@@ -360,22 +360,46 @@ export const setAuthUser = (access_token, refresh_token) => {
     useAuthStore.getState().setLoading(false);
 };
 
+// Variable to hold in-flight refresh promise, preventing parallel refresh race conditions (thundering herd)
+let refreshTokenPromise = null;
+
 export const getRefreshToken = async () => {
-    try {
-        const refresh_token = Cookie.get("refresh_token");
-        
-        if (!refresh_token) {
-            throw new Error("No refresh token available");
-        }
-        
-        const response = await apiInstance.post(`user/token/refresh/`, {
-            refresh: refresh_token,
-        });
-        return response;
-    } catch (error) {
-        logout();
-        throw error;
+    // If a refresh is already in progress, return the existing promise so parallel callers wait for the same response
+    if (refreshTokenPromise) {
+        return refreshTokenPromise;
     }
+
+    refreshTokenPromise = (async () => {
+        try {
+            const refresh_token = Cookie.get("refresh_token");
+            
+            if (!refresh_token) {
+                throw new Error("No refresh token available");
+            }
+            
+            const response = await apiInstance.post(`user/token/refresh/`, {
+                refresh: refresh_token,
+            });
+
+            if (response?.data?.access) {
+                // Update cookies and user state with new access token (and new refresh token if rotated)
+                setAuthUser(response.data.access, response.data.refresh || refresh_token);
+            }
+            return response;
+        } catch (error) {
+            // Only force logout if the backend explicitly rejected the refresh token as invalid/blacklisted (401/400)
+            if (error.response && (error.response.status === 401 || error.response.status === 400)) {
+                if (sessionStorage.getItem('logging_out') !== 'true') {
+                    logout();
+                }
+            }
+            throw error;
+        } finally {
+            refreshTokenPromise = null;
+        }
+    })();
+
+    return refreshTokenPromise;
 };
 
 export const isAccessTokenExpired = (access_token) => {

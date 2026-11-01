@@ -417,7 +417,7 @@ body:has(.contact-page-wrapper)::after {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
   backdrop-filter: blur(6px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Geometric grid & luminous radial glow overlay matching About Section */
@@ -460,6 +460,7 @@ body:has(.contact-page-wrapper)::after {
   position: sticky !important;
   top: calc(var(--header-height, 60px) + 72px) !important; /* 56px stuck hero + 16px gap = 72px */
   align-self: flex-start !important;
+  height: fit-content !important;
   z-index: 95 !important;
 }
 

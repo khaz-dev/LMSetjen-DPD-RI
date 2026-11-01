@@ -3,27 +3,28 @@
    LMSetjen DPD RI Design System
    ======================================== */
 
-/* Force instructor-review-page padding to be overridable by pt-5 and pb-5 */
-.instructor-review-page.pt-5 {
-    padding-top: 50px !important;
-}
-
-.instructor-review-page.pb-5 {
-    padding-bottom: 2rem !important;
-}
-
-/* Main Page Layout */
+/* Page Spacing - Tightened to match Profile page spacing precisely */
 .instructor-review-page {
     margin-left: 0 !important;
     margin-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
-    margin-bottom: 2.5rem !important;
-    min-height: calc(100vh - 200px);
+    min-height: 100vh;
     background: transparent;
-    padding: var(--page-top-spacing, 20px) 0;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
+    margin-bottom: 2rem !important;
+    margin-top: 0 !important;
     overflow: visible !important;
+}
+
+.instructor-review-page.pt-5 {
+    padding-top: 1rem !important;
+}
+
+.instructor-review-page.pb-5 {
+    padding-bottom: 2.5rem !important;
 }
 
 .instructor-review-page .container {
@@ -86,6 +87,14 @@
     padding-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+}
+
+.instructor-review-page .instructor-header-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow: visible !important;
 }
 
 .instructor-review-page .row:has(.instructor-sidebar-column) > .col-lg-9 {

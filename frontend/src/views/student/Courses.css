@@ -1,763 +1,1445 @@
+/* ==========================================================================
+   LMSetjen DPD RI - Perjalanan Belajar Saya (Student Courses Page)
+   Ultra-Compact, High-Density, Modern, Eye-Catching Redesign
+   Completely eliminates excess blank & white space across Hero & Toolbar
+   ========================================================================== */
+
+:root {
+    --dpd-teal-dark: #064e3b;
+    --dpd-teal: #0f766e;
+    --dpd-teal-hover: #115e59;
+    --dpd-teal-light: #ccfbf1;
+    --dpd-teal-subtle: rgba(15, 118, 110, 0.08);
+    --dpd-emerald: #059669;
+    --dpd-emerald-light: #d1fae5;
+    --dpd-indigo: #4338ca;
+    --dpd-indigo-light: #e0e7ff;
+    --dpd-amber: #d97706;
+    --dpd-amber-light: #fef3c7;
+    --dpd-rose: #e11d48;
+    --dpd-rose-light: #ffe4e6;
+    --dpd-slate: #0f172a;
+    --dpd-gray-dark: #334155;
+    --dpd-gray-muted: #64748b;
+    --dpd-border: #e2e8f0;
+    --dpd-card-bg: #ffffff;
+    --dpd-shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.04);
+    --dpd-shadow-md: 0 6px 18px rgba(15, 23, 42, 0.07);
+    --dpd-shadow-lg: 0 14px 30px rgba(15, 23, 42, 0.11);
+}
+
+/* ==========================================================================
+   PAGE CONTAINER & BASE LAYOUT (Eliminates excessive vertical whitespace)
+   ========================================================================== */
 .modern-course-page {
     min-height: 100vh;
     background: transparent;
-    padding: var(--page-top-spacing) 0;
-    padding-top: var(--page-top-spacing) !important;
-    padding-bottom: var(--page-bottom-spacing) !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 2rem !important;
     margin-top: 0 !important;
-    margin-bottom: 8rem;
-    overflow-x: hidden; /* ✨ PHASE 8b: Prevent horizontal scroll from row width calc */
-}
-
-/* ✨ PHASE 8b: Force padding-top to be overridable by pt-5 utility class */
-.modern-course-page.pt-5 {
-    padding-top: 50px !important;
-}
-
-.modern-course-page.pb-5 {
-    padding-bottom: var(--page-bottom-spacing) !important;
-}
-
-.page-header-card {
-    background: var(--theme-gradient) !important;
-    border-radius: 20px !important;
-    color: white !important;
-    padding: 1.5rem 1rem !important;
     margin-bottom: 1.5rem !important;
-    position: relative !important;
-    overflow: hidden !important;
-    box-shadow: 0 15px 35px var(--theme-shadow-color) !important;
+    overflow: visible !important;
+    overflow-x: clip;
 }
 
-.page-header-card::before {
-    content: '' !important;
-    position: absolute !important;
-    top: -50% !important;
-    right: -20% !important;
-    width: 40% !important;
-    height: 200% !important;
-    background: rgba(255, 255, 255, 0.1) !important;
-    transform: rotate(15deg) !important;
-    z-index: 1 !important;
-}
-
-.page-header-content {
-    position: relative !important;
-    z-index: 2 !important;
-}
-
-/* Ensure inner row inside page-header-card flexes properly */
-.page-header-card .row {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
+/* Ensure alignment with Main Navigation header-container (1400px width, 1.25rem padding) */
+.modern-course-page > .container,
+.modern-course-page .container {
     width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    position: relative;
+    overflow: visible !important;
+}
+
+/* ==========================================================================
+   LAYOUT ROW & HEADER ALIGNMENT (Flush with student-header-row)
+   ========================================================================== */
+.modern-course-page .row.student-header-row {
     margin-left: 0 !important;
     margin-right: 0 !important;
-}
-
-.page-header-card .col-lg-8 {
-    flex: 0 1 auto !important;
-    width: auto !important;
-    padding-right: 1rem !important;
-}
-
-/* Make col-lg-4 a flex container so stats-grid aligns right */
-.page-header-card .col-lg-4 {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    flex: 1 1 auto !important;
-    width: auto !important;
+    padding-left: 0 !important;
     padding-right: 0 !important;
-}
-
-.page-header-card h1 {
-    font-size: 2rem !important;
-    font-weight: 700 !important;
-    margin: 0 !important;
-    color: white !important;
-}
-
-.search-card {
-    background: white;
-    border-radius: 15px;
-    padding: 1.5rem;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
-    border: 1px solid #e9ecef;
-    margin-bottom: 1.5rem !important;
-}
-
-/* ✨ CRITICAL FIX: Keep page-header-card and search-card in their natural column width */
-/* Course cards row will align with them using same padding approach */
-@media (min-width: 992px) {
-    /* Ensure page-header-card and search-card don't overflow - keep them inside col padding */
-    .modern-course-page .row:has(.student-sidebar-column) > .col-lg-9 > .page-header-card,
-    .modern-course-page .row:has(.student-sidebar-column) > .col-lg-9 > .search-card {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        width: 100% !important;
-    }
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-    /* Ensure page-header-card and search-card don't overflow on tablet - keep them inside col padding */
-    .modern-course-page .row:has(.student-sidebar-column) > .col-md-8 > .page-header-card,
-    .modern-course-page .row:has(.student-sidebar-column) > .col-md-8 > .search-card {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        width: 100% !important;
-    }
-}
-
-/* SCOPED: Courses page search input only - NEVER affects BaseHeader */
-.modern-course-page .search-card .search-input {
-    border: 2px solid #e9ecef;
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background: #f8f9fa;
-}
-
-.modern-course-page .search-card .search-input:focus {
-    border-color: var(--theme-primary);
-    box-shadow: 0 0 0 0.2rem var(--theme-shadow-color);
-    background: white;
-}
-
-.search-icon {
-    color: #6c757d;
-    font-size: 1.1rem;
-}
-
-/* ✨ PHASE 76: Renamed to prevent conflict with dashboard .stats-grid */
-.page-header-stats-grid {
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    margin-left: auto;
-    width: fit-content;
-}
-
-.stat-card-header-wrapper {
-    display: inline-block;
-    width: auto;
-    max-width: 100%;
-    flex-shrink: 0;
-}
-
-.stat-card-header {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px;
-    padding: 0.8rem 1.2rem;
-    text-align: right;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-}
-
-/* PHASE 76.1: Scoped to prevent pollution to admin dashboard */
-.page-header-stats-grid .stat-number {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 0.2rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    color: white;
-    text-align: right;
-    display: flex;
-    justify-content: flex-end;
-}
-
-/* ✨ SCOPED: Courses page stat label - only apply on courses page */
-.modern-course-page .stat-label {
-    font-size: 0.8rem !important;
-    opacity: 0.9 !important;
-    font-weight: 500 !important;
-    text-align: right !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.courses-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1rem;
-    margin-top: 0.8rem;
-}
-
-/* SCOPED: Course card styles only apply on Courses page */
-.modern-course-page .course-card {
-    background: white;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
-    border: 1px solid #e9ecef;
-    position: relative;
-    z-index: 1;
-    padding: 1.5rem !important; /* ✨ Match search-card padding for consistent width appearance */
-}
-
-.modern-course-page .course-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-    z-index: 2;
-    border-color: #0d9488;
-}
-
-.modern-course-page .course-image {
-    width: 100%;
-    height: 100px;
-    border-radius: 15px;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.modern-course-page .course-image-wrapper:hover .course-image {
-    transform: scale(1.05);
-}
-
-.modern-course-page .course-image-wrapper {
-    position: relative;
-    overflow: hidden;
-    border-radius: 15px;
-}
-
-.modern-course-page .course-image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: transparent;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 15px;
-    user-select: none;
-    cursor: pointer;
-    pointer-events: auto;
-}
-
-/* Show overlay on card hover */
-.modern-course-page .course-card:hover .course-image-overlay {
-    opacity: 1 !important;
-}
-
-.modern-course-page .play-icon {
-    color: white;
-    font-size: 2rem;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    animation: pulse 2s infinite;
-    user-select: none;
-}
-
-.modern-course-page .course-content {
-    padding: 1rem;
-}
-
-/* SCOPED: Course title styles only apply on Courses page */
-.modern-course-page .course-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #2d3748;
-    line-height: 1.3;
-    margin-bottom: 0.5rem;
-    display: -webkit-box;
-    line-clamp: 2;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    transition: color 0.3s ease;
-    text-overflow: ellipsis;
-    height: 2.6rem;
-}
-
-.modern-course-page .course-card:hover .course-title {
-    color: #0d9488;
-}
-
-.modern-course-page .course-instructor {
-    color: var(--theme-primary);
-    font-weight: 500;
-    margin-bottom: 0.75rem;
-    font-size: 0.9rem;
-}
-
-.modern-course-page .course-instructor i {
-    margin-right: 0.5rem;
-    color: var(--theme-primary-dark);
-}
-
-.modern-course-page .course-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-}
-
-.modern-course-page .course-date {
-    color: #6c757d;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.modern-course-page .course-date i {
-    margin-right: 0.3rem;
-    color: var(--theme-primary);
-}
-
-.progress-section {
-    margin: 1rem 0;
-}
-
-.progress-header {
-    display: flex;
-    justify-content: between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.progress-text {
-    font-size: 0.85rem;
-    color: #6c757d;
-    font-weight: 500;
-}
-
-.progress-percentage {
-    font-size: 0.85rem;
-    color: var(--theme-primary);
-    font-weight: 600;
-}
-
-.progress-bar-container {
-    height: 8px;
-    background: #e9ecef;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-.progress-bar-fill {
-    height: 100%;
-    background: var(--theme-gradient);
-    border-radius: 6px;
-    transition: width 0.3s ease;
-}
-
-.course-actions {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-}
-
-.btn .fa-search {
-    vertical-align: middle;
-    font-size: 1rem;
-    line-height: 1;
-}
-
-.btn-continue-course {
-    background: var(--theme-gradient);
-    border: none;
-    border-radius: 12px;
-    padding: 0.55rem 1.5rem;
-    color: white;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 0.85rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
-    justify-content: center;
-    text-align: center;
-    box-shadow: var(--theme-card-shadow);
-}
-
-.btn-continue-course:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--theme-hover-shadow);
-    color: white;
-}
-
-/* Course Button States */
-.course-btn {
-    border: none;
-    border-radius: 12px;
-    padding: 0.55rem 1.5rem;
-    color: white;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 0.85rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
-    justify-content: center;
-    text-align: center;
-}
-
-.course-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px var(--theme-shadow-color) !important;
-    color: white;
-}
-
-/* Start Learning Button - Green gradient */
-.btn-start {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
-}
-
-.btn-start:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
-    color: white;
-}
-
-/* Continue Learning Button - Purple gradient */
-.btn-continue {
-    background: var(--theme-gradient) !important;
-    color: white;
-    box-shadow: 0 4px 15px var(--theme-shadow-color) !important;
-}
-
-.btn-continue:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px var(--theme-shadow-color) !important;
-    color: white;
-}
-
-/* Course Completed Button - Light background with green border */
-.btn-completed {
-    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-    color: #48bb78;
-    border: 2px solid #48bb78;
-    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.1);
-}
-
-.btn-completed:hover {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
-}
-
-/* ✨ badge-modern and badge-level are now consistently styled globally from index.css - applies to all pages */
-
-/* Consistent Button/Link Styles - PHASE 4.228.5 */
-.courses-empty-link-btn,
-.btn-modern {
-    background: var(--theme-gradient) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    padding: 0.5rem 1rem !important;
-    color: white !important;
-    font-weight: 500 !important;
-    transition: all 0.3s ease !important;
-    text-decoration: none !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 0.5rem !important;
-    width: fit-content !important;
+    width: 100% !important;
     max-width: 100% !important;
-    font-size: 0.9rem !important;
-    line-height: 1 !important;
-    height: auto !important;
-    min-height: 38px !important;
-    cursor: pointer !important;
-}
-
-.courses-empty-link-btn:hover,
-.btn-modern:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: var(--theme-hover-shadow) !important;
-    color: white !important;
-}
-
-.courses-empty-link-btn i,
-.courses-empty-link-btn span,
-.btn-modern i,
-.btn-modern span,
-.btn-modern > * {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    color: white !important;
-    flex-shrink: 0 !important;
-    line-height: 1 !important;
-}
-
-.courses-empty-link-btn i,
-.btn-modern i {
-    font-size: 0.9em !important;
-    width: 1em !important;
-    height: 1em !important;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 2rem 1.5rem;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
-}
-
-.empty-icon {
-    font-size: 3rem;
-    color: #e9ecef;
-    margin-bottom: 1rem;
-}
-
-.loading-spinner {
-    width: 2.5rem;
-    height: 2.5rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .page-header-card {
-        padding: 1.2rem 1.5rem !important;
-        margin-bottom: 1.5rem !important;
-        border-radius: 20px !important;
-    }
-
-    .page-header-card h1 {
-        font-size: 1.3rem !important;
-    }
-
-    /* ✨ PHASE 8c: Responsive override for modern-course-page scoped styling */
-    .modern-course-page .course-title {
-        font-size: 1.1rem;
-    }
-
-    .courses-grid {
-        grid-template-columns: 1fr;
-        gap: 0.8rem;
-    }
-
-    .course-content {
-        padding: 1.2rem;
-    }
-
-    .course-actions {
-        flex-direction: column;
-    }
-
-    .btn-continue-course {
-        width: 100%;
-        justify-content: center;
-    }
-
-    /* ✨ ALIGNMENT FIX: Course cards row must align with search-card on mobile */
-    .modern-course-page .row.g-4:has(.col-12 > .course-card) {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        width: 100% !important;
-    }
-}
-
-@media (max-width: 576px) {
-    .page-header-card {
-        padding: 1.25rem !important;
-        margin-bottom: 1.25rem !important;
-    }
-
-    .page-header-card h1 {
-        font-size: 1.25rem !important;
-    }
-
-    .course-card {
-        margin-bottom: 1rem;
-    }
-
-    .course-image {
-        width: 100px;
-        height: 75px;
-    }
-}
-
-/* Fix text selection and cursor issues - SCOPED to Courses page */
-.modern-course-page .page-header-card h1,
-.modern-course-page .page-header-card p,
-.modern-course-page .stat-number,
-.modern-course-page .stat-label,
-.modern-course-page .course-card h5,
-.modern-course-page .course-card p,
-.modern-course-page .course-card span,
-.modern-course-page .course-card small,
-.modern-course-page .search-card h4,
-.modern-course-page .search-card p,
-.modern-course-page .empty-state h4,
-.modern-course-page .empty-state p {
-    cursor: default !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    outline: none !important;
-    caret-color: transparent !important;
-}
-
-/* Ensure links still have pointer cursor */
-a, .btn, button {
-    cursor: pointer !important;
-    user-select: none !important;
-}
-
-/* Ensure input fields can still be selected */
-input, textarea, .form-control {
-    cursor: text !important;
-    user-select: text !important;
-    -webkit-user-select: text !important;
-    -moz-user-select: text !important;
-    -ms-user-select: text !important;
-}
-
-/* ============================== */
-/* Adaptive Layout for Sidebar Collapse */
-/* ============================== */
-
-/* Monitor sidebar collapse state - when sidebar is collapsed, main content expands */
-/* IMPORTANT: Don't apply flex-wrap: nowrap to ALL rows - course card row needs normal wrapping */
-.modern-course-page > .container > .row {
     display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap;
-    width: 100%;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    gap: 0 !important;
-}
-
-/* ✨ PHASE 65+: Ensure header row stays visible above content - prevent dropdown clipping */
-.modern-course-page > .container > .student-header-row {
+    flex-wrap: wrap !important;
     position: relative;
     z-index: 102;
 }
 
+.modern-course-page .row.student-header-row > [class*="col-"] {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
 .modern-course-page .student-header-card {
     overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
-.modern-course-page .role-indicator.compact .role-dropdown-menu {
+/* Content Row - Exactly 100% width matching student-header-row */
+.modern-course-page > .container > .row:not(.student-header-row) {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    gap: 0 !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+.modern-course-page > .container > .row.mt-0 {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Sticky sidebar column support */
+.modern-course-page .student-sidebar-column,
+.modern-course-page .row > .student-sidebar-column {
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: stretch !important;
+    height: auto !important;
+    position: static !important;
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.modern-course-page .student-sidebar {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: calc(var(--navbar-height, 60px) + 14px) !important;
+    z-index: 99 !important;
+    align-self: flex-start !important;
+}
+
+/* Main Content Column (col-lg-9 col-md-8 col-12) */
+.modern-course-page .row:has(.student-sidebar-column) > .col-lg-9,
+.modern-course-page > .container > .row > .col-lg-9,
+.modern-course-page .col-lg-9.col-md-8.col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden;
+}
+
+.modern-course-page .sidebar-collapsed-adapted {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: auto !important;
+}
+
+/* ==========================================================================
+   1. ULTRA-COMPACT HERO SECTION (Executive Strip, Minimal Height)
+   ========================================================================== */
+.courses-hero-card {
+    position: relative;
+    background: linear-gradient(135deg, #064e3b 0%, #0f766e 60%, #115e59 100%);
+    border-radius: 14px;
+    padding: 0.8rem 1.25rem;
+    margin-bottom: 0.75rem;
+    color: #ffffff;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(6, 78, 59, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.courses-hero-accent-shape {
     position: absolute;
-    z-index: 2002 !important;
-    pointer-events: auto;
+    top: -50%;
+    right: -10%;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(204, 251, 241, 0.14) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
 }
 
-/* Exception: Allow student-header-row to use its own negative margins for edge-to-edge expansion */
-.modern-course-page .row.student-header-row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
+.courses-hero-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
-/* Column base styles - only for main layout row */
-.modern-course-page > .container > .row > [class*="col-"] {
-    margin-bottom: 0;
-    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
-    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
+.courses-hero-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1 1 300px;
+    min-width: 240px;
+}
+
+.courses-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 16px;
+    padding: 0.12rem 0.55rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    width: fit-content;
+    backdrop-filter: blur(8px);
+}
+
+.courses-hero-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.courses-hero-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #ccfbf1;
+    flex-shrink: 0;
+}
+
+.courses-hero-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+.courses-hero-desc {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.88);
+    margin: 0.12rem 0 0 0;
+    line-height: 1.35;
+}
+
+/* Compact Executive Competency Stats on Right */
+.courses-hero-right {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+}
+
+.courses-hero-stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 0.35rem 0.65rem;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+.courses-hero-stat-pill:hover {
+    background: rgba(255, 255, 255, 0.22);
+    transform: translateY(-1px);
+}
+
+.stat-pill-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.stat-pill-icon.icon-indigo {
+    background: rgba(99, 102, 241, 0.28);
+    color: #e0e7ff;
+}
+
+.stat-pill-icon.icon-teal {
+    background: rgba(20, 184, 166, 0.28);
+    color: #ccfbf1;
+}
+
+.stat-pill-icon.icon-emerald {
+    background: rgba(16, 185, 129, 0.28);
+    color: #a7f3d0;
+}
+
+.stat-pill-info {
     display: flex;
     flex-direction: column;
 }
 
-@media (min-width: 992px) {
-    .modern-course-page .row:has(.student-sidebar-column) > .col-lg-9 {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
-    }
+.stat-pill-num {
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #ffffff;
+}
 
-    /* Inner rows inside col-lg-9: add negative margins to extend col-12 content edge-to-edge */
-    .modern-course-page .row:has(.student-sidebar-column) > .col-lg-9 > .row {
-        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-        width: 100% !important;
-    }
+.stat-pill-text {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+}
 
-    /* ✨ ALIGNMENT FIX: Course cards row now aligns with page-header-card and search-card */
-    /* Don't use negative margins - keep it inside column like the other cards */
-    .modern-course-page .row.g-4:has(.col-12 > .course-card) {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        width: 100% !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
+/* ==========================================================================
+   2. HIGH-DENSITY UNIFIED TOOLBAR (Single-Row Flow, Zero Wasted Space)
+   ========================================================================== */
+.courses-toolbar {
+    background: #ffffff;
+    border: 1px solid var(--dpd-border);
+    border-radius: 12px;
+    padding: 0.55rem 0.85rem;
+    margin-bottom: 0.75rem;
+    box-shadow: var(--dpd-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
 
-    /* Ensure col-12 inside course-cards row has NO padding - let cards handle their spacing */
-    .modern-course-page .row.g-4:has(.col-12 > .course-card) > .col-12 {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
+/* ==========================================
+   LINE 1: Status Filter Pills & Quick Meta
+   ========================================== */
+.courses-toolbar-line1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    width: 100%;
+}
 
-    /* IMPORTANT: Course card rows must display horizontally (3 cols layout) */
-    .modern-course-page .course-card > .row {
-        flex-wrap: wrap !important;
-        align-items: flex-start !important;
+/* Status Filter Segmented Control / Pills */
+.courses-status-pills {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+}
+
+.courses-pill-btn {
+    border: 1px solid var(--dpd-border);
+    background: #f8fafc;
+    color: var(--dpd-gray-dark);
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 0.25rem 0.55rem;
+    border-radius: 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.15s ease;
+    height: 30px;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.courses-pill-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: var(--dpd-slate);
+}
+
+.courses-pill-btn .pill-count {
+    background: rgba(0, 0, 0, 0.06);
+    color: inherit;
+    font-size: 0.68rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.courses-pill-btn.active {
+    background: var(--dpd-teal);
+    border-color: var(--dpd-teal);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.2);
+}
+
+.courses-pill-btn.active .pill-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+.courses-pill-btn.pill-in-progress.active {
+    background: var(--dpd-amber);
+    border-color: var(--dpd-amber);
+}
+
+.courses-pill-btn.pill-completed.active {
+    background: var(--dpd-emerald);
+    border-color: var(--dpd-emerald);
+}
+
+/* Line 1 Right Side: Meta Summary, Reset, Catalog Shortcut */
+.courses-toolbar-line1-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    font-size: 0.74rem;
+    color: var(--dpd-gray-muted);
+}
+
+.courses-meta-count {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 500;
+}
+
+/* ==========================================
+   LINE 2: Controls (Full Width with Search Box)
+   ========================================== */
+.courses-toolbar-line2 {
+    width: 100%;
+    padding-top: 0.45rem;
+    border-top: 1px dashed var(--dpd-border);
+}
+
+.courses-toolbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+}
+
+/* Search Box: Stretches across the remaining line 2 width */
+.courses-search-box {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 140px;
+}
+
+.courses-search-icon {
+    position: absolute !important;
+    left: 0.75rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #94a3b8 !important;
+    font-size: 0.75rem !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+}
+
+.courses-search-input,
+.modern-course-page .courses-search-input,
+.modern-course-page input.form-control.courses-search-input,
+input.form-control.courses-search-input {
+    width: 100% !important;
+    height: 31px !important;
+    padding-left: 2rem !important;
+    padding-right: 1.8rem !important;
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+    font-size: 0.76rem !important;
+    border: 1.2px solid var(--dpd-border) !important;
+    border-radius: 8px !important;
+    background-color: #f8fafc !important;
+    color: var(--dpd-slate) !important;
+    transition: all 0.2s ease !important;
+}
+
+.courses-search-input:focus,
+.modern-course-page .courses-search-input:focus {
+    background-color: #ffffff !important;
+    border-color: var(--dpd-teal) !important;
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15) !important;
+    outline: none !important;
+}
+
+.courses-search-clear {
+    position: absolute !important;
+    right: 0.5rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--dpd-gray-muted) !important;
+    font-size: 0.72rem !important;
+    cursor: pointer !important;
+    padding: 0.2rem !important;
+    border-radius: 50% !important;
+}
+
+/* Micro Dropdown Selects */
+.courses-select-box {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.courses-select,
+.modern-course-page .courses-select,
+.modern-course-page select.form-select.courses-select,
+select.form-select.courses-select {
+    height: 31px !important;
+    padding-left: 0.65rem !important;
+    padding-right: 1.6rem !important;
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    color: var(--dpd-slate) !important;
+    background-color: #f8fafc !important;
+    border: 1.2px solid var(--dpd-border) !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    background-position: right 0.45rem center !important;
+    background-size: 11px 7px !important;
+    max-width: 135px;
+}
+
+.courses-select:focus,
+.modern-course-page .courses-select:focus {
+    background-color: #ffffff !important;
+    border-color: var(--dpd-teal) !important;
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15) !important;
+    outline: none !important;
+}
+
+/* View Mode Switcher Toggle */
+.courses-view-toggle {
+    display: flex;
+    align-items: center;
+    background: #f1f5f9;
+    border: 1px solid var(--dpd-border);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 1px;
+    flex: 0 0 auto;
+}
+
+.courses-view-btn {
+    border: none;
+    background: transparent;
+    color: var(--dpd-gray-muted);
+    width: 27px;
+    height: 27px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.76rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.courses-view-btn:hover {
+    color: var(--dpd-teal);
+}
+
+.courses-view-btn.active {
+    background: #ffffff;
+    color: var(--dpd-teal);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Active Filter Micro-Bar (Appears ONLY when filtering) */
+.courses-toolbar-active-filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.4rem;
+    border-top: 1px dashed var(--dpd-border);
+    font-size: 0.74rem;
+    color: var(--dpd-gray-muted);
+}
+
+.active-filter-icon {
+    color: var(--dpd-teal);
+    font-size: 0.75rem;
+}
+
+.courses-btn-reset-filter {
+    background: #ffe4e6;
+    border: 1px solid #fecdd3;
+    color: var(--dpd-rose);
+    font-weight: 600;
+    font-size: 0.7rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s ease;
+}
+
+.courses-btn-reset-filter:hover {
+    background: #fecdd3;
+    color: #be123c;
+}
+
+.courses-btn-catalog-sm {
+    background: var(--dpd-teal-subtle);
+    border: 1px solid rgba(15, 118, 110, 0.2);
+    color: var(--dpd-teal);
+    font-weight: 600;
+    font-size: 0.7rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s ease;
+}
+
+.courses-btn-catalog-sm:hover {
+    background: var(--dpd-teal);
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   3. GRID VIEW CARDS (Eye-Catching, High-Density, Zero Wasted Space)
+   ========================================================================== */
+.courses-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.85rem;
+    width: 100%;
+}
+
+.course-compact-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid var(--dpd-border);
+    box-shadow: var(--dpd-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
+    position: relative;
+}
+
+.course-compact-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(15, 118, 110, 0.1);
+    border-color: #cbd5e1;
+}
+
+/* Thumbnail Section */
+.course-thumb-box {
+    position: relative;
+    width: 100%;
+    height: 135px;
+    overflow: hidden;
+    background: #0f172a;
+}
+
+.course-thumb-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    text-decoration: none;
+}
+
+.course-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.35s ease;
+}
+
+.course-compact-card:hover .course-thumb-img {
+    transform: scale(1.04);
+}
+
+.course-placeholder-box {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0f766e 0%, #1e293b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 2rem;
+}
+
+.course-thumb-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.45) 100%);
+    opacity: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+}
+
+.course-compact-card:hover .course-thumb-overlay {
+    opacity: 1;
+}
+
+.thumb-play-icon {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--dpd-teal-dark);
+    font-size: 0.8rem;
+    font-weight: 700;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    transform: scale(0.88);
+    transition: transform 0.2s ease;
+}
+
+.course-compact-card:hover .thumb-play-icon {
+    transform: scale(1);
+}
+
+/* Floating Status Pill (Top-Left) */
+.course-thumb-status-pill {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.18rem 0.5rem;
+    border-radius: 16px;
+    letter-spacing: 0.2px;
+    backdrop-filter: blur(8px);
+}
+
+.status-badge.badge-done {
+    background: rgba(5, 150, 105, 0.92);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+}
+
+.status-badge.badge-active {
+    background: rgba(217, 119, 6, 0.92);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+}
+
+.status-badge.badge-new {
+    background: rgba(30, 41, 59, 0.85);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-badge.sm {
+    font-size: 0.65rem;
+    padding: 0.12rem 0.45rem;
+}
+
+/* Floating Level Pill (Top-Right) */
+.course-thumb-level-pill {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.level-badge-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.18rem 0.5rem;
+    border-radius: 10px;
+    backdrop-filter: blur(8px);
+}
+
+.level-badge-chip.level-emerald {
+    background: rgba(209, 250, 229, 0.95);
+    color: #065f46;
+    border: 1px solid rgba(5, 150, 105, 0.3);
+}
+
+.level-badge-chip.level-teal {
+    background: rgba(204, 251, 241, 0.95);
+    color: #115e59;
+    border: 1px solid rgba(15, 118, 110, 0.3);
+}
+
+.level-badge-chip.level-indigo {
+    background: rgba(224, 231, 255, 0.95);
+    color: #3730a3;
+    border: 1px solid rgba(79, 70, 229, 0.3);
+}
+
+.level-badge-chip.level-amber {
+    background: rgba(254, 243, 199, 0.95);
+    color: #92400e;
+    border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.level-badge-chip.level-slate {
+    background: rgba(241, 245, 249, 0.95);
+    color: #334155;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+/* Card Content Area */
+.course-card-content {
+    padding: 0.8rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+}
+
+.course-card-top-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.course-category-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--dpd-teal);
+    background: var(--dpd-teal-subtle);
+    padding: 0.12rem 0.45rem;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    max-width: 130px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.course-instructor-text {
+    font-size: 0.72rem;
+    color: var(--dpd-gray-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.course-card-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 0.55rem;
+    height: 2.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.course-card-title a {
+    color: var(--dpd-slate);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.course-card-title a:hover {
+    color: var(--dpd-teal);
+}
+
+/* Progress Box inside Card */
+.course-card-progress-box {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 8px;
+    padding: 0.45rem 0.6rem;
+    margin-bottom: 0.55rem;
+}
+
+.course-progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.progress-txt-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--dpd-gray-muted);
+}
+
+.progress-pct-val {
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.progress-pct-val.text-emerald {
+    color: var(--dpd-emerald);
+}
+
+.progress-pct-val.text-teal {
+    color: var(--dpd-teal);
+}
+
+.course-progress-track {
+    width: 100%;
+    height: 5px;
+    background: #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 0.2rem;
+}
+
+.course-progress-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.35s ease;
+}
+
+.course-progress-fill.fill-emerald {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.course-progress-fill.fill-teal {
+    background: linear-gradient(90deg, #14b8a6 0%, #0f766e 100%);
+}
+
+.course-progress-sub {
+    font-size: 0.68rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Bottom Meta Chips */
+.course-card-meta-chips {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    color: var(--dpd-gray-muted);
+    margin-top: auto;
+    padding-top: 0.3rem;
+}
+
+.course-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+/* Card Footer Action Area */
+.course-card-footer {
+    padding: 0.65rem 0.85rem;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+}
+
+.btn-course-cta {
+    width: 100%;
+    height: 33px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-course-cta.btn-start {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+}
+
+.btn-course-cta.btn-start:hover {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.3);
+    color: #ffffff;
+}
+
+.btn-course-cta.btn-continue {
+    background: linear-gradient(135deg, #0f766e 0%, #047857 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.2);
+}
+
+.btn-course-cta.btn-continue:hover {
+    background: linear-gradient(135deg, #115e59 0%, #065f46 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(15, 118, 110, 0.3);
+    color: #ffffff;
+}
+
+.btn-course-cta.btn-review {
+    background: #ffffff;
+    border: 1.2px solid var(--dpd-emerald);
+    color: var(--dpd-emerald);
+}
+
+.btn-course-cta.btn-review:hover {
+    background: var(--dpd-emerald);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.btn-cert-shortcut {
+    width: 33px;
+    height: 33px;
+    border-radius: 8px;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #d97706;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.btn-cert-shortcut:hover {
+    background: #fde68a;
+    color: #b45309;
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   4. STREAMLINED COMPACT LIST VIEW (Zero Wasted Space)
+   ========================================================================== */
+.courses-list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: 100%;
+}
+
+.course-list-row {
+    background: #ffffff;
+    border: 1px solid var(--dpd-border);
+    border-radius: 10px;
+    padding: 0.65rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    box-shadow: var(--dpd-shadow-sm);
+    transition: all 0.2s ease;
+}
+
+.course-list-row:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 3px 12px rgba(15, 118, 110, 0.08);
+    transform: translateY(-1px);
+}
+
+.course-list-thumb {
+    width: 125px;
+    height: 82px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    background: #0f172a;
+}
+
+.course-list-thumb .course-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumb-play-icon.sm {
+    width: 28px;
+    height: 28px;
+    font-size: 0.72rem;
+}
+
+.course-list-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.course-list-header-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.course-list-date {
+    font-size: 0.7rem;
+}
+
+.course-list-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.course-list-title a {
+    color: var(--dpd-slate);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.course-list-title a:hover {
+    color: var(--dpd-teal);
+}
+
+.course-list-bottom-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.72rem;
+    color: var(--dpd-gray-muted);
+    flex-wrap: wrap;
+}
+
+.course-list-inline-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 130px;
+}
+
+.course-list-inline-progress .course-progress-track {
+    width: 80px;
+    height: 5px;
+    margin-bottom: 0;
+}
+
+.inline-progress-pct {
+    font-size: 0.74rem;
+    color: var(--dpd-slate);
+}
+
+.course-list-action {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.btn-course-cta.compact {
+    height: 31px;
+    padding: 0 0.85rem;
+    width: auto;
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   5. EMPTY & SKELETON STATES
+   ========================================================================== */
+.courses-empty-card {
+    background: #ffffff;
+    border: 1px dashed var(--dpd-border);
+    border-radius: 14px;
+    padding: 2.25rem 1.25rem;
+    text-align: center;
+    box-shadow: var(--dpd-shadow-sm);
+    margin-bottom: 1.25rem;
+}
+
+.courses-empty-icon-wrap {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: var(--dpd-gray-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    margin-bottom: 0.85rem;
+}
+
+.courses-empty-icon-wrap.hero-empty {
+    background: var(--dpd-teal-light);
+    color: var(--dpd-teal);
+}
+
+.courses-empty-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    margin-bottom: 0.35rem;
+}
+
+.courses-empty-desc {
+    font-size: 0.82rem;
+    color: var(--dpd-gray-muted);
+    max-width: 440px;
+    margin: 0 auto 1.25rem auto;
+    line-height: 1.45;
+}
+
+.courses-empty-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.courses-btn-empty-reset {
+    background: #ffffff;
+    border: 1.2px solid var(--dpd-border);
+    color: var(--dpd-gray-dark);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.courses-btn-empty-reset:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    color: var(--dpd-slate);
+}
+
+.courses-btn-empty-explore {
+    background: var(--dpd-teal);
+    border: 1.2px solid var(--dpd-teal);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.45rem 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.courses-btn-empty-explore:hover {
+    background: var(--dpd-teal-hover);
+    color: #ffffff;
+}
+
+/* Skeletons */
+.course-skeleton-card {
+    pointer-events: none;
+}
+
+.skeleton-thumb {
+    width: 100%;
+    height: 135px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.5s infinite;
+}
+
+.skeleton-line {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    border-radius: 6px;
+    animation: skeleton-pulse 1.5s infinite;
+}
+
+.skeleton-line.sm {
+    height: 10px;
+    width: 45%;
+}
+
+.skeleton-line.md {
+    height: 12px;
+    width: 70%;
+}
+
+.skeleton-line.lg {
+    height: 16px;
+    width: 90%;
+}
+
+@keyframes skeleton-pulse {
+    0% {
+        background-position: 200% 0;
     }
-    
-    /* Ensure course card columns display in row (horizontal) */
-    .modern-course-page .course-card > .row > [class*="col-"] {
-        flex-direction: row !important;
+    100% {
+        background-position: -200% 0;
     }
 }
 
-@media (min-width: 768px) and (max-width: 991px) {
-    .modern-course-page .row:has(.student-sidebar-column) > .col-md-8 {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
+/* ==========================================================================
+   6. RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 991px) {
+    .courses-hero-card {
+        padding: 0.75rem 1rem;
     }
 
-    /* Inner rows inside col-md-8: add negative margins to extend col-12 content edge-to-edge */
-    .modern-course-page .row:has(.student-sidebar-column) > .col-md-8 > .row {
-        margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-        margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
+    .courses-hero-title {
+        font-size: 1.2rem;
+    }
+
+    .courses-hero-right {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+
+    .courses-hero-stat-pill {
+        padding: 0.3rem 0.5rem;
+    }
+
+    .courses-toolbar-line1 {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.4rem;
+    }
+
+    .courses-toolbar-line1-right {
+        margin-left: 0;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .courses-toolbar-controls {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .courses-search-box {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .courses-select-box {
+        flex: 1 1 calc(50% - 0.35rem);
+    }
+
+    .courses-select {
+        max-width: 100% !important;
         width: 100% !important;
     }
+}
 
-    /* ✨ ALIGNMENT FIX: Course cards row now aligns with page-header-card and search-card on tablet */
-    /* Don't use negative margins - keep it inside column like the other cards */
-    .modern-course-page .row.g-4:has(.col-12 > .course-card) {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        width: 100% !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
-
-    /* Ensure col-12 inside course-cards row has NO padding - let cards handle their spacing */
-    .modern-course-page .row.g-4:has(.col-12 > .course-card) > .col-12 {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
-
-    /* IMPORTANT: Course card rows must display horizontally (3 cols layout) on tablet */
-    .modern-course-page .course-card > .row {
+@media (max-width: 767px) {
+    .modern-course-page > .container > .row:not(.student-header-row) {
+        flex-direction: column !important;
         flex-wrap: wrap !important;
-        align-items: flex-start !important;
     }
-    
-    /* Ensure course card columns display in row (horizontal) */
-    .modern-course-page .course-card > .row > [class*="col-"] {
-        flex-direction: row !important;
+
+    .modern-course-page .student-sidebar-column,
+    .modern-course-page .row > .student-sidebar-column {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .modern-course-page .row:has(.student-sidebar-column) > .col-lg-9,
+    .modern-course-page > .container > .row > .col-lg-9,
+    .modern-course-page .col-lg-9.col-md-8.col-12 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+
+    .courses-hero-right {
+        grid-template-columns: 1fr;
+    }
+
+    .courses-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .course-list-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .course-list-thumb {
+        width: 100%;
+        height: 130px;
+    }
+
+    .course-list-action {
+        width: 100%;
+        margin-top: 0.4rem;
+    }
+
+    .btn-course-cta.compact {
+        width: 100%;
     }
 }

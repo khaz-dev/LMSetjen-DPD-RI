@@ -1,140 +1,227 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
-import { Rating } from 'react-simple-star-rating';
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { WishlistContext } from "../plugin/Context";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
-import { getImageUrl, getLevelText } from "../../utils/courseUtils";
-import { calculateTotalDuration, parseDurationToSeconds } from "../../utils/durationUtils";
-// ✨ PHASE 11.12: Import caching hook for seamless navigation
+import { getImageUrl } from "../../utils/courseUtils";
+import { parseDurationToSeconds } from "../../utils/durationUtils";
 import { usePageCache } from "../../utils/usePageCache";
 import "./Wishlist.css";
 
+/**
+ * ✨ Redesigned Student Wishlist Page (Daftar Keinginan Saya)
+ * LMSetjen DPD RI - High-Density, Compact, Modern, Eye-Catching UI
+ * Eliminates excessive white/blank space, provides grid/list views, quick search & filters
+ */
 function Wishlist() {
     const [wishlist, setWishlist] = useState([]);
     const [error, setError] = useState(null);
+    const [removingId, setRemovingId] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("all");
+    const [selectedLevel, setSelectedLevel] = useState("all");
+    const [sortBy, setSortBy] = useState("newest"); // 'newest' | 'title-asc' | 'rating-desc' | 'jp-desc'
+    const [viewMode, setViewMode] = useState(() => {
+        return localStorage.getItem("studentWishlistViewMode") || "grid";
+    });
+
     const [wishlistCount, setWishlistCount, refreshWishlistCount] = useContext(WishlistContext);
     const isCollapsed = useSidebarCollapse();
+    const userData = UserData();
 
-    // ✨ PHASE 4.77+: Calculate total JP (Jam Pelajaran) from course lectures
-    const calculateTotalJP = (lectures) => {
+    // Calculate total JP (Jam Pelajaran) from course lectures (1 JP = 45 mins = 2700s)
+    const calculateTotalJP = useCallback((lectures) => {
         if (!lectures || !Array.isArray(lectures)) return 0;
-        
         let totalSeconds = 0;
-        lectures.forEach(lecture => {
+        lectures.forEach((lecture) => {
             if (lecture.content_duration) {
                 totalSeconds += parseDurationToSeconds(lecture.content_duration);
             }
         });
-        
-        return Math.ceil(totalSeconds / 2700); // 1 JP = 45 minutes = 2700 seconds
+        return Math.ceil(totalSeconds / 2700);
+    }, []);
+
+    // Level badge meta
+    const getLevelBadge = (level) => {
+        const lvl = (level || "").toLowerCase();
+        if (lvl.includes("begin") || lvl.includes("pemula")) {
+            return { label: "Pemula", tone: "level-emerald", icon: "fa-seedling" };
+        }
+        if (lvl.includes("inter") || lvl.includes("menengah")) {
+            return { label: "Menengah", tone: "level-teal", icon: "fa-chart-simple" };
+        }
+        if (lvl.includes("adv") || lvl.includes("lanjut")) {
+            return { label: "Lanjutan", tone: "level-indigo", icon: "fa-rocket" };
+        }
+        if (lvl.includes("exp") || lvl.includes("ahli")) {
+            return { label: "Ahli", tone: "level-amber", icon: "fa-crown" };
+        }
+        return { label: level || "Semua Tingkat", tone: "level-slate", icon: "fa-layer-group" };
     };
 
-    const fetchWishlist = async () => {
+    // Fetch wishlist items from backend
+    const fetchWishlist = useCallback(async () => {
+        if (!userData?.user_id) return [];
         try {
             setError(null);
-            
-            const response = await useAxios.get(`student/wishlist/${UserData()?.user_id}/`);
-            // Handle paginated API response
-            // API returns { results: [...], count: N, ... } due to DRF pagination
+            const response = await useAxios.get(`student/wishlist/${userData.user_id}/`);
             const wishlistData = response.data?.results || response.data || [];
-            const wishlistArray = Array.isArray(wishlistData) ? wishlistData : [];
-            return wishlistArray;
+            return Array.isArray(wishlistData) ? wishlistData : [];
         } catch (err) {
-            setError("Gagal memuat wishlist");
+            console.error("Error fetching wishlist:", err);
+            setError("Gagal memuat daftar keinginan kursus");
             Toast().fire({
                 icon: "error",
-                title: "Gagal memuat wishlist"
+                title: "Gagal memuat daftar keinginan",
             });
             throw err;
         }
-    };
+    }, [userData?.user_id]);
 
-    // ✨ PHASE 11.12: Use page cache to avoid reloading when navigating
-    const { data: cachedWishlist, loading } = usePageCache(
-        'student-wishlist',
+    // Use page cache hook for instant navigation without loading stutter
+    const { data: cachedWishlist, loading, refetch } = usePageCache(
+        `student-wishlist-${userData?.user_id || "guest"}`,
         fetchWishlist,
         {
-            showLoadingOnStale: false
+            showLoadingOnStale: false,
         }
     );
 
-    // Sync cached data to state
+    // Sync cached data to local state
     useEffect(() => {
         if (cachedWishlist) {
             setWishlist(cachedWishlist);
         }
     }, [cachedWishlist]);
 
-    // Check if course is already in wishlist
-    const isCourseInWishlist = (courseId) => {
-        return wishlist.some(item => item.course?.id === courseId);
-    };
-
-    const addToWishlist = async (courseId) => {
-        if (!courseId) {
-            Toast().fire({
-                icon: "error",
-                title: "Kursus tidak valid"
-            });
-            return;
+    // Remove course from wishlist with optimistic UI update
+    const handleRemove = async (courseId, courseTitle, e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
+        if (!courseId || removingId) return;
+
+        setRemovingId(courseId);
+        const previousWishlist = [...wishlist];
+
+        // Optimistic update
+        setWishlist((prev) => prev.filter((item) => item.course?.id !== courseId));
 
         const formdata = new FormData();
         formdata.append("course_id", courseId);
-        formdata.append("user_id", UserData()?.user_id);
+        formdata.append("user_id", userData?.user_id);
 
         try {
-            const response = await useAxios.post(`student/wishlist/${UserData()?.user_id}/`, formdata);
-            
+            const response = await useAxios.post(`student/wishlist/${userData?.user_id}/`, formdata);
+
             Toast().fire({
                 icon: "success",
-                title: response.data.message
+                title: "Dihapus dari Daftar Keinginan",
+                text: courseTitle ? `"${courseTitle}" telah dihapus` : response.data?.message,
+                timer: 1800,
             });
-            
-            // Refresh the wishlist
-            fetchWishlist();
-            refreshWishlistCount();
-        } catch (error) {
+
+            if (refreshWishlistCount) {
+                refreshWishlistCount();
+            }
+            if (refetch) {
+                refetch();
+            }
+        } catch (err) {
+            console.error("Gagal menghapus kursus dari wishlist:", err);
+            // Rollback on failure
+            setWishlist(previousWishlist);
             Toast().fire({
                 icon: "error",
-                title: "Terjadi kesalahan"
+                title: "Gagal menghapus",
+                text: "Terjadi kesalahan saat memperbarui daftar keinginan.",
             });
+        } finally {
+            setRemovingId(null);
         }
     };
 
-    if (loading) {
-        return (
-            <>
-                <BaseHeader />
-                <section className="modern-wishlist-page" style={{ minHeight: 'calc(100vh - 120px)' }}>
-                    <div className="container">
-                        <Header />
-                        <div className="row mt-0">
-                            <Sidebar />
-                            <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-                                <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
-                                        <span className="visually-hidden">Sedang memuat...</span>
-                                    </div>
-                                    <p className="mt-3 text-muted">Memuat Wishlist...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <Footer />
-            </>
-        );
-    }
+    // Calculate total JP across all wishlist items
+    const totalWishlistJP = useMemo(() => {
+        return wishlist.reduce((acc, curr) => {
+            return acc + calculateTotalJP(curr.course?.lectures);
+        }, 0);
+    }, [wishlist, calculateTotalJP]);
+
+    // Extract unique categories available in current wishlist
+    const uniqueCategories = useMemo(() => {
+        const cats = new Set();
+        wishlist.forEach((item) => {
+            const title = item.course?.category?.title;
+            if (title) cats.add(title);
+        });
+        return Array.from(cats);
+    }, [wishlist]);
+
+    // Filter and sort wishlist items
+    const filteredWishlist = useMemo(() => {
+        let list = [...wishlist];
+
+        // Search query filter (title, instructor, category)
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase().trim();
+            list = list.filter((w) => {
+                const title = (w.course?.title || "").toLowerCase();
+                const teacher = (w.course?.teacher?.full_name || "").toLowerCase();
+                const category = (w.course?.category?.title || "").toLowerCase();
+                return title.includes(q) || teacher.includes(q) || category.includes(q);
+            });
+        }
+
+        // Category filter
+        if (selectedCategory !== "all") {
+            list = list.filter((w) => w.course?.category?.title === selectedCategory);
+        }
+
+        // Level filter
+        if (selectedLevel !== "all") {
+            list = list.filter((w) => {
+                const lvl = (w.course?.level || "").toLowerCase();
+                return lvl.includes(selectedLevel.toLowerCase());
+            });
+        }
+
+        // Sorting
+        list.sort((a, b) => {
+            if (sortBy === "title-asc") {
+                return (a.course?.title || "").localeCompare(b.course?.title || "");
+            }
+            if (sortBy === "rating-desc") {
+                return (b.course?.average_rating || 0) - (a.course?.average_rating || 0);
+            }
+            if (sortBy === "jp-desc") {
+                return calculateTotalJP(b.course?.lectures) - calculateTotalJP(a.course?.lectures);
+            }
+            // default 'newest'
+            return (b.id || 0) - (a.id || 0);
+        });
+
+        return list;
+    }, [wishlist, searchQuery, selectedCategory, selectedLevel, sortBy, calculateTotalJP]);
+
+    // Reset all search and dropdown filters
+    const clearAllFilters = () => {
+        setSearchQuery("");
+        setSelectedCategory("all");
+        setSelectedLevel("all");
+        setSortBy("newest");
+    };
+
+    const hasActiveFilters = searchQuery.trim() !== "" || selectedCategory !== "all" || selectedLevel !== "all" || sortBy !== "newest";
 
     return (
         <>
@@ -146,177 +233,520 @@ function Wishlist() {
                     <div className="row mt-0">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
-                            {/* Page Header */}
-                            <div className="page-header-card">
-                                <div className="page-header-content">
-                                    <div className="row align-items-center">
-                                        <div className="col-lg-8">
-                                            <h1 className="mb-3 fw-bold d-flex align-items-center">
-                                                <i className="fas fa-heart me-3" style={{ fontSize: '2.5rem' }}></i>
-                                                Daftar Keinginan Saya
-                                            </h1>
-                                            <p className="mb-0 opacity-90 lead">
-                                                Koleksi kursus tersimpan Anda. Lacak kursus yang ingin Anda ambil nanti.
-                                            </p>
+                            {/* =========================================================================
+                                1. COMPACT HERO SECTION (DPD RI Theme, Glowing Accent, Stat Chips)
+                                ========================================================================= */}
+                            <div className="wishlist-hero-card">
+                                <div className="wishlist-hero-accent-shape"></div>
+                                <div className="wishlist-hero-inner">
+                                    <div className="wishlist-hero-content">
+                                        <div className="wishlist-hero-badge">
+                                            <i className="fas fa-landmark text-amber"></i>
+                                            <span>Setjen DPD RI • E-Learning Platform</span>
                                         </div>
-                                        <div className="col-lg-4">
-                                            <div className="stat-card-header-wrapper">
-                                                <div className="stat-card-header">
-                                                    <div className="stat-number justify-content-end">
-                                                        {wishlist?.length || 0}
-                                                    </div>
-                                                    <div className="stat-label">Kursus Tersimpan</div>
-                                                </div>
+                                        <h1 className="wishlist-hero-title">
+                                            <i className="fas fa-heart text-danger me-2"></i>
+                                            Daftar Keinginan Saya
+                                        </h1>
+                                        <p className="wishlist-hero-desc">
+                                            Kelola kursus pilihan Anda untuk perencanaan pengembangan kompetensi ASN yang berkelanjutan.
+                                        </p>
+                                    </div>
+
+                                    {/* Compact Stat Chips */}
+                                    <div className="wishlist-hero-stats">
+                                        <div className="wishlist-stat-chip" title="Total kursus tersimpan dalam wishlist">
+                                            <div className="wishlist-stat-chip-icon stat-icon-rose">
+                                                <i className="fas fa-heart"></i>
+                                            </div>
+                                            <div className="wishlist-stat-chip-text">
+                                                <span className="wishlist-stat-chip-val">{wishlist?.length || 0}</span>
+                                                <span className="wishlist-stat-chip-lbl">Kursus Tersimpan</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="wishlist-stat-chip" title="Estimasi jam pelajaran dari seluruh kursus tersimpan">
+                                            <div className="wishlist-stat-chip-icon stat-icon-amber">
+                                                <i className="fas fa-clock"></i>
+                                            </div>
+                                            <div className="wishlist-stat-chip-text">
+                                                <span className="wishlist-stat-chip-val">{totalWishlistJP} JP</span>
+                                                <span className="wishlist-stat-chip-lbl">Total Pembelajaran</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="wishlist-stat-chip" title="Variasi bidang kompetensi kursus">
+                                            <div className="wishlist-stat-chip-icon stat-icon-teal">
+                                                <i className="fas fa-layer-group"></i>
+                                            </div>
+                                            <div className="wishlist-stat-chip-text">
+                                                <span className="wishlist-stat-chip-val">{uniqueCategories.length}</span>
+                                                <span className="wishlist-stat-chip-lbl">Bidang Kategori</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* =========================================================================
+                                2. COMPACT SEARCH & CONTROL TOOLBAR (Zero Wasted Space)
+                                ========================================================================= */}
+                            <div className="wishlist-toolbar">
+                                <div className="wishlist-toolbar-row">
+                                    {/* Search Input */}
+                                    <div className="wishlist-search-wrap">
+                                        <i className="fas fa-search wishlist-search-icon"></i>
+                                        <input
+                                            type="text"
+                                            className="form-control wishlist-search-input"
+                                            placeholder="Cari kursus tersimpan, kategori, atau pengajar..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                type="button"
+                                                className="wishlist-search-clear"
+                                                onClick={() => setSearchQuery("")}
+                                                title="Hapus pencarian"
+                                                aria-label="Hapus pencarian"
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Filters & View Controls */}
+                                    <div className="wishlist-filter-group">
+                                        {/* Category Select */}
+                                        {uniqueCategories.length > 0 && (
+                                            <div className="wishlist-select-wrap">
+                                                <i className="fas fa-folder-open wishlist-select-icon"></i>
+                                                <select
+                                                    className="form-select wishlist-select"
+                                                    value={selectedCategory}
+                                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                                    title="Filter berdasarkan kategori"
+                                                    aria-label="Filter kategori"
+                                                >
+                                                    <option value="all">Semua Kategori</option>
+                                                    {uniqueCategories.map((cat) => (
+                                                        <option key={cat} value={cat}>
+                                                            {cat}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+
+                                        {/* Level Select */}
+                                        <div className="wishlist-select-wrap">
+                                            <i className="fas fa-layer-group wishlist-select-icon"></i>
+                                            <select
+                                                className="form-select wishlist-select"
+                                                value={selectedLevel}
+                                                onChange={(e) => setSelectedLevel(e.target.value)}
+                                                title="Filter tingkat kesulitan"
+                                                aria-label="Filter tingkat kesulitan"
+                                            >
+                                                <option value="all">Semua Tingkat</option>
+                                                <option value="beginner">Pemula</option>
+                                                <option value="intermediate">Menengah</option>
+                                                <option value="advanced">Lanjutan</option>
+                                                <option value="expert">Ahli</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Sort Select */}
+                                        <div className="wishlist-select-wrap">
+                                            <i className="fas fa-arrow-down-short-wide wishlist-select-icon"></i>
+                                            <select
+                                                className="form-select wishlist-select"
+                                                value={sortBy}
+                                                onChange={(e) => setSortBy(e.target.value)}
+                                                title="Urutkan daftar kursus"
+                                                aria-label="Urutkan daftar kursus"
+                                            >
+                                                <option value="newest">Terbaru Disimpan</option>
+                                                <option value="title-asc">Judul (A-Z)</option>
+                                                <option value="rating-desc">Rating Tertinggi</option>
+                                                <option value="jp-desc">JP Terbanyak</option>
+                                            </select>
+                                        </div>
+
+                                        {/* View Switcher: Grid vs List */}
+                                        <div className="wishlist-view-toggle" role="group" aria-label="Mode Tampilan">
+                                            <button
+                                                type="button"
+                                                className={`wishlist-view-btn ${viewMode === "grid" ? "active" : ""}`}
+                                                onClick={() => {
+                                                    setViewMode("grid");
+                                                    localStorage.setItem("studentWishlistViewMode", "grid");
+                                                }}
+                                                title="Tampilan Galeri Kartu"
+                                                aria-label="Tampilan Galeri Kartu"
+                                            >
+                                                <i className="fas fa-grip"></i>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`wishlist-view-btn ${viewMode === "list" ? "active" : ""}`}
+                                                onClick={() => {
+                                                    setViewMode("list");
+                                                    localStorage.setItem("studentWishlistViewMode", "list");
+                                                }}
+                                                title="Tampilan Daftar Rapi"
+                                                aria-label="Tampilan Daftar Rapi"
+                                            >
+                                                <i className="fas fa-list-ul"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Active Filters Status Bar */}
+                                <div className="wishlist-toolbar-meta">
+                                    <div className="wishlist-meta-count">
+                                        <span className="badge-count-pill">{filteredWishlist.length}</span>
+                                        <span>
+                                            kursus ditampilkan
+                                            {wishlist.length !== filteredWishlist.length && (
+                                                <span className="text-muted ms-1">(dari total {wishlist.length} tersimpan)</span>
+                                            )}
+                                        </span>
+                                    </div>
+
+                                    <div className="d-flex align-items-center gap-2">
+                                        {hasActiveFilters && (
+                                            <button
+                                                type="button"
+                                                className="wishlist-btn-reset-filter"
+                                                onClick={clearAllFilters}
+                                            >
+                                                <i className="fas fa-rotate-left me-1"></i>
+                                                Reset Filter
+                                            </button>
+                                        )}
+
+                                        <Link to="/search" className="wishlist-btn-catalog" title="Buka katalog lengkap">
+                                            <i className="fas fa-compass me-1"></i>
+                                            <span>Jelajahi Katalog</span>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* =========================================================================
+                                3. CONTENT AREA (Loading, Error, Empty, Grid, List)
+                                ========================================================================= */}
+
+                            {/* Loading State */}
+                            {loading && (
+                                <div className="wishlist-cards-grid mb-4">
+                                    {[1, 2, 3].map((n) => (
+                                        <div className="wishlist-compact-card wishlist-skeleton-card" key={n}>
+                                            <div className="skeleton-thumb"></div>
+                                            <div className="wishlist-card-content p-3">
+                                                <div className="skeleton-line sm mb-2"></div>
+                                                <div className="skeleton-line lg mb-2"></div>
+                                                <div className="skeleton-line md mb-3"></div>
+                                                <div className="skeleton-line sm"></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             {/* Error State */}
-                            {error && (
-                                <div className="empty-state">
-                                    <i className="fas fa-exclamation-triangle empty-icon text-warning"></i>
-                                    <h4 className="text-muted mb-3">Oops! Terjadi kesalahan</h4>
-                                    <p className="text-muted mb-4">{error}</p>
-                                    <button 
-                                        onClick={fetchWishlist} 
-                                        className="btn btn-modern"
+                            {error && !loading && (
+                                <div className="alert alert-danger d-flex align-items-center justify-content-between p-3 rounded-4 mb-4" role="alert">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <i className="fas fa-circle-exclamation fs-5 text-danger"></i>
+                                        <span>{error}</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() => refetch && refetch()}
                                     >
-                                        <i className="fas fa-refresh me-2"></i>
+                                        <i className="fas fa-rotate-right me-1"></i>
                                         Coba Lagi
                                     </button>
                                 </div>
                             )}
-                            
-                            {/* Wishlist Content */}
-                            {!error && (
+
+                            {/* Wishlist Data Loaded */}
+                            {!loading && !error && (
                                 <>
-                                    {wishlist?.length > 0 ? (
-                                        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                                            {wishlist.map((w, index) => (
-                                                <div className="col" key={w.id || index}>
-                                                    <div className="wishlist-card d-flex flex-column h-100">
-                                                        {/* Course Image */}
-                                                        <div className="position-relative" style={{ borderRadius: '20px 20px 0 0', overflow: 'hidden' }}>
-                                                            <Link to={`/course-detail/${w.course?.slug || '#'}/`}>
+                                    {wishlist.length === 0 ? (
+                                        /* Empty State: Wishlist is completely empty */
+                                        <div className="wishlist-empty-card">
+                                            <div className="wishlist-empty-icon-wrap">
+                                                <i className="fas fa-heart"></i>
+                                            </div>
+                                            <h3 className="wishlist-empty-title">Daftar Keinginan Anda Masih Kosong</h3>
+                                            <p className="wishlist-empty-desc">
+                                                Anda belum menyimpan kursus apapun. Temukan beragam kursus berkualitas di katalog LMSetjen DPD RI dan klik ikon hati untuk menyimpannya di sini.
+                                            </p>
+                                            <Link to="/search" className="btn-wishlist-explore">
+                                                <i className="fas fa-compass me-2"></i>
+                                                <span>Jelajahi Katalog Kursus</span>
+                                            </Link>
+                                        </div>
+                                    ) : filteredWishlist.length === 0 ? (
+                                        /* Empty State: Filter or search returned 0 results */
+                                        <div className="wishlist-empty-card">
+                                            <div className="wishlist-empty-icon-wrap filter-empty">
+                                                <i className="fas fa-search"></i>
+                                            </div>
+                                            <h3 className="wishlist-empty-title">Tidak Ditemukan Kursus yang Sesuai</h3>
+                                            <p className="wishlist-empty-desc">
+                                                Tidak ada kursus tersimpan yang cocok dengan filter atau kata kunci pencarian Anda.
+                                            </p>
+                                            <button
+                                                type="button"
+                                                className="btn-wishlist-explore"
+                                                onClick={clearAllFilters}
+                                            >
+                                                <i className="fas fa-rotate-left me-2"></i>
+                                                <span>Reset Filter Pencarian</span>
+                                            </button>
+                                        </div>
+                                    ) : viewMode === "grid" ? (
+                                        /* =========================================================================
+                                           GRID VIEW (Compact Cards, Proportional 155px Image)
+                                           ========================================================================= */
+                                        <div className="wishlist-cards-grid mb-4">
+                                            {filteredWishlist.map((w, index) => {
+                                                const course = w.course || {};
+                                                const levelBadge = getLevelBadge(course.level);
+                                                const courseJP = calculateTotalJP(course.lectures);
+                                                const isRemoving = removingId === course.id;
+
+                                                return (
+                                                    <div className={`wishlist-compact-card ${isRemoving ? "removing" : ""}`} key={w.id || index}>
+                                                        {/* Course Thumbnail */}
+                                                        <div className="wishlist-thumb-wrapper">
+                                                            <Link
+                                                                to={`/course-detail/${course.slug || "#"}/`}
+                                                                className="wishlist-thumb-link"
+                                                                title={course.title}
+                                                            >
                                                                 <img
-                                                                    src={getImageUrl(w.course?.image)}
-                                                                    alt={w.course?.title || "Kursus"}
-                                                                    className="course-image"
+                                                                    src={getImageUrl(course.image)}
+                                                                    alt={course.title || "Kursus"}
+                                                                    className="wishlist-thumb-img"
                                                                     loading="lazy"
                                                                     decoding="async"
                                                                     onError={(e) => {
                                                                         e.target.src = "/images/placeholders/default-course.svg";
                                                                     }}
                                                                 />
+                                                                <div className="wishlist-thumb-overlay">
+                                                                    <span className="thumb-view-badge">
+                                                                        <i className="fas fa-arrow-right"></i>
+                                                                    </span>
+                                                                </div>
                                                             </Link>
-                                                            {/* Wishlist Button */}
-                                                            <button 
-                                                                onClick={() => addToWishlist(w.course?.id)} 
-                                                                className="wishlist-btn position-absolute"
-                                                                type="button"
-                                                                title={isCourseInWishlist(w.course?.id) ? "Hapus dari daftar keinginan" : "Tambah ke daftar keinginan"}
-                                                                style={{
-                                                                    top: '15px',
-                                                                    right: '15px'
-                                                                }}
+
+                                                            {/* Category Pill Floating Top-Left */}
+                                                            <span
+                                                                className="wishlist-category-pill"
+                                                                title={course.category?.title || "Umum"}
                                                             >
-                                                                <i className={`${isCourseInWishlist(w.course?.id) ? 'fas' : 'far'} fa-heart text-danger`} />
+                                                                <i className="fas fa-folder-open me-1"></i>
+                                                                <span>{course.category?.title || "Umum"}</span>
+                                                            </span>
+
+                                                            {/* Remove Wishlist Button Floating Top-Right */}
+                                                            <button
+                                                                type="button"
+                                                                className="wishlist-remove-btn"
+                                                                onClick={(e) => handleRemove(course.id, course.title, e)}
+                                                                title="Hapus dari daftar keinginan"
+                                                                aria-label="Hapus dari daftar keinginan"
+                                                                disabled={isRemoving}
+                                                            >
+                                                                {isRemoving ? (
+                                                                    <span className="spinner-border spinner-border-sm text-danger" role="status"></span>
+                                                                ) : (
+                                                                    <i className="fas fa-heart text-danger"></i>
+                                                                )}
                                                             </button>
                                                         </div>
 
-                                                        {/* Card Body */}
-                                                        <div className="wishlist-card-body p-3 ">
-                                                            {/* Badges */}
-                                                            <div className="d-flex flex-wrap gap-2 mb-2" style={{ maxWidth: '100%' }}>
-                                                                <span className="badge badge-modern">
-                                                                    <i className="fas fa-folder-open"></i>
-                                                                    <span className="badge-text">{w.course?.category?.title || 'Umum'}</span>
+                                                        {/* Card Content */}
+                                                        <div className="wishlist-card-content">
+                                                            {/* Badges: Level & JP */}
+                                                            <div className="wishlist-badges-row">
+                                                                <span className={`wishlist-badge ${levelBadge.tone}`}>
+                                                                    <i className={`fas ${levelBadge.icon} me-1`}></i>
+                                                                    {levelBadge.label}
                                                                 </span>
-                                                                <span className="badge badge-level">
-                                                                    <span className="badge-text">{getLevelText(w.course?.level)}</span>
-                                                                </span>
-                                                                {/* ✨ PHASE 4.77: Display Kursus JP */}
-                                                                {w.course?.lectures && w.course?.lectures.length > 0 && (
-                                                                    <span className="badge badge-jp">
-                                                                        <i className="fas fa-clock"></i>
-                                                                        <span className="badge-text">{calculateTotalJP(w.course?.lectures)} JP</span>
+                                                                {courseJP > 0 && (
+                                                                    <span className="wishlist-badge badge-jp" title={`Total durasi: ${courseJP} Jam Pelajaran`}>
+                                                                        <i className="fas fa-clock me-1"></i>
+                                                                        {courseJP} JP
                                                                     </span>
                                                                 )}
                                                             </div>
 
                                                             {/* Course Title */}
-                                                            <h5 className="card-title mb-3" style={{ lineHeight: '1.4' }}>
-                                                                <Link 
-                                                                    to={`/course-detail/${w.course?.slug || '#'}/`} 
-                                                                    className="text-decoration-none"
-                                                                    style={{ 
-                                                                        color: '#343a40',
-                                                                        display: '-webkit-box',
-                                                                        WebkitLineClamp: '2',
-                                                                        WebkitBoxOrient: 'vertical',
-                                                                        overflow: 'hidden'
-                                                                    }}
+                                                            <h3 className="wishlist-card-title">
+                                                                <Link
+                                                                    to={`/course-detail/${course.slug || "#"}/`}
+                                                                    title={course.title}
                                                                 >
-                                                                    {w.course?.title || 'Judul Kursus Tidak Tersedia'}
+                                                                    {course.title || "Judul Kursus Tidak Tersedia"}
                                                                 </Link>
-                                                            </h5>
+                                                            </h3>
 
-                                                            {/* Course Meta */}
-                                                            <div className="mb-3">
-                                                                <small className="text-muted d-block mb-2">
-                                                                    <i className="fas fa-user me-1" style={{ color: '#0d9488' }}></i>
-                                                                    Oleh: {w.course?.teacher?.full_name || 'Instruktur Tidak Diketahui'}
-                                                                </small>
-                                                                
-                                                                {/* Students & Rating Row */}
-                                                                <div className="d-flex justify-content-between align-items-center">
-                                                                    <small className="text-muted">
-                                                                        <i className="fas fa-users me-1" style={{ color: '#0d9488' }}></i>
-                                                                        {w.course?.students?.length || 0} Siswa{(w.course?.students?.length || 0) !== 1 && "s"}
-                                                                    </small>
-                                                                    
-                                                                    <div className="d-flex align-items-center gap-2">
-                                                                        <Rating
-                                                                            initialValue={w.course?.average_rating || 0}
-                                                                            readonly={true}
-                                                                            size={16}
-                                                                            fillColor="#ffc107"
-                                                                            emptyColor="#e4e5e9"
-                                                                        />
-                                                                        <span className="text-warning fw-medium">{w.course?.average_rating || 0}</span>
-                                                                        <small className="text-muted">({w.course?.reviews?.length || 0} ulasan)</small>
-                                                                    </div>
+                                                            {/* Instructor */}
+                                                            <div className="wishlist-instructor-row">
+                                                                <i className="fas fa-user-tie text-teal me-1"></i>
+                                                                <span className="instructor-name text-truncate">
+                                                                    {course.teacher?.full_name || "Instruktur Setjen DPD RI"}
+                                                                </span>
+                                                            </div>
+
+                                                            {/* Metrics: Rating & Students */}
+                                                            <div className="wishlist-metrics-row">
+                                                                <div className="wishlist-rating-wrap">
+                                                                    <i className="fas fa-star text-warning"></i>
+                                                                    <span className="rating-score">
+                                                                        {Number(course.average_rating || 0).toFixed(1)}
+                                                                    </span>
+                                                                    <span className="rating-count">
+                                                                        ({course.reviews?.length || 0})
+                                                                    </span>
+                                                                </div>
+                                                                <div className="wishlist-students-wrap">
+                                                                    <i className="fas fa-users text-teal"></i>
+                                                                    <span>{course.students?.length || 0} siswa</span>
                                                                 </div>
                                                             </div>
                                                         </div>
 
                                                         {/* Card Footer */}
-                                                        <div className="card-footer bg-transparent border-0 p-3 pt-0 mt-auto">
-                                                            <Link 
-                                                                to={`/course-detail/${w.course?.slug || '#'}/`} 
-                                                                className="btn btn-modern"
+                                                        <div className="wishlist-card-footer">
+                                                            <Link
+                                                                to={`/course-detail/${course.slug || "#"}/`}
+                                                                className="btn-wishlist-primary"
                                                             >
-                                                                <i className="fas fa-eye me-2"></i>
-                                                                Lihat Detail
+                                                                <span>Lihat Detail Kursus</span>
+                                                                <i className="fas fa-chevron-right ms-1"></i>
                                                             </Link>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     ) : (
-                                        <div className="empty-state">
-                                            <i className="fas fa-heart empty-icon"></i>
-                                            <h4 className="text-muted mb-3">Daftar Keinginan Anda Kosong</h4>
-                                            <p className="text-muted mb-4">
-                                                Anda belum menyimpan kursus apapun. Jelajahi katalog kursus kami dan simpan kursus yang Anda minati!
-                                            </p>
-                                            <Link to="/search" className="wishlist-empty-link-btn">
-                                                <i className="fas fa-search"></i>
-                                                <span>Jelajahi Kursus</span>
-                                            </Link>
+                                        /* =========================================================================
+                                           LIST VIEW (Ultra-Compact Rows, Maximum Space Efficiency)
+                                           ========================================================================= */
+                                        <div className="wishlist-list-container mb-4">
+                                            {filteredWishlist.map((w, index) => {
+                                                const course = w.course || {};
+                                                const levelBadge = getLevelBadge(course.level);
+                                                const courseJP = calculateTotalJP(course.lectures);
+                                                const isRemoving = removingId === course.id;
+
+                                                return (
+                                                    <div
+                                                        className={`wishlist-list-item ${isRemoving ? "removing" : ""}`}
+                                                        key={w.id || index}
+                                                    >
+                                                        {/* Thumbnail */}
+                                                        <div className="wishlist-list-thumb">
+                                                            <Link to={`/course-detail/${course.slug || "#"}/`}>
+                                                                <img
+                                                                    src={getImageUrl(course.image)}
+                                                                    alt={course.title || "Kursus"}
+                                                                    className="list-thumb-img"
+                                                                    loading="lazy"
+                                                                    onError={(e) => {
+                                                                        e.target.src = "/images/placeholders/default-course.svg";
+                                                                    }}
+                                                                />
+                                                                <div className="list-thumb-overlay">
+                                                                    <i className="fas fa-play"></i>
+                                                                </div>
+                                                            </Link>
+                                                            {courseJP > 0 && (
+                                                                <span className="list-thumb-jp">
+                                                                    {courseJP} JP
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Info */}
+                                                        <div className="wishlist-list-info">
+                                                            <div className="wishlist-list-badges">
+                                                                <span className="wishlist-badge badge-category-sm">
+                                                                    <i className="fas fa-folder-open me-1"></i>
+                                                                    {course.category?.title || "Umum"}
+                                                                </span>
+                                                                <span className={`wishlist-badge ${levelBadge.tone}`}>
+                                                                    <i className={`fas ${levelBadge.icon} me-1`}></i>
+                                                                    {levelBadge.label}
+                                                                </span>
+                                                            </div>
+
+                                                            <h4 className="wishlist-list-title">
+                                                                <Link to={`/course-detail/${course.slug || "#"}/`}>
+                                                                    {course.title}
+                                                                </Link>
+                                                            </h4>
+
+                                                            <div className="wishlist-list-meta">
+                                                                <span className="meta-item">
+                                                                    <i className="fas fa-user-tie text-teal me-1"></i>
+                                                                    {course.teacher?.full_name || "Instruktur Setjen DPD RI"}
+                                                                </span>
+                                                                <span className="meta-dot">•</span>
+                                                                <span className="meta-item">
+                                                                    <i className="fas fa-star text-warning me-1"></i>
+                                                                    <strong>{Number(course.average_rating || 0).toFixed(1)}</strong> ({course.reviews?.length || 0} ulasan)
+                                                                </span>
+                                                                <span className="meta-dot">•</span>
+                                                                <span className="meta-item">
+                                                                    <i className="fas fa-users text-teal me-1"></i>
+                                                                    {course.students?.length || 0} siswa
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Actions */}
+                                                        <div className="wishlist-list-actions">
+                                                            <Link
+                                                                to={`/course-detail/${course.slug || "#"}/`}
+                                                                className="btn-wishlist-primary list-btn-primary"
+                                                            >
+                                                                <span>Lihat Detail</span>
+                                                                <i className="fas fa-chevron-right ms-1"></i>
+                                                            </Link>
+                                                            <button
+                                                                type="button"
+                                                                className="btn-wishlist-remove-outline"
+                                                                onClick={(e) => handleRemove(course.id, course.title, e)}
+                                                                title="Hapus dari daftar keinginan"
+                                                                aria-label="Hapus dari daftar keinginan"
+                                                                disabled={isRemoving}
+                                                            >
+                                                                {isRemoving ? (
+                                                                    <span className="spinner-border spinner-border-sm" role="status"></span>
+                                                                ) : (
+                                                                    <>
+                                                                        <i className="fas fa-trash-alt"></i>
+                                                                        <span className="d-none d-sm-inline ms-1">Hapus</span>
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </>

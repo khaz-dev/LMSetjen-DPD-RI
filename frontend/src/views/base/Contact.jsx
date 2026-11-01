@@ -66,7 +66,10 @@ function Contact() {
   const mailtoHref = `mailto:sdm@dpd.go.id?subject=${encodeURIComponent(`[LMSetjen DPD RI] ${inquiryTopic}`)}${inquiryNotes ? `&body=${encodeURIComponent(inquiryNotes)}` : ""}`;
 
   return (
-    <div className="contact-page-wrapper">
+    <div 
+      className="contact-page-wrapper"
+      style={{ '--header-height': `${headerHeight}px` }}
+    >
       <BaseHeader />
 
       {/* HERO SLOT ANCHOR PREVENTS LAYOUT SHIFT */}

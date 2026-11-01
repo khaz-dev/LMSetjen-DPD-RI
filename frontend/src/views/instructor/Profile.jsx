@@ -291,6 +291,10 @@ function Profile() {
                 const teacherRes = await useAxios.get(`teacher/profile/${userId}/`);
                 if (teacherRes.data) {
                     tData = teacherRes.data;
+                    try {
+                        localStorage.setItem("instructor_cached_teacher", JSON.stringify(teacherRes.data));
+                        window.dispatchEvent(new CustomEvent("instructorTeacherProfileUpdated", { detail: teacherRes.data }));
+                    } catch (e) {}
                     const teacherId = teacherRes.data.id || userId;
                     try {
                         const summaryRes = await useAxios.get(`teacher/summary/${teacherId}/`);
@@ -402,7 +406,7 @@ function Profile() {
             const hasTeacherFields = Object.keys(dataToSave).some((k) => teacherFields.includes(k));
             if (hasTeacherFields) {
                 try {
-                    await useAxios.patch(`teacher/profile-update/${userId}/`, {
+                    const teacherPayload = {
                         bio: dataToSave.bio ?? profileData.bio ?? "",
                         facebook: dataToSave.facebook ?? profileData.facebook ?? "",
                         twitter: dataToSave.twitter ?? profileData.twitter ?? "",
@@ -410,7 +414,9 @@ function Profile() {
                         youtube: dataToSave.youtube ?? profileData.youtube ?? "",
                         instagram: dataToSave.instagram ?? profileData.instagram ?? "",
                         tiktok: dataToSave.tiktok ?? profileData.tiktok ?? ""
-                    });
+                    };
+                    await useAxios.patch(`teacher/profile-update/${userId}/`, teacherPayload);
+                    window.dispatchEvent(new CustomEvent("instructorTeacherProfileUpdated", { detail: teacherPayload }));
                 } catch (tErr) {
                     console.warn("Catatan sinkronisasi instruktur:", tErr);
                 }

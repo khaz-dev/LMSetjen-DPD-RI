@@ -1,18 +1,19 @@
 /* ✨ PHASE 4.10: Instructor Testimonials Page Styles */
 
+/* Page Spacing - Tightened to match Profile page spacing precisely */
 .instructor-testimonials-page {
     background: transparent;
     min-height: 100vh;
-    padding: var(--page-top-spacing, 1.5rem) 0;
-    padding-top: var(--page-top-spacing, 1.5rem) !important;
-    padding-bottom: var(--page-bottom-spacing, 2rem) !important;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
+    margin-bottom: 2rem !important;
     margin-top: 0 !important;
     overflow: visible !important;
     overflow-x: clip; /* Clip horizontal overflow without creating a scroll container that breaks position: sticky */
 }
 
-/* Adaptive Layout for Sidebar Collapse - MUST match Profile.css structure */
-.instructor-testimonials-page > .container > .row {
+/* Sidebar & Layout Compatibility - Matches Profile.css structure */
+.instructor-testimonials-page > .container > .row:not(.instructor-header-row) {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap;
@@ -29,12 +30,37 @@
     max-width: 100% !important;
 }
 
-.instructor-testimonials-page > .container > .instructor-header-row {
+/* Ensure Header Row is 100% flush on left and right, aligning with the content row below */
+.instructor-testimonials-page .row.instructor-header-row {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
     position: relative;
     z-index: 102;
 }
 
+.instructor-testimonials-page .row.instructor-header-row > .col-xl-12,
+.instructor-testimonials-page .row.instructor-header-row > .col-lg-12,
+.instructor-testimonials-page .row.instructor-header-row > .col-md-12,
+.instructor-testimonials-page .row.instructor-header-row > .col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
 .instructor-testimonials-page .instructor-header-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     overflow: visible !important;
 }
 

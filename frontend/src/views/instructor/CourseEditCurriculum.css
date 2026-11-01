@@ -4,12 +4,31 @@
 
 /* CRITICAL: Force instructor-course-edit-curriculum-page padding to be overridable by pt-5 and pb-5 classes */
 /* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
+/* Page Spacing - Tightened to match Profile & CourseEdit page spacing precisely */
+.instructor-course-edit-curriculum-page {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    min-height: 100vh;
+    background: transparent;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
+    margin-bottom: 2rem !important;
+    margin-top: 0 !important;
+    overflow: visible !important;
+    overflow-x: clip; /* Clip horizontal overflow without creating a scroll container that breaks position: sticky */
+}
+
 .instructor-course-edit-curriculum-page.pt-5 {
-    padding-top: 50px !important;
+    padding-top: 1rem !important;
 }
 
 .instructor-course-edit-curriculum-page.pb-5 {
-    padding-bottom: 3rem !important;
+    padding-bottom: 2.5rem !important;
 }
 
 /* ========================================
@@ -21,26 +40,8 @@
     position: relative;
 }
 
-/* Add proper bottom padding for footer spacing */
-.instructor-course-edit-curriculum-page {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block !important;
-    margin-bottom: 2.5rem !important;
-    min-height: 100vh;
-    background: transparent;
-    padding: var(--page-top-spacing, 1.25rem) 0;
-    padding-top: 1.25rem !important;
-    padding-bottom: 2.5rem !important;
-    padding-left: 0 !important;
-    overflow: visible !important;
-    overflow-x: clip; /* Clip horizontal overflow without creating a scroll container that breaks position: sticky */
-}
-
 /* ✨ Main layout row (direct child of container) - matches Testimonials pattern */
-.instructor-course-edit-curriculum-page > .container > .row {
+.instructor-course-edit-curriculum-page > .container > .row:not(.instructor-header-row) {
     flex-wrap: nowrap;
     width: 100%;
     margin-left: 0 !important;
@@ -81,6 +82,14 @@
     padding-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+}
+
+.instructor-course-edit-curriculum-page .instructor-header-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow: visible !important;
 }
 
 .instructor-course-edit-curriculum-page .row > [class*="col-"] {

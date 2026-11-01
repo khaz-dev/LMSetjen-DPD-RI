@@ -4,37 +4,50 @@
    ========================================================================== */
 
 /* Main Page Container & Layout Overrides */
+/* Page Spacing - Tightened to match Profile page spacing precisely */
 .courses-container {
     margin-left: 0 !important;
     margin-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
-    margin-bottom: 2.5rem !important; /* Reduced from 8rem to eliminate massive whitespace */
-    min-height: calc(100vh - 200px);
+    min-height: 100vh;
     background: transparent;
-    padding: var(--page-top-spacing, 20px) 0;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
+    margin-bottom: 2rem !important;
+    margin-top: 0 !important;
     overflow: visible !important;
 }
 
 .courses-container.pt-5 {
-    padding-top: 50px !important;
+    padding-top: 1rem !important;
 }
 
 .courses-container.pb-5 {
-    padding-bottom: 2rem !important;
+    padding-bottom: 2.5rem !important;
 }
 
-.courses-container .container {
+.courses-container .container,
+.courses-container > .container {
     overflow: visible !important;
     display: flex !important;
     flex-direction: column !important;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
 }
 
 /* ========================================
    CRITICAL LAYOUT FIX - Row & Column Alignment
    ======================================== */
-.courses-container > .container > .row:not(.instructor-header-row) {
+.courses-container > .container > .row:not(.instructor-header-row),
+.courses-container .container > .row:not(.instructor-header-row),
+.courses-container .row.courses-sidebar-content-row,
+.courses-container .row.courses-sidebar-content-row-loading {
     flex-wrap: nowrap;
     width: 100% !important;
     margin-left: 0 !important;
@@ -45,7 +58,7 @@
     overflow: visible !important;
 }
 
-.courses-container .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(:has(.instructor-sidebar-column)) {
+.courses-container .row:not(.instructor-header-row):not(.instructor-header-main-row):not(.instructor-header-details-row):not(.instructor-header-details-items-row):not(:has(.instructor-sidebar-column)):not(.courses-sidebar-content-row):not(.courses-sidebar-content-row-loading) {
     margin-bottom: 0;
     margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
     margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
@@ -93,22 +106,38 @@
     max-width: 100% !important;
 }
 
-.courses-container .row:has(.instructor-sidebar-column) > .col-lg-9 {
+.courses-container .instructor-header-card {
+    width: 100% !important;
+    max-width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
-    flex: 1 1 auto !important;
+    overflow: visible !important;
 }
 
-.courses-container .row:has(.instructor-sidebar-column) > .col-md-8 {
+.courses-container .row:has(.instructor-sidebar-column) > .col-lg-9,
+.courses-container .row.courses-sidebar-content-row > .col-lg-9,
+.courses-container > .container > .row > .col-lg-9,
+.courses-container .container > .row > .col-lg-9 {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
     width: calc(100% - var(--bs-gutter-x, 24px)) !important;
     flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.courses-container .row:has(.instructor-sidebar-column) > .col-md-8,
+.courses-container .row.courses-sidebar-content-row > .col-md-8,
+.courses-container > .container > .row > .col-md-8,
+.courses-container .container > .row > .col-md-8 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: calc(100% - var(--bs-gutter-x, 24px)) !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
 }
 
 /* Sticky Sidebar Settings */

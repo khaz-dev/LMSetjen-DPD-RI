@@ -151,7 +151,10 @@ function UserGuide() {
         <>
             <BaseHeader />
 
-            <div className="user-guide-page user-guide-compact-wrapper">
+            <div 
+                className="user-guide-page user-guide-compact-wrapper"
+                style={{ '--header-height': `${headerHeight}px` }}
+            >
                 {/* Hero & Subnav Filter Coordinator Slot prevents layout shift and eliminates gap */}
                 <div 
                     ref={slotRef}

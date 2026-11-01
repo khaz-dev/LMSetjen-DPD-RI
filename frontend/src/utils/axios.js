@@ -22,14 +22,32 @@ const apiInstance = axios.create({
     },
 });
 
+// Helper to safely check if token is expired without circular imports
+const isTokenExpired = (token) => {
+    if (!token) return true;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp < Date.now() / 1000;
+    } catch (e) {
+        return false;
+    }
+};
+
 // Request interceptor for adding authentication token if available
 apiInstance.interceptors.request.use(
     async (config) => {
+        // Do not attach Authorization header for token refresh endpoint
+        if (config.url?.includes('user/token/refresh/')) {
+            return config;
+        }
+
         const accessToken = Cookie.get("access_token");
 
-        // If the access token exists, add it to the Authorization header
+        // If the access token exists and is not expired, add it to the Authorization header
         if (accessToken && accessToken.trim() !== "") {
-            config.headers.Authorization = `Bearer ${accessToken}`;
+            if (!isTokenExpired(accessToken)) {
+                config.headers.Authorization = `Bearer ${accessToken}`;
+            }
         }
 
         return config;

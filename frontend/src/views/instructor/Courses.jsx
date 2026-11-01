@@ -185,34 +185,6 @@ function Courses() {
 
     const isFilterActive = searchQuery.trim() !== "" || selectedStatus !== "all" || selectedLevel !== "all" || sortBy !== "newest";
 
-    // Show full-page loading spinner on initial load only
-    if (loading) {
-        return (
-            <>
-                <BaseHeader />
-                <section className="courses-container courses-loading-section">
-                    <div className="courses-loading-container">
-                        <div className="container">
-                            <Header />
-                            <div className="row courses-sidebar-content-row-loading">
-                                <Sidebar />
-                                <div className={`col-lg-9 col-md-8 col-12 courses-spinner-wrapper ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
-                                    <div className="courses-spinner-center">
-                                        <div className="spinner-border text-teal courses-spinner" role="status">
-                                            <span className="visually-hidden">Memuat...</span>
-                                        </div>
-                                        <p className="mt-3 text-muted">Memuat Daftar Kursus...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <Footer />
-            </>
-        );
-    }
-
     return (
         <>
             <BaseHeader />
@@ -223,9 +195,19 @@ function Courses() {
                     <div className="row courses-sidebar-content-row">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
-                            
-                            {/* 1. Header Card (Compact & Modern) */}
-                            <div className="courses-header-card">
+                            {loading ? (
+                                <div className="courses-spinner-wrapper">
+                                    <div className="courses-spinner-center">
+                                        <div className="spinner-border text-teal courses-spinner" role="status">
+                                            <span className="visually-hidden">Memuat...</span>
+                                        </div>
+                                        <p className="mt-3 text-muted">Memuat Daftar Kursus...</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* 1. Header Card (Compact & Modern) */}
+                                    <div className="courses-header-card">
                                 <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <div className="courses-header-meta">
                                         <h2 className="courses-title mb-1">
@@ -478,6 +460,8 @@ function Courses() {
                                     />
                                 )}
                             </div>
+                                </>
+                            )}
 
                         </div>
                     </div>

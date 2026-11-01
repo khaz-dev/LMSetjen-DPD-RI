@@ -780,6 +780,10 @@ class VariantSerializer(serializers.ModelSerializer):
 
 class CertificateSerializer(serializers.ModelSerializer):
     course_title = serializers.CharField(source='course.title', read_only=True)
+    course_slug = serializers.CharField(source='course.slug', read_only=True, default='')
+    course_level = serializers.CharField(source='course.level', read_only=True, default='')
+    course_category = serializers.CharField(source='course.category.title', read_only=True, default='')
+    course_image = serializers.SerializerMethodField(read_only=True)
     student_name = serializers.CharField(source='user.full_name', read_only=True)
     instructor_name = serializers.CharField(source='course.teacher.full_name', read_only=True)
     qr_code_url = serializers.SerializerMethodField(read_only=True)
@@ -790,10 +794,16 @@ class CertificateSerializer(serializers.ModelSerializer):
     class Meta:
         fields = [
             'id', 'course', 'user', 'enrollment', 'certificate_id', 'formatted_certificate_id',
-            'validation_token', 'is_valid', 'date', 'course_title', 'student_name', 
+            'validation_token', 'is_valid', 'date', 'course_title', 'course_slug', 'course_level',
+            'course_category', 'course_image', 'student_name', 
             'instructor_name', 'qr_code_url', 'image_file_url', 'pdf_file_url', 'created_at', 'updated_at'
         ]
         model = api_models.Certificate
+
+    def get_course_image(self, obj):
+        if obj.course and obj.course.image:
+            return obj.course.image
+        return None
 
     def get_formatted_certificate_id(self, obj):
         """✨ PHASE 4.227: Get professionally formatted certificate ID"""
@@ -819,10 +829,9 @@ class CertificateSerializer(serializers.ModelSerializer):
                 image_url = request.build_absolute_uri(f'/api/v1/student/certificate-image/{obj.certificate_id}/')
                 return image_url
             except Exception as e:
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.error(f"[CertificateSerializer] ERROR building image URL: {e}")
-                return None
+                return f'/api/v1/student/certificate-image/{obj.certificate_id}/'
+        elif obj.image_file:
+            return f'/api/v1/student/certificate-image/{obj.certificate_id}/'
         
         return None
 

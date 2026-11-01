@@ -253,12 +253,12 @@ const VideoCompressionUtils = {
 
                 if (sizeRatio > 3) {
                     // Heavy compression needed
-                    targetWidth = Math.floor(originalWidth * 0.5);
-                    targetHeight = Math.floor(originalHeight * 0.5);
+                    targetWidth = Math.floor(originalWidth * 0);
+                    targetHeight = Math.floor(originalHeight * 0);
                     quality = FILE_UPLOAD_CONFIG.COMPRESSION_QUALITY_LOW;
                     bitrate = 500000; // 500 Kbps video
                     audioBitrate = 64000; // 64 Kbps audio
-                } else if (sizeRatio > 1.5) {
+                } else if (sizeRatio > 1) {
                     // Medium compression
                     targetWidth = Math.floor(originalWidth * 0.7);
                     targetHeight = Math.floor(originalHeight * 0.7);
@@ -270,7 +270,7 @@ const VideoCompressionUtils = {
                     targetWidth = Math.floor(originalWidth * 0.85);
                     targetHeight = Math.floor(originalHeight * 0.85);
                     quality = FILE_UPLOAD_CONFIG.COMPRESSION_QUALITY_HIGH;
-                    bitrate = 1500000; // 1.5 Mbps video
+                    bitrate = 1500000; // 1 Mbps video
                     audioBitrate = 128001; // 128 Kbps audio
                 }
 
@@ -555,7 +555,7 @@ function SortableSection({
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.7 : 1,
-        marginBottom: '1.5rem',
+        marginBottom: '1rem',
     };
 
     // ✅ FIX: Proper collapsed state logic
@@ -666,8 +666,8 @@ function SortableSection({
             {/* Section Content - Only show if not collapsed */}
             {!isCollapsed && (
                 <div className="subsection-content-enhanced">
-                    <div className="mb-2.5">
-                        <label className="form-label fw-semibold small text-dark d-flex align-items-center gap-1.5 mb-1">
+                    <div className="mb-2">
+                        <label className="form-label fw-semibold small text-dark d-flex align-items-center gap-1 mb-1">
                             <i className="fas fa-heading text-teal small"></i>
                             <span>Judul Bagian</span>
                             <span className="text-danger">*</span>
@@ -695,7 +695,7 @@ function SortableSection({
                     <div className="text-start mt-4 pt-2">
                         <button
                             type="button"
-                            className="btn btn-teal btn-sm px-3 py-1.5 fw-semibold d-inline-flex align-items-center shadow-sm"
+                            className="btn btn-teal btn-sm px-3 py-1 fw-semibold d-inline-flex align-items-center shadow-sm"
                             style={{ gap: "8px" }}
                             onClick={() => addLesson(variantIndex)}
                             disabled={uiState.isSubmitting}
@@ -772,7 +772,7 @@ function SortableLessonItem({
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.5 : 1,
+        opacity: isDragging ? 0 : 1,
         marginBottom: '1rem',
     };
 
@@ -866,8 +866,8 @@ function SortableLessonItem({
 
             <div className="curriculum-item-content-enhanced">
                 {/* Lesson Title - Full Width */}
-                <div className="mb-2.5">
-                    <label className="form-label fw-semibold small text-dark d-flex align-items-center mb-1.5" style={{ gap: "8px" }}>
+                <div className="mb-2">
+                    <label className="form-label fw-semibold small text-dark d-flex align-items-center mb-1" style={{ gap: "8px" }}>
                         <i className="fas fa-heading text-teal small"></i>
                         <span>Judul Pelajaran</span>
                         <span className="text-danger ms-1">*</span>
@@ -893,8 +893,8 @@ function SortableLessonItem({
                 <div className="row">
                     {/* Left Column: Description and Preview Checkbox */}
                     <div className="col-md-6">
-                        <div className="mb-2.5">
-                            <label className="form-label fw-semibold small text-dark d-flex align-items-center mb-1.5" style={{ gap: "8px" }}>
+                        <div className="mb-2">
+                            <label className="form-label fw-semibold small text-dark d-flex align-items-center mb-1" style={{ gap: "8px" }}>
                                 <i className="fas fa-align-left text-teal small"></i>
                                 <span>Deskripsi Pelajaran</span>
                                 <small className="text-muted fw-normal ms-1">(Opsional)</small>
@@ -929,7 +929,7 @@ function SortableLessonItem({
                                             <div className="mt-2">
                                                 {item?.duration_formatted ? (
                                                     <div className="duration-badge d-inline-block">
-                                                        <span className="badge bg-success" style={{ fontSize: '0.95rem', padding: '0.5rem 0.75rem' }}>
+                                                        <span className="badge bg-success" style={{ fontSize: '0.95rem', padding: '0rem 0.75rem' }}>
                                                             <i className="fas fa-check-circle me-1"></i>
                                                             {item.duration_formatted}
                                                         </span>
@@ -942,7 +942,7 @@ function SortableLessonItem({
                                                     </div>
                                                 ) : (
                                                     <div className="duration-empty">
-                                                        <span className="badge bg-secondary" style={{ fontSize: '0.95rem', padding: '0.5rem 0.75rem' }}>
+                                                        <span className="badge bg-secondary" style={{ fontSize: '0.95rem', padding: '0rem 0.75rem' }}>
                                                             <i className="fas fa-clock me-1"></i>
                                                             00:00
                                                         </span>
@@ -1075,14 +1075,14 @@ function SortableLessonItem({
                                     </span>
                                 </div>
 
-                                <p className="text-muted small mb-2.5">
+                                <p className="text-muted small mb-2">
                                     Tentukan bobot Jam Pelajaran untuk modul SCORM ini (standar <strong>1 JP = 45 menit</strong>). Alokasi ini akan otomatis diakumulasikan ke total JP kursus.
                                 </p>
 
                                 {/* Custom JP or Hour/Minute Input */}
                                 <div className="row g-3 align-items-end pt-1">
                                     <div className="col-sm-5">
-                                        <label className="form-label small fw-semibold text-dark mb-1.5 d-flex align-items-center gap-1">
+                                        <label className="form-label small fw-semibold text-dark mb-1 d-flex align-items-center gap-1">
                                             <i className="fas fa-edit text-teal small"></i>
                                             <span>Set Jumlah JP:</span>
                                         </label>
@@ -1105,11 +1105,11 @@ function SortableLessonItem({
                                         </div>
                                     </div>
                                     <div className="col-sm-7">
-                                        <label className="form-label small fw-semibold text-dark mb-1.5 d-flex align-items-center gap-1">
+                                        <label className="form-label small fw-semibold text-dark mb-1 d-flex align-items-center gap-1">
                                             <i className="fas fa-clock text-teal small"></i>
                                             <span>Atau Durasi (Jam & Menit):</span>
                                         </label>
-                                        <div className="d-flex gap-1.5">
+                                        <div className="d-flex gap-1">
                                             <div className="input-group input-group-sm">
                                                 <input
                                                     type="number"
@@ -1173,11 +1173,11 @@ function SortableLessonItem({
                             <div className="scorm-module-card bg-white shadow-sm h-100 d-flex flex-column justify-content-between p-4">
                                 <div className="px-1">
                                     <div className="d-flex align-items-center justify-content-between mb-3">
-                                        <span className="badge px-3 py-1.5 text-white fw-semibold bg-teal d-inline-flex align-items-center" style={{ gap: "8px" }}>
+                                        <span className="badge px-3 py-1 text-white fw-semibold bg-teal d-inline-flex align-items-center" style={{ gap: "8px" }}>
                                             <i className="fas fa-cubes"></i>
                                             <span>Paket Modul {item?.learning_module_info?.module_type?.toUpperCase() || course?.course_type?.toUpperCase() || "SCORM 1.2"}</span>
                                         </span>
-                                        <span className="badge bg-light text-secondary border px-2.5 py-1 d-inline-flex align-items-center" style={{ gap: "6px" }}>
+                                        <span className="badge bg-light text-secondary border px-2 py-1 d-inline-flex align-items-center" style={{ gap: "6px" }}>
                                             <i className="fas fa-check-circle text-success"></i>
                                             <span>Terhubung</span>
                                         </span>
@@ -1192,21 +1192,21 @@ function SortableLessonItem({
 
                                     <div className="px-3 py-2 rounded-3 bg-light border mb-3 small">
                                         <div className="d-flex justify-content-between py-2 border-bottom align-items-center">
-                                            <span className="text-muted"><i className="fas fa-file-code me-1.5 text-primary"></i> Berkas Utama:</span>
-                                            <code className="text-dark fw-bold px-2 py-0.5 bg-white rounded border">{item?.learning_module_info?.entry_file || course?.learning_module?.entry_file || "index.html"}</code>
+                                            <span className="text-muted"><i className="fas fa-file-code me-1 text-primary"></i> Berkas Utama:</span>
+                                            <code className="text-dark fw-bold px-2 py-0 bg-white rounded border">{item?.learning_module_info?.entry_file || course?.learning_module?.entry_file || "index.html"}</code>
                                         </div>
                                         <div className="d-flex justify-content-between py-2 border-bottom align-items-center">
-                                            <span className="text-muted"><i className="fas fa-sliders-h me-1.5 text-info"></i> Model Pelacakan:</span>
+                                            <span className="text-muted"><i className="fas fa-sliders-h me-1 text-info"></i> Model Pelacakan:</span>
                                             <span className="fw-semibold text-secondary">SCORM 1.2 RTE (cmi.core)</span>
                                         </div>
                                         <div className="d-flex justify-content-between py-2 border-bottom align-items-center">
-                                            <span className="text-muted"><i className="fas fa-graduation-cap me-1.5 text-teal"></i> Alokasi Beban Belajar:</span>
+                                            <span className="text-muted"><i className="fas fa-graduation-cap me-1 text-teal"></i> Alokasi Beban Belajar:</span>
                                             <span className="fw-bold text-teal">
                                                 {currentJP > 0 ? `${currentJP} JP (${Math.floor(currentSeconds / 3600)}j ${Math.floor((currentSeconds % 3600) / 60)}m)` : '0 JP (Belum Diatur)'}
                                             </span>
                                         </div>
                                         <div className="d-flex justify-content-between py-2 align-items-center">
-                                            <span className="text-muted"><i className="fas fa-tachometer-alt me-1.5 text-teal"></i> Status Sesi:</span>
+                                            <span className="text-muted"><i className="fas fa-tachometer-alt me-1 text-teal"></i> Status Sesi:</span>
                                             <span className="text-success fw-semibold">Otomatis via Sesi Siswa</span>
                                         </div>
                                     </div>
@@ -1215,7 +1215,7 @@ function SortableLessonItem({
                                 <div className="d-flex align-items-center justify-content-between pt-3 mt-2 border-top px-1">
                                     <button
                                         type="button"
-                                        className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2 px-3 py-1.5"
+                                        className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2 px-3 py-1"
                                         onClick={() => onPreviewScorm && onPreviewScorm(item)}
                                         title="Uji coba pemutar SCORM langsung di halaman ini"
                                     >
@@ -1489,7 +1489,7 @@ function SortableLessonItem({
 
                 {/* Bottom Section: SCORM Evaluation Alert OR Lesson Completion Question Editor */}
                 {isItemScorm ? (
-                    <div className="alert alert-light border rounded-2 p-2.5 mt-3 mb-0 d-flex align-items-center gap-2 small text-secondary" style={{ backgroundColor: "#f8fafc" }}>
+                    <div className="alert alert-light border rounded-2 p-2 mt-3 mb-0 d-flex align-items-center gap-2 small text-secondary" style={{ backgroundColor: "#f8fafc" }}>
                         <i className="fas fa-info-circle text-teal fs-5" style={{ color: "#0f766e" }}></i>
                         <div>
                             <strong>Pelacakan Kuis & Kelulusan Terintegrasi:</strong> Kuis interaktif dan penilaian evaluasi telah terintegrasi langsung di dalam paket e-learning SCORM ini. Nilai skor (<code>cmi.core.score.raw</code>) dan status kelulusan (<code>cmi.core.lesson_status</code>) akan disinkronkan secara otomatis saat siswa menyelesaikan materi.
@@ -3957,32 +3957,32 @@ function CourseEditCurriculum() {
 
                             {/* Compact Curriculum Header Card */}
                             <div className="curriculum-header-card mb-3">
-                                <div className="d-flex flex-column flex-md-row md-align-items-center justify-content-between gap-2.5">
+                                <div className="d-flex flex-column flex-md-row md-align-items-center justify-content-between gap-2">
                                     <div>
                                         <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
-                                            <span className="badge bg-teal-subtle text-teal border border-teal-subtle fw-semibold px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                            <span className="badge bg-teal-subtle text-teal border border-teal-subtle fw-semibold px-2 py-0" style={{ fontSize: "11px" }}>
                                                 <i className="fas fa-layer-group me-1"></i> Edit Kurikulum
                                             </span>
-                                            <span className="badge bg-light text-muted border px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                            <span className="badge bg-light text-muted border px-2 py-0" style={{ fontSize: "11px" }}>
                                                 ID: #{param?.course_id}
                                             </span>
-                                            <span className={`badge px-2 py-0.5 ${course?.status === "Published" ? "bg-success text-white" : "bg-secondary text-white"}`} style={{ fontSize: "11px" }}>
+                                            <span className={`badge px-2 py-0 ${course?.status === "Published" ? "bg-success text-white" : "bg-secondary text-white"}`} style={{ fontSize: "11px" }}>
                                                 {course?.status === "Published" ? "Terbit" : "Draf"}
                                             </span>
                                             {isElearningScorm && (
-                                                <span className="badge bg-white text-teal border border-teal-subtle px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                                <span className="badge bg-white text-teal border border-teal-subtle px-2 py-0" style={{ fontSize: "11px" }}>
                                                     <i className="fas fa-cube me-1"></i> SCORM
                                                 </span>
                                             )}
                                         </div>
-                                        <h4 className="curriculum-header-title mb-0.5 text-dark fw-bold">
+                                        <h4 className="curriculum-header-title mb-0 text-dark fw-bold">
                                             {course?.title || "Kurikulum Kursus"}
                                         </h4>
                                         <p className="curriculum-header-desc text-muted mb-0 small">
                                             Atur konten materi ke dalam bagian terstruktur, modul pembelajaran, dan durasi JP.
                                         </p>
                                     </div>
-                                    <div className="d-flex align-items-center flex-wrap gap-1.5 mt-2 mt-md-0">
+                                    <div className="d-flex align-items-center flex-wrap gap-1 mt-2 mt-md-0">
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/`}
                                             className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center"
@@ -4090,20 +4090,20 @@ function CourseEditCurriculum() {
                                 {/* ✨ SCORM Curriculum Banner (Compact & Refined) */}
                                 {isElearningScorm && (
                                     <div className="scorm-curriculum-banner mb-3 p-3 rounded-3 border">
-                                        <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2.5">
-                                            <div className="d-flex align-items-start gap-2.5">
-                                                <div className="scorm-curriculum-icon bg-white p-2.5 rounded-3 shadow-sm text-teal d-flex align-items-center justify-content-center" style={{ width: "44px", height: "44px", fontSize: "20px" }}>
+                                        <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+                                            <div className="d-flex align-items-start gap-2">
+                                                <div className="scorm-curriculum-icon bg-white p-2 rounded-3 shadow-sm text-teal d-flex align-items-center justify-content-center" style={{ width: "44px", height: "44px", fontSize: "20px" }}>
                                                     <i className="fas fa-boxes-stacked"></i>
                                                 </div>
                                                 <div>
                                                     <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
-                                                        <span className="badge bg-teal text-white fw-bold px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                                        <span className="badge bg-teal text-white fw-bold px-2 py-0" style={{ fontSize: "11px" }}>
                                                             E-Learning SCORM Terintegrasi
                                                         </span>
-                                                        <span className="badge bg-white text-teal border border-teal-subtle px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                                        <span className="badge bg-white text-teal border border-teal-subtle px-2 py-0" style={{ fontSize: "11px" }}>
                                                             {course?.learning_module?.module_type?.toUpperCase() || course?.course_type?.toUpperCase() || 'SCORM 1.2'}
                                                         </span>
-                                                        <span className="badge bg-white text-dark border border-teal-subtle shadow-sm px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                                        <span className="badge bg-white text-dark border border-teal-subtle shadow-sm px-2 py-0" style={{ fontSize: "11px" }}>
                                                             <i className="fas fa-graduation-cap me-1 text-teal"></i>
                                                             Total Beban: <strong className="text-teal ms-1">{totalCourseJP} JP</strong>
                                                             {totalCourseSeconds > 0 ? (
@@ -4113,7 +4113,7 @@ function CourseEditCurriculum() {
                                                             )}
                                                         </span>
                                                     </div>
-                                                    <h6 className="fw-bold mb-0.5 text-dark">
+                                                    <h6 className="fw-bold mb-0 text-dark">
                                                         {course?.learning_module?.judul || course?.title || 'Paket SCORM E-Learning'}
                                                     </h6>
                                                     <p className="text-muted small mb-0" style={{ fontSize: "0.8rem" }}>
@@ -4124,7 +4124,7 @@ function CourseEditCurriculum() {
                                             <div className="d-flex align-items-center gap-2 flex-shrink-0">
                                                 <button
                                                     type="button"
-                                                    className="btn btn-sm btn-outline-teal px-2.5 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5"
+                                                    className="btn btn-sm btn-outline-teal px-2 py-1 fw-semibold d-inline-flex align-items-center gap-1"
                                                     onClick={() => handleOpenScormPreview({
                                                         title: course?.learning_module?.judul || course?.title,
                                                         learning_module_info: course?.learning_module || curriculum?.[0]?.items?.[0]?.learning_module_info
@@ -4153,8 +4153,8 @@ function CourseEditCurriculum() {
                                     }}>
                                         <div className="d-flex align-items-start">
                                             <i className={`fas ${uiState.submitStatus === 'success' ? 'fa-check-circle' :
-                                                    uiState.submitStatus === 'error' ? 'fa-exclamation-circle' :
-                                                        'fa-info-circle'
+                                                uiState.submitStatus === 'error' ? 'fa-exclamation-circle' :
+                                                    'fa-info-circle'
                                                 } me-2 mt-1`} style={{ fontSize: '1.2rem' }}></i>
                                             <div style={{ whiteSpace: 'pre-line', flex: 1 }}>
                                                 {uiState.submitMessage}
@@ -4280,14 +4280,14 @@ function CourseEditCurriculum() {
                                     </DndContext>
                                 </div>
 
-                                <div className="d-flex justify-content-between align-items-center mt-2.5 mb-2.5">
+                                <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
                                     <span className="text-muted small">
                                         <i className="fas fa-info-circle me-1 text-teal"></i>
                                         Urutan bagian dan pelajaran dapat disusun ulang dengan menyeret ikon pegangan.
                                     </span>
                                     <button
                                         type="button"
-                                        className="btn btn-teal btn-sm px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5"
+                                        className="btn btn-teal btn-sm px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1"
                                         onClick={addCurriculumSection}
                                         disabled={uiState.isSubmitting}
                                     >
@@ -4299,7 +4299,7 @@ function CourseEditCurriculum() {
                                 {/* Submit Section */}
                                 <div className="curriculum-submit-bar">
                                     {/* Info message about blank sections */}
-                                    <div className="alert alert-light border d-flex align-items-center py-2 px-3 mb-2.5 text-muted small" style={{ backgroundColor: "#f8fafc" }}>
+                                    <div className="alert alert-light border d-flex align-items-center py-2 px-3 mb-2 text-muted small" style={{ backgroundColor: "#f8fafc" }}>
                                         <i className="fas fa-info-circle text-teal me-2 fs-6"></i>
                                         <div>
                                             <strong>Catatan:</strong> Bagian atau pelajaran kosong otomatis diabaikan saat kurikulum disimpan.
@@ -4312,29 +4312,29 @@ function CourseEditCurriculum() {
                                         <div className="form-status-info">
                                             {autoSaveStatus === "saving" ? (
                                                 <div className="text-info small d-flex align-items-center">
-                                                    <span className="spinner-border spinner-border-sm me-1.5" style={{ width: '13px', height: '13px', display: 'inline-block' }}></span>
+                                                    <span className="spinner-border spinner-border-sm me-1" style={{ width: '13px', height: '13px', display: 'inline-block' }}></span>
                                                     <span>Menyimpan kurikulum...</span>
                                                 </div>
                                             ) : uiState.isDirty ? (
                                                 <div className="text-secondary small d-flex align-items-center">
-                                                    <span className="spinner-border spinner-border-sm text-warning me-1.5" style={{ width: '13px', height: '13px', display: 'inline-block' }}></span>
+                                                    <span className="spinner-border spinner-border-sm text-warning me-1" style={{ width: '13px', height: '13px', display: 'inline-block' }}></span>
                                                     <span>Ada perubahan kurikulum yang belum disimpan...</span>
                                                 </div>
                                             ) : autoSaveStatus === "error" ? (
                                                 <div className="text-danger small d-flex align-items-center">
-                                                    <i className="fas fa-exclamation-circle text-danger me-1.5"></i>
+                                                    <i className="fas fa-exclamation-circle text-danger me-1"></i>
                                                     <span>Gagal menyimpan otomatis, silakan klik tombol Simpan.</span>
                                                 </div>
                                             ) : lastAutoSaveTime ? (
                                                 <div className="text-muted small d-flex align-items-center">
-                                                    <i className="fas fa-check-circle text-success me-1.5"></i>
+                                                    <i className="fas fa-check-circle text-success me-1"></i>
                                                     <span>
                                                         Tersimpan otomatis pada {lastAutoSaveTime.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(/:/g, ".")}
                                                     </span>
                                                 </div>
                                             ) : (
                                                 <div className="text-muted small d-flex align-items-center gap-2">
-                                                    <i className="fas fa-check-circle text-success me-1.5"></i>
+                                                    <i className="fas fa-check-circle text-success me-1"></i>
                                                     <span>Semua struktur kurikulum tersimpan</span>
                                                 </div>
                                             )}
@@ -4343,7 +4343,7 @@ function CourseEditCurriculum() {
                                         <div className="d-flex align-items-center gap-2">
                                             <button
                                                 type="submit"
-                                                className="btn btn-teal btn-sm px-3.5 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm"
+                                                className="btn btn-teal btn-sm px-3 py-1 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm"
                                                 disabled={uiState.isSubmitting}
                                             >
                                                 {uiState.isSubmitting ? (
@@ -4366,7 +4366,7 @@ function CourseEditCurriculum() {
                                         <div className="validation-summary mt-2 pt-2 border-top">
                                             <div className="validation-errors">
                                                 <strong className="small">
-                                                    <i className="fas fa-exclamation-triangle me-1.5 text-danger"></i>
+                                                    <i className="fas fa-exclamation-triangle me-1 text-danger"></i>
                                                     Silakan perbaiki kesalahan berikut:
                                                 </strong>
                                                 <ul className="mt-1 mb-0 small text-danger">
@@ -4393,7 +4393,7 @@ function CourseEditCurriculum() {
                                         <div className="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
                                             <div className="modal-header bg-dark text-white py-3 px-4 d-flex align-items-center justify-content-between">
                                                 <div className="d-flex align-items-center gap-2">
-                                                    <span className="badge bg-teal text-white px-2.5 py-1">
+                                                    <span className="badge bg-teal text-white px-2 py-1">
                                                         <i className="fas fa-cube me-1"></i>
                                                         {scormPreviewModal.moduleType.toUpperCase()}
                                                     </span>
@@ -4402,10 +4402,10 @@ function CourseEditCurriculum() {
                                                     </h6>
                                                 </div>
                                                 <div className="d-flex align-items-center gap-3">
-                                                    <div className="d-none d-sm-flex align-items-center gap-2 bg-secondary bg-opacity-25 px-2.5 py-1 rounded small">
+                                                    <div className="d-none d-sm-flex align-items-center gap-2 bg-secondary bg-opacity-25 px-2 py-1 rounded small">
                                                         <span className="text-light opacity-75">Status RTE:</span>
                                                         <span className={`badge ${scormPlayerStatus === 'completed' || scormPlayerStatus === 'passed' ? 'bg-success' :
-                                                                scormPlayerStatus === 'failed' ? 'bg-danger' : 'bg-warning text-dark'
+                                                            scormPlayerStatus === 'failed' ? 'bg-danger' : 'bg-warning text-dark'
                                                             }`}>
                                                             {scormPlayerStatus}
                                                         </span>

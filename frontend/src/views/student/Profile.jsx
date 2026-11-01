@@ -727,7 +727,7 @@ function Profile() {
         return (
             <>
                 <BaseHeader />
-                <section className="student-profile-page modern-profile-page pt-4 pb-4">
+                <section className="student-profile-page modern-profile-page">
                     <div className="container">
                         <Header />
                         <div className="row">

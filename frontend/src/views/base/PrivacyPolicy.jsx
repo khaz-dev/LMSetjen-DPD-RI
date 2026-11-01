@@ -88,7 +88,10 @@ function PrivacyPolicy() {
   const isMatch = (text) => !q || text.toLowerCase().includes(q);
 
   return (
-    <div className="privacy-policy-wrapper">
+    <div 
+      className="privacy-policy-wrapper"
+      style={{ '--header-height': `${headerHeight}px` }}
+    >
       <BaseHeader />
 
       {/* HERO SLOT ANCHOR PREVENTS LAYOUT SHIFT */}

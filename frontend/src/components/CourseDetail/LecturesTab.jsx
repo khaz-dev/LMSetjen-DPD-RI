@@ -1239,28 +1239,36 @@ const LecturesTab = ({
 
     return (
         <div className="tab-pane fade show active" id="lectures" role="tabpanel">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <h4 className="mb-0">Kurikulum Kursus</h4>
+            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2 curriculum-tab-topbar">
+                <div className="d-flex align-items-center gap-2">
+                    <h5 className="mb-0 fw-bold curriculum-heading-title">
+                        <i className="fas fa-list-check me-2 text-teal"></i>Kurikulum Kursus
+                    </h5>
+                    {course?.curriculum?.length > 0 && (() => {
+                        const totalSections = course.curriculum.length;
+                        const totalLessons = course.curriculum.reduce((acc, c) => acc + (c.variant_items?.length || 0), 0);
+                        return (
+                            <span className="badge curriculum-count-badge">
+                                {totalSections} Bagian • {totalLessons} Materi
+                            </span>
+                        );
+                    })()}
+                </div>
                 {course?.curriculum?.length > 0 && (() => {
                     const totalLessons = course.curriculum.reduce((acc, c) => acc + (c.variant_items?.length || 0), 0);
                     const completedLessons = getCompletedLessonsCount() || 0;
                     const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
                     
                     return (
-                        <div className="curriculum-progress-container">
-                            {/* Move stats above the bar */}
-                            <div className="course-progress-stats">
-                                <span className="progress-text text-white" style={{ color: "white" }}>
-                                    {completedLessons}/{totalLessons} pelajaran
-                                </span>
-                                <span className="progress-percentage text-white" style={{ color: "white" }}>
-                                    {progressPercentage}%
-                                </span>
-                            </div>
-                            <div className="course-progress-bar">
+                        <div className="curriculum-mini-progress">
+                            <span className="curriculum-mini-progress-text">
+                                <i className="fas fa-circle-check text-emerald me-1"></i>
+                                {completedLessons}/{totalLessons} Selesai ({progressPercentage}%)
+                            </span>
+                            <div className="curriculum-mini-progress-track">
                                 <div 
-                                    className="course-progress-fill" 
-                                    style={{width: `${progressPercentage}%`}}
+                                    className="curriculum-mini-progress-fill" 
+                                    style={{ width: `${progressPercentage}%` }}
                                 ></div>
                             </div>
                         </div>
@@ -1307,7 +1315,7 @@ const LecturesTab = ({
                                 return (
                                     <div key={l.variant_item_id || lessonIndex} className="mb-0">{/* Use only variant_item_id for key */}
                                         <div 
-                                            className={`lesson-item ${isCompleted ? "completed" : isInProgress ? "in-progress" : ""} ${variantItem?.variant_item_id === l.variant_item_id ? "active" : ""} p-3 rounded-3 position-relative`}
+                                            className={`lesson-item ${isCompleted ? "completed" : isInProgress ? "in-progress" : ""} ${variantItem?.variant_item_id === l.variant_item_id ? "active" : ""} position-relative`}
                                             onClick={(e) => {
                                                 // ✨ PHASE 6.4: Make entire lesson-item clickable (except buttons/inputs)
                                                 // Only trigger if click target is not an interactive element

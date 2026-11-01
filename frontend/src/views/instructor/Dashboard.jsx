@@ -184,7 +184,7 @@ function Dashboard() {
         return (
             <>
                 <BaseHeader />
-                <section className="pt-2 pb-5 modern-dashboard instructor-dashboard" style={{ display: "flex", alignItems: "center" }}>
+                <section className="modern-dashboard instructor-dashboard" style={{ display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
                         <div className="row">
@@ -209,7 +209,7 @@ function Dashboard() {
         <>
             <BaseHeader />
 
-            <section className="pt-2 pb-5 modern-dashboard instructor-dashboard">
+            <section className="modern-dashboard instructor-dashboard">
                 <div className="container">
                     <Header />
                     <div className="row">

@@ -320,6 +320,8 @@
 /* Section Headings */
 /* ============================== */
 
+.instructor-sidebar .nav-section-title,
+.instructor-sidebar .nav-section-title.section-title,
 .nav-section-title {
     font-size: 0.65rem !important;
     font-weight: 700 !important;
@@ -343,21 +345,25 @@
     transition: opacity 0.2s ease;
 }
 
+.instructor-sidebar .nav-section-title:first-child,
 .nav-section-title:first-child {
     margin-top: 0.15rem !important;
 }
 
+.instructor-sidebar .instructor-divider + .nav-section-title,
 .instructor-divider + .nav-section-title {
     margin-top: 0.4rem !important;
 }
 
+.instructor-sidebar .nav-section-title.section-title::after,
 .nav-section-title.section-title::after {
     display: none !important;
     content: none !important;
 }
 
 /* Collapsed state: hide section titles completely */
-.instructor-sidebar.collapsed .nav-section-title {
+.instructor-sidebar.collapsed .nav-section-title,
+.instructor-sidebar.collapsed .nav-section-title.section-title {
     display: none !important;
     height: 0 !important;
     margin: 0 !important;
@@ -785,6 +791,15 @@
     .instructor-review-page .row:has(.instructor-sidebar),
     .instructor-students-page .row:has(.instructor-sidebar),
     .instructor-profile-page .row:has(.instructor-sidebar),
+    .instructor-testimonials-page .row:has(.instructor-sidebar),
+    .instructor-course-create-page .row:has(.instructor-sidebar),
+    .course-create-container .row:has(.instructor-sidebar),
+    .instructor-course-edit-page .row:has(.instructor-sidebar),
+    .course-edit-container .row:has(.instructor-sidebar),
+    .course-quiz-container .row:has(.instructor-sidebar),
+    .course-quiz-page .row:has(.instructor-sidebar),
+    .courses-container .row:has(.instructor-sidebar),
+    .modern-students .row:has(.instructor-sidebar),
     .instructor-notification-page .row:has(.instructor-sidebar),
     .instructor-qa-detail-page .row:has(.instructor-sidebar),
     .instructor-password-page .row:has(.instructor-sidebar) {
@@ -837,6 +852,8 @@
     .modern-dashboard .row > .col-md-4,
     .instructor-profile-page .row > .col-lg-3,
     .instructor-profile-page .row > .col-md-4,
+    .instructor-testimonials-page .row > .col-lg-3,
+    .instructor-testimonials-page .row > .col-md-4,
     .instructor-review-page .row > .col-lg-3,
     .instructor-review-page .row > .col-md-4,
     .instructor-notification-page .row > .col-lg-3,
@@ -870,11 +887,24 @@
 /* Desktop: col-lg-9 adapts when sidebar collapses */
 @media (min-width: 992px) {
     .instructor-dashboard-page > .container > .row > .col-lg-9,
+    .instructor-dashboard > .container > .row > .col-lg-9,
+    .modern-dashboard > .container > .row > .col-lg-9,
     .instructor-courses-page > .container > .row > .col-lg-9,
     .instructor-profile-page > .container > .row > .col-lg-9,
     .instructor-password-page > .container > .row > .col-lg-9,
     .instructor-notifications-page > .container > .row > .col-lg-9,
-    .instructor-testimonials-page > .container > .row > .col-lg-9 {
+    .instructor-testimonials-page > .container > .row > .col-lg-9,
+    .courses-container > .container > .row > .col-lg-9,
+    .courses-container .container > .row > .col-lg-9,
+    .instructor-review-page > .container > .row > .col-lg-9,
+    .modern-students > .container > .row > .col-lg-9,
+    .instructor-students-page > .container > .row > .col-lg-9,
+    .instructor-course-create-page > .container > .row > .col-lg-9,
+    .course-create-container > .container > .row > .col-lg-9,
+    .instructor-course-edit-page > .container > .row > .col-lg-9,
+    .course-edit-container > .container > .row > .col-lg-9,
+    .course-quiz-container > .container > .row > .col-lg-9,
+    .course-quiz-page > .container > .row > .col-lg-9 {
         flex: 1 1 auto !important;
         max-width: 100% !important;
         transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -886,11 +916,24 @@
 /* Tablet: col-md-8 adapts when sidebar collapses */
 @media (min-width: 768px) and (max-width: 991px) {
     .instructor-dashboard-page > .container > .row > .col-md-8,
+    .instructor-dashboard > .container > .row > .col-md-8,
+    .modern-dashboard > .container > .row > .col-md-8,
     .instructor-courses-page > .container > .row > .col-md-8,
     .instructor-profile-page > .container > .row > .col-md-8,
     .instructor-password-page > .container > .row > .col-md-8,
     .instructor-notifications-page > .container > .row > .col-md-8,
-    .instructor-testimonials-page > .container > .row > .col-md-8 {
+    .instructor-testimonials-page > .container > .row > .col-md-8,
+    .courses-container > .container > .row > .col-md-8,
+    .courses-container .container > .row > .col-md-8,
+    .instructor-review-page > .container > .row > .col-md-8,
+    .modern-students > .container > .row > .col-md-8,
+    .instructor-students-page > .container > .row > .col-md-8,
+    .instructor-course-create-page > .container > .row > .col-md-8,
+    .course-create-container > .container > .row > .col-md-8,
+    .instructor-course-edit-page > .container > .row > .col-md-8,
+    .course-edit-container > .container > .row > .col-md-8,
+    .course-quiz-container > .container > .row > .col-md-8,
+    .course-quiz-page > .container > .row > .col-md-8 {
         flex: 1 1 auto !important;
         max-width: 100% !important;
         transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -941,15 +984,37 @@
     overflow: visible !important;
 }
 
+/* ==========================================================================
+   Container alignment with Main Navigation header-container (1400px width, 1.25rem padding)
+   Ensures all instructor pages match the top navbar container boundaries precisely
+   ========================================================================== */
 .modern-dashboard > .container,
+.instructor-dashboard > .container,
+.instructor-dashboard .container,
+.modern-dashboard .container,
 .instructor-notifications-page > .container,
 .instructor-courses-page > .container,
+.courses-container > .container,
+.courses-container .container,
+.instructor-course-edit-curriculum-page > .container,
+.course-edit-container > .container,
+.instructor-course-edit-page > .container,
+.instructor-course-create-page > .container,
+.course-create-container > .container,
+.course-quiz-container > .container,
 .instructor-review-page > .container,
 .modern-students > .container,
+.instructor-students-page > .container,
 .instructor-profile-page > .container,
 .instructor-password-page > .container,
 .qa-bg-section > .container,
 .instructor-testimonials-page > .container {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
     overflow: visible !important;
 }
 

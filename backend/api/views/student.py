@@ -2421,7 +2421,8 @@ class CertificateValidationAPIView(APIView):
                 'completion_date': certificate.date.strftime('%B %d, %Y'),
                 'issued_date': certificate.created_at.strftime('%B %d, %Y'),
                 'course_level': certificate.course.level,
-                'course_category': certificate.course.category.title if certificate.course.category else 'General'
+                'course_category': certificate.course.category.title if certificate.course.category else 'General',
+                'image_file_url': request.build_absolute_uri(f'/api/v1/student/certificate-image/{certificate.certificate_id}/') if certificate.image_file else None
             }
             
             return Response({
@@ -3126,7 +3127,11 @@ class StudentActivityListAPIView(generics.ListAPIView):
         # Filter by activity type
         activity_type = self.request.query_params.get('activity_type')
         if activity_type:
-            queryset = queryset.filter(activity_type=activity_type)
+            if ',' in activity_type:
+                types = [t.strip() for t in activity_type.split(',') if t.strip()]
+                queryset = queryset.filter(activity_type__in=types)
+            else:
+                queryset = queryset.filter(activity_type=activity_type)
         
         # Filter by course
         course_id = self.request.query_params.get('course_id')
@@ -3137,6 +3142,18 @@ class StudentActivityListAPIView(generics.ListAPIView):
         success = self.request.query_params.get('success')
         if success:
             queryset = queryset.filter(success=success.lower() == 'true')
+        
+        # Filter by search keyword
+        search = self.request.query_params.get('search')
+        if search:
+            search = search.strip()
+            queryset = queryset.filter(
+                Q(title__icontains=search) |
+                Q(description__icontains=search) |
+                Q(course__title__icontains=search) |
+                Q(lesson__title__icontains=search) |
+                Q(quiz__title__icontains=search)
+            )
         
         return queryset.order_by('-activity_date')
 

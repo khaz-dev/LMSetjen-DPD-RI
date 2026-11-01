@@ -1,643 +1,392 @@
-/* LecturesTab Styles */
+/* ==========================================================================
+   LMSetjen DPD RI - LecturesTab Component Styles
+   Ultra-Compact, High-Density, Modern & Clean Institutional Aesthetics
+   Eliminates dark backgrounds and excessive whitespace
+   ========================================================================== */
 
-/* Course Progress Section */
+/* Top bar in LecturesTab */
+.curriculum-tab-topbar {
+    border-color: #e2e8f0 !important;
+}
+
+.curriculum-heading-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.2px;
+}
+
+.curriculum-heading-title i {
+    color: #0d9488;
+}
+
+.curriculum-count-badge {
+    background: rgba(15, 118, 110, 0.08) !important;
+    color: #0f766e !important;
+    border: 1px solid rgba(15, 118, 110, 0.2) !important;
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+    padding: 0.28rem 0.65rem !important;
+    border-radius: 20px !important;
+}
+
+/* Mini Progress Indicator */
+.curriculum-mini-progress {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+}
+
+.curriculum-mini-progress-text {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.curriculum-mini-progress-track {
+    width: 90px;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.curriculum-mini-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #059669);
+    border-radius: 4px;
+    transition: width 0.35s ease;
+}
+
+/* Backward compatibility for curriculum-progress-container */
 .curriculum-progress-container {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
-    padding: 12px 16px;
+    gap: 4px;
+    padding: 6px 12px;
     background: #0d9488;
-    border-radius: 10px;
-    border: 1px solid #e9ecef;
-    width: 100%;
-    max-width: 250px;   /* <-- Make it reasonably wide */
-    margin: 0rem; 
+    border-radius: 8px;
+    max-width: 220px;
+    margin: 0;
 }
 
-/* ✨ PHASE 4.11+: Ensure consistent white text styling in progress container */
-/* ✨ PHASE 4.84: Add maximum specificity to override Dashboard/Courses/CourseDetail CSS conflicts */
 .curriculum-progress-container .progress-text,
-.curriculum-progress-container .progress-text.text-white,
-.viewer-modal-modern + .modal .curriculum-progress-container .progress-text,
-div.curriculum-progress-container .progress-text {
+.curriculum-progress-container .progress-percentage {
     color: white !important;
-    font-size: 0.85rem !important;  /* Override Dashboard's 1.25rem */
-    font-weight: 500 !important;
-}
-
-.curriculum-progress-container .progress-percentage,
-.curriculum-progress-container .progress-percentage.text-white,
-.viewer-modal-modern + .modal .curriculum-progress-container .progress-percentage,
-div.curriculum-progress-container .progress-percentage {
-    padding: 0 !important;           /* ✨ PHASE 4.85: Reset Dashboard's 0.3rem 0.6rem padding */
-    margin: 0 !important;            /* Reset margins */
-    border-radius: 0 !important;     /* Reset Dashboard's 12px border-radius */
-    box-shadow: none !important;     /* Remove Dashboard's shadow effect (creates border-like appearance) */
-    border: none !important;         /* Ensure no borders */
-    color: white !important;
-    font-size: 0.85rem !important;   /* Ensure matching size with progress-text */
+    font-size: 0.75rem !important;
     font-weight: 600 !important;
-    background: transparent !important;  /* Remove Background gradient from Dashboard */
-    display: inline !important;
-    text-decoration: none !important;
-}
-
-/* Force parent container and all children to white */
-.curriculum-progress-container,
-.curriculum-progress-container .course-progress-stats,
-.curriculum-progress-container .course-progress-stats * {
-    color: white !important;
 }
 
 .course-progress-bar {
-    width: 100%;            /* <-- Fix: always full width */
-    min-width: 120px;
-    height: 7px !important;
-    background: #e9ecef;
-    border-radius: 6px;
+    width: 100%;
+    height: 5px !important;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
     overflow: hidden;
-    position: relative;
 }
 
 .course-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #0d9488, #0f766e);
-    border-radius: 6px;
-    transition: width 0.4s cubic-bezier(.4,2,.3,1);
+    background: #ffffff;
+    border-radius: 4px;
+    transition: width 0.4s ease;
 }
 
-/* Curriculum Section */
-
-/* Lecture Cards */
+/* ==========================================================================
+   Section (Lecture) Cards
+   ========================================================================== */
 .lecture-card {
-    background: #2a2a2a;
-    border: 1px solid #404040;
-    border-radius: 12px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    padding: 1rem !important;
-    padding-bottom: 0rem !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    padding: 0 !important;
+    margin-bottom: 0.65rem !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
 }
 
 .lecture-card:hover {
-    border-color: #0d9488;
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.08) !important;
 }
 
 .lecture-header {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    padding: 1rem 1.5rem;
-    color: white;
+    background: linear-gradient(135deg, #064e3b 0%, #0d9488 60%, #0f766e 100%) !important;
+    padding: 0.65rem 1rem !important;
+    color: white !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
+    position: relative;
+    user-select: none;
+}
+
+.lecture-header::before {
+    display: none !important;
 }
 
 .lecture-header-content h5 {
-    color: white;
-    margin-bottom: 0.25rem;
-    font-weight: 600;
+    color: #ffffff !important;
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.15rem !important;
+    line-height: 1.3 !important;
 }
 
 .lecture-header-content small {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.88) !important;
+    font-size: 0.74rem !important;
+    font-weight: 500 !important;
 }
 
 .lecture-header .btn-link {
-    color: white;
-    text-decoration: none;
-    padding: 0.5rem;
-    border-radius: 50%;
-    transition: all 0.2s ease;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    font-size: 0.72rem !important;
 }
 
 .lecture-header .btn-link:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: scale(1.08);
 }
 
-/* Lesson Items */
+.lecture-header .btn-link i {
+    transition: transform 0.25s ease;
+}
+
+.lecture-header .btn-link[aria-expanded="false"] i {
+    transform: rotate(-90deg);
+}
+
+/* ==========================================================================
+   Lesson Items (High Density, Sleek Rows)
+   ========================================================================== */
+.lecture-card .collapse {
+    border-top: 1px solid #e2e8f0;
+}
+
 .lesson-item {
-    background: #333;
-    border: 1px solid #444;
-    transition: all 0.3s ease;
-    margin: 0 0rem 1rem 1rem;
-    position: relative;
-    overflow: hidden;
+    background: #ffffff !important;
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    border-left: 3.5px solid transparent !important;
+    padding: 0.55rem 0.85rem !important;
+    margin: 0 !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: background-color 0.15s ease, border-left-color 0.15s ease !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+.lecture-card .collapse > div:last-child .lesson-item {
+    border-bottom: none !important;
 }
 
 .lesson-item:hover {
-    background: #383838;
-    border-color: #0d9488;
-    transform: translateY(-1px);
+    background: #f0fdfa !important;
+    border-left-color: #5eead4 !important;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
-.lesson-item.completed {
-    background: rgba(102, 126, 234, 0.1);
-    border-color: rgba(102, 126, 234, 0.3);
-}
-
-/* ✨ PHASE 4.107: Active lesson indicator - shows which lesson is currently playing */
+/* Active currently playing lesson */
 .lesson-item.active {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.15) 100%);
-    border-color: #0d9488;
-    border-width: 2px;
-    box-shadow: 0 0 12px rgba(102, 126, 234, 0.4), inset 0 0 8px rgba(102, 126, 234, 0.1);
+    background: linear-gradient(90deg, #ecfdf5 0%, #f0fdfa 100%) !important;
+    border-left-color: #0d9488 !important;
+    box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0.15) !important;
 }
 
 .lesson-item.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 6px;
-    background: linear-gradient(180deg, #0d9488 0%, #0f766e 100%);
-    box-shadow: 0 0 8px rgba(102, 126, 234, 0.8);
+    display: none !important;
 }
 
+/* Completed lesson */
+.lesson-item.completed {
+    background: #ffffff !important;
+    border-left-color: #10b981 !important;
+}
+
+.lesson-item.completed:hover {
+    background: #f0fdfa !important;
+}
+
+/* Progress indicator on left */
 .lesson-progress-indicator {
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
-    width: 4px;
-    background: #555;
-    transition: all 0.3s ease;
+    width: 3.5px;
+    background: transparent;
+    transition: all 0.2s ease;
 }
 
 .lesson-progress-indicator.completed {
-    background: linear-gradient(180deg, #28a745, #20c997);
-    box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
+    background: #10b981;
 }
 
-/* Lesson Play Button */
+.lesson-progress-indicator.in-progress {
+    background: #f59e0b;
+}
+
+/* ==========================================================================
+   Lesson Play Button (Compact 32px)
+   ========================================================================== */
 .lesson-play-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: none;
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.8rem !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 
-.lesson-play-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+.lesson-play-btn.not-started {
+    background: #f1f5f9 !important;
+    color: #0f766e !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.lesson-play-btn.not-started:hover {
+    background: #0d9488 !important;
+    color: #ffffff !important;
+    border-color: #0d9488 !important;
+    transform: scale(1.08) !important;
+    box-shadow: 0 3px 8px rgba(13, 148, 136, 0.3) !important;
+}
+
+.lesson-play-btn.in-progress {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35) !important;
 }
 
 .lesson-play-btn.completed {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35) !important;
 }
 
-.lesson-play-btn.completed:hover {
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+.lesson-play-btn:hover {
+    transform: scale(1.08) !important;
 }
 
-/* Lesson Content */
+/* ==========================================================================
+   Lesson Typography & Metadata
+   ========================================================================== */
 .lesson-title {
-    color: #e0e0e0;
-    font-weight: 600;
-    font-size: 1rem;
-    line-height: 1.4;
+    color: #1e293b !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 0.2rem !important;
+    text-decoration: none !important;
+    opacity: 1 !important;
 }
 
-.lesson-title.completed {
-    color: #20c997;
+.lesson-item:hover .lesson-title {
+    color: #0f766e !important;
+}
+
+.lesson-item.active .lesson-title {
+    color: #0f766e !important;
+    font-weight: 700 !important;
 }
 
 .lesson-meta {
-    color: #aaa;
-    display: flex;
-    align-items: center;
-    font-size: 0.85rem;
+    font-size: 0.72rem !important;
+    color: #64748b !important;
+    background: #f8fafc !important;
+    padding: 0.15rem 0.5rem !important;
+    border-radius: 6px !important;
+    border: 1px solid #e2e8f0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    font-weight: 500 !important;
 }
 
-.lesson-completed-meta {
-    color: #20c997;
-    display: flex;
-    align-items: center;
-    font-size: 0.85rem;
-    font-weight: 500;
+.lesson-status-badge {
+    font-size: 0.72rem !important;
+    padding: 0.15rem 0.55rem !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
 }
 
-/* Lesson Status Container */
-.lesson-status-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.lesson-status-badge.completed {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    border: 1px solid #a7f3d0 !important;
+}
+
+.lesson-status-badge.in-progress {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    border: 1px solid #fde68a !important;
+}
+
+.lesson-status-badge.not-started {
+    background: #f8fafc !important;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0 !important;
 }
 
 /* Empty State */
 .empty-state {
     text-align: center;
-    padding: 3rem 1rem;
-    color: #888;
+    padding: 2.5rem 1rem;
+    color: #64748b;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
 }
 
 .empty-icon {
-    font-size: 4rem;
-    color: #555;
-    margin-bottom: 1rem;
+    font-size: 2.8rem;
+    color: #0d9488;
+    opacity: 0.5;
+    margin-bottom: 0.75rem;
 }
 
 .empty-state h5 {
-    color: #ccc;
-    margin-bottom: 0.5rem;
+    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
 }
 
 .empty-state p {
-    color: #888;
-    font-size: 0.9rem;
+    color: #64748b;
+    font-size: 0.85rem;
+    margin: 0;
 }
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .curriculum-progress-container {
-        padding: 0.75rem 1rem;
-    }
-    
-    .lecture-header {
-        padding: 0.75rem 1rem;
-    }
-    
-    .lesson-item {
-        margin: 0 0.5rem 0.75rem 0.5rem;
-    }
-    
-    .lesson-play-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-    }
-    
-    .lesson-title {
-        font-size: 0.9rem;
-    }
-    
-    .lesson-meta {
-        font-size: 0.8rem;
-    }
-}
-
-@media (max-width: 576px) {
-    .d-flex.gap-3.flex-wrap {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 0.5rem !important;
-    }
-    
-    .course-progress-stats {
-        flex-direction: column;
-        gap: 0.5rem;
-        text-align: center;
-    }
-}
-
-/* File Viewer Modal Styles */
-
-.viewer-modal-modern {
-    --bs-modal-width: 90%;
-}
-
-.viewer-modal-modern .modal-header {
-    border-bottom: none;
-    position: relative;
-    overflow: hidden;
-}
-
-.viewer-modal-modern .modal-title {
-    color: white !important;
-    font-weight: 600;
-}
-
-.file-preview-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-    padding: 2rem;
-}
-
-.file-icon-large {
-    margin-bottom: 1.5rem;
-    animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-    0% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
-    100% {
-        transform: translateY(0px);
-    }
-}
-
-.file-preview-container h5 {
-    color: white;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    text-align: center;
-}
-
-.file-preview-container p {
-    color: #6c757d;
-    margin-bottom: 2rem;
-    text-align: center;
-}
-
-.file-preview-container .btn {
-    border-radius: 25px;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    min-width: 140px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.file-preview-container .btn-primary {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    border: none;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
-.file-preview-container .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-}
-
-.file-preview-container .btn-outline-light {
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-}
-
-.file-preview-container .btn-outline-light:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-    color: white;
-    transform: translateY(-2px);
-}
-
-/* Modal Responsive Design */
-@media (max-width: 768px) {
-    .viewer-modal-modern {
-        --bs-modal-width: 95%;
-    }
-    
-    .file-preview-container {
-        padding: 1rem;
-        min-height: 300px;
-    }
-    
-    .file-icon-large i {
-        font-size: 3rem !important;
-    }
-    
-    .file-preview-container .d-flex {
-        flex-direction: column;
-        gap: 1rem !important;
-    }
-    
-    .file-preview-container .btn {
-        width: 100%;
-        min-width: auto;
-    }
-}
-
-@media (max-width: 576px) {
-    .viewer-modal-modern .modal-header {
-        padding: 1rem;
-    }
-    
-    .viewer-modal-modern .modal-title .me-3 {
-        width: 40px !important;
-        height: 40px !important;
-    }
-    
-    .viewer-modal-modern .modal-title .fw-bold {
-        font-size: 1.1rem !important;
-    }
-    
-    .file-preview-container h5 {
-        font-size: 1.1rem;
-    }
-}
-
-/* Video Container Styles (ReactPlayer wrapper) */
-.video-container {
-    position: relative;
-    background: #000;
-    height: auto;  /* ✨ PHASE 4.86: Changed from min-height: 60vh to auto to match video content */
-}
-
-/* Video Progress Badge */
-.video-progress-badge {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    padding: 10px 16px;
-    background: rgba(0, 0, 0, 0.85);
-    border-radius: 12px;
-    backdrop-filter: blur(5px);
-    z-index: 20;
-    width: fit-content;
-    max-width: 280px;
-    color: white;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    min-height: 32px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 600;
-    white-space: nowrap;
-    transition: all 0.3s ease;
-}
-
-/* ✨ PHASE 4.88: Google Drive Video Player Restrictions */
-/* Hide fullscreen button and disable interactive controls */
-.video-player-inline iframe {
-    /* Prevent direct interaction with fullscreen controls */
-    pointer-events: auto;
-}
-
-/* Disable fullscreen button using CSS */
-.video-player-inline iframe::before,
-.video-player-inline iframe[src*="drive.google.com"] {
-    /* Google Drive player controls override - using sandbox restrictions */
-}
-
-/* Block fullscreen from Google Drive embedded player */
-@supports (selector(::-webkit-scrollbar)) {
-    .video-player-inline iframe[src*="drive.google.com"] {
-        /* WebKit browser fullscreen button hiding */
-        filter: none;
-    }
-}
-
-/* Video Container Responsive Design */
-@media (max-width: 768px) {
-    .video-container {
-        height: auto;
-    }
-    
-    .video-progress-badge {
-        padding: 8px 12px !important;
-        font-size: 0.85rem !important;
-        min-height: 28px !important;
-    }
-}
-
-@media (max-width: 576px) {
-    .video-container {
-        height: auto;
-    }
-    
-    .video-progress-badge {
-        padding: 6px 10px !important;
-        font-size: 0.8rem !important;
-        min-height: 24px !important;
-        right: 12px !important;
-        bottom: 12px !important;
-    }
-}
-
-/* Keyboard shortcuts styling */
-kbd {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 3px;
-    box-shadow: 0 1px 0 rgba(0,0,0,0.2), inset 0 0 0 2px #fff;
-    color: #495057;
-    display: inline-block;
-    font-size: 0.8rem;
-    font-weight: 700;
-    line-height: 1;
-    padding: 2px 4px;
-    white-space: nowrap;
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    min-width: 1.5rem;
-    text-align: center;
-}
-
-/* Enhanced Lesson Status Indicators */
-.lesson-status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-}
-
-.lesson-status-badge.completed {
-    background: linear-gradient(135deg, #10B981, #059669);
-    color: white;
-}
-
-.lesson-status-badge.in-progress {
-    background: linear-gradient(135deg, #F59E0B, #D97706);
-    color: white;
-}
-
-.lesson-status-badge.not-started {
-    background: linear-gradient(135deg, #6B7280, #4B5563);
-    color: white;
-}
-
-/* Enhanced Progress Indicators */
-.lesson-progress-indicator {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    border-radius: 0 4px 4px 0;
-    background: #E5E7EB;
-}
-
-.lesson-progress-indicator.completed {
-    background: linear-gradient(180deg, #10B981, #059669);
-}
-
-.lesson-progress-indicator.in-progress {
-    background: linear-gradient(180deg, #F59E0B, #D97706);
-    position: relative;
-    overflow: hidden;
-}
-
-.lesson-progress-indicator .progress-fill {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(180deg, #FBBF24, #F59E0B);
-    transition: height 0.3s ease;
-}
-
-.lesson-progress-indicator.not-started {
-    background: #E5E7EB;
-}
-
-/* Enhanced Play Button States */
-.lesson-play-btn.completed {
-    background: linear-gradient(135deg, #10B981, #059669);
-    color: white;
-    border: 2px solid #10B981;
-}
-
-.lesson-play-btn.in-progress {
-    background: linear-gradient(135deg, #F59E0B, #D97706);
-    color: white;
-    border: 2px solid #F59E0B;
-    position: relative;
-    overflow: hidden;
-}
-
-.lesson-play-btn.not-started {
-    background: #F3F4F6;
-    color: #6B7280;
-    border: 2px solid #E5E7EB;
-}
-
-.lesson-play-btn.not-started:hover {
-    background: #0d9488;
-    color: white;
-    border-color: #0d9488;
-    transform: scale(1.05);
-}
-
-/* Lesson Title States */
-.lesson-title.completed {
-    color: #059669;
-    text-decoration: line-through;
-    opacity: 0.8;
-}
-
-.lesson-title.in-progress {
-    color: #D97706;
-    font-weight: 600;
-}
-
-.lesson-title.not-started {
-    color: #374151;
-}
-
-/* Animation Keyframes */
-/* Shimmer animation removed - no more repeated shining */

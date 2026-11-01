@@ -27,11 +27,6 @@
    LAYOUT, CONTAINER & STICKY SIDEBAR PRESERVATION
    ========================================================================== */
 
-.qa-bg-section .instructor-header-card {
-    margin-top: 0 !important;
-    margin-bottom: 1.25rem !important;
-}
-
 .qa-bg-section {
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -39,6 +34,7 @@
     max-width: 100% !important;
     display: block !important;
     margin-bottom: 2rem !important; /* Eliminated vast 8rem empty bottom space */
+    margin-top: 0 !important;
     min-height: 100vh;
     background: transparent;
     padding-top: 1rem !important;
@@ -49,19 +45,35 @@
 }
 
 .qa-bg-section .container {
+    position: relative;
     overflow: visible !important;
 }
 
 /* Main layout row (direct child of container, excluding header row) */
 .qa-bg-section > .container > .row:not(.instructor-header-row) {
-    flex-wrap: nowrap;
-    width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
     gap: 0 !important;
     overflow: visible !important;
+}
+
+.qa-bg-section > .container > .row.mt-0 {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 0 !important;
+}
+
+.qa-bg-section .instructor-header-card {
+    overflow: visible !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 1rem !important;
 }
 
 /* Consistent vertical spacing for INNER dashboard sections */

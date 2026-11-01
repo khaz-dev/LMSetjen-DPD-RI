@@ -8,37 +8,93 @@ import useAxios from "../../../utils/useAxios";
 import { getValidProfileImageUrl } from "../../../utils/imageUtils";
 import "./Header.css";
 
+// In-memory module cache for teacher profile across page navigations
+let cachedTeacherData = null;
+let lastTeacherFetchTime = 0;
+const TEACHER_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+// Helper to get initial cached teacher profile to prevent flicker on mount
+const getInitialTeacherProfile = (userId) => {
+  if (cachedTeacherData && (!userId || cachedTeacherData.user_id === userId || cachedTeacherData.user === userId)) {
+    return cachedTeacherData;
+  }
+  try {
+    const saved = localStorage.getItem("instructor_cached_teacher");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && (!userId || parsed.user_id === userId || parsed.user === userId || parsed.id)) {
+        cachedTeacherData = parsed;
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return null;
+};
+
 function Header() {
   const profileContext = useContext(ProfileContext);
   const [profile] = profileContext || [null, () => {}];
-  const [teacher, setTeacher] = useState(null);
+  const userData = UserData();
+  const [teacher, setTeacher] = useState(() => getInitialTeacherProfile(userData?.user_id));
   const [isCollapsed, setIsCollapsed] = useState(() => {
     // Initialize from localStorage - SEPARATE key for header
     const saved = localStorage.getItem("instructorHeaderCollapsed");
     return saved === "true";
   });
   const [isAnimating, setIsAnimating] = useState(false); // ✨ Only animate on user interaction
-  const userData = UserData();
   const location = useLocation();
 
   // ✨ Real data sync: Fetch teacher profile from backend to ensure all instructor details are up-to-date
   useEffect(() => {
     let isMounted = true;
+
+    // Listen for custom event when instructor updates profile
+    const handleProfileUpdate = (e) => {
+      if (e?.detail) {
+        cachedTeacherData = { ...(cachedTeacherData || {}), ...e.detail };
+        lastTeacherFetchTime = Date.now();
+        try {
+          localStorage.setItem("instructor_cached_teacher", JSON.stringify(cachedTeacherData));
+        } catch (err) {}
+        if (isMounted) {
+          setTeacher((prev) => ({ ...(prev || {}), ...e.detail }));
+        }
+      }
+    };
+    window.addEventListener("instructorTeacherProfileUpdated", handleProfileUpdate);
+
+    const userId = userData?.user_id;
+    if (!userId) {
+      return () => {
+        isMounted = false;
+        window.removeEventListener("instructorTeacherProfileUpdated", handleProfileUpdate);
+      };
+    }
+
     const fetchTeacherProfile = async () => {
-      const userId = userData?.user_id;
-      if (!userId) return;
       try {
         const res = await useAxios.get(`teacher/profile/${userId}/`);
         if (isMounted && res.data) {
-          setTeacher(res.data);
+          const newData = res.data;
+          const isChanged = JSON.stringify(newData) !== JSON.stringify(cachedTeacherData);
+          cachedTeacherData = newData;
+          lastTeacherFetchTime = Date.now();
+          try {
+            localStorage.setItem("instructor_cached_teacher", JSON.stringify(newData));
+          } catch (err) {}
+          if (isChanged) {
+            setTeacher(newData);
+          }
         }
       } catch (err) {
         // Ignored if teacher profile not yet created or loading
       }
     };
     fetchTeacherProfile();
+
     return () => {
       isMounted = false;
+      window.removeEventListener("instructorTeacherProfileUpdated", handleProfileUpdate);
     };
   }, [userData?.user_id]);
 
@@ -140,7 +196,12 @@ function Header() {
   };
 
   const fullName = teacher?.full_name || profile?.full_name || userData?.full_name || "Instruktur";
-  const bio = teacher?.bio || teacher?.about || profile?.about || "Kelola materi pelatihan, pantau partisipasi peserta, dan evaluasi hasil belajar di platform LMSetjen DPD RI.";
+  const bio =
+    (teacher?.bio && teacher?.bio.trim()) ||
+    (profile?.bio && profile?.bio.trim()) ||
+    (teacher?.about && teacher?.about.trim()) ||
+    (profile?.about && profile?.about.trim()) ||
+    "Kelola materi pelatihan, pantau partisipasi peserta, dan evaluasi hasil belajar di platform LMSetjen DPD RI.";
   const country = teacher?.country || profile?.country;
   const avatarUrl = getValidProfileImageUrl(teacher?.image || profile?.image || userData?.image);
 

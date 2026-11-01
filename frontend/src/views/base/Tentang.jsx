@@ -77,7 +77,10 @@ function Tentang() {
   const isMatch = (text) => !q || text.toLowerCase().includes(q);
 
   return (
-    <div className="tentang-page-wrapper">
+    <div 
+      className="tentang-page-wrapper"
+      style={{ '--header-height': `${headerHeight}px` }}
+    >
       <BaseHeader />
 
       {/* HERO SLOT ANCHOR PREVENTS LAYOUT SHIFT */}

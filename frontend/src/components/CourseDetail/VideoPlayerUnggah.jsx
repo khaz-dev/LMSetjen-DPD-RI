@@ -48,6 +48,12 @@ const VideoPlayerUnggah = forwardRef(({
     const videoRef = useRef(null);
     const onProgressRef = useRef(onProgress);  // ✨ PHASE 4.156: Ref for stable onProgress
     const progressStoppedRef = useRef(false);  // ✨ PHASE 13.2: Track if we've already stopped progress tracking at 95%+
+    const maxTimeWatchedRef = useRef(0);  // ✨ Anti-skip: Track furthest watched point to prevent skipping
+
+    // Sync maxTimeWatchedRef on lesson change or resume seek position
+    useEffect(() => {
+        maxTimeWatchedRef.current = (seekPosition && seekPosition > 0) ? seekPosition : 0;
+    }, [variantItem?.variant_item_id, seekPosition]);
     
     // ✨ PHASE 4.156: Keep ref in sync
     useEffect(() => {
@@ -211,17 +217,45 @@ const VideoPlayerUnggah = forwardRef(({
         setIsPlaying(false);
     };
 
-    // ✨ PHASE 11.180 FIX: Use useCallback to capture latest allowVideoAccess state
+    // ✨ Anti-skip: Enforce strict keyboard lock in LIMITED mode
     const handleVideoKeyDown = useCallback((e) => {
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-            // ✨ PHASE 11.180: Only block arrow keys in LIMITED mode (when allowVideoAccess = false)
-            // In FULL mode (allowVideoAccess = true), allow keyboard navigation
-            if (!allowVideoAccess) {
+        if (!allowVideoAccess) {
+            // Block forward/skip keys in LIMITED mode (arrows, end, home, page keys, numbers, vim/youtube keys)
+            if (
+                e.key === 'ArrowLeft' ||
+                e.key === 'ArrowRight' ||
+                e.key === 'End' ||
+                e.key === 'Home' ||
+                e.key === 'PageDown' ||
+                e.key === 'PageUp' ||
+                (e.key >= '0' && e.key <= '9') ||
+                e.key === 'l' || e.key === 'L' ||
+                e.key === 'j' || e.key === 'J'
+            ) {
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
             }
-            // In FULL mode, allow the default browser behavior for navigation
+        }
+    }, [allowVideoAccess]);
+
+    // ✨ Anti-skip: Guard seeking to prevent forward scrub bypass
+    const handleVideoSeeking = useCallback(() => {
+        if (!allowVideoAccess && videoRef.current) {
+            if (videoRef.current.currentTime > maxTimeWatchedRef.current + 2.0) {
+                console.warn('[VideoPlayerUnggah] ⚠️ Forward skip blocked! Snapping back to:', maxTimeWatchedRef.current);
+                videoRef.current.currentTime = maxTimeWatchedRef.current;
+            }
+        }
+    }, [allowVideoAccess]);
+
+    // ✨ Anti-skip: Prevent playback rate acceleration hacks in LIMITED mode
+    const handleRateChange = useCallback(() => {
+        if (!allowVideoAccess && videoRef.current) {
+            if (videoRef.current.playbackRate > 2.0) {
+                console.warn('[VideoPlayerUnggah] ⚠️ Playback speed acceleration blocked!');
+                videoRef.current.playbackRate = 1.0;
+            }
         }
     }, [allowVideoAccess]);
 
@@ -442,31 +476,45 @@ const VideoPlayerUnggah = forwardRef(({
         <div className="video-player-inline">
             {/* Header */}
             <div className="video-player-header">
-                <div className="video-player-header-content">
-                    <div className="video-player-icon-box">
-                        <i className="fas fa-video"></i>
+                <div className="video-player-header-left">
+                    <div className="video-player-icon-box" title="Video Pembelajaran">
+                        <i className="fas fa-play"></i>
                     </div>
                     <div className="video-player-title-wrapper">
-                        {/* ✨ PHASE 6.3: Show Bagian context in title */}
-                        <div className="video-player-title">
-                            {variantContext ? (
-                                <>
-                                    <span style={{ fontSize: '0.85em', opacity: 0.9 }}>{variantContext.variantTitle}</span>
-                                    <span style={{ margin: '0 0.5rem', opacity: 0.7 }}>|</span>
-                                    <span style={{ fontWeight: 600 }}>{variantItem?.title}</span>
-                                </>
-                            ) : (
-                                variantItem?.title
+                        <div className="video-player-title-row">
+                            {variantContext?.variantTitle && (
+                                <span className="video-header-section-chip" title={`Bagian: ${variantContext.variantTitle}`}>
+                                    <i className="fas fa-layer-group me-1"></i>
+                                    {variantContext.variantTitle}
+                                </span>
                             )}
+                            <span className="video-header-lesson-title" title={variantItem?.title}>
+                                {variantItem?.title}
+                            </span>
                         </div>
-                        <small className="video-player-progress-info">{formatVideoTimer()}</small>
                     </div>
                 </div>
-                <button
-                    onClick={handleClose}
-                    className="btn-close video-player-close-btn"
-                    aria-label="Close"
-                ></button>
+
+                <div className="video-player-header-right">
+                    <div className="video-player-live-badge d-none d-md-inline-flex" title="Status Pemutaran Aktif">
+                        <span className="live-pulse-dot"></span>
+                        <span>Memutar</span>
+                    </div>
+
+                    <div className="video-player-progress-info" title="Waktu Pemutaran (Waktu Saat Ini | Durasi | Persentase)">
+                        <i className="fas fa-clock me-1 text-amber"></i>
+                        <span>{formatVideoTimer()}</span>
+                    </div>
+
+                    <button
+                        onClick={handleClose}
+                        className="video-player-close-btn"
+                        aria-label="Tutup Pemutar"
+                        title="Tutup Pemutar Video"
+                    >
+                        <i className="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
 
             {/* Content */}
@@ -489,6 +537,7 @@ const VideoPlayerUnggah = forwardRef(({
                     <div 
                         ref={containerRef}
                         className="video-player-video-container video-player-video-hover"
+                        onContextMenu={(e) => { if (!allowVideoAccess) e.preventDefault(); }}
                         onKeyDown={handleVideoKeyDown}
                         tabIndex={allowVideoAccess ? 0 : -1}
                         onMouseMove={() => setMouseActive(true)}
@@ -535,6 +584,9 @@ const VideoPlayerUnggah = forwardRef(({
                             autoPlay={autoplay && (!seekPosition || seekPosition <= 0)}
                             tabIndex={allowVideoAccess ? 0 : -1}
                             controls={allowVideoAccess}
+                            onSeeking={handleVideoSeeking}
+                            onRateChange={handleRateChange}
+                            onContextMenu={(e) => { if (!allowVideoAccess) e.preventDefault(); }}
                             onLoadedMetadata={() => {
                                 if (videoRef.current) {
                                     setDuration(videoRef.current.duration);
@@ -543,6 +595,9 @@ const VideoPlayerUnggah = forwardRef(({
                             onTimeUpdate={() => {
                                 if (videoRef.current && videoRef.current.duration) {
                                     setCurrentTime(videoRef.current.currentTime);
+                                    if (videoRef.current.currentTime > maxTimeWatchedRef.current) {
+                                        maxTimeWatchedRef.current = videoRef.current.currentTime;
+                                    }
                                     const percentage = (videoRef.current.currentTime / videoRef.current.duration) * 100;
                                     setProgressPercentage(Math.round(percentage));
                                     

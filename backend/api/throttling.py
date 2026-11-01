@@ -77,6 +77,17 @@ class SecureAnonRateThrottle(AnonRateThrottle):
     """
     scope = 'anon'
 
+    def allow_request(self, request, view):
+        from django.conf import settings
+        # Dalam mode DEBUG (development), jangan throttle localhost / loopback / private IP
+        if getattr(settings, 'DISABLE_THROTTLING', False):
+            return True
+        if getattr(settings, 'DEBUG', False):
+            ident = self.get_ident(request)
+            if is_private_or_loopback(ident):
+                return True
+        return super().allow_request(request, view)
+
     def get_ident(self, request):
         return get_real_client_ip(request)
 
@@ -87,6 +98,17 @@ class SecureUserRateThrottle(UserRateThrottle):
     dengan fallback aman ke IP klien asli hasil inspeksi django-ipware.
     """
     scope = 'user'
+
+    def allow_request(self, request, view):
+        from django.conf import settings
+        # Dalam mode DEBUG (development), jangan throttle localhost / loopback / private IP
+        if getattr(settings, 'DISABLE_THROTTLING', False):
+            return True
+        if getattr(settings, 'DEBUG', False):
+            ident = self.get_ident(request)
+            if is_private_or_loopback(ident):
+                return True
+        return super().allow_request(request, view)
 
     def get_ident(self, request):
         user = getattr(request, 'user', None)
@@ -102,12 +124,25 @@ class SecureBurstRateThrottle(SimpleRateThrottle):
     """
     scope = 'burst'
 
-    def get_cache_key(self, request, view):
+    def allow_request(self, request, view):
+        from django.conf import settings
+        # Dalam mode DEBUG (development), jangan throttle localhost / loopback / private IP
+        if getattr(settings, 'DISABLE_THROTTLING', False):
+            return True
+        if getattr(settings, 'DEBUG', False):
+            ident = self.get_ident(request)
+            if is_private_or_loopback(ident):
+                return True
+        return super().allow_request(request, view)
+
+    def get_ident(self, request):
         user = getattr(request, 'user', None)
         if user and getattr(user, 'is_authenticated', False):
-            ident = str(user.pk)
-        else:
-            ident = get_real_client_ip(request)
+            return str(user.pk)
+        return get_real_client_ip(request)
+
+    def get_cache_key(self, request, view):
+        ident = self.get_ident(request)
 
         return self.cache_format % {
             'scope': self.scope,

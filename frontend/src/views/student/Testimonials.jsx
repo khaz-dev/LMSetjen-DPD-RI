@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
+import { Link } from "react-router-dom";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
@@ -6,23 +7,74 @@ import Header from "./Partials/Header";
 import TestimonialSubmitForm from "../../components/TestimonialSubmitForm";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
+import { ProfileContext } from "../plugin/Context";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
-// ✨ PHASE 11.12: Import caching hook for seamless navigation
 import { usePageCache } from "../../utils/usePageCache";
+import { getValidProfileImageUrl } from "../../utils/imageUtils";
 import "./Testimonials.css";
 
-function Testimonials() {
-    const [testimonials, setTestimonials] = useState([]);
-    const isCollapsed = useSidebarCollapse();
+// Helper to safely extract string position/jabatan from profile object
+const extractPosition = (p) => {
+    if (!p) return "";
+    if (typeof p.position_name === "string" && p.position_name.trim()) {
+        return p.position_name.trim();
+    }
+    if (p.position && typeof p.position === "object" && typeof p.position.name === "string" && p.position.name.trim()) {
+        return p.position.name.trim();
+    }
+    if (typeof p.position === "string" && p.position.trim()) {
+        return p.position.trim();
+    }
+    if (typeof p.kelas_jabatan === "string" && p.kelas_jabatan.trim()) {
+        return p.kelas_jabatan.trim();
+    }
+    if (typeof p.jenis_jabatan === "string" && p.jenis_jabatan.trim()) {
+        return p.jenis_jabatan.trim();
+    }
+    return "";
+};
 
-    const fetchTestimonials = async () => {
-        const res = await useAxios
-            .get("student/testimonials/list/?role=student");  // ✨ PHASE 4.13: Fetch user's own testimonials with status
+// Helper to safely extract string organization unit from profile object
+const extractUnit = (p) => {
+    if (!p) return "";
+    if (typeof p.organization_unit_name === "string" && p.organization_unit_name.trim()) {
+        return p.organization_unit_name.trim();
+    }
+    if (p.organization_unit && typeof p.organization_unit === "object" && typeof p.organization_unit.name === "string" && p.organization_unit.name.trim()) {
+        return p.organization_unit.name.trim();
+    }
+    if (typeof p.unit_organisasi === "string" && p.unit_organisasi.trim()) {
+        return p.unit_organisasi.trim();
+    }
+    return "";
+};
+
+function Testimonials() {
+    const isCollapsed = useSidebarCollapse();
+    const userData = UserData();
+    const profileContext = useContext(ProfileContext);
+    const [profile] = profileContext || [null, () => {}];
+    const [fetchedProfile, setFetchedProfile] = useState(null);
+
+    // If profile is not available in context, fetch it directly
+    useEffect(() => {
+        if (!profile && userData?.user_id) {
+            useAxios.get(`user/profile/${userData.user_id}/`)
+                .then(res => setFetchedProfile(res.data))
+                .catch(() => {});
+        }
+    }, [profile, userData?.user_id]);
+
+    const activeProfile = profile || fetchedProfile;
+
+    // Fetch user's own student testimonial with status
+    const fetchTestimonials = useCallback(async () => {
+        const res = await useAxios.get("student/testimonials/list/?role=student");
         return res.data?.results || [];
-    };
+    }, []);
 
     // ✨ PHASE 11.12: Use page cache to avoid reloading when navigating
-    const { data: cachedTestimonials, loading: fetching, refetch } = usePageCache(
+    const { data: testimonials = [], loading: fetching, refetch } = usePageCache(
         'student-testimonials',
         fetchTestimonials,
         {
@@ -30,16 +82,57 @@ function Testimonials() {
         }
     );
 
-    // Sync cached data to state
+    const currentTestimonial = testimonials && testimonials.length > 0 ? testimonials[0] : null;
+
+    // Real-time preview data synced with form
+    const [previewData, setPreviewData] = useState({
+        rating: 5,
+        review: ""
+    });
+
+    // Sync preview state with loaded testimonial on initial load / change
     useEffect(() => {
-        if (cachedTestimonials) {
-            setTestimonials(cachedTestimonials);
+        if (currentTestimonial) {
+            setPreviewData({
+                rating: currentTestimonial.rating || 5,
+                review: currentTestimonial.review || ""
+            });
         }
-    }, [cachedTestimonials]);
+    }, [currentTestimonial?.id, currentTestimonial?.review, currentTestimonial?.rating]);
+
+    const handleFormChange = useCallback((formData) => {
+        setPreviewData({
+            rating: formData.rating || 5,
+            review: formData.review || ""
+        });
+    }, []);
 
     const handleTestimonialSubmitSuccess = () => {
         // Refresh testimonials after successful submission
         refetch();
+    };
+
+    // Extract student profile metadata
+    const authorName = activeProfile?.full_name || userData?.full_name || userData?.username || "Siswa LMSetjen DPD RI";
+    const authorRawAvatar = activeProfile?.image || userData?.image || null;
+    const authorAvatar = getValidProfileImageUrl(authorRawAvatar);
+
+    const resolvedPosition = extractPosition(activeProfile) || extractPosition(userData);
+    const resolvedGolongan = activeProfile?.golongan || userData?.golongan || "";
+    const authorUnit = extractUnit(activeProfile) || extractUnit(userData) || (activeProfile ? "Setjen DPD RI" : "");
+
+    let authorTitle = "Siswa LMS Setjen DPD RI";
+    if (resolvedPosition && resolvedGolongan) {
+        authorTitle = `${resolvedPosition} (${resolvedGolongan})`;
+    } else if (resolvedPosition) {
+        authorTitle = resolvedPosition;
+    } else if (resolvedGolongan) {
+        authorTitle = `Pegawai Golongan ${resolvedGolongan}`;
+    }
+
+    const getAvatarInitial = (name) => {
+        if (!name) return "S";
+        return name.trim().charAt(0).toUpperCase();
     };
 
     if (fetching) {
@@ -53,10 +146,10 @@ function Testimonials() {
                             <Sidebar />
                             <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
-                                    <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
+                                    <div className="spinner-border text-teal" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Memuat Testimoni...</p>
+                                    <p className="mt-3 text-muted">Memuat Testimoni Siswa...</p>
                                 </div>
                             </div>
                         </div>
@@ -76,141 +169,288 @@ function Testimonials() {
                     <div className="row mt-0">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
-                            {/* Page Header */}
-                            <div className="modern-header-section mb-4" style={{
-                                background: "rgba(255, 255, 255, 0.95)",
-                                backdropFilter: "blur(10px)",
-                                borderRadius: "20px",
-                                padding: "20px 20px",
-                                border: "1px solid rgba(255, 255, 255, 0.2)",
-                                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-                                position: "relative",
-                                overflow: "hidden"
-                            }}>
-                                <div style={{
-                                    position: "absolute",
-                                    top: "-50%",
-                                    right: "-15%",
-                                    width: "300px",
-                                    height: "300px",
-                                    background: "linear-gradient(45deg, #0d948820, #0f766e20)",
-                                    borderRadius: "50%",
-                                    zIndex: 1,
-                                    pointerEvents: "none"
-                                }}></div>
-                                <div className="d-flex align-items-center justify-content-between position-relative" style={{ zIndex: 2 }}>
-                                    <div>
-                                        <h1 className="mb-2" style={{
-                                            background: "linear-gradient(135deg, #0d9488, #0f766e)",
-                                            WebkitBackgroundClip: "text",
-                                            WebkitTextFillColor: "transparent",
-                                            fontSize: "2.5rem",
-                                            fontWeight: "bold"
-                                        }}>
-                                            <i className="fas fa-quote-left me-3"></i>Testimoni Platform
-                                        </h1>
-                                        <p className="mb-0 text-muted" style={{ fontSize: "1.1rem" }}>
-                                            Bagikan pengalaman belajar anda dalam platform ini.
-                                        </p>
+                            
+                            {/* Compact Modern Header */}
+                            <div className="student-testimonial-header mb-4">
+                                <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                                    <div className="d-flex align-items-center gap-3">
+                                        <div className="testimonial-header-icon">
+                                            <i className="fas fa-quote-left"></i>
+                                        </div>
+                                        <div>
+                                            <h2 className="header-title mb-1">Testimoni Student Platform</h2>
+                                            <p className="header-subtitle mb-0">
+                                                Bagikan pengalaman dan ulasan belajar Anda pada portal LMS Setjen DPD RI
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Real-time Status Badge */}
+                                    <div className="status-badge-container">
+                                        {!currentTestimonial ? (
+                                            <span className="badge rounded-pill badge-status-empty">
+                                                <i className="fas fa-pen-nib me-1"></i> Belum Ada Testimoni
+                                            </span>
+                                        ) : currentTestimonial.status === 'approved' ? (
+                                            <span className="badge rounded-pill badge-status-approved">
+                                                <i className="fas fa-check-circle me-1"></i> Disetujui (+50 Poin)
+                                            </span>
+                                        ) : currentTestimonial.status === 'pending' ? (
+                                            <span className="badge rounded-pill badge-status-pending">
+                                                <i className="fas fa-hourglass-half me-1"></i> Menunggu Review Admin
+                                            </span>
+                                        ) : (
+                                            <span className="badge rounded-pill badge-status-rejected">
+                                                <i className="fas fa-triangle-exclamation me-1"></i> Perlu Revisi
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Testimonial Submission Form */}
-                            <div className="card mb-5" style={{
-                                borderRadius: "15px",
-                                border: "1px solid rgba(102, 126, 234, 0.2)",
-                                boxShadow: "0 4px 15px rgba(102, 126, 234, 0.1)"
-                            }}>
-                                <div className="card-body p-4">
-                                    {/* ✨ PHASE 4.14: Show status of latest testimonial inside form card */}
-                                    {testimonials && testimonials.length > 0 && (
-                                        <div style={{ marginBottom: "1rem", paddingBottom: "1rem", borderBottom: "1px solid #e9ecef" }}>
-                                            <h5 style={{
-                                                marginBottom: "1rem",
-                                                color: "#0d9488",
-                                                fontSize: "1rem",
-                                                fontWeight: "600"
-                                            }}>
-                                                <i className="fas fa-check-double me-2"></i>Status Testimoni Anda
-                                            </h5>
-
-                                            {testimonials[0].status === 'approved' ? (
-                                                <div style={{
-                                                    padding: "1rem",
-                                                    backgroundColor: "#d4edda",
-                                                    border: "1px solid #c3e6cb",
-                                                    borderRadius: "8px",
-                                                    color: "#155724"
-                                                }}>
-                                                    <i className="fas fa-check-circle me-2" style={{ fontSize: "1.1rem" }}></i>
-                                                    <strong>Testimoni Anda Telah Disetujui!</strong>
-                                                    <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.9rem" }}>
-                                                        Terima kasih, testimoni Anda akan ditampilkan di halaman utama.
-                                                    </p>
-                                                </div>
-                                            ) : testimonials[0].status === 'pending' ? (
-                                                <div style={{
-                                                    padding: "1rem",
-                                                    backgroundColor: "#d1ecf1",
-                                                    border: "1px solid #bee5eb",
-                                                    borderRadius: "8px",
-                                                    color: "#0c5460"
-                                                }}>
-                                                    <i className="fas fa-clock me-2" style={{ fontSize: "1.1rem" }}></i>
-                                                    <strong>Testimoni Menunggu Persetujuan</strong>
-                                                    <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.9rem" }}>
-                                                        Testimoni Anda sedang ditinjau oleh admin. Terima kasih atas kesabaran Anda.
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                <div>
-                                                    <div style={{
-                                                        padding: "1rem",
-                                                        backgroundColor: "#f8d7da",
-                                                        border: "1px solid #f5c6cb",
-                                                        borderRadius: "8px",
-                                                        color: "#721c24",
-                                                        marginBottom: "1rem"
-                                                    }}>
-                                                        <i className="fas fa-times-circle me-2" style={{ fontSize: "1.1rem" }}></i>
-                                                        <strong>Testimoni Anda Ditolak</strong>
-                                                    </div>
-
-                                                    {testimonials[0].rejection_reason && (
-                                                        <div style={{
-                                                            padding: "1rem",
-                                                            backgroundColor: "#fff3cd",
-                                                            border: "1px solid #ffeeba",
-                                                            borderLeft: "4px solid #ffc107",
-                                                            borderRadius: "8px",
-                                                            color: "#856404"
-                                                        }}>
-                                                            <i className="fas fa-exclamation-triangle me-2"></i>
-                                                            <strong>Alasan Penolakan:</strong>
-                                                            <p style={{ margin: "0.75rem 0 0 0", lineHeight: "1.5" }}>
-                                                                {testimonials[0].rejection_reason}
+                            {/* Main 2-Column Responsive Compact Layout */}
+                            <div className="row g-4 align-items-start testimonial-main-grid">
+                                
+                                {/* Left Column: Form Submission / Edit Card */}
+                                <div className="col-xl-7 col-lg-7 col-12 col-testimonial-form">
+                                    <div className="card testimonial-form-card shadow-sm border-0">
+                                        <div className="card-body p-4">
+                                            
+                                            {/* Status Notification Banner (if submitted) */}
+                                            {currentTestimonial && (
+                                                <div className="mb-4">
+                                                    {currentTestimonial.status === 'approved' ? (
+                                                        <div className="status-alert-box alert-success-compact">
+                                                            <div className="d-flex align-items-center gap-2 mb-1">
+                                                                <i className="fas fa-circle-check text-success fs-5"></i>
+                                                                <strong className="text-success">Testimoni Anda Telah Disetujui & Tampil di Beranda!</strong>
+                                                            </div>
+                                                            <p className="small text-muted mb-0">
+                                                                Terima kasih telah memberikan ulasan. Testimoni ini telah dipublikasikan pada halaman utama portal LMSetjen DPD RI dan Anda memperoleh reward <strong>+50 Poin Siswa</strong>.
+                                                            </p>
+                                                        </div>
+                                                    ) : currentTestimonial.status === 'pending' ? (
+                                                        <div className="status-alert-box alert-pending-compact">
+                                                            <div className="d-flex align-items-center gap-2 mb-1">
+                                                                <i className="fas fa-clock text-primary fs-5"></i>
+                                                                <strong className="text-primary">Testimoni Sedang Ditinjau Admin</strong>
+                                                            </div>
+                                                            <p className="small text-muted mb-0">
+                                                                Ulasan Anda sedang dalam antrean moderasi administrator. Anda tetap dapat memperbarui isi ulasan ini kapan saja sebelum disetujui.
+                                                            </p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="status-alert-box alert-rejected-compact">
+                                                            <div className="d-flex align-items-center gap-2 mb-1">
+                                                                <i className="fas fa-circle-xmark text-danger fs-5"></i>
+                                                                <strong className="text-danger">Testimoni Perlu Direvisi</strong>
+                                                            </div>
+                                                            {currentTestimonial.rejection_reason && (
+                                                                <div className="rejection-note mt-2 p-2 rounded">
+                                                                    <span className="fw-semibold text-dark small d-block">Catatan Admin:</span>
+                                                                    <span className="small text-danger-emphasis">{currentTestimonial.rejection_reason}</span>
+                                                                </div>
+                                                            )}
+                                                            <p className="small text-muted mt-2 mb-0">
+                                                                Silakan perbaiki ulasan sesuai catatan di atas dan kirim ulang untuk ditinjau kembali oleh admin.
                                                             </p>
                                                         </div>
                                                     )}
                                                 </div>
                                             )}
-                                        </div>
-                                    )}
 
-                                    <h4 className="card-title mb-3" style={{
-                                        background: "linear-gradient(135deg, #0d9488, #0f766e)",
-                                        WebkitBackgroundClip: "text",
-                                        WebkitTextFillColor: "transparent"
-                                    }}>
-                                        <i className="fas fa-pen-fancy me-2"></i>Bagikan Testimoni Anda
-                                    </h4>
-                                    <p className="card-text text-muted mb-3">
-                                        Ceritakan pengalaman dan pembelajaran Anda sebagai siswa di platform kami
-                                    </p>
-                                    {/* ✨ PHASE 4.11: Pass role='student' to form */}
-                                    <TestimonialSubmitForm onSuccess={handleTestimonialSubmitSuccess} role="student" />
+                                            {/* Form Title & Subtitle */}
+                                            <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                                <div>
+                                                    <h5 className="fw-bold mb-1 text-dark">
+                                                        <i className="fas fa-pen-fancy text-teal me-2"></i>
+                                                        {currentTestimonial ? "Edit Testimoni Anda" : "Tulis Testimoni Siswa"}
+                                                    </h5>
+                                                    <span className="small text-muted">
+                                                        Penilaian Anda membantu peningkatan kualitas pembelajaran digital Setjen DPD RI
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Testimonial Form with Compact & Realtime FormChange Integration */}
+                                            <TestimonialSubmitForm 
+                                                onSuccess={handleTestimonialSubmitSuccess}
+                                                onFormChange={handleFormChange}
+                                                role="student" 
+                                                compact={true}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {/* Right Column: Live Homepage Preview & Activity/Points Summary */}
+                                <div className="col-xl-5 col-lg-5 col-12 col-testimonial-sidebar">
+                                    <div className="d-flex flex-column gap-4">
+                                        
+                                        {/* Card 1: Live Homepage Preview Card */}
+                                        <div className="card preview-container-card shadow-sm border-0">
+                                            <div className="card-header bg-transparent border-0 pt-3 px-4 pb-0 d-flex align-items-center justify-content-between">
+                                                <span className="preview-label">
+                                                    <i className="fas fa-eye text-teal me-2"></i>Pratinjau di Beranda
+                                                </span>
+                                                <span className="badge preview-mode-tag">
+                                                    <i className="fas fa-sparkles me-1 text-warning"></i>Live Preview
+                                                </span>
+                                            </div>
+
+                                            <div className="card-body p-4 pt-3">
+                                                <p className="preview-help-text small text-muted mb-3">
+                                                    Tampilan kartu testimoni Anda yang akan dilihat publik & peserta di halaman utama portal:
+                                                </p>
+
+                                                {/* Simulated Homepage Testimonial Card */}
+                                                <div className="homepage-preview-card text-center">
+                                                    
+                                                    {/* Avatar */}
+                                                    <div className="preview-avatar-wrap mx-auto mb-3">
+                                                        {authorAvatar ? (
+                                                            <img 
+                                                                src={authorAvatar} 
+                                                                alt={authorName} 
+                                                                className="preview-avatar-img"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className="preview-avatar-fallback">
+                                                                {getAvatarInitial(authorName)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Review Text */}
+                                                    <div className="preview-quote-box mb-3">
+                                                        <span className="quote-mark-open">“</span>
+                                                        <p className="preview-quote-text fst-italic mb-0">
+                                                            {previewData.review && previewData.review.trim() 
+                                                                ? previewData.review.trim() 
+                                                                : "Ketik ulasan Anda pada formulir di sebelah kiri untuk melihat tampilan langsung kartu testimoni di sini..."}
+                                                        </p>
+                                                        <span className="quote-mark-close">”</span>
+                                                    </div>
+
+                                                    {/* Rating Stars */}
+                                                    <div className="preview-rating-row mb-3">
+                                                        {[1, 2, 3, 4, 5].map((star) => (
+                                                            <i 
+                                                                key={star} 
+                                                                className={`fas fa-star ${star <= previewData.rating ? 'text-warning' : 'text-muted-star'}`}
+                                                            ></i>
+                                                        ))}
+                                                        <span className="preview-rating-number ms-2 fw-bold text-warning">
+                                                            {previewData.rating}.0
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Badges */}
+                                                    <div className="d-flex flex-wrap justify-content-center gap-1 mb-3">
+                                                        <span className="badge badge-role-student">
+                                                            <i className="fas fa-graduation-cap me-1"></i>Sebagai Siswa
+                                                        </span>
+                                                        {currentTestimonial?.status === 'approved' ? (
+                                                            <span className="badge bg-success-subtle text-success border border-success-subtle">
+                                                                <i className="fas fa-check-double me-1"></i>Aktif di Beranda
+                                                            </span>
+                                                        ) : (
+                                                            <span className="badge bg-light text-muted border">
+                                                                <i className="fas fa-circle-dot me-1 text-primary"></i>Simulasi Kartu
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Author Info */}
+                                                    <h6 className="preview-author-name fw-bold mb-1">{authorName}</h6>
+                                                    <p className="preview-author-role text-muted small mb-0">{authorTitle}</p>
+                                                    {authorUnit && (
+                                                        <small className="preview-author-unit text-muted d-block mt-1">
+                                                            <i className="fas fa-building text-teal me-1"></i>{authorUnit}
+                                                        </small>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Card 2: Points & Activity History Information */}
+                                        <div className="card gamification-info-card shadow-sm border-0">
+                                            <div className="card-body p-4">
+                                                <div className="d-flex align-items-center gap-2 mb-3">
+                                                    <div className="info-icon-box">
+                                                        <i className="fas fa-coins text-warning"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 className="fw-bold mb-0 text-dark">Poin & Riwayat Aktivitas</h6>
+                                                        <span className="small text-muted">Dampak testimoni terhadap profil & ranking Anda</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Points Highlight */}
+                                                <div className="points-highlight-box p-3 rounded mb-3">
+                                                    <div className="d-flex align-items-center justify-content-between mb-1">
+                                                        <span className="fw-semibold text-dark small">Reward Testimoni Platform</span>
+                                                        <span className="badge badge-points-reward">+50 Poin</span>
+                                                    </div>
+                                                    <p className="small text-muted mb-0">
+                                                        Saat testimoni disetujui Admin, Anda otomatis mendapatkan <strong>50 Poin</strong> yang berkontribusi langsung pada akumulasi skor & peringkat Anda di Leaderboard Siswa.
+                                                    </p>
+                                                </div>
+
+                                                {/* Activity Tracking Breakdown */}
+                                                <div className="activity-timeline-box mb-3">
+                                                    <span className="timeline-title d-block fw-semibold text-dark small mb-2">
+                                                        <i className="fas fa-clock-rotate-left me-1 text-teal"></i>Terekap di Riwayat Aktivitas Siswa:
+                                                    </span>
+                                                    <ul className="activity-list list-unstyled mb-0">
+                                                        <li className="d-flex align-items-start gap-2 mb-2">
+                                                            <span className="badge-bullet bullet-create"></span>
+                                                            <div className="small">
+                                                                <strong>Membuat Testimoni</strong> (<code className="code-tag">testimonial_posted</code>)
+                                                                <div className="text-muted">Tercatat saat testimoni pertama kali dikirimkan.</div>
+                                                            </div>
+                                                        </li>
+                                                        <li className="d-flex align-items-start gap-2 mb-2">
+                                                            <span className="badge-bullet bullet-update"></span>
+                                                            <div className="small">
+                                                                <strong>Mengubah Testimoni</strong> (<code className="code-tag">testimonial_updated</code>)
+                                                                <div className="text-muted">Tercatat saat ulasan diperbarui untuk peninjauan ulang.</div>
+                                                            </div>
+                                                        </li>
+                                                        <li className="d-flex align-items-start gap-2">
+                                                            <span className="badge-bullet bullet-delete"></span>
+                                                            <div className="small">
+                                                                <strong>Menghapus Testimoni</strong> (<code className="code-tag">testimonial_deleted</code>)
+                                                                <div className="text-muted">Tercatat di riwayat & audit log jika ulasan dihapus. Reward 50 poin ditarik kembali secara otomatis melalui rekonsiliasi poin.</div>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+
+                                                {/* Quick Action Navigation Buttons */}
+                                                <div className="d-flex gap-2 pt-2 border-top">
+                                                    <Link 
+                                                        to="/student/activities/" 
+                                                        className="btn btn-action-activities flex-fill"
+                                                    >
+                                                        <i className="fas fa-list-check me-1"></i>Riwayat Aktivitas
+                                                    </Link>
+                                                    <Link 
+                                                        to="/rankings/" 
+                                                        className="btn btn-action-rankings flex-fill"
+                                                    >
+                                                        <i className="fas fa-trophy me-1"></i>Peringkat Siswa
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
                             </div>
 
                         </div>

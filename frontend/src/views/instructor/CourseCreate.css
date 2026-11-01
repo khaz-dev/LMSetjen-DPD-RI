@@ -3,11 +3,11 @@
 /* CRITICAL: Force instructor-course-create-page padding to be overridable by pt-5 and pb-5 classes */
 /* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
 .instructor-course-create-page.pt-5 {
-    padding-top: 50px !important;
+    padding-top: 1rem !important;
 }
 
 .instructor-course-create-page.pb-5 {
-    padding-bottom: 3rem !important;
+    padding-bottom: 2.5rem !important;
 }
 
 /* ========================================
@@ -20,7 +20,7 @@
 }
 
 /* ✨ Main layout row (direct child of container) - matches Testimonials pattern */
-.instructor-course-create-page > .container > .row {
+.instructor-course-create-page > .container > .row:not(.instructor-header-row) {
     flex-wrap: nowrap;
     width: 100%;
     margin-left: 0 !important;
@@ -61,6 +61,14 @@
     padding-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+}
+
+.instructor-course-create-page .instructor-header-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow: visible !important;
 }
 
 .instructor-course-create-page .row > [class*="col-"] {
@@ -217,22 +225,24 @@
 
 /* Main page container - Compact bottom margin to eliminate dead whitespace */
 .instructor-course-create-page {
-    min-height: calc(100vh - 200px);
+    min-height: 100vh;
     background: transparent;
-    padding: var(--page-top-spacing, 20px) 0;
-    padding-top: var(--page-top-spacing, 20px) !important;
-    padding-bottom: 2rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
     margin-bottom: 2rem !important;
+    margin-top: 0 !important;
+    overflow: visible !important;
 }
 
 /* Deprecated: old class name (kept for compatibility) */
 .course-create-container {
-    min-height: calc(100vh - 200px);
+    min-height: 100vh;
     background: transparent;
-    padding: var(--page-top-spacing, 20px) 0;
-    padding-top: var(--page-top-spacing, 20px) !important;
-    padding-bottom: 2rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
     margin-bottom: 2rem !important;
+    margin-top: 0 !important;
+    overflow: visible !important;
 }
 
 /* ================================

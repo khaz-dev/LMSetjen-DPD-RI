@@ -1009,10 +1009,10 @@ function QA() {
         return (
             <>
                 <BaseHeader />
-                <section className="qa-bg-section pt-4 pb-5" style={{ display: "flex", alignItems: "center" }}>
+                <section className="qa-bg-section" style={{ display: "flex", alignItems: "center" }}>
                     <div className="container" style={{ flex: 1 }}>
                         <Header />
-                        <div className="row">
+                        <div className="row mt-0">
                             <Sidebar />
                             <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
                                 <div className="text-center">
@@ -1033,10 +1033,10 @@ function QA() {
     return (
         <>
             <BaseHeader />
-            <section className="qa-bg-section pt-3 pb-4">
+            <section className="qa-bg-section">
                 <div className="container">
                     <Header />
-                    <div className="row">
+                    <div className="row mt-0">
                         <Sidebar />
                         <div className={`col-lg-9 col-md-8 col-12 ${isCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
                             {/* Modern Compact Hero Section */}

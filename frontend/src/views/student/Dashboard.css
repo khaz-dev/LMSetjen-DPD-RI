@@ -1,1096 +1,1396 @@
-/* Student Dashboard Component Styles */
+/* ==========================================================================
+   LMSetjen DPD RI - Dasbor Siswa (Student Dashboard)
+   Ultra-Compact, High-Density, Modern, Eye-Catching Redesign
+   Benchmarked against Instructor Dashboard (.activity-panel-modern & .panel-header)
+   ========================================================================== */
 
-/* Page Background */
+:root {
+    --dpd-teal-dark: #064e3b;
+    --dpd-teal: #0f766e;
+    --dpd-teal-hover: #115e59;
+    --dpd-teal-light: #ccfbf1;
+    --dpd-teal-subtle: rgba(15, 118, 110, 0.09);
+    --dpd-emerald: #059669;
+    --dpd-emerald-light: #d1fae5;
+    --dpd-indigo: #4338ca;
+    --dpd-indigo-light: #e0e7ff;
+    --dpd-amber: #d97706;
+    --dpd-amber-light: #fef3c7;
+    --dpd-rose: #e11d48;
+    --dpd-rose-light: #ffe4e6;
+    --dpd-slate: #0f172a;
+    --dpd-gray-dark: #334155;
+    --dpd-gray-muted: #64748b;
+    --dpd-border: #e2e8f0;
+    --dpd-card-bg: #ffffff;
+    --dpd-shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.04);
+    --dpd-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.04);
+    --dpd-shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.09);
+}
+
+/* ==========================================================================
+   1. PAGE CONTAINER & BASE SPACING (Eliminates excessive whitespace)
+   ========================================================================== */
+.dashboard-page.modern-dashboard-page,
 .dashboard-page {
     min-height: 100vh;
     background: transparent;
-    padding: var(--page-top-spacing) 0;
-    padding-top: var(--page-top-spacing) !important;
-    padding-bottom: var(--page-bottom-spacing) !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 2rem !important;
     margin-top: 0 !important;
-    margin-bottom: 8rem;
-    overflow-x: hidden; /* ✨ PHASE 8b: Prevent horizontal scroll from row width calc */
+    margin-bottom: 1.5rem !important;
+    overflow: visible !important;
+    overflow-x: clip;
 }
 
-/* ✨ PHASE 8b: Force padding-top to be overridable by pt-5 utility class */
-.dashboard-page.pt-5 {
-    padding-top: 50px !important;
-}
-
-.dashboard-page.pb-5 {
-    padding-bottom: var(--page-bottom-spacing) !important;
-}
-
-/* ✨ PHASE 8b: Critical row styling - match instructor Dashboard pattern */
-.dashboard-page > .container > .row {
-    margin-bottom: 0; /* Remove gap below header-card */
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Neutralize column padding-left */
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important; /* Neutralize column padding-right */
-    display: flex; /* Enable flexbox layout for all rows */
-    flex-wrap: wrap; /* Allow wrapping if needed */
-    gap: 0; /* Remove Bootstrap gap */
-    width: calc(100% + var(--bs-gutter-x, 24px)); /* Extend to compensate for negative margins */
-    /* \u2728 PHASE 40.12: Made more specific to only target top-level rows in container, not nested rows */
-}
-
-/* ✨ PHASE 8b: Column styling - remove bottom margin and set proper padding */
-/* Only target direct children of top-level rows in container */
-.dashboard-page > .container > .row > [class*="col-"] {
-    margin-bottom: 0; /* Remove gap for columns */
-    padding-left: calc(0.5 * var(--bs-gutter-x, 24px)); /* Bootstrap default column padding */
-    padding-right: calc(0.5 * var(--bs-gutter-x, 24px)); /* Bootstrap default column padding */
-    display: flex;
-    flex-direction: column;
-    /* \u2728 PHASE 40.12: Made more specific to only target top-level columns in container, not nested columns */
-}
-
-/* Dashboard Cards */
-.dashboard-card {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    border: none;
-    transition: all 0.3s ease;
-    overflow: hidden;
-    padding: 0.5rem 1rem;
-    user-select: none; /* Prevent text selection */
-}
-
-.dashboard-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
-}
-
-/* Statistics Cards */
-.dashboard-stat-card {
-    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-    border-radius: 18px;
-    padding: 0.8rem 1.5rem;
-    color: #fff;
+/* Ensure proper scroll context and precise alignment with Main Navigation header-container */
+.dashboard-page > .container,
+.dashboard-page .container,
+.modern-dashboard-page > .container,
+.modern-dashboard-page .container {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
     position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    border: none;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
+    overflow: visible !important;
 }
 
-
-
-.dashboard-stat-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-}
-
-/* Ensure inner flex container fills parent width */
-.dashboard-stat-card > .d-flex {
-    width: 100%;
-}
-
-.dashboard-stat-card::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.dashboard-stat-card:hover::before {
-    transform: scale(1.2);
-}
-
-/* Individual Statistics Card Colors (fallback) */
-.row.mb-2 .col-lg-3:nth-child(1) .dashboard-stat-card {
-    background: var(--theme-gradient) !important;
-}
-
-.row.mb-2 .col-lg-3:nth-child(2) .dashboard-stat-card {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-}
-
-.row.mb-2 .col-lg-3:nth-child(3) .dashboard-stat-card {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-}
-
-.row.mb-2 .col-lg-3:nth-child(4) .dashboard-stat-card {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
-}
-
-/* ✨ PHASE 4.10: Remove left/right gaps on first and last stat cards */
-.row.mb-2 > [class*="col-"]:first-child {
-    padding-left: 0 !important;
-}
-
-.row.mb-2 > [class*="col-"]:last-child {
-    padding-right: 0 !important;
-}
-
-    /* ✨ PHASE 4.10: Remove left/right gaps on Activity & Course Overview row */
-    .row.dashboard-activity-row > [class*="col-"]:first-child {
-        padding-left: 0 !important;
-    }
-
-    .row.dashboard-activity-row > [class*="col-"]:last-child {
-        padding-right: 0 !important;
-    }
-.stat-info {
-  min-width: 0;
-}
-
-.dashboard-stat-number {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-/* ✨ PHASE 4.X: Stat Icon - Strictly scoped to student dashboard stat cards */
-.dashboard-page .dashboard-stat-card .stat-icon,
-.dashboard-stat-card .stat-icon {
-  width: 45px !important;
-  height: 45px !important;
-  background: rgba(255, 255, 255, 0.25) !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: white !important;
-  font-size: 2rem !important;
-  flex-shrink: 0 !important;
-  min-width: 45px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-  transition: all 0.3s ease !important;
-  margin-right: 1.5rem !important;
-}
-
-.dashboard-page .dashboard-stat-card .stat-icon i,
-.dashboard-stat-card .stat-icon i {
-  font-size: 1.5rem !important;
-  color: white !important;
-  user-select: none !important;
-  pointer-events: none !important;
-}
-
-/* ✨ SCOPED: Dashboard stat label - strictly scoped to student dashboard */
-.dashboard-page .dashboard-stat-card .stat-label,
-.dashboard-stat-card .stat-label {
-  font-size: 1rem !important;
-  margin-left: 0.1rem;
-  margin-top: 0.5rem;
-  color: rgba(255, 255, 255, 0.95) !important;
-  text-align: right;
-  white-space: normal;
-  word-break: break-word;
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  letter-spacing: 0.3px;
-}
-
-.dashboard-page .dashboard-stat-card .stat-label.text-end,
-.dashboard-stat-card .stat-label.text-end {
-  font-size: 1rem !important;
-  color: rgba(255, 255, 255, 0.95) !important;
-}
-
-/* Progress Circle */
-.progress-circle {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: conic-gradient(from 0deg, var(--theme-primary) 0deg, var(--theme-primary-dark) calc(var(--progress, 0) * 3.6deg), #e9ecef 0deg);
-    position: relative;
-    user-select: none; /* Prevent selection */
-    cursor: default; /* Default cursor */
-}
-
-.progress-circle::before {
-    content: '';
-    position: absolute;
-    width: 90px;
-    height: 90px;
-    background: white;
-    border-radius: 50%;
-    z-index: 1;
-}
-
-.progress-inner {
-    position: relative;
-    z-index: 2;
-}
-
-.progress-text {
-    position: relative;
-    z-index: 2;
-    font-weight: 700;
-    font-size: 1.25rem;
-    color: #333;
-    user-select: none; /* Prevent text selection */
-}
-
-/* Activity Items */
-.activity-item {
-    padding: 1rem 1rem;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-    transition: all 0.3s ease;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    position: relative;
-    overflow: hidden;
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-.activity-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: var(--theme-gradient) !important;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.activity-item:hover {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px var(--theme-shadow-color) !important;
-    border-color: var(--theme-border-color) !important;
-}
-
-.activity-item:hover::before {
-    opacity: 1;
-}
-
-.activity-item:last-child {
-    margin-bottom: 0;
-}
-
-.activity-item .d-flex {
-    align-items: flex-start;
-    gap: 0.5rem;
-}
-
-.activity-item .flex-grow-1 p {
-    margin-bottom: 0.25rem;
-    font-size: 0.85rem;
-    line-height: 1.3;
-    font-weight: 600;
-    color: #2d3748;
-}
-
-.activity-item .flex-grow-1 small {
-    font-size: 0.75rem;
-    line-height: 1.2;
-    display: block;
-    color: #718096;
-    font-weight: 500;
-}
-
-.activity-item .activity-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.activity-item .activity-icon.text-success {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    color: white;
-}
-
-.activity-item .activity-icon.text-primary {
-    background: var(--theme-gradient) !important;
-    color: white;
-}
-
-/* Recent Activity Card Specific Styling */
-.dashboard-card .card-header {
-    padding: 0.5rem 0.5rem 0.75rem 0.5rem;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.dashboard-card .card-body {
-    padding: 0.5rem;
-}
-
-/* Override Bootstrap padding for all dashboard cards */
-.dashboard-card .card-header.p-4 {
-    padding: 0.5rem 0.75rem 0.75rem 0.75rem !important;
-    border-bottom: 1px solid #e9ecef !important;
-}
-
-.dashboard-card .card-body.p-4,
-.dashboard-card .card-body.p-4.pt-0 {
-    padding: 0.5rem !important;
-}
-
-/* Recent Activity card header styling */
-.dashboard-card .card-header h5 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 0;
-    color: #2d3748;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.dashboard-card .card-header h5 i {
-    font-size: 1rem;
-    padding: 0.5rem;
-    background: var(--theme-gradient) !important;
-    color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px var(--theme-shadow-color) !important;
-}
-
-/* Make Recent Activity card even more compact */
-.dashboard-card.h-50 {
-    max-height: fit-content;
-}
-
-.dashboard-card.h-50 .card-header h5 {
-    font-size: 1rem;
-    margin-bottom: 0;
-}
-
-.dashboard-card.h-50 .card-header i {
-    font-size: 0.9rem;
-}
-
-/* Course cards inside dashboard card should have minimal padding */
-.dashboard-card .course-card .card-body {
-    padding: 0.5rem !important;
-}
-
-/* Course Cards */
-.course-card {
-    background: white;
-    border-radius: 20px;
-    border: none;
-    overflow: hidden;
-    transition: all 0.4s ease;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-    position: relative;
-    height: 100%;
-    border: 1px solid var(--theme-border-color) !important;
-    user-select: none; /* Prevent text selection */
-}
-
-.course-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 50px var(--theme-shadow-color) !important;
-    border-color: var(--theme-primary-light) !important;
-}
-
-/* Purple decoration removed - users prefer clean design */
-
-/* Course Image */
-.course-image-container {
-    position: relative;
-    overflow: hidden;
-    border-radius: 15px;
-    margin-bottom: 1rem;
-}
-
-.course-image {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-    border-radius: 15px;
-    user-select: none; /* Prevent image selection */
-    pointer-events: none; /* Prevent image interaction */
-}
-
-.course-card:hover .course-image {
-    transform: scale(1.05);
-}
-
-.course-image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: transparent;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 15px;
-    user-select: none; /* Prevent selection */
-    cursor: pointer; /* Pointer cursor for overlay */
-}
-
-.course-card:hover .course-image-overlay {
-    opacity: 1;
-}
-
-.course-play-icon {
-    color: white;
-    font-size: 2rem;
-    animation: pulse 2s infinite;
-    user-select: none; /* Prevent icon selection */
-}
-
-/* Course Content */
-/* ✨ PHASE 8c: NOTE - .course-title base styles are now in CourseCard.css (consolidated source of truth)
-   Dashboard-specific overrides are maintained below to avoid conflicts
-*/
-/* Course title styles are inherited from CourseCard.css */
-
-.course-card:hover .course-title {
-    color: var(--theme-primary) !important;
-}
-
-.course-title:hover {
-    text-decoration: none; /* Prevent underline on hover */
-}
-
-.course-category {
-    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-    color: var(--theme-primary) !important;
-    padding: 0.3rem 0.6rem;
-    border-radius: 15px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    display: inline-block;
-    border: 1px solid var(--theme-border-color) !important;
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-.course-category i {
-    user-select: none; /* Prevent icon selection */
-}
-
-/* Progress Container */
-.progress-container {
-    background: #f7fafc;
-    border-radius: 12px;
-    padding: 0.875rem;
-    border: 1px solid #e2e8f0;
-}
-
-.progress-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-}
-
-.progress-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #4a5568;
-    user-select: none; /* Prevent text selection */
-}
-
-.progress-percentage {
-    background: var(--theme-gradient) !important;
-    color: white;
-    padding: 0.3rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    box-shadow: 0 2px 8px var(--theme-shadow-color) !important;
-    user-select: none; /* Prevent text selection */
-}
-
-.course-progress {
-    height: 8px;
-    background: #e2e8f0;
-    border-radius: 20px;
-    overflow: hidden;
-    position: relative;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.course-progress-bar {
-    height: 100%;
-    /* background: linear-gradient(90deg, #0d9488 0%, #0f766e 100%); */
-    border-radius: 20px;
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-}
-
-.course-progress-bar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    animation: shimmer 2s infinite;
-}
-
-.course-stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 0.5rem;
-    font-size: 0.8rem;
-    color: #718096;
-}
-
-.lesson-count {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    user-select: none; /* Prevent text selection */
-}
-
-.lesson-count i {
-    user-select: none; /* Prevent icon selection */
-}
-
-/* Course Actions */
-.course-actions {
-    margin-top: auto;
-    padding-top: 0.5rem;
-}
-
-/* ✨ SCOPED: Dashboard course-btn only - prevents bleed to Courses page */
-.dashboard-page .course-btn {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-    border: none;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    position: relative;
-    overflow: hidden;
-    user-select: none; /* Prevent text selection */
-    cursor: pointer; /* Pointer cursor for buttons */
-}
-
-.dashboard-page .course-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
-}
-
-.dashboard-page .course-btn:hover::before {
-    left: 100%;
-}
-
-.dashboard-page .course-btn:hover {
-    text-decoration: none; /* Prevent underline on hover */
-}
-
-.dashboard-page .btn-start {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
-}
-
-.dashboard-page .btn-start:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
-    color: white;
-}
-
-.dashboard-page .btn-continue {
-    background: var(--theme-gradient) !important;
-    color: white;
-    box-shadow: 0 4px 15px var(--theme-shadow-color) !important;
-}
-
-.dashboard-page .btn-continue:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px var(--theme-shadow-color) !important;
-    color: white;
-}
-
-/* ✨ SCOPED: Dashboard button states only */
-.dashboard-page .btn-completed {
-    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-    color: #48bb78;
-    border: 2px solid #48bb78;
-    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.1);
-}
-
-.dashboard-page .btn-completed:hover {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
-}
-
-/* Course Meta */
-.course-meta {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.625rem;
-    background: #f7fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-size: 0.8rem;
-    color: #718096;
-    user-select: none; /* Prevent text selection */
-}
-
-.meta-icon {
-    color: var(--theme-primary) !important;
-    user-select: none; /* Prevent icon selection */
-}
-
-/* Welcome Section */
-.welcome-section {
-    background: var(--theme-gradient) !important;
-    border-radius: 20px;
-    color: white;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1.5rem;
-    position: relative;
-    overflow: hidden;
-    user-select: none; /* Prevent text selection */
-}
-
-.welcome-section::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 40%;
-    height: 200%;
-    background: rgba(255, 255, 255, 0.1);
-    transform: rotate(15deg);
-}
-
-.welcome-section h2,
-.welcome-section p,
-.welcome-section h5 {
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-/* ✨ PHASE 4.32: Fix h5 text readability in welcome-section */
-/* Override white text color for better contrast on gradient background */
-.welcome-section h5 {
-    color: rgba(255, 255, 255, 1) !important; /* Pure white instead of inherited weak color */
-    font-weight: 600 !important; /* Make text bolder for better visibility */
-    font-size: 0.95rem !important; /* Slightly larger than default h5 */
-    opacity: 1 !important; /* Override opacity-90 class for full visibility */
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Add shadow for depth and contrast */
-}
-
-/* Modern Buttons */
-.btn-modern {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    border: none;
-    border-radius: 25px;
-    padding: 0.75rem 1.5rem;
-    color: white;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    user-select: none; /* Prevent text selection */
-    cursor: pointer; /* Pointer cursor */
-}
-
-.btn-modern:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-    color: white;
-    text-decoration: none; /* Prevent underline on hover */
-}
-
-.btn-modern-success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-}
-
-.btn-modern-success:hover {
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-}
-
-/* Search Container - Unified Design - SCOPED to prevent affecting BaseHeader */
-.dashboard-page .search-container {
-    display: flex;
-    align-items: center;
-    min-width: 300px;
-    background: #f8f9fa;
-    border-radius: 25px;
-    padding: 5px;
-    border: 1px solid #e9ecef;
-    user-select: none; /* Prevent text selection on container */
-    height: 48px; /* Increased height for better proportions */
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-}
-
-.dashboard-page .search-container:focus-within {
-    border-color: #0d9488;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.dashboard-page .search-input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    outline: none;
-    box-shadow: none;
-    font-size: 0.95rem;
-    padding-left: 20px;
-    color: #343a40;
-    user-select: text; /* Allow text selection in input */
-    cursor: text; /* Text cursor for input */
-    height: 36px; /* Increased to fit within 48px container with 5px padding */
-}
-
-.dashboard-page .search-input::placeholder {
-    color: rgba(52, 58, 64, 0.6);
-    user-select: none; /* Prevent placeholder selection */
-}
-
-/* Search button removed - not needed with onChange handler */
-
-/* Card Headers */
-.card-header h5 {
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-.card-header i {
-    user-select: none; /* Prevent icon selection */
-}
-
-/* Empty State */
-.text-center h6,
-.text-center p {
-    user-select: none; /* Prevent text selection */
-    cursor: default; /* Default cursor */
-}
-
-.text-center i {
-    user-select: none; /* Prevent icon selection */
-}
-
-/* Animations */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-@keyframes shimmer {
-    0% { left: -100%; }
-    100% { left: 100%; }
-}
-
-/* Loading States */
-.spinner-border {
-    user-select: none; /* Prevent selection */
-}
-
-.visually-hidden {
-    user-select: none; /* Prevent selection */
-}
-
-/* ============================== */
-/* Adaptive Layout for Sidebar Collapse */
-/* ============================== */
-
-/* Monitor sidebar collapse state - when sidebar is collapsed, main content expands */
-/* ✨ SCOPED SELECTOR: Only target rows directly inside .container, not nested rows inside Header */
-.dashboard-page > .container > .row {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap;
-    width: 100%;
+/* Header row alignment */
+.dashboard-page .row.student-header-row {
     margin-left: 0 !important;
     margin-right: 0 !important;
-    gap: 0 !important;
-}
-
-/* ✨ PHASE 65+: Ensure header row stays visible above content - prevent dropdown clipping */
-.dashboard-page > .container > .student-header-row {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
     position: relative;
     z-index: 102;
 }
 
+.dashboard-page .row.student-header-row > [class*="col-"] {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
 .dashboard-page .student-header-card {
     overflow: visible !important;
-}
-
-.dashboard-page .role-indicator.compact .role-dropdown-menu {
-    position: absolute;
-    z-index: 2002 !important;
-    pointer-events: auto;
-}
-
-/* Exception: Allow student-header-row to use its own negative margins for edge-to-edge expansion */
-.dashboard-page .row.student-header-row {
-    margin-left: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    margin-right: calc(-0.5 * var(--bs-gutter-x, 24px)) !important;
-    width: calc(100% + var(--bs-gutter-x, 24px)) !important;
-}
-
-.dashboard-page > .container > .row > [class*="col-"] {
-    margin-bottom: 0;
-    padding-left: calc(0.5 * var(--bs-gutter-x, 24px));
-    padding-right: calc(0.5 * var(--bs-gutter-x, 24px));
-    display: flex;
-    flex-direction: column;
-}
-
-/* Desktop: col-lg-9 content wrapper (inside sidebar row) */
-.dashboard-page .row:has(.student-sidebar-column) > .col-lg-9 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
     width: 100% !important;
-    /* ✨ PHASE 40.10: Added width 100% to ensure sidebar-collapsed-adapted fills parent width */
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-}
-
-/* Inner rows inside col-lg-9: align with welcome-section (no negative margins needed) */
-.dashboard-page .row:has(.student-sidebar-column) > .col-lg-9 > .row {
+    max-width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    width: 100% !important;
-    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
 }
 
-/* Ensure row.mb-2 inside col-lg-9 follows welcome-section width */
-.dashboard-page .row:has(.student-sidebar-column) > .col-lg-9 > .row.mb-2 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100% !important;
-    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
-}
-
-/* Ensure row.mb-4 inside col-lg-9 follows welcome-section width */
-.dashboard-page .row:has(.student-sidebar-column) > .col-lg-9 > .row.mb-4 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100% !important;
-    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
-}
-
-/* Tablet: col-md-8 content wrapper (inside sidebar row) */
-.dashboard-page .row:has(.student-sidebar-column) > .col-md-8 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: 100% !important;
-    /* ✨ PHASE 40.10: Added width 100% to ensure sidebar-collapsed-adapted fills parent width */
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-}
-
-/* Inner rows inside col-md-8: align with welcome-section (no negative margins needed) */
-.dashboard-page .row:has(.student-sidebar-column) > .col-md-8 > .row {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100% !important;
-    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
-}
-
-/* Ensure row.mb-2 inside col-md-8 follows welcome-section width */
-.dashboard-page .row:has(.student-sidebar-column) > .col-md-8 > .row.mb-2 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100% !important;
-    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
-}
-
-/* Ensure row.mb-4 inside col-md-8 follows welcome-section width */
-.dashboard-page .row:has(.student-sidebar-column) > .col-md-8 > .row.mb-4 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    width: 100% !important;
-    /* ✨ PHASE 40.13: Removed negative margins to align with welcome-section left/right edges */
-}
-
-/* 💨 PHASE 40.17: Ensure columns inside rows fill left-start to right-end */
-.dashboard-page .sidebar-collapsed-adapted .row.mb-2 > [class*="col-"] {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    /* 💨 PHASE 40.17: Column children have zero spacing */
-}
-
-.dashboard-page .sidebar-collapsed-adapted .row > [class*="col-"] {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    /* 💨 PHASE 40.17: All column children have zero spacing */
-}
-
-/* Override for specific spacing needs */
-.dashboard-page .row.mb-3 {
-    margin-bottom: 1rem !important;
-}
-
-/* 💨 PHASE 40.22: Master rule - row.mb-2 displays all 4 cards in 1 line with maximum gap spacing */
-.dashboard-page .sidebar-collapsed-adapted .row.mb-2 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    position: relative !important;
-    gap: 2rem !important;
-    /* 💨 PHASE 40.22: Increased gap to 2rem for maximum generous spacing between cards */
+/* Main Content Row */
+.dashboard-page > .container > .row:not(.student-header-row) {
     display: flex !important;
+    flex-direction: row !important;
     flex-wrap: nowrap !important;
-    /* 💨 PHASE 40.22: Explicit flex display prevents wrapping */
-}
-
-/* 💨 PHASE 40.22: Ensure columns don't grow beyond their width */
-.dashboard-page .sidebar-collapsed-adapted .row.mb-2 > [class*="col-"] {
-    flex: 0 1 calc(25% - 1.5rem) !important;
-    /* 💨 PHASE 40.22: Updated flex-basis to account for 2rem gap distribution (6rem / 4) */
-    min-width: 0 !important;
-}
-
-/* 💨 PHASE 40.25: Nested row with g-3 (3 learning time stat cards) with 2rem gap spacing */
-.dashboard-page .sidebar-collapsed-adapted .row.g-3 {
+    width: 100% !important;
+    max-width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    gap: 0 !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+.dashboard-page > .container > .row.mt-0 {
     width: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    position: relative !important;
-    gap: 2rem !important;
-    /* 💨 PHASE 40.25: Increased gap from Bootstrap's g-3 (1rem) to 2rem for consistency */
-    display: flex !important;
-    flex-wrap: nowrap !important;
-}
-
-/* 💨 PHASE 40.25: Ensure g-3 child columns maintain proper sizing */
-.dashboard-page .sidebar-collapsed-adapted .row.g-3 > [class*="col-"] {
-    flex: 0 1 calc(33.333% - 1.333rem) !important;
-    /* 💨 PHASE 40.25: 3 columns with 2rem gap (2rem / 3 ≈ 0.667rem per column, rounded to 1.333rem) */
-    min-width: 0 !important;
-}
-
-/* 💨 PHASE 40.24: Learning Progress row (mb-4) with 2rem gap spacing */
-.dashboard-page .sidebar-collapsed-adapted .row.mb-4 {
+    max-width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    position: relative !important;
-    gap: 2rem !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    /* 💨 PHASE 40.24: Learning Progress card displayed with maximum spacing */
 }
 
-/* 💨 PHASE 40.24: Ensure Learning Progress card children maintain proper sizing */
-.dashboard-page .sidebar-collapsed-adapted .row.mb-4 > [class*="col-"] {
-    flex: 0 1 auto !important;
-    /* 💨 PHASE 40.24: Allow dashboard-card to maintain full width */
-    min-width: 0 !important;
-}
-
-/* 💨 PHASE 40.23: Recent Activity / My Courses row with 2rem gap spacing */
-.dashboard-page .sidebar-collapsed-adapted > .row:not(.mb-2):not(.mb-4):has(.col-lg-4):has(.col-lg-8) {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    position: relative !important;
-    gap: 2rem !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    /* 💨 PHASE 40.23: Recent Activity/My Courses displayed in single line with maximum spacing */
-}
-
-/* 💨 PHASE 40.23: Adjust column widths for Recent Activity (col-lg-4) and My Courses (col-lg-8) */
-.dashboard-page .sidebar-collapsed-adapted > .row:not(.mb-2):not(.mb-4):has(.col-lg-4):has(.col-lg-8) > [class*="col-"] {
-    flex: 0 1 auto !important;
-    /* 💨 PHASE 40.23: Allow col-lg-4 and col-lg-8 to maintain their natural width ratio */
-    min-width: 0 !important;
-}
-
-/* 💨 PHASE 40.17: Remove ALL left/right margins AND padding from ANY row inside sidebar-collapsed-adapted */
-.dashboard-page .sidebar-collapsed-adapted .row {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    width: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    position: relative !important;
-    /* 💨 PHASE 40.17: Ensures all rows fill parent's full horizontal space */
-}
-
-/* ============================== */
-/* STICKY SIDEBAR - EXPLICIT CONFIRMATION */
-/* Ensure sticky positioning works on Dashboard */
-/* ============================== */
-/* Sidebar column: flex container that holds sticky sidebar */
+/* Sticky Sidebar Column */
+.dashboard-page .student-sidebar-column,
 .dashboard-page .row > .student-sidebar-column {
-    display: flex;
-    flex-direction: column;
-    overflow: visible !important; /* CRITICAL: Must be visible, not auto/hidden */
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: stretch !important;
+    height: auto !important;
+    position: static !important;
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
-/* Sidebar: sticky positioning defined in global performance.css */
-/* This ensures the sidebar sticks to the viewport when scrolling */
-/* Position: sticky is already set in Sidebar.css & performance.css */
-/* NO override or conflicting properties here */
+.dashboard-page .student-sidebar {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: calc(var(--navbar-height, 60px) + 14px) !important;
+    z-index: 99 !important;
+    align-self: flex-start !important;
+}
+
+/* Main Content Area */
+.dashboard-page .row:has(.student-sidebar-column) > .col-lg-9,
+.dashboard-page > .container > .row > .col-lg-9,
+.dashboard-page .col-lg-9.col-md-8.col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: visible;
+}
+
+.dashboard-page .sidebar-collapsed-adapted {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: auto !important;
+}
+
+/* ==========================================================================
+   2. ULTRA-COMPACT HERO SECTION (Executive DPD RI Strip)
+   ========================================================================== */
+.dash-hero-card {
+    position: relative;
+    background: linear-gradient(135deg, #064e3b 0%, #0f766e 60%, #115e59 100%);
+    border-radius: 14px;
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 0.75rem;
+    color: #ffffff;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(6, 78, 59, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dash-hero-accent-shape {
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(204, 251, 241, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.dash-hero-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.dash-hero-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1 1 340px;
+    min-width: 260px;
+}
+
+.dash-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 20px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    width: fit-content;
+    backdrop-filter: blur(8px);
+    color: #ffffff;
+}
+
+.dash-hero-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.dash-hero-icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    color: #ccfbf1;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dash-hero-title {
+    font-size: 1.28rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+.dash-hero-desc {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    line-height: 1.35;
+}
+
+/* Hero Quick Resume Learning Pill */
+.dash-hero-resume {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.25rem 0.6rem;
+    margin-top: 0.25rem;
+    width: fit-content;
+    max-width: 100%;
+    backdrop-filter: blur(6px);
+}
+
+.dash-resume-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+}
+
+.dash-resume-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: #ffffff;
+    color: var(--dpd-teal-dark);
+    font-weight: 700;
+    font-size: 0.72rem;
+    padding: 0.18rem 0.6rem;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    max-width: 230px;
+}
+
+.dash-resume-btn:hover {
+    background: #f0fdfa;
+    color: var(--dpd-teal);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    text-decoration: none;
+}
+
+.dash-resume-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dash-resume-pct {
+    background: #ccfbf1;
+    color: var(--dpd-teal);
+    font-size: 0.65rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 5px;
+}
+
+/* Hero Right: Compact Circular Progress Dial */
+.dash-hero-right {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-shrink: 0;
+}
+
+.dash-progress-widget {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 12px;
+    padding: 0.5rem 0.85rem;
+    backdrop-filter: blur(8px);
+}
+
+.dash-progress-ring {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(
+        #2dd4bf 0deg,
+        #14b8a6 calc(var(--progress, 0) * 3.6deg),
+        rgba(255, 255, 255, 0.2) 0deg
+    );
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dash-progress-inner {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #064e3b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.dash-progress-num {
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #ffffff;
+}
+
+.dash-progress-sub {
+    font-size: 0.52rem;
+    font-weight: 600;
+    color: #ccfbf1;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 1px;
+}
+
+.dash-progress-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-progress-meta-title {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.dash-progress-meta-desc {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.82);
+    margin-top: 2px;
+}
+
+/* ==========================================================================
+   3. HIGH-DENSITY KPI STAT CARDS (Single compact row)
+   ========================================================================== */
+.dash-stats-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0.75rem !important;
+}
+
+.dash-stats-row > [class*="col-"] {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+}
+
+.dash-stats-row > [class*="col-"]:first-child {
+    padding-left: 0 !important;
+}
+
+.dash-stats-row > [class*="col-"]:last-child {
+    padding-right: 0 !important;
+}
+
+.dash-kpi-card {
+    background: #ffffff;
+    border: 1px solid var(--dpd-border);
+    border-radius: 12px;
+    padding: 0.65rem 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: var(--dpd-shadow-sm);
+    transition: all 0.25s ease;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.dash-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--dpd-shadow-md);
+    border-color: #cbd5e1;
+}
+
+.dash-kpi-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3.5px;
+    border-radius: 4px 0 0 4px;
+}
+
+.dash-kpi-card.kpi-teal::before { background: var(--dpd-teal); }
+.dash-kpi-card.kpi-emerald::before { background: var(--dpd-emerald); }
+.dash-kpi-card.kpi-amber::before { background: var(--dpd-amber); }
+.dash-kpi-card.kpi-indigo::before { background: var(--dpd-indigo); }
+
+.kpi-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+}
+
+.dash-kpi-card:hover .kpi-icon-wrap {
+    transform: scale(1.08);
+}
+
+.kpi-teal .kpi-icon-wrap { background: var(--dpd-teal-subtle); color: var(--dpd-teal); }
+.kpi-emerald .kpi-icon-wrap { background: rgba(5, 150, 105, 0.1); color: var(--dpd-emerald); }
+.kpi-amber .kpi-icon-wrap { background: rgba(217, 119, 6, 0.1); color: var(--dpd-amber); }
+.kpi-indigo .kpi-icon-wrap { background: rgba(67, 56, 202, 0.1); color: var(--dpd-indigo); }
+
+.kpi-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.kpi-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--dpd-gray-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.kpi-val-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
+
+.kpi-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: 0;
+    color: var(--dpd-slate);
+}
+
+.kpi-pill {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    border-radius: 5px;
+    background: #f1f5f9;
+    color: var(--dpd-gray-dark);
+}
+
+.kpi-teal .kpi-pill { background: #f0fdfa; color: var(--dpd-teal); }
+.kpi-emerald .kpi-pill { background: #ecfdf5; color: var(--dpd-emerald); }
+.kpi-amber .kpi-pill { background: #fffbeb; color: var(--dpd-amber); }
+.kpi-indigo .kpi-pill { background: #eef2ff; color: var(--dpd-indigo); }
+
+/* ==========================================================================
+   4. COMPACT LEARNING TIME & JP PROGRESS STRIP
+   ========================================================================== */
+.dash-progress-strip {
+    background: #ffffff;
+    border: 1px solid var(--dpd-border);
+    border-radius: 12px;
+    padding: 0.6rem 0.95rem;
+    margin-bottom: 0.85rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    box-shadow: var(--dpd-shadow-sm);
+}
+
+.strip-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1 1 auto;
+    min-width: 140px;
+}
+
+.strip-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.strip-icon.text-teal { color: var(--dpd-teal); background: #f0fdfa; border-color: #ccfbf1; }
+.strip-icon.text-emerald { color: var(--dpd-emerald); background: #ecfdf5; border-color: #a7f3d0; }
+
+.strip-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.strip-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--dpd-gray-muted);
+    line-height: 1.2;
+}
+
+.strip-val {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    line-height: 1.3;
+}
+
+.strip-divider {
+    width: 1px;
+    height: 30px;
+    background: #e2e8f0;
+}
+
+.strip-item-progress {
+    flex: 2 1 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.strip-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.strip-pct {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--dpd-teal);
+    background: var(--dpd-teal-light);
+    padding: 0.1rem 0.35rem;
+    border-radius: 5px;
+}
+
+.dash-mini-progress {
+    width: 100%;
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.dash-mini-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #0d9488 0%, #10b981 100%);
+    border-radius: 8px;
+    transition: width 0.6s ease;
+}
+
+.strip-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-shrink: 0;
+}
+
+.strip-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--dpd-teal);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.32rem 0.7rem;
+    border-radius: 7px;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.2);
+}
+
+.strip-action-btn:hover {
+    background: var(--dpd-teal-hover);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 118, 110, 0.3);
+    text-decoration: none;
+}
+
+.strip-action-btn.secondary {
+    background: #ffffff;
+    color: var(--dpd-slate);
+    border: 1px solid var(--dpd-border);
+    box-shadow: none;
+}
+
+.strip-action-btn.secondary:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: var(--dpd-teal);
+}
+
+/* ==========================================================================
+   5. REDESIGNED dash-section-card (Modeled on Instructor .panel-header)
+   ========================================================================== */
+.dash-section-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.dash-section-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+/* Header styled with linear-gradient matching instructor dashboard */
+.dash-section-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.dash-header-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dash-header-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: rgba(15, 118, 110, 0.1);
+    color: var(--dpd-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.dash-header-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.dash-count-badge {
+    background: #ffffff;
+    color: var(--dpd-teal);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.12rem 0.45rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Header Controls & Filter Tabs */
+.dash-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.dash-filter-tabs {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.dash-filter-tab {
+    border: none;
+    background: transparent;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--dpd-gray-muted);
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.dash-filter-tab:hover {
+    color: var(--dpd-slate);
+}
+
+.dash-filter-tab.active {
+    background: var(--dpd-teal);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(15, 118, 110, 0.25);
+}
+
+/* Compact Search Box */
+.dash-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 175px;
+}
+
+.dash-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    color: #94a3b8;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.dash-search-input {
+    width: 100%;
+    height: 30px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding-left: 2.25rem !important;
+    padding-right: 1.8rem !important;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+    font-size: 0.74rem;
+    color: var(--dpd-slate);
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box !important;
+}
+
+.dash-search-input::placeholder {
+    color: #94a3b8 !important;
+    font-size: 0.72rem;
+    opacity: 1;
+}
+
+.dash-search-input:focus {
+    background: #ffffff;
+    border-color: var(--dpd-teal);
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.12);
+}
+
+.dash-search-clear {
+    position: absolute;
+    right: 0.45rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 2px;
+}
+
+.dash-search-clear:hover {
+    color: var(--dpd-slate);
+}
+
+.dash-header-link {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--dpd-teal);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.dash-header-link:hover {
+    color: var(--dpd-teal-hover);
+    text-decoration: underline;
+}
+
+/* Section Card Body */
+.dash-section-body {
+    padding: 0.75rem;
+    flex: 1;
+}
+
+/* ==========================================================================
+   6. ULTRA-COMPACT COURSE CARDS GRID (Kursus Saya)
+   ========================================================================== */
+.dash-course-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    position: relative;
+}
+
+.dash-course-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(15, 118, 110, 0.08);
+    border-color: #cbd5e1;
+}
+
+/* Upper Horizontal Section: Thumbnail + Content */
+.dash-card-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    flex: 1;
+}
+
+/* Compact Thumbnail */
+.dash-card-thumb-wrap {
+    position: relative;
+    width: 78px;
+    height: 60px;
+    min-width: 78px;
+    border-radius: 7px;
+    overflow: hidden;
+    background: #0f172a;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+}
+
+.dash-card-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.dash-course-card:hover .dash-card-thumb {
+    transform: scale(1.06);
+}
+
+.dash-card-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 1.25rem;
+}
+
+.dash-card-thumb-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    opacity: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+    text-decoration: none;
+}
+
+.dash-course-card:hover .dash-card-thumb-overlay {
+    opacity: 1;
+}
+
+.dash-card-play-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--dpd-teal);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Duration Badge on Thumbnail */
+.dash-card-duration-badge {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(4px);
+    color: #f8fafc;
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 0.05rem 0.28rem;
+    border-radius: 4px;
+    line-height: 1.2;
+    z-index: 2;
+}
+
+/* Course Details Column */
+.dash-card-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 0.25rem;
+}
+
+.dash-card-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
+
+.dash-card-category-badge {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--dpd-teal);
+    background: rgba(15, 118, 110, 0.08);
+    padding: 0.1rem 0.38rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+    line-height: 1.2;
+}
+
+.dash-card-status-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.1rem 0.38rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.2;
+}
+
+.dash-card-status-badge.completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.dash-card-status-badge.new {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.dash-card-status-badge.active {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.dash-card-title {
+    font-size: 0.77rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    line-height: 1.3;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.dash-card-title:hover {
+    color: var(--dpd-teal);
+    text-decoration: none;
+}
+
+/* Meta Info */
+.dash-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.64rem;
+    color: #64748b;
+}
+
+.dash-card-meta-item {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.dash-card-meta-divider {
+    color: #cbd5e1;
+    font-size: 0.6rem;
+}
+
+/* Bottom Footer: Progress Bar + Action Button */
+.dash-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid #f1f5f9;
+    margin-top: auto;
+}
+
+.dash-card-progress-bar-wrap {
+    flex: 1;
+    height: 5px;
+    background: #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dash-card-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #0d9488 0%, #10b981 100%);
+    border-radius: 8px;
+    transition: width 0.3s ease;
+}
+
+.dash-card-progress-bar.completed {
+    background: #059669;
+}
+
+.dash-card-action-wrap {
+    flex-shrink: 0;
+}
+
+.dash-card-btn {
+    padding: 0.22rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.67rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    text-decoration: none;
+    border: none;
+    transition: all 0.2s ease;
+    line-height: 1.3;
+}
+
+.dash-card-btn:hover {
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.dash-card-btn.btn-continue {
+    background: var(--dpd-teal);
+    color: #ffffff;
+    box-shadow: 0 1px 4px rgba(15, 118, 110, 0.2);
+}
+
+.dash-card-btn.btn-continue:hover {
+    background: var(--dpd-teal-hover);
+    color: #ffffff;
+    box-shadow: 0 3px 8px rgba(15, 118, 110, 0.3);
+}
+
+.dash-card-btn.btn-start {
+    background: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 1px 4px rgba(2, 132, 199, 0.2);
+}
+
+.dash-card-btn.btn-start:hover {
+    background: #0369a1;
+    color: #ffffff;
+    box-shadow: 0 3px 8px rgba(2, 132, 199, 0.3);
+}
+
+.dash-card-btn.btn-done {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.dash-card-btn.btn-done:hover {
+    background: #d1fae5;
+    color: #047857;
+}
+
+/* ==========================================================================
+   7. COMPACT EMPTY STATE
+   ========================================================================== */
+.dash-empty-state {
+    text-align: center;
+    padding: 1.8rem 1.25rem;
+    background: #f8fafc;
+    border: 1px dashed var(--dpd-border);
+    border-radius: 12px;
+    margin: 0.35rem 0;
+}
+
+.dash-empty-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: var(--dpd-teal);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.dash-empty-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    margin-bottom: 0.2rem;
+}
+
+.dash-empty-desc {
+    font-size: 0.72rem;
+    color: var(--dpd-gray-muted);
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.dash-empty-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--dpd-teal);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.3rem 0.75rem;
+    border-radius: 7px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.dash-empty-btn:hover {
+    background: var(--dpd-teal-hover);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+/* ==========================================================================
+   8. REDESIGNED col-lg-4 (Aktivitas Terkini & Pintasan 2x2 Grid)
+   ========================================================================== */
+.dash-col-side {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Side Column Activity Card */
+.dash-col-side .dash-section-card {
+    height: auto !important;
+}
+
+/* Quick Actions Panel (Modeled on Instructor .quick-actions-panel) */
+.dash-shortcuts-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+}
+
+.dash-shortcuts-head {
+    padding: 0.65rem 0.95rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.dash-shortcuts-head i {
+    color: var(--dpd-teal);
+    font-size: 0.85rem;
+}
+
+/* 2x2 High-Density Action Grid (Eliminates vertical whitespace) */
+.dash-shortcuts-grid {
+    padding: 0.65rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.45rem;
+}
+
+.dash-shortcut-tile {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.65rem;
+    background: #f8fafc;
+    border: 1px solid #edf2f7;
+    border-radius: 9px;
+    text-decoration: none;
+    color: #1e293b;
+    transition: all 0.2s ease;
+}
+
+.dash-shortcut-tile:hover {
+    background: #f0fdfa;
+    border-color: #ccfbf1;
+    color: var(--dpd-teal);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.08);
+    text-decoration: none;
+}
+
+.dash-shortcut-tile-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+}
+
+.tile-teal .dash-shortcut-tile-icon { background: rgba(15, 118, 110, 0.12); color: var(--dpd-teal); }
+.tile-amber .dash-shortcut-tile-icon { background: rgba(217, 119, 6, 0.12); color: var(--dpd-amber); }
+.tile-rose .dash-shortcut-tile-icon { background: rgba(225, 29, 72, 0.12); color: var(--dpd-rose); }
+.tile-indigo .dash-shortcut-tile-icon { background: rgba(67, 56, 202, 0.12); color: var(--dpd-indigo); }
+
+.dash-shortcut-tile-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dash-shortcut-tile-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-shortcut-tile-sub {
+    font-size: 0.62rem;
+    color: #64748b;
+    line-height: 1.1;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   9. RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+@media (max-width: 991.98px) {
+    .dash-hero-inner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dash-hero-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .dash-progress-strip {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .strip-divider {
+        display: none;
+    }
+
+    .strip-item-progress {
+        width: 100%;
+    }
+
+    .strip-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .dashboard-page > .container > .row:not(.student-header-row) {
+        flex-direction: column !important;
+    }
+
+    .dash-hero-title {
+        font-size: 1.15rem;
+    }
+
+    .dash-header-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .dash-search-box {
+        width: 100%;
+    }
+
+    .dash-shortcuts-grid {
+        grid-template-columns: 1fr;
+    }
+}

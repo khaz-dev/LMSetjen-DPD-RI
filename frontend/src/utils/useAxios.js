@@ -26,8 +26,8 @@ useAxios.interceptors.request.use(async (config) => {
         if (isAccessTokenExpired(access_token)) {
             try {
                 const response = await getRefreshToken();
-                setAuthUser(response.data.access, response.data.refresh);
-                config.headers.Authorization = `Bearer ${response.data.access}`;
+                const newAccessToken = response?.data?.access || Cookie.get("access_token");
+                config.headers.Authorization = `Bearer ${newAccessToken}`;
             } catch (error) {
                 console.error("Token refresh failed:", error);
                 return Promise.reject(error);

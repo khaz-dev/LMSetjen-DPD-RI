@@ -89,11 +89,14 @@ function CookiePolicy() {
   const isMatch = (text) => !q || text.toLowerCase().includes(q);
 
   return (
-    <div className="cookie-policy-wrapper">
+    <div
+      className="cookie-policy-wrapper"
+      style={{ '--header-height': `${headerHeight}px` }}
+    >
       <BaseHeader />
 
       {/* HERO SLOT ANCHOR PREVENTS LAYOUT SHIFT */}
-      <div 
+      <div
         className="cookie-hero-slot"
         style={{ '--header-height': `${headerHeight}px` }}
       >
@@ -112,7 +115,7 @@ function CookiePolicy() {
                 </nav>
                 <span className="cookie-badge">
                   <span className="badge-pulse" aria-hidden="true"></span>
-                  <span>Standar Transparansi Web Setjen DPD RI</span>
+                  <span>Standar Transparansi Web LMSetjen DPD RI</span>
                 </span>
               </div>
 
@@ -188,7 +191,7 @@ function CookiePolicy() {
               <div className="cookie-sidebar-sticky">
 
                 {/* Search / Fast Filter */}
-                <div 
+                <div
                   className="cookie-search-card"
                   title="Cari kata kunci (JWT, Sesi, Google, Keamanan, Masa Simpan)..."
                 >
@@ -205,9 +208,9 @@ function CookiePolicy() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                     {searchQuery && (
-                      <button 
-                        type="button" 
-                        className="search-clear-btn" 
+                      <button
+                        type="button"
+                        className="search-clear-btn"
                         onClick={() => setSearchQuery("")}
                         aria-label="Bersihkan pencarian"
                       >
@@ -302,12 +305,12 @@ function CookiePolicy() {
                   <div className="authority-emblem-wrap">
                     <picture>
                       <source srcSet={logoSetjenWebP} type="image/webp" />
-                      <img 
-                        src={logoSetjenPNG} 
-                        alt="Logo Setjen DPD RI" 
-                        className="authority-emblem" 
-                        width="36" 
-                        height="36" 
+                      <img
+                        src={logoSetjenPNG}
+                        alt="Logo Setjen DPD RI"
+                        className="authority-emblem"
+                        width="36"
+                        height="36"
                       />
                     </picture>
                     <div className="authority-meta">
@@ -324,8 +327,8 @@ function CookiePolicy() {
             <div className="col-lg-8 col-xl-9 cookie-content-col">
 
               {/* SECTION 1: APA ITU COOKIE */}
-              <article 
-                id="apa-itu-cookie" 
+              <article
+                id="apa-itu-cookie"
                 className={`policy-card ${!isMatch("apa itu cookie file peramban browser definisi simpan") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
@@ -351,8 +354,8 @@ function CookiePolicy() {
               </article>
 
               {/* SECTION 2: JENIS COOKIE YANG KAMI GUNAKAN */}
-              <article 
-                id="jenis-cookie" 
+              <article
+                id="jenis-cookie"
                 className={`policy-card ${!isMatch("jenis cookie esensial analitik preferensi tema bahasa sesi") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
@@ -428,8 +431,8 @@ function CookiePolicy() {
               </article>
 
               {/* SECTION 3: TOKEN JWT */}
-              <article 
-                id="token-jwt" 
+              <article
+                id="token-jwt"
                 className={`policy-card ${!isMatch("token jwt json web token localstorage sessionstorage autentikasi") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
@@ -485,8 +488,8 @@ function CookiePolicy() {
               </article>
 
               {/* SECTION 4: CARA KAMI MENGGUNAKAN COOKIE */}
-              <article 
-                id="cara-penggunaan" 
+              <article
+                id="cara-penggunaan"
                 className={`policy-card ${!isMatch("cara penggunaan tujuan peningkatan personalisasi keamanan fungsionalitas") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
@@ -540,8 +543,8 @@ function CookiePolicy() {
               </article>
 
               {/* SECTION 5: KONTROL DAN PENGATURAN COOKIE */}
-              <article 
-                id="kontrol-cookie" 
+              <article
+                id="kontrol-cookie"
                 className={`policy-card ${!isMatch("kontrol pengaturan kelola tolak hapus browser peramban") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
@@ -583,8 +586,8 @@ function CookiePolicy() {
               </article>
 
               {/* SECTION 6: COOKIE PIHAK KETIGA */}
-              <article 
-                id="cookie-pihak-ketiga" 
+              <article
+                id="cookie-pihak-ketiga"
                 className={`policy-card ${!isMatch("pihak ketiga google oauth nusa dpd sso login") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
@@ -632,8 +635,8 @@ function CookiePolicy() {
               </article>
 
               {/* SECTION 7: RETENSI COOKIE */}
-              <article 
-                id="retensi-cookie" 
+              <article
+                id="retensi-cookie"
                 className={`policy-card ${!isMatch("retensi cookie durasi simpan masa berlaku sesi permanen") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
@@ -673,8 +676,8 @@ function CookiePolicy() {
               </article>
 
               {/* SECTION 8: PRIVASI DAN KEAMANAN */}
-              <article 
-                id="privasi-keamanan" 
+              <article
+                id="privasi-keamanan"
                 className={`policy-card ${!isMatch("privasi keamanan enkripsi ssl tls sensitif proteksi") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
@@ -703,8 +706,8 @@ function CookiePolicy() {
               </article>
 
               {/* SECTION 9: PERUBAHAN KEBIJAKAN COOKIE */}
-              <article 
-                id="perubahan-kebijakan" 
+              <article
+                id="perubahan-kebijakan"
                 className={`policy-card ${!isMatch("perubahan kebijakan cookie revisi pembaruan teknologi") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
@@ -727,8 +730,8 @@ function CookiePolicy() {
               </article>
 
               {/* SECTION 10: KONTAK KAMI */}
-              <article 
-                id="kontak-kami" 
+              <article
+                id="kontak-kami"
                 className={`policy-card ${!isMatch("kontak bpsdm email sdm@dpd.go.id biro okk bantuan hubungi") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
@@ -774,8 +777,8 @@ function CookiePolicy() {
                           <i className={`bi ${copiedEmail ? "bi-check-lg text-success" : "bi-files"}`} aria-hidden="true"></i>
                         </button>
                       </div>
-                      <a 
-                        href="mailto:sdm@dpd.go.id?subject=Pertanyaan%20Kebijakan%20Cookie%20LMSetjen%20DPD%20RI" 
+                      <a
+                        href="mailto:sdm@dpd.go.id?subject=Pertanyaan%20Kebijakan%20Cookie%20LMSetjen%20DPD%20RI"
                         className="btn-send-inquiry"
                       >
                         <i className="bi bi-send-fill me-2" aria-hidden="true"></i>

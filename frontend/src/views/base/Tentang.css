@@ -76,8 +76,8 @@ body:has(.tentang-page-wrapper)::after {
   overflow: hidden;
   width: 100%;
   transition: background 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              padding 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    padding 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Stuck Mode: Fixed under BaseHeader navbar with High-End Glassmorphism */
@@ -139,13 +139,12 @@ body:has(.tentang-page-wrapper)::after {
   width: 100%;
   height: 2px;
   border-radius: 0;
-  background: linear-gradient(90deg, 
-      transparent 0%, 
-      rgba(45, 212, 191, 0.25) 10%, 
-      #2dd4bf 50%, 
-      rgba(45, 212, 191, 0.25) 90%, 
-      transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(45, 212, 191, 0.25) 10%,
+      #2dd4bf 50%,
+      rgba(45, 212, 191, 0.25) 90%,
+      transparent 100%);
   box-shadow: 0 0 12px #2dd4bf;
   pointer-events: none;
   z-index: 10;
@@ -277,8 +276,17 @@ body:has(.tentang-page-wrapper)::after {
 }
 
 @keyframes tentang-pulse-glow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.2); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
 }
 
 /* Title & Subtitle */
@@ -412,7 +420,7 @@ body:has(.tentang-page-wrapper)::after {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
   backdrop-filter: blur(6px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Geometric grid & luminous radial glow overlay matching About Section */
@@ -455,6 +463,7 @@ body:has(.tentang-page-wrapper)::after {
   position: sticky !important;
   top: calc(var(--header-height, 60px) + 72px) !important;
   align-self: flex-start !important;
+  height: fit-content !important;
   z-index: 95 !important;
 }
 
@@ -495,6 +504,7 @@ body:has(.tentang-page-wrapper)::after {
 }
 
 @media (max-width: 991.98px) {
+
   .tentang-main-container .tentang-sidebar-col,
   .tentang-main-container .tentang-content-col {
     flex: 0 0 100% !important;
@@ -522,6 +532,7 @@ body:has(.tentang-page-wrapper)::after {
 .tentang-sidebar-sticky::-webkit-scrollbar {
   width: 4px;
 }
+
 .tentang-sidebar-sticky::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
@@ -565,8 +576,8 @@ body:has(.tentang-page-wrapper)::after {
   visibility: hidden;
   transform: translateY(-4px);
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.2s;
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0.2s;
   z-index: 1050;
   display: flex;
   align-items: center;
@@ -748,8 +759,8 @@ body:has(.tentang-page-wrapper)::after {
   visibility: hidden;
   transform: translateY(3px);
   transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.18s;
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0.18s;
   z-index: 1060;
   display: flex;
   align-items: center;
@@ -969,10 +980,21 @@ body:has(.tentang-page-wrapper)::after {
   flex-shrink: 0;
 }
 
-.bg-teal-subtle { background: #ccfbf1 !important; }
-.text-teal { color: #0d9488 !important; }
-.bg-emerald-subtle { background: #d1fae5 !important; }
-.text-emerald { color: #059669 !important; }
+.bg-teal-subtle {
+  background: #ccfbf1 !important;
+}
+
+.text-teal {
+  color: #0d9488 !important;
+}
+
+.bg-emerald-subtle {
+  background: #d1fae5 !important;
+}
+
+.text-emerald {
+  color: #059669 !important;
+}
 
 .feature-title {
   font-size: 0.88rem;

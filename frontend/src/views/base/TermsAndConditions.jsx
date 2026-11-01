@@ -90,7 +90,10 @@ function TermsAndConditions() {
   const isMatch = (text) => !q || text.toLowerCase().includes(q);
 
   return (
-    <div className="terms-policy-wrapper">
+    <div 
+      className="terms-policy-wrapper"
+      style={{ '--header-height': `${headerHeight}px` }}
+    >
       <BaseHeader />
 
       {/* HERO SLOT ANCHOR PREVENTS LAYOUT SHIFT */}

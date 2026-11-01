@@ -330,12 +330,12 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['rest_framework.filters.SearchFilter', 'rest_framework.filters.OrderingFilter'],
 }
 
-# 🔒 SECURITY FIX: Reduced JWT token lifetimes for security
+# 🔒 JWT Configuration
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Reduced from 3 days
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Reduced from 50 days
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),       # 1 hari (mencegah sering ter-logout saat beraktivitas)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),      # 7 hari (masa aktif sesi pengguna)
+    'ROTATE_REFRESH_TOKENS': False,                   # False untuk mencegah race condition / invalidasi token saat request paralel
+    'BLACKLIST_AFTER_ROTATION': False,
     'UPDATE_LAST_LOGIN': True,
 
     'ALGORITHM': 'HS256',
@@ -651,10 +651,14 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = [
     'api.throttling.SecureAnonRateThrottle',
     'api.throttling.SecureUserRateThrottle'
 ]
+DEFAULT_THROTTLE_CLASSES = REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES']
+
+DISABLE_THROTTLING = env.bool('DISABLE_THROTTLING', default=False)
+
 REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
-    'anon': env('ANON_THROTTLE_RATE', default='100/hour'),  # 100 requests per hour for anonymous users
-    'user': env('USER_THROTTLE_RATE', default='1000/hour'),  # 1000 requests per hour for authenticated users
-    'burst': env('BURST_THROTTLE_RATE', default='30/minute'),  # 30 requests per minute burst limit
+    'anon': env('ANON_THROTTLE_RATE', default='1000/hour' if not DEBUG else '100000/hour'),  # 1000 requests/hr in prod, 100k in dev
+    'user': env('USER_THROTTLE_RATE', default='5000/hour' if not DEBUG else '100000/hour'),  # 5000 requests/hr in prod, 100k in dev
+    'burst': env('BURST_THROTTLE_RATE', default='60/minute' if not DEBUG else '1000/minute'),  # 60 requests/min in prod, 1k in dev
 }
 
 # 8. Password Validation Enhancements

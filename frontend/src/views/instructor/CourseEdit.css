@@ -2,19 +2,7 @@
 
 /* CRITICAL: Force instructor-course-edit-page padding to be overridable by pt-5 and pb-5 classes */
 /* ✨ PHASE 4.23: Maintain consistent navbar compensation in both loading and loaded states */
-.instructor-course-edit-page.pt-5 {
-    padding-top: 50px !important;
-}
-
-.instructor-course-edit-page.pb-5 {
-    padding-bottom: 3rem !important;
-}
-
-/* ========================================
-   CRITICAL LAYOUT FIX - Row & Column Structure
-   ======================================== */
-
-/* Main section container - ensure proper display and spacing */
+/* Page Spacing - Tightened to match Profile page spacing precisely */
 .instructor-course-edit-page {
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -23,14 +11,22 @@
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
-    min-height: calc(100vh - 200px);
+    min-height: 100vh;
     background: transparent;
-    padding: var(--page-top-spacing, 20px) 0 1.5rem 0;
-    padding-top: var(--page-top-spacing, 20px) !important;
-    padding-bottom: 1.5rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
     margin-bottom: 2rem !important;
+    margin-top: 0 !important;
     overflow: visible !important;
     overflow-x: clip; /* Clip horizontal overflow without creating a scroll container that breaks position: sticky */
+}
+
+.instructor-course-edit-page.pt-5 {
+    padding-top: 1rem !important;
+}
+
+.instructor-course-edit-page.pb-5 {
+    padding-bottom: 2.5rem !important;
 }
 
 /* Ensure proper scroll context for sticky sidebar */
@@ -39,7 +35,7 @@
 }
 
 /* ✨ Main layout row (direct child of container) - matches Testimonials pattern */
-.instructor-course-edit-page > .container > .row {
+.instructor-course-edit-page > .container > .row:not(.instructor-header-row) {
     flex-wrap: nowrap;
     width: 100%;
     margin-left: 0 !important;
@@ -80,6 +76,14 @@
     padding-right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+}
+
+.instructor-course-edit-page .instructor-header-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow: visible !important;
 }
 
 .instructor-course-edit-page .row > [class*="col-"] {
@@ -266,9 +270,11 @@
 .course-edit-container {
     min-height: 100vh;
     background: transparent;
-    padding: var(--page-top-spacing) 0;
-    padding-top: var(--page-top-spacing) !important;
-    padding-bottom: var(--page-bottom-spacing) !important;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
+    margin-bottom: 2rem !important;
+    margin-top: 0 !important;
+    overflow: visible !important;
 }
 
 /* Main Card */
@@ -356,7 +362,7 @@
     padding-bottom: 0 !important;
 }
 
-.instructor-course-edit-page .section-title {
+.instructor-course-edit-page .form-section .section-title {
     color: #1e293b !important;
     font-weight: 700 !important;
     font-size: 1.05rem !important;
@@ -368,7 +374,7 @@
     letter-spacing: -0.01em;
 }
 
-.instructor-course-edit-page .section-title i {
+.instructor-course-edit-page .form-section .section-title i {
     color: #0f766e !important;
 }
 
@@ -1155,7 +1161,7 @@
         padding: var(--space-lg) !important;
     }
     
-    .instructor-course-edit-page .section-title {
+    .instructor-course-edit-page .form-section .section-title {
         font-size: 1.25rem;
     }
     
@@ -1421,7 +1427,7 @@
         margin-bottom: 1.5rem;
     }
     
-    .section-title {
+    .form-section .section-title {
         font-size: 1.2rem;
     }
 }
@@ -2178,7 +2184,7 @@ div.form-check.modern-form-check {
     padding-bottom: 0 !important;
 }
 
-.instructor-course-edit-page .section-title {
+.instructor-course-edit-page .form-section .section-title {
     font-size: 1.05rem !important;
     font-weight: 700 !important;
     color: #1e293b !important;
@@ -2189,11 +2195,11 @@ div.form-check.modern-form-check {
     gap: 6px !important;
 }
 
-.instructor-course-edit-page .section-title::after {
+.instructor-course-edit-page .form-section .section-title::after {
     display: none !important;
 }
 
-.instructor-course-edit-page .section-title i {
+.instructor-course-edit-page .form-section .section-title i {
     color: #0f766e !important;
 }
 
@@ -2412,4 +2418,4 @@ div.form-check.modern-form-check {
 
 .instructor-course-edit-page .text-danger {
     color: #dc2626 !important;
-}
+}

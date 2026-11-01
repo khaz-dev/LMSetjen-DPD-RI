@@ -12,6 +12,11 @@ import { getImageUrl } from "../../utils/courseUtils";  // ✨ PHASE 4.77: Image
 import RoleIndicator from "../../components/RoleIndicator";
 import './BaseHeader.css';
 
+// Module-level cache for trending searches across page navigations
+let cachedTrendingSearches = null;
+let lastTrendingFetchTime = 0;
+const TRENDING_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
 function BaseHeader() {
     const [wishlistCount, setWishlistCount] = useContext(WishlistContext);
     // ✨ PHASE 4.20: Import RolesContext to track role changes for menu updates
@@ -31,7 +36,12 @@ function BaseHeader() {
     const [selectedResultIndex, setSelectedResultIndex] = useState(-1);  // ✨ Track keyboard navigation
     const [searchHistory, setSearchHistory] = useState([]);  // ✨ PHASE 3: Search history
     const [showSearchHistory, setShowSearchHistory] = useState(false);  // ✨ PHASE 3: Show history dropdown
-    const [trendingSearches, setTrendingSearches] = useState([]);  // ✨ PHASE 3: Trending searches
+    const [trendingSearches, setTrendingSearches] = useState(() => {
+        if (cachedTrendingSearches && Date.now() - lastTrendingFetchTime < TRENDING_CACHE_TTL) {
+            return cachedTrendingSearches;
+        }
+        return [];
+    });  // ✨ PHASE 3: Trending searches (cached)
     const [showTrendingSearches, setShowTrendingSearches] = useState(false);  // ✨ PHASE 3: Show trending dropdown
     const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
     
@@ -91,30 +101,39 @@ function BaseHeader() {
             }
         }
         
+        // If already cached and valid, use cached data
+        if (cachedTrendingSearches && Date.now() - lastTrendingFetchTime < TRENDING_CACHE_TTL) {
+            setTrendingSearches(cachedTrendingSearches);
+            return;
+        }
+
         // ✨ PHASE 3: Fetch trending searches on component mount
         // ✨ PHASE 4.177: Add fetch guard + data check to prevent duplicate calls in React Strict Mode
-        if (!trendingSearches || trendingSearches.length === 0) {
-            if (!hasFetchedTrendingRef.current) {
-                hasFetchedTrendingRef.current = true;
-                const fetchTrendingSearches = async () => {
-                    try {
-                        const response = await apiInstance.get('course/trending-searches/');
-                        setTrendingSearches(response.data?.trending || []);
-                    } catch (error) {
-                        setTrendingSearches([]);
-                    }
-                };
-                fetchTrendingSearches();
-            }
+        if (!hasFetchedTrendingRef.current) {
+            hasFetchedTrendingRef.current = true;
+            const fetchTrendingSearches = async () => {
+                try {
+                    const response = await apiInstance.get('course/trending-searches/');
+                    const data = response.data?.trending || [];
+                    cachedTrendingSearches = data;
+                    lastTrendingFetchTime = Date.now();
+                    setTrendingSearches(data);
+                } catch (error) {
+                    setTrendingSearches(cachedTrendingSearches || []);
+                }
+            };
+            fetchTrendingSearches();
         }
-        
-        // ✨ PHASE 3: Sync search param from URL if navigating to search page
+    }, []);
+
+    // ✨ PHASE 3: Sync search param from URL if navigating to search page
+    useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const queryParam = searchParams.get('search');
         if (queryParam && isSearchPage) {
             setSearchQuery(queryParam);
         }
-    }, [isSearchPage, location, trendingSearches]);
+    }, [isSearchPage, location.search]);
 
     // ✨ PHASE 11.2: Avatar is now managed via ProfileContext from App.jsx
     // It updates automatically when user changes avatar on Profile page

@@ -152,7 +152,10 @@ function Capaian() {
   const isMatch = (text) => !q || text.toLowerCase().includes(q);
 
   return (
-    <div className="capaian-page-wrapper">
+    <div 
+      className="capaian-page-wrapper"
+      style={{ '--header-height': `${headerHeight}px` }}
+    >
       <BaseHeader />
 
       {/* HERO SLOT ANCHOR PREVENTS LAYOUT SHIFT */}

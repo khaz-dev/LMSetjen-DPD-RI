@@ -19,7 +19,7 @@ function Sidebar() {
         // ✨ Trigger event for all pages to adapt their layout
         triggerInstructorSidebarCollapseEvent();
     };
-    
+
     // Accurate active path checking
     const isActive = (path) => {
         const current = location.pathname;
@@ -89,10 +89,10 @@ function Sidebar() {
                             </div>
                             <div className="sidebar-header-text">
                                 <h6 className="sidebar-header-title">Menu Instruktur</h6>
-                                <span className="sidebar-header-badge">DPD RI LMS</span>
+                                <span className="sidebar-header-badge">LMSetjen DPD RI</span>
                             </div>
                         </div>
-                        <button 
+                        <button
                             className="sidebar-toggle-btn d-flex"
                             onClick={toggleSidebarCollapse}
                             title="Tutup bilah sisi"
@@ -106,7 +106,7 @@ function Sidebar() {
                 {/* Desktop Header - Collapsed State */}
                 {isCollapsed && (
                     <div className="d-none d-md-flex instructor-sidebar-header-collapsed">
-                        <button 
+                        <button
                             className="sidebar-expand-btn d-flex"
                             onClick={toggleSidebarCollapse}
                             title="Perluas bilah sisi"
@@ -122,8 +122,8 @@ function Sidebar() {
                         {/* Main Navigation */}
                         <div className="nav-section-title section-title">Manajemen Kursus</div>
                         <div className="d-flex flex-column nav-items-group">
-                            <Link 
-                                className={`instructor-nav-link ${isActive("/instructor/dashboard") ? "active" : ""}`} 
+                            <Link
+                                className={`instructor-nav-link ${isActive("/instructor/dashboard") ? "active" : ""}`}
                                 to="/instructor/dashboard/"
                                 data-tooltip="Dasbor"
                             >
@@ -132,9 +132,9 @@ function Sidebar() {
                                 </div>
                                 <span className="nav-text">Dasbor</span>
                             </Link>
-                            
-                            <Link 
-                                className={`instructor-nav-link ${isActive("/instructor/courses") ? "active" : ""}`} 
+
+                            <Link
+                                className={`instructor-nav-link ${isActive("/instructor/courses") ? "active" : ""}`}
                                 to="/instructor/courses/"
                                 data-tooltip="Kursus Saya"
                             >
@@ -143,9 +143,9 @@ function Sidebar() {
                                 </div>
                                 <span className="nav-text">Kursus Saya</span>
                             </Link>
-                            
-                            <Link 
-                                className={`instructor-nav-link ${isActive("/instructor/create-course") ? "active" : ""}`} 
+
+                            <Link
+                                className={`instructor-nav-link ${isActive("/instructor/create-course") ? "active" : ""}`}
                                 to="/instructor/create-course/"
                                 data-tooltip="Buat Kursus"
                             >
@@ -154,9 +154,9 @@ function Sidebar() {
                                 </div>
                                 <span className="nav-text">Buat Kursus</span>
                             </Link>
-                            
-                            <Link 
-                                className={`instructor-nav-link ${isActive("/instructor/students") ? "active" : ""}`} 
+
+                            <Link
+                                className={`instructor-nav-link ${isActive("/instructor/students") ? "active" : ""}`}
                                 to="/instructor/students/"
                                 data-tooltip="Siswa"
                             >
@@ -165,9 +165,9 @@ function Sidebar() {
                                 </div>
                                 <span className="nav-text">Siswa</span>
                             </Link>
-                            
-                            <Link 
-                                className={`instructor-nav-link ${isActive("/instructor/reviews") ? "active" : ""}`} 
+
+                            <Link
+                                className={`instructor-nav-link ${isActive("/instructor/reviews") ? "active" : ""}`}
                                 to="/instructor/reviews/"
                                 data-tooltip="Ulasan"
                             >
@@ -176,9 +176,9 @@ function Sidebar() {
                                 </div>
                                 <span className="nav-text">Ulasan</span>
                             </Link>
-                            
-                            <Link 
-                                className={`instructor-nav-link ${isActive("/instructor/question-answer") ? "active" : ""}`} 
+
+                            <Link
+                                className={`instructor-nav-link ${isActive("/instructor/question-answer") ? "active" : ""}`}
                                 to="/instructor/question-answer/"
                                 data-tooltip="Forum T&J"
                             >
@@ -188,8 +188,8 @@ function Sidebar() {
                                 <span className="nav-text">Forum T&J</span>
                             </Link>
 
-                            <Link 
-                                className={`instructor-nav-link ${isActive("/instructor/notifications") ? "active" : ""}`} 
+                            <Link
+                                className={`instructor-nav-link ${isActive("/instructor/notifications") ? "active" : ""}`}
                                 to="/instructor/notifications/"
                                 data-tooltip="Riwayat Aktivitas"
                             >
@@ -205,8 +205,8 @@ function Sidebar() {
                         {/* Account Settings */}
                         <div className="nav-section-title section-title">Pengaturan Akun</div>
                         <div className="d-flex flex-column nav-items-group">
-                            <Link 
-                                className={`instructor-nav-link ${isActive("/instructor/profile") ? "active" : ""}`} 
+                            <Link
+                                className={`instructor-nav-link ${isActive("/instructor/profile") ? "active" : ""}`}
                                 to="/instructor/profile/"
                                 data-tooltip="Edit Profil"
                             >
@@ -215,9 +215,9 @@ function Sidebar() {
                                 </div>
                                 <span className="nav-text">Edit Profil</span>
                             </Link>
-                            
-                            <Link 
-                                className={`instructor-nav-link ${isActive("/instructor/testimonials") ? "active" : ""}`} 
+
+                            <Link
+                                className={`instructor-nav-link ${isActive("/instructor/testimonials") ? "active" : ""}`}
                                 to="/instructor/testimonials/"
                                 data-tooltip="Testimoni"
                             >
@@ -229,7 +229,7 @@ function Sidebar() {
                         </div>
 
                         {/* Logout Button */}
-                        <button 
+                        <button
                             onClick={handleLogout}
                             className={`instructor-logout-btn ${isCollapsed ? "collapsed" : ""}`}
                             data-tooltip="Keluar"
