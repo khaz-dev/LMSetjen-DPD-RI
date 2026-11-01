@@ -19,7 +19,11 @@ const LecturesTab = ({
     isVideoPlaying,  // ✨ PHASE 4.105: Track if video is currently playing
     toggleVideoPlayPause,  // ✨ PHASE 4.105: Function to toggle play/pause
     onProgressUpdate,  // ✨ PHASE 4.115: Callback when progress is saved externally
-    onLessonCompletion  // ✨ PHASE 4.133: Callback to register lesson completion handler
+    onLessonCompletion,  // ✨ PHASE 4.133: Callback to register lesson completion handler
+    // ✨ Pre-test & Sequential Locking Props
+    hasCompletedPretest = true,
+    pretestRequired = false,
+    onStartPretest = null
 }) => {
     // Video player ref
     const playerRef = useRef(null);
@@ -285,6 +289,23 @@ const LecturesTab = ({
         });
         return completedSet.size;
     };
+
+    // Build flattened list of lessons across all curriculum sections to evaluate sequential progression
+    const flattenedLessons = [];
+    if (course?.curriculum && Array.isArray(course.curriculum)) {
+        course.curriculum.forEach((sec, sIdx) => {
+            const items = sec.variant_items || sec.items || [];
+            items.forEach((it, lIdx) => {
+                flattenedLessons.push({
+                    variant_item_id: it.variant_item_id,
+                    sectionIndex: sIdx,
+                    lessonIndex: lIdx,
+                    title: it.title,
+                    sectionTitle: sec.title
+                });
+            });
+        });
+    }
 
     // Video player handlers
     // ✨ PHASE 4.86: Removed setShow since using inline VideoPlayer component
@@ -1276,17 +1297,80 @@ const LecturesTab = ({
                 })()}
             </div>
             
+            {/* Pre-test Diagnostic Requirement Notice */}
+            {pretestRequired && !hasCompletedPretest && (
+                <div className="pretest-curriculum-locked-banner mb-3 p-3 rounded-3">
+                    <div className="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                        <div className="d-flex align-items-center gap-3">
+                            <div className="pretest-banner-lock-icon">
+                                <i className="fas fa-lock"></i>
+                            </div>
+                            <div>
+                                <h6 className="mb-1 fw-bold text-dark">
+                                    <i className="fas fa-clipboard-check text-teal-accent me-2"></i>
+                                    Kurikulum Terkunci — Selesaikan Pre-test Terlebih Dahulu
+                                </h6>
+                                <p className="mb-0 text-muted small">
+                                    Pre-test diagnostik ini wajib diselesaikan untuk membuka akses materi kursus. <strong>Tidak ada syarat kelulusan minimal</strong> pada Pre-test (hanya untuk menguji pemahaman awal).
+                                </p>
+                            </div>
+                        </div>
+                        {onStartPretest && (
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-teal fw-bold px-3 py-2 text-nowrap"
+                                onClick={onStartPretest}
+                            >
+                                <i className="fas fa-play me-1"></i>
+                                Mulai Pre-test Sekarang
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {course?.curriculum?.length > 0 ? (
-                course.curriculum.map((c, index) => (
-                    <div key={c.variant_id || index} className="lecture-card">
+                course.curriculum.map((c, index) => {
+                    // Check if Section is locked
+                    const isSectionLocked = (() => {
+                        if (pretestRequired && !hasCompletedPretest) {
+                            return { locked: true, reason: "Selesaikan Pre-test terlebih dahulu untuk membuka kurikulum pembelajaran." };
+                        }
+                        if (index === 0) return { locked: false, reason: "" };
+                        // Check if all lessons in all previous sections are completed
+                        for (let prevIdx = 0; prevIdx < index; prevIdx++) {
+                            const prevSection = course.curriculum[prevIdx];
+                            const prevItems = prevSection?.variant_items || prevSection?.items || [];
+                            const allPrevCompleted = prevItems.length === 0 || prevItems.every(it => isLessonCompleted(it));
+                            if (!allPrevCompleted) {
+                                return {
+                                    locked: true,
+                                    reason: `Selesaikan semua pelajaran di Bagian ${prevIdx + 1} (${prevSection.title}) terlebih dahulu.`
+                                };
+                            }
+                        }
+                        return { locked: false, reason: "" };
+                    })();
+
+                    return (
+                    <div key={c.variant_id || index} className={`lecture-card ${isSectionLocked.locked ? 'lecture-card-locked' : ''}`}>
                         <div className="lecture-header">
                             <div className="lecture-header-content">
                                 <div className="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <h5 className="mb-1">{c.title}</h5>
-                                        <small className="opacity-90">
-                                            {c.variant_items?.length || 0} Pelajaran{(c.variant_items?.length || 0) !== 1 ? "" : ""}
-                                        </small>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <div>
+                                            <h5 className="mb-1 d-flex align-items-center gap-2">
+                                                {c.title}
+                                                {isSectionLocked.locked && (
+                                                    <span className="badge-section-locked" title={isSectionLocked.reason}>
+                                                        <i className="fas fa-lock me-1"></i>Terkunci
+                                                    </span>
+                                                )}
+                                            </h5>
+                                            <small className="opacity-90">
+                                                {c.variant_items?.length || 0} Pelajaran{(c.variant_items?.length || 0) !== 1 ? "" : ""}
+                                            </small>
+                                        </div>
                                     </div>
                                     <button
                                         className="btn btn-link text-white p-0"
@@ -1309,17 +1393,46 @@ const LecturesTab = ({
                                 const progressStatus = getLessonProgressStatus(l);
                                 const isCompleted = progressStatus.status === "completed";
                                 const isInProgress = progressStatus.status === "in-progress";
-                                const isVideoLesson = isVideoContent(l);  // ✨ PHASE 4.10: Check all video sources
+                                const isVideoLesson = isVideoContent(l);
                                 const itemId = l.variant_item_id;
+
+                                // Sequential lesson lock evaluation
+                                const lessonLockStatus = (() => {
+                                    if (pretestRequired && !hasCompletedPretest) {
+                                        return { locked: true, reason: "Selesaikan Pre-test terlebih dahulu untuk membuka pelajaran." };
+                                    }
+                                    if (isSectionLocked.locked) {
+                                        return { locked: true, reason: isSectionLocked.reason };
+                                    }
+                                    const currentFlatIdx = flattenedLessons.findIndex(fl => fl.variant_item_id === l.variant_item_id);
+                                    if (currentFlatIdx > 0) {
+                                        const prevFlat = flattenedLessons[currentFlatIdx - 1];
+                                        const isPrevCompleted = course.completed_lesson?.some(cl => cl.variant_item?.variant_item_id === prevFlat.variant_item_id);
+                                        if (!isPrevCompleted) {
+                                            return {
+                                                locked: true,
+                                                reason: `Selesaikan pelajaran "${prevFlat.title}" terlebih dahulu.`
+                                            };
+                                        }
+                                    }
+                                    return { locked: false, reason: "" };
+                                })();
                                 
                                 return (
-                                    <div key={l.variant_item_id || lessonIndex} className="mb-0">{/* Use only variant_item_id for key */}
+                                    <div key={l.variant_item_id || lessonIndex} className="mb-0">
                                         <div 
-                                            className={`lesson-item ${isCompleted ? "completed" : isInProgress ? "in-progress" : ""} ${variantItem?.variant_item_id === l.variant_item_id ? "active" : ""} position-relative`}
+                                            className={`lesson-item ${lessonLockStatus.locked ? "lesson-item-locked" : ""} ${isCompleted ? "completed" : isInProgress ? "in-progress" : ""} ${variantItem?.variant_item_id === l.variant_item_id ? "active" : ""} position-relative`}
                                             onClick={(e) => {
-                                                // ✨ PHASE 6.4: Make entire lesson-item clickable (except buttons/inputs)
-                                                // Only trigger if click target is not an interactive element
                                                 if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.closest('button') === null) {
+                                                    if (lessonLockStatus.locked) {
+                                                        Toast().fire({
+                                                            icon: 'warning',
+                                                            title: 'Pelajaran Terkunci',
+                                                            text: lessonLockStatus.reason,
+                                                            timer: 4000
+                                                        });
+                                                        return;
+                                                    }
                                                     if (isClickingLessonRef.current) {
                                                         return;
                                                     }
@@ -1327,12 +1440,12 @@ const LecturesTab = ({
                                                 }
                                             }}
                                             style={{
-                                                cursor: 'pointer'
+                                                cursor: lessonLockStatus.locked ? 'not-allowed' : 'pointer'
                                             }}
                                         >
                                             {/* Enhanced Progress indicator */}
-                                            <div className={`lesson-progress-indicator ${progressStatus.status}`}>
-                                                {isInProgress && (
+                                            <div className={`lesson-progress-indicator ${lessonLockStatus.locked ? "locked" : progressStatus.status}`}>
+                                                {isInProgress && !lessonLockStatus.locked && (
                                                     <div 
                                                         className="progress-fill" 
                                                         style={{ width: `${progressStatus.percentage}%` }}
@@ -1343,15 +1456,35 @@ const LecturesTab = ({
                                             <div className="d-flex align-items-center justify-content-between">
                                                 <div className="d-flex align-items-center gap-3 flex-grow-1">
                                                     {(() => {
-                                                        // ✨ PHASE 4.118: Define isSameLesson outside button so it can be used in disabled attribute
                                                         const isSameLesson = variantItem?.variant_item_id === l.variant_item_id;
                                                         
+                                                        if (lessonLockStatus.locked) {
+                                                            return (
+                                                                <button
+                                                                    type="button"
+                                                                    className="lesson-play-btn locked"
+                                                                    title={lessonLockStatus.reason}
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+                                                                        Toast().fire({
+                                                                            icon: 'warning',
+                                                                            title: 'Pelajaran Terkunci',
+                                                                            text: lessonLockStatus.reason,
+                                                                            timer: 4000
+                                                                        });
+                                                                    }}
+                                                                >
+                                                                    <i className="fas fa-lock"></i>
+                                                                </button>
+                                                            );
+                                                        }
+
                                                         return (
                                                             <button 
                                                                 onClick={(e) => {
                                                                     e.preventDefault();
                                                                     e.stopPropagation();
-                                                                    // ✨ PHASE 4.142+: Double-check lock before processing click
                                                                     if (isClickingLessonRef.current) {
                                                                         return;
                                                                     }
@@ -1361,10 +1494,9 @@ const LecturesTab = ({
                                                                     if (e.key === 'Enter' || e.key === ' ') {
                                                                         e.preventDefault();
                                                                         e.stopPropagation();
-                                                                        // ✨ PHASE 4.142+: Prevent keyboard access when button is locked
                                                                         const isSameLesson = variantItem?.variant_item_id === l.variant_item_id;
                                                                         if (isSameLesson && isClickingLessonUI) {
-                                                                            return;  // Blocked
+                                                                            return;
                                                                         }
                                                                         handlePlayVideo(l);
                                                                     }
@@ -1381,18 +1513,15 @@ const LecturesTab = ({
                                                                 {(() => {
                                                                     const shouldShowPause = isSameLesson && isVideoPlaying;
                                                                     
-                                                                    // ✨ PHASE 4.107: Show play/pause icons for currently selected lesson, regardless of progress status
                                                                     if (progressStatus.status === "completed") {
                                                                         return <i className="fas fa-check"></i>;
                                                                     } else if (isSameLesson) {
-                                                                        // Currently selected lesson - show play/pause icon
                                                                         return shouldShowPause ? (
                                                                             <i className="fas fa-pause text-warning"></i>
                                                                         ) : (
                                                                             <i className="fas fa-play text-warning"></i>
                                                                         );
                                                                     } else {
-                                                                        // Different lesson - show generic file icon
                                                                         return <i className={getFileIcon(l.file, l)}></i>;
                                                                     }
                                                                 })()}
@@ -1405,8 +1534,8 @@ const LecturesTab = ({
                                                         </h6>
                                                         <div className="d-flex align-items-center gap-3 flex-wrap">
                                                             <small className="lesson-meta">
-                                                                <i className={`${getFileTypeIcon(l.file, l)} me-1`}></i>  {/* ✨ PHASE 4.10: Pass variant item */}
-                                                                {getFileTypeLabel(l.file, l)}  {/* ✨ PHASE 4.10: Pass variant item */}
+                                                                <i className={`${getFileTypeIcon(l.file, l)} me-1`}></i>
+                                                                {getFileTypeLabel(l.file, l)}
                                                             </small>
                                                             {l.content_duration && l.content_duration !== "0m 0s" && (
                                                                 <small className="lesson-meta">
@@ -1416,24 +1545,27 @@ const LecturesTab = ({
                                                             )}
                                                             
                                                             {/* Enhanced progress status badges */}
-                                                            {progressStatus.status === "completed" && (
+                                                            {lessonLockStatus.locked ? (
+                                                                <small className="lesson-status-badge locked" title={lessonLockStatus.reason}>
+                                                                    <i className="fas fa-lock me-1"></i>
+                                                                    Terkunci
+                                                                </small>
+                                                            ) : progressStatus.status === "completed" ? (
                                                                 <small className="lesson-status-badge completed">
                                                                     <i className="fas fa-check-circle me-1"></i>
                                                                     Diselesaikan
                                                                 </small>
-                                                            )}
-                                                            {progressStatus.status === "in-progress" && (
+                                                            ) : progressStatus.status === "in-progress" ? (
                                                                 <small className="lesson-status-badge in-progress">
                                                                     <i className="fas fa-play-circle me-1"></i>
                                                                     {progressStatus.percentage}% ditonton
                                                                 </small>
-                                                            )}
-                                                            {isVideoLesson && progressStatus.status === "not-started" && (
+                                                            ) : isVideoLesson && progressStatus.status === "not-started" ? (
                                                                 <small className="lesson-status-badge not-started">
                                                                     <i className="fas fa-play me-1"></i>
                                                                     Siap ditonton
                                                                 </small>
-                                                            )}
+                                                            ) : null}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1444,7 +1576,8 @@ const LecturesTab = ({
                             })}
                         </div>
                     </div>
-                ))
+                );
+                })
             ) : (
                 <div className="empty-state">
                     <i className="fas fa-play-circle empty-icon"></i>

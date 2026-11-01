@@ -1844,7 +1844,7 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
         fields = [
             'attempt_id', 'quiz', 'quiz_title', 'score', 'total_questions', 
             'correct_answers', 'is_passed', 'pass_status', 'percentage_display',
-            'time_taken', 'date_attempted'
+            'time_taken', 'date_attempted', 'attempt_type'
         ]
         read_only_fields = ['attempt_id', 'is_passed', 'date_attempted']
 
@@ -1869,6 +1869,7 @@ class QuizSubmissionSerializer(serializers.Serializer):
         )
     )
     time_taken = serializers.IntegerField(required=False)  # Changed from DurationField to IntegerField for seconds
+    attempt_type = serializers.CharField(required=False, allow_blank=True, default='quiz')
 
 
 class FileUploadSerializer(serializers.Serializer):
@@ -2784,7 +2785,7 @@ class Question_Answer_MessageSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = api_models.Question_Answer_Message
-        fields = ['id', 'qam_id', 'qa_id', 'question', 'message', 'user', 'user_id', 'profile', 'date', 'likes_count', 'user_liked']
+        fields = ['id', 'qam_id', 'qa_id', 'question', 'message', 'user', 'user_id', 'profile', 'date', 'likes_count', 'user_liked', 'is_solution']
         read_only_fields = ['id', 'qam_id', 'qa_id', 'date']
     
     def get_profile(self, obj):
@@ -2851,14 +2852,18 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
     user_liked = serializers.SerializerMethodField(read_only=True)
     
+    # Solved & Instructor status
+    has_instructor_reply = serializers.SerializerMethodField(read_only=True)
+    
     class Meta:
         model = api_models.Question_Answer
         fields = [
             'id', 'qa_id', 'course', 'title', 'user', 'user_id',
             'profile', 'variant', 'variant_item',
-            'date', 'messages', 'replies_count', 'likes_count', 'user_liked'
+            'date', 'messages', 'replies_count', 'likes_count', 'user_liked',
+            'is_solved', 'has_instructor_reply', 'video_timestamp'
         ]
-        read_only_fields = ['id', 'qa_id', 'date', 'messages', 'replies_count']
+        read_only_fields = ['id', 'qa_id', 'date', 'messages', 'replies_count', 'has_instructor_reply']
     
     def get_profile(self, obj):
         """Get user profile with all details"""
@@ -2925,6 +2930,19 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
             return api_models.Question_Answer_Like.objects.filter(
                 question=obj, user=request.user
             ).exists()
+        return False
+
+    def get_has_instructor_reply(self, obj):
+        """Check if any reply in this thread was posted by the course instructor"""
+        try:
+            teacher_user_id = obj.course.teacher.user_id if obj.course and obj.course.teacher else None
+            if not teacher_user_id:
+                return False
+            messages = list(obj.reply_messages.all().order_by('date'))
+            if len(messages) > 1:
+                return any(m.user_id == teacher_user_id for m in messages[1:])
+        except Exception:
+            pass
         return False
 
 

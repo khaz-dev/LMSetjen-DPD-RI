@@ -1055,6 +1055,8 @@ class Question_Answer(models.Model):
     date = models.DateTimeField(default=timezone.now)
     # ✨ PHASE 7.7: Store lesson context (Bagian/Pelajaran) for better organization
     variant_item = models.ForeignKey(VariantItem, on_delete=models.SET_NULL, null=True, blank=True, related_name="questions")
+    is_solved = models.BooleanField(default=False)
+    video_timestamp = models.IntegerField(null=True, blank=True, help_text="Timestamp in seconds for video playback")
 
     def __str__(self):
         return f"{self.user.username} - {self.course.title}"
@@ -1076,6 +1078,7 @@ class Question_Answer_Message(models.Model):
     qam_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     qa_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date = models.DateTimeField(default=timezone.now)
+    is_solution = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} - {self.course.title}"
@@ -1753,17 +1756,36 @@ class EnrolledCourse(models.Model):
         return results
     
     def are_all_quizzes_passed(self):
-        """Check if all quizzes are passed with 70% or higher"""
-        quiz_results = self.quiz_results()
-        
-        if not quiz_results:
-            return True  # No quizzes means requirement is met
-        
-        return all(result['passed'] and result['percentage'] >= 70 for result in quiz_results)
-    
+        """Check if all regular quizzes are passed with 70% or higher"""
+        quizzes = Quiz.objects.filter(course=self.course, quiz_type='quiz', is_active=True)
+        if not quizzes.exists():
+            return True
+        for quiz in quizzes:
+            best_attempt = QuizAttempt.objects.filter(user=self.user, quiz=quiz).order_by('-score').first()
+            if not best_attempt or not best_attempt.is_passed or best_attempt.score < 70:
+                return False
+        return True
+
+    def has_completed_pre_test(self):
+        """Check if pre-test has been completed (if course has pre_post_test)"""
+        pre_post_quiz = Quiz.objects.filter(course=self.course, quiz_type='pre_post_test', is_active=True).first()
+        if not pre_post_quiz:
+            return True
+        return QuizAttempt.objects.filter(user=self.user, quiz=pre_post_quiz).exists()
+
+    def has_completed_post_test(self):
+        """Check if post-test has been completed (if course has pre_post_test)"""
+        pre_post_quiz = Quiz.objects.filter(course=self.course, quiz_type='pre_post_test', is_active=True).first()
+        if not pre_post_quiz:
+            return True
+        has_post = QuizAttempt.objects.filter(user=self.user, quiz=pre_post_quiz, attempt_type='post_test').exists()
+        if has_post:
+            return True
+        return QuizAttempt.objects.filter(user=self.user, quiz=pre_post_quiz).count() >= 2
+
     def is_certificate_eligible(self):
-        """Check if user is eligible for certificate"""
-        return self.is_course_completed() and self.are_all_quizzes_passed()
+        """Check if user is eligible for certificate (lessons complete + regular quizzes passed + post-test complete)"""
+        return self.is_course_completed() and self.are_all_quizzes_passed() and self.has_completed_post_test()
     
     def get_or_create_certificate(self):
         """Get existing certificate or create new one if eligible"""
@@ -1961,6 +1983,12 @@ class QuizAttempt(models.Model):
     attempt_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date_attempted = models.DateTimeField(default=timezone.now)
     _points_awarded = models.BooleanField(default=False, db_index=True, editable=False, help_text="Points awarded for this attempt")  # ✨ PHASE 11.169: Add missing field from migration
+    ATTEMPT_TYPE_CHOICES = (
+        ('pre_test', 'Pre-test'),
+        ('post_test', 'Post-test'),
+        ('quiz', 'Kuis'),
+    )
+    attempt_type = models.CharField(max_length=20, choices=ATTEMPT_TYPE_CHOICES, default='quiz', blank=True, null=True)
 
     class Meta:
         ordering = ['-date_attempted']
@@ -1973,9 +2001,12 @@ class QuizAttempt(models.Model):
         return "PASSED" if self.is_passed else "FAILED"
 
     def save(self, *args, **kwargs):
-        # Calculate if passed (score >= 70%)
+        # Calculate if passed (Pre-test has no minimum passing score requirement)
         from decimal import Decimal
-        self.is_passed = Decimal(str(self.score)) >= Decimal('70.00')
+        if (self.quiz and getattr(self.quiz, 'quiz_type', '') == 'pre_post_test' and self.attempt_type == 'pre_test') or getattr(self, '_is_pre_test', False):
+            self.is_passed = True
+        else:
+            self.is_passed = Decimal(str(self.score)) >= Decimal('70.00')
         super().save(*args, **kwargs)
 
     @classmethod

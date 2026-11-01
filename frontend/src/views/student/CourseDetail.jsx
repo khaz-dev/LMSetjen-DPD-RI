@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
 import dayjs, { moment } from "../../utils/dayjs";
@@ -20,6 +20,13 @@ import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.9+: Add JP calculation for progress card
 import "./CourseDetail.css";
 import apiInstance from "../../utils/axios";
+import {
+    formatTimestamp,
+    parseTimeToSeconds,
+    QAFormattingToolbar,
+    QAMarkdownRenderer,
+    QAVideoTimestampBadge,
+} from "../../components/CourseDetail/QAMarkdownTools";
 
 // ✨ PHASE 11.164: Extracted floating note card component - fixes React hooks violation
 const FloatingNoteCard = React.memo(({ item, idx, openNotes, setOpenNotes, param, enrollmentId, fetchCourseDetail }) => {
@@ -377,6 +384,11 @@ function CourseDetail() {
     const videoPlayerContainerRef = useRef(null);  // ✨ PHASE X.X: Ref to video player container for auto-scroll
     const lecturesTabProgressRef = useRef(null);  // ✨ PHASE 4.115: Ref to external progress update callback
     const lecturesTabCompletionRef = useRef(null);  // ✨ PHASE 4.133: Ref to lesson completion callback
+    const currentVideoPlaybackTimeRef = useRef(0);  // ✨ Pilar 3: Track continuous video playback seconds
+    const replyTextareaRef = useRef(null);  // ✨ Pilar 4: Ref to discussion reply textarea
+    const [attachedTimestamp, setAttachedTimestamp] = useState(null);  // ✨ Pilar 3: Attached video timestamp for new question
+    const [questionPreviewMode, setQuestionPreviewMode] = useState(false);  // ✨ Pilar 4: Preview mode for question modal
+    const [replyPreviewMode, setReplyPreviewMode] = useState(false);  // ✨ Pilar 4: Preview mode for reply form
 
     // ✨ PHASE 4.146: Certificate state to hide video player when certificate exists
     const [existingCertificate, setExistingCertificate] = useState(null);
@@ -388,6 +400,54 @@ function CourseDetail() {
     // ✨ PHASE 4.225+: Quiz state - declared early for useEffect dependency
     const [quizzes, setQuizzes] = useState([]);
     const [selectedQuiz, setSelectedQuiz] = useState(null);
+
+    // ✨ Pre-test, Post-test & Sequential Progression Helpers
+    const prePostQuiz = quizzes?.find(q => q.quiz_type === 'pre_post_test') || null;
+    const regularQuizzes = quizzes?.filter(q => q.quiz_type === 'quiz') || [];
+    const hasPrePostTest = Boolean(prePostQuiz);
+    const hasCompletedPretest = hasPrePostTest ? Boolean(prePostQuiz.has_pre_test || prePostQuiz.today_attempts > 0 || prePostQuiz.is_passed) : true;
+    const hasCompletedPosttest = hasPrePostTest ? Boolean(prePostQuiz.has_post_test) : true;
+    const pretestRequired = hasPrePostTest;
+
+    const allLessonsCompleted = (() => {
+        const totalLessons = course?.curriculum?.reduce((total, section) => {
+            const items = section.variant_items || section.items || [];
+            return total + items.length;
+        }, 0) || 0;
+        const completedCount = new Set(course?.completed_lesson?.map(cl => cl.variant_item?.variant_item_id)).size;
+        return totalLessons > 0 && completedCount >= totalLessons;
+    })();
+
+    const allRegularQuizzesPassed = regularQuizzes.length === 0 || regularQuizzes.every(q => q.is_passed);
+    const canTakePostTest = hasPrePostTest && allLessonsCompleted && allRegularQuizzesPassed;
+
+    const handleStartPretest = () => {
+        if (prePostQuiz) {
+            setActiveTab('quiz');
+            handleQuizShow(prePostQuiz);
+        } else {
+            Toast().fire({
+                icon: 'info',
+                title: 'Info Pre-test',
+                text: 'Tidak ada Pre-test yang dikonfigurasi untuk kursus ini.'
+            });
+        }
+    };
+
+    const handleStartPosttest = () => {
+        if (prePostQuiz) {
+            if (!canTakePostTest) {
+                Toast().fire({
+                    icon: 'warning',
+                    title: 'Post-test Terkunci',
+                    text: 'Selesaikan semua materi kurikulum dan kuis kursus terlebih dahulu.'
+                });
+                return;
+            }
+            setActiveTab('quiz');
+            handleQuizShow(prePostQuiz);
+        }
+    };
     const [quizShow, setQuizShow] = useState(false);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [timeRemaining, setTimeRemaining] = useState(60);
@@ -469,10 +529,39 @@ function CourseDetail() {
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [createMessage, setCreateMessage] = useState({ title: "", message: "" });
     const [currentVariantContext, setCurrentVariantContext] = useState(null);
-    const [discussionFilters, setDiscussionFilters] = useState({ search: '', bagian: null, pelajaran: null });
+    const [discussionFilters, setDiscussionFilters] = useState({ 
+        search: '', 
+        bagian: null, 
+        pelajaran: null, 
+        tab: 'all', 
+        sort: 'newest' 
+    });
     const [filteredQuestions, setFilteredQuestions] = useState([]);
     // ✨ PHASE 7.10: Inline forum view - track opened question for inline display instead of modal
     const [openedQuestionId, setOpenedQuestionId] = useState(null);
+
+    // ✨ Pilar 2: Hitung Statistik Q&A secara Real-Time untuk Quick Filter Tabs
+    const qaStats = useMemo(() => {
+        const all = questions || [];
+        const currentUserId = UserData()?.user_id;
+        const teacherUserId = course?.course?.teacher?.user_id;
+
+        const solved = all.filter(q => q.is_solved || q.messages?.some(m => m.is_solution)).length;
+        const unsolved = Math.max(0, all.length - solved);
+        const instructor = all.filter(q => 
+            q.has_instructor_reply || 
+            (teacherUserId && q.messages?.slice(1).some(m => m.user_id === teacherUserId || m.profile?.user_id === teacherUserId))
+        ).length;
+        const myQuestions = all.filter(q => q.user_id === currentUserId || q.profile?.user_id === currentUserId).length;
+
+        return {
+            total: all.length,
+            unsolved,
+            solved,
+            instructor,
+            myQuestions
+        };
+    }, [questions, course]);
 
     // ✨ PHASE 11.160: Notes filter state - same pattern as discussions
     const [noteFilters, setNoteFilters] = useState({ search: '', bagian: null, pelajaran: null, color: null });
@@ -549,38 +638,72 @@ function CourseDetail() {
         setFilteredNotes(filtered);
     }, [course?.note, noteFilters]);
 
-    // ✨ PHASE 7.8-7.9: Filter questions by search term, bagian, and pelajaran
+    // ✨ PHASE 7.8-7.9 & Pilar 2: Filter and sort questions (Tab Quick Filter, Search, Bagian, Pelajaran, Sorting)
     useEffect(() => {
-        let filtered = questions;
+        let filtered = [...(questions || [])];
+        const currentUserId = UserData()?.user_id;
+        const teacherUserId = course?.course?.teacher?.user_id;
 
-        // Filter by search term (title or message)
+        // 1. Tab Quick Filter
+        const activeTab = discussionFilters.tab || 'all';
+        if (activeTab === 'unsolved') {
+            filtered = filtered.filter(q => !q.is_solved && !q.messages?.some(m => m.is_solution));
+        } else if (activeTab === 'solved') {
+            filtered = filtered.filter(q => q.is_solved || q.messages?.some(m => m.is_solution));
+        } else if (activeTab === 'instructor') {
+            filtered = filtered.filter(q => 
+                q.has_instructor_reply || 
+                (teacherUserId && q.messages?.slice(1).some(m => m.user_id === teacherUserId || m.profile?.user_id === teacherUserId))
+            );
+        } else if (activeTab === 'my_questions') {
+            filtered = filtered.filter(q => q.user_id === currentUserId || q.profile?.user_id === currentUserId);
+        } else if (activeTab === 'popular') {
+            filtered = filtered.filter(q => (q.likes_count || 0) > 0 || (q.replies_count || q.messages?.length - 1 || 0) > 0);
+        }
+
+        // 2. Filter by search term (title, message, or author name)
         if (discussionFilters.search?.trim()) {
             const searchLower = discussionFilters.search.toLowerCase();
             filtered = filtered.filter(q => {
                 const titleMatch = q.title?.toLowerCase().includes(searchLower);
-                const messageMatch = q.message?.toLowerCase().includes(searchLower);
-                return titleMatch || messageMatch;
+                const messageMatch = (q.message || q.messages?.[0]?.message)?.toLowerCase().includes(searchLower);
+                const authorMatch = q.profile?.full_name?.toLowerCase().includes(searchLower);
+                return titleMatch || messageMatch || authorMatch;
             });
         }
 
-        // Filter by bagian (section)
+        // 3. Filter by bagian (section)
         if (discussionFilters.bagian) {
             filtered = filtered.filter(q =>
                 q.variant?.variant_id === discussionFilters.bagian
             );
         }
 
-        // Filter by pelajaran (lesson)
+        // 4. Filter by pelajaran (lesson)
         if (discussionFilters.pelajaran) {
             filtered = filtered.filter(q =>
                 q.variant_item?.variant_item_id === discussionFilters.pelajaran
             );
         }
 
+        // 5. Sorting
+        const sort = discussionFilters.sort || (activeTab === 'popular' ? 'most_liked' : 'newest');
+        if (sort === 'most_liked') {
+            filtered.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
+        } else if (sort === 'most_replies') {
+            filtered.sort((a, b) => {
+                const countA = a.replies_count ?? Math.max(0, (a.messages?.length || 0) - 1);
+                const countB = b.replies_count ?? Math.max(0, (b.messages?.length || 0) - 1);
+                return countB - countA;
+            });
+        } else {
+            // Newest by date
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
         setFilteredQuestions(filtered);
 
         // ✨ PHASE 7.24: Populate user's liked questions from API data (user_liked field)
-        // This ensures question-cards in list view show correct like status
         const likedQuestionIds = new Set();
         filtered.forEach(q => {
             if (q.user_liked) {
@@ -589,8 +712,7 @@ function CourseDetail() {
         });
         setUserLikedQuestions(likedQuestionIds);
 
-        // Q&A forum population
-    }, [questions, discussionFilters]);
+    }, [questions, discussionFilters, course]);
     // ✨ PHASE 4.224: Set up Bootstrap tab change listeners
     useEffect(() => {
         const tabElements = document.querySelectorAll('[data-bs-toggle="tab"]');
@@ -599,6 +721,21 @@ function CourseDetail() {
             const tabName = target?.replace('#', '');
             if (tabName) {
                 setActiveTab(tabName);
+                if (tabName === 'quiz') {
+                    setTimeout(() => {
+                        const targetRow = document.querySelector('.course-quiz-layout-row');
+                        if (targetRow) {
+                            targetRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 50);
+                } else if (tabName === 'certificate') {
+                    setTimeout(() => {
+                        const targetRow = document.querySelector('.course-certificate-review-row');
+                        if (targetRow) {
+                            targetRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 50);
+                }
             }
         };
 
@@ -680,7 +817,7 @@ function CourseDetail() {
         }
 
         // Prevent body scroll when quiz is active
-        document.body.style.overflow = 'hidden';
+        // document.body.style.overflow = 'hidden';
 
         // Prevent copy/cut/paste
         const handleCopy = (e) => {
@@ -827,6 +964,11 @@ function CourseDetail() {
 
         const itemId = variantItem.variant_item_id;
         const { played, duration, currentTime } = progress;
+
+        // ✨ Pilar 3: Continuously capture current playback seconds
+        if (typeof currentTime === 'number' && !isNaN(currentTime) && currentTime >= 0) {
+            currentVideoPlaybackTimeRef.current = currentTime;
+        }
 
         if (!itemId) {
             console.warn('[CourseDetail] ❌ itemId is empty/null:', { variantItem });
@@ -1031,6 +1173,78 @@ function CourseDetail() {
             }
         }
     }, [course, variantItem]);
+
+    // ✨ Pilar 3: Get current video playback time in seconds
+    const getCurrentVideoTime = useCallback(() => {
+        if (videoPlayerRef.current?.getCurrentTime) {
+            const t = videoPlayerRef.current.getCurrentTime();
+            if (typeof t === 'number' && !isNaN(t) && t >= 0) return t;
+        }
+        return currentVideoPlaybackTimeRef.current || 0;
+    }, []);
+
+    // ✨ Pilar 3: Video Timestamp Linking handler
+    const handleJumpToVideoTimestamp = useCallback((targetVariantItemId, seconds) => {
+        const secNum = Math.max(0, Math.floor(Number(seconds) || 0));
+
+        // If target lesson is already active
+        if (variantItem && (!targetVariantItemId || variantItem.variant_item_id === targetVariantItemId)) {
+            if (videoPlayerRef.current?.seekToPosition) {
+                videoPlayerRef.current.seekToPosition(secNum);
+            }
+            if (videoPlayerContainerRef.current) {
+                videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            Toast().fire({
+                icon: 'info',
+                title: `Melompat ke menit ${formatTimestamp(secNum)}`,
+                timer: 1800,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        // If target lesson is different or no lesson open, locate in curriculum
+        let targetLesson = null;
+        if (course?.curriculum && targetVariantItemId) {
+            for (const variant of course.curriculum) {
+                const found = (variant.variant_items || variant.items || []).find(
+                    it => it.variant_item_id === targetVariantItemId
+                );
+                if (found) {
+                    targetLesson = found;
+                    break;
+                }
+            }
+        }
+
+        if (targetLesson) {
+            handlePlayLessonWithAutoplay(targetLesson);
+            setSeekPosition(secNum);
+            setTimeout(() => {
+                if (videoPlayerRef.current?.seekToPosition) {
+                    videoPlayerRef.current.seekToPosition(secNum);
+                }
+                if (videoPlayerContainerRef.current) {
+                    videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 350);
+            Toast().fire({
+                icon: 'info',
+                title: `Membuka materi & melompat ke ${formatTimestamp(secNum)}`,
+                timer: 2200,
+                showConfirmButton: false
+            });
+        } else {
+            // Fallback: seek current player if possible
+            if (videoPlayerRef.current?.seekToPosition) {
+                videoPlayerRef.current.seekToPosition(secNum);
+            }
+            if (videoPlayerContainerRef.current) {
+                videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }, [variantItem, course]);
 
 
     // ✨ PHASE 4.116: Load saved progress when video changes and notify user if resuming
@@ -1487,8 +1701,19 @@ function CourseDetail() {
         }, 100);
     };
 
-    const handleQuestionClose = () => setAddQuestionShow(false);
-    const handleQuestionShow = () => setAddQuestionShow(true);
+    const handleQuestionClose = () => {
+        setAddQuestionShow(false);
+        setAttachedTimestamp(null);
+        setQuestionPreviewMode(false);
+    };
+    const handleQuestionShow = () => {
+        setAddQuestionShow(true);
+        // Pre-capture active video playback timestamp if available
+        const curTime = Math.floor(getCurrentVideoTime());
+        if (curTime > 0 && variantItem) {
+            setAttachedTimestamp(curTime);
+        }
+    };
 
     // ✨ PHASE 7.12: Sync state refs when state changes
     useEffect(() => {
@@ -1812,6 +2037,15 @@ function CourseDetail() {
         }
     };
 
+    const handleReturnToLessons = () => {
+        handleQuizClose();
+        setActiveTab('notes');
+        const notesTabBtn = document.querySelector('#notes-tab');
+        if (notesTabBtn && window.bootstrap?.Tab) {
+            window.bootstrap.Tab.getOrCreateInstance(notesTabBtn).show();
+        }
+    };
+
     const handleQuizShow = async (quiz) => {
         try {
             // Fetch full quiz details with questions and choices
@@ -1829,6 +2063,7 @@ function CourseDetail() {
 
             setSelectedQuiz(quizWithAttemptInfo);
             setQuizShow(true);
+            setActiveTab('quiz');
             setCurrentQuestionIndex(0);
             setQuizAnswers({});
             setTimeRemaining(60);
@@ -2040,10 +2275,14 @@ function CourseDetail() {
                 choice_id: choiceId.toString()
             }));
 
+            const isPreTest = selectedQuiz.quiz_type === 'pre_post_test' && (!selectedQuiz.has_pre_test || selectedQuiz.current_mode === 'pre_test');
+            const finalAttemptType = selectedQuiz.quiz_type === 'pre_post_test' ? (isPreTest ? 'pre_test' : 'post_test') : 'quiz';
+
             const submissionData = {
                 quiz_id: selectedQuiz.quiz_id,
                 answers: formattedAnswers,
-                time_taken: timeTaken
+                time_taken: timeTaken,
+                attempt_type: finalAttemptType
             };
 
             const response = await useAxios.post(`student/quiz-submit/${UserData()?.user_id}/`, submissionData);
@@ -2103,10 +2342,14 @@ function CourseDetail() {
                 choice_id: choiceId.toString()
             }));
 
+            const isPreTest = selectedQuiz.quiz_type === 'pre_post_test' && (!selectedQuiz.has_pre_test || selectedQuiz.current_mode === 'pre_test');
+            const finalAttemptType = selectedQuiz.quiz_type === 'pre_post_test' ? (isPreTest ? 'pre_test' : 'post_test') : 'quiz';
+
             const submissionData = {
                 quiz_id: selectedQuiz.quiz_id,
                 answers: formattedAnswers,
-                time_taken: timeTaken
+                time_taken: timeTaken,
+                attempt_type: finalAttemptType
             };
 
             const response = await useAxios.post(`student/quiz-submit/${UserData()?.user_id}/`, submissionData);
@@ -2696,7 +2939,7 @@ function CourseDetail() {
     useEffect(() => {
         if (isQuizActive) {
             // Disable scrolling by adding overflow hidden to body
-            document.body.style.overflow = 'hidden';
+            // document.body.style.overflow = 'hidden';
             return () => {
                 // Re-enable scrolling when quiz closes
                 document.body.style.overflow = 'unset';
@@ -2896,6 +3139,10 @@ function CourseDetail() {
         if (currentVariantContext?.variant_item_id) {
             formdata.append("variant_item_id", currentVariantContext.variant_item_id);
         }
+        // ✨ Pilar 3: Send attached video timestamp if set
+        if (attachedTimestamp !== null && attachedTimestamp !== undefined) {
+            formdata.append("video_timestamp", attachedTimestamp);
+        }
 
         await useAxios.post(`student/question-answer-list-create/${course.course?.id}/`, formdata).then((res) => {
             fetchCourseDetail();
@@ -2903,6 +3150,8 @@ function CourseDetail() {
                 title: "",
                 message: "",
             });
+            setAttachedTimestamp(null);
+            setQuestionPreviewMode(false);
             handleQuestionClose();
             Toast().fire({
                 icon: "success",
@@ -2952,11 +3201,12 @@ function CourseDetail() {
                 }));
             }
 
-            // Clear the message input
+            // Clear the message input & reset preview
             setCreateMessage({
                 title: "",
                 message: "",
             });
+            setReplyPreviewMode(false);
 
         } catch (error) {
             Toast().fire({
@@ -3397,6 +3647,72 @@ function CourseDetail() {
         }
     };
 
+    // ✨ Pilar 1: Solusi Terverifikasi / Best Answer Toggle Handler
+    const handleToggleSolution = async (message) => {
+        if (!selectedConversation || !message) return;
+        try {
+            const currentUserId = UserData()?.user_id;
+            const res = await useAxios.post(`student/question-answer-toggle-solution/${selectedConversation.qa_id}/`, {
+                user_id: currentUserId,
+                message_id: message.id || message.qam_id
+            });
+
+            const newIsSolution = res.data.is_solution;
+            const newIsSolved = res.data.is_solved;
+
+            Toast().fire({
+                icon: "success",
+                title: res.data.message || "Status solusi berhasil diperbarui",
+                timer: 3000
+            });
+
+            // Update selectedConversation
+            setSelectedConversation(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    is_solved: newIsSolved,
+                    messages: prev.messages?.map(m => {
+                        if (m.id === message.id) {
+                            return { ...m, is_solution: newIsSolution };
+                        }
+                        if (newIsSolution) {
+                            return { ...m, is_solution: false };
+                        }
+                        return m;
+                    })
+                };
+            });
+
+            // Sync with questions state
+            setQuestions(prev => prev.map(q => {
+                if (q.qa_id === selectedConversation.qa_id) {
+                    return {
+                        ...q,
+                        is_solved: newIsSolved,
+                        messages: q.messages?.map(m => {
+                            if (m.id === message.id) {
+                                return { ...m, is_solution: newIsSolution };
+                            }
+                            if (newIsSolution) {
+                                return { ...m, is_solution: false };
+                            }
+                            return m;
+                        })
+                    };
+                }
+                return q;
+            }));
+
+        } catch (error) {
+            Toast().fire({
+                icon: "error",
+                title: error.response?.data?.error || "Gagal mengubah status solusi",
+                timer: 4000
+            });
+        }
+    };
+
     useEffect(() => {
         if (lastElementRef.current) {
             lastElementRef.current.scrollIntoView({ behavior: "smooth" });
@@ -3526,8 +3842,200 @@ function CourseDetail() {
     // Video player visibility calculation for two-column split layout
     const isVideoPlayerVisible = Boolean(
         variantItem &&
-        !(existingCertificate?.image_file_url && activeTab === 'certificate') &&
+        activeTab !== 'certificate' &&
+        activeTab !== 'review' &&
         !(activeTab === 'quiz' && (quizShow || isQuizActive))
+    );
+
+    // Switch active tab between certificate and review in side card & bootstrap tab
+    const handleSwitchCertSideTab = (tabName) => {
+        setActiveTab(tabName);
+        const tabBtn = document.querySelector(`[data-bs-target="#${tabName}"]`);
+        if (tabBtn && window.bootstrap?.Tab) {
+            const bsTab = window.bootstrap.Tab.getOrCreateInstance(tabBtn);
+            bsTab.show();
+        }
+    };
+
+    const renderReviewContent = () => (
+        <div className="review-section-content">
+            {studentReview ? (
+                !isEditingReview ? (
+                    <div className="review-card-modern">
+                        <div className="review-card-header d-flex justify-content-between align-items-center mb-2">
+                            <div className="d-flex align-items-center gap-2">
+                                <div className="review-header-badge">
+                                    <i className="fas fa-star text-amber"></i>
+                                    <span className="fw-bold">Ulasan Anda</span>
+                                </div>
+                                <span className="review-date-chip">
+                                    <i className="fas fa-calendar-alt me-1"></i>
+                                    {moment(studentReview.date).format("DD MMM YYYY")}
+                                </span>
+                            </div>
+                            <button
+                                className="btn btn-sm btn-outline-teal review-edit-btn"
+                                onClick={handleEditReview}
+                                title="Edit ulasan Anda"
+                            >
+                                <i className="fas fa-edit me-1"></i>
+                                Edit
+                            </button>
+                        </div>
+
+                        {/* Compact Rating Stars Row */}
+                        <div className="review-rating-row mb-2">
+                            <div className="star-rating-pill">
+                                <div className="stars-group">
+                                    {[...Array(5)].map((_, i) => (
+                                        <i key={i} className={`fas fa-star ${i < studentReview.rating ? "star-filled" : "star-empty"}`}></i>
+                                    ))}
+                                </div>
+                                <span className="rating-score-badge">{studentReview.rating}/5</span>
+                                <span className="rating-label-text">
+                                    {studentReview.rating === 5 ? "Sangat Memuaskan" : studentReview.rating === 4 ? "Memuaskan" : studentReview.rating === 3 ? "Cukup Baik" : "Perlu Peningkatan"}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Review Text Quote Box */}
+                        <div className="review-quote-box mb-2">
+                            <i className="fas fa-quote-left quote-icon-left"></i>
+                            <p className="review-text-content mb-0">{studentReview.review}</p>
+                        </div>
+
+                        {/* Instructor Reply Section */}
+                        {studentReview.reply ? (
+                            <div className="instructor-reply-card mt-2">
+                                <div className="reply-header d-flex align-items-center justify-content-between mb-1">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <div className="reply-avatar-box">
+                                            <i className="fas fa-chalkboard-user"></i>
+                                        </div>
+                                        <div>
+                                            <span className="reply-author-name">{course.course?.teacher?.full_name || "Instruktur Kursus"}</span>
+                                            <span className="reply-author-badge">Instruktur</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="reply-body">
+                                    <p className="reply-text mb-0">{studentReview.reply}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="no-reply-chip mt-2">
+                                <i className="fas fa-hourglass-half text-amber me-1"></i>
+                                <span>Menunggu tanggapan dari instruktur...</span>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="review-card-modern">
+                        <div className="review-card-header d-flex justify-content-between align-items-center mb-2">
+                            <h6 className="mb-0 review-form-title">
+                                <i className="fas fa-edit text-teal-accent me-1"></i>Edit Ulasan Kursus
+                            </h6>
+                            <span className="badge-form-mode">Mode Edit</span>
+                        </div>
+                        <form onSubmit={handleUpdateReviewSubmit} className="review-form-compact">
+                            <div className="form-group-compact mb-2">
+                                <label className="compact-field-label">Rating Penilaian:</label>
+                                <div className="star-rating-selector">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <i
+                                            key={star}
+                                            className={`fas fa-star star-interactive ${star <= createReview.rating ? "star-active" : "star-inactive"}`}
+                                            onClick={() => setCreateReview({ ...createReview, rating: star })}
+                                            title={`Beri ${star} bintang`}
+                                        ></i>
+                                    ))}
+                                    <span className="star-rating-hint ms-2">
+                                        {createReview.rating ? `${createReview.rating}/5 Bintang` : "Pilih bintang"}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="form-group-compact mb-2">
+                                <label className="compact-field-label">Ulasan Anda:</label>
+                                <textarea
+                                    name="review"
+                                    value={createReview.review}
+                                    onChange={handleReviewChange}
+                                    className="form-control compact-review-textarea"
+                                    rows="3"
+                                    placeholder="Bagikan pemikiran Anda tentang kursus ini..."
+                                ></textarea>
+                            </div>
+                            <div className="review-form-actions d-flex gap-2 justify-content-end">
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-secondary"
+                                    onClick={handleCancelEditReview}
+                                >
+                                    <i className="fas fa-times me-1"></i>
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-sm btn-teal"
+                                    disabled={!createReview.review.trim() || !createReview.rating}
+                                >
+                                    <i className="fas fa-save me-1"></i>
+                                    Perbarui Ulasan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                )
+            ) : (
+                <div className="review-card-modern">
+                    <div className="review-card-header mb-2">
+                        <h6 className="mb-0 review-form-title">
+                            <i className="fas fa-star text-amber me-1"></i>Beri Penilaian Kursus
+                        </h6>
+                        <small className="text-muted d-block mt-1">Ulasan Anda membantu meningkatkan mutu materi pembelajaran LMSetjen DPD RI.</small>
+                    </div>
+                    <form onSubmit={handleCreateReviewSubmit} className="review-form-compact">
+                        <div className="form-group-compact mb-2">
+                            <label className="compact-field-label">Rating Penilaian:</label>
+                            <div className="star-rating-selector">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <i
+                                        key={star}
+                                        className={`fas fa-star star-interactive ${star <= createReview.rating ? "star-active" : "star-inactive"}`}
+                                        onClick={() => setCreateReview({ ...createReview, rating: star })}
+                                        title={`Beri ${star} bintang`}
+                                    ></i>
+                                ))}
+                                <span className="star-rating-hint ms-2">
+                                    {createReview.rating ? `${createReview.rating}/5 Bintang` : "Klik untuk memilih bintang"}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="form-group-compact mb-2">
+                            <label className="compact-field-label">Ulasan & Kesan Pembelajaran:</label>
+                            <textarea
+                                name="review"
+                                value={createReview.review}
+                                onChange={handleReviewChange}
+                                className="form-control compact-review-textarea"
+                                rows="3"
+                                placeholder="Bagikan pengalaman belajar Anda terhadap materi, metode, dan penyampaian..."
+                            ></textarea>
+                        </div>
+                        <div className="review-form-actions d-flex justify-content-end">
+                            <button
+                                type="submit"
+                                className="btn btn-sm btn-teal"
+                                disabled={!createReview.review.trim() || !createReview.rating}
+                            >
+                                <i className="fas fa-paper-plane me-1"></i>
+                                Kirim Ulasan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+        </div>
     );
 
     return (
@@ -3704,413 +4212,891 @@ function CourseDetail() {
                                 </div>
                             )}
 
-                            {/* ✨ PHASE 4.224: Certificate Display - appears between progress card and tabs when Sertifikat tab active */}
-                            {existingCertificate && existingCertificate.image_file_url && activeTab === 'certificate' && (
-                                <div className="certificate-display">
-                                    <img
-                                        src={existingCertificate.image_file_url}
-                                        alt="Sertifikat"
-                                        className="certificate-image"
-                                        onError={(e) => {
-                                            console.error('❌ Certificate image failed to load:', e);
-                                            e.target.style.display = 'none';
-                                        }}
-                                    />
-                                </div>
-                            )}
 
-                            {/* ✨ PHASE 4.225+: Fullscreen Quiz Overlay - black background covering entire page except quiz area */}
-                            {/* ✨ PHASE 4.9+: Only show when on Kuis tab */}
-                            {isQuizActive && activeTab === 'quiz' && (
-                                <div className="quiz-fullscreen-overlay">
-                                    <div className="quiz-overlay-content">
-                                        <i className="fas fa-brain quiz-overlay-icon"></i>
-                                        <p className="quiz-overlay-text">Sedang mengerjakan kuis...</p>
+                            {(activeTab === 'certificate' || activeTab === 'review') && (
+                                <div className="course-certificate-review-row">
+                                    {/* Left Column: Certificate Display */}
+                                    <div className="certificate-display-column">
+                                        {existingCertificate && existingCertificate.image_file_url ? (
+                                            <div className="certificate-display-card">
+                                                <div className="certificate-display-header">
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <i className="fas fa-award text-amber"></i>
+                                                        <span className="cert-preview-title">Pratinjau Sertifikat Kelulusan</span>
+                                                    </div>
+                                                    <span className="badge-cert-verified">
+                                                        <i className="fas fa-check-circle me-1"></i>Resmi & Terverifikasi
+                                                    </span>
+                                                </div>
+                                                <div className="certificate-image-wrapper">
+                                                    <img
+                                                        src={existingCertificate.image_file_url}
+                                                        alt="Sertifikat Kursus"
+                                                        className="certificate-image"
+                                                        onError={(e) => {
+                                                            console.error('❌ Certificate image failed to load:', e);
+                                                            e.target.style.display = 'none';
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="certificate-display-footer">
+                                                    <small className="text-muted">
+                                                        <i className="fas fa-shield-alt me-1 text-teal-accent"></i>
+                                                        Diterbitkan secara resmi oleh Sekretariat Jenderal DPD RI
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="certificate-standby-card">
+                                                <div className="cert-standby-content">
+                                                    <div className="cert-standby-icon">
+                                                        <i className="fas fa-award"></i>
+                                                    </div>
+                                                    <h5 className="cert-standby-title">Pratinjau Sertifikat Kursus</h5>
+                                                    <p className="cert-standby-subtitle">
+                                                        {completionPercentage === 100
+                                                            ? "Selamat! Semua materi telah selesai 100%. Silakan klik tombol 'Buat Sertifikat' pada panel di sebelah kanan untuk menerbitkan sertifikat resmi Anda."
+                                                            : "Selesaikan seluruh materi kurikulum kursus dan penuhi syarat kelulusan kuis untuk menerbitkan sertifikat resmi Anda."}
+                                                    </p>
+                                                    <div className="cert-standby-progress-chip">
+                                                        <i className="fas fa-tasks me-1"></i>
+                                                        <span>Progres Kurikulum: {completionPercentage || 0}%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Right Column: Tab Sertifikat and Tab Ulasan */}
+                                    <div className="certificate-sidebar-column">
+                                        <div className="certificate-side-card">
+                                            {/* Header Pills for Switching between Sertifikat & Ulasan */}
+                                            <div className="cert-side-nav-pills">
+                                                <button
+                                                    type="button"
+                                                    className={`cert-pill-btn ${activeTab === 'certificate' ? 'active' : ''}`}
+                                                    onClick={() => handleSwitchCertSideTab('certificate')}
+                                                >
+                                                    <i className="fas fa-certificate me-1"></i>
+                                                    <span>Sertifikat</span>
+                                                    {existingCertificate ? (
+                                                        <span className="cert-pill-badge badge-success"><i className="fas fa-check"></i></span>
+                                                    ) : completionPercentage === 100 ? (
+                                                        <span className="cert-pill-badge badge-ready"><i className="fas fa-award"></i></span>
+                                                    ) : null}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`cert-pill-btn ${activeTab === 'review' ? 'active' : ''}`}
+                                                    onClick={() => handleSwitchCertSideTab('review')}
+                                                >
+                                                    <i className="fas fa-star me-1"></i>
+                                                    <span>Ulasan Kursus</span>
+                                                    {(studentReview?.id || studentReview?.rating) && (
+                                                        <span className="cert-pill-badge badge-info"><i className="fas fa-check"></i></span>
+                                                    )}
+                                                </button>
+                                            </div>
+
+                                            {/* Content Area */}
+                                            <div className="cert-side-body">
+                                                {activeTab === 'certificate' ? (
+                                                    <div className="cert-side-pane">
+                                                        <CertificateTab
+                                                            course={course}
+                                                            enrollmentId={param.enrollment_id}
+                                                            completionPercentage={completionPercentage}
+                                                            onCertificateGenerated={(cert) => setExistingCertificate(cert)}
+                                                            isInline={true}
+                                                            onStartPosttest={handleStartPosttest}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="cert-side-pane">
+                                                        {renderReviewContent()}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* ✨ PHASE 4.225+: Inline Quiz Display with Start Screen and Active Quiz */}
-                            {/* ✨ PHASE 4.9+: Only show when on Kuis tab */}
-                            {(quizShow || (isQuizActive && selectedQuiz)) && selectedQuiz && activeTab === 'quiz' && (
-                                <div
-                                    ref={inlineQuizContainerRef}
-                                    className={`inline-quiz-fullscreen ${isQuizActive ? 'quiz-active' : ''} ${!isMouseInQuizArea && isQuizActive ? 'quiz-mouse-left' : ''}`}
-                                >
-                                    {/* Quiz Start Screen */}
-                                    {!isQuizActive && !showQuizResult && selectedQuiz && (
-                                        <div className="quiz-start-screen-inline">
-                                            <div className="quiz-intro-header">
-                                                <div className="quiz-intro-header-content">
-                                                    <div className="quiz-intro-icon-box">
-                                                        <i className="fas fa-brain"></i>
-                                                    </div>
-                                                    <div className="quiz-intro-title-wrapper">
-                                                        <h4 className="quiz-intro-title">{selectedQuiz.title}</h4>
-                                                        <small className="quiz-intro-description">
-                                                            {selectedQuiz.description || "Uji pemahaman Anda tentang materi kursus"}
-                                                        </small>
-                                                    </div>
-                                                </div>
+                            {/* ✨ 2-Column Split Layout for Quiz: Inline Quiz Player on Left, Tab Kuis (Daftar Kuis) on Right */}
+                            {activeTab === 'quiz' && (
+                                <div className="course-quiz-layout-row">
+                                    {/* Left Column: Quiz Player (Start screen, active questions, results, or standby) */}
+                                    <div className="quiz-player-column">
+                                        {/* Left Quiz Area Notification */}
+                                        {isQuizActive && showLeftQuizNotification && (
+                                            <div className="left-quiz-notification mb-2">
+                                                <i className="fas fa-exclamation-circle notification-icon me-2"></i>
+                                                <span><strong>Peringatan Integritas:</strong> Harap tetap fokus pada area kuis. Selesaikan dengan integritas diri.</span>
                                             </div>
-                                            <div className="quiz-intro">
+                                        )}
 
-                                                <div className="quiz-info-cards">
-                                                    <div className="quiz-info-card">
-                                                        <i className="fas fa-question-circle"></i>
-                                                        <span className="info-number">{selectedQuiz.total_questions}</span>
-                                                        <span className="info-label">Pertanyaan</span>
-                                                    </div>
-                                                    <div className="quiz-info-card">
-                                                        <i className="fas fa-clock"></i>
-                                                        <span className="info-number">{selectedQuiz.total_questions}</span>
-                                                        <span className="info-label">Menit</span>
-                                                    </div>
-                                                    <div className="quiz-info-card">
-                                                        <i className="fas fa-trophy"></i>
-                                                        <span className="info-number">80%</span>
-                                                        <span className="info-label">Skor Lulus</span>
-                                                    </div>
-                                                    <div className="quiz-info-card">
-                                                        <i className="fas fa-redo"></i>
-                                                        <span className={`info-number ${selectedQuiz.today_attempts >= 3 ? "text-danger" : "text-warning"}`}>
-                                                            {selectedQuiz.today_attempts || 0}/3
-                                                        </span>
-                                                        <span className="info-label">Percobaan Hari Ini</span>
-                                                    </div>
-                                                </div>
+                                        {selectedQuiz ? (
+                                            <div
+                                                ref={inlineQuizContainerRef}
+                                                className={`inline-quiz-fullscreen ${isQuizActive ? 'quiz-active' : ''} ${!isMouseInQuizArea && isQuizActive ? 'quiz-mouse-left' : ''}`}
+                                            >
+                                                {/* Quiz Start Screen */}
+                                                {!isQuizActive && !showQuizResult && selectedQuiz && (() => {
+                                                    const isPreTest = selectedQuiz.quiz_type === 'pre_post_test' && (!selectedQuiz.has_pre_test || selectedQuiz.current_mode === 'pre_test');
+                                                    const isPostTest = selectedQuiz.quiz_type === 'pre_post_test' && (selectedQuiz.has_pre_test || selectedQuiz.current_mode === 'post_test');
+                                                    
+                                                    return (
+                                                    <div className="quiz-start-screen-inline">
+                                                        <div className="quiz-intro-header">
+                                                            <div className="quiz-intro-header-content">
+                                                                <div className={`quiz-intro-icon-box ${isPreTest ? 'pretest' : isPostTest ? 'posttest' : ''}`}>
+                                                                    <i className={`fas ${isPreTest ? 'fa-clipboard-check' : isPostTest ? 'fa-award' : 'fa-brain'}`}></i>
+                                                                </div>
+                                                                <div className="quiz-intro-title-wrapper">
+                                                                    <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                                                        <h4 className="quiz-intro-title mb-0">{selectedQuiz.title}</h4>
+                                                                        {isPreTest ? (
+                                                                            <span className="badge-quiz-mode pretest"><i className="fas fa-clipboard-check me-1"></i>Pre-test Diagnostik</span>
+                                                                        ) : isPostTest ? (
+                                                                            <span className="badge-quiz-mode posttest"><i className="fas fa-award me-1"></i>Post-test Evaluasi Akhir</span>
+                                                                        ) : (
+                                                                            <span className="badge-quiz-mode regular"><i className="fas fa-question-circle me-1"></i>Kuis Pembelajaran</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <small className="quiz-intro-description">
+                                                                        {isPreTest 
+                                                                            ? "Pre-test diagnostik ini menguji pemahaman awal Anda sebelum memulai materi kursus. Tidak ada syarat nilai kelulusan minimal."
+                                                                            : isPostTest 
+                                                                                ? "Evaluasi akhir untuk mengukur peningkatan kompetensi Anda setelah menyelesaikan seluruh materi kurikulum dan kuis kursus."
+                                                                                : (selectedQuiz.description || "Uji pemahaman Anda tentang materi kursus")}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="quiz-intro">
+                                                            <div className="quiz-info-cards">
+                                                                <div className="quiz-info-card">
+                                                                    <i className="fas fa-question-circle"></i>
+                                                                    <span className="info-number">{selectedQuiz.total_questions}</span>
+                                                                    <span className="info-label">Pertanyaan</span>
+                                                                </div>
+                                                                <div className="quiz-info-card">
+                                                                    <i className="fas fa-clock"></i>
+                                                                    <span className="info-number">{selectedQuiz.total_questions}</span>
+                                                                    <span className="info-label">Menit</span>
+                                                                </div>
+                                                                <div className="quiz-info-card">
+                                                                    <i className={`fas ${isPreTest ? 'fa-check text-success' : 'fa-trophy text-amber'}`}></i>
+                                                                    <span className="info-number">{isPreTest ? "Bebas" : "80%"}</span>
+                                                                    <span className="info-label">{isPreTest ? "Tanpa Batas Nilai" : "Skor Lulus"}</span>
+                                                                </div>
+                                                                <div className="quiz-info-card">
+                                                                    <i className="fas fa-redo"></i>
+                                                                    <span className={`info-number ${selectedQuiz.today_attempts >= 3 ? "text-danger" : "text-warning"}`}>
+                                                                        {selectedQuiz.today_attempts || 0}/3
+                                                                    </span>
+                                                                    <span className="info-label">Percobaan Hari Ini</span>
+                                                                </div>
+                                                            </div>
 
-                                                {selectedQuiz.today_attempts > 0 && (
-                                                    <div className={`quiz-attempt-warning ${selectedQuiz.can_attempt ? "warning" : "danger"}`}>
-                                                        <i className={`fas ${selectedQuiz.can_attempt ? "fa-exclamation-triangle" : "fa-ban"} me-2`}></i>
-                                                        {selectedQuiz.can_attempt
-                                                            ? `Anda telah menggunakan ${selectedQuiz.today_attempts} dari 3 percobaan harian. ${3 - selectedQuiz.today_attempts} percobaan tersisa.`
-                                                            : "Anda telah mencapai batas harian 3 percobaan. Silakan coba lagi besok."
-                                                        }
+                                                            {selectedQuiz.today_attempts > 0 && (
+                                                                <div className={`quiz-attempt-warning ${selectedQuiz.can_attempt ? "warning" : "danger"}`}>
+                                                                    <i className={`fas ${selectedQuiz.can_attempt ? "fa-exclamation-triangle" : "fa-ban"} me-2`}></i>
+                                                                    {selectedQuiz.can_attempt
+                                                                        ? `Anda telah menggunakan ${selectedQuiz.today_attempts} dari 3 percobaan harian. ${3 - selectedQuiz.today_attempts} percobaan tersisa.`
+                                                                        : "Anda telah mencapai batas harian 3 percobaan. Silakan coba lagi besok."
+                                                                    }
+                                                                </div>
+                                                            )}
+
+                                                            <div className="quiz-rules">
+                                                                <h6>Aturan {isPreTest ? "Pre-test" : isPostTest ? "Post-test" : "Kuis"}:</h6>
+                                                                <ul>
+                                                                    <li>Anda memiliki 1 menit per pertanyaan</li>
+                                                                    {isPreTest ? (
+                                                                        <>
+                                                                            <li><strong>Tidak ada batas nilai kelulusan minimal.</strong> Pre-test ini murni diagnostik untuk mengukur pemahaman awal Anda.</li>
+                                                                            <li>Setelah Anda menyelesaikan Pre-test, seluruh materi kurikulum kursus akan langsung terbuka.</li>
+                                                                        </>
+                                                                    ) : isPostTest ? (
+                                                                        <>
+                                                                            <li>Post-test mengevaluasi peningkatan kompetensi akhir Anda dibandingkan dengan hasil Pre-test.</li>
+                                                                            <li>Penyelesaian Post-test merupakan syarat wajib untuk menerbitkan sertifikat resmi.</li>
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <li>Anda perlu 80% untuk lulus kuis ini</li>
+                                                                            <li>Anda dapat mencoba kuis ini maksimal 3 kali per hari</li>
+                                                                        </>
+                                                                    )}
+                                                                    <li>Setelah dimulai, Anda tidak dapat menjeda tes</li>
+                                                                </ul>
+                                                            </div>
+
+                                                            <div className="quiz-start-actions">
+                                                                <button className="btn btn-secondary btn-sm" onClick={handleQuizClose}>
+                                                                    <i className="fas fa-arrow-left me-1"></i>
+                                                                    Tutup
+                                                                </button>
+                                                                {selectedQuiz.can_attempt ? (
+                                                                    <button className="btn btn-teal btn-sm" onClick={startQuiz}>
+                                                                        <i className="fas fa-play me-1"></i>
+                                                                        {isPreTest ? "Mulai Pre-test Sekarang" : isPostTest ? "Mulai Post-test Sekarang" : "Mulai Kuis"}
+                                                                    </button>
+                                                                ) : (
+                                                                    <button className="btn btn-secondary btn-sm" disabled>
+                                                                        <i className="fas fa-ban me-1"></i>
+                                                                        Batas Harian Tercapai
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    );
+                                                })()}
+
+                                                {/* Active Quiz Screen */}
+                                                {isQuizActive && selectedQuiz && (
+                                                    <div className="quiz-active-screen-inline">
+                                                        <div className="quiz-question-progress-bar">
+                                                            <div
+                                                                className="quiz-question-progress-fill"
+                                                                style={{ width: `${((currentQuestionIndex + 1) / (selectedQuiz.questions?.length || 1)) * 100}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <div className="quiz-question-header">
+                                                            <div className="quiz-progress-info">
+                                                                <div className="question-counter">
+                                                                    Pertanyaan {currentQuestionIndex + 1} dari {selectedQuiz.questions?.length || 0}
+                                                                </div>
+                                                                <div className="quiz-timer">
+                                                                    <i className="fas fa-clock me-2"></i>
+                                                                    {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, "0")}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {selectedQuiz.questions && selectedQuiz.questions[currentQuestionIndex] && (
+                                                            <div className="quiz-question-section">
+                                                                <div className="question-text">
+                                                                    {selectedQuiz.questions[currentQuestionIndex].question_text}
+                                                                </div>
+
+                                                                <div className="quiz-choices">
+                                                                    {selectedQuiz.questions[currentQuestionIndex].choices?.map((choice) => (
+                                                                        <div key={choice.choice_id} className="quiz-choice">
+                                                                            <label className="quiz-choice-label">
+                                                                                <input
+                                                                                    type="radio"
+                                                                                    name={`question_${selectedQuiz.questions[currentQuestionIndex].question_id}`}
+                                                                                    value={choice.choice_id}
+                                                                                    checked={quizAnswers[selectedQuiz.questions[currentQuestionIndex].question_id] == choice.choice_id}
+                                                                                    onChange={(e) => {
+                                                                                        const newAnswers = {
+                                                                                            ...quizAnswers,
+                                                                                            [selectedQuiz.questions[currentQuestionIndex].question_id]: choice.choice_id
+                                                                                        };
+                                                                                        setQuizAnswers(newAnswers);
+                                                                                        currentQuizStateRef.current.answers = newAnswers;
+                                                                                        if (isQuizActive && selectedQuiz) {
+                                                                                            saveQuizProgress(selectedQuiz, newAnswers, currentQuestionIndex, timeRemaining, quizStartTime);
+                                                                                        }
+                                                                                    }}
+                                                                                />
+                                                                                <span className="quiz-choice-text">{choice.choice_text}</span>
+                                                                                <span className="quiz-choice-indicator"></span>
+                                                                            </label>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+
+                                                                <div className="quiz-navigation">
+                                                                    <button
+                                                                        className="btn btn-sm btn-outline-primary"
+                                                                        onClick={() => {
+                                                                            const newIndex = Math.max(0, currentQuestionIndex - 1);
+                                                                            setCurrentQuestionIndex(newIndex);
+                                                                            currentQuizStateRef.current.questionIndex = newIndex;
+                                                                            if (isQuizActive && selectedQuiz) {
+                                                                                saveQuizProgress(selectedQuiz, quizAnswers, newIndex, timeRemaining, quizStartTime);
+                                                                            }
+                                                                        }}
+                                                                        disabled={currentQuestionIndex === 0}
+                                                                    >
+                                                                        <i className="fas fa-arrow-left me-1"></i>
+                                                                        Sebelumnya
+                                                                    </button>
+
+                                                                    {currentQuestionIndex < (selectedQuiz.questions?.length || 0) - 1 ? (
+                                                                        <button
+                                                                            className="btn btn-sm btn-primary"
+                                                                            onClick={() => {
+                                                                                const newIndex = currentQuestionIndex + 1;
+                                                                                setCurrentQuestionIndex(newIndex);
+                                                                                currentQuizStateRef.current.questionIndex = newIndex;
+                                                                                if (isQuizActive && selectedQuiz) {
+                                                                                    saveQuizProgress(selectedQuiz, quizAnswers, newIndex, timeRemaining, quizStartTime);
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            Berikutnya
+                                                                            <i className="fas fa-arrow-right ms-1"></i>
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button
+                                                                            className="btn btn-sm btn-success"
+                                                                            onClick={submitQuiz}
+                                                                        >
+                                                                            <i className="fas fa-check me-1"></i>
+                                                                            Kirim Kuis
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
 
-                                                <div className="quiz-rules">
-                                                    <h6>Aturan Kuis:</h6>
-                                                    <ul>
-                                                        <li>Anda memiliki 1 menit per pertanyaan</li>
-                                                        <li>Anda perlu 80% untuk lulus kuis ini</li>
-                                                        <li>Anda dapat mencoba kuis ini maksimal 3 kali per hari</li>
-                                                        <li>Setelah dimulai, Anda tidak dapat menjeda kuis</li>
-                                                    </ul>
-                                                </div>
+                                                {/* Quiz Result Screen */}
+                                                {showQuizResult && quizResult && (() => {
+                                                    const isPreTest = selectedQuiz?.quiz_type === 'pre_post_test' && (!selectedQuiz?.has_pre_test || selectedQuiz?.current_mode === 'pre_test' || quizResult?.is_pre_test);
+                                                    const isPostTest = selectedQuiz?.quiz_type === 'pre_post_test' && (selectedQuiz?.has_pre_test || selectedQuiz?.current_mode === 'post_test' || quizResult?.is_post_test);
 
-                                                <div className="quiz-start-actions">
-                                                    <button className="btn btn-secondary" onClick={handleQuizClose}>
-                                                        <i className="fas fa-arrow-left me-2"></i>
-                                                        Kembali ke Kursus
-                                                    </button>
-                                                    {selectedQuiz.can_attempt ? (
-                                                        <button className="btn btn-primary" onClick={startQuiz}>
-                                                            <i className="fas fa-play me-2"></i>
-                                                            Mulai Kuis
-                                                        </button>
-                                                    ) : (
-                                                        <button className="btn btn-secondary" disabled>
-                                                            <i className="fas fa-ban me-2"></i>
-                                                            Batas Harian Tercapai
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Active Quiz Screen */}
-                                    {isQuizActive && selectedQuiz && (
-                                        <div className="quiz-active-screen-inline">
-                                            <div className="quiz-question-progress-bar">
-                                                <div
-                                                    className="quiz-question-progress-fill"
-                                                    style={{ width: `${((currentQuestionIndex + 1) / (selectedQuiz.questions?.length || 1)) * 100}%` }}
-                                                ></div>
-                                            </div>
-                                            <div className="quiz-question-header">
-                                                <div className="quiz-progress-info">
-                                                    <div className="question-counter">
-                                                        Pertanyaan {currentQuestionIndex + 1} dari {selectedQuiz.questions?.length || 0}
-                                                    </div>
-                                                    <div className="quiz-timer">
-                                                        <i className="fas fa-clock me-2"></i>
-                                                        {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, "0")}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {selectedQuiz.questions && selectedQuiz.questions[currentQuestionIndex] && (
-                                                <div className="quiz-question-section">
-                                                    <div className="question-text">
-                                                        {selectedQuiz.questions[currentQuestionIndex].question_text}
-                                                    </div>
-
-                                                    <div className="quiz-choices">
-                                                        {selectedQuiz.questions[currentQuestionIndex].choices?.map((choice) => (
-                                                            <div key={choice.choice_id} className="quiz-choice">
-                                                                <label className="quiz-choice-label">
-                                                                    <input
-                                                                        type="radio"
-                                                                        name={`question_${selectedQuiz.questions[currentQuestionIndex].question_id}`}
-                                                                        value={choice.choice_id}
-                                                                        checked={quizAnswers[selectedQuiz.questions[currentQuestionIndex].question_id] == choice.choice_id}
-                                                                        onChange={(e) => {
-                                                                            const newAnswers = {
-                                                                                ...quizAnswers,
-                                                                                [selectedQuiz.questions[currentQuestionIndex].question_id]: choice.choice_id
-                                                                            };
-                                                                            setQuizAnswers(newAnswers);
-                                                                            currentQuizStateRef.current.answers = newAnswers;
-                                                                            if (isQuizActive && selectedQuiz) {
-                                                                                saveQuizProgress(selectedQuiz, newAnswers, currentQuestionIndex, timeRemaining, quizStartTime);
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                    <span className="quiz-choice-text">{choice.choice_text}</span>
-                                                                    <span className="quiz-choice-indicator"></span>
-                                                                </label>
+                                                    return (
+                                                    <div className="quiz-result-screen-inline">
+                                                        <div className="quiz-result-header-top">
+                                                            <div className="quiz-result-header-content d-flex align-items-center gap-2">
+                                                                <div className={`quiz-result-icon-box ${isPreTest || quizResult.passed ? "success" : "failure"}`}>
+                                                                    <i className={`fas ${isPreTest ? "fa-clipboard-check" : quizResult.passed ? "fa-trophy" : "fa-times-circle"}`}></i>
+                                                                </div>
+                                                                <div className="quiz-result-title-wrapper">
+                                                                    <h4 className="quiz-result-title">{selectedQuiz?.title}</h4>
+                                                                    <small className="quiz-result-description">
+                                                                        {isPreTest 
+                                                                            ? "Pre-test selesai! Pemahaman awal Anda telah tercatat dan kurikulum kursus kini telah terbuka."
+                                                                            : isPostTest
+                                                                                ? "Post-test selesai! Evaluasi akhir Anda telah tercatat dan syarat sertifikat telah terpenuhi."
+                                                                                : (quizResult.passed ? "Selamat! Anda telah berhasil lulus kuis ini!" : "Teruslah berlatih untuk hasil yang lebih baik")}
+                                                                    </small>
+                                                                </div>
                                                             </div>
-                                                        ))}
+                                                        </div>
+
+                                                        <div className="quiz-result">
+                                                            <div className="quiz-result-status">
+                                                                <h5 className={`quiz-result-status-title ${isPreTest || quizResult.passed ? "text-success" : "text-danger"}`}>
+                                                                    {isPreTest ? "✅ Pre-test Berhasil Diselesaikan!" : isPostTest ? "🎉 Post-test Berhasil Diselesaikan!" : quizResult.passed ? "🎉 Selamat! Kuis Lulus" : "❌ Kuis Belum Lulus"}
+                                                                </h5>
+                                                                <p className="quiz-result-status-message">
+                                                                    {isPreTest
+                                                                        ? "Hasil diagnostik pemahaman awal Anda berhasil disimpan. Anda kini dapat mulai mempelajari materi pada kurikulum."
+                                                                        : isPostTest
+                                                                            ? "Rangkaian evaluasi akhir Anda telah tuntas. Anda kini dapat menerbitkan sertifikat resmi kursus ini."
+                                                                            : quizResult.passed
+                                                                                ? "Anda telah berhasil lulus kuis ini dengan baik!"
+                                                                                : "Anda membutuhkan 80% atau lebih untuk lulus kuis ini. Silakan review materi dan coba lagi!"}
+                                                                </p>
+                                                            </div>
+
+                                                            <div className="quiz-result-stats-cards">
+                                                                <div className="result-stat-card">
+                                                                    <i className="fas fa-percent"></i>
+                                                                    <span className="stat-label">Skor</span>
+                                                                    <span className={`stat-number ${isPreTest || quizResult.passed ? "text-success" : "text-danger"}`}>
+                                                                        {Math.round(quizResult.score)}%
+                                                                    </span>
+                                                                </div>
+                                                                <div className="result-stat-card">
+                                                                    <i className="fas fa-check-circle"></i>
+                                                                    <span className="stat-label">Benar</span>
+                                                                    <span className="stat-number">
+                                                                        {quizResult.correct_answers}/{quizResult.total_questions}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="result-stat-card">
+                                                                    <i className="fas fa-hourglass-end"></i>
+                                                                    <span className="stat-label">Waktu</span>
+                                                                    <span className="stat-number">
+                                                                        {(() => {
+                                                                            const timeTaken = quizResult.time_taken || 0;
+                                                                            const minutes = Math.floor(timeTaken / 60);
+                                                                            const seconds = timeTaken % 60;
+                                                                            return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+                                                                        })()}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="result-stat-card">
+                                                                    <i className="fas fa-redo"></i>
+                                                                    <span className="stat-label">Sisa</span>
+                                                                    <span className={`stat-number ${quizResult.attempts_left === 0 ? "text-danger" : "text-warning"}`}>
+                                                                        {quizResult.attempts_left || 0}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="quiz-result-summary">
+                                                                <i className={`fas ${isPreTest || quizResult.passed ? "fa-lightbulb text-amber" : "fa-info-circle text-teal-accent"} me-2`}></i>
+                                                                <p className="summary-text">
+                                                                    {isPreTest
+                                                                        ? "Akses materi pembelajaran telah dibuka. Silakan lanjutkan ke Kurikulum Kursus untuk mulai belajar."
+                                                                        : isPostTest
+                                                                            ? "Evaluasi pembelajaran lengkap! Silakan buka Tab Sertifikat untuk mengunduh sertifikat resmi."
+                                                                            : quizResult.passed
+                                                                                ? "Nilai sempurna! Lanjutkan dengan kuis berikutnya atau review materi."
+                                                                                : `Anda mendapat ${Math.round(quizResult.score)}%. Coba lagi untuk mencapai skor lulus minimal 80%.`}
+                                                                </p>
+                                                            </div>
+
+                                                            <div className="quiz-result-actions">
+                                                                {isPreTest ? (
+                                                                    <button
+                                                                        className="btn btn-sm btn-teal"
+                                                                        onClick={() => {
+                                                                            handleQuizClose();
+                                                                            setActiveTab('lectures');
+                                                                        }}
+                                                                    >
+                                                                        <i className="fas fa-play me-1"></i>
+                                                                        Mulai Pelajari Materi Kursus
+                                                                    </button>
+                                                                ) : isPostTest ? (
+                                                                    <button
+                                                                        className="btn btn-sm btn-teal"
+                                                                        onClick={() => {
+                                                                            handleQuizClose();
+                                                                            setActiveTab('certificate');
+                                                                        }}
+                                                                    >
+                                                                        <i className="fas fa-award me-1"></i>
+                                                                        Lihat & Terbitkan Sertifikat
+                                                                    </button>
+                                                                ) : (
+                                                                    <>
+                                                                        <button
+                                                                            className="btn btn-sm btn-secondary"
+                                                                            onClick={handleQuizClose}
+                                                                        >
+                                                                            <i className="fas fa-arrow-left me-1"></i>
+                                                                            Tutup
+                                                                        </button>
+                                                                        {quizResult.attempts_left !== undefined && quizResult.attempts_left > 0 && !quizResult.passed && (
+                                                                            <button
+                                                                                className="btn btn-sm btn-primary"
+                                                                                onClick={() => {
+                                                                                    handleQuizShow(selectedQuiz);
+                                                                                }}
+                                                                            >
+                                                                                <i className="fas fa-redo me-1"></i>
+                                                                                Coba Lagi
+                                                                            </button>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
-
-                                                    <div className="quiz-navigation">
-                                                        <button
-                                                            className="btn btn-outline-primary"
-                                                            onClick={() => {
-                                                                const newIndex = Math.max(0, currentQuestionIndex - 1);
-                                                                setCurrentQuestionIndex(newIndex);
-                                                                currentQuizStateRef.current.questionIndex = newIndex;
-                                                                if (isQuizActive && selectedQuiz) {
-                                                                    saveQuizProgress(selectedQuiz, quizAnswers, newIndex, timeRemaining, quizStartTime);
-                                                                }
-                                                            }}
-                                                            disabled={currentQuestionIndex === 0}
-                                                        >
-                                                            <i className="fas fa-arrow-left me-2"></i>
-                                                            Sebelumnya
-                                                        </button>
-
-                                                        {currentQuestionIndex < (selectedQuiz.questions?.length || 0) - 1 ? (
+                                                    );
+                                                })()}
+                                            </div>
+                                        ) : (
+                                            <div className="quiz-player-standby">
+                                                <div className="quiz-standby-content">
+                                                    <div className="quiz-standby-icon">
+                                                        <i className="fas fa-brain"></i>
+                                                    </div>
+                                                    <h5 className="quiz-standby-title">Evaluasi & Kuis Kursus</h5>
+                                                    <p className="quiz-standby-subtitle">
+                                                        Pilih kuis dari daftar di sebelah kanan untuk menguji pemahaman materi kursus Anda.
+                                                        Setiap kuis memerlukan skor kelulusan minimal 80% untuk memenuhi syarat penerbitan sertifikat resmi.
+                                                    </p>
+                                                    <div className="quiz-standby-stats-strip">
+                                                        <span className="quiz-standby-chip">
+                                                            <i className="fas fa-check-circle text-teal-accent me-1"></i>
+                                                            {completionStats.passedQuizzes} dari {quizzes?.length || 0} Kuis Lulus
+                                                        </span>
+                                                        <span className="quiz-standby-chip">
+                                                            <i className="fas fa-redo text-amber me-1"></i>
+                                                            Maks. 3x Percobaan / Hari
+                                                        </span>
+                                                        <span className="quiz-standby-chip">
+                                                            <i className="fas fa-trophy text-amber me-1"></i>
+                                                            Passing Grade: 80%
+                                                        </span>
+                                                    </div>
+                                                    <div className="d-flex align-items-center justify-content-center gap-2 mt-2 flex-wrap">
+                                                        {quizzes && quizzes.length > 0 && (
                                                             <button
-                                                                className="btn btn-primary"
+                                                                type="button"
+                                                                className="btn btn-sm btn-teal"
                                                                 onClick={() => {
-                                                                    const newIndex = currentQuestionIndex + 1;
-                                                                    setCurrentQuestionIndex(newIndex);
-                                                                    currentQuizStateRef.current.questionIndex = newIndex;
-                                                                    if (isQuizActive && selectedQuiz) {
-                                                                        saveQuizProgress(selectedQuiz, quizAnswers, newIndex, timeRemaining, quizStartTime);
-                                                                    }
+                                                                    const nextQuiz = quizzes.find(q => !q.is_passed) || quizzes[0];
+                                                                    if (nextQuiz) handleQuizShow(nextQuiz);
                                                                 }}
                                                             >
-                                                                Berikutnya
-                                                                <i className="fas fa-arrow-right ms-2"></i>
-                                                            </button>
-                                                        ) : (
-                                                            <button
-                                                                className="btn btn-success"
-                                                                onClick={submitQuiz}
-                                                            >
-                                                                <i className="fas fa-check me-2"></i>
-                                                                Kirim Kuis
+                                                                <i className="fas fa-play me-1"></i>
+                                                                {quizzes.some(q => !q.is_passed) ? "Mulai Kuis Berikutnya" : "Buka Kuis"}
                                                             </button>
                                                         )}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Quiz Result Screen */}
-                                    {showQuizResult && quizResult && (
-                                        <div className="quiz-result-screen-inline">
-                                            {/* Result Header - Similar structure to quiz-intro-header */}
-                                            <div className="quiz-result-header-top">
-                                                <div className="quiz-result-header-content">
-                                                    <div className={`quiz-result-icon-box ${quizResult.passed ? "success" : "failure"}`}>
-                                                        <i className={`fas ${quizResult.passed ? "fa-trophy" : "fa-times-circle"}`}></i>
-                                                    </div>
-                                                    <div className="quiz-result-title-wrapper">
-                                                        <h4 className="quiz-result-title">{selectedQuiz.title}</h4>
-                                                        <small className="quiz-result-description">
-                                                            {quizResult.passed ? "Selamat! Anda telah berhasil lulus kuis ini!" : "Teruslah berlatih untuk hasil yang lebih baik"}
-                                                        </small>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-outline-secondary"
+                                                            onClick={handleReturnToLessons}
+                                                        >
+                                                            <i className="fas fa-arrow-left me-1"></i>Kembali ke Materi Pelajaran
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
+                                        )}
+                                    </div>
 
-                                            {/* Result Content - Similar to quiz-intro content area */}
-                                            <div className="quiz-result">
-                                                {/* Status Message */}
-                                                <div className="quiz-result-status">
-                                                    <h4 className={`quiz-result-status-title ${quizResult.passed ? "text-success" : "text-danger"}`}>
-                                                        {quizResult.passed ? "🎉 Selamat!" : "❌ Kuis Gagal"}
-                                                    </h4>
-                                                    <p className="quiz-result-status-message">
-                                                        {quizResult.passed
-                                                            ? "Anda telah berhasil lulus kuis ini!"
-                                                            : "Anda membutuhkan 80% atau lebih untuk lulus. Coba lagi!"}
-                                                    </p>
+                                    {/* Right Column: Tab Kuis (Daftar Kuis Kursus) */}
+                                    <div className="quiz-sidebar-column">
+                                        <div className="quiz-sidebar-card">
+                                            <div className="quiz-sidebar-header">
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <i className="fas fa-brain text-teal-accent"></i>
+                                                    <span className="quiz-sidebar-title">Daftar Kuis Kursus</span>
                                                 </div>
+                                                <span className="quiz-header-counter-badge">
+                                                    {completionStats.passedQuizzes}/{quizzes?.length || 0} Lulus
+                                                </span>
+                                            </div>
 
-                                                {/* Results Stats - Similar structure to quiz-info-cards */}
-                                                <div className="quiz-result-stats-cards">
-                                                    <div className="result-stat-card">
-                                                        <i className="fas fa-percent"></i>
-                                                        <span className="stat-label">Skor Anda</span>
-                                                        <span className={`stat-number ${quizResult.passed ? "text-success" : "text-danger"}`}>
-                                                            {Math.round(quizResult.score)}%
-                                                        </span>
-                                                    </div>
-                                                    <div className="result-stat-card">
-                                                        <i className="fas fa-check-circle"></i>
-                                                        <span className="stat-label">Jawaban Benar</span>
-                                                        <span className="stat-number">
-                                                            {quizResult.correct_answers}/{quizResult.total_questions}
-                                                        </span>
-                                                    </div>
-                                                    <div className="result-stat-card">
-                                                        <i className="fas fa-hourglass-end"></i>
-                                                        <span className="stat-label">Waktu yang Digunakan</span>
-                                                        <span className="stat-number">
-                                                            {(() => {
-                                                                const timeTaken = quizResult.time_taken || 0;
-                                                                const minutes = Math.floor(timeTaken / 60);
-                                                                const seconds = timeTaken % 60;
-                                                                return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-                                                            })()}
-                                                        </span>
-                                                    </div>
-                                                    <div className="result-stat-card">
-                                                        <i className="fas fa-redo"></i>
-                                                        <span className="stat-label">Percobaan Tersisa</span>
-                                                        <span className={`stat-number ${quizResult.attempts_left === 0 ? "text-danger" : "text-warning"}`}>
-                                                            {quizResult.attempts_left || 0}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Result Summary Info */}
-                                                <div className="quiz-result-summary">
-                                                    <i className={`fas ${quizResult.passed ? "fa-lightbulb" : "fa-info-circle"} me-2`}></i>
-                                                    <p className="summary-text">
-                                                        {quizResult.passed
-                                                            ? "Nilai sempurna! Lanjutkan dengan kuis berikutnya atau review materi untuk pengalaman belajar yang lebih baik."
-                                                            : `Anda mendapat ${Math.round(quizResult.score)}%. Coba lagi untuk mencapai skor lulus minimal 80%.`}
-                                                    </p>
-                                                </div>
-
-                                                {/* Result Actions - Similar to quiz-start-actions */}
-                                                <div className="quiz-result-actions">
-                                                    <button
-                                                        className="btn btn-secondary"
-                                                        onClick={handleQuizClose}
-                                                    >
-                                                        <i className="fas fa-arrow-left me-2"></i>
-                                                        Kembali ke Kursus
-                                                    </button>
-                                                    {quizResult.attempts_left !== undefined && quizResult.attempts_left > 0 && (
-                                                        <button
-                                                            className="btn btn-primary"
+                                            <div className="quiz-sidebar-list">
+                                                {/* Group 1: Pre-test & Post-test Diagnostik */}
+                                                {hasPrePostTest && prePostQuiz && (
+                                                    <div className="quiz-group-container mb-3">
+                                                        <div className="quiz-group-header">
+                                                            <i className="fas fa-clipboard-check text-amber me-1"></i>
+                                                            <span>Evaluasi Diagnostik & Akhir</span>
+                                                        </div>
+                                                        
+                                                        {/* Pre-test Card */}
+                                                        <div
+                                                            className={`quiz-sidebar-item ${selectedQuiz?.quiz_id === prePostQuiz.quiz_id && (!prePostQuiz.has_pre_test || selectedQuiz?.current_mode === 'pre_test') ? 'active' : ''} ${hasCompletedPretest ? 'passed' : 'pending-test'}`}
                                                             onClick={() => {
-                                                                handleQuizShow(selectedQuiz);
+                                                                if (isQuizActive && selectedQuiz?.quiz_id !== prePostQuiz.quiz_id) {
+                                                                    Swal.fire({
+                                                                        title: 'Kuis Sedang Berjalan',
+                                                                        text: 'Harap selesaikan kuis yang sedang aktif terlebih dahulu.',
+                                                                        icon: 'warning',
+                                                                        confirmButtonText: 'Oke'
+                                                                    });
+                                                                    return;
+                                                                }
+                                                                handleQuizShow({ ...prePostQuiz, current_mode: 'pre_test' });
                                                             }}
                                                         >
-                                                            <i className="fas fa-redo me-2"></i>
-                                                            Coba Lagi
-                                                        </button>
+                                                            <div className="quiz-item-indicator">
+                                                                {hasCompletedPretest ? (
+                                                                    <i className="fas fa-check-circle text-success"></i>
+                                                                ) : (
+                                                                    <i className="fas fa-clipboard-check text-amber"></i>
+                                                                )}
+                                                            </div>
+                                                            <div className="quiz-item-info">
+                                                                <div className="quiz-item-title-row">
+                                                                    <span className="quiz-item-title">Pre-test Diagnostik Awal</span>
+                                                                    {hasCompletedPretest ? (
+                                                                        <span className="badge-quiz-passed">
+                                                                            <i className="fas fa-check me-1"></i>Selesai ({Math.round(prePostQuiz.pre_test_score || 0)}%)
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="badge-quiz-required">
+                                                                            <i className="fas fa-exclamation me-1"></i>Wajib
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="quiz-item-meta">
+                                                                    <span><i className="fas fa-question-circle me-1"></i>{prePostQuiz.total_questions} Soal</span>
+                                                                    <span><i className="fas fa-info-circle me-1 text-teal-accent"></i>Diagnostik</span>
+                                                                    <span><i className="fas fa-check-circle me-1 text-success"></i>Bebas Nilai</span>
+                                                                </div>
+                                                                <div className="quiz-item-footer">
+                                                                    <span className="quiz-item-attempts">
+                                                                        {hasCompletedPretest ? "Tercatat sebelum materi" : "Wajib untuk buka materi"}
+                                                                    </span>
+                                                                    <button
+                                                                        type="button"
+                                                                        className={`btn-quiz-item-action ${hasCompletedPretest ? 'btn-outline-teal' : 'btn-amber'}`}
+                                                                    >
+                                                                        {hasCompletedPretest ? "Lihat" : "Kerjakan"}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Post-test Card */}
+                                                        <div
+                                                            className={`quiz-sidebar-item ${selectedQuiz?.quiz_id === prePostQuiz.quiz_id && (prePostQuiz.has_pre_test || selectedQuiz?.current_mode === 'post_test') ? 'active' : ''} ${hasCompletedPosttest ? 'passed' : !canTakePostTest ? 'quiz-item-locked' : 'pending-test'}`}
+                                                            onClick={() => {
+                                                                if (!canTakePostTest && !hasCompletedPosttest) {
+                                                                    Toast().fire({
+                                                                        icon: 'warning',
+                                                                        title: 'Post-test Terkunci',
+                                                                        text: 'Selesaikan semua materi pelajaran dan kuis kursus terlebih dahulu untuk membuka Post-test.',
+                                                                        timer: 4000
+                                                                    });
+                                                                    return;
+                                                                }
+                                                                if (isQuizActive && selectedQuiz?.quiz_id !== prePostQuiz.quiz_id) {
+                                                                    Swal.fire({
+                                                                        title: 'Kuis Sedang Berjalan',
+                                                                        text: 'Harap selesaikan kuis yang sedang aktif terlebih dahulu.',
+                                                                        icon: 'warning'
+                                                                    });
+                                                                    return;
+                                                                }
+                                                                handleQuizShow({ ...prePostQuiz, current_mode: 'post_test' });
+                                                            }}
+                                                        >
+                                                            <div className="quiz-item-indicator">
+                                                                {hasCompletedPosttest ? (
+                                                                    <i className="fas fa-check-circle text-success"></i>
+                                                                ) : canTakePostTest ? (
+                                                                    <i className="fas fa-award text-amber"></i>
+                                                                ) : (
+                                                                    <i className="fas fa-lock text-muted"></i>
+                                                                )}
+                                                            </div>
+                                                            <div className="quiz-item-info">
+                                                                <div className="quiz-item-title-row">
+                                                                    <span className="quiz-item-title">Post-test Evaluasi Akhir</span>
+                                                                    {hasCompletedPosttest ? (
+                                                                        <span className="badge-quiz-passed">
+                                                                            <i className="fas fa-check me-1"></i>Selesai ({Math.round(prePostQuiz.post_test_score || 0)}%)
+                                                                        </span>
+                                                                    ) : canTakePostTest ? (
+                                                                        <span className="badge-quiz-unlocked">
+                                                                            <i className="fas fa-unlock me-1"></i>Siap
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="badge-quiz-locked">
+                                                                            <i className="fas fa-lock me-1"></i>Terkunci
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="quiz-item-meta">
+                                                                    <span><i className="fas fa-question-circle me-1"></i>{prePostQuiz.total_questions} Soal</span>
+                                                                    <span><i className="fas fa-certificate me-1 text-amber"></i>Syarat Sertifikat</span>
+                                                                </div>
+                                                                <div className="quiz-item-footer">
+                                                                    <span className="quiz-item-attempts">
+                                                                        {hasCompletedPosttest 
+                                                                            ? `Gain: ${prePostQuiz.post_test_score - prePostQuiz.pre_test_score >= 0 ? '+' : ''}${Math.round((prePostQuiz.post_test_score || 0) - (prePostQuiz.pre_test_score || 0))}%`
+                                                                            : canTakePostTest 
+                                                                                ? "Siap dikerjakan sekarang" 
+                                                                                : "Buka setelah materi tuntas"}
+                                                                    </span>
+                                                                    <button
+                                                                        type="button"
+                                                                        className={`btn-quiz-item-action ${hasCompletedPosttest ? 'btn-outline-teal' : canTakePostTest ? 'btn-teal' : 'btn-secondary disabled'}`}
+                                                                        disabled={!canTakePostTest && !hasCompletedPosttest}
+                                                                    >
+                                                                        {hasCompletedPosttest ? "Lihat" : canTakePostTest ? "Mulai" : "Terkunci"}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Group 2: Kuis Pembelajaran (Kuis Modul / Topik) */}
+                                                <div className="quiz-group-container">
+                                                    {hasPrePostTest && (
+                                                        <div className="quiz-group-header">
+                                                            <i className="fas fa-brain text-teal-accent me-1"></i>
+                                                            <span>Kuis Pembelajaran (Materi)</span>
+                                                        </div>
+                                                    )}
+                                                    {regularQuizzes.length > 0 ? (
+                                                        regularQuizzes.map((quiz, index) => {
+                                                            const isSelected = selectedQuiz?.quiz_id === quiz.quiz_id;
+                                                            const hasProgress = hasQuizProgress(quiz);
+                                                            const isLocked = (pretestRequired && !hasCompletedPretest) || (index > 0 && !regularQuizzes[index - 1].is_passed);
+                                                            const lockReason = (pretestRequired && !hasCompletedPretest)
+                                                                ? "Selesaikan Pre-test terlebih dahulu untuk membuka kuis ini."
+                                                                : (index > 0 && !regularQuizzes[index - 1].is_passed)
+                                                                    ? `Luluskan kuis sebelumnya (${regularQuizzes[index - 1].title}) terlebih dahulu.`
+                                                                    : "";
+
+                                                            return (
+                                                                <div
+                                                                    key={quiz.quiz_id}
+                                                                    className={`quiz-sidebar-item ${isSelected ? 'active' : ''} ${quiz.is_passed ? 'passed' : ''} ${isLocked ? 'quiz-item-locked' : ''}`}
+                                                                    onClick={() => {
+                                                                        if (isLocked) {
+                                                                            Toast().fire({
+                                                                                icon: 'warning',
+                                                                                title: 'Kuis Terkunci',
+                                                                                text: lockReason,
+                                                                                timer: 4000
+                                                                            });
+                                                                            return;
+                                                                        }
+                                                                        if (isQuizActive && selectedQuiz?.quiz_id !== quiz.quiz_id) {
+                                                                            Swal.fire({
+                                                                                title: 'Kuis Sedang Berjalan',
+                                                                                text: 'Harap selesaikan kuis yang sedang aktif terlebih dahulu.',
+                                                                                icon: 'warning'
+                                                                            });
+                                                                            return;
+                                                                        }
+                                                                        handleQuizShow(quiz);
+                                                                    }}
+                                                                >
+                                                                    <div className="quiz-item-indicator">
+                                                                        {isLocked ? (
+                                                                            <i className="fas fa-lock text-muted"></i>
+                                                                        ) : quiz.is_passed ? (
+                                                                            <i className="fas fa-check-circle text-success"></i>
+                                                                        ) : hasProgress ? (
+                                                                            <i className="fas fa-play-circle text-info"></i>
+                                                                        ) : quiz.best_score > 0 ? (
+                                                                            <i className="fas fa-redo text-amber"></i>
+                                                                        ) : (
+                                                                            <i className="fas fa-question-circle text-muted"></i>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="quiz-item-info">
+                                                                        <div className="quiz-item-title-row">
+                                                                            <span className="quiz-item-title" title={quiz.title}>
+                                                                                {quiz.title}
+                                                                            </span>
+                                                                            {isLocked ? (
+                                                                                <span className="badge-quiz-locked">
+                                                                                    <i className="fas fa-lock me-1"></i>Terkunci
+                                                                                </span>
+                                                                            ) : quiz.is_passed ? (
+                                                                                <span className="badge-quiz-passed">
+                                                                                    <i className="fas fa-check me-1"></i>Lulus
+                                                                                </span>
+                                                                            ) : null}
+                                                                        </div>
+                                                                        <div className="quiz-item-meta">
+                                                                            <span><i className="fas fa-question-circle me-1"></i>{quiz.total_questions} Soal</span>
+                                                                            <span><i className="fas fa-clock me-1"></i>{quiz.total_questions} Mnt</span>
+                                                                            <span><i className="fas fa-trophy me-1 text-amber"></i>{Math.round(quiz.best_score || 0)}%</span>
+                                                                        </div>
+                                                                        <div className="quiz-item-footer">
+                                                                            <span className="quiz-item-attempts">
+                                                                                <i className="fas fa-redo me-1"></i>{quiz.today_attempts || 0}/3 Percobaan
+                                                                            </span>
+                                                                            <button
+                                                                                type="button"
+                                                                                className={`btn-quiz-item-action ${
+                                                                                    isLocked
+                                                                                        ? 'btn-secondary disabled'
+                                                                                        : quiz.is_passed
+                                                                                            ? 'btn-outline-teal'
+                                                                                            : isSelected && isQuizActive
+                                                                                                ? 'btn-amber'
+                                                                                                : 'btn-teal'
+                                                                                }`}
+                                                                                disabled={isLocked || (!quiz.can_attempt && !hasProgress)}
+                                                                            >
+                                                                                {isLocked ? (
+                                                                                    <span>Terkunci</span>
+                                                                                ) : !quiz.can_attempt && !hasProgress ? (
+                                                                                    <span>Limit 3/3</span>
+                                                                                ) : isSelected && isQuizActive ? (
+                                                                                    <span><i className="fas fa-spinner fa-spin me-1"></i>Aktif</span>
+                                                                                ) : hasProgress ? (
+                                                                                    <span><i className="fas fa-play me-1"></i>Lanjut</span>
+                                                                                ) : quiz.best_score > 0 ? (
+                                                                                    <span><i className="fas fa-redo me-1"></i>Ulang</span>
+                                                                                ) : (
+                                                                                    <span><i className="fas fa-play me-1"></i>Mulai</span>
+                                                                                )}
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })
+                                                    ) : (
+                                                        <div className="quiz-sidebar-empty">
+                                                            <i className="fas fa-brain"></i>
+                                                            <p>Tidak ada kuis pembelajaran untuk kursus ini.</p>
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             )}
 
-                            {/* ✨ PHASE 4.225+: Left Quiz Area Notification */}
-                            {isQuizActive && showLeftQuizNotification && (
-                                <div className="left-quiz-notification">
-                                    <i className="fas fa-exclamation-circle notification-icon"></i>
-                                    <h4 className="notification-title">Peringatan Integritas Kuis</h4>
-                                    <p className="notification-message">
-                                        Harap tetap fokus pada area kuis. Kembali ke dalam area kuis untuk melanjutkan.
-                                    </p>
-                                    <p className="notification-subtitle">
-                                        Selesaikan kuis dengan integritas diri.
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* ✨ PHASE 4.86: Inline VideoPlayer - displays when variantItem is selected and certificate tab not active */}
-                            {/* ✨ PHASE 4.224: Hide video player when certificate is displayed */}
-                            {/* ✨ PHASE 4.225+: Hide video player only when quiz is active AND on quiz tab */}
-                            {/* ✨ PHASE 4.9+: Show video player on Pelajaran, Catatan, and Diskusi tabs even if quiz was active */}
-                            {/* ✨ PHASE X.X: Wrapped in container div with ref for auto-scroll functionality */}
-                            {/* ✨ PHASE 42.6 CRITICAL FIX: Always render VideoPlayer unconditionally, use CSS display to hide
-                                    ROOT CAUSE IDENTIFIED: The conditional rendering {variantItem && <VideoPlayer/>} causes unmount/remount on EVERY lesson switch.
-                                    This triggers cascading issues:
-                                    1. VideoPlayer unmounts when user switches lessons
-                                    2. YouTube player destroyed, container removed from DOM
-                                    3. YouTube API caches internal references to destroyed DOM nodes
-                                    4. VideoPlayer remounts with new lesson
-                                    5. New container created, YouTube API accumulates stale cached references
-                                    6. By 4th switch: Accumulated stale references cause insertBefore() to fail on stale cached container
-                                    
-                                    SOLUTION: Render VideoPlayer unconditionally (always mounted).
-                                    Use CSS display:none to hide instead of conditional rendering.
-                                    This ensures:
-                                    - Same VideoPlayer component instance always exists in React tree
-                                    - YouTube player ref survives lesson switches
-                                    - No unmount/remount cycles
-                                    - No stale reference accumulation in YouTube API
-                                    - Clean, stable switching between any lesson at any time
-                                   */}
                             {/* ✨ Top Section: Video Player & Tab Pelajaran (Kurikulum Kursus) Side-by-Side (Equal Height) */}
-                            {!(existingCertificate?.image_file_url && activeTab === 'certificate') && !(activeTab === 'quiz' && (quizShow || isQuizActive)) && (
+                            {activeTab !== 'certificate' && activeTab !== 'review' && activeTab !== 'quiz' && (
                                 <div className="course-player-curriculum-row">
                                     {/* Left Column: Video / Module Player */}
                                     <div
                                         ref={videoPlayerContainerRef}
                                         className="course-player-column"
                                     >
-                                        <div style={{ display: variantItem ? 'block' : 'none', width: '100%', height: '100%' }}>
-                                            {variantItem?.file_type === 'scorm' || variantItem?.file_type === 'h5p' || variantItem?.learning_module_info ? (
-                                                <ScormPlayer
-                                                    variantItem={variantItem}
-                                                    courseId={course?.course?.id}
-                                                    course={course}
-                                                    onClose={handleVideoPlayerClose}
-                                                    handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
-                                                />
-                                            ) : (
-                                                <VideoPlayer
-                                                    ref={videoPlayerRef}
-                                                    variantItem={variantItem}
-                                                    courseId={course?.course?.id}  // ✨ PHASE 4.144+: Pass courseId for completion endpoint
-                                                    course={course}  // ✨ PHASE 12.9: Pass full course data so VideoPlayerGoogle can check actual completed_lesson array
-                                                    onClose={handleVideoPlayerClose}  // ✨ PHASE 17.12 FIX: Use memoized callback instead of inline function
-                                                    handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}  // ✨ PHASE 4.143+: Use memoized callback
-                                                    autoplay={autoplayVideo}  // ✨ PHASE 12.15: Enable autoplay when user clicks lesson or on hard refresh
-                                                    onPlayingChange={setIsVideoPlaying}  // ✨ PHASE 4.105: Track playing state
-                                                    onProgress={handleVideoProgress}  // ✨ PHASE 4.115: Pass progress callback
-                                                    seekPosition={seekPosition}  // ✨ PHASE 4.117: Pass seek position for resume
-                                                />
-                                            )}
-                                        </div>
-                                        {!variantItem && (
-                                            <div className="course-player-standby">
+                                        {pretestRequired && !hasCompletedPretest ? (
+                                            <div className="course-player-standby pretest-required-standby">
                                                 <div className="standby-content">
-                                                    <div className="standby-icon-circle">
-                                                        <i className="fas fa-play"></i>
+                                                    <div className="standby-icon-circle pretest-circle">
+                                                        <i className="fas fa-clipboard-check"></i>
                                                     </div>
-                                                    <h5 className="standby-title">Pilih Materi Pembelajaran</h5>
+                                                    <h5 className="standby-title">Pre-test Diagnostik Wajib</h5>
                                                     <p className="standby-subtitle">
-                                                        Silakan pilih salah satu materi pada Kurikulum Kursus di sebelah kanan untuk memulai pemutaran.
+                                                        Akses kurikulum dan materi pembelajaran akan terbuka setelah Anda menyelesaikan Pre-test ini. 
+                                                        Pre-test bertujuan menguji pemahaman awal sebelum memulai dan <strong>tidak memiliki syarat nilai kelulusan minimal</strong>.
                                                     </p>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-teal mt-2 fw-bold px-3 py-2"
+                                                        onClick={handleStartPretest}
+                                                    >
+                                                        <i className="fas fa-play me-1"></i>
+                                                        Mulai Kerjakan Pre-test Sekarang
+                                                    </button>
                                                 </div>
                                             </div>
+                                        ) : (
+                                            <>
+                                                <div style={{ display: variantItem ? 'block' : 'none', width: '100%', height: '100%' }}>
+                                                    {variantItem?.file_type === 'scorm' || variantItem?.file_type === 'h5p' || variantItem?.learning_module_info ? (
+                                                        <ScormPlayer
+                                                            variantItem={variantItem}
+                                                            courseId={course?.course?.id}
+                                                            course={course}
+                                                            onClose={handleVideoPlayerClose}
+                                                            handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
+                                                        />
+                                                    ) : (
+                                                        <VideoPlayer
+                                                            ref={videoPlayerRef}
+                                                            variantItem={variantItem}
+                                                            courseId={course?.course?.id}
+                                                            course={course}
+                                                            onClose={handleVideoPlayerClose}
+                                                            handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
+                                                            autoplay={autoplayVideo}
+                                                            onPlayingChange={setIsVideoPlaying}
+                                                            onProgress={handleVideoProgress}
+                                                            seekPosition={seekPosition}
+                                                        />
+                                                    )}
+                                                </div>
+                                                {!variantItem && (
+                                                    <div className="course-player-standby">
+                                                        <div className="standby-content">
+                                                            <div className="standby-icon-circle">
+                                                                <i className="fas fa-play"></i>
+                                                            </div>
+                                                            <h5 className="standby-title">Pilih Materi Pembelajaran</h5>
+                                                            <p className="standby-subtitle">
+                                                                Silakan pilih salah satu materi pada Kurikulum Kursus di sebelah kanan untuk memulai pemutaran.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
 
@@ -4128,6 +5114,9 @@ function CourseDetail() {
                                                 toggleVideoPlayPause={toggleVideoPlayPause}  // ✨ PHASE 4.105: Pass toggle function
                                                 onProgressUpdate={handleProgressUpdateCallback}  // ✨ PHASE 4.132: Use memoized callback
                                                 onLessonCompletion={handleLessonCompletionRegistration}  // ✨ PHASE 4.143+: Use memoized callback
+                                                hasCompletedPretest={hasCompletedPretest}
+                                                pretestRequired={pretestRequired}
+                                                onStartPretest={handleStartPretest}
                                             />
                                         </div>
                                     </div>
@@ -4176,15 +5165,7 @@ function CourseDetail() {
                                             ) : null}
                                         </button>
                                     </li>
-                                    <li className="nav-item" role="presentation">
-                                        <button className="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab">
-                                            <i className="fas fa-star me-1"></i>
-                                            <span>Ulasan</span>
-                                            {(studentReview?.id || studentReview?.rating) && (
-                                                <span className="tab-pill-counter counter-info"><i className="fas fa-check"></i></span>
-                                            )}
-                                        </button>
-                                    </li>
+
                                 </ul>
 
                                 {/* Tab Content */}
@@ -4205,71 +5186,32 @@ function CourseDetail() {
                                         </div>
 
                                         {/* ✨ PHASE 11.160: Search and filter controls for notes - same pattern as discussions */}
-                                        <div className="mb-3 course-filters-row" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                        <div className="mb-3 course-filters-row">
                                             {/* ✨ PHASE 11.161: Search Input - 25% */}
-                                            <div style={{ flex: '1 1 25%' }}>
-                                                <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                    <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#0f766e' }}></i>
+                                            <div className="filter-col-search">
+                                                <label className="compact-filter-label">
+                                                    <i className="fas fa-search me-1 text-teal-accent"></i>
                                                     Cari Catatan
                                                 </label>
                                                 <input
                                                     type="text"
+                                                    className="form-control compact-filter-input"
                                                     placeholder="Cari berdasarkan judul atau isi..."
                                                     value={noteFilters.search}
                                                     onChange={(e) => setNoteFilters({ ...noteFilters, search: e.target.value })}
-                                                    style={{
-                                                        width: '100%',
-                                                        fontSize: '1rem',
-                                                        borderRadius: '12px',
-                                                        border: '2px solid #e9ecef',
-                                                        backgroundColor: '#ffffff',
-                                                        color: '#2c3e50',
-                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                                        padding: '0.75rem 1rem',
-                                                        transition: 'all 0.3s ease',
-                                                        outline: 'none'
-                                                    }}
-                                                    onFocus={(e) => {
-                                                        e.target.style.borderColor = '#0f766e';
-                                                        e.target.style.boxShadow = '0 0 0 3px rgba(52, 152, 219, 0.1)';
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        e.target.style.borderColor = '#e9ecef';
-                                                        e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                                                    }}
                                                 />
                                             </div>
 
                                             {/* Bagian Filter Dropdown - 20% */}
-                                            <div style={{ flex: '1 1 20%' }}>
-                                                <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                    <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#0d9488' }}></i>
+                                            <div className="filter-col-select">
+                                                <label className="compact-filter-label">
+                                                    <i className="fas fa-layer-group me-1 text-teal-accent"></i>
                                                     Bagian
                                                 </label>
                                                 <select
+                                                    className="form-select compact-filter-select"
                                                     value={noteFilters.bagian || ''}
                                                     onChange={(e) => setNoteFilters({ ...noteFilters, bagian: e.target.value || null, pelajaran: null })}
-                                                    style={{
-                                                        width: '100%',
-                                                        fontSize: '1rem',
-                                                        borderRadius: '12px',
-                                                        border: '2px solid #e9ecef',
-                                                        backgroundColor: '#ffffff',
-                                                        color: '#2c3e50',
-                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                                        padding: '0.75rem 1rem',
-                                                        transition: 'all 0.3s ease',
-                                                        outline: 'none',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                    onFocus={(e) => {
-                                                        e.target.style.borderColor = '#0d9488';
-                                                        e.target.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.1)';
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        e.target.style.borderColor = '#e9ecef';
-                                                        e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                                                    }}
                                                 >
                                                     <option value="">Semua Bagian</option>
                                                     {course?.curriculum?.map((variant) => (
@@ -4281,39 +5223,16 @@ function CourseDetail() {
                                             </div>
 
                                             {/* Pelajaran Filter Dropdown - 20% */}
-                                            <div style={{ flex: '1 1 20%' }}>
-                                                <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                    <i className="fas fa-book" style={{ marginRight: '0.5rem', color: '#e74c3c' }}></i>
+                                            <div className="filter-col-select">
+                                                <label className="compact-filter-label">
+                                                    <i className="fas fa-book me-1 text-danger"></i>
                                                     Pelajaran
                                                 </label>
                                                 <select
+                                                    className="form-select compact-filter-select"
                                                     value={noteFilters.pelajaran || ''}
                                                     onChange={(e) => setNoteFilters({ ...noteFilters, pelajaran: e.target.value || null })}
                                                     disabled={!noteFilters.bagian}
-                                                    style={{
-                                                        width: '100%',
-                                                        fontSize: '1rem',
-                                                        borderRadius: '12px',
-                                                        border: '2px solid #e9ecef',
-                                                        backgroundColor: noteFilters.bagian ? '#ffffff' : '#f8f9fa',
-                                                        color: '#2c3e50',
-                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                                        padding: '0.75rem 1rem',
-                                                        transition: 'all 0.3s ease',
-                                                        outline: 'none',
-                                                        cursor: noteFilters.bagian ? 'pointer' : 'not-allowed',
-                                                        opacity: noteFilters.bagian ? 1 : 0.6
-                                                    }}
-                                                    onFocus={(e) => {
-                                                        if (noteFilters.bagian) {
-                                                            e.target.style.borderColor = '#e74c3c';
-                                                            e.target.style.boxShadow = '0 0 0 3px rgba(231, 76, 60, 0.1)';
-                                                        }
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        e.target.style.borderColor = '#e9ecef';
-                                                        e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                                                    }}
                                                 >
                                                     <option value="">Semua Pelajaran</option>
                                                     {noteFilters.bagian && course?.curriculum?.find(v => v.variant_id === noteFilters.bagian)?.variant_items?.map((item) => (
@@ -4325,36 +5244,15 @@ function CourseDetail() {
                                             </div>
 
                                             {/* ✨ PHASE 11.160 FIX: Color Filter Dropdown - 25% */}
-                                            <div style={{ flex: '1 1 25%' }}>
-                                                <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                    <i className="fas fa-palette" style={{ marginRight: '0.5rem', color: '#f39c12' }}></i>
+                                            <div className="filter-col-color">
+                                                <label className="compact-filter-label">
+                                                    <i className="fas fa-palette me-1 text-amber"></i>
                                                     Warna
                                                 </label>
                                                 <select
+                                                    className="form-select compact-filter-select"
                                                     value={noteFilters.color || ''}
                                                     onChange={(e) => setNoteFilters({ ...noteFilters, color: e.target.value || null })}
-                                                    className="form-select"
-                                                    style={{
-                                                        width: '100%',
-                                                        fontSize: '0.95rem',
-                                                        borderRadius: '12px',
-                                                        border: '2px solid #e9ecef',
-                                                        backgroundColor: '#ffffff',
-                                                        color: '#2c3e50',
-                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                                        padding: '0.75rem 1rem',
-                                                        transition: 'all 0.3s ease',
-                                                        outline: 'none',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                    onFocus={(e) => {
-                                                        e.target.style.borderColor = '#f39c12';
-                                                        e.target.style.boxShadow = '0 0 0 3px rgba(243, 156, 18, 0.1)';
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        e.target.style.borderColor = '#e9ecef';
-                                                        e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                                                    }}
                                                 >
                                                     <option value="">Semua Warna</option>
                                                     <option value="#f39c12">🟠 Orange</option>
@@ -4377,10 +5275,10 @@ function CourseDetail() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setNoteFilters({ search: '', bagian: null, pelajaran: null, color: null })}
-                                                    className="add-btn-modern"
-                                                    style={{ background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', padding: '0.75rem 1.5rem' }}
+                                                    className="compact-clear-filter-btn"
+                                                    title="Reset Filter Catatan"
                                                 >
-                                                    <i className="fas fa-times"></i>
+                                                    <i className="fas fa-times me-1"></i>Reset
                                                 </button>
                                             )}
                                         </div>
@@ -4516,24 +5414,32 @@ function CourseDetail() {
                                             )}
                                         </div>
 
-                                        {/* ✨ PHASE 7.10: Inline forum view - show when a question is opened */}
+                                        {/* ✨ PHASE 7.10 & Pilar 1: Inline forum view - show when a question is opened */}
                                         {openedQuestionId && selectedConversation ? (
                                             <div className="forum-thread-container">
-                                                {/* Professional Forum Header */}
+                                                {/* Professional Forum Header with Status Badge */}
                                                 <div className="forum-thread-header">
                                                     <div className="forum-thread-title-area">
-                                                        <div className="d-flex align-items-center gap-3">
+                                                        <div className="d-flex align-items-center gap-2 flex-wrap">
                                                             <button
-                                                                className="btn btn-outline-primary"
+                                                                className="forum-back-btn"
                                                                 onClick={handleConversationClose}
-                                                                style={{ minWidth: '50px', padding: '0.5rem 1rem', flexShrink: 0 }}
                                                             >
-                                                                <i className="fas fa-arrow-left me-2"></i>
+                                                                <i className="fas fa-arrow-left me-1"></i>
                                                                 Kembali
                                                             </button>
-                                                            <h2 className="forum-thread-title">
+                                                            <h2 className="forum-thread-title mb-0 flex-grow-1">
                                                                 {selectedConversation.title || 'Tidak Ada Judul'}
                                                             </h2>
+                                                            {selectedConversation.is_solved || selectedConversation.messages?.some(m => m.is_solution) ? (
+                                                                <span className="qa-status-pill solved">
+                                                                    <i className="fas fa-check-circle me-1"></i>Terjawab
+                                                                </span>
+                                                            ) : (
+                                                                <span className="qa-status-pill waiting">
+                                                                    <i className="fas fa-clock me-1"></i>Menunggu Solusi
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     {/* ✨ PHASE 7.15: Breadcrumb and Meta in one line */}
@@ -4553,10 +5459,18 @@ function CourseDetail() {
                                                                 </>
                                                             )}
                                                         </div>
-                                                        <div className="forum-thread-meta">
+                                                        <div className="forum-thread-meta d-flex align-items-center gap-2">
+                                                            {selectedConversation.video_timestamp !== null && selectedConversation.video_timestamp !== undefined && (
+                                                                <QAVideoTimestampBadge
+                                                                    timestamp={selectedConversation.video_timestamp}
+                                                                    onClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
+                                                                    label="Menit"
+                                                                    size="md"
+                                                                />
+                                                            )}
                                                             <span className="forum-meta-badge">
                                                                 <i className="fas fa-comments"></i>
-                                                                {selectedConversation.messages?.length || 0} Balasan
+                                                                {Math.max(0, (selectedConversation.messages?.length || 1) - 1)} Balasan
                                                             </span>
                                                             <span className="forum-meta-badge">
                                                                 <i className="fas fa-clock"></i>
@@ -4582,17 +5496,25 @@ function CourseDetail() {
                                                                         alt={selectedConversation.profile?.full_name || "User"}
                                                                         className="forum-user-avatar"
                                                                         onError={(e) => {
-                                                                            e.target.style.display = "none";
-                                                                            e.target.nextSibling.style.display = "flex";
+                                                                            e.target.onerror = null;
+                                                                            e.target.src = "/images/placeholders/default-avatar.svg";
                                                                         }}
                                                                     />
-                                                                ) : null}
-                                                                <div
-                                                                    className="forum-user-avatar-placeholder"
-                                                                    style={{ display: selectedConversation.profile?.image ? "none" : "flex" }}
-                                                                >
-                                                                    <i className="fas fa-user"></i>
-                                                                </div>
+                                                                ) : (
+                                                                    <div className="forum-user-avatar-placeholder">
+                                                                        {selectedConversation.profile?.full_name ? (
+                                                                            selectedConversation.profile.full_name
+                                                                                .split(' ')
+                                                                                .filter(Boolean)
+                                                                                .map(n => n[0])
+                                                                                .slice(0, 2)
+                                                                                .join('')
+                                                                                .toUpperCase()
+                                                                        ) : (
+                                                                            <i className="fas fa-user"></i>
+                                                                        )}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                             <div className="forum-user-details">
                                                                 <div className="forum-user-name">
@@ -4631,7 +5553,10 @@ function CourseDetail() {
 
                                                     {/* Post Content */}
                                                     <div className="forum-post-content">
-                                                        {selectedConversation.message || (selectedConversation.messages?.[0]?.message) || 'Tidak ada pesan'}
+                                                        <QAMarkdownRenderer
+                                                            content={selectedConversation.message || (selectedConversation.messages?.[0]?.message) || 'Tidak ada pesan'}
+                                                            onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
+                                                        />
                                                     </div>
 
                                                     {/* Post Footer with Like and Report Button */}
@@ -4669,33 +5594,83 @@ function CourseDetail() {
                                                     </div>
                                                 </div>
 
+                                                {/* ✨ Pilar 1: Pinned Verified Solution Box (if verified answer exists) */}
+                                                {(selectedConversation.is_solved || selectedConversation.messages?.some(m => m.is_solution)) && (
+                                                    <div className="pinned-solution-box my-2">
+                                                        <div className="d-flex align-items-center justify-content-between mb-1">
+                                                            <span className="solution-badge-pill">
+                                                                <i className="fas fa-award me-1"></i>Solusi Terverifikasi
+                                                            </span>
+                                                            <small className="text-muted" style={{ fontSize: '0.72rem' }}>
+                                                                Telah diverifikasi sebagai jawaban terbaik
+                                                            </small>
+                                                        </div>
+                                                        {(() => {
+                                                            const solMsg = selectedConversation.messages?.find(m => m.is_solution);
+                                                            if (!solMsg) return null;
+                                                            return (
+                                                                <div className="pinned-solution-body">
+                                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                                        <strong className="text-slate-800" style={{ fontSize: '0.82rem' }}>
+                                                                            {solMsg.profile?.full_name || 'Pengguna'}
+                                                                        </strong>
+                                                                        <span className="text-muted" style={{ fontSize: '0.72rem' }}>
+                                                                            {moment(solMsg.date).fromNow()}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="mb-0 text-dark" style={{ fontSize: '0.84rem', lineHeight: '1.45' }}>
+                                                                        <QAMarkdownRenderer
+                                                                            content={solMsg.message}
+                                                                            onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                )}
+
                                                 {/* Replies Section */}
-                                                {selectedConversation.messages && selectedConversation.messages.length > 0 && (
+                                                {selectedConversation.messages && selectedConversation.messages.length > 1 && (
                                                     <div className="forum-replies-section">
                                                         <div className="forum-replies-list">
-                                                            {selectedConversation.messages.slice(1).map((msg, index) => {  /* ✨ PHASE 7.16: Skip first message (original question) */
+                                                            {selectedConversation.messages.slice(1).map((msg, index) => {  /* Skip first message (original question) */
                                                                 const currentUser = UserData();
-                                                                // ✨ PHASE 7.16: Better current user detection
                                                                 const isCurrentUser = msg.profile?.user_id === currentUser?.user_id ||
                                                                     (msg.user_id && msg.user_id === currentUser?.user_id);
-                                                                // Check if this reply is from the course instructor
                                                                 const isInstructor = course?.course?.teacher && (
                                                                     msg.user_id === course.course.teacher.user_id ||
                                                                     msg.profile?.user_id === course.course.teacher.user_id
                                                                 );
-                                                                // ✨ DEBUG: Log instructor badge comparison for ALL messages
-                                                                console.log(`[CourseDetail.Forum] Message ${index + 1}:`, {
-                                                                    msg_user_id: msg.user_id,
-                                                                    msg_profile_user_id: msg.profile?.user_id,
-                                                                    teacher_user_id: course?.course?.teacher?.user_id,
-                                                                    msg_profile: msg.profile,
-                                                                    course_teacher: course?.course?.teacher,
-                                                                    isInstructor: isInstructor,
-                                                                    comparison1: msg.user_id === course?.course?.teacher?.user_id,
-                                                                    comparison2: msg.profile?.user_id === course?.course?.teacher?.user_id,
-                                                                });
+
+                                                                // Permission to mark/unmark solution
+                                                                const isQuestionAsker = (selectedConversation?.user_id === currentUser?.user_id) ||
+                                                                    (selectedConversation?.profile?.user_id === currentUser?.user_id);
+                                                                const isTeacherUser = course?.course?.teacher && (
+                                                                    currentUser?.user_id === course.course.teacher.user_id ||
+                                                                    currentUser?.user_id === course.course.teacher?.user?.id
+                                                                );
+                                                                const isAdmin = currentUser?.is_staff || currentUser?.is_superuser;
+                                                                const canManageSolution = isQuestionAsker || isTeacherUser || isAdmin;
+                                                                const isSolution = Boolean(msg.is_solution);
+
                                                                 return (
-                                                                    <div key={msg.id || `message-${index}`} className="forum-post-card forum-reply-post">
+                                                                    <div 
+                                                                        key={msg.id || `message-${index}`} 
+                                                                        className={`forum-post-card forum-reply-post ${isSolution ? 'forum-solution-post' : ''}`}
+                                                                    >
+                                                                        {/* Solution Banner */}
+                                                                        {isSolution && (
+                                                                            <div className="solution-banner-header">
+                                                                                <span className="solution-badge-pill">
+                                                                                    <i className="fas fa-check-circle me-1"></i>Solusi Terverifikasi
+                                                                                </span>
+                                                                                <span className="solution-banner-text">
+                                                                                    Jawaban ini telah ditandai sebagai solusi paling tepat.
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+
                                                                         {/* Reply Header */}
                                                                         <div className="forum-post-header">
                                                                             <div className="forum-user-info">
@@ -4710,21 +5685,34 @@ function CourseDetail() {
                                                                                             alt={`${msg.profile?.full_name || "User"} avatar`}
                                                                                             className="forum-user-avatar"
                                                                                             onError={(e) => {
-                                                                                                e.target.style.display = "none";
-                                                                                                e.target.nextSibling.style.display = "flex";
+                                                                                                e.target.onerror = null;
+                                                                                                e.target.src = "/images/placeholders/default-avatar.svg";
                                                                                             }}
                                                                                         />
-                                                                                    ) : null}
-                                                                                    <div
-                                                                                        className="forum-user-avatar-placeholder"
-                                                                                        style={{ display: msg.profile?.image ? "none" : "flex" }}
-                                                                                    >
-                                                                                        <i className="fas fa-user"></i>
-                                                                                    </div>
+                                                                                    ) : (
+                                                                                        <div className="forum-user-avatar-placeholder">
+                                                                                            {msg.profile?.full_name ? (
+                                                                                                msg.profile.full_name
+                                                                                                    .split(' ')
+                                                                                                    .filter(Boolean)
+                                                                                                    .map(n => n[0])
+                                                                                                    .slice(0, 2)
+                                                                                                    .join('')
+                                                                                                    .toUpperCase()
+                                                                                            ) : (
+                                                                                                <i className="fas fa-user"></i>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
                                                                                 </div>
                                                                                 <div className="forum-user-details">
                                                                                     <div className="forum-user-name">
                                                                                         {msg.profile?.full_name || 'Pengguna Anonim'}
+                                                                                        {isSolution && (
+                                                                                            <span className="forum-user-badge-solution" title="Solusi Terverifikasi">
+                                                                                                <i className="fas fa-check-circle me-1"></i>Solusi Terpilih
+                                                                                            </span>
+                                                                                        )}
                                                                                         {isInstructor && (
                                                                                             <span className="forum-user-badge-instructor" title="Instruktur Kursus">
                                                                                                 <i className="fas fa-chalkboard-user"></i>
@@ -4732,7 +5720,6 @@ function CourseDetail() {
                                                                                             </span>
                                                                                         )}
                                                                                         {isCurrentUser && <span className="forum-user-badge-current">Anda</span>}
-                                                                                        {/* ✨ PHASE 7.16: Show "Reported" badge if current user has reported this message */}
                                                                                         {isQAItemReported(msg.qa_id) && (
                                                                                             <span className="forum-user-badge-reported">
                                                                                                 <i className="fas fa-flag me-1"></i>
@@ -4750,40 +5737,61 @@ function CourseDetail() {
 
                                                                         {/* Reply Content */}
                                                                         <div className="forum-post-content">
-                                                                            {msg.message}
+                                                                            <QAMarkdownRenderer
+                                                                                content={msg.message}
+                                                                                onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
+                                                                            />
                                                                         </div>
 
-                                                                        {/* Post Footer with Like and Report Button */}
+                                                                        {/* Post Footer with Solution Toggle, Like and Report Button */}
                                                                         <div className="forum-post-footer">
-                                                                            <div className="forum-post-actions">
-                                                                                <button
-                                                                                    className="forum-like-btn"
-                                                                                    title={userLikedMessages.has(msg.id) ? "Batalkan suka" : "Sukai jawaban ini"}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        handleLikeMessage(msg);
-                                                                                    }}
-                                                                                    style={userLikedMessages.has(msg.id) ? { color: '#ff4757' } : {}}
-                                                                                >
-                                                                                    <i className={userLikedMessages.has(msg.id) ? "fas fa-heart" : "far fa-heart"}></i>
-                                                                                    <span className="like-count">{msg.likes_count || 0}</span>
-                                                                                </button>
-                                                                                {(() => {
-                                                                                    const reportStatus = getQAReportStatus(msg.qa_id, 'message');
-                                                                                    return (
-                                                                                        <button
-                                                                                            className="forum-report-btn"
-                                                                                            title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan jawaban ini"}
-                                                                                            onClick={() => handleOpenQAMessageReportModal(msg)}
-                                                                                            style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
-                                                                                        >
-                                                                                            <i className="fas fa-flag"></i>
-                                                                                            {reportStatus && (
-                                                                                                <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
-                                                                                            )}
-                                                                                        </button>
-                                                                                    );
-                                                                                })()}
+                                                                            <div className="forum-post-actions d-flex align-items-center justify-content-between w-100">
+                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                    <button
+                                                                                        className="forum-like-btn"
+                                                                                        title={userLikedMessages.has(msg.id) ? "Batalkan suka" : "Sukai jawaban ini"}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            handleLikeMessage(msg);
+                                                                                        }}
+                                                                                        style={userLikedMessages.has(msg.id) ? { color: '#ff4757' } : {}}
+                                                                                    >
+                                                                                        <i className={userLikedMessages.has(msg.id) ? "fas fa-heart" : "far fa-heart"}></i>
+                                                                                        <span className="like-count">{msg.likes_count || 0}</span>
+                                                                                    </button>
+                                                                                    {(() => {
+                                                                                        const reportStatus = getQAReportStatus(msg.qa_id, 'message');
+                                                                                        return (
+                                                                                            <button
+                                                                                                className="forum-report-btn"
+                                                                                                title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan jawaban ini"}
+                                                                                                onClick={() => handleOpenQAMessageReportModal(msg)}
+                                                                                                style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
+                                                                                            >
+                                                                                                <i className="fas fa-flag"></i>
+                                                                                                {reportStatus && (
+                                                                                                    <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
+                                                                                                )}
+                                                                                            </button>
+                                                                                        );
+                                                                                    })()}
+                                                                                </div>
+
+                                                                                {/* ✨ Pilar 1: Toggle Solution Button */}
+                                                                                {canManageSolution && (
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        className={`forum-solution-btn ${isSolution ? 'active' : ''}`}
+                                                                                        title={isSolution ? "Batalkan status solusi" : "Tandai balasan ini sebagai Solusi Terverifikasi"}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            handleToggleSolution(msg);
+                                                                                        }}
+                                                                                    >
+                                                                                        <i className={`fas ${isSolution ? 'fa-check-double' : 'fa-check'} me-1`}></i>
+                                                                                        <span>{isSolution ? 'Solusi Terpilih (Batalkan)' : 'Tandai Solusi'}</span>
+                                                                                    </button>
+                                                                                )}
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -4812,25 +5820,46 @@ function CourseDetail() {
                                                     </h3>
                                                     <form onSubmit={sendNewMessage} className="forum-reply-form">
                                                         <div className="forum-form-group">
-                                                            <textarea
-                                                                name="message"
-                                                                className="forum-reply-textarea"
-                                                                placeholder="Tulis balasan Anda di sini... Jelaskan dengan detail untuk memberikan nilai maksimal kepada komunitas."
-                                                                rows="6"
-                                                                onChange={handleMessageChange}
+                                                            {/* ✨ Pilar 4: Formatting Toolbar */}
+                                                            <QAFormattingToolbar
+                                                                textareaRef={replyTextareaRef}
                                                                 value={createMessage.message}
-                                                                required
+                                                                onChange={(newVal) => setCreateMessage(prev => ({ ...prev, message: newVal }))}
+                                                                isPreview={replyPreviewMode}
+                                                                onTogglePreview={setReplyPreviewMode}
+                                                                getCurrentVideoTime={getCurrentVideoTime}
+                                                                showTimestampBtn={true}
                                                             />
+                                                            {replyPreviewMode ? (
+                                                                <div className="forum-reply-preview-container">
+                                                                    <QAMarkdownRenderer
+                                                                        content={createMessage.message}
+                                                                        onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation?.variant_item?.variant_item_id, sec)}
+                                                                        emptyPlaceholder="Tuliskan balasan Anda di mode Tulis untuk melihat pratinjau di sini."
+                                                                    />
+                                                                </div>
+                                                            ) : (
+                                                                <textarea
+                                                                    ref={replyTextareaRef}
+                                                                    name="message"
+                                                                    className="forum-reply-textarea"
+                                                                    placeholder="Tulis balasan Anda di sini... Mendukung Markdown (tebal, miring, kode, kutipan) dan cap waktu video seperti [02:15]."
+                                                                    rows="3"
+                                                                    onChange={handleMessageChange}
+                                                                    value={createMessage.message}
+                                                                    required
+                                                                />
+                                                            )}
                                                         </div>
                                                         <div className="forum-form-actions">
                                                             <p className="forum-form-hint">
-                                                                <i className="fas fa-info-circle me-1"></i>Formulir Markdown didukung. Pastikan kode Anda diformat dengan benar.
+                                                                <i className="fas fa-info-circle me-1"></i>Format Markdown & cap waktu video (contoh: <code>02:15</code>) didukung penuh.
                                                             </p>
                                                             <div className="forum-action-buttons">
-
                                                                 <button
                                                                     type="submit"
                                                                     className="forum-btn-primary"
+                                                                    disabled={!createMessage.message?.trim()}
                                                                 >
                                                                     <i className="fas fa-paper-plane me-2"></i>Kirim Balasan
                                                                 </button>
@@ -4841,72 +5870,84 @@ function CourseDetail() {
                                             </div>
                                         ) : (
                                             <>
-                                                {/* ✨ PHASE 7.9-7.10: Filter controls - Search and dropdowns with proportional widths */}
-                                                <div className="mb-3 course-filters-row" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                                                    {/* Search Input - 50% */}
-                                                    <div style={{ flex: '1 1 50%' }}>
-                                                        <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                            <i className="fas fa-search" style={{ marginRight: '0.5rem', color: '#0f766e' }}></i>
+                                                {/* ✨ Pilar 2: Quick Filter Tabs */}
+                                                <div className="qa-quick-filter-tabs mb-2">
+                                                    <button
+                                                        type="button"
+                                                        className={`qa-filter-tab-btn ${(!discussionFilters.tab || discussionFilters.tab === 'all') ? 'active' : ''}`}
+                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'all' }))}
+                                                    >
+                                                        <i className="fas fa-layer-group me-1"></i>Semua Diskusi
+                                                        <span className="qa-tab-count">{qaStats.total}</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={`qa-filter-tab-btn ${discussionFilters.tab === 'unsolved' ? 'active' : ''}`}
+                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'unsolved' }))}
+                                                    >
+                                                        <i className="fas fa-clock me-1"></i>Belum Terjawab
+                                                        <span className="qa-tab-count">{qaStats.unsolved}</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={`qa-filter-tab-btn ${discussionFilters.tab === 'solved' ? 'active' : ''}`}
+                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'solved' }))}
+                                                    >
+                                                        <i className="fas fa-check-circle me-1"></i>Terjawab
+                                                        <span className="qa-tab-count">{qaStats.solved}</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={`qa-filter-tab-btn ${discussionFilters.tab === 'instructor' ? 'active' : ''}`}
+                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'instructor' }))}
+                                                    >
+                                                        <i className="fas fa-chalkboard-user me-1"></i>Dijawab Instruktur
+                                                        <span className="qa-tab-count">{qaStats.instructor}</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={`qa-filter-tab-btn ${discussionFilters.tab === 'my_questions' ? 'active' : ''}`}
+                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'my_questions' }))}
+                                                    >
+                                                        <i className="fas fa-user me-1"></i>Pertanyaan Saya
+                                                        <span className="qa-tab-count">{qaStats.myQuestions}</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={`qa-filter-tab-btn ${discussionFilters.tab === 'popular' ? 'active' : ''}`}
+                                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'popular' }))}
+                                                    >
+                                                        <i className="fas fa-fire me-1 text-danger"></i>Populer
+                                                    </button>
+                                                </div>
+
+                                                {/* ✨ Secondary Filter Controls - Search, Bagian, Pelajaran, Sorting */}
+                                                <div className="mb-3 course-filters-row">
+                                                    {/* Search Input */}
+                                                    <div className="filter-col-search" style={{ flex: '1 1 35%' }}>
+                                                        <label className="compact-filter-label">
+                                                            <i className="fas fa-search me-1 text-teal-accent"></i>
                                                             Cari Pertanyaan
                                                         </label>
                                                         <input
                                                             type="text"
-                                                            placeholder="Cari berdasarkan judul atau isi..."
+                                                            className="form-control compact-filter-input"
+                                                            placeholder="Cari judul, topik, atau kata kunci..."
                                                             value={discussionFilters.search}
                                                             onChange={(e) => setDiscussionFilters({ ...discussionFilters, search: e.target.value })}
-                                                            style={{
-                                                                width: '100%',
-                                                                fontSize: '1rem',
-                                                                borderRadius: '12px',
-                                                                border: '2px solid #e9ecef',
-                                                                backgroundColor: '#ffffff',
-                                                                color: '#2c3e50',
-                                                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                                                padding: '0.75rem 1rem',
-                                                                transition: 'all 0.3s ease',
-                                                                outline: 'none'
-                                                            }}
-                                                            onFocus={(e) => {
-                                                                e.target.style.borderColor = '#0f766e';
-                                                                e.target.style.boxShadow = '0 0 0 3px rgba(52, 152, 219, 0.1)';
-                                                            }}
-                                                            onBlur={(e) => {
-                                                                e.target.style.borderColor = '#e9ecef';
-                                                                e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                                                            }}
                                                         />
                                                     </div>
 
-                                                    {/* Bagian Filter Dropdown - 25% */}
-                                                    <div style={{ flex: '1 1 25%' }}>
-                                                        <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                            <i className="fas fa-layer-group" style={{ marginRight: '0.5rem', color: '#0d9488' }}></i>
+                                                    {/* Bagian Filter Dropdown */}
+                                                    <div className="filter-col-select" style={{ flex: '1 1 20%' }}>
+                                                        <label className="compact-filter-label">
+                                                            <i className="fas fa-layer-group me-1 text-teal-accent"></i>
                                                             Bagian
                                                         </label>
                                                         <select
+                                                            className="form-select compact-filter-select"
                                                             value={discussionFilters.bagian || ''}
                                                             onChange={(e) => setDiscussionFilters({ ...discussionFilters, bagian: e.target.value || null, pelajaran: null })}
-                                                            style={{
-                                                                width: '100%',
-                                                                fontSize: '1rem',
-                                                                borderRadius: '12px',
-                                                                border: '2px solid #e9ecef',
-                                                                backgroundColor: '#ffffff',
-                                                                color: '#2c3e50',
-                                                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                                                padding: '0.75rem 1rem',
-                                                                transition: 'all 0.3s ease',
-                                                                outline: 'none',
-                                                                cursor: 'pointer'
-                                                            }}
-                                                            onFocus={(e) => {
-                                                                e.target.style.borderColor = '#0d9488';
-                                                                e.target.style.boxShadow = '0 0 0 3px rgba(13, 148, 136, 0.1)';
-                                                            }}
-                                                            onBlur={(e) => {
-                                                                e.target.style.borderColor = '#e9ecef';
-                                                                e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                                                            }}
                                                         >
                                                             <option value="">Semua Bagian</option>
                                                             {course?.curriculum?.map((variant) => (
@@ -4917,40 +5958,17 @@ function CourseDetail() {
                                                         </select>
                                                     </div>
 
-                                                    {/* Pelajaran Filter Dropdown - 25% */}
-                                                    <div style={{ flex: '1 1 25%' }}>
-                                                        <label style={{ display: 'block', fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem', color: '#2c3e50' }}>
-                                                            <i className="fas fa-book" style={{ marginRight: '0.5rem', color: '#e74c3c' }}></i>
+                                                    {/* Pelajaran Filter Dropdown */}
+                                                    <div className="filter-col-select" style={{ flex: '1 1 20%' }}>
+                                                        <label className="compact-filter-label">
+                                                            <i className="fas fa-book me-1 text-danger"></i>
                                                             Pelajaran
                                                         </label>
                                                         <select
+                                                            className="form-select compact-filter-select"
                                                             value={discussionFilters.pelajaran || ''}
                                                             onChange={(e) => setDiscussionFilters({ ...discussionFilters, pelajaran: e.target.value || null })}
                                                             disabled={!discussionFilters.bagian}
-                                                            style={{
-                                                                width: '100%',
-                                                                fontSize: '1rem',
-                                                                borderRadius: '12px',
-                                                                border: '2px solid #e9ecef',
-                                                                backgroundColor: discussionFilters.bagian ? '#ffffff' : '#f8f9fa',
-                                                                color: '#2c3e50',
-                                                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                                                padding: '0.75rem 1rem',
-                                                                transition: 'all 0.3s ease',
-                                                                outline: 'none',
-                                                                cursor: discussionFilters.bagian ? 'pointer' : 'not-allowed',
-                                                                opacity: discussionFilters.bagian ? 1 : 0.6
-                                                            }}
-                                                            onFocus={(e) => {
-                                                                if (discussionFilters.bagian) {
-                                                                    e.target.style.borderColor = '#e74c3c';
-                                                                    e.target.style.boxShadow = '0 0 0 3px rgba(231, 76, 60, 0.1)';
-                                                                }
-                                                            }}
-                                                            onBlur={(e) => {
-                                                                e.target.style.borderColor = '#e9ecef';
-                                                                e.target.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                                                            }}
                                                         >
                                                             <option value="">Semua Pelajaran</option>
                                                             {discussionFilters.bagian && course?.curriculum?.find(v => v.variant_id === discussionFilters.bagian)?.variant_items?.map((item) => (
@@ -4961,169 +5979,205 @@ function CourseDetail() {
                                                         </select>
                                                     </div>
 
-                                                    {/* Clear Filters Button */}
-                                                    {(discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran) && (
-                                                        <button
-                                                            onClick={() => setDiscussionFilters({ search: '', bagian: null, pelajaran: null })}
-                                                            className="add-btn-modern"
-                                                            style={{ background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', padding: '0.75rem 1.5rem' }}
+                                                    {/* Urutkan / Sort Dropdown */}
+                                                    <div className="filter-col-select" style={{ flex: '1 1 18%' }}>
+                                                        <label className="compact-filter-label">
+                                                            <i className="fas fa-sort-amount-down me-1 text-amber"></i>
+                                                            Urutkan
+                                                        </label>
+                                                        <select
+                                                            className="form-select compact-filter-select"
+                                                            value={discussionFilters.sort || 'newest'}
+                                                            onChange={(e) => setDiscussionFilters({ ...discussionFilters, sort: e.target.value })}
                                                         >
-                                                            <i className="fas fa-times"></i>Bersihkan Filter
+                                                            <option value="newest">Terbaru</option>
+                                                            <option value="most_replies">Paling Banyak Balasan</option>
+                                                            <option value="most_liked">Paling Banyak Disukai</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Clear Filters Button */}
+                                                    {(discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran || (discussionFilters.tab && discussionFilters.tab !== 'all') || (discussionFilters.sort && discussionFilters.sort !== 'newest')) && (
+                                                        <button
+                                                            onClick={() => setDiscussionFilters({ search: '', bagian: null, pelajaran: null, tab: 'all', sort: 'newest' })}
+                                                            className="compact-clear-filter-btn"
+                                                            title="Reset Semua Filter"
+                                                        >
+                                                            <i className="fas fa-times me-1"></i>Reset
                                                         </button>
                                                     )}
                                                 </div>
 
+                                                {/* ✨ Pilar 2: Redesigned Compact & Eye-Catching Question Cards List */}
                                                 {filteredQuestions?.length > 0 ? (
-                                                    filteredQuestions.map((q, index) => (
-                                                        <div
-                                                            key={q.qa_id || index}
-                                                            className="question-card"
-                                                            onClick={() => handleConversationShow(q)}
-                                                        >
-                                                            {/* Top section: Title on left, Badges on right */}
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
-                                                                {/* Header row - title with avatar */}
-                                                                <div className="question-header">
-                                                                    <img
-                                                                        src={q.profile?.image?.startsWith("http")
-                                                                            ? q.profile.image
-                                                                            : q.profile?.image?.startsWith("/images/")
-                                                                                ? q.profile.image
-                                                                                : getMediaUrl(q.profile?.image || '')}
-                                                                        alt={q.profile?.full_name || "User"}
-                                                                        className="avatar-modern"
-                                                                        onError={(e) => {
-                                                                            e.target.style.display = "none";
-                                                                        }}
-                                                                        style={{ display: q.profile?.image ? 'block' : 'none' }}
-                                                                    />
-                                                                    {!q.profile?.image && (
-                                                                        <div style={{
-                                                                            width: '60px',
-                                                                            height: '60px',
-                                                                            borderRadius: '50%',
-                                                                            backgroundColor: '#e8f4f8',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'center',
-                                                                            flexShrink: 0,
-                                                                            border: '3px solid white',
-                                                                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                                                                        }}>
-                                                                            <i className="fas fa-user" style={{ color: '#016b87', fontSize: '1.5rem' }}></i>
+                                                    filteredQuestions.map((q, index) => {
+                                                        const isSolved = Boolean(q.is_solved || q.messages?.some(m => m.is_solution));
+                                                        const hasInstructorReply = Boolean(
+                                                            q.has_instructor_reply ||
+                                                            (course?.course?.teacher?.user_id && q.messages?.slice(1).some(m => m.user_id === course.course.teacher.user_id || m.profile?.user_id === course.course.teacher.user_id))
+                                                        );
+
+                                                        return (
+                                                            <div
+                                                                key={q.qa_id || index}
+                                                                className={`question-card ${isSolved ? 'card-solved' : 'card-waiting'}`}
+                                                                onClick={() => handleConversationShow(q)}
+                                                            >
+                                                                {/* Top Row: Status Pills & Curriculum Context */}
+                                                                <div className="qa-card-header d-flex justify-content-between align-items-center mb-1">
+                                                                    <div className="d-flex align-items-center gap-1 flex-wrap">
+                                                                        {isSolved ? (
+                                                                            <span className="qa-status-pill solved">
+                                                                                <i className="fas fa-check-circle me-1"></i>Terjawab
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="qa-status-pill waiting">
+                                                                                <i className="fas fa-clock me-1"></i>Menunggu Solusi
+                                                                            </span>
+                                                                        )}
+
+                                                                        {hasInstructorReply && (
+                                                                            <span className="qa-status-pill instructor">
+                                                                                <i className="fas fa-chalkboard-user me-1"></i>Respon Instruktur
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {(q.variant || q.variant_item || (q.video_timestamp !== null && q.video_timestamp !== undefined)) && (
+                                                                        <div className="question-card-badges d-flex align-items-center gap-1">
+                                                                            {q.variant && (
+                                                                                <span className="question-badge-variant">
+                                                                                    <i className="fas fa-layer-group me-1"></i>{q.variant.title}
+                                                                                </span>
+                                                                            )}
+                                                                            {q.variant_item && (
+                                                                                <span className="question-badge-lesson">
+                                                                                    <i className="fas fa-book me-1"></i>{q.variant_item.title}
+                                                                                </span>
+                                                                            )}
+                                                                            {q.video_timestamp !== null && q.video_timestamp !== undefined && (
+                                                                                <QAVideoTimestampBadge
+                                                                                    timestamp={q.video_timestamp}
+                                                                                    onClick={(sec) => handleJumpToVideoTimestamp(q.variant_item?.variant_item_id, sec)}
+                                                                                    size="sm"
+                                                                                />
+                                                                            )}
                                                                         </div>
                                                                     )}
-
-                                                                    <div className="question-content">
-                                                                        <h5 className="question-title">{q.title || 'Tidak Ada Judul'}</h5>
-                                                                    </div>
                                                                 </div>
 
-                                                                {/* Context badges on right */}
-                                                                {(q.variant || q.variant_item) && (
-                                                                    <div style={{
-                                                                        display: 'flex',
-                                                                        gap: '0.75rem',
-                                                                        flexWrap: 'wrap',
-                                                                        justifyContent: 'flex-end',
-                                                                        flexShrink: 0
-                                                                    }}>
-                                                                        {q.variant && (
-                                                                            <span style={{
-                                                                                backgroundColor: '#e8f4f8',
-                                                                                color: '#016b87',
-                                                                                padding: '0.4rem 0.9rem',
-                                                                                borderRadius: '12px',
-                                                                                fontSize: '0.9rem',
-                                                                                fontWeight: 600,
-                                                                                border: '1px solid #a8d8dc',
-                                                                                whiteSpace: 'nowrap',
-                                                                                display: 'inline-block'
-                                                                            }}>
-                                                                                <i className="fas fa-layer-group" style={{ marginRight: '0.4rem' }}></i>{q.variant.title}
-                                                                            </span>
-                                                                        )}
-                                                                        {q.variant_item && (
-                                                                            <span style={{
-                                                                                backgroundColor: '#f0e8f4',
-                                                                                color: '#662d91',
-                                                                                padding: '0.4rem 0.9rem',
-                                                                                borderRadius: '12px',
-                                                                                fontSize: '0.9rem',
-                                                                                fontWeight: 600,
-                                                                                border: '1px solid #d4b5e0',
-                                                                                whiteSpace: 'nowrap',
-                                                                                display: 'inline-block'
-                                                                            }}>
-                                                                                <i className="fas fa-book" style={{ marginRight: '0.4rem' }}></i>{q.variant_item.title}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-
-                                                            {/* Message preview - MAX 2 LINES */}
-                                                            {(q.message || (q.messages && q.messages[0]?.message)) && (
-                                                                <p className="question-message-preview">
-                                                                    {(q.message || q.messages?.[0]?.message || 'Tidak ada pesan').substring(0, 200)}
-                                                                    {(q.message || q.messages?.[0]?.message || '').length > 200 ? '...' : ''}
-                                                                </p>
-                                                            )}
-
-                                                            {/* Meta information at bottom - Replies badge first, like button on right */}
-                                                            <div className="question-meta" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                                                                    <span className="question-meta-item">
-                                                                        <span className="replies-badge">
-                                                                            <i className="fas fa-comments" style={{ marginRight: '0.5rem' }}></i>
-                                                                            {q.messages?.length || 0} Balasan
-                                                                        </span>
-                                                                    </span>
-                                                                    <span className="question-meta-item">
-                                                                        <i className="fas fa-user" style={{ marginRight: '0.5rem', color: '#0f766e' }}></i>
-                                                                        {q.profile?.full_name || 'Anonim'}
-                                                                    </span>
-                                                                    <span className="question-meta-item">
-                                                                        <i className="fas fa-clock" style={{ marginRight: '0.5rem', color: '#f39c12' }}></i>
-                                                                        {moment(q.date).fromNow()}
-                                                                    </span>
-                                                                </div>
-                                                                {/* ✨ PHASE 7.16+: Like and Report buttons on question card - Enhanced with status */}
-                                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                                    <button
-                                                                        className="forum-like-btn"
-                                                                        title={userLikedQuestions.has(q.qa_id) ? "Batalkan suka" : "Sukai pertanyaan ini"}
-                                                                        onClick={(e) => { e.stopPropagation(); handleLikeQuestion(q); }}
-                                                                        style={userLikedQuestions.has(q.qa_id) ? { color: '#ff4757' } : {}}
-                                                                    >
-                                                                        <i className={userLikedQuestions.has(q.qa_id) ? "fas fa-heart" : "far fa-heart"}></i>
-                                                                        <span className="like-count">{q.likes_count || 0}</span>
-                                                                    </button>
-                                                                    {(() => {
-                                                                        const reportStatus = getQAReportStatus(q.qa_id, 'question');
-                                                                        return (
-                                                                            <button
-                                                                                className="forum-report-btn"
-                                                                                title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
-                                                                                onClick={(e) => { e.stopPropagation(); handleOpenQAReportModal(q, 'question'); }}
-                                                                                style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
-                                                                            >
-                                                                                <i className={reportStatus ? "fas fa-flag" : "fas fa-flag"}></i>
-                                                                                {reportStatus && (
-                                                                                    <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
+                                                                {/* Content Row: Avatar + Title & Snippet */}
+                                                                <div className="d-flex align-items-start gap-2 mb-2">
+                                                                    <div className="avatar-compact-wrapper flex-shrink-0">
+                                                                        {q.profile?.image ? (
+                                                                            <img
+                                                                                src={q.profile.image.startsWith("http")
+                                                                                    ? q.profile.image
+                                                                                    : q.profile.image.startsWith("/images/")
+                                                                                        ? q.profile.image
+                                                                                        : getMediaUrl(q.profile.image)}
+                                                                                alt={q.profile?.full_name || "User"}
+                                                                                className="avatar-compact"
+                                                                                onError={(e) => {
+                                                                                    e.target.onerror = null;
+                                                                                    e.target.src = "/images/placeholders/default-avatar.svg";
+                                                                                }}
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="avatar-compact-placeholder">
+                                                                                {q.profile?.full_name ? (
+                                                                                    q.profile.full_name
+                                                                                        .split(' ')
+                                                                                        .filter(Boolean)
+                                                                                        .map(n => n[0])
+                                                                                        .slice(0, 2)
+                                                                                        .join('')
+                                                                                        .toUpperCase()
+                                                                                ) : (
+                                                                                    <i className="fas fa-user"></i>
                                                                                 )}
-                                                                            </button>
-                                                                        );
-                                                                    })()}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex-grow-1 overflow-hidden">
+                                                                        <h5 className="question-title-compact text-truncate mb-1">
+                                                                            {q.title || 'Tidak Ada Judul'}
+                                                                        </h5>
+                                                                        {(q.message || (q.messages && q.messages[0]?.message)) && (
+                                                                            <p className="question-snippet-compact mb-0">
+                                                                                {(q.message || q.messages?.[0]?.message || '').substring(0, 160)}
+                                                                                {(q.message || q.messages?.[0]?.message || '').length > 160 ? '...' : ''}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Footer Row: User + Relative Date & Actions */}
+                                                                <div className="qa-card-footer d-flex justify-content-between align-items-center pt-1">
+                                                                    <div className="d-flex align-items-center gap-2 text-muted" style={{ fontSize: '0.74rem' }}>
+                                                                        <span className="fw-semibold text-slate-700">
+                                                                            {q.profile?.full_name || 'Anonim'}
+                                                                        </span>
+                                                                        <span>•</span>
+                                                                        <span>
+                                                                            <i className="fas fa-clock me-1 text-amber"></i>{moment(q.date).fromNow()}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="d-flex align-items-center gap-2">
+                                                                        <span className="qa-stat-pill">
+                                                                            <i className="fas fa-comments me-1 text-teal"></i>
+                                                                            {q.replies_count ?? Math.max(0, (q.messages?.length || 0) - 1)} Balasan
+                                                                        </span>
+                                                                        <button
+                                                                            type="button"
+                                                                            className={`forum-like-btn ${userLikedQuestions.has(q.qa_id) ? 'liked' : ''}`}
+                                                                            title={userLikedQuestions.has(q.qa_id) ? "Batalkan suka" : "Sukai pertanyaan ini"}
+                                                                            onClick={(e) => { e.stopPropagation(); handleLikeQuestion(q); }}
+                                                                            style={userLikedQuestions.has(q.qa_id) ? { color: '#ff4757' } : {}}
+                                                                        >
+                                                                            <i className={`${userLikedQuestions.has(q.qa_id) ? 'fas fa-heart text-danger' : 'far fa-heart'} me-1`}></i>
+                                                                            <span className="like-count">{q.likes_count || 0}</span>
+                                                                        </button>
+                                                                        {(() => {
+                                                                            const reportStatus = getQAReportStatus(q.qa_id, 'question');
+                                                                            return (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    className="forum-report-btn"
+                                                                                    title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
+                                                                                    onClick={(e) => { e.stopPropagation(); handleOpenQAReportModal(q, 'question'); }}
+                                                                                    style={reportStatus ? { color: '#d32f2f', opacity: 0.8 } : {}}
+                                                                                >
+                                                                                    <i className="fas fa-flag"></i>
+                                                                                    {reportStatus && (
+                                                                                        <span style={{ marginLeft: '0.25rem', fontSize: '0.7rem' }}>✓</span>
+                                                                                    )}
+                                                                                </button>
+                                                                            );
+                                                                        })()}
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    ))
+                                                        );
+                                                    })
                                                 ) : (
                                                     <div className="empty-state">
                                                         <i className="fas fa-comments empty-icon"></i>
-                                                        <h5>Belum ada diskusi</h5>
-                                                        <p>Jadilah yang pertama mengajukan pertanyaan atau memulai diskusi</p>
+                                                        <h5>Belum ada diskusi ditemukan</h5>
+                                                        <p>
+                                                            {discussionFilters.tab !== 'all' || discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran
+                                                                ? 'Tidak ada pertanyaan yang sesuai dengan filter yang dipilih.'
+                                                                : 'Jadilah yang pertama mengajukan pertanyaan atau memulai diskusi!'}
+                                                        </p>
+                                                        {(discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran || (discussionFilters.tab && discussionFilters.tab !== 'all')) && (
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-sm btn-outline-teal mt-2"
+                                                                onClick={() => setDiscussionFilters({ search: '', bagian: null, pelajaran: null, tab: 'all', sort: 'newest' })}
+                                                            >
+                                                                <i className="fas fa-undo me-1"></i>Reset Filter
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 )}
                                             </>
@@ -5132,330 +6186,57 @@ function CourseDetail() {
 
                                     {/* Quiz Tab */}
                                     <div className="tab-pane fade" id="quiz" role="tabpanel">
-                                        <div className="d-flex justify-content-between align-items-center mb-3">
-                                            <h4 className="mb-0">
-                                                <i className="fas fa-brain text-teal-accent me-2"></i>Kuis Kursus
-                                            </h4>
-                                            {quizzes.length > 0 && (
-                                                <div className="quiz-summary">
-                                                    <span className="badge bg-primary px-3 py-2 rounded-pill">
-                                                        <i className="fas fa-brain me-1"></i>
-                                                        {quizzes.length} Kuis Tersedia
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {quizzes.length > 0 ? (
-                                            <div className="row">
-                                                {quizzes.map((quiz, index) => (
-                                                    <div key={quiz.quiz_id} className="col-lg-4 col-md-6 mb-4">
-                                                        <div className="student-quiz-card">
-                                                            {hasQuizProgress(quiz) && (
-                                                                <div className="resume-quiz-badge">
-                                                                    <i className="fas fa-play-circle me-1"></i>
-                                                                    Resume
-                                                                </div>
-                                                            )}
-                                                            <div className="student-quiz-card-header">
-                                                                <div className="student-quiz-icon-wrapper">
-                                                                    <i className="fas fa-brain text-white"></i>
-                                                                </div>
-                                                                <div className="quiz-header-content">
-                                                                    <h1 className="student-quiz-title">{quiz.title}</h1>
-                                                                    <p className="student-quiz-description">{quiz.description || "Uji pemahaman Anda tentang materi kursus ini"}</p>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="student-quiz-stats">
-                                                                <div className="row text-center">
-                                                                    <div className="col-4">
-                                                                        <div className="student-stat-item">
-                                                                            <i className="fas fa-question-circle text-primary"></i>
-                                                                            <span className="student-stat-number">{quiz.total_questions}</span>
-                                                                            <span className="student-stat-label">Pertanyaan</span>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="col-4">
-                                                                        <div className="student-stat-item">
-                                                                            <i className="fas fa-clock text-warning"></i>
-                                                                            <span className="student-stat-number">{quiz.total_questions}</span>
-                                                                            <span className="student-stat-label">Menit</span>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="col-4">
-                                                                        <div className="student-stat-item">
-                                                                            <i className="fas fa-trophy text-success"></i>
-                                                                            <span className="student-stat-number">{Math.round(quiz.best_score || 0)}%</span>
-                                                                            <span className="student-stat-label">Terbaik</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="quiz-progress">
-                                                                <div className="d-flex justify-content-between align-items-center mb-2">
-                                                                    <span className="progress-label">
-                                                                        {hasQuizProgress(quiz) ? (
-                                                                            <span className="text-info">
-                                                                                <i className="fas fa-play-circle me-1"></i>
-                                                                                Siap Dilanjutkan
-                                                                            </span>
-                                                                        ) : quiz.is_passed ? (
-                                                                            <span className="text-success">
-                                                                                <i className="fas fa-check-circle me-1"></i>
-                                                                                Lulus
-                                                                            </span>
-                                                                        ) : quiz.best_score > 0 ? (
-                                                                            <span className="text-warning">
-                                                                                <i className="fas fa-exclamation-triangle me-1"></i>
-                                                                                Perlu Ditingkatkan
-                                                                            </span>
-                                                                        ) : (
-                                                                            <span className="text-muted">
-                                                                                <i className="fas fa-clock me-1"></i>
-                                                                                Belum Dicoba
-                                                                            </span>
-                                                                        )}
-                                                                    </span>
-                                                                    <span className="attempts-counter">
-                                                                        <i className="fas fa-redo me-1"></i>
-                                                                        {quiz.today_attempts}/3 percobaan hari ini
-                                                                    </span>
-                                                                </div>
-                                                                <div className="progress quiz-progress-bar">
-                                                                    <div
-                                                                        className={`progress-bar ${quiz.is_passed ? "bg-info" : "bg-warning"}`}
-                                                                        style={{ width: `${quiz.best_score || 0}%` }}
-                                                                    ></div>
-                                                                </div>
-                                                                <small className="text-muted">Skor minimum untuk lulus: 80%</small>
-                                                            </div>
-
-                                                            <div className="student-quiz-actions">
-                                                                {quiz.can_attempt ? (
-                                                                    <button
-                                                                        className="btn btn-primary w-100"
-                                                                        onClick={() => handleQuizShow(quiz)}
-                                                                    >
-                                                                        {(() => {
-                                                                            if (hasQuizProgress(quiz)) {
-                                                                                return (
-                                                                                    <>
-                                                                                        <i className="fas fa-play-circle me-2"></i>
-                                                                                        Lanjutkan Kuis
-                                                                                    </>
-                                                                                );
-                                                                            } else if (quiz.best_score > 0) {
-                                                                                return (
-                                                                                    <>
-                                                                                        <i className="fas fa-redo me-2"></i>
-                                                                                        Coba Lagi
-                                                                                    </>
-                                                                                );
-                                                                            } else {
-                                                                                return (
-                                                                                    <>
-                                                                                        <i className="fas fa-play me-2"></i>
-                                                                                        Mulai Kuis
-                                                                                    </>
-                                                                                );
-                                                                            }
-                                                                        })()}
-                                                                    </button>
-                                                                ) : (
-                                                                    <div className="quiz-daily-limit-disabled">
-                                                                        <div className="quiz-limit-disabled-badge">
-                                                                            <i className="fas fa-ban"></i>
-                                                                            <span>Batas Harian (3/3)</span>
-                                                                        </div>
-                                                                        <div className="quiz-limit-tooltip">
-                                                                            <div className="quiz-tooltip-icon">
-                                                                                <i className="fas fa-exclamation-circle"></i>
-                                                                            </div>
-                                                                            <p className="quiz-tooltip-text">Anda telah menggunakan semua 3 kesempatan percobaan untuk hari ini.</p>
-                                                                            <p className="quiz-tooltip-text">Silakan coba lagi besok. Terus semangat! 💪</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
+                                        <div className="cert-active-notice-card">
+                                            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                <div className="d-flex align-items-center gap-3">
+                                                    <div className="notice-icon-box">
+                                                        <i className="fas fa-brain text-teal-accent"></i>
                                                     </div>
-                                                ))}
+                                                    <div>
+                                                        <h6 className="mb-0">Panel Kuis Kursus Aktif di Atas</h6>
+                                                        <small className="text-muted">Pengerjaan kuis dan daftar kuis kursus ditampilkan secara interaktif pada panel 2-kolom di atas.</small>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-teal"
+                                                    onClick={() => {
+                                                        document.querySelector('.course-quiz-layout-row')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                    }}
+                                                >
+                                                    <i className="fas fa-arrow-up me-1"></i>Ke Panel Kuis
+                                                </button>
                                             </div>
-                                        ) : (
-                                            <div className="empty-state">
-                                                <i className="fas fa-brain empty-icon"></i>
-                                                <h5>Tidak ada kuis yang tersedia</h5>
-                                                <p>Kuis akan muncul di sini setelah ditambahkan ke kursus</p>
-                                            </div>
-                                        )}
+                                        </div>
                                     </div>
-
 
                                     {/* Certificate Tab */}
-                                    <CertificateTab
-                                        course={course}
-                                        enrollmentId={param.enrollment_id}
-                                        completionPercentage={completionPercentage}
-                                        onCertificateGenerated={(cert) => setExistingCertificate(cert)}
-                                    />
-
-                                    {/* Review Tab */}
-                                    <div className="tab-pane fade" id="review" role="tabpanel">
-                                        <h4 className="mb-3">
-                                            <i className="fas fa-star text-amber me-2"></i>Ulasan Kursus
-                                        </h4>
-
-                                        {studentReview ? (
-                                            !isEditingReview ? (
-                                                <div className="review-card-modern">
-                                                    <div className="d-flex justify-content-between align-items-start mb-3">
-                                                        <h5 className="mb-0">Ulasan Anda</h5>
-                                                        <div className="d-flex gap-2">
-                                                            <button
-                                                                className="btn btn-primary btn-sm"
-                                                                onClick={handleEditReview}
-                                                                title="Edit ulasan Anda"
-                                                            >
-                                                                <i className="fas fa-edit me-1"></i>
-                                                                Edit
-                                                            </button>
-                                                        </div>
+                                    <div className="tab-pane fade" id="certificate" role="tabpanel">
+                                        <div className="cert-active-notice-card">
+                                            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                <div className="d-flex align-items-center gap-3">
+                                                    <div className="notice-icon-box">
+                                                        <i className="fas fa-award"></i>
                                                     </div>
-                                                    <div className="star-rating mb-3 d-flex align-items-center justify-content-between">
-                                                        <div className="d-flex align-items-center">
-                                                            {[...Array(5)].map((_, i) => (
-                                                                <i key={i} className={`fas fa-star ${i < studentReview.rating ? "text-warning" : "text-muted"}`}></i>
-                                                            ))}
-                                                            <span className="ms-2">({studentReview.rating}/5)</span>
-                                                        </div>
-                                                        <small className="text-muted">
-                                                            Diulas pada {moment(studentReview.date).format("DD MMM YYYY")}
-                                                        </small>
+                                                    <div>
+                                                        <h6 className="mb-0">Panel Sertifikat Aktif di Atas</h6>
+                                                        <small className="text-muted">Pratinjau sertifikat resmi dan informasi kelulusan ditampilkan pada panel 2-kolom di atas.</small>
                                                     </div>
-                                                    <p className="mb-3">{studentReview.review}</p>
-
-                                                    {/* Teacher/Instructor Reply Section */}
-                                                    {studentReview.reply ? (
-                                                        <div className="instructor-reply-section mt-4 mb-0">
-                                                            <div className="instructor-reply-header mb-2 d-flex align-items-center gap-2">
-                                                                <div className="reply-badge">
-                                                                    <i className="fas fa-reply me-1"></i>
-                                                                    <small>Balasan</small>
-                                                                </div>
-                                                                <div className="d-flex align-items-center gap-2 justify-content-end flex-grow-1">
-                                                                    <div className="flex-grow-1">
-                                                                        <h4 className="mb-0 instructor-name text-primary text-end">
-                                                                            {course.course?.teacher?.full_name || "Instruktur Kursus"}
-                                                                        </h4>
-                                                                        <small className="text-muted d-block text-end">Balasan dari Instruktur</small>
-                                                                    </div>
-                                                                    <div className="instructor-avatar">
-                                                                        <i className="fas fa-chalkboard-teacher"></i>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div className="instructor-reply-content">
-                                                                <p className="mb-0 text-end">{studentReview.reply}</p>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="no-reply-section mt-4">
-                                                            <div className="d-flex align-items-center justify-content-center text-muted">
-                                                                <i className="fas fa-hourglass-half me-2"></i>
-                                                                <small>Menunggu balasan dari instruktur...</small>
-                                                            </div>
-                                                        </div>
-                                                    )}
                                                 </div>
-                                            ) : (
-                                                <div className="review-card-modern">
-                                                    <h5 className="mb-3">Edit Ulasan Anda</h5>
-                                                    <form onSubmit={handleUpdateReviewSubmit}>
-                                                        <div className="mb-3">
-                                                            <label className="form-label">Rating</label>
-                                                            <div className="star-rating">
-                                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                                    <i
-                                                                        key={star}
-                                                                        className={`fas fa-star cursor-pointer ${star <= createReview.rating ? "text-warning" : "text-muted"}`}
-                                                                        onClick={() => setCreateReview({ ...createReview, rating: star })}
-                                                                    ></i>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                        <div className="mb-3">
-                                                            <label className="form-label">Ulasan Anda</label>
-                                                            <textarea
-                                                                name="review"
-                                                                value={createReview.review}
-                                                                onChange={handleReviewChange}
-                                                                className="form-control form-control-modern"
-                                                                rows="4"
-                                                                placeholder="Bagikan pemikiran Anda tentang kursus ini..."
-                                                            ></textarea>
-                                                        </div>
-                                                        <div className="review-edit-actions d-flex gap-2">
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-secondary"
-                                                                onClick={handleCancelEditReview}
-                                                            >
-                                                                <i className="fas fa-times me-2"></i>
-                                                                Batal
-                                                            </button>
-                                                            <button
-                                                                type="submit"
-                                                                className="add-btn-modern"
-                                                                disabled={!createReview.review.trim() || !createReview.rating}
-                                                            >
-                                                                <i className="fas fa-save me-2"></i>
-                                                                Perbarui Ulasan
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            )
-                                        ) : (
-                                            <div className="review-card-modern">
-                                                <h5 className="mb-3">Beri Rating Kursus Ini</h5>
-                                                <form onSubmit={handleCreateReviewSubmit}>
-                                                    <div className="mb-0">
-                                                        <label className="form-label">Rating</label>
-                                                        <div className="star-rating">
-                                                            {[1, 2, 3, 4, 5].map((star) => (
-                                                                <i
-                                                                    key={star}
-                                                                    className={`fas fa-star cursor-pointer ${star <= createReview.rating ? "text-warning" : "text-muted"}`}
-                                                                    onClick={() => setCreateReview({ ...createReview, rating: star })}
-                                                                ></i>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Ulasan Anda</label>
-                                                        <textarea
-                                                            name="review"
-                                                            value={createReview.review}
-                                                            onChange={handleReviewChange}
-                                                            className="form-control form-control-modern"
-                                                            rows="4"
-                                                            placeholder="Bagikan pemikiran Anda tentang kursus ini..."
-                                                        ></textarea>
-                                                    </div>
-                                                    <button
-                                                        type="submit"
-                                                        className="add-btn-modern"
-                                                        disabled={!createReview.review.trim() || !createReview.rating}
-                                                    >
-                                                        <i className="fas fa-star me-2"></i>
-                                                        Kirim Ulasan
-                                                    </button>
-                                                </form>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-teal"
+                                                    onClick={() => {
+                                                        document.querySelector('.course-certificate-review-row')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                    }}
+                                                >
+                                                    <i className="fas fa-arrow-up me-1"></i>Ke Pratinjau Sertifikat
+                                                </button>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
+
+
                                 </div>
                             </div>
                         </div>
@@ -5877,24 +6658,112 @@ function CourseDetail() {
                                 </div>
                             </div>
 
+                            {/* ✨ Pilar 3: Video Timestamp Attachment */}
+                            <div className="form-group-modern qa-timestamp-attach-group">
+                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                    <label className="form-label-modern mb-0">
+                                        <i className="fas fa-stopwatch form-label-icon"></i>
+                                        Tautkan ke Menit Video (Opsional)
+                                    </label>
+                                    {attachedTimestamp !== null && (
+                                        <button
+                                            type="button"
+                                            className="btn-clear-timestamp-action"
+                                            onClick={() => setAttachedTimestamp(null)}
+                                            title="Hapus tautan video"
+                                        >
+                                            <i className="fas fa-times me-1"></i>Hapus Tautan
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="qa-timestamp-attach-card">
+                                    {attachedTimestamp !== null ? (
+                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <span className="qa-attached-badge">
+                                                    <i className="fas fa-play-circle me-1"></i>
+                                                    {formatTimestamp(attachedTimestamp)}
+                                                </span>
+                                                <span className="text-muted" style={{ fontSize: '0.82rem' }}>
+                                                    Pertanyaan ditautkan ke durasi <strong>{formatTimestamp(attachedTimestamp)}</strong>.
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-secondary"
+                                                style={{ fontSize: '0.78rem', padding: '0.2rem 0.6rem' }}
+                                                onClick={() => {
+                                                    const cur = Math.floor(getCurrentVideoTime());
+                                                    setAttachedTimestamp(cur);
+                                                }}
+                                            >
+                                                <i className="fas fa-sync-alt me-1"></i>Waktu Pemutar Sekarang ({formatTimestamp(Math.floor(getCurrentVideoTime()))})
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                            <span className="text-muted" style={{ fontSize: '0.82rem' }}>
+                                                <i className="fas fa-info-circle me-1"></i>
+                                                Tautkan menit video agar instruktur atau rekan langsung membuka bagian yang Anda tanyakan.
+                                            </span>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-teal"
+                                                style={{ fontSize: '0.8rem', padding: '0.25rem 0.65rem' }}
+                                                onClick={() => {
+                                                    const cur = Math.floor(getCurrentVideoTime());
+                                                    setAttachedTimestamp(cur);
+                                                }}
+                                            >
+                                                <i className="fas fa-clock me-1"></i>
+                                                Sematkan Waktu Pemutar ({formatTimestamp(Math.floor(getCurrentVideoTime()))})
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Question Message */}
                             <div className="form-group-modern">
-                                <label className="form-label-modern">
+                                <label className="form-label-modern mb-1">
                                     <i className="fas fa-edit form-label-icon"></i>
                                     Detail Pertanyaan
                                     <span className="required-indicator">*</span>
                                 </label>
-                                <div className="textarea-wrapper-modern">
-                                    <textarea
-                                        ref={questionTextareaRef}
-                                        name="message"
-                                        className="form-textarea-modern"
-                                        rows="4"
-                                        placeholder="Berikan informasi detail tentang pertanyaan Anda. Semakin banyak konteks yang Anda berikan, semakin baik jawaban yang akan Anda terima..."
-                                        value={createMessage.message}
-                                        onChange={handleMessageChange}
-                                        required
-                                    />
+
+                                {/* ✨ Pilar 4: Formatting Toolbar & Pratinjau */}
+                                <QAFormattingToolbar
+                                    textareaRef={questionTextareaRef}
+                                    value={createMessage.message}
+                                    onChange={(newVal) => setCreateMessage(prev => ({ ...prev, message: newVal }))}
+                                    isPreview={questionPreviewMode}
+                                    onTogglePreview={setQuestionPreviewMode}
+                                    getCurrentVideoTime={getCurrentVideoTime}
+                                    showTimestampBtn={true}
+                                    compact={true}
+                                />
+
+                                <div className="textarea-wrapper-modern mt-1">
+                                    {questionPreviewMode ? (
+                                        <div className="modal-question-preview-box">
+                                            <QAMarkdownRenderer
+                                                content={createMessage.message}
+                                                onTimestampClick={(sec) => handleJumpToVideoTimestamp(currentVariantContext?.variant_item_id, sec)}
+                                                emptyPlaceholder="Tuliskan detail pertanyaan Anda di mode Tulis untuk melihat pratinjau di sini."
+                                            />
+                                        </div>
+                                    ) : (
+                                        <textarea
+                                            ref={questionTextareaRef}
+                                            name="message"
+                                            className="form-textarea-modern"
+                                            rows="4"
+                                            placeholder="Berikan informasi detail tentang pertanyaan Anda. Mendukung Markdown (tebal, miring, kode) dan cap waktu video seperti [02:15]..."
+                                            value={createMessage.message}
+                                            onChange={handleMessageChange}
+                                            required
+                                        />
+                                    )}
                                     <div className="character-counter">
                                         {createMessage.message?.length || 0}/2000 karakter
                                     </div>

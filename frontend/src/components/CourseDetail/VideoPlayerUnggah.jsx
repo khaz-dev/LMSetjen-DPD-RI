@@ -164,13 +164,24 @@ const VideoPlayerUnggah = forwardRef(({
         }
     };
 
-    // ✨ PHASE 4.142: Expose play/pause toggle and seek methods via ref
+    // ✨ PHASE 4.142: Expose play/pause toggle, seek methods, and currentTime via ref
     useImperativeHandle(ref, () => ({
         togglePlayPause: handlePlayPause,
         seekToPosition: (position) => {
             if (videoRef.current) {
                 videoRef.current.currentTime = position;
+                try {
+                    const playPromise = videoRef.current.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => setIsPlaying(true)).catch(() => {});
+                    }
+                } catch (e) {
+                    // Ignore autoplay restrictions
+                }
             }
+        },
+        getCurrentTime: () => {
+            return videoRef.current ? videoRef.current.currentTime : 0;
         }
     }), [handlePlayPause]);  // ✨ PHASE 4.152: Include handlePlayPause in dependencies to capture current state
 

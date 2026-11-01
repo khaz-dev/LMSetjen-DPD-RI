@@ -87,6 +87,7 @@ urlpatterns = [
     path("student/question-answer-message-like/<qa_id>/", api_views.QuestionAnswerMessageLikeAPIView.as_view()),
     path("student/question-answer-report/<qa_id>/", api_views.QuestionAnswerReportAPIView.as_view()),
     path("student/question-answer-message-report/<qa_id>/", api_views.QuestionAnswerMessageReportAPIView.as_view()),
+    path("student/question-answer-toggle-solution/<qa_id>/", api_views.QuestionAnswerToggleSolutionAPIView.as_view()),
     path("student/qa-reports/<course_id>/", api_views.StudentQAReportsAPIView.as_view()),
 
     # Student Quiz Endpoints

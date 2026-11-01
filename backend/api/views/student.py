@@ -227,6 +227,31 @@ class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
             variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
             print(f"   ✅ Found variant_item: {variant_item.title}")
 
+            # Check if course has a pre_post_test quiz and if student has completed pre-test
+            pre_post_quiz = api_models.Quiz.objects.filter(course=course, quiz_type='pre_post_test', is_active=True).first()
+            if pre_post_quiz:
+                has_pre_test = api_models.QuizAttempt.objects.filter(user=user, quiz=pre_post_quiz).exists()
+                if not has_pre_test:
+                    return Response({
+                        "error": "Akses materi terkunci. Anda harus menyelesaikan Pre-test terlebih dahulu sebelum menyelesaikan materi pelajaran.",
+                        "is_pretest_required": True
+                    }, status=status.HTTP_403_FORBIDDEN)
+
+            # Check sequential progression: previous lesson in curriculum must be completed
+            course_items = list(api_models.VariantItem.objects.filter(variant__course=course).order_by('variant__id', 'id'))
+            try:
+                curr_idx = next(i for i, item in enumerate(course_items) if item.variant_item_id == variant_item.variant_item_id)
+                if curr_idx > 0:
+                    prev_item = course_items[curr_idx - 1]
+                    prev_completed = api_models.CompletedLesson.objects.filter(user=user, course=course, variant_item=prev_item).exists()
+                    if not prev_completed:
+                        return Response({
+                            "error": f"Harap selesaikan materi pelajaran sebelumnya ({prev_item.title}) terlebih dahulu.",
+                            "is_sequential_locked": True
+                        }, status=status.HTTP_403_FORBIDDEN)
+            except StopIteration:
+                pass
+
             # ✨ PHASE 11.201: CRITICAL - Check if a verification question exists
             # If it does, ensure the student actually answered it correctly before marking complete
             verification_question = api_models.LessonCompletionQuestion.objects.filter(
@@ -1085,11 +1110,22 @@ class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # ✨ Video Timestamp (optional)
+        video_timestamp = request.data.get('video_timestamp', None)
+        if video_timestamp is not None and str(video_timestamp).strip() != '' and str(video_timestamp).strip() != 'null':
+            try:
+                video_timestamp = int(float(video_timestamp))
+            except (ValueError, TypeError):
+                video_timestamp = None
+        else:
+            video_timestamp = None
+
         question = api_models.Question_Answer.objects.create(
             course=course,
             user=user,
             title=title,
-            variant_item=variant_item  # Now guaranteed to have lesson context
+            variant_item=variant_item,  # Now guaranteed to have lesson context
+            video_timestamp=video_timestamp
         )
 
         api_models.Question_Answer_Message.objects.create(
@@ -1282,6 +1318,96 @@ class QuestionAnswerMessageLikeAPIView(generics.CreateAPIView):
             return Response({"error": "User tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
         except api_models.Question_Answer_Message.DoesNotExist:
             return Response({"error": "Message tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+# ✨ Solved / Best Answer System - Toggle accepted solution on reply
+class QuestionAnswerToggleSolutionAPIView(generics.CreateAPIView):
+    """
+    Q&A Toggle Solution API - Mark or unmark a reply as verified solution / best answer
+    POST /api/v1/student/question-answer-toggle-solution/<qa_id>/
+    Body: {user_id, message_id}
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def create(self, request, qa_id=None):
+        try:
+            user_id = request.data.get('user_id')
+            message_id = request.data.get('message_id')
+
+            if not all([user_id, qa_id, message_id]):
+                return Response(
+                    {"error": "Missing required fields: user_id, qa_id, message_id"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user = User.objects.get(id=user_id)
+            question = api_models.Question_Answer.objects.get(qa_id=qa_id)
+            
+            # Lookup message by id or qam_id
+            try:
+                if str(message_id).isdigit():
+                    message = api_models.Question_Answer_Message.objects.get(id=int(message_id), question=question)
+                else:
+                    message = api_models.Question_Answer_Message.objects.get(qam_id=message_id, question=question)
+            except api_models.Question_Answer_Message.DoesNotExist:
+                return Response({"error": "Pesan balasan tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+            # Check permissions: question asker, course instructor, or staff/superuser
+            is_asker = bool(question.user_id == user.id)
+            is_instructor = bool(
+                question.course and question.course.teacher and 
+                (question.course.teacher.user_id == user.id)
+            )
+            is_admin = bool(user.is_staff or user.is_superuser)
+
+            if not (is_asker or is_instructor or is_admin):
+                return Response(
+                    {"error": "Hanya penanya atau instruktur kursus yang berhak menandai solusi terverifikasi"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Toggle solution
+            if message.is_solution:
+                # Unmark
+                message.is_solution = False
+                message.save()
+                
+                # Check if any other reply is marked
+                has_other_solution = question.reply_messages.filter(is_solution=True).exists()
+                question.is_solved = has_other_solution
+                question.save()
+                
+                return Response({
+                    "message": "Status solusi berhasil dibatalkan",
+                    "is_solution": False,
+                    "is_solved": question.is_solved,
+                    "message_id": message.id
+                }, status=status.HTTP_200_OK)
+            else:
+                # Mark as solution - reset others for this question first
+                question.reply_messages.filter(is_solution=True).update(is_solution=False)
+                message.is_solution = True
+                message.save()
+                
+                question.is_solved = True
+                question.save()
+
+                return Response({
+                    "message": "Jawaban berhasil ditandai sebagai Solusi Terverifikasi",
+                    "is_solution": True,
+                    "is_solved": True,
+                    "message_id": message.id
+                }, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"error": "User tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.Question_Answer.DoesNotExist:
+            return Response({"error": "Pertanyaan tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -1751,24 +1877,89 @@ class StudentQuizListAPIView(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         
-        # Add attempt information for each quiz
+        # Add attempt information and sequential lock status for each quiz
         user_id = self.kwargs.get('user_id')
         if user_id:
             user = User.objects.get(id=user_id)
+            course_id = self.kwargs.get('course_id')
+            course = api_models.Course.objects.filter(course_id=course_id).first()
+            
+            # Check pre-test status for course
+            pre_post_quiz = api_models.Quiz.objects.filter(course=course, quiz_type='pre_post_test', is_active=True).first() if course else None
+            pre_test_completed = False
+            pre_test_score = 0
+            post_test_completed = False
+            post_test_score = 0
+            
+            if pre_post_quiz:
+                attempts = api_models.QuizAttempt.objects.filter(user=user, quiz=pre_post_quiz).order_by('date_attempted')
+                pre_att = attempts.filter(attempt_type='pre_test').first() or attempts.first()
+                if pre_att:
+                    pre_test_completed = True
+                    pre_test_score = float(pre_att.score)
+                post_att = attempts.filter(attempt_type='post_test').first()
+                if not post_att and attempts.count() >= 2:
+                    post_att = attempts.last()
+                if post_att and post_att != pre_att:
+                    post_test_completed = True
+                    post_test_score = float(post_att.score)
+
+            enrollment = api_models.EnrolledCourse.objects.filter(user=user, course=course).first() if course else None
+            all_lessons_completed = enrollment.is_course_completed() if enrollment else False
+            all_regular_quizzes_passed = enrollment.are_all_quizzes_passed() if enrollment else False
+            can_take_post_test = all_lessons_completed and all_regular_quizzes_passed
+
+            prev_regular_passed = True
+
             for quiz_data in serializer.data:
                 quiz = api_models.Quiz.objects.get(quiz_id=quiz_data['quiz_id'])
-                
-                # Get attempts info
                 today_attempts = api_models.QuizAttempt.get_daily_attempts_count(user, quiz)
                 can_attempt = api_models.QuizAttempt.can_attempt_quiz(user, quiz)
-                best_attempt = api_models.QuizAttempt.objects.filter(
-                    user=user, quiz=quiz
-                ).order_by('-score').first()
+                best_attempt = api_models.QuizAttempt.objects.filter(user=user, quiz=quiz).order_by('-score').first()
                 
                 quiz_data['today_attempts'] = today_attempts
                 quiz_data['can_attempt'] = can_attempt
                 quiz_data['best_score'] = best_attempt.score if best_attempt else 0
                 quiz_data['is_passed'] = best_attempt.is_passed if best_attempt else False
+
+                if quiz.quiz_type == 'pre_post_test':
+                    quiz_data['has_pre_test'] = pre_test_completed
+                    quiz_data['pre_test_score'] = pre_test_score
+                    quiz_data['has_post_test'] = post_test_completed
+                    quiz_data['post_test_score'] = post_test_score
+                    quiz_data['can_take_post_test'] = can_take_post_test
+                    
+                    if not pre_test_completed:
+                        quiz_data['current_mode'] = 'pre_test'
+                        quiz_data['is_locked'] = False
+                        quiz_data['lock_reason'] = None
+                    elif not post_test_completed:
+                        quiz_data['current_mode'] = 'post_test'
+                        if can_take_post_test:
+                            quiz_data['is_locked'] = False
+                            quiz_data['lock_reason'] = None
+                        else:
+                            quiz_data['is_locked'] = True
+                            quiz_data['lock_reason'] = "Selesaikan seluruh materi kurikulum dan kuis kursus terlebih dahulu untuk membuka Post-test"
+                    else:
+                        quiz_data['current_mode'] = 'completed'
+                        quiz_data['is_locked'] = False
+                        quiz_data['lock_reason'] = None
+                        quiz_data['is_passed'] = True
+                else:
+                    # Regular quiz logic
+                    quiz_data['current_mode'] = 'quiz'
+                    if pre_post_quiz and not pre_test_completed:
+                        quiz_data['is_locked'] = True
+                        quiz_data['lock_reason'] = "Selesaikan Pre-test terlebih dahulu untuk membuka kuis kursus"
+                    elif not prev_regular_passed:
+                        quiz_data['is_locked'] = True
+                        quiz_data['lock_reason'] = "Selesaikan dan lulus kuis sebelumnya terlebih dahulu"
+                    else:
+                        quiz_data['is_locked'] = False
+                        quiz_data['lock_reason'] = None
+                    
+                    prev_regular_passed = bool(best_attempt and best_attempt.is_passed)
         
         return Response(serializer.data)
 
@@ -1907,18 +2098,35 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                 from decimal import Decimal
                 time_taken_duration = timedelta(seconds=time_taken) if time_taken else None
                 
-                # ✨ PHASE 11.169: Explicitly set _points_awarded to False on creation
+                # Determine attempt_type
+                req_attempt_type = request.data.get('attempt_type')
+                if quiz.quiz_type == 'pre_post_test':
+                    existing_attempts = api_models.QuizAttempt.objects.filter(user=user, quiz=quiz)
+                    if not existing_attempts.exists() or req_attempt_type == 'pre_test':
+                        final_attempt_type = 'pre_test'
+                        is_pre_test = True
+                    else:
+                        final_attempt_type = 'post_test'
+                        is_pre_test = False
+                else:
+                    final_attempt_type = 'quiz'
+                    is_pre_test = False
+
                 attempt = api_models.QuizAttempt.objects.create(
                     user=user,
                     quiz=quiz,
-                    score=Decimal(str(score)),  # Ensure Decimal type for accurate comparison
+                    score=Decimal(str(score)),
                     total_questions=total_questions,
                     correct_answers=correct_answers,
                     time_taken=time_taken_duration,
-                    _points_awarded=False  # ✨ PHASE 11.169: Explicitly set to False (will be set to True when points awarded)
+                    attempt_type=final_attempt_type,
+                    _points_awarded=False
                 )
+                if is_pre_test:
+                    attempt.is_passed = True
+                    attempt.save()
                 
-                # Refresh the attempt from database to get the calculated is_passed value
+                # Refresh the attempt from database
                 attempt.refresh_from_db()
                 
                 print(f"Quiz attempt created - score: {attempt.score}, is_passed: {attempt.is_passed}, pass_status: {attempt.pass_status}")
@@ -2030,11 +2238,38 @@ class StudentCertificateEligibilityAPIView(APIView):
             except api_models.Certificate.DoesNotExist:
                 pass
             
+            # Check pre and post test info
+            pre_post_quiz = api_models.Quiz.objects.filter(course=course, quiz_type='pre_post_test', is_active=True).first()
+            has_pre_post_test = pre_post_quiz is not None
+            pre_test_completed = False
+            post_test_completed = False
+            pre_test_score = 0
+            post_test_score = 0
+            
+            if has_pre_post_test:
+                attempts = api_models.QuizAttempt.objects.filter(user=user, quiz=pre_post_quiz).order_by('date_attempted')
+                pre_att = attempts.filter(attempt_type='pre_test').first() or attempts.first()
+                if pre_att:
+                    pre_test_completed = True
+                    pre_test_score = float(pre_att.score)
+                post_att = attempts.filter(attempt_type='post_test').first()
+                if not post_att and attempts.count() >= 2:
+                    post_att = attempts.last()
+                if post_att and post_att != pre_att:
+                    post_test_completed = True
+                    post_test_score = float(post_att.score)
+
             return Response({
                 'is_eligible': is_eligible,
                 'completion_percentage': round(enrollment.completion_percentage()),
                 'all_lessons_completed': enrollment.is_course_completed(),
                 'all_quizzes_passed': enrollment.are_all_quizzes_passed(),
+                'has_pre_post_test': has_pre_post_test,
+                'pre_test_completed': pre_test_completed,
+                'post_test_completed': post_test_completed,
+                'pre_test_score': pre_test_score,
+                'post_test_score': post_test_score,
+                'learning_gain': round(post_test_score - pre_test_score, 1) if (pre_test_completed and post_test_completed) else 0,
                 'certificate': certificate,
                 'quiz_results': quiz_results
             }, status=status.HTTP_200_OK)

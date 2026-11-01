@@ -390,3 +390,83 @@
     font-size: 0.85rem;
     margin: 0;
 }
+
+
+/* ==========================================================================
+   Pre-test & Sequential Progression Styles
+   ========================================================================== */
+
+.pretest-curriculum-locked-banner {
+    background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+    border: 1px solid #99f6e4;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.08);
+}
+
+.pretest-banner-lock-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #0f766e;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+}
+
+.lecture-card-locked .lecture-header {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+    opacity: 0.92;
+}
+
+.badge-section-locked {
+    background: rgba(254, 242, 242, 0.95);
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    letter-spacing: 0.2px;
+}
+
+.lesson-item-locked {
+    background: #f8fafc !important;
+    opacity: 0.72;
+    cursor: not-allowed !important;
+    border-color: #e2e8f0 !important;
+}
+
+.lesson-item-locked:hover {
+    background: #f1f5f9 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.lesson-play-btn.locked {
+    background: #e2e8f0 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #64748b !important;
+    cursor: not-allowed !important;
+}
+
+.lesson-play-btn.locked:hover {
+    background: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+.lesson-status-badge.locked {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.28);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+}
