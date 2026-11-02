@@ -23,7 +23,14 @@ const LecturesTab = ({
     // ✨ Pre-test & Sequential Locking Props
     hasCompletedPretest = true,
     pretestRequired = false,
-    onStartPretest = null
+    onStartPretest = null,
+    // ✨ Integrated Curriculum & Quiz Props
+    quizzes = [],
+    selectedQuiz = null,
+    onSelectQuiz = null,
+    prePostQuiz = null,
+    hasCompletedPosttest = true,
+    canTakePostTest = false
 }) => {
     // Video player ref
     const playerRef = useRef(null);
@@ -290,22 +297,35 @@ const LecturesTab = ({
         return completedSet.size;
     };
 
-    // Build flattened list of lessons across all curriculum sections to evaluate sequential progression
-    const flattenedLessons = [];
+    // Build flattened list of curriculum items (lessons & quizzes) across all sections
+    const flattenedCurriculumItems = [];
     if (course?.curriculum && Array.isArray(course.curriculum)) {
         course.curriculum.forEach((sec, sIdx) => {
             const items = sec.variant_items || sec.items || [];
             items.forEach((it, lIdx) => {
-                flattenedLessons.push({
+                const isQuizItem = it.item_type === 'quiz' || Boolean(it.quiz_id) || Boolean(it.quiz);
+                flattenedCurriculumItems.push({
                     variant_item_id: it.variant_item_id,
+                    isQuiz: isQuizItem,
+                    quiz_id: it.quiz_id || (it.quiz && typeof it.quiz === 'object' ? it.quiz.quiz_id : (typeof it.quiz === 'string' ? it.quiz : null)),
                     sectionIndex: sIdx,
                     lessonIndex: lIdx,
                     title: it.title,
-                    sectionTitle: sec.title
+                    sectionTitle: sec.title,
+                    raw: it
                 });
             });
         });
     }
+
+    const isItemCompletedOrPassed = (flatItem) => {
+        if (!flatItem) return true;
+        if (flatItem.isQuiz) {
+            const q = quizzes?.find(qz => qz.quiz_id === flatItem.quiz_id || String(qz.id) === String(flatItem.quiz_id));
+            return Boolean(q?.is_passed || flatItem.raw?.quiz_detail?.is_passed || flatItem.raw?.is_completed);
+        }
+        return isLessonCompleted(flatItem.raw || { variant_item_id: flatItem.variant_item_id });
+    };
 
     // Video player handlers
     // ✨ PHASE 4.86: Removed setShow since using inline VideoPlayer component
@@ -1297,8 +1317,51 @@ const LecturesTab = ({
                 })()}
             </div>
             
+            {/* 📌 Pre-test Diagnostic: Auto-pinned at top of curriculum */}
+            {prePostQuiz && (
+                <div 
+                    className={`pretest-curriculum-item mb-3 p-3 rounded-3 border ${selectedQuiz?.quiz_id === prePostQuiz.quiz_id && (!prePostQuiz.has_pre_test || selectedQuiz?.current_mode === 'pre_test') ? 'active border-teal shadow-sm bg-light' : hasCompletedPretest ? 'completed border-success-subtle bg-light' : 'pending border-warning bg-white shadow-sm'}`}
+                    onClick={() => {
+                        if (onSelectQuiz) {
+                            onSelectQuiz({ ...prePostQuiz, current_mode: 'pre_test' });
+                        } else if (onStartPretest) {
+                            onStartPretest();
+                        }
+                    }}
+                    style={{ cursor: 'pointer', transition: 'all 0.2s ease', borderRadius: '10px' }}
+                >
+                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div className="d-flex align-items-center gap-3">
+                            <div className={`step-badge-icon rounded-circle d-flex align-items-center justify-content-center ${hasCompletedPretest ? 'bg-success text-white' : 'bg-teal text-white'}`} style={{ width: '36px', height: '36px', fontSize: '0.95rem' }}>
+                                <i className={`fas ${hasCompletedPretest ? 'fa-check' : 'fa-clipboard-check'}`}></i>
+                            </div>
+                            <div>
+                                <div className="d-flex align-items-center gap-2">
+                                    <span className="badge bg-secondary-subtle text-secondary border px-2 py-0" style={{ fontSize: '10px' }}>LANGKAH 1</span>
+                                    <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '0.92rem' }}>Pre-Test Diagnostik</h6>
+                                </div>
+                                <small className="text-muted d-block mt-1">
+                                    {prePostQuiz.title} &bull; {prePostQuiz.total_questions || prePostQuiz.questions?.length || 0} Soal
+                                </small>
+                            </div>
+                        </div>
+                        <div>
+                            {hasCompletedPretest ? (
+                                <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                    <i className="fas fa-check-circle me-1"></i>Selesai ({Math.round(prePostQuiz.pre_test_score || 0)}%)
+                                </span>
+                            ) : (
+                                <button type="button" className="btn btn-sm btn-teal fw-bold px-3 py-1 text-nowrap">
+                                    <i className="fas fa-play me-1"></i>Mulai Pre-Test
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Pre-test Diagnostic Requirement Notice */}
-            {pretestRequired && !hasCompletedPretest && (
+            {pretestRequired && !hasCompletedPretest && !prePostQuiz && (
                 <div className="pretest-curriculum-locked-banner mb-3 p-3 rounded-3">
                     <div className="d-flex align-items-center justify-content-between gap-3 flex-wrap">
                         <div className="d-flex align-items-center gap-3">
@@ -1311,7 +1374,7 @@ const LecturesTab = ({
                                     Kurikulum Terkunci — Selesaikan Pre-test Terlebih Dahulu
                                 </h6>
                                 <p className="mb-0 text-muted small">
-                                    Pre-test diagnostik ini wajib diselesaikan untuk membuka akses materi kursus. <strong>Tidak ada syarat kelulusan minimal</strong> pada Pre-test (hanya untuk menguji pemahaman awal).
+                                    Pre-test diagnostik ini wajib diselesaikan untuk membuka akses materi kursus.
                                 </p>
                             </div>
                         </div>
@@ -1341,11 +1404,19 @@ const LecturesTab = ({
                         for (let prevIdx = 0; prevIdx < index; prevIdx++) {
                             const prevSection = course.curriculum[prevIdx];
                             const prevItems = prevSection?.variant_items || prevSection?.items || [];
-                            const allPrevCompleted = prevItems.length === 0 || prevItems.every(it => isLessonCompleted(it));
+                            const allPrevCompleted = prevItems.length === 0 || prevItems.every(it => {
+                                const isQuiz = it.item_type === 'quiz' || Boolean(it.quiz_id) || Boolean(it.quiz);
+                                const qId = it.quiz_id || (it.quiz && typeof it.quiz === 'object' ? it.quiz.quiz_id : null);
+                                if (isQuiz) {
+                                    const q = quizzes?.find(qz => qz.quiz_id === qId);
+                                    return Boolean(q?.is_passed || it.quiz_detail?.is_passed || it.is_completed);
+                                }
+                                return isLessonCompleted(it);
+                            });
                             if (!allPrevCompleted) {
                                 return {
                                     locked: true,
-                                    reason: `Selesaikan semua pelajaran di Bagian ${prevIdx + 1} (${prevSection.title}) terlebih dahulu.`
+                                    reason: `Selesaikan semua materi dan kuis di Bagian ${prevIdx + 1} (${prevSection.title}) terlebih dahulu.`
                                 };
                             }
                         }
@@ -1396,27 +1467,104 @@ const LecturesTab = ({
                                 const isVideoLesson = isVideoContent(l);
                                 const itemId = l.variant_item_id;
 
-                                // Sequential lesson lock evaluation
+                                // Sequential item lock evaluation (for lessons & quizzes)
+                                const isItemQuiz = l.item_type === 'quiz' || Boolean(l.quiz_id) || Boolean(l.quiz);
+                                const matchedQuiz = isItemQuiz ? ((quizzes || []).find(q => q.quiz_id === l.quiz_id || q.quiz_id === l.quiz?.quiz_id) || l.quiz_detail || l.quiz) : null;
+                                const isQuizPassed = Boolean(matchedQuiz?.is_passed || l.is_completed);
+                                const isQuizSelected = Boolean(selectedQuiz && (selectedQuiz.quiz_id === l.quiz_id || selectedQuiz.quiz_id === matchedQuiz?.quiz_id));
+
                                 const lessonLockStatus = (() => {
                                     if (pretestRequired && !hasCompletedPretest) {
-                                        return { locked: true, reason: "Selesaikan Pre-test terlebih dahulu untuk membuka pelajaran." };
+                                        return { locked: true, reason: "Selesaikan Pre-test terlebih dahulu untuk membuka kurikulum pembelajaran." };
                                     }
                                     if (isSectionLocked.locked) {
                                         return { locked: true, reason: isSectionLocked.reason };
                                     }
-                                    const currentFlatIdx = flattenedLessons.findIndex(fl => fl.variant_item_id === l.variant_item_id);
+                                    const currentFlatIdx = flattenedCurriculumItems.findIndex(fl => fl.variant_item_id === l.variant_item_id);
                                     if (currentFlatIdx > 0) {
-                                        const prevFlat = flattenedLessons[currentFlatIdx - 1];
-                                        const isPrevCompleted = course.completed_lesson?.some(cl => cl.variant_item?.variant_item_id === prevFlat.variant_item_id);
-                                        if (!isPrevCompleted) {
+                                        const prevFlat = flattenedCurriculumItems[currentFlatIdx - 1];
+                                        const isPrevDone = isItemCompletedOrPassed(prevFlat);
+                                        if (!isPrevDone) {
                                             return {
                                                 locked: true,
-                                                reason: `Selesaikan pelajaran "${prevFlat.title}" terlebih dahulu.`
+                                                reason: prevFlat.isQuiz
+                                                    ? `Luluskan kuis "${prevFlat.title}" terlebih dahulu.`
+                                                    : `Selesaikan pelajaran "${prevFlat.title}" terlebih dahulu.`
                                             };
                                         }
                                     }
                                     return { locked: false, reason: "" };
                                 })();
+
+                                // If this item is a Quiz item, render specialized Quiz Row
+                                if (isItemQuiz) {
+                                    return (
+                                        <div key={l.variant_item_id || lessonIndex} className="mb-0">
+                                            <div 
+                                                className={`lesson-item quiz-curriculum-item ${lessonLockStatus.locked ? "lesson-item-locked" : ""} ${isQuizPassed ? "completed" : ""} ${isQuizSelected ? "active" : ""} position-relative`}
+                                                onClick={() => {
+                                                    if (lessonLockStatus.locked) {
+                                                        Toast().fire({
+                                                            icon: 'warning',
+                                                            title: 'Kuis Terkunci',
+                                                            text: lessonLockStatus.reason,
+                                                            timer: 4000
+                                                        });
+                                                        return;
+                                                    }
+                                                    if (onSelectQuiz) {
+                                                        onSelectQuiz(matchedQuiz || { quiz_id: l.quiz_id, title: l.title });
+                                                    }
+                                                }}
+                                                style={{
+                                                    cursor: lessonLockStatus.locked ? 'not-allowed' : 'pointer'
+                                                }}
+                                            >
+                                                <div className={`lesson-progress-indicator ${lessonLockStatus.locked ? "locked" : isQuizPassed ? "completed" : ""}`}>
+                                                    {isQuizPassed ? (
+                                                        <i className="fas fa-check text-success" style={{ fontSize: "11px" }}></i>
+                                                    ) : lessonLockStatus.locked ? (
+                                                        <i className="fas fa-lock text-muted" style={{ fontSize: "11px" }}></i>
+                                                    ) : (
+                                                        <i className="fas fa-clipboard-check text-warning" style={{ fontSize: "12px" }}></i>
+                                                    )}
+                                                </div>
+
+                                                <div className="lesson-info d-flex flex-column flex-grow-1 min-w-0">
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <span className="badge bg-warning-subtle text-dark border border-warning-subtle px-1 py-0" style={{ fontSize: '10px' }}>
+                                                            <i className="fas fa-clipboard-check text-warning me-1"></i>Kuis
+                                                        </span>
+                                                        <span className="lesson-title text-truncate fw-semibold" title={l.title || matchedQuiz?.title}>
+                                                            {l.title || matchedQuiz?.title || "Kuis Pembelajaran"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="lesson-meta-wrapper d-flex align-items-center gap-2 text-muted small" style={{ fontSize: '0.75rem' }}>
+                                                        <span>{matchedQuiz?.total_questions || matchedQuiz?.questions?.length || 0} Pertanyaan</span>
+                                                        <span>&bull;</span>
+                                                        <span>Passing Grade: 70%</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="lesson-actions ms-2">
+                                                    {isQuizPassed ? (
+                                                        <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style={{ fontSize: '11px' }}>
+                                                            <i className="fas fa-check me-1"></i>Lulus ({Math.round(matchedQuiz?.best_score || 0)}%)
+                                                        </span>
+                                                    ) : lessonLockStatus.locked ? (
+                                                        <span className="badge bg-light text-muted border px-2 py-1" style={{ fontSize: '11px' }}>
+                                                            <i className="fas fa-lock me-1"></i>Terkunci
+                                                        </span>
+                                                    ) : (
+                                                        <button type="button" className="btn btn-sm btn-outline-warning py-0 px-2" style={{ fontSize: '11px' }}>
+                                                            <i className="fas fa-play me-1"></i>Buka Kuis
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }
                                 
                                 return (
                                     <div key={l.variant_item_id || lessonIndex} className="mb-0">
@@ -1583,6 +1731,60 @@ const LecturesTab = ({
                     <i className="fas fa-play-circle empty-icon"></i>
                     <h5>Belum ada pelajaran yang tersedia</h5>
                     <p>Konten kursus akan segera tersedia</p>
+                </div>
+            )}
+
+{/* 📌 Post-test Evaluation: Auto-pinned at end of curriculum */}
+            {prePostQuiz && (
+                <div 
+                    className={`posttest-curriculum-item mt-3 p-3 rounded-3 border ${selectedQuiz?.quiz_id === prePostQuiz.quiz_id && (prePostQuiz.has_pre_test || selectedQuiz?.current_mode === 'post_test') ? 'active border-danger shadow-sm bg-light' : hasCompletedPosttest ? 'completed border-success-subtle bg-light' : !canTakePostTest ? 'locked border-secondary-subtle bg-light opacity-75' : 'pending border-danger bg-white shadow-sm'}`}
+                    onClick={() => {
+                        if (!canTakePostTest) {
+                            Toast().fire({
+                                icon: 'warning',
+                                title: 'Post-test Terkunci',
+                                text: 'Selesaikan seluruh materi kurikulum dan luluskan semua kuis terlebih dahulu untuk membuka Post-test.',
+                                timer: 4000
+                            });
+                            return;
+                        }
+                        if (onSelectQuiz) {
+                            onSelectQuiz({ ...prePostQuiz, current_mode: 'post_test' });
+                        }
+                    }}
+                    style={{ cursor: !canTakePostTest ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease', borderRadius: '10px' }}
+                >
+                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div className="d-flex align-items-center gap-3">
+                            <div className={`step-badge-icon rounded-circle d-flex align-items-center justify-content-center ${hasCompletedPosttest ? 'bg-success text-white' : !canTakePostTest ? 'bg-secondary text-white' : 'bg-danger text-white'}`} style={{ width: '36px', height: '36px', fontSize: '0.95rem' }}>
+                                <i className={`fas ${hasCompletedPosttest ? 'fa-check' : !canTakePostTest ? 'fa-lock' : 'fa-award'}`}></i>
+                            </div>
+                            <div>
+                                <div className="d-flex align-items-center gap-2">
+                                    <span className="badge bg-secondary-subtle text-secondary border px-2 py-0" style={{ fontSize: '10px' }}>LANGKAH AKHIR</span>
+                                    <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '0.92rem' }}>Post-Test Evaluasi Akhir</h6>
+                                </div>
+                                <small className="text-muted d-block mt-1">
+                                    {prePostQuiz.title} &bull; {prePostQuiz.total_questions || prePostQuiz.questions?.length || 0} Soal
+                                </small>
+                            </div>
+                        </div>
+                        <div>
+                            {hasCompletedPosttest ? (
+                                <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                    <i className="fas fa-check-circle me-1"></i>Selesai ({Math.round(prePostQuiz.post_test_score || 0)}%)
+                                </span>
+                            ) : !canTakePostTest ? (
+                                <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
+                                    <i className="fas fa-lock me-1"></i>Terkunci
+                                </span>
+                            ) : (
+                                <button type="button" className="btn btn-sm btn-danger fw-bold px-3 py-1 text-nowrap">
+                                    <i className="fas fa-play me-1"></i>Mulai Post-Test
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

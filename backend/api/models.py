@@ -533,7 +533,45 @@ class Course(models.Model):
                 print(f"[Content Copy] [OK] Target course content cleared")
             
             try:
-                # STEP 1: Copy curriculum variants (Bagian)
+                # STEP 1: Copy quizzes (Kuis) with all questions and choices FIRST so items can reference them
+                print("[Content Copy] Copying quizzes (Kuis) with questions and choices...")
+                quiz_map = {}  # Map old quiz IDs to new ones
+                for quiz in self.quizzes.all():
+                    new_quiz = Quiz.objects.create(
+                        course=target_course,
+                        title=quiz.title,
+                        description=quiz.description,
+                        quiz_type=quiz.quiz_type,
+                        presentation_mode=quiz.presentation_mode,
+                        is_active=quiz.is_active,
+                    )
+                    quiz_map[quiz.id] = new_quiz
+                    
+                    # Copy quiz questions and their choices
+                    print(f"[Content Copy] Copying questions for quiz: {quiz.title}")
+                    question_map = {}
+                    for question in quiz.questions.all():
+                        new_question = QuizQuestion.objects.create(
+                            quiz=new_quiz,
+                            question_text=question.question_text,
+                            order=question.order,
+                        )
+                        question_map[question.id] = new_question
+                        
+                        # Copy quiz choices (answers) for this question
+                        for choice in question.choices.all():
+                            QuizChoice.objects.create(
+                                question=new_question,
+                                choice_text=choice.choice_text,
+                                is_correct=choice.is_correct,
+                                order=choice.order,
+                            )
+                    
+                    print(f"[Content Copy] [OK] Copied {quiz.questions.count()} questions with choices")
+                
+                print(f"[Content Copy] [OK] Copied {len(quiz_map)} quizzes")
+
+                # STEP 2: Copy curriculum variants (Bagian)
                 print("[Content Copy] Copying curriculum sections (Bagian)...")
                 variant_map = {}  # Map old variant IDs to new ones
                 for variant in self.curriculum.all():
@@ -544,7 +582,7 @@ class Course(models.Model):
                     )
                     variant_map[variant.id] = new_variant
                     
-                    # Copy variant items (Pelajaran - lessons)
+                    # Copy variant items (Pelajaran - lessons or inserted Quizzes)
                     print(f"[Content Copy] Copying lessons for section: {variant.title}")
                     for item in variant.variant_items.all():
                         new_item = VariantItem.objects.create(
@@ -555,6 +593,9 @@ class Course(models.Model):
                             duration=item.duration,
                             preview=item.preview,
                             order=item.order,
+                            item_type=getattr(item, 'item_type', 'lesson'),
+                            quiz=quiz_map.get(item.quiz_id) if getattr(item, 'quiz_id', None) else None,
+                            learning_module=item.learning_module,
                         )
                         
                         # ✨ NEW FIX: Copy lesson completion questions (Pertanyaan Penyelesaian Pelajaran)
@@ -585,42 +626,6 @@ class Course(models.Model):
                     print(f"[Content Copy] [OK] Copied {variant.variant_items.count()} lessons (including completion questions)")
                 
                 print(f"[Content Copy] [OK] Copied {len(variant_map)} curriculum sections")
-                
-                # STEP 2: Copy quizzes (Kuis) with all questions and choices
-                print("[Content Copy] Copying quizzes (Kuis) with questions and choices...")
-                quiz_map = {}  # Map old quiz IDs to new ones
-                for quiz in self.quizzes.all():
-                    new_quiz = Quiz.objects.create(
-                        course=target_course,
-                        title=quiz.title,
-                        description=quiz.description,
-                        is_active=quiz.is_active,
-                    )
-                    quiz_map[quiz.id] = new_quiz
-                    
-                    # Copy quiz questions and their choices
-                    print(f"[Content Copy] Copying questions for quiz: {quiz.title}")
-                    question_map = {}
-                    for question in quiz.questions.all():
-                        new_question = QuizQuestion.objects.create(
-                            quiz=new_quiz,
-                            question_text=question.question_text,
-                            order=question.order,
-                        )
-                        question_map[question.id] = new_question
-                        
-                        # Copy quiz choices (answers) for this question
-                        for choice in question.choices.all():
-                            QuizChoice.objects.create(
-                                question=new_question,
-                                choice_text=choice.choice_text,
-                                is_correct=choice.is_correct,
-                                order=choice.order,
-                            )
-                    
-                    print(f"[Content Copy] [OK] Copied {quiz.questions.count()} questions with choices")
-                
-                print(f"[Content Copy] [OK] Copied {len(quiz_map)} quizzes")
                 
                 # STEP 3: Copy course features (Fitur)
                 print("[Content Copy] Copying course features (Fitur)...")
@@ -806,7 +811,21 @@ class Variant(models.Model):
     
     
 class VariantItem(models.Model):
+    ITEM_TYPE_CHOICES = (
+        ('lesson', 'Pelajaran'),
+        ('quiz', 'Kuis'),
+    )
+
     variant = models.ForeignKey(Variant, on_delete=models.CASCADE, related_name="variant_items")
+    item_type = models.CharField(max_length=20, choices=ITEM_TYPE_CHOICES, default='lesson', db_index=True)
+    quiz = models.ForeignKey(
+        'Quiz',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='variant_items',
+        verbose_name="Kuis Terkait"
+    )
     learning_module = models.ForeignKey(
         'LearningModule',
         on_delete=models.SET_NULL,
@@ -843,7 +862,9 @@ class VariantItem(models.Model):
     
     @property
     def file_type(self):
-        """Determine file type based on URL extension or linked learning_module"""
+        """Determine file type based on item_type, URL extension or linked learning_module"""
+        if self.item_type == 'quiz' or self.quiz_id:
+            return "quiz"
         if self.learning_module_id:
             return "h5p" if self.learning_module.module_type == "h5p" else "scorm"
         if not self.file:
@@ -1694,7 +1715,7 @@ class EnrolledCourse(models.Model):
         return self.course.title
     
     def lectures(self):
-        return VariantItem.objects.filter(variant__course=self.course)
+        return VariantItem.objects.filter(variant__course=self.course, item_type='lesson')
     
     def completed_lesson(self):
         return CompletedLesson.objects.filter(course=self.course, user=self.user)

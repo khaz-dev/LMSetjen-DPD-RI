@@ -38,6 +38,7 @@ import LessonCompletionQuestionEditor from "../../components/CourseEdit/LessonCo
 
 // Utility imports
 import useAxios from "../../utils/useAxios";
+import apiInstance from "../../utils/axios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
@@ -540,6 +541,7 @@ function SortableSection({
     collapsedSections,
     toggleSectionCollapse,
     addLesson,
+    addQuiz,
     children
 }) {
     const {
@@ -703,6 +705,16 @@ function SortableSection({
                             <i className="fas fa-plus small"></i>
                             <span>Tambah Pelajaran Baru</span>
                         </button>
+                        <button
+                            type="button"
+                            className="btn btn-outline-warning btn-sm px-3 py-1 fw-semibold d-inline-flex align-items-center shadow-sm ms-2"
+                            style={{ gap: "8px" }}
+                            onClick={() => addQuiz && addQuiz(variantIndex)}
+                            disabled={uiState.isSubmitting}
+                        >
+                            <i className="fas fa-clipboard-check small"></i>
+                            <span>Sisipkan Kuis</span>
+                        </button>
                     </div>
                 </div>
             )}
@@ -720,6 +732,7 @@ function SortableLessonItem({
     itemIndex,
     variantIndex,
     variant,
+    variants,
     moveLessonUp,
     moveLessonDown,
     removeLesson,
@@ -754,9 +767,27 @@ function SortableLessonItem({
     extractedDuration, // ✨ PHASE 4.204: Extracted duration state for display
     setExtractedDuration, // ✨ PHASE 4.204: Setter for extracted duration state
     isElearningScorm,
-    onPreviewScorm
+    onPreviewScorm,
+    courseQuizzes = []
 }) {
     const isItemScorm = isElearningScorm || Boolean(item?.learning_module_id) || Boolean(item?.learning_module_info) || item?.file_type === 'scorm';
+    const isItemQuiz = item?.item_type === 'quiz' || Boolean(item?.quiz_id);
+    const regularQuizzes = (courseQuizzes || []).filter(q => q.quiz_type !== 'pre_post_test' && !q.has_pre_test && !q.has_post_test);
+    const selectedQuiz = isItemQuiz ? ((courseQuizzes || []).find(q => String(q.quiz_id) === String(item?.quiz_id)) || item?.quiz_detail) : null;
+
+    // ✨ Compute quiz IDs already used in OTHER sections/items in curriculum to prevent duplicates
+    const usedQuizIds = new Set();
+    if (Array.isArray(variants)) {
+        variants.forEach((v, vIdx) => {
+            (v.items || []).forEach((it, iIdx) => {
+                if (vIdx === variantIndex && iIdx === itemIndex) return; // skip self
+                const qId = it.quiz_id || (it.quiz && typeof it.quiz === 'object' ? it.quiz.quiz_id : (it.quiz || null));
+                if (qId) {
+                    usedQuizIds.add(String(qId));
+                }
+            });
+        });
+    }
     const currentSeconds = Number(item?.duration_seconds) || 0;
     const currentJP = currentSeconds > 0 ? Math.ceil(currentSeconds / 2700) : 0;
 
@@ -830,9 +861,9 @@ function SortableLessonItem({
                             </button>
                         </div>
 
-                        <span className="lesson-number-badge">
-                            <i className={`fas ${isItemScorm ? 'fa-cubes' : 'fa-play-circle'} me-1`}></i>
-                            Pelajaran {itemIndex + 1}
+                        <span className={`lesson-number-badge ${isItemQuiz ? 'bg-warning-subtle text-dark border border-warning' : ''}`}>
+                            <i className={`fas ${isItemQuiz ? 'fa-clipboard-check text-warning' : isItemScorm ? 'fa-cubes' : 'fa-play-circle'} me-1`}></i>
+                            {isItemQuiz ? `Kuis ${itemIndex + 1}` : `Pelajaran ${itemIndex + 1}`}
                         </span>
                         {isItemScorm && (
                             <>
@@ -865,6 +896,92 @@ function SortableLessonItem({
             </div>
 
             <div className="curriculum-item-content-enhanced">
+                {isItemQuiz ? (
+                    <div className="p-3 bg-light rounded-3 border" style={{ borderLeft: '4px solid #f59e0b' }}>
+                        <div className="row g-3 align-items-center">
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold text-dark d-flex align-items-center gap-2 mb-1">
+                                    <i className="fas fa-clipboard-question text-warning"></i>
+                                    <span>Pilih Kuis Kursus</span>
+                                    <span className="text-danger">*</span>
+                                </label>
+                                <select
+                                    className={`form-select curriculum-form-control ${getValidationClass(
+                                        validationState.errors[`item_${variantIndex}_${itemIndex}_quiz_id`]
+                                    )}`}
+                                    value={item?.quiz_id || ''}
+                                    onChange={(e) => {
+                                        const chosenId = e.target.value;
+                                        if (chosenId && usedQuizIds.has(String(chosenId))) {
+                                            Toast().fire({
+                                                icon: "warning",
+                                                title: "Kuis Sudah Disisipkan",
+                                                text: "Kuis ini sudah disisipkan pada bagian materi lain. Setiap kuis hanya dapat disisipkan 1 kali.",
+                                            });
+                                            return;
+                                        }
+                                        const chosenQuiz = courseQuizzes.find(q => String(q.quiz_id) === String(chosenId));
+                                        handleLessonChange(variantIndex, itemIndex, "quiz_id", chosenId);
+                                        if (chosenQuiz) {
+                                            handleLessonChange(variantIndex, itemIndex, "title", chosenQuiz.title);
+                                            handleLessonChange(variantIndex, itemIndex, "description", chosenQuiz.description || '');
+                                            if (chosenQuiz.duration_minutes) {
+                                                handleLessonChange(variantIndex, itemIndex, "duration_seconds", chosenQuiz.duration_minutes * 60);
+                                                handleLessonChange(variantIndex, itemIndex, "duration_formatted", `${chosenQuiz.duration_minutes} Menit`);
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <option value="">-- Pilih Kuis --</option>
+                                    {regularQuizzes.map(q => {
+                                        const isAlreadyUsed = usedQuizIds.has(String(q.quiz_id));
+                                        return (
+                                            <option key={q.quiz_id} value={q.quiz_id} disabled={isAlreadyUsed}>
+                                                {q.title} ({q.total_questions || q.questions?.length || 0} Soal){isAlreadyUsed ? " — [Sudah Disisipkan]" : ""}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                                {validationState.errors[`item_${variantIndex}_${itemIndex}_quiz_id`] && (
+                                    <div className="curriculum-invalid-feedback">
+                                        {validationState.errors[`item_${variantIndex}_${itemIndex}_quiz_id`]}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-6">
+                                {selectedQuiz ? (
+                                    <div className="p-2 rounded bg-white border border-warning-subtle shadow-sm">
+                                        <div className="d-flex align-items-center justify-content-between mb-1">
+                                            <span className="badge bg-warning text-dark fw-bold">
+                                                <i className="fas fa-award me-1"></i>Passing Grade: 70%
+                                            </span>
+                                            <small className="text-muted">
+                                                <i className="fas fa-clock me-1"></i>
+                                                {selectedQuiz.duration_minutes ? `${selectedQuiz.duration_minutes} Menit` : 'Tanpa Batas'}
+                                            </small>
+                                        </div>
+                                        <h6 className="mb-1 text-truncate fw-bold">{selectedQuiz.title}</h6>
+                                        <p className="mb-0 text-muted small text-truncate">
+                                            {selectedQuiz.total_questions || selectedQuiz.questions?.length || 0} Soal Pertanyaan &bull; {selectedQuiz.passing_score || 70}% Nilai Minimum
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="alert alert-warning py-2 px-3 mb-0 small">
+                                        <i className="fas fa-exclamation-triangle me-1"></i>
+                                        Silakan pilih kuis yang akan disisipkan di posisi urutan ini.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="d-flex align-items-center justify-content-between mt-3 pt-2 border-top">
+                            <small className="text-muted">
+                                <i className="fas fa-info-circle me-1 text-warning"></i>
+                                Siswa harus lulus kuis ini (skor &ge; 70%) untuk dapat melanjutkan ke materi berikutnya.
+                            </small>
+                        </div>
+                    </div>
+                ) : (
+                    <>
                 {/* Lesson Title - Full Width */}
                 <div className="mb-2">
                     <label className="form-label fw-semibold small text-dark d-flex align-items-center mb-1" style={{ gap: "8px" }}>
@@ -1504,6 +1621,8 @@ function SortableLessonItem({
                         }}
                     />
                 )}
+                    </>
+                )}
             </div>
         </div>
     );
@@ -1551,6 +1670,11 @@ function CourseEditCurriculum() {
     });
 
     const [category, setCategory] = useState([]);
+
+    // ✨ Quizzes state for curriculum embedding & Pre/Post-Test detection
+    const [courseQuizzes, setCourseQuizzes] = useState([]);
+    const prePostQuiz = courseQuizzes.find(q => q.quiz_type === 'pre_post_test' || q.has_pre_test || q.has_post_test) || null;
+    const regularQuizzes = courseQuizzes.filter(q => q.quiz_type !== 'pre_post_test' && !q.has_pre_test && !q.has_post_test);
     const [ckEditorData, setCKEditorData] = useState("");
     const [variants, setVariants] = useState([
         {
@@ -2023,6 +2147,32 @@ function CourseEditCurriculum() {
         // Safety check
         if (!item) return { errors: itemErrors, warnings: itemWarnings };
 
+        // ✨ Quiz Item: Validated by selecting a valid quiz and checking duplicates
+        if (item.item_type === 'quiz' || item.quiz_id) {
+            if (!item.quiz_id) {
+                itemErrors.quiz_id = 'Silakan pilih kuis dari daftar kuis kursus';
+            }
+            if (!item.title || item.title.trim().length === 0) {
+                itemErrors.title = 'Judul kuis tidak boleh kosong';
+            }
+            // Check for duplicate quiz_id across the entire curriculum
+            if (item.quiz_id && Array.isArray(variants)) {
+                let duplicateCount = 0;
+                variants.forEach(v => {
+                    (v.items || []).forEach(it => {
+                        const itQuizId = it.quiz_id || (it.quiz && typeof it.quiz === 'object' ? it.quiz.quiz_id : (it.quiz || null));
+                        if (itQuizId && String(itQuizId) === String(item.quiz_id)) {
+                            duplicateCount++;
+                        }
+                    });
+                });
+                if (duplicateCount > 1) {
+                    itemErrors.quiz_id = `Kuis "${item.title || 'ini'}" terduplikasi! Setiap kuis hanya boleh disisipkan satu kali dalam kurikulum.`;
+                }
+            }
+            return { errors: itemErrors, warnings: itemWarnings };
+        }
+
         if (!item.title || item.title.trim().length < VALIDATION_RULES.ITEM_TITLE_MIN_LENGTH) {
             itemErrors.title = `Judul pelajaran harus minimal ${VALIDATION_RULES.ITEM_TITLE_MIN_LENGTH} karakter`;
         } else if (item.title.trim().length > VALIDATION_RULES.ITEM_TITLE_MAX_LENGTH) {
@@ -2183,6 +2333,15 @@ function CourseEditCurriculum() {
                 setCategory(categoriesResponse.data);
             }
 
+            // ✨ Fetch course quizzes for curriculum insertion and pre/post-test detection
+            try {
+                const quizResponse = await useAxios.get(`quiz/list-create/?course_id=${param.course_id}`);
+                const quizList = Array.isArray(quizResponse.data) ? quizResponse.data : (quizResponse.data?.results || []);
+                setCourseQuizzes(quizList);
+            } catch (qErr) {
+                console.warn("[CourseEditCurriculum] Could not fetch course quizzes:", qErr);
+            }
+
             // Fetch course details
             const courseResponse = await useAxios.get(`teacher/course-detail/${param.course_id}/`);
             setCourse(courseResponse.data);
@@ -2232,6 +2391,9 @@ function CourseEditCurriculum() {
                         return {
                             title: item.title || "",
                             description: item.description || "",
+                            item_type: item.item_type || (item.quiz_id || item.quiz ? 'quiz' : 'lesson'),
+                            quiz_id: item.quiz_id || (item.quiz && typeof item.quiz === 'object' ? item.quiz.quiz_id : (item.quiz || null)),
+                            quiz_detail: item.quiz_detail || null,
                             gdriveLink: !isYouTubeLink && !isUploadedFile ? fileUrl : '',  // Store Google Drive links
                             youtubeLink: isYouTubeLink ? fileUrl : '',  // Store YouTube URLs
                             uploadedFile: isUploadedFile ? fileUrl : '',  // ✨ PHASE 4.110: Store uploaded file URLs
@@ -3047,6 +3209,83 @@ function CourseEditCurriculum() {
     /**
      * Add a new lesson to a curriculum section
      */
+    /**
+     * Add an existing quiz as a curriculum item to a section
+     */
+    const addQuiz = (variantIndex) => {
+        // Collect all quiz IDs currently used across all sections
+        const usedQuizIds = new Set();
+        (variants || []).forEach(v => {
+            (v.items || []).forEach(it => {
+                const qId = it.quiz_id || (it.quiz && typeof it.quiz === 'object' ? it.quiz.quiz_id : (it.quiz || null));
+                if (qId) {
+                    usedQuizIds.add(String(qId));
+                }
+            });
+        });
+
+        // Find available regular quizzes that haven't been inserted yet
+        const availableQuizzes = regularQuizzes.filter(q => !usedQuizIds.has(String(q.quiz_id)));
+
+        if (regularQuizzes.length === 0) {
+            Swal.fire({
+                icon: "info",
+                title: "Belum Ada Kuis",
+                text: "Kursus ini belum memiliki Kuis Pembelajaran. Silakan buat kuis terlebih dahulu di menu Kuis.",
+                confirmButtonText: "Buka Menu Kuis",
+                showCancelButton: true,
+                cancelButtonText: "Tutup"
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    navigate(`/instructor/edit-course/${param?.course_id}/quiz/`);
+                }
+            });
+            return;
+        }
+
+        if (availableQuizzes.length === 0) {
+            Swal.fire({
+                icon: "warning",
+                title: "Semua Kuis Sudah Disisipkan",
+                text: `Seluruh (${regularQuizzes.length}) kuis kursus yang tersedia sudah disisipkan ke dalam kurikulum. Setiap kuis hanya dapat disisipkan 1 kali untuk mencegah duplikasi alur belajar.`,
+                confirmButtonText: "Kelola Kuis",
+                showCancelButton: true,
+                cancelButtonText: "Batal"
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    navigate(`/instructor/edit-course/${param?.course_id}/quiz/`);
+                }
+            });
+            return;
+        }
+
+        const chosenQuiz = availableQuizzes[0];
+        const updatedVariants = [...variants];
+        const currentItems = updatedVariants[variantIndex].items || [];
+        const maxOrder = currentItems.reduce((max, item) => Math.max(max, item.order || 0), -1);
+        const newOrder = maxOrder + 1;
+
+        updatedVariants[variantIndex].items.push({
+            title: chosenQuiz.title,
+            description: chosenQuiz.description || "",
+            item_type: "quiz",
+            quiz_id: chosenQuiz.quiz_id,
+            preview: false,
+            order: newOrder,
+            duration_seconds: chosenQuiz.duration_minutes ? chosenQuiz.duration_minutes * 60 : null,
+            duration_formatted: chosenQuiz.duration_minutes ? `${chosenQuiz.duration_minutes} Menit` : null,
+            media_source: null
+        });
+
+        setVariants(updatedVariants);
+        trackFormChanges();
+
+        Toast().fire({
+            icon: "success",
+            title: `Kuis "${chosenQuiz.title}" berhasil disisipkan!`,
+        });
+    };
+
     const addLesson = (variantIndex) => {
         const updatedVariants = [...variants];
 
@@ -3305,7 +3544,9 @@ function CourseEditCurriculum() {
                     item.uploadedFile ||
                     item.learning_module_id ||
                     item.learning_module_info ||
-                    item.variant_item_id
+                    item.variant_item_id ||
+                    item.item_type === 'quiz' ||
+                    item.quiz_id
                 );
                 return hasTitle || hasNonEmptyLessons || variant.variant_id;
             });
@@ -3320,13 +3561,31 @@ function CourseEditCurriculum() {
                     item.uploadedFile ||
                     item.learning_module_id ||
                     item.learning_module_info ||
-                    item.variant_item_id
+                    item.variant_item_id ||
+                    item.item_type === 'quiz' ||
+                    item.quiz_id
                 )
             }));
 
             // Skip save if no variants
             if (!cleanedVariants || cleanedVariants.length === 0) {
                 return;
+            }
+
+            // Check for duplicate quiz items to prevent saving corrupt duplicate state
+            const seenAutoSaveQuizIds = new Set();
+            for (const variant of cleanedVariants) {
+                for (const item of (variant.items || [])) {
+                    const isQuiz = item.item_type === 'quiz' || Boolean(item.quiz_id);
+                    if (isQuiz && item.quiz_id) {
+                        const qIdStr = String(item.quiz_id);
+                        if (seenAutoSaveQuizIds.has(qIdStr)) {
+                            console.warn("[AutoSave] ⚠️ Duplicate quiz detected in curriculum. Skipping auto-save.");
+                            return;
+                        }
+                        seenAutoSaveQuizIds.add(qIdStr);
+                    }
+                }
             }
 
             console.log("[AutoSave] Saving curriculum after file upload...");
@@ -3396,6 +3655,12 @@ function CourseEditCurriculum() {
                         if (item.variant_item_id) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][variant_item_id]`, item.variant_item_id);
                         }
+                        if (item.item_type) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][item_type]`, item.item_type);
+                        }
+                        if (item.quiz_id) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][quiz_id]`, item.quiz_id);
+                        }
                         const targetLmId = item.learning_module_id || (isElearningScorm ? (course.learning_module_id || course.learning_module?.id) : null);
                         if (targetLmId) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][learning_module_id]`, targetLmId);
@@ -3440,7 +3705,9 @@ function CourseEditCurriculum() {
                     item.uploadedFile ||
                     item.learning_module_id ||
                     item.learning_module_info ||
-                    item.variant_item_id
+                    item.variant_item_id ||
+                    item.item_type === 'quiz' ||
+                    item.quiz_id
                 );
                 return hasTitle || hasNonEmptyLessons || variant.variant_id;
             });
@@ -3455,9 +3722,28 @@ function CourseEditCurriculum() {
                     item.uploadedFile ||
                     item.learning_module_id ||
                     item.learning_module_info ||
-                    item.variant_item_id
+                    item.variant_item_id ||
+                    item.item_type === 'quiz' ||
+                    item.quiz_id
                 )
             }));
+
+            // Check for duplicate quiz items
+            const seenPerformAutoSaveQuizIds = new Set();
+            for (const variant of cleanedVariants) {
+                for (const item of (variant.items || [])) {
+                    const isQuiz = item.item_type === 'quiz' || Boolean(item.quiz_id);
+                    if (isQuiz && item.quiz_id) {
+                        const qIdStr = String(item.quiz_id);
+                        if (seenPerformAutoSaveQuizIds.has(qIdStr)) {
+                            console.warn("[PerformAutoSave] ⚠️ Duplicate quiz detected in curriculum. Skipping auto-save.");
+                            setAutoSaveStatus("idle");
+                            return;
+                        }
+                        seenPerformAutoSaveQuizIds.add(qIdStr);
+                    }
+                }
+            }
 
             const formData = new FormData();
             if (course.title) formData.append("title", course.title);
@@ -3520,6 +3806,12 @@ function CourseEditCurriculum() {
                         }
                         if (item.variant_item_id) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][variant_item_id]`, item.variant_item_id);
+                        }
+                        if (item.item_type) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][item_type]`, item.item_type);
+                        }
+                        if (item.quiz_id) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][quiz_id]`, item.quiz_id);
                         }
                         const targetLmId = item.learning_module_id || (isElearningScorm ? (course.learning_module_id || course.learning_module?.id) : null);
                         if (targetLmId) {
@@ -3585,7 +3877,9 @@ function CourseEditCurriculum() {
                     item.uploadedFile ||
                     item.learning_module_id ||
                     item.learning_module_info ||
-                    item.variant_item_id // Keep if it's already saved in database
+                    item.variant_item_id ||
+                    item.item_type === 'quiz' ||
+                    item.quiz_id // Keep if it's already saved in database
                 );
                 return hasTitle || hasNonEmptyLessons || variant.variant_id; // Keep if already saved in database
             });
@@ -3601,7 +3895,9 @@ function CourseEditCurriculum() {
                     item.uploadedFile ||
                     item.learning_module_id ||
                     item.learning_module_info ||
-                    item.variant_item_id // Keep if already saved in database
+                    item.variant_item_id ||
+                    item.item_type === 'quiz' ||
+                    item.quiz_id // Keep if already saved in database
                 )
             }));
 
@@ -3635,6 +3931,24 @@ function CourseEditCurriculum() {
                             }
                         });
                     }
+                });
+
+                // Check for duplicate quiz items across all sections
+                const seenQuizMap = new Map();
+                cleanedVariants.forEach((variant, vIdx) => {
+                    (variant.items || []).forEach((item, iIdx) => {
+                        const isQuiz = item.item_type === 'quiz' || Boolean(item.quiz_id);
+                        if (isQuiz && item.quiz_id) {
+                            const qIdStr = String(item.quiz_id);
+                            if (seenQuizMap.has(qIdStr)) {
+                                hasErrors = true;
+                                const firstUsedSection = seenQuizMap.get(qIdStr);
+                                newErrors[`item_${vIdx}_${iIdx}_quiz_id`] = `Kuis "${item.title || 'ini'}" sudah digunakan di Bagian ${firstUsedSection + 1}. Setiap kuis hanya boleh disisipkan satu kali.`;
+                            } else {
+                                seenQuizMap.set(qIdStr, vIdx);
+                            }
+                        }
+                    });
                 });
             }
 
@@ -3737,6 +4051,12 @@ function CourseEditCurriculum() {
                         // Include variant_item_id for existing items
                         if (item.variant_item_id) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][variant_item_id]`, item.variant_item_id);
+                        }
+                        if (item.item_type) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][item_type]`, item.item_type);
+                        }
+                        if (item.quiz_id) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][quiz_id]`, item.quiz_id);
                         }
                     });
                 }
@@ -3957,8 +4277,8 @@ function CourseEditCurriculum() {
 
                             {/* Compact Curriculum Header Card */}
                             <div className="curriculum-header-card mb-3">
-                                <div className="d-flex flex-column flex-md-row md-align-items-center justify-content-between gap-2">
-                                    <div>
+                                <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+                                    <div className="flex-grow-1">
                                         <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
                                             <span className="badge bg-teal-subtle text-teal border border-teal-subtle fw-semibold px-2 py-0" style={{ fontSize: "11px" }}>
                                                 <i className="fas fa-layer-group me-1"></i> Edit Kurikulum
@@ -3982,7 +4302,7 @@ function CourseEditCurriculum() {
                                             Atur konten materi ke dalam bagian terstruktur, modul pembelajaran, dan durasi JP.
                                         </p>
                                     </div>
-                                    <div className="d-flex align-items-center flex-wrap gap-1 mt-2 mt-md-0">
+                                    <div className="d-flex align-items-center justify-content-md-end flex-wrap gap-1 mt-2 mt-md-0 ms-md-auto">
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/`}
                                             className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center"
@@ -4163,6 +4483,50 @@ function CourseEditCurriculum() {
                                     </div>
                                 )}
 
+                                {/* 📌 Pre-Test: Otomatis di Awal Kurikulum */}
+                                <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%)', borderLeft: '5px solid #10b981' }}>
+                                    <div className="card-body p-3 p-md-4">
+                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                            <div className="d-flex align-items-center gap-3">
+                                                <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
+                                                    <i className="fas fa-clipboard-check"></i>
+                                                </div>
+                                                <div>
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <span className="badge bg-success text-white px-2 py-1" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>LANGKAH 1 (OTOMATIS)</span>
+                                                        <h6 className="mb-0 fw-bold text-dark">Pre-Test Diagnostik</h6>
+                                                    </div>
+                                                    {prePostQuiz ? (
+                                                        <p className="mb-0 small text-muted">
+                                                            <strong className="text-dark">{prePostQuiz.title}</strong> &bull; {prePostQuiz.total_questions || prePostQuiz.questions?.length || 0} Soal &bull; <span className="text-success fw-semibold"><i className="fas fa-check-circle me-1"></i>Aktif</span>
+                                                        </p>
+                                                    ) : (
+                                                        <p className="mb-0 small text-muted">
+                                                            Kursus ini belum memiliki Pre/Post-Test. Siswa akan langsung memulai dari Bagian 1.
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Link
+                                                    to={`/instructor/edit-course/${param?.course_id}/quiz/`}
+                                                    className="btn btn-sm btn-outline-success fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
+                                                    style={{ borderRadius: '8px' }}
+                                                >
+                                                    <i className="fas fa-cog"></i>
+                                                    <span>{prePostQuiz ? "Kelola Soal Pre-Test" : "+ Buat Pre & Post-Test"}</span>
+                                                </Link>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 pt-2 border-top border-success border-opacity-10">
+                                            <small className="text-secondary d-flex align-items-center gap-1">
+                                                <i className="fas fa-info-circle text-success"></i>
+                                                Pre-test otomatis muncul di urutan pertama pada antarmuka belajar siswa tanpa perlu diurutkan manual di sini.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Sections Container - Modern Drag and Drop with @dnd-kit */}
                                 <div className="sections-container">
                                     <DndContext
@@ -4196,6 +4560,7 @@ function CourseEditCurriculum() {
                                                         collapsedSections={collapsedSections}
                                                         toggleSectionCollapse={toggleSectionCollapse}
                                                         addLesson={addLesson}
+                                                        addQuiz={addQuiz}
                                                     >
                                                         {/* Lessons Container */}
                                                         <div className="lessons-container">
@@ -4231,6 +4596,7 @@ function CourseEditCurriculum() {
                                                                                     itemIndex={itemIndex}
                                                                                     variantIndex={variantIndex}
                                                                                     variant={variant}
+                                                                                    variants={variants}
                                                                                     moveLessonUp={moveLessonUp}
                                                                                     moveLessonDown={moveLessonDown}
                                                                                     removeLesson={removeLesson}
@@ -4266,6 +4632,7 @@ function CourseEditCurriculum() {
                                                                                     setExtractedDuration={setExtractedDuration}  // ✨ PHASE 4.204: Setter for extracted duration
                                                                                     isElearningScorm={isElearningScorm}
                                                                                     onPreviewScorm={handleOpenScormPreview}
+                                                                                    courseQuizzes={courseQuizzes}
                                                                                 />
                                                                             );
                                                                         })}
@@ -4278,6 +4645,50 @@ function CourseEditCurriculum() {
                                             })}
                                         </SortableContext>
                                     </DndContext>
+                                </div>
+
+                                {/* 📌 Post-Test: Otomatis di Akhir Kurikulum */}
+                                <div className="card border-0 shadow-sm mt-4 mb-4" style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)', borderLeft: '5px solid #ef4444' }}>
+                                    <div className="card-body p-3 p-md-4">
+                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                            <div className="d-flex align-items-center gap-3">
+                                                <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#ef4444', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
+                                                    <i className="fas fa-award"></i>
+                                                </div>
+                                                <div>
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <span className="badge bg-danger text-white px-2 py-1" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>LANGKAH AKHIR (OTOMATIS)</span>
+                                                        <h6 className="mb-0 fw-bold text-dark">Post-Test Evaluasi Akhir</h6>
+                                                    </div>
+                                                    {prePostQuiz ? (
+                                                        <p className="mb-0 small text-muted">
+                                                            <strong className="text-dark">{prePostQuiz.title} (Post-test)</strong> &bull; {prePostQuiz.total_questions || prePostQuiz.questions?.length || 0} Soal &bull; <span className="text-danger fw-semibold"><i className="fas fa-lock me-1"></i>Terbuka setelah seluruh kurikulum dan kuis lulus</span>
+                                                        </p>
+                                                    ) : (
+                                                        <p className="mb-0 small text-muted">
+                                                            Kursus ini belum memiliki Pre/Post-Test.
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Link
+                                                    to={`/instructor/edit-course/${param?.course_id}/quiz/`}
+                                                    className="btn btn-sm btn-outline-danger fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
+                                                    style={{ borderRadius: '8px' }}
+                                                >
+                                                    <i className="fas fa-cog"></i>
+                                                    <span>{prePostQuiz ? "Kelola Soal Post-Test" : "+ Buat Pre & Post-Test"}</span>
+                                                </Link>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 pt-2 border-top border-danger border-opacity-10">
+                                            <small className="text-secondary d-flex align-items-center gap-1">
+                                                <i className="fas fa-info-circle text-danger"></i>
+                                                Post-test otomatis muncul di urutan paling akhir pada antarmuka belajar siswa setelah seluruh materi dan kuis diselesaikan.
+                                            </small>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="d-flex justify-content-between align-items-center mt-2 mb-2">

@@ -735,6 +735,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
         # Track which variants and items are being updated
         updated_variant_ids = set()
         updated_item_ids = set()
+        attached_quiz_ids = set()
         
         # Group variant data by index
         variant_indices = set()
@@ -812,6 +813,29 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                 variant_item_id = item_data.get("variant_item_id")
                 duration_seconds = item_data.get("duration_seconds")  # Get duration from file upload
                 item_order = item_data.get("order", item_index)  # Get order or use index as fallback
+                item_type = item_data.get("item_type", "lesson")
+                quiz_id = item_data.get("quiz_id")
+
+                target_quiz = None
+                if item_type == 'quiz' or (quiz_id and str(quiz_id) not in ["null", "undefined", ""]):
+                    item_type = 'quiz'
+                    target_quiz = api_models.Quiz.objects.filter(course=course, quiz_id=quiz_id).first()
+                    if not target_quiz and quiz_id:
+                        try:
+                            target_quiz = api_models.Quiz.objects.filter(course=course, id=int(quiz_id)).first()
+                        except (ValueError, TypeError):
+                            pass
+                    if target_quiz and (not item_title or item_title.strip() == ''):
+                        item_title = target_quiz.title
+                    
+                    # Prevent duplicate quiz assignment across multiple variant items in the same course
+                    if target_quiz:
+                        if target_quiz.id in attached_quiz_ids:
+                            print(f"[Curriculum Update] ⚠️ Quiz {target_quiz.id} ({target_quiz.title}) already attached to another item in this course! Skipping duplicate attachment.")
+                            target_quiz = None
+                            item_type = 'lesson'
+                        else:
+                            attached_quiz_ids.add(target_quiz.id)
                 
                 # Skip empty items
                 if not item_title or item_title.strip() == '':
@@ -876,6 +900,8 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                         variant_item.description = item_description
                         variant_item.preview = preview
                         variant_item.order = int(item_order) if item_order else 0
+                        variant_item.item_type = item_type
+                        variant_item.quiz = target_quiz
                         # PHASE 4.167: Always set file field (None if empty) to allow clearing files
                         # This ensures deleted files are properly removed from the database
                         variant_item.file = file
@@ -914,7 +940,9 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                             duration=duration,
                             preview=preview,
                             order=int(item_order) if item_order else 0,
-                            learning_module_id=target_lm_id
+                            learning_module_id=target_lm_id,
+                            item_type=item_type,
+                            quiz=target_quiz
                         )
                         updated_item_ids.add(variant_item.variant_item_id)
                 else:
@@ -937,7 +965,9 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                         duration=duration,
                         preview=preview,
                         order=int(item_order) if item_order else 0,
-                        learning_module_id=target_lm_id
+                        learning_module_id=target_lm_id,
+                        item_type=item_type,
+                        quiz=target_quiz
                     )
                     updated_item_ids.add(variant_item.variant_item_id)
         

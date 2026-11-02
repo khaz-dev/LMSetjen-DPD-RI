@@ -567,6 +567,8 @@ class VariantItemSerializer(serializers.ModelSerializer):
     is_fully_watched = serializers.SerializerMethodField()  # ✨ PHASE 11.178: Track if student watched 100%
     is_completed = serializers.SerializerMethodField()  # ✨ PHASE 11.178: Track if student finished (watched + answered correctly)
     learning_module_info = serializers.SerializerMethodField()
+    quiz_detail = serializers.SerializerMethodField()
+    quiz_id = serializers.SerializerMethodField()
     
     class Meta:
         fields = '__all__'
@@ -581,6 +583,39 @@ class VariantItemSerializer(serializers.ModelSerializer):
         else:
             self.Meta.depth = 1  # Reduced from 3 to 1
     
+    def get_quiz_id(self, obj):
+        if obj.quiz_id and obj.quiz:
+            return obj.quiz.quiz_id
+        return None
+
+    def get_quiz_detail(self, obj):
+        if obj.quiz_id and obj.quiz:
+            quiz = obj.quiz
+            user = None
+            request = self.context.get('request')
+            if request and hasattr(request, 'user') and request.user and not request.user.is_anonymous:
+                user = request.user
+            else:
+                user = self.context.get('current_user')
+
+            best_attempt = None
+            if user:
+                best_attempt = api_models.QuizAttempt.objects.filter(user=user, quiz=quiz).order_by('-score').first()
+
+            return {
+                'id': quiz.id,
+                'quiz_id': quiz.quiz_id,
+                'title': quiz.title,
+                'description': quiz.description,
+                'quiz_type': quiz.quiz_type,
+                'presentation_mode': quiz.presentation_mode,
+                'total_questions': quiz.questions.count(),
+                'is_active': quiz.is_active,
+                'is_passed': best_attempt.is_passed if best_attempt else False,
+                'best_score': best_attempt.score if best_attempt else 0,
+            }
+        return None
+
     def get_duration_seconds(self, obj):
         """✨ PHASE 4.43.9: Extract duration in seconds from DurationField for frontend"""
         if obj.duration:
@@ -610,6 +645,16 @@ class VariantItemSerializer(serializers.ModelSerializer):
             return False
         
         try:
+            # Check if this item is a quiz item
+            if getattr(obj, 'item_type', 'lesson') == 'quiz' or obj.quiz_id:
+                if obj.quiz:
+                    best_attempt = api_models.QuizAttempt.objects.filter(
+                        user=user,
+                        quiz=obj.quiz
+                    ).order_by('-score').first()
+                    return bool(best_attempt and best_attempt.is_passed and best_attempt.score >= 70)
+                return False
+
             # Get current user's course
             course = obj.variant.course
             
@@ -670,6 +715,16 @@ class VariantItemSerializer(serializers.ModelSerializer):
             return False
         
         try:
+            # Check if this item is a quiz item
+            if getattr(obj, 'item_type', 'lesson') == 'quiz' or obj.quiz_id:
+                if obj.quiz:
+                    best_attempt = api_models.QuizAttempt.objects.filter(
+                        user=user,
+                        quiz=obj.quiz
+                    ).order_by('-score').first()
+                    return bool(best_attempt and best_attempt.is_passed and best_attempt.score >= 70)
+                return False
+
             # Get current user's course
             course = obj.variant.course
             lesson_title = obj.title if obj else "Unknown"

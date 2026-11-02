@@ -9996,55 +9996,6 @@ function CourseDetail() {
 
 
 
-                                    {/* Quiz Tab */}
-
-                                    <div className="tab-pane fade" id="quiz" role="tabpanel">
-
-                                        <div className="cert-active-notice-card">
-
-                                            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-
-                                                <div className="d-flex align-items-center gap-3">
-
-                                                    <div className="notice-icon-box">
-
-                                                        <i className="fas fa-brain text-teal-accent"></i>
-
-                                                    </div>
-
-                                                    <div>
-
-                                                        <h6 className="mb-0">Panel Kuis Kursus Aktif di Atas</h6>
-
-                                                        <small className="text-muted">Pengerjaan kuis dan daftar kuis kursus ditampilkan secara interaktif pada panel 2-kolom di atas.</small>
-
-                                                    </div>
-
-                                                </div>
-
-                                                <button
-
-                                                    type="button"
-
-                                                    className="btn btn-sm btn-outline-teal"
-
-                                                    onClick={() => {
-
-                                                        document.querySelector('.course-quiz-layout-row')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                                                    }}
-
-                                                >
-
-                                                    <i className="fas fa-arrow-up me-1"></i>Ke Panel Kuis
-
-                                                </button>
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
 
 
 
