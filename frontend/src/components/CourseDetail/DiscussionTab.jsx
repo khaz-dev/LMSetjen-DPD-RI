@@ -9,7 +9,11 @@ import {
     QAFormattingToolbar,
     QAMarkdownRenderer,
     QAVideoTimestampBadge,
+    stripMarkdown,
 } from "./QAMarkdownTools";
+import { QAAttachmentInputPreview, QAAttachmentDisplay, QAImageLightboxModal } from "./QAAttachmentTools";
+import { validateQAFile, compressImageFile, formatFileSize } from "../../utils/qaCompression";
+import Toast from "../../views/plugin/Toast";
 
 /**
  * ✨ PILAR 5: Official Executive DPD RI Role Badges
@@ -161,6 +165,8 @@ const DiscussionTab = ({
     setCreateMessage,
     handleMessageChange,
     sendNewMessage,
+    isSubmittingReply = false,
+    activeVariantItem = null,
     replyTextareaRef,
     replyPreviewMode,
     setReplyPreviewMode,
@@ -170,22 +176,132 @@ const DiscussionTab = ({
 }) => {
     const currentUser = UserData();
 
+    const [replyAttachment, setReplyAttachment] = React.useState(null);
+    const [isCompressingReplyAttachment, setIsCompressingReplyAttachment] = React.useState(false);
+    const [lightboxImage, setLightboxImage] = React.useState({ show: false, url: '', name: '' });
+    const replyFileInputRef = React.useRef(null);
+
+    const handleReplyFileChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const validation = validateQAFile(file);
+        if (!validation.valid) {
+            Toast().fire({ icon: "error", title: validation.error });
+            e.target.value = "";
+            return;
+        }
+
+        try {
+            setIsCompressingReplyAttachment(true);
+            const compressed = await compressImageFile(file);
+            setReplyAttachment(compressed);
+        } catch (err) {
+            console.error("Gagal mengompresi gambar:", err);
+            setReplyAttachment(file);
+        } finally {
+            setIsCompressingReplyAttachment(false);
+            e.target.value = "";
+        }
+    };
+
+    const handleReplyPasteImage = async (e) => {
+        const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+        if (!items) return;
+
+        for (const item of items) {
+            if (item.type && item.type.indexOf("image") === 0) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (!file) continue;
+
+                const validation = validateQAFile(file);
+                if (!validation.valid) {
+                    Toast().fire({ icon: "error", title: validation.error });
+                    return;
+                }
+
+                try {
+                    setIsCompressingReplyAttachment(true);
+                    const compressed = await compressImageFile(file);
+                    setReplyAttachment(compressed);
+                    Toast().fire({
+                        icon: "success",
+                        title: `Gambar berhasil dilampirkan (${formatFileSize(compressed.size)})`
+                    });
+                } catch (err) {
+                    console.error("Paste image error:", err);
+                } finally {
+                    setIsCompressingReplyAttachment(false);
+                }
+                break;
+            }
+        }
+    };
+
+    // ✨ Keyboard shortcut: Esc to return to question list
+    React.useEffect(() => {
+        if (!openedQuestionId) return;
+
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape" || e.key === "Esc") {
+                handleConversationClose();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [openedQuestionId, handleConversationClose]);
+
     return (
         <div className="tab-pane fade" id="discussions" role="tabpanel">
             {/* Header - shows "Diskusi Kursus" when viewing list, question title when viewing detail */}
-            <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
                 {!openedQuestionId && (
                     <>
-                        <h4 className="mb-0">
-                            <i className="fas fa-comments text-teal-accent me-2"></i>Diskusi Kursus
-                        </h4>
-                        <button
-                            className="add-btn-modern"
-                            onClick={handleQuestionShow}
-                        >
-                            <i className="fas fa-plus"></i>
-                            Ajukan Pertanyaan
-                        </button>
+                        <div className="d-flex align-items-center pt-1">
+                            <h4 className="mb-0">
+                                <i className="fas fa-comments text-teal-accent me-2"></i>Diskusi Kursus
+                            </h4>
+                        </div>
+                        <div className="d-flex flex-column align-items-end gap-1 ms-auto qa-header-actions-col">
+                            <button
+                                className="add-btn-modern"
+                                onClick={handleQuestionShow}
+                            >
+                                <i className="fas fa-plus"></i>
+                                Ajukan Pertanyaan
+                            </button>
+                            {activeVariantItem && (
+                                <button
+                                    type="button"
+                                    className={`qa-active-lesson-chip ${discussionFilters.pelajaran === activeVariantItem.variant_item_id ? 'active' : ''}`}
+                                    onClick={() => {
+                                        if (discussionFilters.pelajaran === activeVariantItem.variant_item_id) {
+                                            setDiscussionFilters(prev => ({ ...prev, bagian: null, pelajaran: null }));
+                                        } else {
+                                            const parentVariant = course?.curriculum?.find(v =>
+                                                (v.variant_items || v.items || []).some(it => it.variant_item_id === activeVariantItem.variant_item_id)
+                                            );
+                                            setDiscussionFilters(prev => ({
+                                                ...prev,
+                                                bagian: parentVariant?.variant_id || null,
+                                                pelajaran: activeVariantItem.variant_item_id
+                                            }));
+                                        }
+                                    }}
+                                    title={discussionFilters.pelajaran === activeVariantItem.variant_item_id ? "Klik untuk menampilkan semua diskusi materi" : "Klik untuk memfilter diskusi materi yang sedang Anda pelajari"}
+                                >
+                                    <i className="fas fa-crosshairs me-1 text-teal-accent"></i>
+                                    <span className="qa-chip-title">Materi Aktif: <strong>{activeVariantItem.title}</strong></span>
+                                    {discussionFilters.pelajaran === activeVariantItem.variant_item_id ? (
+                                        <span className="qa-chip-status-tag tag-active"><i className="fas fa-times me-1"></i>Batalkan</span>
+                                    ) : (
+                                        <span className="qa-chip-status-tag tag-idle"><i className="fas fa-filter me-1"></i>Filter Diskusi Ini</span>
+                                    )}
+                                </button>
+                            )}
+                        </div>
                     </>
                 )}
             </div>
@@ -247,6 +363,26 @@ const DiscussionTab = ({
                                         <i className="fas fa-clock me-1"></i>Menunggu Solusi
                                     </span>
                                 )}
+
+                                {/* ✨ Quick Jump to Reply Form Button */}
+                                <button
+                                    type="button"
+                                    className="forum-quick-reply-btn"
+                                    onClick={() => {
+                                        const replySec = document.querySelector('.forum-reply-section');
+                                        if (replySec) {
+                                            replySec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                            setTimeout(() => {
+                                                if (replyTextareaRef?.current) {
+                                                    replyTextareaRef.current.focus();
+                                                }
+                                            }, 250);
+                                        }
+                                    }}
+                                    title="Langsung menuju form balasan di bawah"
+                                >
+                                    <i className="fas fa-reply me-1 text-teal"></i>Tulis Balasan
+                                </button>
 
                                 {/* ✨ Pilar 5: Pin Toggle Button for Instructors / Staff */}
                                 {isCourseInstructorOrStaff && !selectedConversation.is_pinned && (
@@ -374,6 +510,12 @@ const DiscussionTab = ({
                                 content={selectedConversation.message || (selectedConversation.messages?.[0]?.message) || 'Tidak ada pesan'}
                                 onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
                             />
+                            {/* Attachment Display for Original Question */}
+                            <QAAttachmentDisplay
+                                fileUrl={selectedConversation.file || selectedConversation.messages?.[0]?.file}
+                                fileName={selectedConversation.file_name || selectedConversation.messages?.[0]?.file_name}
+                                onImageClick={(url, name) => setLightboxImage({ show: true, url, name })}
+                            />
                         </div>
 
                         {/* Post Footer with Like and Report Button */}
@@ -450,6 +592,11 @@ const DiscussionTab = ({
                                             <QAMarkdownRenderer
                                                 content={solMsg.message}
                                                 onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
+                                            />
+                                            <QAAttachmentDisplay
+                                                fileUrl={solMsg.file}
+                                                fileName={solMsg.file_name}
+                                                onImageClick={(url, name) => setLightboxImage({ show: true, url, name })}
                                             />
                                         </div>
                                     </div>
@@ -559,6 +706,11 @@ const DiscussionTab = ({
                                                     content={msg.message}
                                                     onTimestampClick={(sec) => handleJumpToVideoTimestamp(selectedConversation.variant_item?.variant_item_id, sec)}
                                                 />
+                                                <QAAttachmentDisplay
+                                                    fileUrl={msg.file}
+                                                    fileName={msg.file_name}
+                                                    onImageClick={(url, name) => setLightboxImage({ show: true, url, name })}
+                                                />
                                             </div>
 
                                             {/* Post Footer with Solution Toggle, Like and Report Button */}
@@ -634,7 +786,16 @@ const DiscussionTab = ({
                         <h3 className="forum-reply-section-title">
                             <i className="fas fa-edit me-2"></i>Berikan Balasan Anda
                         </h3>
-                        <form onSubmit={sendNewMessage} className="forum-reply-form">
+                        <form onSubmit={(e) => { e.preventDefault(); sendNewMessage(e, replyAttachment, () => setReplyAttachment(null)); }} className="forum-reply-form">
+                            {/* Hidden file input for reply attachment */}
+                            <input
+                                type="file"
+                                ref={replyFileInputRef}
+                                style={{ display: "none" }}
+                                accept=".png,.jpg,.jpeg,.webp,.pdf,image/*"
+                                onChange={handleReplyFileChange}
+                            />
+
                             <div className="forum-form-group">
                                 {/* ✨ Pilar 4: Formatting Toolbar */}
                                 <QAFormattingToolbar
@@ -645,6 +806,8 @@ const DiscussionTab = ({
                                     onTogglePreview={setReplyPreviewMode}
                                     getCurrentVideoTime={getCurrentVideoTime}
                                     showTimestampBtn={true}
+                                    onAttachClick={() => replyFileInputRef.current?.click()}
+                                    hasAttachment={Boolean(replyAttachment)}
                                 />
                                 {replyPreviewMode ? (
                                     <div className="forum-reply-preview-container">
@@ -659,25 +822,41 @@ const DiscussionTab = ({
                                         ref={replyTextareaRef}
                                         name="message"
                                         className="forum-reply-textarea"
-                                        placeholder="Tulis balasan Anda di sini... Mendukung Markdown (tebal, miring, kode, kutipan) dan cap waktu video seperti [02:15]."
+                                        placeholder="Tulis balasan Anda di sini... Mendukung Markdown, cap waktu video [02:15], dan tempel screenshot langsung (Ctrl+V)."
                                         rows="3"
                                         onChange={handleMessageChange}
+                                        onPaste={handleReplyPasteImage}
                                         value={createMessage.message}
-                                        required
+                                        required={!replyAttachment}
                                     />
                                 )}
+
+                                {/* Attachment Preview Chip for Reply */}
+                                <QAAttachmentInputPreview
+                                    file={replyAttachment}
+                                    isCompressing={isCompressingReplyAttachment}
+                                    onRemove={() => setReplyAttachment(null)}
+                                />
                             </div>
                             <div className="forum-form-actions">
                                 <p className="forum-form-hint">
-                                    <i className="fas fa-info-circle me-1"></i>Format Markdown & cap waktu video (contoh: <code>02:15</code>) didukung penuh.
+                                    <i className="fas fa-info-circle me-1"></i>Format Markdown, cap waktu video, dan lampiran file/gambar didukung penuh.
                                 </p>
                                 <div className="forum-action-buttons">
                                     <button
                                         type="submit"
                                         className="forum-btn-primary"
-                                        disabled={!createMessage.message?.trim()}
+                                        disabled={(!createMessage.message?.trim() && !replyAttachment) || isSubmittingReply || isCompressingReplyAttachment}
                                     >
-                                        <i className="fas fa-paper-plane me-2"></i>Kirim Balasan
+                                        {isSubmittingReply ? (
+                                            <>
+                                                <i className="fas fa-spinner fa-spin me-2"></i>Mengirim...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-paper-plane me-2"></i>Kirim Balasan
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>
@@ -739,19 +918,32 @@ const DiscussionTab = ({
 
                     {/* Secondary Filter Controls - Search, Bagian, Pelajaran, Sorting */}
                     <div className="mb-3 course-filters-row">
-                        {/* Search Input */}
+                        {/* Search Input with inline clear */}
                         <div className="filter-col-search" style={{ flex: '1 1 35%' }}>
                             <label className="compact-filter-label">
                                 <i className="fas fa-search me-1 text-teal-accent"></i>
                                 Cari Pertanyaan
                             </label>
-                            <input
-                                type="text"
-                                className="form-control compact-filter-input"
-                                placeholder="Cari judul, topik, atau kata kunci..."
-                                value={discussionFilters.search}
-                                onChange={(e) => setDiscussionFilters({ ...discussionFilters, search: e.target.value })}
-                            />
+                            <div className="search-input-wrapper position-relative">
+                                <input
+                                    type="text"
+                                    className="form-control compact-filter-input"
+                                    placeholder="Cari judul, kata kunci, atau jawaban..."
+                                    value={discussionFilters.search}
+                                    onChange={(e) => setDiscussionFilters({ ...discussionFilters, search: e.target.value })}
+                                    style={{ paddingRight: discussionFilters.search ? '2rem' : undefined }}
+                                />
+                                {discussionFilters.search && (
+                                    <button
+                                        type="button"
+                                        className="search-clear-inline-btn"
+                                        onClick={() => setDiscussionFilters(prev => ({ ...prev, search: '' }))}
+                                        title="Hapus kata kunci pencarian"
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         {/* Bagian Filter Dropdown */}
@@ -871,6 +1063,12 @@ const DiscussionTab = ({
                                                     <i className="fas fa-chalkboard-user me-1"></i>Respon Instruktur
                                                 </span>
                                             )}
+
+                                            {Boolean(q.file || q.messages?.some(m => m.file)) && (
+                                                <span className="qa-status-pill attachment" title="Diskusi ini memiliki lampiran gambar atau dokumen">
+                                                    <i className="fas fa-paperclip me-1 text-teal-accent"></i>Lampiran
+                                                </span>
+                                            )}
                                         </div>
 
                                         {(q.variant || q.variant_item || (q.video_timestamp !== null && q.video_timestamp !== undefined)) && (
@@ -935,8 +1133,7 @@ const DiscussionTab = ({
                                             </h5>
                                             {(q.message || (q.messages && q.messages[0]?.message)) && (
                                                 <p className="question-snippet-compact mb-0">
-                                                    {(q.message || q.messages?.[0]?.message || '').substring(0, 160)}
-                                                    {(q.message || q.messages?.[0]?.message || '').length > 160 ? '...' : ''}
+                                                    {stripMarkdown(q.message || q.messages?.[0]?.message || '', 160)}
                                                 </p>
                                             )}
                                         </div>
@@ -1038,6 +1235,14 @@ const DiscussionTab = ({
                     )}
                 </>
             )}
+
+            {/* Fullscreen Lightbox Modal for Attachment Images */}
+            <QAImageLightboxModal
+                show={lightboxImage.show}
+                onHide={() => setLightboxImage({ show: false, url: '', name: '' })}
+                imageUrl={lightboxImage.url}
+                imageName={lightboxImage.name}
+            />
         </div>
     );
 };

@@ -1058,6 +1058,8 @@ class Question_Answer(models.Model):
     is_solved = models.BooleanField(default=False)
     video_timestamp = models.IntegerField(null=True, blank=True, help_text="Timestamp in seconds for video playback")
     is_pinned = models.BooleanField(default=False, help_text="Pinned discussion to appear at the top")
+    file = models.FileField(upload_to="qa_attachments/", null=True, blank=True)
+    file_name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.course.title}"
@@ -1080,6 +1082,8 @@ class Question_Answer_Message(models.Model):
     qa_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date = models.DateTimeField(default=timezone.now)
     is_solution = models.BooleanField(default=False)
+    file = models.FileField(upload_to="qa_attachments/", null=True, blank=True)
+    file_name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.course.title}"
@@ -3853,108 +3857,188 @@ class StudentPoints(models.Model):
     @classmethod
     def reconcile_points(cls, user):
         """
-        Anti-redundansi & Rekonsiliasi Komprehensif Poin Siswa:
+        Anti-redundansi, Sinkronisasi Komprehensif, dan Adaptasi Perubahan Data Poin Siswa:
         1. Kuis & Ujian (quiz_score):
-           - Hanya mengambil skor TERTINGGI untuk setiap kuis (berdasarkan normalized quiz title atau quiz_id).
-           - Mengeliminasi/menghapus entri log audit yang redundan atau memiliki skor lebih rendah.
-        2. Penyelesaian Kursus (course_completion):
-           - Maksimal 1 penghargaan (+100 pt) per kursus (berdasarkan course_id atau course title).
-           - Menghapus perolehan duplikat.
-        3. Ulasan & Rating (rating_given):
-           - Maksimal 1 perolehan (+50 pt) per kursus.
-           - Memverifikasi apakah review masih aktif atau tidak dihapus.
+           - Evaluasi QuizAttempt user yang lulus (is_passed=True).
+           - Ambil attempt terbaik (skor tertinggi) untuk setiap kuis.
+           - Sinkronkan PointsAuditLog (+skor tertinggi pt) dan hapus entri jika attempt dihapus.
+        2. Penyelesaian Kursus / Sertifikat (course_completion):
+           - Evaluasi Certificate valid (is_valid=True) user.
+           - Sinkronkan PointsAuditLog (+100 pt per kursus) dan hapus entri jika sertifikat dihapus / tidak valid.
+        3. Ulasan Kursus (rating_given):
+           - Evaluasi Review aktif (active=True, role='student', course__isnull=False).
+           - Sinkronkan PointsAuditLog (+50 pt per kursus) dan hapus entri jika review dihapus / dinonaktifkan.
         4. Testimoni Platform (platform_testimonial):
-           - Maksimal 1 perolehan (+50 pt) per siswa.
-        5. Rekalkulasi total lifetime, yearly, dan monthly points siswa secara akurat.
+           - Evaluasi Review aktif testimoni platform (active=True, role='student', course__isnull=True).
+           - Sinkronkan PointsAuditLog (+50 pt per siswa) dan hapus jika dihapus / dinonaktifkan.
+        5. Rekalkulasi StudentPoints:
+           - Hitung total aktual lifetime, yearly, dan monthly points.
+        6. Sinkronisasi ActivityLog:
+           - Set points_awarded = 0 untuk seluruh aktivitas non-poin (lesson_completed, video_*, enrollment, question_*).
+           - Bersihkan duplikasi ActivityLog pada lesson_completed dan question_asked.
+           - Pastikan points_awarded pada log aktivitas perolehan poin (certificate_earned, quiz_passed, review_posted, testimonial_posted)
+             persis sama dengan PointsAuditLog sehingga total poin di timeline tepat sama dengan StudentPoints.lifetime_points.
         """
         from collections import defaultdict
+        from django.db.models import Max
         now = timezone.now()
         current_year = now.year
         current_month = now.month
 
-        # 1. Kuis: deduplikasi dan pertahankan hanya skor tertinggi
-        quiz_logs = PointsAuditLog.objects.filter(
-            user=user,
-            points_type='student',
-            activity_type='quiz_score'
-        ).order_by('-points_awarded', '-awarded_at')
+        # 1. Kursus & Sertifikat: sinkronisasi dari Certificate valid
+        valid_certs = Certificate.objects.filter(user=user, is_valid=True).select_related('course')
+        valid_cert_courses = set()
+        for cert in valid_certs:
+            if cert.course_id:
+                valid_cert_courses.add(cert.course_id)
+                has_pal = PointsAuditLog.objects.filter(
+                    user=user,
+                    points_type='student',
+                    activity_type='course_completion',
+                    course_id=cert.course_id
+                ).exists()
+                if not has_pal:
+                    c_title = cert.course.title if cert.course else f"Kursus #{cert.course_id}"
+                    PointsAuditLog.objects.create(
+                        user=user,
+                        points_type='student',
+                        activity_type='course_completion',
+                        points_awarded=100,
+                        course_id=cert.course_id,
+                        description=f"Completed course: {c_title}"
+                    )
 
-        quizzes_by_key = defaultdict(list)
-        for q_log in quiz_logs:
-            title = None
-            if q_log.quiz_id:
-                try:
-                    q_obj = Quiz.objects.filter(id=q_log.quiz_id).first()
-                    if q_obj:
-                        title = q_obj.title
-                except Exception:
-                    pass
-            if not title and q_log.description:
-                if 'on:' in q_log.description:
-                    title = q_log.description.split('on:')[-1].strip()
+        # Hapus audit log course_completion yang sertifikatnya sudah dihapus / tidak valid
+        for c_log in PointsAuditLog.objects.filter(user=user, points_type='student', activity_type='course_completion'):
+            if c_log.course_id not in valid_cert_courses:
+                c_log.delete()
+
+        # Deduplikasi course_completion (maksimal 1 per kursus)
+        seen_courses = set()
+        for c_log in PointsAuditLog.objects.filter(user=user, points_type='student', activity_type='course_completion').order_by('-awarded_at'):
+            if c_log.course_id in seen_courses:
+                c_log.delete()
+            else:
+                seen_courses.add(c_log.course_id)
+
+        # 2. Kuis & Ujian: hanya skor tertinggi per kuis dari QuizAttempt yang lulus
+        passed_attempts = QuizAttempt.objects.filter(user=user, is_passed=True).select_related('quiz')
+        quiz_ids = set(passed_attempts.values_list('quiz_id', flat=True))
+
+        for q_id in quiz_ids:
+            best_score = QuizAttempt.objects.filter(user=user, quiz_id=q_id, is_passed=True).aggregate(Max('score'))['score__max']
+            if best_score is not None and best_score > 0:
+                score_pts = min(max(int(best_score), 0), 100)
+                q_obj = Quiz.objects.filter(id=q_id).first()
+                q_title = q_obj.title if q_obj else f"Quiz #{q_id}"
+                pal_qs = PointsAuditLog.objects.filter(
+                    user=user,
+                    points_type='student',
+                    activity_type='quiz_score',
+                    quiz_id=q_id
+                ).order_by('-points_awarded', '-awarded_at')
+
+                if pal_qs.exists():
+                    primary = pal_qs.first()
+                    if primary.points_awarded != score_pts:
+                        primary.points_awarded = score_pts
+                        primary.save(update_fields=['points_awarded'])
+                    for red in pal_qs[1:]:
+                        red.delete()
                 else:
-                    title = q_log.description.strip()
-            norm_key = (title or f"quiz_{q_log.quiz_id or 'unknown'}").strip().lower()
-            quizzes_by_key[norm_key].append(q_log)
+                    PointsAuditLog.objects.create(
+                        user=user,
+                        points_type='student',
+                        activity_type='quiz_score',
+                        points_awarded=score_pts,
+                        quiz_id=q_id,
+                        course_id=q_obj.course_id if q_obj else None,
+                        description=f"Quiz score {score_pts}% on: {q_title}"
+                    )
 
-        for norm_key, group in quizzes_by_key.items():
-            if len(group) > 1:
-                # group is already sorted by -points_awarded, -awarded_at
-                # Keep the first (highest score), delete lower/redundant ones
-                best = group[0]
-                for redundant in group[1:]:
-                    redundant.delete()
+        # Hapus audit log kuis yang kuis/attempt-nya sudah dihapus atau tidak lulus
+        for q_log in PointsAuditLog.objects.filter(user=user, points_type='student', activity_type='quiz_score'):
+            if q_log.quiz_id not in quiz_ids:
+                q_log.delete()
 
-        # 2. Kursus: deduplikasi dan pastikan maksimal 1 per kursus
-        course_logs = PointsAuditLog.objects.filter(
+        # 3. Ulasan / Rating Kursus: dari Review aktif siswa per kursus
+        active_course_reviews = Review.objects.filter(
             user=user,
-            points_type='student',
-            activity_type='course_completion'
-        ).order_by('-awarded_at')
+            active=True,
+            course__isnull=False
+        ).select_related('course')
+        reviewed_course_ids = set()
+        for rev in active_course_reviews:
+            if getattr(rev, 'role', 'student') == 'student':
+                reviewed_course_ids.add(rev.course_id)
+                has_pal = PointsAuditLog.objects.filter(
+                    user=user,
+                    points_type='student',
+                    activity_type='rating_given',
+                    course_id=rev.course_id
+                ).exists()
+                if not has_pal:
+                    c_title = rev.course.title if rev.course else f"Kursus #{rev.course_id}"
+                    PointsAuditLog.objects.create(
+                        user=user,
+                        points_type='student',
+                        activity_type='rating_given',
+                        points_awarded=50,
+                        course_id=rev.course_id,
+                        review_id=rev.id,
+                        description=f"Gave {rev.rating}* rating on: {c_title}"
+                    )
 
-        courses_by_key = defaultdict(list)
-        for c_log in course_logs:
-            c_key = c_log.course_id
-            if not c_key and c_log.description:
-                c_key = c_log.description.strip().lower()
-            courses_by_key[c_key].append(c_log)
+        # Hapus audit log ulasan yang review-nya dihapus atau dinonaktifkan
+        for r_log in PointsAuditLog.objects.filter(user=user, points_type='student', activity_type='rating_given', course_id__isnull=False):
+            if r_log.course_id not in reviewed_course_ids:
+                r_log.delete()
 
-        for c_key, group in courses_by_key.items():
-            if len(group) > 1:
-                for redundant in group[1:]:
-                    redundant.delete()
+        # Deduplikasi ulasan kursus (maksimal 1 per kursus)
+        seen_reviews = set()
+        for r_log in PointsAuditLog.objects.filter(user=user, points_type='student', activity_type='rating_given', course_id__isnull=False).order_by('-awarded_at'):
+            if r_log.course_id in seen_reviews:
+                r_log.delete()
+            else:
+                seen_reviews.add(r_log.course_id)
 
-        # 3. Ulasan/Rating: deduplikasi per course_id dan verifikasi apakah review masih aktif
-        rating_logs = PointsAuditLog.objects.filter(
+        # 4. Testimoni Platform: maksimal 1 per siswa dari Review aktif testimoni
+        active_testi = Review.objects.filter(
             user=user,
-            points_type='student',
-            activity_type='rating_given'
-        )
-        ratings_by_course = defaultdict(list)
-        for r_log in rating_logs:
-            if r_log.review_id:
-                rev = Review.objects.filter(id=r_log.review_id, active=True).first()
-                if not rev:
-                    r_log.delete()
-                    continue
-            ratings_by_course[r_log.course_id or r_log.description].append(r_log)
+            active=True,
+            course__isnull=True,
+            role='student'
+        ).first()
 
-        for c_key, group in ratings_by_course.items():
-            if len(group) > 1:
-                for redundant in group[1:]:
-                    redundant.delete()
-
-        # 4. Testimoni Platform: maksimal 1 per siswa
         testi_logs = PointsAuditLog.objects.filter(
             user=user,
             points_type='student',
-            activity_type='platform_testimonial'
-        )
-        if testi_logs.count() > 1:
-            kept = testi_logs.first()
-            testi_logs.exclude(id=kept.id).delete()
+            activity_type__in=['platform_testimonial', 'rating_given'],
+            course_id__isnull=True
+        ).order_by('-awarded_at')
 
-        # 5. Hitung total aktual dari log audit yang sudah bersih & terverifikasi
+        if active_testi:
+            if testi_logs.exists():
+                primary = testi_logs.first()
+                if primary.points_awarded != 50:
+                    primary.points_awarded = 50
+                    primary.save(update_fields=['points_awarded'])
+                for red in testi_logs[1:]:
+                    red.delete()
+            else:
+                PointsAuditLog.objects.create(
+                    user=user,
+                    points_type='student',
+                    activity_type='platform_testimonial',
+                    points_awarded=50,
+                    review_id=active_testi.id,
+                    description=f"Review: {active_testi.rating}* on [PLATFORM TESTIMONIAL as student]"
+                )
+        else:
+            for red in testi_logs:
+                red.delete()
+
+        # 5. Hitung total aktual StudentPoints dari PointsAuditLog
         valid_activities = ['course_completion', 'quiz_score', 'rating_given', 'platform_testimonial']
         valid_logs = PointsAuditLog.objects.filter(
             user=user,
@@ -3977,6 +4061,199 @@ class StudentPoints(models.Model):
         obj.monthly_year = current_year
         obj.monthly_month = current_month
         obj.save()
+
+        # 6. Sinkronisasi ActivityLog agar konsisten 100% dengan StudentPoints
+        try:
+            # a. Nol-kan poin pada aktivitas yang bukan perolehan poin gamifikasi
+            non_point_types = [
+                'lesson_completed', 'lesson_started', 'video_watched', 'video_completed',
+                'enrollment', 'question_asked', 'question_answered', 'search_query',
+                'content_liked', 'wishlist_added', 'discussion_participated'
+            ]
+            ActivityLog.objects.filter(
+                user=user,
+                activity_type__in=non_point_types,
+                points_awarded__gt=0
+            ).update(points_awarded=0)
+
+            # b. Deduplikasi lesson_completed berulang
+            lesson_logs = ActivityLog.objects.filter(
+                user=user,
+                activity_type='lesson_completed'
+            ).order_by('activity_date')
+            seen_lessons = set()
+            for ll in lesson_logs:
+                key = (ll.lesson_id or ll.title, ll.course_id)
+                if key in seen_lessons:
+                    ll.delete()
+                else:
+                    seen_lessons.add(key)
+
+            # c. Deduplikasi question_asked berulang
+            q_logs = ActivityLog.objects.filter(
+                user=user,
+                activity_type='question_asked'
+            ).order_by('activity_date')
+            seen_q = set()
+            for ql in q_logs:
+                q_id = ql.metadata.get('question_id') or ql.metadata.get('qa_id') or ql.title
+                if q_id in seen_q:
+                    ql.delete()
+                else:
+                    seen_q.add(q_id)
+
+            # d. Sinkronkan ActivityLog Certificate / Course Completion
+            for c_id in valid_cert_courses:
+                has_pt = valid_logs.filter(activity_type='course_completion', course_id=c_id).exists()
+                c_logs = ActivityLog.objects.filter(
+                    user=user,
+                    activity_type='certificate_earned',
+                    course_id=c_id,
+                    role_at_time='student'
+                ).order_by('activity_date')
+                if c_logs.exists():
+                    primary = c_logs.first()
+                    pts = 100 if has_pt else 0
+                    if primary.points_awarded != pts:
+                        primary.points_awarded = pts
+                        primary.save(update_fields=['points_awarded'])
+                    for red in c_logs[1:]:
+                        if red.points_awarded != 0:
+                            red.points_awarded = 0
+                            red.save(update_fields=['points_awarded'])
+                elif has_pt:
+                    c_obj = Certificate.objects.filter(user=user, course_id=c_id, is_valid=True).first()
+                    c_title = c_obj.course.title if c_obj and c_obj.course else f"Kursus #{c_id}"
+                    ActivityLog.objects.create(
+                        user=user,
+                        activity_type='certificate_earned',
+                        role_at_time='student',
+                        course_id=c_id,
+                        title=f"Raih Sertifikat: {c_title}",
+                        description=f"Berhasil meraih sertifikat untuk kursus {c_title}",
+                        success=True,
+                        points_awarded=100,
+                        activity_date=c_obj.date if c_obj else now,
+                        metadata={'course_id': c_id}
+                    )
+
+            # Nol-kan poin certificate_earned yang tidak lagi memiliki bukti kelulusan valid
+            ActivityLog.objects.filter(
+                user=user,
+                activity_type='certificate_earned',
+                role_at_time='student'
+            ).exclude(course_id__in=valid_cert_courses).update(points_awarded=0)
+
+            # e. Sinkronkan ActivityLog Kuis: hanya attempt dengan skor tertinggi yang memegang poin
+            for q_id in quiz_ids:
+                best_att = QuizAttempt.objects.filter(user=user, quiz_id=q_id, is_passed=True).order_by('-score', '-date_attempted').first()
+                if best_att and best_att.score > 0:
+                    best_pts = min(max(int(best_att.score), 0), 100)
+                    att_logs = ActivityLog.objects.filter(
+                        user=user,
+                        quiz_id=q_id,
+                        role_at_time='student',
+                        activity_type__in=['quiz_passed', 'quiz_attempted']
+                    ).order_by('-activity_date')
+
+                    matched = False
+                    for al in att_logs:
+                        if al.metadata.get('quiz_attempt_id') == best_att.id and not matched:
+                            if al.points_awarded != best_pts:
+                                al.points_awarded = best_pts
+                                al.save(update_fields=['points_awarded'])
+                            matched = True
+                        else:
+                            if al.points_awarded != 0:
+                                al.points_awarded = 0
+                                al.save(update_fields=['points_awarded'])
+
+            # Nol-kan kuis yang attempt-nya dihapus
+            ActivityLog.objects.filter(
+                user=user,
+                activity_type__in=['quiz_passed', 'quiz_attempted'],
+                role_at_time='student'
+            ).exclude(quiz_id__in=quiz_ids).update(points_awarded=0)
+
+            # f. Sinkronkan ActivityLog Ulasan Kursus
+            for c_id in reviewed_course_ids:
+                r_obj = active_course_reviews.filter(course_id=c_id, role='student').first()
+                if r_obj:
+                    r_logs = ActivityLog.objects.filter(
+                        user=user,
+                        activity_type='review_posted',
+                        course_id=c_id,
+                        role_at_time='student'
+                    ).order_by('activity_date')
+                    if r_logs.exists():
+                        primary = r_logs.first()
+                        if primary.points_awarded != 50:
+                            primary.points_awarded = 50
+                            primary.save(update_fields=['points_awarded'])
+                        for red in r_logs[1:]:
+                            if red.points_awarded != 0:
+                                red.points_awarded = 0
+                                red.save(update_fields=['points_awarded'])
+                    else:
+                        c_title = r_obj.course.title if r_obj.course else f"Kursus #{c_id}"
+                        ActivityLog.objects.create(
+                            user=user,
+                            activity_type='review_posted',
+                            role_at_time='student',
+                            course_id=c_id,
+                            title=f"Posting Review: {c_title}",
+                            description=f"Memberikan ulasan {r_obj.rating}/5 bintang untuk {c_title}",
+                            success=True,
+                            points_awarded=50,
+                            activity_date=r_obj.date,
+                            metadata={'review_id': r_obj.id, 'course_id': c_id, 'rating': r_obj.rating}
+                        )
+
+            # Nol-kan ulasan yang dihapus / dinonaktifkan
+            ActivityLog.objects.filter(
+                user=user,
+                activity_type='review_posted',
+                role_at_time='student'
+            ).exclude(course_id__in=reviewed_course_ids).update(points_awarded=0)
+
+            # g. Sinkronkan ActivityLog Testimoni Platform
+            if active_testi:
+                t_logs = ActivityLog.objects.filter(
+                    user=user,
+                    activity_type='testimonial_posted',
+                    role_at_time='student'
+                ).order_by('activity_date')
+                if t_logs.exists():
+                    primary = t_logs.first()
+                    if primary.points_awarded != 50:
+                        primary.points_awarded = 50
+                        primary.save(update_fields=['points_awarded'])
+                    for red in t_logs[1:]:
+                        if red.points_awarded != 0:
+                            red.points_awarded = 0
+                            red.save(update_fields=['points_awarded'])
+                else:
+                    ActivityLog.objects.create(
+                        user=user,
+                        activity_type='testimonial_posted',
+                        role_at_time='student',
+                        title="Kirim Testimoni Platform",
+                        description=f"Mengirimkan testimoni platform ({active_testi.rating}/5 bintang)",
+                        success=True,
+                        points_awarded=50,
+                        activity_date=active_testi.date,
+                        metadata={'review_id': active_testi.id, 'rating': active_testi.rating}
+                    )
+            else:
+                ActivityLog.objects.filter(
+                    user=user,
+                    activity_type='testimonial_posted',
+                    role_at_time='student'
+                ).update(points_awarded=0)
+
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Error synchronizing ActivityLog in reconcile_points: {e}")
 
         return obj
 
@@ -4579,211 +4856,8 @@ class UploadedFile(models.Model):
         return f"File {self.file_id} ({self.file_name}) by {self.uploaded_by.username}"
 
 
+
 # Connect the signals
 post_save.connect(sync_teacher_with_profile, sender=Teacher)
 post_save.connect(track_course_click, sender=SearchLog)
 post_save.connect(update_search_taxonomy, sender=SearchLog)
-
-
-# ==================== ACTIVITY LOG SIGNAL HANDLERS ====================
-
-def log_course_enrollment(sender, instance, created, **kwargs):
-    """
-    ✨ PHASE 53: Auto-create ActivityLog when student enrolls in a course.
-    Called when EnrolledCourse is created.
-    """
-    if created and instance.user and instance.course:
-        try:
-            ActivityLog.objects.create(
-                user=instance.user,
-                activity_type='enrollment',
-                role_at_time='student',
-                course=instance.course,
-                title=f"Mendaftar di {instance.course.title}",
-                description=f"Siswa {instance.user.full_name} mendaftar di kursus {instance.course.title}",
-                activity_date=instance.date,
-                success=True,
-                metadata={
-                    'course_title': instance.course.title,
-                    'teacher': instance.course.teacher.full_name if instance.course.teacher else 'Unknown',
-                    'enrollment_id': instance.enrollment_id,
-                }
-            )
-            print(f"[ActivityLog] Created enrollment log for {instance.user.username} on {instance.course.title}")
-        except Exception as e:
-            print(f"[ActivityLog] FAILED to create enrollment log: {str(e)}")
-
-
-def log_lesson_completion(sender, instance, created, **kwargs):
-    """
-    ✨ PHASE 53: Auto-create ActivityLog when student completes a lesson.
-    Called when CompletedLesson is created.
-    """
-    if created and instance.user and instance.variant_item:
-        try:
-            # Check if ActivityLog already exists for this completion to avoid duplicates
-            existing = ActivityLog.objects.filter(
-                user=instance.user,
-                activity_type='lesson_completed',
-                lesson=instance.variant_item,
-                activity_date__date=instance.date.date()
-            ).exists()
-            
-            if existing:
-                print(f"[ActivityLog] Duplicate detected, skipping for {instance.user.username} on {instance.variant_item.title}")
-                return
-            
-            ActivityLog.objects.create(
-                user=instance.user,
-                activity_type='lesson_completed',
-                role_at_time='student',
-                course=instance.course,
-                lesson=instance.variant_item,
-                title=f"Selesaikan Pelajaran: {instance.variant_item.title}",
-                description=f"Siswa {instance.user.full_name} menyelesaikan pelajaran {instance.variant_item.title} dalam kursus {instance.course.title}",
-                activity_date=instance.date,
-                success=True,
-                points_awarded=10,  # 10 points for lesson completion
-                metadata={
-                    'course_title': instance.course.title,
-                    'lesson_title': instance.variant_item.title,
-                    'lesson_duration': str(instance.variant_item.duration) if instance.variant_item.duration else 'Unknown',
-                }
-            )
-            print(f"[ActivityLog] Created lesson_completed log for {instance.user.username} on {instance.variant_item.title}")
-        except Exception as e:
-            print(f"[ActivityLog] FAILED to create lesson_completed log: {str(e)}")
-
-
-def log_quiz_attempt(sender, instance, created, **kwargs):
-    """
-    ✨ PHASE 53: Auto-create ActivityLog when student completes a quiz.
-    Called when QuizAttempt is created.
-    """
-    if created and instance.user and instance.quiz:
-        try:
-            # Determine activity type based on whether quiz was passed
-            activity_type = 'quiz_passed' if instance.is_passed else 'quiz_failed'
-            points = int(instance.score) if instance.is_passed else 0  # Award points only if passed
-            
-            ActivityLog.objects.create(
-                user=instance.user,
-                activity_type=activity_type,
-                role_at_time='student',
-                course=instance.quiz.course,
-                quiz=instance.quiz,
-                title=f"{'Lulus' if instance.is_passed else 'Tidak Lulus'} Kuis: {instance.quiz.title}",
-                description=f"Siswa {instance.user.full_name} mengerjakan kuis {instance.quiz.title} dengan skor {instance.score}% - {'LULUS' if instance.is_passed else 'TIDAK LULUS'}",
-                activity_date=instance.date_attempted,
-                success=instance.is_passed,
-                points_awarded=points,
-                duration_seconds=int(instance.time_taken.total_seconds()) if instance.time_taken else 0,
-                metadata={
-                    'quiz_title': instance.quiz.title,
-                    'course_title': instance.quiz.course.title,
-                    'score': instance.score,
-                    'correct_answers': instance.correct_answers,
-                    'total_questions': instance.total_questions,
-                    'is_passed': instance.is_passed,
-                }
-            )
-            print(f"[ActivityLog] Created {activity_type} log for {instance.user.username} on {instance.quiz.title} (Score: {instance.score}%)")
-        except Exception as e:
-            print(f"[ActivityLog] FAILED to create quiz_attempt log: {str(e)}")
-
-
-def log_certificate_earned(sender, instance, created, **kwargs):
-    """
-    ✨ PHASE 53: Auto-create ActivityLog when student earns a certificate.
-    Called when Certificate is created.
-    """
-    if created and instance.user and instance.course:
-        try:
-            ActivityLog.objects.create(
-                user=instance.user,
-                activity_type='certificate_earned',
-                role_at_time='student',
-                course=instance.course,
-                title=f"Raih Sertifikat: {instance.course.title}",
-                description=f"Siswa {instance.user.full_name} meraih sertifikat untuk kursus {instance.course.title}",
-                activity_date=instance.date,
-                success=True,
-                points_awarded=100,  # 100 points for certificate
-                metadata={
-                    'course_title': instance.course.title,
-                    'certificate_id': instance.certificate_id,
-                    'certificate_code': instance.get_formatted_certificate_id(),
-                }
-            )
-            print(f"[ActivityLog] Created certificate_earned log for {instance.user.username} on {instance.course.title}")
-        except Exception as e:
-            print(f"[ActivityLog] FAILED to create certificate_earned log: {str(e)}")
-
-
-def log_question_asked(sender, instance, created, **kwargs):
-    """
-    ✨ PHASE 53: Auto-create ActivityLog when student posts a Q&A question.
-    Called when Question_Answer is created.
-    """
-    if created and instance.user and instance.course:
-        try:
-            ActivityLog.objects.create(
-                user=instance.user,
-                activity_type='question_asked',
-                role_at_time='student',
-                course=instance.course,
-                lesson=instance.variant_item,
-                title=f"Membuat Pertanyaan: {instance.title[:50]}",
-                description=f"Siswa {instance.user.full_name} membuat pertanyaan di kursus {instance.course.title}",
-                activity_date=instance.date,
-                success=True,
-                metadata={
-                    'course_title': instance.course.title,
-                    'question_title': instance.title,
-                    'qa_id': instance.qa_id,
-                    'lesson_title': instance.variant_item.title if instance.variant_item else 'Tidak ada',
-                }
-            )
-            print(f"[ActivityLog] Created question_asked log for {instance.user.username}")
-        except Exception as e:
-            print(f"[ActivityLog] FAILED to create question_asked log: {str(e)}")
-
-
-def log_review_posted(sender, instance, created, **kwargs):
-    """
-    ✨ PHASE 53: Auto-create ActivityLog when user posts a review/rating.
-    Called when Review is created.
-    """
-    if created and instance.user:
-        try:
-            course_title = instance.course.title if instance.course else 'Rekomendasi Umum'
-            activity_type = 'review_posted'
-            
-            ActivityLog.objects.create(
-                user=instance.user,
-                activity_type=activity_type,
-                role_at_time=instance.role if hasattr(instance, 'role') else 'student',
-                course=instance.course,
-                title=f"Posting Review: {course_title}",
-                description=f"{instance.user.full_name} memberi rating {instance.rating}/5 untuk {course_title}",
-                activity_date=instance.date,
-                success=True,
-                metadata={
-                    'course_title': course_title,
-                    'rating': instance.rating,
-                    'role': instance.role if hasattr(instance, 'role') else 'student',
-                    'review_excerpt': instance.review[:100] if instance.review else '',
-                }
-            )
-            print(f"[ActivityLog] Created review_posted log for {instance.user.username}")
-        except Exception as e:
-            print(f"[ActivityLog] FAILED to create review_posted log: {str(e)}")
-
-
-# Register signal handlers for ActivityLog auto-creation
-post_save.connect(log_course_enrollment, sender=EnrolledCourse)
-post_save.connect(log_lesson_completion, sender=CompletedLesson)
-post_save.connect(log_quiz_attempt, sender=QuizAttempt)
-post_save.connect(log_certificate_earned, sender=Certificate)
-post_save.connect(log_question_asked, sender=Question_Answer)
-post_save.connect(log_review_posted, sender=Review)

@@ -562,37 +562,73 @@
 
 .qa-filter-search-box {
     flex: 2 1 300px;
-    position: relative;
+    position: relative !important;
     min-width: 180px;
+    display: flex !important;
+    align-items: center !important;
 }
 
-.qa-filter-search-input {
-    width: 100%;
-    height: 38px;
-    border: 1.5px solid var(--dpd-border);
-    border-radius: 9px;
-    padding: 0.4rem 0.85rem 0.4rem 2.2rem;
-    font-size: 0.85rem;
-    background: #f8fafc;
-    color: var(--dpd-slate);
-    transition: all 0.2s ease;
+.qa-filter-search-box .qa-filter-icon {
+    position: absolute !important;
+    left: 0.85rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: var(--dpd-teal) !important;
+    font-size: 0.85rem !important;
+    z-index: 4 !important;
+    pointer-events: none !important;
 }
 
-.qa-filter-search-input:focus {
-    border-color: var(--dpd-teal);
-    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
-    background: #ffffff;
-    outline: none;
+.qa-filter-search-box input.qa-filter-search-input,
+.qa-filter-search-box input[type="text"].qa-filter-search-input {
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    border: 1.5px solid var(--dpd-border) !important;
+    border-radius: 9px !important;
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+    padding-left: 2.35rem !important; /* Critical: provides 38px clearance so icon at 0.85rem never overlaps placeholder */
+    padding-right: 2.2rem !important;
+    font-size: 0.85rem !important;
+    background: #f8fafc !important;
+    color: var(--dpd-slate) !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
 }
 
-.qa-filter-icon {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--dpd-teal);
-    font-size: 0.8rem;
-    pointer-events: none;
+.qa-filter-search-box input.qa-filter-search-input:focus,
+.qa-filter-search-box input[type="text"].qa-filter-search-input:focus {
+    border-color: var(--dpd-teal) !important;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12) !important;
+    background: #ffffff !important;
+    outline: none !important;
+}
+
+.qa-filter-search-box .qa-search-clear-inline-btn {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: transparent !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    font-size: 0.78rem !important;
+    width: 22px !important;
+    height: 22px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    transition: all 0.15s ease !important;
+    z-index: 5 !important;
+}
+
+.qa-filter-search-box .qa-search-clear-inline-btn:hover {
+    color: #ef4444 !important;
+    background: #fee2e2 !important;
 }
 
 .qa-filter-select-box {
@@ -860,9 +896,47 @@
 }
 
 .forum-like-btn:hover {
-    border-color: #f43f5e;
-    color: #f43f5e;
-    background: #fff1f2;
+    border-color: #f59e0b;
+    color: #d97706;
+    background: #fefce8;
+}
+
+.forum-like-btn.liked {
+    border-color: #fde047;
+    color: #eab308;
+    background: #fef9c3;
+}
+
+.forum-like-btn.liked i {
+    color: #eab308;
+}
+
+.qa-card-content-row .qa-question-title {
+    margin-top: 0;
+}
+
+.qa-card-side-badges {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+}
+
+.forum-thread-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.forum-thread-title-row .forum-thread-title {
+    margin: 0;
+}
+
+.forum-thread-title-row .forum-thread-meta-row {
+    margin: 0;
 }
 
 .forum-report-btn:hover {
@@ -1376,4 +1450,476 @@
         height: 100px;
         border-radius: 12px 12px 0 0;
     }
+}
+
+/* ==========================================================================
+   ✨ INSTRUCTOR Q&A ATTACHMENT, MARKDOWN & MODERATION STYLES
+   ========================================================================== */
+
+/* 1. Pin & Solution Moderation Buttons */
+.forum-pin-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 20px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.forum-pin-toggle-btn:hover,
+.forum-pin-toggle-btn.active {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #b45309;
+    box-shadow: 0 1px 4px rgba(245, 158, 11, 0.15);
+}
+
+.forum-solution-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.forum-solution-toggle-btn:hover {
+    background: #f0fdfa;
+    border-color: #99f6e4;
+    color: #0f766e;
+}
+
+.forum-solution-toggle-btn.active {
+    background: #0f766e;
+    border-color: #0f766e;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+}
+
+.forum-solution-toggle-btn.active i {
+    color: #ffffff !important;
+}
+
+/* 2. Question Card Status Pills in Instructor List */
+.qa-status-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    line-height: 1.4;
+}
+
+.qa-status-pill.pinned {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.qa-status-pill.solved {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.qa-status-pill.attachment {
+    background: #f0fdfa;
+    color: #0f766e;
+    border: 1px solid #99f6e4;
+}
+
+/* 3. Attachment Previews in Reply Form */
+.qa-attachment-preview-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 7px 12px;
+    margin-top: 8px;
+    transition: all 0.2s ease;
+}
+
+.qa-attachment-preview-chip.compact {
+    padding: 5px 10px;
+    margin-top: 6px;
+    font-size: 0.82rem;
+}
+
+.qa-attachment-preview-chip.compressing {
+    background: #f0fdfa;
+    border-color: #99f6e4;
+    color: #0f766e;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.qa-attachment-thumb {
+    width: 34px;
+    height: 34px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+}
+
+.qa-attachment-file-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.qa-attachment-file-icon.pdf {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.qa-attachment-file-icon.default {
+    background: #f1f5f9;
+    color: #0d9488;
+}
+
+.qa-attachment-info {
+    min-width: 0;
+}
+
+.qa-attachment-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1e293b;
+    max-width: 260px;
+}
+
+.qa-attachment-size {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.qa-attachment-remove-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.qa-attachment-remove-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* 4. Display Uploaded Attachment (Images & PDFs) in Instructor View */
+.qa-attachment-display-container {
+    margin: 10px 0;
+}
+
+.qa-image-attachment-wrapper {
+    position: relative;
+    display: inline-block;
+    max-width: 440px;
+    max-height: 320px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    background: #f8fafc;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.qa-image-attachment-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.qa-image-attachment-thumb {
+    max-width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    display: block;
+}
+
+.qa-image-attachment-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(15, 23, 42, 0.85));
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 20px 12px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.qa-image-attachment-wrapper:hover .qa-image-attachment-overlay {
+    opacity: 1;
+}
+
+.qa-attachment-caption {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 4px;
+    max-width: 440px;
+    display: flex;
+    align-items: center;
+}
+
+.qa-pdf-attachment-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+    max-width: 460px;
+}
+
+.qa-pdf-attachment-card:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.qa-pdf-icon-wrapper {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #fee2e2;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.qa-pdf-meta {
+    min-width: 0;
+}
+
+.qa-pdf-title {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.qa-pdf-sub {
+    font-size: 0.73rem;
+    color: #64748b;
+}
+
+/* 5. Lightbox Modal */
+.qa-image-lightbox-modal .modal-dialog {
+    max-width: 90vw;
+}
+
+.qa-lightbox-modal-content {
+    background: transparent !important;
+}
+
+.qa-lightbox-inner {
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.qa-lightbox-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.qa-lightbox-body {
+    padding: 16px;
+    cursor: zoom-out;
+}
+
+.qa-lightbox-img {
+    max-height: 82vh;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    cursor: default;
+}
+
+/* 6. Formatting Toolbar in QA */
+.qa-formatting-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+}
+
+.qa-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-wrap: wrap;
+}
+
+.qa-toolbar-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #475569;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.qa-toolbar-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.qa-toolbar-btn.active {
+    background: #ccfbf1;
+    color: #0f766e;
+}
+
+.qa-toolbar-separator {
+    width: 1px;
+    height: 16px;
+    background: #cbd5e1;
+    margin: 0 4px;
+}
+
+.qa-toolbar-modes {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.qa-mode-tab-btn {
+    padding: 3px 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #64748b;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.qa-mode-tab-btn:hover {
+    color: #0f172a;
+}
+
+.qa-mode-tab-btn.active {
+    background: #ffffff;
+    color: #0f766e;
+    border-color: #cbd5e1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.forum-reply-preview-container-instructor {
+    min-height: 100px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0 0 8px 8px;
+}
+
+
+/* ==========================================================================
+   ✨ VIDEO TIMESTAMP BADGE (Harmonized with Instructor Q&A Theme)
+   ========================================================================== */
+.qa-video-time-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    background: #f0fdfa !important;
+    color: #0f766e !important;
+    border: 1px solid #99f6e4 !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-family: inherit !important;
+    cursor: default !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    vertical-align: middle !important;
+}
+
+.qa-video-time-badge:hover {
+    background: #ccfbf1 !important;
+    border-color: #5eead4 !important;
+    color: #115e59 !important;
+}
+
+.qa-video-time-badge i {
+    color: #0d9488 !important;
+    font-size: 0.8rem !important;
+}
+
+.qa-time-badge-sm {
+    font-size: 0.74rem !important;
+    padding: 0.15rem 0.5rem !important;
+    height: 24px !important;
+    line-height: 1 !important;
+}
+
+.qa-time-badge-md {
+    font-size: 0.8rem !important;
+    padding: 0.25rem 0.65rem !important;
+    height: 28px !important;
+}
+
+.qa-time-badge-lg {
+    font-size: 0.86rem !important;
+    padding: 0.35rem 0.8rem !important;
+    height: 32px !important;
 }

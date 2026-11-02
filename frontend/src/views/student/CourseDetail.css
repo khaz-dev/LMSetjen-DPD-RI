@@ -10202,6 +10202,146 @@ body.modern-course-active {
    ✨ PILAR 1 & 2: FORUM DISKUSI UPGRADE (SOLUSI TERVERIFIKASI & QUICK FILTER)
    ========================================================================== */
 
+
+/* ✨ Quick Jump to Reply Form Button */
+.forum-quick-reply-btn {
+    height: 28px !important;
+    padding: 0 0.65rem !important;
+    font-size: 0.74rem !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
+    background: #f0fdfa !important;
+    color: #0f766e !important;
+    border: 1px solid #99f6e4 !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.forum-quick-reply-btn:hover {
+    background: #0d9488 !important;
+    color: #ffffff !important;
+    border-color: #0d9488 !important;
+    transform: translateY(-1px) !important;
+}
+
+.forum-quick-reply-btn:hover i {
+    color: #ffffff !important;
+}
+
+/* ✨ Contextual Active Lesson Filter Chip */
+.qa-header-actions-col {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 0.35rem !important;
+}
+
+.qa-active-lesson-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    padding: 0.2rem 0.6rem !important;
+    background: #ffffff !important;
+    border: 1.2px dashed #0d9488 !important;
+    border-radius: 6px !important;
+    font-size: 0.73rem !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    max-width: 380px !important;
+}
+
+.qa-active-lesson-chip:hover {
+    background: #f0fdfa !important;
+    border-color: #0f766e !important;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.12) !important;
+    transform: translateY(-1px) !important;
+}
+
+.qa-active-lesson-chip.active {
+    background: #0d9488 !important;
+    border: 1.2px solid #0d9488 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25) !important;
+}
+
+.qa-active-lesson-chip.active i {
+    color: #ffffff !important;
+}
+
+.qa-active-lesson-chip .qa-chip-title {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 250px !important;
+}
+
+.qa-chip-status-tag {
+    font-size: 0.68rem !important;
+    padding: 0.08rem 0.4rem !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+}
+
+.qa-chip-status-tag.tag-idle {
+    background: rgba(13, 148, 136, 0.1) !important;
+    color: #0f766e !important;
+}
+
+.qa-chip-status-tag.tag-active {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+}
+
+@media (max-width: 576px) {
+    .qa-header-actions-col {
+        width: 100% !important;
+        align-items: stretch !important;
+    }
+    .qa-active-lesson-chip {
+        max-width: 100% !important;
+        justify-content: space-between !important;
+    }
+    .qa-active-lesson-chip .qa-chip-title {
+        max-width: 180px !important;
+    }
+}
+
+/* ✨ Search Input Inline Clear Button */
+.search-input-wrapper {
+    position: relative !important;
+    width: 100% !important;
+}
+
+.search-clear-inline-btn {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: none !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    font-size: 0.78rem !important;
+    width: 22px !important;
+    height: 22px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    transition: all 0.15s ease !important;
+}
+
+.search-clear-inline-btn:hover {
+    color: #ef4444 !important;
+    background: #fee2e2 !important;
+}
+
 /* Quick Filter Tab Bar */
 .qa-quick-filter-tabs {
     display: flex !important;
@@ -10748,6 +10888,63 @@ body.modern-course-active {
     color: #94a3b8 !important;
     font-style: italic !important;
     font-size: 0.85rem !important;
+}
+
+/* ✨ Interactive Markdown Link Styles */
+.qa-md-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.22rem !important;
+    color: #0f766e !important;
+    background: rgba(13, 148, 136, 0.08) !important;
+    border: 1px solid rgba(13, 148, 136, 0.28) !important;
+    padding: 0.08rem 0.45rem !important;
+    border-radius: 5px !important;
+    font-size: 0.84em !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    margin: 0 0.15rem !important;
+    vertical-align: middle !important;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    word-break: break-all !important;
+    cursor: pointer !important;
+}
+
+.qa-md-link:hover {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+    border-color: #0d9488 !important;
+    text-decoration: none !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3) !important;
+}
+
+.qa-md-link .qa-link-icon {
+    font-size: 0.75em !important;
+    color: #0d9488 !important;
+    transition: color 0.15s ease !important;
+}
+
+.qa-md-link:hover .qa-link-icon {
+    color: #ffffff !important;
+}
+
+.qa-md-link .qa-link-ext-icon {
+    font-size: 0.68em !important;
+    color: #0f766e !important;
+    opacity: 0.8 !important;
+    transition: transform 0.15s ease, color 0.15s ease, opacity 0.15s ease !important;
+}
+
+.qa-md-link:hover .qa-link-ext-icon {
+    transform: translate(1px, -1px) !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+.qa-md-raw-url {
+    font-family: 'Fira Code', Consolas, Monaco, monospace !important;
+    font-size: 0.78em !important;
 }
 
 /* Pilar 3: Interactive Video Timestamp Inline Buttons */
@@ -11523,4 +11720,278 @@ body.modern-course-active {
     opacity: 1 !important;
     transform: scale(1.1) !important;
     filter: brightness(1.15) !important;
+}
+
+
+/* ==========================================================================
+   ✨ PHASE 7.30: QA DISCUSSION ATTACHMENT & LIGHTBOX STYLES
+   ========================================================================== */
+
+/* 1. Attachment Preview Chip in Input Forms */
+.qa-attachment-preview-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 7px 12px;
+    margin-top: 8px;
+    transition: all 0.2s ease;
+}
+
+.qa-attachment-preview-chip.compact {
+    padding: 5px 10px;
+    margin-top: 6px;
+    font-size: 0.82rem;
+}
+
+.qa-attachment-preview-chip.compressing {
+    background: #f0fdfa;
+    border-color: #99f6e4;
+    color: #0f766e;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.qa-attachment-thumb {
+    width: 34px;
+    height: 34px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+}
+
+.qa-attachment-file-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.qa-attachment-file-icon.pdf {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.qa-attachment-file-icon.default {
+    background: #f1f5f9;
+    color: #0d9488;
+}
+
+.qa-attachment-info {
+    min-width: 0;
+}
+
+.qa-attachment-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1e293b;
+    max-width: 260px;
+}
+
+.qa-attachment-size {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.qa-attachment-remove-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.qa-attachment-remove-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* 2. Uploaded Attachment Display (Images & PDF in threads) */
+.qa-attachment-display-container {
+    margin: 10px 0;
+}
+
+.qa-image-attachment-wrapper {
+    position: relative;
+    display: inline-block;
+    max-width: 440px;
+    max-height: 320px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    background: #f8fafc;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.qa-image-attachment-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.qa-image-attachment-thumb {
+    max-width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    display: block;
+}
+
+.qa-image-attachment-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(15, 23, 42, 0.85));
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 20px 12px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.qa-image-attachment-wrapper:hover .qa-image-attachment-overlay {
+    opacity: 1;
+}
+
+.qa-attachment-caption {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 4px;
+    max-width: 440px;
+    display: flex;
+    align-items: center;
+}
+
+/* PDF Document Attachment Card */
+.qa-pdf-attachment-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+    max-width: 460px;
+}
+
+.qa-pdf-attachment-card:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.qa-pdf-icon-wrapper {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #fee2e2;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.qa-pdf-meta {
+    min-width: 0;
+}
+
+.qa-pdf-title {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.qa-pdf-sub {
+    font-size: 0.73rem;
+    color: #64748b;
+}
+
+/* Generic Fallback Attachment Card */
+.qa-generic-attachment-card {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none !important;
+    font-size: 0.82rem;
+    color: #1e293b;
+    transition: all 0.15s ease;
+}
+
+.qa-generic-attachment-card:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+/* 3. Status Pill on Discussion Cards List */
+.qa-status-pill.attachment {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+/* 4. Fullscreen Lightbox Modal */
+.qa-image-lightbox-modal .modal-dialog {
+    max-width: 90vw;
+}
+
+.qa-lightbox-modal-content {
+    background: transparent !important;
+}
+
+.qa-lightbox-inner {
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.qa-lightbox-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.qa-lightbox-body {
+    padding: 16px;
+    cursor: zoom-out;
+}
+
+.qa-lightbox-img {
+    max-height: 82vh;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    cursor: default;
 }

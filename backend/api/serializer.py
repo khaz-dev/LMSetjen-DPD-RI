@@ -2785,7 +2785,7 @@ class Question_Answer_MessageSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = api_models.Question_Answer_Message
-        fields = ['id', 'qam_id', 'qa_id', 'question', 'message', 'user', 'user_id', 'profile', 'date', 'likes_count', 'user_liked', 'is_solution']
+        fields = ['id', 'qam_id', 'qa_id', 'question', 'message', 'user', 'user_id', 'profile', 'date', 'likes_count', 'user_liked', 'is_solution', 'file', 'file_name']
         read_only_fields = ['id', 'qam_id', 'qa_id', 'date']
     
     def get_profile(self, obj):
@@ -2863,7 +2863,8 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
             'id', 'qa_id', 'course', 'title', 'user', 'user_id',
             'profile', 'variant', 'variant_item',
             'date', 'messages', 'replies_count', 'likes_count', 'user_liked',
-            'is_solved', 'has_instructor_reply', 'video_timestamp', 'is_pinned'
+            'is_solved', 'has_instructor_reply', 'video_timestamp', 'is_pinned',
+            'file', 'file_name'
         ]
         read_only_fields = ['id', 'qa_id', 'date', 'messages', 'replies_count', 'has_instructor_reply']
     

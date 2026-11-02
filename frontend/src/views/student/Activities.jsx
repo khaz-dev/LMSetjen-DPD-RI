@@ -437,6 +437,9 @@ function Activities() {
                                         >
                                             <i className="fas fa-coins text-warning"></i>
                                             <span>Perolehan Poin</span>
+                                            {pointsData?.lifetime_points > 0 && (
+                                                <span className="act-tab-count">{pointsData.lifetime_points} pt</span>
+                                            )}
                                         </button>
                                     </div>
 

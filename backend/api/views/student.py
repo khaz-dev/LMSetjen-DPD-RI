@@ -30,6 +30,7 @@ from userauths.models import User, Profile, OrganizationUnit, Position, UsedSSOT
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import generics, status, viewsets
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
@@ -1072,6 +1073,7 @@ class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = api_serializer.Question_AnswerSerializer
     permission_classes = [AllowAny]
     authentication_classes = []
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         course_id = self.kwargs.get('course_id')
@@ -1120,19 +1122,43 @@ class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
         else:
             video_timestamp = None
 
+        # ✨ Handle optional file attachment with security and size validation
+        attached_file = request.FILES.get('file', None)
+        file_name = request.data.get('file_name', None)
+        if attached_file:
+            import os
+            ext = os.path.splitext(attached_file.name)[1].lower()
+            allowed_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.pdf'}
+            if ext not in allowed_extensions:
+                return Response(
+                    {"error": f"Format file '{ext}' tidak didukung. Harap unggah gambar (PNG, JPG, WEBP) atau PDF."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if attached_file.size > 5 * 1024 * 1024:
+                return Response(
+                    {"error": "Ukuran file terlalu besar. Maksimal 5MB."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if not file_name:
+                file_name = attached_file.name
+
         question = api_models.Question_Answer.objects.create(
             course=course,
             user=user,
             title=title,
             variant_item=variant_item,  # Now guaranteed to have lesson context
-            video_timestamp=video_timestamp
+            video_timestamp=video_timestamp,
+            file=attached_file,
+            file_name=file_name
         )
 
         api_models.Question_Answer_Message.objects.create(
             course=course,
             user=user,
-            message=message,
-            question=question
+            message=message or "",
+            question=question,
+            file=attached_file,
+            file_name=file_name
         )
         
         return Response({"message": "Group conversation Started"}, status=status.HTTP_201_CREATED)
@@ -1152,6 +1178,7 @@ class QuestionAnswerMessageSendAPIView(generics.CreateAPIView):
     serializer_class = api_serializer.Question_Answer_MessageSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def create(self, request, *args, **kwargs):
         print("=== DEBUG: QuestionAnswerMessageSendAPIView ===")
@@ -1164,17 +1191,38 @@ class QuestionAnswerMessageSendAPIView(generics.CreateAPIView):
             user = request.user
             message = request.data.get('message')
 
-            print(f"Extracted data - course_id: {course_id}, qa_id: {qa_id}, user_id: {user}, message: {message}")
+            # ✨ Handle optional file attachment with security and size validation
+            attached_file = request.FILES.get('file', None)
+            file_name = request.data.get('file_name', None)
+            if attached_file:
+                import os
+                ext = os.path.splitext(attached_file.name)[1].lower()
+                allowed_extensions = {'.png', '.jpg', '.jpeg', '.webp', '.pdf'}
+                if ext not in allowed_extensions:
+                    return Response(
+                        {"error": f"Format file '{ext}' tidak didukung. Harap unggah gambar (PNG, JPG, WEBP) atau PDF."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                if attached_file.size > 5 * 1024 * 1024:
+                    return Response(
+                        {"error": "Ukuran file terlalu besar. Maksimal 5MB."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                if not file_name:
+                    file_name = attached_file.name
+
+            print(f"Extracted data - course_id: {course_id}, qa_id: {qa_id}, user_id: {user}, message: {message}, file: {file_name}")
 
             # Validate required fields
-            if not all([course_id, qa_id, user, message]):
-                missing_fields = []
-                if not course_id: missing_fields.append('course_id')
-                if not qa_id: missing_fields.append('qa_id') 
-                if not message: missing_fields.append('message')
-                print(f"Missing fields: {missing_fields}")
+            if not course_id or not qa_id or not user:
                 return Response(
-                    {"error": f"Missing required fields: {', '.join(missing_fields)}"}, 
+                    {"error": "Missing required fields: course_id, qa_id, or user"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if not message and not attached_file:
+                return Response(
+                    {"error": "Pesan atau lampiran file harus diisi."}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -1191,8 +1239,10 @@ class QuestionAnswerMessageSendAPIView(generics.CreateAPIView):
             message_obj = api_models.Question_Answer_Message.objects.create(
                 course=course,
                 user=user,
-                message=message,
-                question=question
+                message=message or "",
+                question=question,
+                file=attached_file,
+                file_name=file_name
             )
 
             # Return the updated question with all messages
@@ -3410,8 +3460,21 @@ class StudentActivityListAPIView(generics.ListAPIView):
     pagination_class = PageNumberPagination
     
     def get_queryset(self):
-        """Filter activities for current user"""
-        queryset = api_models.ActivityLog.objects.filter(user=self.request.user)
+        """Filter activities for current student"""
+        user = self.request.user
+        
+        # Self-healing synchronization on load
+        try:
+            api_models.StudentPoints.reconcile_points(user)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Error reconciling student points: {e}")
+            
+        queryset = api_models.ActivityLog.objects.filter(
+            user=user
+        ).filter(
+            Q(role_at_time='student') | (Q(role_at_time__isnull=True) & ~Q(activity_type__startswith='course_') & ~Q(activity_type__startswith='quiz_created') & ~Q(activity_type__startswith='lesson_created'))
+        ).exclude(role_at_time='instructor')
         
         # Filter by activity type
         activity_type = self.request.query_params.get('activity_type')
@@ -3479,14 +3542,26 @@ class StudentActivityStatsAPIView(APIView):
         week_ago = now - timedelta(days=7)
         month_ago = now - timedelta(days=30)
         
-        # Get all activities
-        all_activities = api_models.ActivityLog.objects.filter(user=user)
+        # Run self-healing reconciliation
+        try:
+            api_models.StudentPoints.reconcile_points(user)
+        except Exception:
+            pass
+            
+        # Get all activities for student
+        all_activities = api_models.ActivityLog.objects.filter(
+            user=user
+        ).filter(
+            Q(role_at_time='student') | (Q(role_at_time__isnull=True) & ~Q(activity_type__startswith='course_'))
+        ).exclude(role_at_time='instructor')
         
         # Calculate statistics
         total_activities = all_activities.count()
         activities_this_week = all_activities.filter(activity_date__gte=week_ago).count()
         activities_this_month = all_activities.filter(activity_date__gte=month_ago).count()
-        points_earned = all_activities.aggregate(Sum('points_awarded'))['points_awarded__sum'] or 0
+        
+        sp = api_models.StudentPoints.objects.filter(user=user).first()
+        points_earned = sp.lifetime_points if sp else 0
         
         # Get most active course
         most_active_course = None
@@ -3514,8 +3589,8 @@ class StudentActivityStatsAPIView(APIView):
             choices_dict = dict(api_models.ActivityLog.ACTIVITY_TYPE_CHOICES)
             activity['display'] = choices_dict.get(activity['activity_type'], activity['activity_type'])
         
-        # Get recent activities
-        recent_activities = api_models.ActivityLog.objects.filter(user=user).order_by('-activity_date')[:10]
+        # Get recent student activities
+        recent_activities = all_activities.order_by('-activity_date')[:10]
         
         data = {
             'total_activities': total_activities,

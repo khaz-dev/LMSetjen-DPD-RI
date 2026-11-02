@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useRef } from "react";
 import Modal from "react-bootstrap/Modal";
 import {
     formatTimestamp,
     QAFormattingToolbar,
     QAMarkdownRenderer,
 } from "./QAMarkdownTools";
+import { QAAttachmentInputPreview } from "./QAAttachmentTools";
+import { validateQAFile, compressImageFile, formatFileSize } from "../../utils/qaCompression";
+import Toast from "../../views/plugin/Toast";
 
 /**
  * CreateQuestionModal Component - Redesigned Executive DPD RI Edition
@@ -27,7 +30,70 @@ const CreateQuestionModal = ({
     questionPreviewMode,
     setQuestionPreviewMode,
     handleJumpToVideoTimestamp,
+    questionAttachment = null,
+    setQuestionAttachment,
+    isCompressingAttachment = false,
+    setIsCompressingAttachment,
 }) => {
+    const fileInputRef = useRef(null);
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const validation = validateQAFile(file);
+        if (!validation.valid) {
+            Toast().fire({ icon: "error", title: validation.error });
+            e.target.value = "";
+            return;
+        }
+
+        try {
+            if (setIsCompressingAttachment) setIsCompressingAttachment(true);
+            const compressed = await compressImageFile(file);
+            if (setQuestionAttachment) setQuestionAttachment(compressed);
+        } catch (err) {
+            console.error("Gagal mengompresi gambar:", err);
+            if (setQuestionAttachment) setQuestionAttachment(file);
+        } finally {
+            if (setIsCompressingAttachment) setIsCompressingAttachment(false);
+            e.target.value = "";
+        }
+    };
+
+    const handlePasteImage = async (e) => {
+        const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+        if (!items) return;
+
+        for (const item of items) {
+            if (item.type && item.type.indexOf("image") === 0) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (!file) continue;
+
+                const validation = validateQAFile(file);
+                if (!validation.valid) {
+                    Toast().fire({ icon: "error", title: validation.error });
+                    return;
+                }
+
+                try {
+                    if (setIsCompressingAttachment) setIsCompressingAttachment(true);
+                    const compressed = await compressImageFile(file);
+                    if (setQuestionAttachment) setQuestionAttachment(compressed);
+                    Toast().fire({
+                        icon: "success",
+                        title: `Gambar berhasil dilampirkan (${formatFileSize(compressed.size)})`
+                    });
+                } catch (err) {
+                    console.error("Paste image error:", err);
+                } finally {
+                    if (setIsCompressingAttachment) setIsCompressingAttachment(false);
+                }
+                break;
+            }
+        }
+    };
     // Helper to determine if a lesson has video content
     const isVideoFile = (fileUrl) => {
         if (!fileUrl) return false;
@@ -245,6 +311,15 @@ const CreateQuestionModal = ({
                             </span>
                         </div>
 
+                        {/* Hidden file input for question attachment */}
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            style={{ display: "none" }}
+                            accept=".png,.jpg,.jpeg,.webp,.pdf,image/*"
+                            onChange={handleFileChange}
+                        />
+
                         {/* Formatting Toolbar - Timestamp button synced with canAttachVideoTimestamp */}
                         <QAFormattingToolbar
                             textareaRef={questionTextareaRef}
@@ -255,6 +330,8 @@ const CreateQuestionModal = ({
                             getCurrentVideoTime={getCurrentVideoTime}
                             showTimestampBtn={canAttachVideoTimestamp}
                             compact={true}
+                            onAttachClick={() => fileInputRef.current?.click()}
+                            hasAttachment={Boolean(questionAttachment)}
                         />
 
                         {/* Textarea or Markdown Preview */}
@@ -273,13 +350,22 @@ const CreateQuestionModal = ({
                                     name="message"
                                     className="form-control compact-modal-textarea"
                                     rows="5"
-                                    placeholder="Tuliskan rincian pertanyaan Anda di sini. Mendukung pemformatan Markdown (tebal, miring, poin, blok kode) serta tautan menit video seperti [02:30]..."
+                                    placeholder="Tuliskan rincian pertanyaan Anda di sini. Mendukung pemformatan Markdown, tautan menit video [02:30], dan tempel screenshot langsung (Ctrl+V)..."
                                     value={createMessage.message}
                                     onChange={handleMessageChange}
-                                    required
+                                    onPaste={handlePasteImage}
+                                    required={!questionAttachment}
                                 />
                             )}
                         </div>
+
+                        {/* Attachment Preview Chip */}
+                        <QAAttachmentInputPreview
+                            file={questionAttachment}
+                            isCompressing={isCompressingAttachment}
+                            onRemove={() => setQuestionAttachment && setQuestionAttachment(null)}
+                            compact={true}
+                        />
                     </div>
 
                     {/* Slim Tips Banner (1 line) */}
@@ -304,7 +390,7 @@ const CreateQuestionModal = ({
                         <button
                             type="submit"
                             className="btn btn-sm compact-btn-submit text-white"
-                            disabled={!createMessage.title?.trim() || !createMessage.message?.trim()}
+                            disabled={!createMessage.title?.trim() || (!createMessage.message?.trim() && !questionAttachment) || isCompressingAttachment}
                             style={{
                                 background: 'linear-gradient(135deg, #0d9488 0%, #059669 100%)',
                                 boxShadow: '0 3px 10px rgba(13, 148, 136, 0.35)'

@@ -30,6 +30,51 @@ export const parseTimeToSeconds = (timeStr) => {
 };
 
 /**
+ * Safely ensure URL has absolute protocol (https:// or http://)
+ */
+export const ensureAbsoluteUrl = (url) => {
+    if (!url) return "#";
+    const clean = String(url).trim();
+    if (/^https?:\/\//i.test(clean)) {
+        return clean;
+    }
+    if (/^www\./i.test(clean)) {
+        return `https://${clean}`;
+    }
+    return `https://${clean}`;
+};
+
+/**
+ * Strip markdown formatting and links for clean plain-text card snippet
+ */
+export const stripMarkdown = (text, maxLength = 160) => {
+    if (!text) return "";
+    let clean = String(text)
+        // Replace markdown links [text](url) with just text
+        .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+        // Remove code blocks
+        .replace(/```[\s\S]*?```/g, "")
+        // Remove inline code
+        .replace(/`([^`]+)`/g, "$1")
+        // Remove bold and italic
+        .replace(/(\*\*|\*|__|_)(.*?)\1/g, "$2")
+        // Remove blockquotes and list markers
+        .replace(/^>\s*/gm, "")
+        .replace(/^[-*+]\s+/gm, "")
+        .replace(/^\d+\.\s+/gm, "")
+        // Remove timestamp brackets [02:15]
+        .replace(/\[(\d{1,2}:[0-5]\d(?::[0-5]\d)?)\]/g, "$1")
+        // Collapse multiple whitespace/newlines
+        .replace(/\s+/g, " ")
+        .trim();
+
+    if (clean.length > maxLength) {
+        return clean.substring(0, maxLength) + "...";
+    }
+    return clean;
+};
+
+/**
  * Formatting Toolbar for Question and Reply form with live preview toggle
  */
 export const QAFormattingToolbar = ({
@@ -41,6 +86,8 @@ export const QAFormattingToolbar = ({
     getCurrentVideoTime,
     showTimestampBtn = true,
     compact = false,
+    onAttachClick,
+    hasAttachment = false,
 }) => {
     const handleInsert = (formatType) => {
         // If in preview mode, switch to edit mode first
@@ -90,6 +137,20 @@ export const QAFormattingToolbar = ({
                 replacement = `\n1. ${selected || "Poin berurutan"}\n`;
                 cursorOffset = selected ? replacement.length : 4;
                 break;
+            case "link": {
+                // If user selected text that already looks like a URL
+                if (selected && (/^(?:https?:\/\/|www\.)/i.test(selected.trim()))) {
+                    replacement = `[Tautan Referensi](${selected.trim()})`;
+                    cursorOffset = 1; // cursor at "Tautan Referensi"
+                } else if (selected) {
+                    replacement = `[${selected}](https://)`;
+                    cursorOffset = replacement.length - 1; // cursor right after https://
+                } else {
+                    replacement = `[Teks Tautan](https://)`;
+                    cursorOffset = replacement.length - 1; // cursor right after https://
+                }
+                break;
+            }
             case "timestamp": {
                 const curSeconds = getCurrentVideoTime ? getCurrentVideoTime() : 0;
                 const formatted = formatTimestamp(curSeconds);
@@ -138,6 +199,24 @@ export const QAFormattingToolbar = ({
                 >
                     <i className="fas fa-italic"></i>
                 </button>
+                <button
+                    type="button"
+                    className="qa-toolbar-btn"
+                    title="Sisipkan Tautan / Link ([Teks](https://...))"
+                    onClick={() => handleInsert("link")}
+                >
+                    <i className="fas fa-link"></i>
+                </button>
+                {onAttachClick && (
+                    <button
+                        type="button"
+                        className={`qa-toolbar-btn ${hasAttachment ? "active text-teal" : ""}`}
+                        title="Lampirkan File / Gambar (PNG, JPG, WEBP, PDF)"
+                        onClick={onAttachClick}
+                    >
+                        <i className="fas fa-paperclip"></i>
+                    </button>
+                )}
                 <span className="qa-toolbar-separator"></span>
                 <button
                     type="button"
@@ -300,14 +379,16 @@ export const QAMarkdownRenderer = ({
         });
     }
 
-    // Helper to render inline tokens: timestamps, bold, italic, inline code
+    // Helper to render inline tokens: markdown links, raw URLs, timestamps, bold, italic, inline code
     const renderInline = (text, keyPrefix) => {
         // Regex matches:
-        // 1. Timestamps: [MM:SS] or MM:SS or [HH:MM:SS] or HH:MM:SS
-        // 2. Bold: **...**
-        // 3. Italic: *...*
-        // 4. Inline code: `...`
-        const tokenRegex = /((?:\[)?\b\d{1,2}:[0-5]\d(?::[0-5]\d)?\b(?:\])?)|(\*\*[^*]+\*\*)|(\*(?!\*)[^*]+\*)|(`[^`]+`)/g;
+        // 1. Markdown Links: [text](url) -> group 1: full, group 2: text, group 3: url
+        // 2. Raw URLs: https://... or http://... or www.... -> group 4
+        // 3. Timestamps: [MM:SS] or MM:SS or [HH:MM:SS] or HH:MM:SS -> group 5
+        // 4. Bold: **...** -> group 6
+        // 5. Italic: *...* -> group 7
+        // 6. Inline code: `...` -> group 8
+        const tokenRegex = /(\[([^\]\r\n]+)\]\(((?:https?:\/\/|www\.)[^\s\)]+)\))|(\b(?:https?:\/\/|www\.)[^\s<]+)|((?:\[)?\b\d{1,2}:[0-5]\d(?::[0-5]\d)?\b(?:\])?)|(\*\*[^*]+\*\*)|(\*(?!\*)[^*]+\*)|(`[^`]+`)/g;
 
         const elements = [];
         let curIdx = 0;
@@ -321,7 +402,56 @@ export const QAMarkdownRenderer = ({
             const token = m[0];
             const elemKey = `${keyPrefix}-${m.index}`;
 
-            if (token.startsWith("**") && token.endsWith("**")) {
+            if (m[1]) {
+                // 1. Markdown Link [text](url)
+                const linkText = m[2];
+                const rawUrl = m[3];
+                const safeUrl = ensureAbsoluteUrl(rawUrl);
+
+                elements.push(
+                    <a
+                        key={elemKey}
+                        href={safeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="qa-md-link"
+                        title={`Buka tautan: ${safeUrl}`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <i className="fas fa-link me-1 qa-link-icon"></i>
+                        <span>{linkText}</span>
+                        <i className="fas fa-arrow-up-right-from-square ms-1 qa-link-ext-icon"></i>
+                    </a>
+                );
+            } else if (m[4]) {
+                // 2. Raw URL (https://... or www....)
+                let cleanUrl = m[4];
+                let trailingPunct = "";
+                const trailingMatch = cleanUrl.match(/[,.;:!?)]+$/);
+                if (trailingMatch) {
+                    trailingPunct = trailingMatch[0];
+                    cleanUrl = cleanUrl.slice(0, -trailingPunct.length);
+                }
+                const safeUrl = ensureAbsoluteUrl(cleanUrl);
+
+                elements.push(
+                    <React.Fragment key={elemKey}>
+                        <a
+                            href={safeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="qa-md-link qa-md-raw-url"
+                            title={`Buka tautan: ${safeUrl}`}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <i className="fas fa-globe me-1 qa-link-icon"></i>
+                            <span>{cleanUrl}</span>
+                            <i className="fas fa-arrow-up-right-from-square ms-1 qa-link-ext-icon"></i>
+                        </a>
+                        {trailingPunct}
+                    </React.Fragment>
+                );
+            } else if (token.startsWith("**") && token.endsWith("**")) {
                 elements.push(
                     <strong key={elemKey} className="qa-md-bold">
                         {token.slice(2, -2)}
@@ -340,7 +470,7 @@ export const QAMarkdownRenderer = ({
                     </code>
                 );
             } else {
-                // Timestamp token
+                // 3. Timestamp token
                 const cleanTime = token.replace(/[\[\]]/g, "");
                 const seconds = parseTimeToSeconds(cleanTime);
                 elements.push(

@@ -49,26 +49,37 @@ def log_course_enrollment(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=api_models.CompletedLesson)
 def log_lesson_completion(sender, instance, created, **kwargs):
-    """Log when student completes a lesson"""
+    """Log when student completes a lesson (0 gamification points; course completion awards 100 points)"""
     if not created:
         return
     
     try:
+        # Check if already logged for this lesson to prevent duplicates
+        existing = api_models.ActivityLog.objects.filter(
+            user=instance.user,
+            activity_type='lesson_completed',
+            lesson=instance.variant_item,
+            course=instance.course
+        ).exists()
+        if existing:
+            return
+
         api_models.ActivityLog.objects.create(
             user=instance.user,
             activity_type='lesson_completed',
             role_at_time='student',
             course=instance.course,
             lesson=instance.variant_item,
-            title=f"Selesaikan Pelajaran: {instance.variant_item.title}",
-            description=f"Menyelesaikan pelajaran '{instance.variant_item.title}' dari kursus {instance.course.title}",
+            title=f"Selesaikan Pelajaran: {instance.variant_item.title if instance.variant_item else ''}",
+            description=f"Menyelesaikan pelajaran '{instance.variant_item.title if instance.variant_item else ''}' dari kursus {instance.course.title if instance.course else ''}",
+            points_awarded=0,
             success=True,
             metadata={
                 'completed_lesson_id': instance.id,
-                'variant_item_id': instance.variant_item.variant_item_id,
-                'lesson_title': instance.variant_item.title,
-                'course_id': instance.course.id,
-                'course_title': instance.course.title
+                'variant_item_id': instance.variant_item.variant_item_id if instance.variant_item else None,
+                'lesson_title': instance.variant_item.title if instance.variant_item else '',
+                'course_id': instance.course.id if instance.course else None,
+                'course_title': instance.course.title if instance.course else ''
             }
         )
     except Exception as e:
@@ -129,62 +140,88 @@ def log_video_completion(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=api_models.QuizAttempt)
 def log_quiz_activity(sender, instance, created, **kwargs):
-    """Log when student attempts or completes a quiz"""
+    """Log when student attempts or completes a quiz. Points awarded only for highest score on passed quiz."""
     try:
+        from django.db.models import Max
         if created:
-            # Log quiz attempt
+            pts = 0
+            if instance.is_passed and instance.score and instance.user and instance.quiz:
+                score_val = min(max(int(instance.score), 0), 100)
+                prev_best = api_models.QuizAttempt.objects.filter(
+                    user=instance.user,
+                    quiz=instance.quiz,
+                    is_passed=True
+                ).exclude(id=instance.id).aggregate(Max('score'))['score__max']
+                
+                if prev_best is None or instance.score > prev_best:
+                    pts = score_val
+                    api_models.ActivityLog.objects.filter(
+                        user=instance.user,
+                        quiz=instance.quiz,
+                        role_at_time='student'
+                    ).update(points_awarded=0)
+            
+            act_type = 'quiz_passed' if instance.is_passed else 'quiz_attempted'
+            q_title = instance.quiz.title if instance.quiz else ''
+            title = f"{'Lulus' if instance.is_passed else 'Kerjakan'} Kuis: {q_title}"
+            desc = f"{'Lulus' if instance.is_passed else 'Mengerjakan'} kuis '{q_title}' dengan skor {instance.score}%"
+            
             api_models.ActivityLog.objects.create(
                 user=instance.user,
-                activity_type='quiz_attempted',
+                activity_type=act_type,
                 role_at_time='student',
-                course=instance.quiz.course if instance.quiz.course else None,
+                course=instance.quiz.course if instance.quiz and instance.quiz.course else None,
                 quiz=instance.quiz,
-                title=f"Kerjakan Kuis: {instance.quiz.title}",
-                description=f"Mengerjakan kuis '{instance.quiz.title}' dengan skor {instance.score}%",
-                points_awarded=int(instance.score) if instance.score else 0,
+                title=title,
+                description=desc,
+                points_awarded=pts,
+                duration_seconds=int(instance.time_taken.total_seconds()) if instance.time_taken else 0,
                 success=instance.is_passed,
                 metadata={
                     'quiz_attempt_id': instance.id,
-                    'quiz_id': instance.quiz.id,
-                    'quiz_title': instance.quiz.title,
+                    'quiz_id': instance.quiz.id if instance.quiz else None,
+                    'quiz_title': q_title,
                     'score': instance.score,
                     'is_passed': instance.is_passed,
-                    'course_id': instance.quiz.course.id if instance.quiz.course else None
+                    'course_id': instance.quiz.course.id if instance.quiz and instance.quiz.course else None
                 }
             )
+            if instance.user and pts > 0:
+                api_models.StudentPoints.reconcile_points(instance.user)
         else:
-            # Log quiz result change if status changed
-            # Check if we need to create a quiz_passed or quiz_failed log
-            activity_type = 'quiz_passed' if instance.is_passed else 'quiz_failed'
-            
-            # Check if already logged
-            existing_log = api_models.ActivityLog.objects.filter(
-                user=instance.user,
-                activity_type=activity_type,
-                quiz=instance.quiz,
-                metadata__quiz_attempt_id=instance.id
-            ).exists()
-            
-            if not existing_log:
-                api_models.ActivityLog.objects.create(
+            if instance.is_passed and instance.score and instance.user and instance.quiz:
+                score_val = min(max(int(instance.score), 0), 100)
+                prev_best = api_models.QuizAttempt.objects.filter(
                     user=instance.user,
-                    activity_type=activity_type,
-                    role_at_time='student',
-                    course=instance.quiz.course if instance.quiz.course else None,
                     quiz=instance.quiz,
-                    title=f"{'Lulus' if instance.is_passed else 'Gagal'} Kuis: {instance.quiz.title}",
-                    description=f"{'Lulus' if instance.is_passed else 'Gagal'} kuis '{instance.quiz.title}' dengan skor {instance.score}%",
-                    points_awarded=int(instance.score) if instance.is_passed and instance.score else 0,
-                    success=instance.is_passed,
-                    metadata={
-                        'quiz_attempt_id': instance.id,
-                        'quiz_id': instance.quiz.id,
-                        'quiz_title': instance.quiz.title,
-                        'score': instance.score,
-                        'is_passed': instance.is_passed,
-                        'course_id': instance.quiz.course.id if instance.quiz.course else None
-                    }
-                )
+                    is_passed=True
+                ).exclude(id=instance.id).aggregate(Max('score'))['score__max']
+                
+                existing_al = api_models.ActivityLog.objects.filter(
+                    user=instance.user,
+                    metadata__quiz_attempt_id=instance.id
+                ).first()
+                
+                if prev_best is None or instance.score > prev_best:
+                    api_models.ActivityLog.objects.filter(
+                        user=instance.user,
+                        quiz=instance.quiz,
+                        role_at_time='student'
+                    ).exclude(metadata__quiz_attempt_id=instance.id).update(points_awarded=0)
+                    
+                    if existing_al:
+                        q_title = instance.quiz.title if instance.quiz else ''
+                        existing_al.activity_type = 'quiz_passed'
+                        existing_al.title = f"Lulus Kuis: {q_title}"
+                        existing_al.points_awarded = score_val
+                        existing_al.success = True
+                        existing_al.save(update_fields=['activity_type', 'title', 'points_awarded', 'success'])
+                    if instance.user:
+                        api_models.StudentPoints.reconcile_points(instance.user)
+                else:
+                    if existing_al:
+                        existing_al.points_awarded = 0
+                        existing_al.save(update_fields=['points_awarded'])
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
@@ -193,65 +230,44 @@ def log_quiz_activity(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=api_models.Certificate)
 def log_certificate_earned(sender, instance, created, **kwargs):
-    """Log when student earns a certificate"""
-    if not created:
+    """Log when student earns a certificate and synchronize points"""
+    if not created or not instance.is_valid:
         return
     
     try:
+        has_existing = api_models.ActivityLog.objects.filter(
+            user=instance.user,
+            activity_type='certificate_earned',
+            course=instance.course,
+            role_at_time='student'
+        ).exists()
+        
+        pts = 100 if not has_existing else 0
+        c_title = instance.course.title if instance.course else ''
+        
         api_models.ActivityLog.objects.create(
             user=instance.user,
             activity_type='certificate_earned',
             role_at_time='student',
             course=instance.course,
-            title=f"Raih Sertifikat: {instance.course.title}",
-            description=f"Berhasil meraih sertifikat untuk kursus {instance.course.title}",
+            title=f"Raih Sertifikat: {c_title}",
+            description=f"Berhasil meraih sertifikat untuk kursus {c_title}",
             success=True,
-            points_awarded=100,
+            points_awarded=pts,
             metadata={
                 'certificate_id': instance.id,
-                'certificate_number': instance.certificate_number,
-                'course_id': instance.course.id,
-                'course_title': instance.course.title,
-                'issue_date': str(instance.issue_date)
+                'certificate_code': getattr(instance, 'certificate_id', None) or getattr(instance, 'certificate_number', ''),
+                'course_id': instance.course.id if instance.course else None,
+                'course_title': c_title,
+                'issue_date': str(instance.date if hasattr(instance, 'date') else instance.issue_date if hasattr(instance, 'issue_date') else '')
             }
         )
+        if instance.user:
+            api_models.StudentPoints.reconcile_points(instance.user)
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error logging certificate: {str(e)}")
-
-
-@receiver(post_save, sender=api_models.Review)
-def log_review_posted(sender, instance, created, **kwargs):
-    """Log when student posts a review (already has review posting in signals)"""
-    if not created:
-        return
-    
-    # Only log approved reviews
-    if not instance.active:
-        return
-    
-    try:
-        api_models.ActivityLog.objects.create(
-            user=instance.user,
-            activity_type='review_posted' if instance.course else 'discussion_participated',
-            role_at_time='student',
-            course=instance.course,
-            title=f"Posting Review: {instance.course.title if instance.course else 'Testimoni'}",
-            description=f"Meninggalkan review dari {instance.rating}★ untuk {instance.course.title if instance.course else 'platform'}",
-            success=True,
-            points_awarded=50,
-            metadata={
-                'review_id': instance.id,
-                'rating': instance.rating,
-                'course_id': instance.course.id if instance.course else None,
-                'review_text': instance.review[:100] if instance.review else ""
-            }
-        )
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error logging review: {str(e)}")
 
 
 @receiver(post_save, sender=api_models.Question_Answer)
@@ -458,42 +474,39 @@ def award_points_on_course_rating(sender, instance, created, **kwargs):
     """
     try:
         # Only process active (approved) reviews
-        if not instance.active:
+        if not instance.active or not instance.user:
             return
         
-        # ✨ PHASE 10.5: Check if points already awarded to prevent duplicates
-        if instance._points_awarded:
+        # Check if points already awarded to prevent duplicates
+        if api_models.PointsAuditLog.objects.filter(review_id=instance.id).exists():
             return
         
-        # ✨ PHASE 4.11: Only award student points if reviewing as student
-        if instance.role == 'student' and instance.user:
-            # Award points to the student who submitted the review (student gives 50 points)
+        # Only award student points if reviewing as student
+        if instance.role == 'student':
             student_points, _ = api_models.StudentPoints.objects.get_or_create(
                 user=instance.user
             )
-            # ✨ PHASE 10.8: Include audit information
             student_points.add_points(
                 instance.user, 
                 50, 
-                'rating_given',
+                'rating_given' if instance.course else 'platform_testimonial',
                 review_id=instance.id,
                 course_id=instance.course.id if instance.course else None,
                 description=f"Submitted {instance.rating}★ review for: {instance.course.title if instance.course else 'Testimonial'}"
             )
+            api_models.StudentPoints.reconcile_points(instance.user)
         
-        # ✨ PHASE 4.11: Award instructor points only if course exists
-        # Instructor gets RATING-BASED points for receiving ratings on their courses
-        if instance.course and instance.course.teacher:
-            rating_points = min(int(instance.rating) * 10, 50)  # ✨ PHASE 10.8: rating * 10, capped at 50
+        # Award instructor points only if course exists
+        if instance.course and instance.course.teacher and instance.course.teacher.user:
+            rating_points = min(int(instance.rating) * 10, 50)
             
             instructor_points, _ = api_models.InstructorPoints.objects.get_or_create(
                 user=instance.course.teacher.user,
-                teacher=instance.course.teacher
+                defaults={'teacher': instance.course.teacher}
             )
-            # ✨ PHASE 10.8: Include rating-based calculation in audit
             instructor_points.add_points(
                 instance.course.teacher.user, 
-                rating_points,  # ✨ PHASE 10.8: rating-based (1★=10, 2★=20, 3★=30, 4★=40, 5★=50)
+                rating_points,
                 'student_rating',
                 review_id=instance.id,
                 course_id=instance.course.id,
@@ -511,10 +524,6 @@ def award_points_on_course_rating(sender, instance, created, **kwargs):
                 review_id=instance.id,
                 description=f"Testimoni Platform sebagai Instruktur ({instance.rating}★)"
             )
-        
-        # ✨ PHASE 10.5: Mark points as awarded to prevent duplicates
-        instance._points_awarded = True
-        instance.save(update_fields=['_points_awarded'])
         
     except Exception as e:
         import logging
@@ -1108,22 +1117,25 @@ def log_review_activity(sender, instance, created, **kwargs):
             return
         
         user = instance.user
-        role = getattr(instance, 'role', 'instructor' if hasattr(user, 'teacher') else 'student')
+        role = getattr(instance, 'role', None) or ('instructor' if hasattr(user, 'teacher') else 'student')
         is_testimonial = (instance.course is None)
         
         if created:
             if is_testimonial:
                 act_type = 'testimonial_posted'
                 title = "Kirim Testimoni Platform"
-                pts = 50 if instance.active else 0
+                pts = 50 if (instance.active and role == 'student') else 0
                 desc = f"Mengirimkan testimoni platform ({instance.rating}/5 bintang)"
                 if pts > 0:
                     desc += f" (+{pts} Poin)"
             else:
                 act_type = 'review_posted'
-                title = f"Posting Review: {instance.course.title}"
-                pts = 0
-                desc = f"Memberikan ulasan {instance.rating}/5 bintang untuk {instance.course.title}"
+                c_title = instance.course.title if instance.course else 'kursus'
+                title = f"Posting Review: {c_title}"
+                pts = 50 if (instance.active and role == 'student') else 0
+                desc = f"Memberikan ulasan {instance.rating}/5 bintang untuk {c_title}"
+                if pts > 0:
+                    desc += f" (+{pts} Poin)"
             
             api_models.ActivityLog.objects.create(
                 user=user,
@@ -1142,6 +1154,8 @@ def log_review_activity(sender, instance, created, **kwargs):
                     'active': instance.active
                 }
             )
+            if role == 'student' and pts > 0:
+                api_models.StudentPoints.reconcile_points(user)
             return
         
         previous = getattr(instance, '_previous_instance', None)
@@ -1150,16 +1164,17 @@ def log_review_activity(sender, instance, created, **kwargs):
             
         # Check if review became active (admin approved)
         if not previous.active and instance.active:
-            if is_testimonial:
-                recent_log = api_models.ActivityLog.objects.filter(
-                    user=user,
-                    activity_type='testimonial_posted',
-                    metadata__review_id=instance.id
-                ).first()
-                if recent_log and recent_log.points_awarded == 0:
-                    recent_log.points_awarded = 50
-                    recent_log.description = f"Mengirimkan testimoni platform ({instance.rating}/5 bintang) (+50 Poin)"
-                    recent_log.save(update_fields=['points_awarded', 'description'])
+            pts = 50 if role == 'student' else 0
+            recent_log = api_models.ActivityLog.objects.filter(
+                user=user,
+                activity_type='testimonial_posted' if is_testimonial else 'review_posted',
+                metadata__review_id=instance.id
+            ).first()
+            if recent_log:
+                recent_log.points_awarded = pts
+                recent_log.save(update_fields=['points_awarded'])
+            if role == 'student':
+                api_models.StudentPoints.reconcile_points(user)
             return
         
         # Check if content/rating updated
@@ -1232,6 +1247,7 @@ def log_review_deletion(sender, instance, **kwargs):
         
         # Hapus audit log perolehan poin yang berkaitan dengan review/testimoni ini
         api_models.PointsAuditLog.objects.filter(review_id=instance.id).delete()
+        api_models.ActivityLog.objects.filter(metadata__review_id=instance.id).update(points_awarded=0)
         
         # Rekonsiliasi poin siswa
         if role == 'student' or not hasattr(user, 'teacher'):
@@ -1292,6 +1308,11 @@ def handle_certificate_deletion(sender, instance, **kwargs):
                 activity_type='course_completion',
                 course_id=instance.course_id
             ).delete()
+            api_models.ActivityLog.objects.filter(
+                user=instance.user,
+                activity_type='certificate_earned',
+                course_id=instance.course_id
+            ).update(points_awarded=0)
             api_models.StudentPoints.reconcile_points(instance.user)
     except Exception as e:
         import logging

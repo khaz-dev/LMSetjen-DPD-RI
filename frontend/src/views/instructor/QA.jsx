@@ -17,6 +17,23 @@ import Toast from "../plugin/Toast";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 import { usePageCache } from "../../utils/usePageCache"; // ✨ PHASE 11.12+: Fix page reload issue
+import {
+    formatTimestamp,
+    QAFormattingToolbar,
+    QAMarkdownRenderer,
+    QAVideoTimestampBadge,
+    stripMarkdown,
+} from "../../components/CourseDetail/QAMarkdownTools";
+import {
+    QAAttachmentInputPreview,
+    QAAttachmentDisplay,
+    QAImageLightboxModal,
+} from "../../components/CourseDetail/QAAttachmentTools";
+import {
+    validateQAFile,
+    compressImageFile,
+    formatFileSize,
+} from "../../utils/qaCompression";
 import "./QA.css";
 
 // Constants
@@ -47,6 +64,14 @@ function QA() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [messageLoading, setMessageLoading] = useState(false);
+
+    // ✨ Attachment & Lightbox & Markdown Preview states for Instructor
+    const [replyAttachment, setReplyAttachment] = useState(null);
+    const [isCompressingReplyAttachment, setIsCompressingReplyAttachment] = useState(false);
+    const [lightboxImage, setLightboxImage] = useState({ show: false, url: '', name: '' });
+    const [replyPreviewMode, setReplyPreviewMode] = useState(false);
+    const replyTextareaRef = useRef(null);
+    const replyFileInputRef = useRef(null);
     
     // ✨ PHASE 7.18: Report tracking - for showing report status on buttons
     const [qaReports, setQaReports] = useState({
@@ -378,12 +403,157 @@ function QA() {
         setFilteredQuestions(filtered);
     }, [questions, discussionFilters]);
 
+    // ✨ File upload & compression handlers for instructor reply
+    const handleReplyFileChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const validation = validateQAFile(file);
+        if (!validation.valid) {
+            Toast().fire({ icon: "error", title: validation.error });
+            e.target.value = "";
+            return;
+        }
+
+        try {
+            setIsCompressingReplyAttachment(true);
+            const compressed = await compressImageFile(file);
+            setReplyAttachment(compressed);
+        } catch (err) {
+            console.error("Gagal mengompresi gambar:", err);
+            setReplyAttachment(file);
+        } finally {
+            setIsCompressingReplyAttachment(false);
+            e.target.value = "";
+        }
+    };
+
+    const handleReplyPasteImage = async (e) => {
+        const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+        if (!items) return;
+
+        for (const item of items) {
+            if (item.type && item.type.indexOf("image") === 0) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (!file) continue;
+
+                const validation = validateQAFile(file);
+                if (!validation.valid) {
+                    Toast().fire({ icon: "error", title: validation.error });
+                    return;
+                }
+
+                try {
+                    setIsCompressingReplyAttachment(true);
+                    const compressed = await compressImageFile(file);
+                    setReplyAttachment(compressed);
+                    Toast().fire({
+                        icon: "success",
+                        title: `Gambar berhasil dilampirkan (${formatFileSize(compressed.size)})`
+                    });
+                } catch (err) {
+                    console.error("Paste image error:", err);
+                } finally {
+                    setIsCompressingReplyAttachment(false);
+                }
+                break;
+            }
+        }
+    };
+
+    // ✨ Instructor moderation: Toggle Pin on discussion
+    const handleTogglePin = async (qaId) => {
+        const user = UserData();
+        if (!user) {
+            Toast().fire({ icon: 'warning', title: 'Silakan login terlebih dahulu' });
+            return;
+        }
+
+        try {
+            const res = await useAxios.post(`student/question-answer-toggle-pin/${qaId}/`, {
+                user_id: user.user_id
+            });
+
+            Toast().fire({
+                icon: 'success',
+                title: res.data.message || 'Status sematan berhasil diperbarui',
+            });
+
+            const newIsPinned = res.data.is_pinned;
+            setSelectedConversation(prev => prev ? { ...prev, is_pinned: newIsPinned } : null);
+            setQuestions(prev => prev.map(q => (q.qa_id === qaId || q.id === qaId) ? { ...q, is_pinned: newIsPinned } : q));
+        } catch (err) {
+            console.error("Error toggling pin:", err);
+            Toast().fire({ icon: 'error', title: 'Gagal memperbarui status sematan' });
+        }
+    };
+
+    // ✨ Instructor moderation: Toggle solution mark on replies
+    const handleToggleSolution = async (msg, qaId) => {
+        const user = UserData();
+        if (!user || !qaId || !msg) return;
+
+        try {
+            const res = await useAxios.post(`student/question-answer-toggle-solution/${qaId}/`, {
+                user_id: user.user_id,
+                message_id: msg.id || msg.qam_id
+            });
+
+            const newIsSolution = res.data.is_solution;
+            const newIsSolved = res.data.is_solved;
+
+            Toast().fire({
+                icon: 'success',
+                title: res.data.message || (newIsSolution ? 'Ditandai sebagai solusi' : 'Tanda solusi dibatalkan')
+            });
+
+            setSelectedConversation(prev => {
+                if (!prev) return null;
+                const updatedMessages = (prev.messages || []).map(m => {
+                    if ((m.id && m.id === msg.id) || (m.qam_id && m.qam_id === msg.qam_id)) {
+                        return { ...m, is_solution: newIsSolution };
+                    }
+                    return m;
+                });
+                return {
+                    ...prev,
+                    is_solved: newIsSolved,
+                    messages: updatedMessages
+                };
+            });
+
+            setQuestions(prev => prev.map(q => {
+                if (q.qa_id === qaId || q.id === qaId) {
+                    const updatedMessages = (q.messages || []).map(m => {
+                        if ((m.id && m.id === msg.id) || (m.qam_id && m.qam_id === msg.qam_id)) {
+                            return { ...m, is_solution: newIsSolution };
+                        }
+                        return m;
+                    });
+                    return {
+                        ...q,
+                        is_solved: newIsSolved,
+                        messages: updatedMessages
+                    };
+                }
+                return q;
+            }));
+        } catch (err) {
+            console.error("Error toggling solution:", err);
+            Toast().fire({ icon: 'error', title: 'Gagal mengubah status solusi' });
+        }
+    };
+
     const sendNewMessage = async (e) => {
         e.preventDefault();
         
         const messageText = getCurrentMessage().trim();
-        if (!messageText) {
-            console.error("No message text provided");
+        if (!messageText && !replyAttachment) {
+            Toast().fire({
+                icon: "error",
+                title: "Silakan masukkan pesan balasan atau lampirkan gambar/file"
+            });
             return;
         }
 
@@ -393,65 +563,59 @@ function QA() {
         }
 
         const conversationId = selectedConversation?.qa_id || selectedConversation?.id;
-        const courseId = selectedConversation?.course?.id || selectedConversation?.course;
         const userId = UserData()?.user_id;
 
-        // Try multiple ways to get course ID
         const possibleCourseIds = [
             selectedConversation?.course?.id,
             selectedConversation?.course,
             selectedConversation?.course_id,
-            selectedConversation?.courseId
+            selectedConversation?.courseId,
+            selectedCourse?.id
         ];
         
-        // Use the first valid course ID found
         const validCourseId = possibleCourseIds.find(id => id !== null && id !== undefined && id !== "");
         
-        // Validate required data
-        if (!conversationId) {
-            console.error("Missing conversation ID (qa_id)");
-            setError("Invalid conversation. Please refresh and try again.");
-            return;
-        }
-
-        if (!validCourseId) {
-            console.error("Missing course ID - tried all possible paths:", possibleCourseIds);
-            setError("Invalid course. Please refresh and try again.");
-            return;
-        }
-
-        if (!userId) {
-            console.error("Missing user ID");
-            setError("User not authenticated. Please login again.");
+        if (!conversationId || !validCourseId || !userId) {
+            Toast().fire({
+                icon: "error",
+                title: "Data percakapan tidak valid. Silakan muat ulang."
+            });
             return;
         }
         
         const formdata = new FormData();
-        formdata.append("course_id", courseId);
+        formdata.append("course_id", validCourseId);
         formdata.append("user_id", userId);
-        formdata.append("message", messageText);
+        formdata.append("message", messageText || "");
         formdata.append("qa_id", conversationId);
 
+        if (replyAttachment) {
+            formdata.append("file", replyAttachment);
+            formdata.append("file_name", replyAttachment.name);
+        }
+
         try {
+            setMessageLoading(true);
             const response = await useAxios.post("student/question-answer-message-create/", formdata);
             
-            // Update the conversation with new message from the response
             if (response.data.question) {
                 setSelectedConversation(response.data.question);
-                
-                // Update the main questions list as well
                 setQuestions(prev => prev.map(q => 
                     (q.qa_id || q.id) === conversationId ? response.data.question : q
                 ));
             }
 
-            // Clear the input for this conversation
-            setConversationMessages({
-                ...conversationMessages,
+            setReplyAttachment(null);
+            setConversationMessages(prev => ({
+                ...prev,
                 [conversationId]: ""
+            }));
+
+            Toast().fire({
+                icon: "success",
+                title: "Balasan berhasil dikirim"
             });
 
-            // Auto-scroll to bottom
             setTimeout(() => {
                 if (lastElementRef.current) {
                     lastElementRef.current.scrollIntoView({ behavior: "smooth" });
@@ -460,13 +624,12 @@ function QA() {
 
         } catch (error) {
             console.error("Error sending message:", error);
-            console.error("Error details:", {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-                config: error.config
+            Toast().fire({
+                icon: "error",
+                title: "Gagal mengirim balasan. Silakan coba lagi."
             });
-            setError("Failed to send message. Please try again.");
+        } finally {
+            setMessageLoading(false);
         }
     };
 
@@ -1244,6 +1407,17 @@ function QA() {
                                                 value={discussionFilters.search}
                                                 onChange={(e) => setDiscussionFilters({ ...discussionFilters, search: e.target.value })}
                                             />
+                                            {discussionFilters.search && (
+                                                <button
+                                                    type="button"
+                                                    className="qa-search-clear-inline-btn"
+                                                    onClick={() => setDiscussionFilters(prev => ({ ...prev, search: '' }))}
+                                                    title="Hapus pencarian"
+                                                    aria-label="Hapus pencarian"
+                                                >
+                                                    <i className="fas fa-times"></i>
+                                                </button>
+                                            )}
                                         </div>
                                         
                                         {/* Bagian Filter Dropdown */}
@@ -1360,10 +1534,22 @@ function QA() {
                                                                         <span className="qa-user-name">
                                                                             {q.profile?.full_name || 'Pengguna Anonim'}
                                                                         </span>
-                                                                        <span className="qa-time-meta">
-                                                                            <i className="fas fa-clock me-1"></i>
-                                                                            {moment(q.date).fromNow()}
-                                                                        </span>
+                                                                        <div className="d-flex align-items-center gap-1.5 flex-wrap">
+                                                                            <span className="qa-time-meta">
+                                                                                <i className="fas fa-clock me-1"></i>
+                                                                                {moment(q.date).fromNow()}
+                                                                            </span>
+                                                                            {(q.is_solved || q.messages?.some(m => m.is_solution)) && (
+                                                                                <span className="qa-status-pill solved">
+                                                                                    <i className="fas fa-check-circle me-1"></i>Terjawab
+                                                                                </span>
+                                                                            )}
+                                                                            {q.is_pinned && (
+                                                                                <span className="qa-status-pill pinned" title="Disematkan oleh instruktur">
+                                                                                    <i className="fas fa-thumbtack text-amber me-1"></i>Disematkan
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                                 
@@ -1386,18 +1572,37 @@ function QA() {
                                                                 )}
                                                             </div>
                                                             
-                                                            {/* Title */}
-                                                            <h5 className="qa-question-title">
-                                                                {q.title || 'Tidak Ada Judul'}
-                                                            </h5>
+                                                            {/* Title, Preview, and Right Side Badges */}
+                                                            <div className="qa-card-content-row d-flex justify-content-between align-items-start gap-2">
+                                                                <div className="qa-card-text-block flex-grow-1" style={{ minWidth: 0 }}>
+                                                                    <h5 className="qa-question-title">
+                                                                        {q.title || 'Tidak Ada Judul'}
+                                                                    </h5>
 
-                                                            {/* Message preview */}
-                                                            {(q.message || (q.messages && q.messages[0]?.message)) && (
-                                                                <p className="question-message-preview">
-                                                                    {(q.message || q.messages?.[0]?.message || 'Tidak ada pesan').substring(0, 180)}
-                                                                    {(q.message || q.messages?.[0]?.message || '').length > 180 ? '...' : ''}
-                                                                </p>
-                                                            )}
+                                                                    {/* Message preview with Markdown stripped */}
+                                                                    {(q.message || (q.messages && q.messages[0]?.message)) && (
+                                                                        <p className="question-message-preview">
+                                                                            {stripMarkdown(q.message || q.messages?.[0]?.message || 'Tidak ada pesan', 180)}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+
+                                                                {(Boolean(q.file || q.messages?.some(m => m.file)) || (q.video_timestamp !== null && q.video_timestamp !== undefined)) && (
+                                                                    <div className="qa-card-side-badges d-flex flex-column align-items-end gap-1 flex-shrink-0 ms-2 pt-1">
+                                                                        {Boolean(q.file || q.messages?.some(m => m.file)) && (
+                                                                            <span className="qa-status-pill attachment" title="Diskusi ini memiliki lampiran">
+                                                                                <i className="fas fa-paperclip text-teal-accent me-1"></i>Lampiran
+                                                                            </span>
+                                                                        )}
+                                                                        {q.video_timestamp !== null && q.video_timestamp !== undefined && (
+                                                                            <QAVideoTimestampBadge
+                                                                                timestamp={q.video_timestamp}
+                                                                                size="sm"
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                             
                                                             {/* Bottom Meta */}
                                                             <div className="question-meta">
@@ -1408,14 +1613,14 @@ function QA() {
                                                                 
                                                                 <div className="d-flex align-items-center gap-1.5">
                                                                     <button 
-                                                                        className="forum-like-btn" 
-                                                                        title="Sukai pertanyaan ini" 
+                                                                        className={`forum-like-btn ${q?.user_liked ? 'liked' : ''}`} 
+                                                                        title={q?.user_liked ? "Batal menyukai" : "Sukai pertanyaan ini"} 
                                                                         onClick={(e) => { e.stopPropagation(); handleLikeQuestion(q); }}
                                                                         style={{
-                                                                            color: q?.user_liked ? '#e11d48' : 'inherit',
+                                                                            color: q?.user_liked ? '#eab308' : 'inherit',
                                                                         }}
                                                                     >
-                                                                        <i className={`${q?.user_liked ? 'fas' : 'far'} fa-heart`}></i>
+                                                                        <i className={`${q?.user_liked ? 'fas' : 'far'} fa-thumbs-up`}></i>
                                                                         <span className="like-count">{q.likes_count || 0}</span>
                                                                     </button>
                                                                     {(() => {
@@ -1464,7 +1669,22 @@ function QA() {
                                                 <i className="fas fa-arrow-left"></i>
                                                 <span>Kembali</span>
                                             </button>
-                                            <div className="d-flex align-items-center gap-2">
+                                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                                <button
+                                                    type="button"
+                                                    className={`forum-pin-toggle-btn ${selectedConversation?.is_pinned ? "active" : ""}`}
+                                                    onClick={() => handleTogglePin(selectedConversation?.qa_id)}
+                                                    title={selectedConversation?.is_pinned ? "Lepaskan sematan pertanyaan ini" : "Sematkan pertanyaan ini di posisi teratas"}
+                                                >
+                                                    <i className="fas fa-thumbtack me-1 text-amber"></i>
+                                                    <span>{selectedConversation?.is_pinned ? "Disematkan" : "Sematkan"}</span>
+                                                </button>
+                                                {selectedConversation?.video_timestamp !== null && selectedConversation?.video_timestamp !== undefined && (
+                                                    <QAVideoTimestampBadge
+                                                        timestamp={selectedConversation.video_timestamp}
+                                                        size="sm"
+                                                    />
+                                                )}
                                                 <span className="forum-meta-badge">
                                                     <i className="fas fa-comments"></i>
                                                     <span>{selectedConversation?.replies_count || 0} Balasan</span>
@@ -1475,21 +1695,25 @@ function QA() {
                                                 </span>
                                             </div>
                                         </div>
-                                        <h3 className="forum-thread-title">
-                                            {selectedConversation?.title || 'Tidak Ada Judul'}
-                                        </h3>
-                                        <div className="forum-thread-meta-row">
-                                            {selectedConversation?.variant && (
-                                                <div className="forum-breadcrumb-wrap">
-                                                    <i className="fas fa-layer-group" style={{ color: '#0369a1' }}></i>
-                                                    <span>{selectedConversation.variant.title}</span>
-                                                    {selectedConversation.variant_item && <span className="mx-1 text-muted">/</span>}
-                                                </div>
-                                            )}
-                                            {selectedConversation?.variant_item && (
-                                                <div className="forum-breadcrumb-wrap">
-                                                    <i className="fas fa-book" style={{ color: '#7e22ce' }}></i>
-                                                    <span>{selectedConversation.variant_item.title}</span>
+                                        <div className="forum-thread-title-row d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                            <h3 className="forum-thread-title mb-0">
+                                                {selectedConversation?.title || 'Tidak Ada Judul'}
+                                            </h3>
+                                            {(selectedConversation?.variant || selectedConversation?.variant_item) && (
+                                                <div className="forum-thread-meta-row ms-auto mb-0">
+                                                    {selectedConversation?.variant && (
+                                                        <div className="forum-breadcrumb-wrap">
+                                                            <i className="fas fa-layer-group" style={{ color: '#0369a1' }}></i>
+                                                            <span>{selectedConversation.variant.title}</span>
+                                                            {selectedConversation.variant_item && <span className="mx-1 text-muted">/</span>}
+                                                        </div>
+                                                    )}
+                                                    {selectedConversation?.variant_item && (
+                                                        <div className="forum-breadcrumb-wrap">
+                                                            <i className="fas fa-book" style={{ color: '#7e22ce' }}></i>
+                                                            <span>{selectedConversation.variant_item.title}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1543,24 +1767,31 @@ function QA() {
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* Post Content */}
+                                        {/* Post Content with Markdown & Attachment */}
                                         <div className="forum-post-content">
-                                            {selectedConversation?.message || selectedConversation?.description || selectedConversation?.messages?.[0]?.message || 'Tidak ada pesan'}
+                                            <QAMarkdownRenderer
+                                                content={selectedConversation?.message || selectedConversation?.description || selectedConversation?.messages?.[0]?.message || 'Tidak ada pesan'}
+                                            />
+                                            <QAAttachmentDisplay
+                                                fileUrl={selectedConversation?.file || selectedConversation?.messages?.[0]?.file}
+                                                fileName={selectedConversation?.file_name || selectedConversation?.messages?.[0]?.file_name}
+                                                onImageClick={(url, name) => setLightboxImage({ show: true, url, name })}
+                                            />
                                         </div>
                                         {/* Post Footer */}
                                         <div className="forum-post-footer">
                                             <button 
-                                                className="forum-like-btn" 
-                                                title="Sukai pertanyaan ini"
+                                                className={`forum-like-btn ${selectedConversation?.user_liked ? 'liked' : ''}`} 
+                                                title={selectedConversation?.user_liked ? "Batal menyukai" : "Sukai pertanyaan ini"}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleLikeQuestion(selectedConversation);
                                                 }}
                                                 style={{
-                                                    color: selectedConversation?.user_liked ? '#e11d48' : 'inherit',
+                                                    color: selectedConversation?.user_liked ? '#eab308' : 'inherit',
                                                 }}
                                             >
-                                                <i className={`${selectedConversation?.user_liked ? 'fas' : 'far'} fa-heart`}></i>
+                                                <i className={`${selectedConversation?.user_liked ? 'fas' : 'far'} fa-thumbs-up`}></i>
                                                 <span className="like-count">{selectedConversation?.likes_count || 0}</span>
                                             </button>
                                             {(() => {
@@ -1644,42 +1875,58 @@ function QA() {
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            {/* Reply Content */}
+                                                            {/* Reply Content with Markdown & Attachment */}
                                                             <div className="forum-post-content">
-                                                                {msg.message}
+                                                                <QAMarkdownRenderer content={msg.message} />
+                                                                <QAAttachmentDisplay
+                                                                    fileUrl={msg.file}
+                                                                    fileName={msg.file_name}
+                                                                    onImageClick={(url, name) => setLightboxImage({ show: true, url, name })}
+                                                                />
                                                             </div>
                                                             {/* Reply Footer */}
-                                                            <div className="forum-post-footer">
-                                                                <button 
-                                                                    className="forum-like-btn" 
-                                                                    title="Sukai jawaban ini"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleLikeMessage(msg, selectedConversation?.qa_id);
-                                                                    }}
-                                                                    style={{
-                                                                        color: msg?.user_liked ? '#e11d48' : 'inherit',
-                                                                    }}
+                                                            <div className="forum-post-footer d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    className={`forum-solution-toggle-btn ${msg.is_solution ? "active" : ""}`}
+                                                                    onClick={() => handleToggleSolution(msg, selectedConversation?.qa_id)}
+                                                                    title={msg.is_solution ? "Batalkan tanda solusi" : "Tandai jawaban ini sebagai solusi"}
                                                                 >
-                                                                    <i className={`${msg?.user_liked ? 'fas' : 'far'} fa-heart`}></i>
-                                                                    <span className="like-count">{msg.likes_count || 0}</span>
+                                                                    <i className="fas fa-check-circle me-1 text-teal"></i>
+                                                                    <span>{msg.is_solution ? "Solusi Terpilih" : "Tandai Solusi"}</span>
                                                                 </button>
-                                                                {(() => {
-                                                                    const reportStatus = getQAReportStatus(msg.qa_id, 'message');
-                                                                    return (
-                                                                        <button 
-                                                                            className="forum-report-btn" 
-                                                                            title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan jawaban ini"}
-                                                                            onClick={() => handleOpenReportModal(msg)}
-                                                                            style={reportStatus ? { color: '#dc2626', opacity: 0.85 } : {}}
-                                                                        >
-                                                                            <i className="fas fa-flag"></i>
-                                                                            {reportStatus && (
-                                                                                <span style={{ marginLeft: '0.2rem', fontSize: '0.65rem' }}>✓</span>
-                                                                            )}
-                                                                        </button>
-                                                                    );
-                                                                })()}
+                                                                <div className="d-flex align-items-center gap-1.5 ms-auto">
+                                                                    <button 
+                                                                        className={`forum-like-btn ${msg?.user_liked ? 'liked' : ''}`} 
+                                                                        title={msg?.user_liked ? "Batal menyukai" : "Sukai jawaban ini"}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleLikeMessage(msg, selectedConversation?.qa_id);
+                                                                        }}
+                                                                        style={{
+                                                                            color: msg?.user_liked ? '#eab308' : 'inherit',
+                                                                        }}
+                                                                    >
+                                                                        <i className={`${msg?.user_liked ? 'fas' : 'far'} fa-thumbs-up`}></i>
+                                                                        <span className="like-count">{msg.likes_count || 0}</span>
+                                                                    </button>
+                                                                    {(() => {
+                                                                        const reportStatus = getQAReportStatus(msg.qa_id, 'message');
+                                                                        return (
+                                                                            <button 
+                                                                                className="forum-report-btn" 
+                                                                                title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan jawaban ini"}
+                                                                                onClick={() => handleOpenReportModal(msg)}
+                                                                                style={reportStatus ? { color: '#dc2626', opacity: 0.85 } : {}}
+                                                                            >
+                                                                                <i className="fas fa-flag"></i>
+                                                                                {reportStatus && (
+                                                                                    <span style={{ marginLeft: '0.2rem', fontSize: '0.65rem' }}>✓</span>
+                                                                                )}
+                                                                            </button>
+                                                                        );
+                                                                    })()}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     );
@@ -1707,25 +1954,72 @@ function QA() {
                                             Tambahkan Balasan Sebagai Instruktur
                                         </h6>
                                         <form className="message-form-qa" onSubmit={sendNewMessage}>
-                                            <textarea 
-                                                name="message" 
-                                                className="message-textarea-qa" 
-                                                rows="3" 
-                                                onChange={handleMessageChange}
-                                                value={getCurrentMessage()}
-                                                placeholder="Ketik balasan atau penjelasan Anda untuk siswa di sini..."
-                                                disabled={messageLoading}
-                                                required
+                                            {/* Hidden file input for instructor attachment */}
+                                            <input
+                                                type="file"
+                                                ref={replyFileInputRef}
+                                                style={{ display: "none" }}
+                                                accept=".png,.jpg,.jpeg,.webp,.pdf,image/*"
+                                                onChange={handleReplyFileChange}
                                             />
+
+                                            <QAFormattingToolbar
+                                                textareaRef={replyTextareaRef}
+                                                value={getCurrentMessage()}
+                                                onChange={(newVal) => {
+                                                    const conversationId = selectedConversation?.qa_id || selectedConversation?.id;
+                                                    setConversationMessages(prev => ({
+                                                        ...prev,
+                                                        [conversationId]: newVal
+                                                    }));
+                                                }}
+                                                isPreview={replyPreviewMode}
+                                                onTogglePreview={setReplyPreviewMode}
+                                                showTimestampBtn={false}
+                                                compact={true}
+                                                onAttachClick={() => replyFileInputRef.current?.click()}
+                                                hasAttachment={Boolean(replyAttachment)}
+                                            />
+
+                                            {replyPreviewMode ? (
+                                                <div className="forum-reply-preview-container-instructor p-3 rounded border bg-white my-2">
+                                                    <QAMarkdownRenderer
+                                                        content={getCurrentMessage()}
+                                                        emptyPlaceholder="Tuliskan balasan Anda di mode Tulis untuk melihat pratinjau di sini."
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <textarea 
+                                                    ref={replyTextareaRef}
+                                                    name="message" 
+                                                    className="message-textarea-qa" 
+                                                    rows="4" 
+                                                    onChange={handleMessageChange}
+                                                    onPaste={handleReplyPasteImage}
+                                                    value={getCurrentMessage()}
+                                                    placeholder="Ketik balasan untuk siswa di sini... Mendukung Markdown, tautan [link], dan tempel screenshot langsung (Ctrl+V)."
+                                                    disabled={messageLoading}
+                                                    required={!replyAttachment}
+                                                />
+                                            )}
+
+                                            {/* Attachment Preview Chip */}
+                                            <QAAttachmentInputPreview
+                                                file={replyAttachment}
+                                                isCompressing={isCompressingReplyAttachment}
+                                                onRemove={() => setReplyAttachment(null)}
+                                                compact={true}
+                                            />
+
                                             <div className="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
                                                 <small className="text-muted">
                                                     <i className="fas fa-shield-alt me-1" style={{ color: "#0f766e" }}></i>
-                                                    Tergabung sebagai instruktur kursus
+                                                    Tergabung sebagai instruktur kursus &bull; Format Markdown & Lampiran didukung
                                                 </small>
                                                 <button 
                                                     className="qa-send-btn" 
                                                     type="submit"
-                                                    disabled={messageLoading || !getCurrentMessage().trim()}
+                                                    disabled={messageLoading || (!getCurrentMessage().trim() && !replyAttachment) || isCompressingReplyAttachment}
                                                 >
                                                     {messageLoading ? (
                                                         <>
@@ -1748,6 +2042,14 @@ function QA() {
                     </div>
                 </div>
             </section>
+
+            {/* Fullscreen Lightbox Modal for Attachment Images */}
+            <QAImageLightboxModal
+                show={lightboxImage.show}
+                onHide={() => setLightboxImage({ show: false, url: '', name: '' })}
+                imageUrl={lightboxImage.url}
+                imageName={lightboxImage.name}
+            />
 
             {/* Conversation Modal removed - now using inline forum thread view */}
 
