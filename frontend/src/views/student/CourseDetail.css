@@ -7215,9 +7215,9 @@ body.modern-course-active {
 }
 
 .forum-like-btn:hover {
-    border-color: #e9366d;
-    color: #e9366d;
-    background: #fff5f8;
+    border-color: #f59e0b;
+    color: #d97706;
+    background: #fefce8;
 }
 
 .forum-like-btn i {
@@ -7927,13 +7927,19 @@ body.modern-course-active {
 }
 
 /* Like and report button states */
-.forum-like-btn.liked,
 .forum-report-btn.reported {
     opacity: 0.8;
 }
 
 .forum-like-btn.liked {
-    color: #ff4757;
+    color: #eab308 !important;
+    border-color: #fde047 !important;
+    background: #fef9c3 !important;
+    opacity: 1 !important;
+}
+
+.forum-like-btn.liked i {
+    color: #eab308 !important;
 }
 
 .forum-report-btn.reported {
@@ -10234,9 +10240,11 @@ body.modern-course-active {
 /* ✨ Contextual Active Lesson Filter Chip */
 .qa-header-actions-col {
     display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-end !important;
-    gap: 0.35rem !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
 }
 
 .qa-active-lesson-chip {
@@ -10300,7 +10308,9 @@ body.modern-course-active {
 @media (max-width: 576px) {
     .qa-header-actions-col {
         width: 100% !important;
+        flex-direction: column-reverse !important;
         align-items: stretch !important;
+        gap: 0.4rem !important;
     }
     .qa-active-lesson-chip {
         max-width: 100% !important;

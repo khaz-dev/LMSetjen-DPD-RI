@@ -264,14 +264,7 @@ const DiscussionTab = ({
                                 <i className="fas fa-comments text-teal-accent me-2"></i>Diskusi Kursus
                             </h4>
                         </div>
-                        <div className="d-flex flex-column align-items-end gap-1 ms-auto qa-header-actions-col">
-                            <button
-                                className="add-btn-modern"
-                                onClick={handleQuestionShow}
-                            >
-                                <i className="fas fa-plus"></i>
-                                Ajukan Pertanyaan
-                            </button>
+                        <div className="d-flex align-items-center gap-2 ms-auto flex-wrap justify-content-end qa-header-actions-col">
                             {activeVariantItem && (
                                 <button
                                     type="button"
@@ -301,6 +294,13 @@ const DiscussionTab = ({
                                     )}
                                 </button>
                             )}
+                            <button
+                                className="add-btn-modern"
+                                onClick={handleQuestionShow}
+                            >
+                                <i className="fas fa-plus"></i>
+                                Ajukan Pertanyaan
+                            </button>
                         </div>
                     </>
                 )}
@@ -522,15 +522,15 @@ const DiscussionTab = ({
                         <div className="forum-post-footer">
                             <div className="forum-post-actions">
                                 <button
-                                    className="forum-like-btn"
+                                    className={`forum-like-btn ${userLikedQuestions.has(selectedConversation.qa_id) ? 'liked' : ''}`}
                                     title={userLikedQuestions.has(selectedConversation.qa_id) ? "Batalkan suka" : "Sukai pertanyaan ini"}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleLikeQuestion(selectedConversation);
                                     }}
-                                    style={userLikedQuestions.has(selectedConversation.qa_id) ? { color: '#ff4757' } : {}}
+                                    style={userLikedQuestions.has(selectedConversation.qa_id) ? { color: '#eab308' } : {}}
                                 >
-                                    <i className={userLikedQuestions.has(selectedConversation.qa_id) ? "fas fa-heart" : "far fa-heart"}></i>
+                                    <i className={`${userLikedQuestions.has(selectedConversation.qa_id) ? "fas" : "far"} fa-thumbs-up me-1`}></i>
                                     <span className="like-count">{selectedConversation.likes_count || 0}</span>
                                 </button>
                                 {(() => {
@@ -718,15 +718,15 @@ const DiscussionTab = ({
                                                 <div className="forum-post-actions d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
                                                     <div className="d-flex align-items-center gap-2">
                                                         <button
-                                                            className="forum-like-btn"
+                                                            className={`forum-like-btn ${userLikedMessages.has(msg.id) ? 'liked' : ''}`}
                                                             title={userLikedMessages.has(msg.id) ? "Batalkan suka" : "Sukai jawaban ini"}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 handleLikeMessage(msg);
                                                             }}
-                                                            style={userLikedMessages.has(msg.id) ? { color: '#ff4757' } : {}}
+                                                            style={userLikedMessages.has(msg.id) ? { color: '#eab308' } : {}}
                                                         >
-                                                            <i className={userLikedMessages.has(msg.id) ? "fas fa-heart" : "far fa-heart"}></i>
+                                                            <i className={`${userLikedMessages.has(msg.id) ? "fas" : "far"} fa-thumbs-up me-1`}></i>
                                                             <span className="like-count">{msg.likes_count || 0}</span>
                                                         </button>
                                                         {(() => {
@@ -1186,9 +1186,9 @@ const DiscussionTab = ({
                                                 className={`forum-like-btn ${userLikedQuestions.has(q.qa_id) ? 'liked' : ''}`}
                                                 title={userLikedQuestions.has(q.qa_id) ? "Batalkan suka" : "Sukai pertanyaan ini"}
                                                 onClick={(e) => { e.stopPropagation(); handleLikeQuestion(q); }}
-                                                style={userLikedQuestions.has(q.qa_id) ? { color: '#ff4757' } : {}}
+                                                style={userLikedQuestions.has(q.qa_id) ? { color: '#eab308' } : {}}
                                             >
-                                                <i className={`${userLikedQuestions.has(q.qa_id) ? 'fas fa-heart text-danger' : 'far fa-heart'} me-1`}></i>
+                                                <i className={`${userLikedQuestions.has(q.qa_id) ? 'fas fa-thumbs-up' : 'far fa-thumbs-up'} me-1`}></i>
                                                 <span className="like-count">{q.likes_count || 0}</span>
                                             </button>
                                             {(() => {
