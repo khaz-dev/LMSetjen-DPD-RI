@@ -1425,7 +1425,14 @@ const LecturesTab = ({
 
                     return (
                     <div key={c.variant_id || index} className={`lecture-card ${isSectionLocked.locked ? 'lecture-card-locked' : ''}`}>
-                        <div className="lecture-header">
+                        <div 
+                            className="lecture-header"
+                            style={{ cursor: 'pointer' }}
+                            data-bs-toggle="collapse"
+                            data-bs-target={`#collapse-${c.variant_id || index}`}
+                            aria-expanded="true"
+                            aria-controls={`collapse-${c.variant_id || index}`}
+                        >
                             <div className="lecture-header-content">
                                 <div className="d-flex align-items-center justify-content-between">
                                     <div className="d-flex align-items-center gap-2">
@@ -1443,22 +1450,17 @@ const LecturesTab = ({
                                             </small>
                                         </div>
                                     </div>
-                                    <button
+                                    <div
                                         className="btn btn-link text-white p-0"
-                                        type="button"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target={`#collapse-${c.variant_id}`}
-                                        aria-expanded="true"
-                                        aria-controls={`collapse-${c.variant_id}`}
                                         title="Tombol bagian"
                                     >
                                         <i className="fas fa-chevron-down fa-lg"></i>
-                                    </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div id={`collapse-${c.variant_id}`} className="collapse show">
+                        <div id={`collapse-${c.variant_id || index}`} className="collapse show">
                             {c.variant_items?.map((l, lessonIndex) => {
                                 // Get detailed progress status
                                 const progressStatus = getLessonProgressStatus(l);

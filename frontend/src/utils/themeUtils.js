@@ -8,15 +8,17 @@ export const useTheme = () => {
     useEffect(() => {
         // Detect user type based on current route
         const isAdminRoute = location.pathname.includes('/admin/');
-        const isInstructorRoute = location.pathname.includes('/instructor/') || 
-                                 location.pathname.includes('/teacher/');
+        const isPreviewCourseRoute = location.pathname.includes('/instructor/preview-course/');
+        const isInstructorRoute = (location.pathname.includes('/instructor/') || 
+                                 location.pathname.includes('/teacher/')) && 
+                                 !isPreviewCourseRoute;
         const isStudentRoute = location.pathname.includes('/student/');
 
         // Apply theme class to body
         const body = document.body;
         
         // Remove existing theme classes
-        body.classList.remove('instructor-theme', 'student-theme');
+        body.classList.remove('instructor-theme', 'student-theme', 'is-student-portal', 'is-instructor-portal');
         
         // Apply appropriate theme
         // IMPORTANT: Admin routes should NOT have instructor/student themes applied
@@ -24,12 +26,15 @@ export const useTheme = () => {
         if (isAdminRoute) {
             // Admin pages don't use theme color variables, just remove all theme classes
             // This prevents instructor-theme CSS from interfering with admin styling
-        } else if (isInstructorRoute) {
+        } else if (isPreviewCourseRoute) {
+            // Dedicated Course Preview: keep instructor-theme for color variables, but exclude from is-instructor-portal
             body.classList.add('instructor-theme');
+        } else if (isInstructorRoute) {
+            body.classList.add('instructor-theme', 'is-instructor-portal');
         } else if (isStudentRoute) {
-            body.classList.add('student-theme');
+            body.classList.add('student-theme', 'is-student-portal');
         } else {
-            // Default to student theme for public pages
+            // Default to student theme for public pages (DO NOT add is-student-portal to public pages)
             body.classList.add('student-theme');
         }
     }, [location.pathname]);
@@ -51,12 +56,12 @@ export const useTheme = () => {
 // Utility function to manually set theme (if needed)
 export const setTheme = (themeType) => {
     const body = document.body;
-    body.classList.remove('instructor-theme', 'student-theme');
+    body.classList.remove('instructor-theme', 'student-theme', 'is-student-portal', 'is-instructor-portal');
     
     if (themeType === 'instructor') {
-        body.classList.add('instructor-theme');
+        body.classList.add('instructor-theme', 'is-instructor-portal');
     } else if (themeType === 'student') {
-        body.classList.add('student-theme');
+        body.classList.add('student-theme', 'is-student-portal');
     }
     // NOTE: Admin theme doesn't add any classes - it's just the absence of instructor/student themes
 };

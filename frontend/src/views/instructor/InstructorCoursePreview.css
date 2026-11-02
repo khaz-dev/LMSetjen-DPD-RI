@@ -22,11 +22,82 @@
     --icp-shadow-lg: 0 10px 25px -3px rgba(15, 23, 42, 0.08);
 }
 
+/* Ensure proper background layer stacking for Instructor Course Preview page */
+html:has(.icp-wrapper),
+body:has(.icp-wrapper) {
+    background-color: #f1f5f9 !important;
+}
+
+body:has(.icp-wrapper)::before,
+body:has(.icp-wrapper)::after {
+    display: none !important;
+}
+
+#root:has(.icp-wrapper) {
+    background-color: #f1f5f9 !important;
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Dedicated fixed background layer: keeps the iconic building silhouette visible subtly (matching /login/) */
+#root:has(.icp-wrapper)::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background-image: url('../../assets/background.jpg');
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    opacity: 0.35;
+    filter: contrast(118%) brightness(1.04);
+    pointer-events: none;
+    will-change: opacity;
+}
+
+/* Main Content Area: Frosted glass translucent veil with geometric grid & radial glow (matching /login/) */
 .icp-wrapper {
-    background-color: #f1f5f9;
-    min-height: calc(100vh - 140px);
+    position: relative;
+    z-index: 1;
+    min-height: calc(100vh - 120px);
+    flex: 1 0 auto;
+    background:
+        radial-gradient(circle at 82% 25%, rgba(13, 148, 136, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 18% 75%, rgba(245, 158, 11, 0.10) 0%, transparent 42%),
+        radial-gradient(circle at 50% 90%, rgba(13, 148, 136, 0.08) 0%, transparent 55%),
+        linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
+    background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px, 100% 100% !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
     color: var(--icp-slate-text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    padding-bottom: 2.5rem;
+    margin-bottom: 0 !important;
+}
+
+/* Ensure container inside icp-wrapper sits at z-index: 2 */
+.icp-wrapper > .container {
+    position: relative;
+    z-index: 2;
+}
+
+/* Footer seamless docking without gap */
+#root:has(.icp-wrapper) .footer-wrapper {
+    position: relative;
+    z-index: 10;
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+    flex-shrink: 0;
 }
 
 /* ========================================================================
@@ -34,8 +105,8 @@
    ======================================================================== */
 .icp-topbar-sticky {
     position: sticky;
-    top: 0;
-    z-index: 1020;
+    top: 60px;
+    z-index: 100;
     background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -841,7 +912,7 @@
    ======================================================================== */
 .icp-sidebar-sticky {
     position: sticky;
-    top: 70px;
+    top: 120px;
     display: flex;
     flex-direction: column;
 }
@@ -1099,4 +1170,69 @@
     .icp-topbar-actions .btn {
         padding: 0.35rem 0.55rem;
     }
+}
+
+/* ==========================================================================
+   ✨ Curriculum Pre-Test, Post-Test, and Inserted Quiz Styles
+   ========================================================================== */
+.icp-pretest-card,
+.icp-posttest-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.icp-pretest-card:hover,
+.icp-posttest-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.icp-test-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.icp-test-icon-wrap.pretest-icon {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.icp-test-icon-wrap.posttest-icon {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+/* Inserted Quiz Row in Curriculum Structure */
+.icp-lecture-row.icp-lecture-quiz-row {
+    background: #fffdfa;
+    border-left: 3px solid #f59e0b;
+}
+
+.icp-lecture-row.icp-lecture-quiz-row:hover {
+    background: #fffbeb;
+}
+
+.icp-lecture-icon-wrap.quiz-icon-wrap {
+    background: #fef3c7 !important;
+    border-color: #fde68a !important;
+}
+
+.pill-quiz {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.pill-passing {
+    background: #fdf2f8;
+    color: #be185d;
+    border: 1px solid #fbcfe8;
+}
+
+.shadow-xs {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }

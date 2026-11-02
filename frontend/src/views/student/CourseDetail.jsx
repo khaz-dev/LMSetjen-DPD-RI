@@ -7966,13 +7966,18 @@ function CourseDetail() {
 
 
 
-                            {(activeTab === 'certificate' || activeTab === 'review') && (
+                                                        {/* ✨ Unified 2-Column Responsive Layout: Left Main Column & Right Sidebar Column */}
 
-                                <div className="course-certificate-review-row">
+                            <div className={`course-unified-layout-row ${activeTab === 'certificate' || activeTab === 'review' ? 'course-certificate-review-row' : ''} ${activeTab === 'quiz' ? 'course-quiz-layout-row' : 'course-player-curriculum-row'}`}>
 
-                                    {/* Left Column: Certificate Display */}
+                                {/* Left Main Column: Media Display + Modern Tabs (Exact Equal Width!) */}
 
-                                    <div className="certificate-display-column">
+                                <div className="course-main-left-column">
+
+                                    {/* 1. Main Display Area: Certificate Display / Quiz Player / Video Player */}
+
+                                    {(activeTab === 'certificate' || activeTab === 'review') && (
+<div className="certificate-display-column">
 
                                         {existingCertificate && existingCertificate.image_file_url ? (
 
@@ -8071,128 +8076,10 @@ function CourseDetail() {
                                         )}
 
                                     </div>
+                                    )}
 
-
-
-                                    {/* Right Column: Tab Sertifikat and Tab Ulasan */}
-
-                                    <div className="certificate-sidebar-column">
-
-                                        <div className="certificate-side-card">
-
-                                            {/* Header Pills for Switching between Sertifikat & Ulasan */}
-
-                                            <div className="cert-side-nav-pills">
-
-                                                <button
-
-                                                    type="button"
-
-                                                    className={`cert-pill-btn ${activeTab === 'certificate' ? 'active' : ''}`}
-
-                                                    onClick={() => handleSwitchCertSideTab('certificate')}
-
-                                                >
-
-                                                    <i className="fas fa-certificate me-1"></i>
-
-                                                    <span>Sertifikat</span>
-
-                                                    {existingCertificate ? (
-
-                                                        <span className="cert-pill-badge badge-success"><i className="fas fa-check"></i></span>
-
-                                                    ) : completionPercentage === 100 ? (
-
-                                                        <span className="cert-pill-badge badge-ready"><i className="fas fa-award"></i></span>
-
-                                                    ) : null}
-
-                                                </button>
-
-                                                <button
-
-                                                    type="button"
-
-                                                    className={`cert-pill-btn ${activeTab === 'review' ? 'active' : ''}`}
-
-                                                    onClick={() => handleSwitchCertSideTab('review')}
-
-                                                >
-
-                                                    <i className="fas fa-star me-1"></i>
-
-                                                    <span>Ulasan Kursus</span>
-
-                                                    {(studentReview?.id || studentReview?.rating) && (
-
-                                                        <span className="cert-pill-badge badge-info"><i className="fas fa-check"></i></span>
-
-                                                    )}
-
-                                                </button>
-
-                                            </div>
-
-
-
-                                            {/* Content Area */}
-
-                                            <div className="cert-side-body">
-
-                                                {activeTab === 'certificate' ? (
-
-                                                    <div className="cert-side-pane">
-
-                                                        <CertificateTab
-
-                                                            course={course}
-
-                                                            enrollmentId={param.enrollment_id}
-
-                                                            completionPercentage={completionPercentage}
-
-                                                            onCertificateGenerated={(cert) => setExistingCertificate(cert)}
-
-                                                            isInline={true}
-
-                                                            onStartPosttest={handleStartPosttest}
-
-                                                        />
-
-                                                    </div>
-
-                                                ) : (
-
-                                                    <div className="cert-side-pane">
-
-                                                        {renderReviewContent()}
-
-                                                    </div>
-
-                                                )}
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            )}
-
-
-
-                            {/* ✨ 2-Column Split Layout for Quiz: Inline Quiz Player on Left, Tab Kuis (Daftar Kuis) on Right */}
-
-                            {activeTab === 'quiz' && (
-
-                                <div className="course-quiz-layout-row">
-
-                                    {/* Left Column: Quiz Player (Start screen, active questions, results, or standby) */}
-
-                                    <div className="quiz-player-column">
+                                    {activeTab === 'quiz' && (
+<div className="quiz-player-column">
 
                                         {/* Left Quiz Area Notification */}
 
@@ -9037,12 +8924,508 @@ function CourseDetail() {
                                         )}
 
                                     </div>
+                                    )}
+
+                                    {activeTab !== 'certificate' && activeTab !== 'review' && activeTab !== 'quiz' && (
+<div
+
+                                        ref={videoPlayerContainerRef}
+
+                                        className="course-player-column"
+
+                                    >
+
+                                        {pretestRequired && !hasCompletedPretest ? (
+
+                                            <div className="course-player-standby pretest-required-standby">
+
+                                                <div className="standby-content">
+
+                                                    <div className="standby-icon-circle pretest-circle">
+
+                                                        <i className="fas fa-clipboard-check"></i>
+
+                                                    </div>
+
+                                                    <h5 className="standby-title">Pre-test Diagnostik Wajib</h5>
+
+                                                    <p className="standby-subtitle">
+
+                                                        Akses kurikulum dan materi pembelajaran akan terbuka setelah Anda menyelesaikan Pre-test ini. 
+
+                                                        Pre-test bertujuan menguji pemahaman awal sebelum memulai dan <strong>tidak memiliki syarat nilai kelulusan minimal</strong>.
+
+                                                    </p>
+
+                                                    <button
+
+                                                        type="button"
+
+                                                        className="btn btn-sm btn-teal mt-2 fw-bold px-3 py-2"
+
+                                                        onClick={handleStartPretest}
+
+                                                    >
+
+                                                        <i className="fas fa-play me-1"></i>
+
+                                                        Mulai Kerjakan Pre-test Sekarang
+
+                                                    </button>
+
+                                                </div>
+
+                                            </div>
+
+                                        ) : (
+
+                                            <>
+
+                                                <div style={{ display: variantItem ? 'block' : 'none', width: '100%', height: '100%' }}>
+
+                                                    {variantItem?.file_type === 'scorm' || variantItem?.file_type === 'h5p' || variantItem?.learning_module_info ? (
+
+                                                        <ScormPlayer
+
+                                                            variantItem={variantItem}
+
+                                                            courseId={course?.course?.id}
+
+                                                            course={course}
+
+                                                            onClose={handleVideoPlayerClose}
+
+                                                            handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
+
+                                                        />
+
+                                                    ) : (
+
+                                                        <VideoPlayer
+
+                                                            ref={videoPlayerRef}
+
+                                                            variantItem={variantItem}
+
+                                                            courseId={course?.course?.id}
+
+                                                            course={course}
+
+                                                            onClose={handleVideoPlayerClose}
+
+                                                            handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
+
+                                                            autoplay={autoplayVideo}
+
+                                                            onPlayingChange={setIsVideoPlaying}
+
+                                                            onProgress={handleVideoProgress}
+
+                                                            seekPosition={seekPosition}
+
+                                                        />
+
+                                                    )}
+
+                                                </div>
+
+                                                {!variantItem && (
+
+                                                    <div className="course-player-standby">
+
+                                                        <div className="standby-content">
+
+                                                            <div className="standby-icon-circle">
+
+                                                                <i className="fas fa-play"></i>
+
+                                                            </div>
+
+                                                            <h5 className="standby-title">Pilih Materi Pembelajaran</h5>
+
+                                                            <p className="standby-subtitle">
+
+                                                                Silakan pilih salah satu materi pada Kurikulum Kursus di sebelah kanan untuk memulai pemutaran.
+
+                                                            </p>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                )}
+
+                                            </>
+
+                                        )}
+
+                                    </div>
+                                    )}
+
+                                    {/* 2. Modern Tabs: Sejajar dan Tepat Berada di Bawah certificate-display-column & course-player-column */}
+<div className="modern-tabs">
+
+                                {/* Tab Navigation */}
+
+                                <ul className="nav nav-tabs nav-tabs-modern" id="courseTab" role="tablist">
+
+                                    <li className="nav-item" role="presentation">
+
+                                        <button className="nav-link active" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">
+
+                                            <i className="fas fa-sticky-note me-1"></i>
+
+                                            <span>Catatan</span>
+
+                                            {course?.note?.length > 0 && (
+
+                                                <span className="tab-pill-counter">{course.note.length}</span>
+
+                                            )}
+
+                                        </button>
+
+                                    </li>
+
+                                    <li className="nav-item" role="presentation">
+
+                                        <button className="nav-link" id="discussions-tab" data-bs-toggle="tab" data-bs-target="#discussions" type="button" role="tab">
+
+                                            <i className="fas fa-comments me-1"></i>
+
+                                            <span>Diskusi</span>
+
+                                            {questions?.length > 0 && (
+
+                                                <span className="tab-pill-counter">{questions.length}</span>
+
+                                            )}
+
+                                        </button>
+
+                                    </li>
+
+                                    <li className="nav-item" role="presentation">
+
+                                        <button className="nav-link" id="certificate-tab" data-bs-toggle="tab" data-bs-target="#certificate" type="button" role="tab">
+
+                                            <i className="fas fa-certificate me-1"></i>
+
+                                            <span>Sertifikat</span>
+
+                                            {existingCertificate ? (
+
+                                                <span className="tab-pill-counter counter-success"><i className="fas fa-check"></i></span>
+
+                                            ) : completionPercentage === 100 ? (
+
+                                                <span className="tab-pill-counter counter-ready"><i className="fas fa-award"></i></span>
+
+                                            ) : null}
+
+                                        </button>
+
+                                    </li>
 
 
 
-                                    {/* Right Column: Tab Kuis (Daftar Kuis Kursus) */}
+                                </ul>
 
-                                    <div className="quiz-sidebar-column">
+
+
+                                {/* Tab Content */}
+
+                                <div className="tab-content tab-content-modern" id="courseTabContent">
+
+                                    {/* Notes Tab (Modularized in NotesTab.jsx) */}
+
+
+
+                                    <NotesTab
+
+
+
+                                        course={course}
+
+
+
+                                        handleNoteShow={handleNoteShow}
+
+
+
+                                        noteFilters={noteFilters}
+
+
+
+                                        setNoteFilters={setNoteFilters}
+
+
+
+                                        filteredNotes={filteredNotes}
+
+
+
+                                        openNotes={openNotes}
+
+
+
+                                        setOpenNotes={setOpenNotes}
+
+
+
+                                        getColorVariations={getColorVariations}
+
+
+
+                                        handleDeleteNote={handleDeleteNote}
+
+
+
+                                    />
+
+{/* Discussions Tab (Modularized in DiscussionTab.jsx) */}
+
+                                    <DiscussionTab
+
+                                        course={course}
+
+                                        openedQuestionId={openedQuestionId}
+
+                                        selectedConversation={selectedConversation}
+
+                                        handleConversationClose={handleConversationClose}
+
+                                        handleConversationShow={handleConversationShow}
+
+                                        handleQuestionShow={handleQuestionShow}
+
+                                        qaStats={qaStats}
+
+                                        discussionFilters={discussionFilters}
+
+                                        setDiscussionFilters={setDiscussionFilters}
+
+                                        filteredQuestions={filteredQuestions}
+
+                                        handleToggleSolution={handleToggleSolution}
+
+                                        handleTogglePin={handleTogglePin}
+
+                                        handleLikeQuestion={handleLikeQuestion}
+
+                                        handleLikeMessage={handleLikeMessage}
+
+                                        userLikedQuestions={userLikedQuestions}
+
+                                        userLikedMessages={userLikedMessages}
+
+                                        isQAItemReported={isQAItemReported}
+
+                                        getQAReportStatus={getQAReportStatus}
+
+                                        handleOpenQAReportModal={handleOpenQAReportModal}
+
+                                        createMessage={createMessage}
+
+                                        setCreateMessage={setCreateMessage}
+
+                                        handleMessageChange={handleMessageChange}
+
+                                        sendNewMessage={sendNewMessage}
+
+                                        isSubmittingReply={isSubmittingReply}
+
+                                        activeVariantItem={variantItem}
+
+                                        replyTextareaRef={replyTextareaRef}
+
+                                        replyPreviewMode={replyPreviewMode}
+
+                                        setReplyPreviewMode={setReplyPreviewMode}
+
+                                        getCurrentVideoTime={getCurrentVideoTime}
+
+                                        handleJumpToVideoTimestamp={handleJumpToVideoTimestamp}
+
+                                        isCourseInstructorOrStaff={isCourseInstructorOrStaff}
+
+                                    />
+
+
+
+
+
+
+                                    {/* Certificate Tab */}
+
+                                    <div className="tab-pane fade" id="certificate" role="tabpanel">
+
+                                        <div className="cert-active-notice-card">
+
+                                            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+                                                <div className="d-flex align-items-center gap-3">
+
+                                                    <div className="notice-icon-box">
+
+                                                        <i className="fas fa-award"></i>
+
+                                                    </div>
+
+                                                    <div>
+
+                                                        <h6 className="mb-0">Panel Sertifikat Aktif di Atas</h6>
+
+                                                        <small className="text-muted">Pratinjau sertifikat resmi dan informasi kelulusan ditampilkan pada panel 2-kolom di atas.</small>
+
+                                                    </div>
+
+                                                </div>
+
+                                                <button
+
+                                                    type="button"
+
+                                                    className="btn btn-sm btn-outline-teal"
+
+                                                    onClick={() => {
+
+                                                        document.querySelector('.course-certificate-review-row')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                                                    }}
+
+                                                >
+
+                                                    <i className="fas fa-arrow-up me-1"></i>Ke Pratinjau Sertifikat
+
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+
+
+
+                                </div>
+
+                            </div>
+
+                                </div>
+
+                                {/* Right Sidebar Column: Certificate Sidebar / Quiz Sidebar / Curriculum */}
+
+                                <div className="course-sidebar-right-column">
+
+                                    {(activeTab === 'certificate' || activeTab === 'review') && (
+<div className="certificate-sidebar-column">
+
+                                        <div className="certificate-side-card">
+
+                                            {/* Header Pills for Switching between Sertifikat & Ulasan */}
+
+                                            <div className="cert-side-nav-pills">
+
+                                                <button
+
+                                                    type="button"
+
+                                                    className={`cert-pill-btn ${activeTab === 'certificate' ? 'active' : ''}`}
+
+                                                    onClick={() => handleSwitchCertSideTab('certificate')}
+
+                                                >
+
+                                                    <i className="fas fa-certificate me-1"></i>
+
+                                                    <span>Sertifikat</span>
+
+                                                    {existingCertificate ? (
+
+                                                        <span className="cert-pill-badge badge-success"><i className="fas fa-check"></i></span>
+
+                                                    ) : completionPercentage === 100 ? (
+
+                                                        <span className="cert-pill-badge badge-ready"><i className="fas fa-award"></i></span>
+
+                                                    ) : null}
+
+                                                </button>
+
+                                                <button
+
+                                                    type="button"
+
+                                                    className={`cert-pill-btn ${activeTab === 'review' ? 'active' : ''}`}
+
+                                                    onClick={() => handleSwitchCertSideTab('review')}
+
+                                                >
+
+                                                    <i className="fas fa-star me-1"></i>
+
+                                                    <span>Ulasan Kursus</span>
+
+                                                    {(studentReview?.id || studentReview?.rating) && (
+
+                                                        <span className="cert-pill-badge badge-info"><i className="fas fa-check"></i></span>
+
+                                                    )}
+
+                                                </button>
+
+                                            </div>
+
+
+
+                                            {/* Content Area */}
+
+                                            <div className="cert-side-body">
+
+                                                {activeTab === 'certificate' ? (
+
+                                                    <div className="cert-side-pane">
+
+                                                        <CertificateTab
+
+                                                            course={course}
+
+                                                            enrollmentId={param.enrollment_id}
+
+                                                            completionPercentage={completionPercentage}
+
+                                                            onCertificateGenerated={(cert) => setExistingCertificate(cert)}
+
+                                                            isInline={true}
+
+                                                            onStartPosttest={handleStartPosttest}
+
+                                                        />
+
+                                                    </div>
+
+                                                ) : (
+
+                                                    <div className="cert-side-pane">
+
+                                                        {renderReviewContent()}
+
+                                                    </div>
+
+                                                )}
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                    )}
+
+                                    {activeTab === 'quiz' && (
+<div className="quiz-sidebar-column">
 
                                         <div className="quiz-sidebar-card">
 
@@ -9589,160 +9972,10 @@ function CourseDetail() {
                                         </div>
 
                                     </div>
+                                    )}
 
-                                </div>
-
-                            )}
-
-
-
-                            {/* ✨ Top Section: Video Player & Tab Pelajaran (Kurikulum Kursus) Side-by-Side (Equal Height) */}
-
-                            {activeTab !== 'certificate' && activeTab !== 'review' && activeTab !== 'quiz' && (
-
-                                <div className="course-player-curriculum-row">
-
-                                    {/* Left Column: Video / Module Player */}
-
-                                    <div
-
-                                        ref={videoPlayerContainerRef}
-
-                                        className="course-player-column"
-
-                                    >
-
-                                        {pretestRequired && !hasCompletedPretest ? (
-
-                                            <div className="course-player-standby pretest-required-standby">
-
-                                                <div className="standby-content">
-
-                                                    <div className="standby-icon-circle pretest-circle">
-
-                                                        <i className="fas fa-clipboard-check"></i>
-
-                                                    </div>
-
-                                                    <h5 className="standby-title">Pre-test Diagnostik Wajib</h5>
-
-                                                    <p className="standby-subtitle">
-
-                                                        Akses kurikulum dan materi pembelajaran akan terbuka setelah Anda menyelesaikan Pre-test ini. 
-
-                                                        Pre-test bertujuan menguji pemahaman awal sebelum memulai dan <strong>tidak memiliki syarat nilai kelulusan minimal</strong>.
-
-                                                    </p>
-
-                                                    <button
-
-                                                        type="button"
-
-                                                        className="btn btn-sm btn-teal mt-2 fw-bold px-3 py-2"
-
-                                                        onClick={handleStartPretest}
-
-                                                    >
-
-                                                        <i className="fas fa-play me-1"></i>
-
-                                                        Mulai Kerjakan Pre-test Sekarang
-
-                                                    </button>
-
-                                                </div>
-
-                                            </div>
-
-                                        ) : (
-
-                                            <>
-
-                                                <div style={{ display: variantItem ? 'block' : 'none', width: '100%', height: '100%' }}>
-
-                                                    {variantItem?.file_type === 'scorm' || variantItem?.file_type === 'h5p' || variantItem?.learning_module_info ? (
-
-                                                        <ScormPlayer
-
-                                                            variantItem={variantItem}
-
-                                                            courseId={course?.course?.id}
-
-                                                            course={course}
-
-                                                            onClose={handleVideoPlayerClose}
-
-                                                            handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
-
-                                                        />
-
-                                                    ) : (
-
-                                                        <VideoPlayer
-
-                                                            ref={videoPlayerRef}
-
-                                                            variantItem={variantItem}
-
-                                                            courseId={course?.course?.id}
-
-                                                            course={course}
-
-                                                            onClose={handleVideoPlayerClose}
-
-                                                            handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
-
-                                                            autoplay={autoplayVideo}
-
-                                                            onPlayingChange={setIsVideoPlaying}
-
-                                                            onProgress={handleVideoProgress}
-
-                                                            seekPosition={seekPosition}
-
-                                                        />
-
-                                                    )}
-
-                                                </div>
-
-                                                {!variantItem && (
-
-                                                    <div className="course-player-standby">
-
-                                                        <div className="standby-content">
-
-                                                            <div className="standby-icon-circle">
-
-                                                                <i className="fas fa-play"></i>
-
-                                                            </div>
-
-                                                            <h5 className="standby-title">Pilih Materi Pembelajaran</h5>
-
-                                                            <p className="standby-subtitle">
-
-                                                                Silakan pilih salah satu materi pada Kurikulum Kursus di sebelah kanan untuk memulai pemutaran.
-
-                                                            </p>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                )}
-
-                                            </>
-
-                                        )}
-
-                                    </div>
-
-
-
-                                    {/* Right Column: Tab Pelajaran / Kurikulum Kursus (Exact Equal Height) */}
-
-                                    <div className="course-curriculum-column">
+                                    {activeTab !== 'certificate' && activeTab !== 'review' && activeTab !== 'quiz' && (
+<div className="course-curriculum-column">
 
                                         <div className="curriculum-side-card">
 
@@ -9774,284 +10007,24 @@ function CourseDetail() {
 
                                                 onStartPretest={handleStartPretest}
 
+                                                prePostQuiz={prePostQuiz}
+
+                                                canTakePostTest={canTakePostTest}
+
+                                                hasCompletedPosttest={hasCompletedPosttest}
+
+                                                quizzes={quizzes}
+
+                                                selectedQuiz={selectedQuiz}
+
+                                                onSelectQuiz={handleQuizShow}
+
                                             />
 
                                         </div>
 
                                     </div>
-
-                                </div>
-
-                            )}
-
-
-
-                            {/* ✨ Bottom Section: Remaining Tabs (Catatan, Diskusi, Kuis, Sertifikat, Ulasan) */}
-
-                            <div className="modern-tabs">
-
-                                {/* Tab Navigation */}
-
-                                <ul className="nav nav-tabs nav-tabs-modern" id="courseTab" role="tablist">
-
-                                    <li className="nav-item" role="presentation">
-
-                                        <button className="nav-link active" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">
-
-                                            <i className="fas fa-sticky-note me-1"></i>
-
-                                            <span>Catatan</span>
-
-                                            {course?.note?.length > 0 && (
-
-                                                <span className="tab-pill-counter">{course.note.length}</span>
-
-                                            )}
-
-                                        </button>
-
-                                    </li>
-
-                                    <li className="nav-item" role="presentation">
-
-                                        <button className="nav-link" id="discussions-tab" data-bs-toggle="tab" data-bs-target="#discussions" type="button" role="tab">
-
-                                            <i className="fas fa-comments me-1"></i>
-
-                                            <span>Diskusi</span>
-
-                                            {questions?.length > 0 && (
-
-                                                <span className="tab-pill-counter">{questions.length}</span>
-
-                                            )}
-
-                                        </button>
-
-                                    </li>
-
-                                    <li className="nav-item" role="presentation">
-
-                                        <button className="nav-link" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz" type="button" role="tab">
-
-                                            <i className="fas fa-brain me-1"></i>
-
-                                            <span>Kuis</span>
-
-                                            {quizzes?.length > 0 && (
-
-                                                <span className="tab-pill-counter">{completionStats.passedQuizzes}/{quizzes.length}</span>
-
-                                            )}
-
-                                        </button>
-
-                                    </li>
-
-                                    <li className="nav-item" role="presentation">
-
-                                        <button className="nav-link" id="certificate-tab" data-bs-toggle="tab" data-bs-target="#certificate" type="button" role="tab">
-
-                                            <i className="fas fa-certificate me-1"></i>
-
-                                            <span>Sertifikat</span>
-
-                                            {existingCertificate ? (
-
-                                                <span className="tab-pill-counter counter-success"><i className="fas fa-check"></i></span>
-
-                                            ) : completionPercentage === 100 ? (
-
-                                                <span className="tab-pill-counter counter-ready"><i className="fas fa-award"></i></span>
-
-                                            ) : null}
-
-                                        </button>
-
-                                    </li>
-
-
-
-                                </ul>
-
-
-
-                                {/* Tab Content */}
-
-                                <div className="tab-content tab-content-modern" id="courseTabContent">
-
-                                    {/* Notes Tab (Modularized in NotesTab.jsx) */}
-
-
-
-                                    <NotesTab
-
-
-
-                                        course={course}
-
-
-
-                                        handleNoteShow={handleNoteShow}
-
-
-
-                                        noteFilters={noteFilters}
-
-
-
-                                        setNoteFilters={setNoteFilters}
-
-
-
-                                        filteredNotes={filteredNotes}
-
-
-
-                                        openNotes={openNotes}
-
-
-
-                                        setOpenNotes={setOpenNotes}
-
-
-
-                                        getColorVariations={getColorVariations}
-
-
-
-                                        handleDeleteNote={handleDeleteNote}
-
-
-
-                                    />
-
-{/* Discussions Tab (Modularized in DiscussionTab.jsx) */}
-
-                                    <DiscussionTab
-
-                                        course={course}
-
-                                        openedQuestionId={openedQuestionId}
-
-                                        selectedConversation={selectedConversation}
-
-                                        handleConversationClose={handleConversationClose}
-
-                                        handleConversationShow={handleConversationShow}
-
-                                        handleQuestionShow={handleQuestionShow}
-
-                                        qaStats={qaStats}
-
-                                        discussionFilters={discussionFilters}
-
-                                        setDiscussionFilters={setDiscussionFilters}
-
-                                        filteredQuestions={filteredQuestions}
-
-                                        handleToggleSolution={handleToggleSolution}
-
-                                        handleTogglePin={handleTogglePin}
-
-                                        handleLikeQuestion={handleLikeQuestion}
-
-                                        handleLikeMessage={handleLikeMessage}
-
-                                        userLikedQuestions={userLikedQuestions}
-
-                                        userLikedMessages={userLikedMessages}
-
-                                        isQAItemReported={isQAItemReported}
-
-                                        getQAReportStatus={getQAReportStatus}
-
-                                        handleOpenQAReportModal={handleOpenQAReportModal}
-
-                                        createMessage={createMessage}
-
-                                        setCreateMessage={setCreateMessage}
-
-                                        handleMessageChange={handleMessageChange}
-
-                                        sendNewMessage={sendNewMessage}
-
-                                        isSubmittingReply={isSubmittingReply}
-
-                                        activeVariantItem={variantItem}
-
-                                        replyTextareaRef={replyTextareaRef}
-
-                                        replyPreviewMode={replyPreviewMode}
-
-                                        setReplyPreviewMode={setReplyPreviewMode}
-
-                                        getCurrentVideoTime={getCurrentVideoTime}
-
-                                        handleJumpToVideoTimestamp={handleJumpToVideoTimestamp}
-
-                                        isCourseInstructorOrStaff={isCourseInstructorOrStaff}
-
-                                    />
-
-
-
-
-
-
-                                    {/* Certificate Tab */}
-
-                                    <div className="tab-pane fade" id="certificate" role="tabpanel">
-
-                                        <div className="cert-active-notice-card">
-
-                                            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-
-                                                <div className="d-flex align-items-center gap-3">
-
-                                                    <div className="notice-icon-box">
-
-                                                        <i className="fas fa-award"></i>
-
-                                                    </div>
-
-                                                    <div>
-
-                                                        <h6 className="mb-0">Panel Sertifikat Aktif di Atas</h6>
-
-                                                        <small className="text-muted">Pratinjau sertifikat resmi dan informasi kelulusan ditampilkan pada panel 2-kolom di atas.</small>
-
-                                                    </div>
-
-                                                </div>
-
-                                                <button
-
-                                                    type="button"
-
-                                                    className="btn btn-sm btn-outline-teal"
-
-                                                    onClick={() => {
-
-                                                        document.querySelector('.course-certificate-review-row')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                                                    }}
-
-                                                >
-
-                                                    <i className="fas fa-arrow-up me-1"></i>Ke Pratinjau Sertifikat
-
-                                                </button>
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-
-
-
-
+                                    )}
 
                                 </div>
 

@@ -3,8 +3,8 @@
    Isolated with .landing-page-container scope to prevent conflicts
    ========================================== */
 
-/* Base canvas with smooth scrolling */
-html {
+/* Base canvas with smooth scrolling - Scoped to landing page container to prevent style leak in SPA */
+html:has(.landing-page-container) {
     scroll-behavior: smooth;
     background-color: #f1f5f9;
 }
@@ -13,6 +13,11 @@ body:has(.landing-page-container) {
     padding-top: 0 !important;
     margin-top: 0 !important;
     background-color: #f1f5f9 !important;
+}
+
+body:has(.landing-page-container)::before,
+body:has(.landing-page-container)::after {
+    display: none !important;
 }
 
 /* === FIXED HEADER FOR LANDING PAGE === */

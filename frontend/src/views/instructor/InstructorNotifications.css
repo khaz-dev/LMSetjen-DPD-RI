@@ -30,7 +30,7 @@
     padding-top: 1rem !important;
     padding-bottom: 2.5rem !important;
     margin-top: 0 !important;
-    margin-bottom: 2rem !important; /* Eliminated vast 8rem blank whitespace */
+    margin-bottom: 0 !important; /* Eliminated vast 8rem blank whitespace */
     overflow: visible !important; /* CRITICAL: Must be visible to allow position: sticky on sidebar to track window scroll */
 }
 

@@ -33,7 +33,7 @@
     padding-top: 0.75rem !important;
     padding-bottom: 2rem !important;
     margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 0 !important;
     overflow: visible !important;
     overflow-x: clip;
 }
@@ -1529,7 +1529,7 @@
     .modern-certificates-page {
         padding-top: 0.75rem !important;
         padding-bottom: 2rem !important;
-        margin-bottom: 1.5rem !important;
+        margin-bottom: 0 !important;
     }
 
     .cert-hero-card {

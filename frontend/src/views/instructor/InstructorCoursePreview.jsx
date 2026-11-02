@@ -140,13 +140,20 @@ function InstructorCoursePreview() {
 
     // Derived statistics
     const stats = useMemo(() => {
-        if (!course) return { sections: 0, lectures: 0, quizzes: 0, questions: 0 };
+        if (!course) return { sections: 0, lectures: 0, quizzes: 0, questions: 0, curriculumQuizzes: 0 };
         const sections = course.curriculum?.length || 0;
         let lectures = 0;
+        let curriculumQuizzes = 0;
         if (course.curriculum) {
             course.curriculum.forEach(sec => {
                 const items = sec.items || sec.variant_items || [];
-                lectures += items.length;
+                items.forEach(it => {
+                    if (it.item_type === 'quiz' || it.quiz_id || it.quiz) {
+                        curriculumQuizzes++;
+                    } else {
+                        lectures++;
+                    }
+                });
             });
         }
         if (!lectures && course.lectures) {
@@ -159,7 +166,12 @@ function InstructorCoursePreview() {
                 questions += q.questions?.length || q.question_count || 0;
             });
         }
-        return { sections, lectures, quizzes, questions };
+        return { sections, lectures, quizzes, questions, curriculumQuizzes };
+    }, [course]);
+
+    // ✨ Pre/Post-Test detection
+    const prePostQuiz = useMemo(() => {
+        return (course?.quizzes || []).find(q => q.quiz_type === 'pre_post_test' || q.has_pre_test || q.has_post_test) || null;
     }, [course]);
 
     const isAllSectionsExpanded = useMemo(() => {
@@ -338,7 +350,7 @@ function InstructorCoursePreview() {
                                     >
                                         <i className="fas fa-layer-group me-1.5"></i>
                                         <span>Kurikulum</span>
-                                        <span className="icp-tab-counter">{stats.sections} Bagian • {stats.lectures} Materi</span>
+                                        <span className="icp-tab-counter">{stats.sections} Bagian • {stats.lectures} Pelajaran{stats.curriculumQuizzes > 0 ? ` • ${stats.curriculumQuizzes} Kuis` : ''}</span>
                                     </button>
                                     <button 
                                         className={`icp-nav-tab ${activeTab === 'quizzes' ? 'active' : ''}`}
@@ -376,7 +388,7 @@ function InstructorCoursePreview() {
                                             <div>
                                                 <h3 className="icp-card-title mb-0">Struktur Kurikulum</h3>
                                                 <span className="icp-card-subtitle">
-                                                    {stats.sections} Bagian • {stats.lectures} Pelajaran
+                                                    {stats.sections} Bagian • {stats.lectures} Pelajaran{stats.curriculumQuizzes > 0 ? ` • ${stats.curriculumQuizzes} Kuis Sisipan` : ''}{prePostQuiz ? ' • Pre & Post-Test' : ''}
                                                 </span>
                                             </div>
                                         </div>
@@ -392,6 +404,57 @@ function InstructorCoursePreview() {
                                     </div>
 
                                     <div className="icp-card-body p-0">
+                                        {/* 📌 Pre-Test Diagnostik: Otomatis di Awal Kurikulum */}
+                                        {prePostQuiz && (
+                                            <div className="p-3 pb-2 border-bottom">
+                                                <div className="icp-pretest-card p-3 rounded-3 border" style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%)', borderLeft: '5px solid #10b981' }}>
+                                                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                        <div className="d-flex align-items-center gap-3 flex-wrap">
+                                                            <div className="icp-test-icon-wrap pretest-icon">
+                                                                <i className="fas fa-clipboard-check"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                                    <span className="badge bg-success text-white px-2 py-0.5" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>
+                                                                        LANGKAH 1 (OTOMATIS)
+                                                                    </span>
+                                                                    <span className="fw-bold text-dark" style={{ fontSize: '0.95rem' }}>Pre-Test Diagnostik</span>
+                                                                    <span className="badge bg-white text-success border border-success-subtle fw-semibold" style={{ fontSize: '10px' }}>
+                                                                        <i className="fas fa-check-circle me-1"></i>Wajib di Awal
+                                                                    </span>
+                                                                </div>
+                                                                <div className="d-flex align-items-center gap-2 flex-wrap text-muted small">
+                                                                    <strong className="text-dark">{prePostQuiz.title}</strong>
+                                                                    <span>&bull;</span>
+                                                                    <span><i className="fas fa-question-circle me-1 text-success"></i>{prePostQuiz.questions?.length || prePostQuiz.total_questions || prePostQuiz.question_count || 0} Soal</span>
+                                                                    <span>&bull;</span>
+                                                                    <span className="text-secondary">Wajib dikerjakan siswa sebelum membuka materi Bagian 1</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-sm btn-outline-success fw-semibold d-inline-flex align-items-center gap-1 shadow-xs"
+                                                                style={{ borderRadius: '8px' }}
+                                                                onClick={() => {
+                                                                    setActiveTab('quizzes');
+                                                                    const qKey = prePostQuiz.id || prePostQuiz.quiz_id;
+                                                                    if (qKey) {
+                                                                        setExpandedQuizzes(prev => ({ ...prev, [qKey]: true }));
+                                                                    }
+                                                                }}
+                                                                title="Lihat detail soal Pre-Test di Tab Kuis"
+                                                            >
+                                                                <i className="fas fa-external-link-alt"></i>
+                                                                <span>Lihat Soal Pre-Test</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {(!course.curriculum || course.curriculum.length === 0) ? (
                                             <div className="icp-empty-state">
                                                 <i className="fas fa-book-reader mb-2"></i>
@@ -404,6 +467,8 @@ function InstructorCoursePreview() {
                                                     const sectionId = section.id || section.variant_id || `section-${idx}`;
                                                     const items = section.items || section.variant_items || [];
                                                     const isExpanded = !!expandedSections[sectionId];
+                                                    const sectionLectures = items.filter(it => it.item_type !== 'quiz' && !it.quiz_id && !it.quiz).length;
+                                                    const sectionQuizzes = items.filter(it => it.item_type === 'quiz' || it.quiz_id || it.quiz).length;
 
                                                     return (
                                                         <div key={sectionId} className={`icp-section-block ${isExpanded ? 'is-open' : ''}`}>
@@ -417,7 +482,7 @@ function InstructorCoursePreview() {
                                                                 </div>
                                                                 <div className="d-flex align-items-center gap-3">
                                                                     <span className="icp-section-counter">
-                                                                        {items.length} Pelajaran
+                                                                        {sectionLectures} Pelajaran{sectionQuizzes > 0 ? ` • ${sectionQuizzes} Kuis` : ''}
                                                                     </span>
                                                                     <i className={`fas fa-chevron-down icp-arrow ${isExpanded ? 'rotate' : ''}`}></i>
                                                                 </div>
@@ -434,42 +499,88 @@ function InstructorCoursePreview() {
                                                                         <div className="icp-lecture-group">
                                                                             {items.map((lecture, lIdx) => {
                                                                                 const lectureId = lecture.id || lecture.variant_item_id || `lec-${idx}-${lIdx}`;
-                                                                                const isVideo = lecture.file_type === "video" || 
+                                                                                const isQuiz = lecture.item_type === "quiz" || Boolean(lecture.quiz_id) || Boolean(lecture.quiz);
+                                                                                const targetQuiz = isQuiz ? ((course.quizzes || []).find(q => String(q.quiz_id) === String(lecture.quiz_id || (typeof lecture.quiz === 'object' ? lecture.quiz.quiz_id : lecture.quiz))) || lecture.quiz_detail) : null;
+                                                                                const isVideo = !isQuiz && (lecture.file_type === "video" || 
                                                                                                 lecture.content_type === "video" || 
                                                                                                 lecture.file?.includes('youtube') || 
                                                                                                 lecture.file?.includes('youtu.be') || 
-                                                                                                lecture.file?.includes('drive.google');
+                                                                                                lecture.file?.includes('drive.google') ||
+                                                                                                lecture.file?.includes('/media/'));
                                                                                 const isLecturePreviewOpen = !!expandedLecturePreview[lectureId];
 
                                                                                 return (
-                                                                                    <div key={lectureId} className="icp-lecture-row">
+                                                                                    <div key={lectureId} className={`icp-lecture-row ${isQuiz ? 'icp-lecture-quiz-row' : ''}`}>
                                                                                         <div className="icp-lecture-main">
-                                                                                            <div className="icp-lecture-icon-wrap">
-                                                                                                <i className={`fas ${isVideo ? 'fa-play-circle text-teal' : 'fa-file-alt text-primary'}`}></i>
+                                                                                            <div className={`icp-lecture-icon-wrap ${isQuiz ? 'quiz-icon-wrap' : ''}`}>
+                                                                                                <i className={`fas ${isQuiz ? 'fa-clipboard-question text-warning' : isVideo ? 'fa-play-circle text-teal' : 'fa-file-alt text-primary'}`}></i>
                                                                                             </div>
                                                                                             <div className="icp-lecture-content-block">
                                                                                                 <div className="d-flex align-items-center gap-2 flex-wrap">
                                                                                                     <span className="icp-lecture-title">
                                                                                                         {lIdx + 1}. {lecture.title}
                                                                                                     </span>
-                                                                                                    <span className={`icp-pill-micro ${isVideo ? 'pill-video' : 'pill-doc'}`}>
-                                                                                                        {isVideo ? 'Video' : 'Dokumen'}
-                                                                                                    </span>
-                                                                                                    {(lecture.duration_seconds || lecture.content_duration) && (
-                                                                                                        <span className="icp-pill-micro pill-time">
-                                                                                                            <i className="fas fa-clock me-1"></i>
-                                                                                                            {lecture.content_duration || `${Math.floor((lecture.duration_seconds || 0) / 60)}:${String(Math.floor((lecture.duration_seconds || 0) % 60)).padStart(2, '0')}`}
-                                                                                                        </span>
+                                                                                                    {isQuiz ? (
+                                                                                                        <>
+                                                                                                            <span className="icp-pill-micro pill-quiz">
+                                                                                                                <i className="fas fa-tasks me-1"></i>Kuis
+                                                                                                            </span>
+                                                                                                            <span className="icp-pill-micro pill-time">
+                                                                                                                <i className="fas fa-question-circle me-1"></i>
+                                                                                                                {targetQuiz?.questions?.length || targetQuiz?.total_questions || targetQuiz?.question_count || 0} Soal
+                                                                                                            </span>
+                                                                                                            <span className="icp-pill-micro pill-passing">
+                                                                                                                <i className="fas fa-award me-1"></i>
+                                                                                                                Passing: {targetQuiz?.passing_score || 70}%
+                                                                                                            </span>
+                                                                                                            {targetQuiz?.duration_minutes ? (
+                                                                                                                <span className="icp-pill-micro pill-time">
+                                                                                                                    <i className="fas fa-clock me-1"></i>
+                                                                                                                    {targetQuiz.duration_minutes} Menit
+                                                                                                                </span>
+                                                                                                            ) : null}
+                                                                                                        </>
+                                                                                                    ) : (
+                                                                                                        <>
+                                                                                                            <span className={`icp-pill-micro ${isVideo ? 'pill-video' : 'pill-doc'}`}>
+                                                                                                                {isVideo ? 'Video' : 'Dokumen'}
+                                                                                                            </span>
+                                                                                                            {(lecture.duration_seconds || lecture.content_duration) && (
+                                                                                                                <span className="icp-pill-micro pill-time">
+                                                                                                                    <i className="fas fa-clock me-1"></i>
+                                                                                                                    {lecture.content_duration || `${Math.floor((lecture.duration_seconds || 0) / 60)}:${String(Math.floor((lecture.duration_seconds || 0) % 60)).padStart(2, '0')}`}
+                                                                                                                </span>
+                                                                                                            )}
+                                                                                                        </>
                                                                                                     )}
                                                                                                 </div>
-                                                                                                {lecture.description && (
+                                                                                                {(lecture.description || (isQuiz && targetQuiz?.description)) && (
                                                                                                     <div className="icp-lecture-desc">
-                                                                                                        {lecture.description}
+                                                                                                        {lecture.description || targetQuiz?.description}
                                                                                                     </div>
                                                                                                 )}
                                                                                             </div>
                                                                                             
-                                                                                            {lecture.file && (
+                                                                                            {isQuiz ? (
+                                                                                                <div className="icp-lecture-action">
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        className="btn btn-xs btn-outline-warning text-dark fw-semibold d-inline-flex align-items-center gap-1 shadow-xs"
+                                                                                                        style={{ borderRadius: '6px', fontSize: '0.75rem', padding: '0.2rem 0.55rem' }}
+                                                                                                        onClick={() => {
+                                                                                                            setActiveTab('quizzes');
+                                                                                                            const qKey = targetQuiz?.id || targetQuiz?.quiz_id;
+                                                                                                            if (qKey) {
+                                                                                                                setExpandedQuizzes(prev => ({ ...prev, [qKey]: true }));
+                                                                                                            }
+                                                                                                        }}
+                                                                                                        title="Buka detail soal kuis di Tab Kuis"
+                                                                                                    >
+                                                                                                        <i className="fas fa-external-link-alt text-warning"></i>
+                                                                                                        <span>Detail Kuis</span>
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            ) : lecture.file ? (
                                                                                                 <div className="icp-lecture-action">
                                                                                                     {isVideo ? (
                                                                                                         <button
@@ -491,11 +602,11 @@ function InstructorCoursePreview() {
                                                                                                         </a>
                                                                                                     )}
                                                                                                 </div>
-                                                                                            )}
+                                                                                            ) : null}
                                                                                         </div>
 
                                                                                         {/* Inline Lecture Video Preview */}
-                                                                                        {isLecturePreviewOpen && lecture.file && (
+                                                                                        {!isQuiz && isLecturePreviewOpen && lecture.file && (
                                                                                             <div className="icp-lecture-video-box">
                                                                                                 {lecture.file.includes('youtube') || lecture.file.includes('youtu.be') ? (
                                                                                                     <iframe
@@ -523,7 +634,7 @@ function InstructorCoursePreview() {
                                                                                         )}
 
                                                                                         {/* Lesson Completion Question */}
-                                                                                        {lecture.completion_question && (
+                                                                                        {!isQuiz && lecture.completion_question && (
                                                                                             <div className="icp-completion-box">
                                                                                                 <div className="d-flex align-items-center justify-content-between mb-1">
                                                                                                     <span className="icp-completion-tag">
@@ -576,6 +687,57 @@ function InstructorCoursePreview() {
                                                 })}
                                             </div>
                                         )}
+
+                                        {/* 📌 Post-Test Evaluasi Akhir: Otomatis di Akhir Kurikulum */}
+                                        {prePostQuiz && (
+                                            <div className="p-3 pt-2 border-top">
+                                                <div className="icp-posttest-card p-3 rounded-3 border" style={{ background: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)', borderLeft: '5px solid #ef4444' }}>
+                                                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                        <div className="d-flex align-items-center gap-3 flex-wrap">
+                                                            <div className="icp-test-icon-wrap posttest-icon">
+                                                                <i className="fas fa-award"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                                    <span className="badge bg-danger text-white px-2 py-0.5" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>
+                                                                        LANGKAH AKHIR (OTOMATIS)
+                                                                    </span>
+                                                                    <span className="fw-bold text-dark" style={{ fontSize: '0.95rem' }}>Post-Test Evaluasi Akhir</span>
+                                                                    <span className="badge bg-white text-danger border border-danger-subtle fw-semibold" style={{ fontSize: '10px' }}>
+                                                                        <i className="fas fa-lock me-1"></i>Evaluasi Kelulusan
+                                                                    </span>
+                                                                </div>
+                                                                <div className="d-flex align-items-center gap-2 flex-wrap text-muted small">
+                                                                    <strong className="text-dark">{prePostQuiz.title} (Post-test)</strong>
+                                                                    <span>&bull;</span>
+                                                                    <span><i className="fas fa-question-circle me-1 text-danger"></i>{prePostQuiz.questions?.length || prePostQuiz.total_questions || prePostQuiz.question_count || 0} Soal</span>
+                                                                    <span>&bull;</span>
+                                                                    <span className="text-danger fw-semibold"><i className="fas fa-award me-1"></i>Passing Grade: 70%</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-sm btn-outline-danger fw-semibold d-inline-flex align-items-center gap-1 shadow-xs"
+                                                                style={{ borderRadius: '8px' }}
+                                                                onClick={() => {
+                                                                    setActiveTab('quizzes');
+                                                                    const qKey = prePostQuiz.id || prePostQuiz.quiz_id;
+                                                                    if (qKey) {
+                                                                        setExpandedQuizzes(prev => ({ ...prev, [qKey]: true }));
+                                                                    }
+                                                                }}
+                                                                title="Lihat detail soal Post-Test di Tab Kuis"
+                                                            >
+                                                                <i className="fas fa-external-link-alt"></i>
+                                                                <span>Lihat Soal Post-Test</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -619,6 +781,7 @@ function InstructorCoursePreview() {
                                                     const quizId = quiz.id || quiz.quiz_id || `quiz-${qIndex}`;
                                                     const isExpanded = !!expandedQuizzes[quizId];
                                                     const questions = quiz.questions || [];
+                                                    const isPrePost = quiz.quiz_type === 'pre_post_test' || quiz.has_pre_test || quiz.has_post_test;
 
                                                     return (
                                                         <div key={quizId} className={`icp-section-block ${isExpanded ? 'is-open' : ''}`}>
@@ -626,9 +789,20 @@ function InstructorCoursePreview() {
                                                                 className="icp-section-head"
                                                                 onClick={() => toggleQuiz(quizId)}
                                                             >
-                                                                <div className="d-flex align-items-center gap-2 flex-grow-1">
-                                                                    <span className="icp-section-badge quiz-badge">Kuis {qIndex + 1}</span>
+                                                                <div className="d-flex align-items-center gap-2 flex-grow-1 flex-wrap">
+                                                                    {isPrePost ? (
+                                                                        <span className="badge text-white px-2.5 py-1" style={{ background: 'linear-gradient(135deg, #059669 0%, #dc2626 100%)', fontSize: '11px', borderRadius: '6px' }}>
+                                                                            <i className="fas fa-clipboard-check me-1"></i>Pre & Post-Test
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="icp-section-badge quiz-badge">Kuis {qIndex + 1}</span>
+                                                                    )}
                                                                     <span className="icp-section-name">{quiz.title || "Kuis Tanpa Judul"}</span>
+                                                                    {isPrePost && (
+                                                                        <span className="badge bg-light text-secondary border small">
+                                                                            Pre-Test & Post-Test
+                                                                        </span>
+                                                                    )}
                                                                     {quiz.is_active !== undefined && (
                                                                         <span className={`icp-pill-micro ${quiz.is_active ? 'pill-active' : 'pill-inactive'}`}>
                                                                             {quiz.is_active ? 'Aktif' : 'Nonaktif'}
@@ -645,6 +819,14 @@ function InstructorCoursePreview() {
 
                                                             {isExpanded && (
                                                                 <div className="icp-section-body">
+                                                                    {isPrePost && (
+                                                                        <div className="alert alert-light border rounded-2 p-2.5 mx-3 mt-2 mb-2 d-flex align-items-center gap-2 small text-secondary" style={{ backgroundColor: '#f8fafc', borderLeft: '4px solid #059669' }}>
+                                                                            <i className="fas fa-info-circle text-success fs-5"></i>
+                                                                            <div>
+                                                                                <strong>Kuis Terpadu Pre-Test & Post-Test:</strong> Soal pada kuis ini digunakan sebagai <em>Pre-Test Diagnostik</em> di awal kursus (tanpa passing grade) serta sebagai <em>Post-Test Evaluasi Akhir</em> setelah seluruh materi tuntas (passing grade 70%).
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                     {quiz.description && (
                                                                         <div className="icp-quiz-desc-box">
                                                                             <i className="fas fa-info-circle text-teal me-2"></i>

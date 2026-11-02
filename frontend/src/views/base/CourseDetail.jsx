@@ -876,17 +876,19 @@ function CourseDetail() {
         return (
             <>
                 <BaseHeader />
-                <CourseDetailLoading />
+                <div className="course-detail">
+                    <CourseDetailLoading />
+                </div>
                 <Footer />
             </>
         );
     }
 
     return (
-        <div className="course-detail">
+        <>
             <BaseHeader />
-
             <CourseHero course={course} />
+            <div className="course-detail">
 
             <section className="py-3 py-md-4 base-course-detail-content">
                 <div className="container">
@@ -1454,8 +1456,9 @@ function CourseDetail() {
                 </div>
             )}
 
+            </div>
             <Footer />
-        </div>
+        </>
     );
 }
 

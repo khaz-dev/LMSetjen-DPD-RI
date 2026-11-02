@@ -1,3 +1,93 @@
+/* ==========================================================================
+   UNIFIED 2-COLUMN LAYOUT: MAIN LEFT COLUMN & SIDEBAR RIGHT COLUMN
+   Ensures modern-tabs is exactly aligned and sits beneath course-player-column
+   and certificate-display-column with identical width!
+   ========================================================================== */
+.course-unified-layout-row {
+    width: 100%;
+    margin-top: 0.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.5rem;
+    position: relative;
+    box-sizing: border-box;
+}
+
+@media (min-width: 992px) {
+    /* Left Main Column: Media Display + Modern Tabs (Exact Equal Width!) */
+    .course-unified-layout-row .course-main-left-column {
+        flex: 1 1 0%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .course-unified-layout-row .course-main-left-column .course-player-column,
+    .course-unified-layout-row .course-main-left-column .certificate-display-column,
+    .course-unified-layout-row .course-main-left-column .quiz-player-column {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 auto !important;
+    }
+
+    .course-unified-layout-row .course-main-left-column .modern-tabs {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 0 !important;
+    }
+
+    /* Right Sidebar Column: Curriculum / Certificate Sidebar / Quiz Sidebar */
+    .course-unified-layout-row .course-sidebar-right-column {
+        flex: 0 0 380px;
+        width: 380px;
+        max-width: 380px;
+        min-width: 320px;
+        display: flex;
+        flex-direction: column;
+        height: auto;
+    }
+
+    .course-unified-layout-row .course-sidebar-right-column .course-curriculum-column,
+    .course-unified-layout-row .course-sidebar-right-column .certificate-sidebar-column,
+    .course-unified-layout-row .course-sidebar-right-column .quiz-sidebar-column {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 auto !important;
+    }
+}
+
+@media (min-width: 1200px) {
+    .course-unified-layout-row .course-sidebar-right-column {
+        flex: 0 0 400px;
+        width: 400px;
+        max-width: 400px;
+    }
+}
+
+@media (min-width: 1400px) {
+    .course-unified-layout-row .course-sidebar-right-column {
+        flex: 0 0 430px;
+        width: 430px;
+        max-width: 430px;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .course-unified-layout-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .course-unified-layout-row .course-main-left-column,
+    .course-unified-layout-row .course-sidebar-right-column {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
 /* ============================================
    COURSE DETAIL PAGE STYLES
    ============================================
@@ -18,7 +108,7 @@ body.modern-course-active {
     padding-top: 0.75rem !important;
     padding-bottom: 2rem !important;
     margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 0 !important;
     overflow: visible !important;
     overflow-x: clip;
 }
@@ -481,12 +571,11 @@ body.modern-course-active {
 .course-player-curriculum-row {
     width: 100%;
     margin-top: 0.25rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
     display: flex;
     flex-direction: row;
-    align-items: stretch;
-    /* Enforces EXACT SAME HEIGHT on both columns */
-    gap: 1.25rem;
+    align-items: flex-start;
+    gap: 1.5rem;
     position: relative;
     box-sizing: border-box;
 }
@@ -495,28 +584,29 @@ body.modern-course-active {
     .course-player-curriculum-row {
         display: flex;
         flex-direction: row;
-        align-items: stretch;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+
+    /* Left: Video Player + Modern Tabs Column (Exact Equal Width) */
+    .course-player-curriculum-row .course-player-column {
+        flex: 1 1 0%;
+        min-width: 0;
+        width: auto;
+        max-width: none;
+        display: flex;
+        flex-direction: column;
         gap: 1.25rem;
     }
 
-    /* Left: Video Player Column (62% width) */
-    .course-player-curriculum-row .course-player-column {
-        flex: 0 0 62%;
-        max-width: 62%;
-        width: 62%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .course-player-curriculum-row .course-player-column>div {
+    .course-player-curriculum-row .course-player-column .course-player-wrapper {
         width: 100%;
-        height: 100%;
         display: flex;
         flex-direction: column;
     }
 
     .course-player-curriculum-row .course-player-column .video-player-inline {
-        height: 100%;
+        width: 100%;
         display: flex;
         flex-direction: column;
         border-radius: 14px !important;
@@ -528,25 +618,46 @@ body.modern-course-active {
         flex-direction: column;
         justify-content: center;
         max-height: none !important;
-        /* Let height match natural 16:9 ratio */
     }
 
-    /* Right: Tab Pelajaran / Kurikulum Kursus Column (38% width, EXACT EQUAL HEIGHT) */
+    /* Modern tabs inside player column automatically takes 100% width of the left column */
+    .course-player-curriculum-row .course-player-column .modern-tabs {
+        width: 100%;
+        margin-top: 0 !important;
+    }
+
+    /* Right: Tab Pelajaran / Kurikulum Kursus Column (Bebas memanjang ke bawah tanpa batasan) */
     .course-player-curriculum-row .course-curriculum-column {
-        flex: 0 0 calc(38% - 1.25rem);
-        max-width: calc(38% - 1.25rem);
-        width: calc(38% - 1.25rem);
-        min-width: 0;
+        flex: 0 0 380px;
+        width: 380px;
+        max-width: 380px;
+        min-width: 320px;
         display: flex;
         flex-direction: column;
-        height: 100%;
-        /* Matches left player column */
+        height: auto;
+    }
+}
+
+@media (min-width: 1200px) {
+    .course-player-curriculum-row .course-curriculum-column {
+        flex: 0 0 400px;
+        width: 400px;
+        max-width: 400px;
+    }
+}
+
+@media (min-width: 1400px) {
+    .course-player-curriculum-row .course-curriculum-column {
+        flex: 0 0 430px;
+        width: 430px;
+        max-width: 430px;
     }
 }
 
 /* Curriculum Card inside Right Column */
 .curriculum-side-card {
-    height: 100%;
+    height: auto !important;
+    max-height: none !important;
     min-height: 0;
     display: flex;
     flex-direction: column;
@@ -554,19 +665,20 @@ body.modern-course-active {
     border-radius: 14px !important;
     border: 1px solid rgba(226, 232, 240, 0.9) !important;
     box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06) !important;
-    overflow: hidden;
+    overflow: visible !important;
     box-sizing: border-box;
 }
 
-.curriculum-side-card .tab-pane {
-    height: 100%;
+.curriculum-side-card .tab-pane,
+.curriculum-side-card .tab-pane.fade.show.active {
+    height: auto !important;
+    max-height: none !important;
     min-height: 0;
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     padding: 0.85rem 1rem !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: visible !important;
     box-sizing: border-box;
 }
 
@@ -601,7 +713,8 @@ body.modern-course-active {
 /* Standby card when no lesson is playing */
 .course-player-standby {
     height: 100%;
-    min-height: 380px;
+    min-height: 440px;
+    overflow-y: auto;
     background: linear-gradient(135deg, #042f2e 0%, #0d9488 100%);
     border-radius: 14px;
     display: flex;
@@ -661,7 +774,8 @@ body.modern-course-active {
     }
 
     .curriculum-side-card {
-        max-height: 480px;
+        max-height: none !important;
+        height: auto !important;
     }
 }
 
@@ -8109,6 +8223,36 @@ body.modern-course-active {
     min-height: 220px;
 }
 
+/* Static height and internal scroll for bottom tab panes */
+.tab-content-modern .tab-pane,
+.tab-content-modern .tab-pane.fade.show.active {
+    max-height: 540px;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box;
+    padding-right: 0.35rem;
+}
+
+.tab-content-modern .tab-pane::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tab-content-modern .tab-pane::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 4px;
+}
+
+.tab-content-modern .tab-pane::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.tab-content-modern .tab-pane::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Student active tab-pane flows naturally */
+
 /* Generic Tab Header Strips */
 .tab-pane > .d-flex.justify-content-between {
     margin-bottom: 0.65rem !important;
@@ -9070,8 +9214,29 @@ body.modern-course-active {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 540px;
+    max-height: 540px;
     min-height: 480px;
-    height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.quiz-player-standby::-webkit-scrollbar {
+    width: 6px;
+}
+
+.quiz-player-standby::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 4px;
+}
+
+.quiz-player-standby::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.quiz-player-standby::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 .quiz-standby-content {
@@ -9608,9 +9773,9 @@ body.modern-course-active {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    height: 100%;
+    height: 540px;
     min-height: 480px;
-    max-height: 560px;
+    max-height: 540px;
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);

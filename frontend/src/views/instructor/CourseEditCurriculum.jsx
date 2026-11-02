@@ -4022,14 +4022,15 @@ function CourseEditCurriculum() {
                         // ✅ Include order field to maintain lesson sequence
                         formData.append(`variants[${variantIndex}][items][${itemIndex}][order]`, item.order !== undefined ? item.order : itemIndex);
 
-                        // Handle Google Drive link
-                        if (item.gdriveLink) {
-                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.gdriveLink);
-                        }
-
-                        // ✨ PHASE 4.61: Handle YouTube link (alternative media link)
+                        // ✨ Fix media file/link handling: support all media sources (YouTube, Google Drive, Uploaded File)
                         if (item.youtubeLink) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][youtube_link]`, item.youtubeLink);
+                        } else if (item.gdriveLink) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.gdriveLink);
+                        } else if (item.uploadedFile) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.uploadedFile);
+                        } else if (item.file) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.file);
                         }
 
                         // ✨ PHASE 4.187: Send media_source to remember which source was used
@@ -4100,8 +4101,17 @@ function CourseEditCurriculum() {
             // Update course state
             setCourse(updatedCourse);
 
+            // Create a lookup of previous items by variant_item_id or title to preserve client state
+            const previousItemsMap = new Map();
+            cleanedVariants.forEach(v => {
+                (v.items || []).forEach(it => {
+                    if (it.variant_item_id) previousItemsMap.set(String(it.variant_item_id), it);
+                    if (it.title) previousItemsMap.set(it.title, it);
+                });
+            });
+
             // Rebuild variants state with fresh IDs from backend
-            const freshVariants = updatedCourse.curriculum.map(variant => {
+            const freshVariants = (updatedCourse.curriculum || updatedCourse.variants || []).map((variant, index) => {
                 // ✨ PHASE 4.70: Check BOTH variant.variant_items and variant.items
                 // Backend serializer provides both fields, use whichever has data
                 const variantItemsList = (variant.variant_items && variant.variant_items.length > 0)
@@ -4112,38 +4122,62 @@ function CourseEditCurriculum() {
                 if (!variant || !variantItemsList || variantItemsList.length === 0) {
                     return {
                         title: variant?.title || '',
-                        variant_id: variant?.variant_id,
-                        order: variant?.order || 0,
+                        variant_id: variant?.variant_id || variant?.id,
+                        order: variant?.order !== undefined ? variant.order : index,
                         items: []
                     };
                 }
 
+                // Sort items by order
+                const sortedItems = [...variantItemsList].sort((a, b) => {
+                    const orderA = a.order !== undefined ? a.order : 999999;
+                    const orderB = b.order !== undefined ? b.order : 999999;
+                    return orderA - orderB;
+                });
+
                 return {
                     title: variant.title || '',
-                    variant_id: variant.variant_id,  // ← Fresh ID from backend
-                    order: variant.order !== undefined ? variant.order : 0,  // ← Fresh order from backend
-                    items: variantItemsList.map(item => {
+                    variant_id: variant.variant_id || variant.id,  // ← Fresh ID from backend
+                    order: variant.order !== undefined ? variant.order : index,  // ← Fresh order from backend
+                    items: sortedItems.map((item, itemIndex) => {
                         // ✨ PHASE 4.142: Detect media type on fresh load - Support YouTube, Uploaded, and Google Drive
                         const fileUrl = item.file || '';
                         const isYouTubeLink = fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be');
                         const isUploadedFile = fileUrl.includes('/media/') ||
                             /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl); // Check for video extensions
 
+                        const prevItem = previousItemsMap.get(String(item.variant_item_id || item.id)) || previousItemsMap.get(item.title);
+
+                        const itemLmInfo = item.learning_module_info || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module : updatedCourse.learning_module);
+                        const itemLmId = item.learning_module_id || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module.id : (typeof item.learning_module === 'number' ? item.learning_module : (updatedCourse.learning_module_id || updatedCourse.learning_module?.id)));
+                        const isItemScorm = isElearningScorm || Boolean(itemLmId) || item.file_type === 'scorm';
+
+                        const detectedSource = isItemScorm ? 'scorm' : (isUploadedFile ? 'upload' : (isYouTubeLink ? 'youtube' : (fileUrl ? 'google_drive' : (prevItem?.media_source || null))));
+
                         return {
                             title: item.title || '',
                             description: item.description || '',
-                            gdriveLink: !isYouTubeLink && !isUploadedFile ? fileUrl : '',  // Store only Google Drive links
-                            youtubeLink: isYouTubeLink ? fileUrl : '',  // Store YouTube URLs as youtubeLink
-                            uploadedFile: isUploadedFile ? fileUrl : '',  // ✨ PHASE 4.142: Store uploaded file URLs
+                            item_type: item.item_type || (item.quiz_id || item.quiz ? 'quiz' : (prevItem?.item_type || 'lesson')),
+                            quiz_id: item.quiz_id || (item.quiz && typeof item.quiz === 'object' ? item.quiz.quiz_id : (item.quiz || prevItem?.quiz_id || null)),
+                            quiz_detail: item.quiz_detail || prevItem?.quiz_detail || null,
+                            gdriveLink: !isYouTubeLink && !isUploadedFile ? fileUrl : (prevItem?.gdriveLink || ''),
+                            youtubeLink: isYouTubeLink ? fileUrl : (prevItem?.youtubeLink || ''),
+                            uploadedFile: isUploadedFile ? fileUrl : (prevItem?.uploadedFile || ''),
                             preview: item.preview || false,
-                            variant_item_id: item.variant_item_id,  // ← Fresh ID from backend
-                            order: item.order !== undefined ? item.order : 0,  // ← Fresh order from backend
-                            duration_seconds: item.duration_seconds,  // ✨ PHASE 4.43.9: Store duration in seconds
-                            duration_formatted: item.content_duration,  // Store formatted duration for potential display
-                            // ✨ PHASE 4.187: Load saved media_source from backend to remember user's source selection
-                            media_source: item.media_source || (item.learning_module_id || isElearningScorm ? 'scorm' : null),
-                            learning_module_id: item.learning_module_id || (isElearningScorm ? (course.learning_module_id || course.learning_module?.id) : null),
-                            learning_module_info: item.learning_module_info || course.learning_module_info || null
+                            variant_item_id: item.variant_item_id || item.id,  // ← Fresh ID from backend
+                            order: item.order !== undefined ? item.order : itemIndex,  // ← Fresh order from backend
+                            duration_seconds: item.duration_seconds || (prevItem?.duration_seconds || null),  // ✨ Preserve duration in seconds
+                            duration_formatted: item.content_duration || (prevItem?.duration_formatted || null),  // Store formatted duration
+                            media_source: item.media_source || detectedSource,
+                            learning_module_id: itemLmId || null,
+                            learning_module_info: itemLmInfo ? {
+                                id: itemLmInfo.id,
+                                judul: itemLmInfo.judul || updatedCourse.title,
+                                module_type: itemLmInfo.module_type || updatedCourse.course_type,
+                                player_url: itemLmInfo.player_url,
+                                entry_file: itemLmInfo.entry_file || "index.html"
+                            } : null,
+                            file_type: isItemScorm ? 'scorm' : (item.file_type || null)
                         };
                     })
                 };
@@ -4647,11 +4681,24 @@ function CourseEditCurriculum() {
                                     </DndContext>
                                 </div>
 
+                                {/* ✨ Tombol Tambah Bagian Baru: Di atas card-body Post-Test Evaluasi Akhir */}
+                                <div className="d-flex justify-content-end align-items-center mt-3 mb-3">
+                                    <button
+                                        type="button"
+                                        className="btn btn-teal btn-sm px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
+                                        onClick={addCurriculumSection}
+                                        disabled={uiState.isSubmitting}
+                                    >
+                                        <i className="fas fa-plus"></i>
+                                        <span>Tambah Bagian Baru</span>
+                                    </button>
+                                </div>
+
                                 {/* 📌 Post-Test: Otomatis di Akhir Kurikulum */}
-                                <div className="card border-0 shadow-sm mt-4 mb-4" style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)', borderLeft: '5px solid #ef4444' }}>
+                                <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '12px', background: 'linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%)', borderLeft: '5px solid #ef4444' }}>
                                     <div className="card-body p-3 p-md-4">
                                         <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                            <div className="d-flex align-items-center gap-3">
+                                            <div className="d-flex align-items-center gap-3 flex-wrap">
                                                 <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#ef4444', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
                                                     <i className="fas fa-award"></i>
                                                 </div>
@@ -4670,16 +4717,17 @@ function CourseEditCurriculum() {
                                                         </p>
                                                     )}
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <Link
-                                                    to={`/instructor/edit-course/${param?.course_id}/quiz/`}
-                                                    className="btn btn-sm btn-outline-danger fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
-                                                    style={{ borderRadius: '8px' }}
-                                                >
-                                                    <i className="fas fa-cog"></i>
-                                                    <span>{prePostQuiz ? "Kelola Soal Post-Test" : "+ Buat Pre & Post-Test"}</span>
-                                                </Link>
+                                                {/* ✨ Tombol Kelola Soal Post Test: Di bagian kanan d-flex align-items-center gap-3 */}
+                                                <div className="ms-auto ms-sm-2">
+                                                    <Link
+                                                        to={`/instructor/edit-course/${param?.course_id}/quiz/`}
+                                                        className="btn btn-sm btn-outline-danger fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
+                                                        style={{ borderRadius: '8px' }}
+                                                    >
+                                                        <i className="fas fa-cog"></i>
+                                                        <span>{prePostQuiz ? "Kelola Soal Post-Test" : "+ Buat Pre & Post-Test"}</span>
+                                                    </Link>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="mt-2 pt-2 border-top border-danger border-opacity-10">
@@ -4691,24 +4739,14 @@ function CourseEditCurriculum() {
                                     </div>
                                 </div>
 
-                                <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
-                                    <span className="text-muted small">
-                                        <i className="fas fa-info-circle me-1 text-teal"></i>
-                                        Urutan bagian dan pelajaran dapat disusun ulang dengan menyeret ikon pegangan.
-                                    </span>
-                                    <button
-                                        type="button"
-                                        className="btn btn-teal btn-sm px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1"
-                                        onClick={addCurriculumSection}
-                                        disabled={uiState.isSubmitting}
-                                    >
-                                        <i className="fas fa-plus"></i>
-                                        <span>Tambah Bagian Baru</span>
-                                    </button>
-                                </div>
-
                                 {/* Submit Section */}
                                 <div className="curriculum-submit-bar">
+                                    {/* ✨ Urutan bagian dan pelajaran teks di atas alert catatan */}
+                                    <div className="text-muted small mb-2 d-flex align-items-center gap-1">
+                                        <i className="fas fa-info-circle text-teal"></i>
+                                        <span>Urutan bagian dan pelajaran dapat disusun ulang dengan menyeret ikon pegangan.</span>
+                                    </div>
+
                                     {/* Info message about blank sections */}
                                     <div className="alert alert-light border d-flex align-items-center py-2 px-3 mb-2 text-muted small" style={{ backgroundColor: "#f8fafc" }}>
                                         <i className="fas fa-info-circle text-teal me-2 fs-6"></i>

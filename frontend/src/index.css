@@ -33,10 +33,14 @@ body::before {
   will-change: opacity;
 }
 
-/* Ensure body and html take full height */
+/* Ensure body and html take full height and keep body background transparent to preserve background image */
 html, body {
   min-height: 100vh;
   position: relative;
+}
+
+body:not(.dark-theme) {
+  background-color: transparent !important;
 }
 
 /* Optional: Add a subtle overlay for better text readability */
@@ -1144,3 +1148,85 @@ section[style*="minHeight:calc(100vh - 120px)"] .row {
    END GLOBAL TEAL BUTTONS & SUBTLE STATUS BADGES
    ======================================== */
 
+/* ==========================================================================
+   STUDENT & INSTRUCTOR PORTAL FROSTED GLASS SYSTEM (Matching /login/)
+   Subtle building silhouette + frosted glass veil + geometric grid
+   STRICTLY scoped to .is-student-portal and .is-instructor-portal
+   ========================================================================== */
+
+/* 1. Base canvas for Student and Instructor portals */
+body.is-student-portal,
+body.is-instructor-portal {
+  background-color: #f1f5f9 !important;
+}
+
+body.is-student-portal #root,
+body.is-instructor-portal #root {
+  background-color: #f1f5f9 !important;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 2. Building silhouette background layer at z-index: 0 */
+body.is-student-portal #root::before,
+body.is-instructor-portal #root::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-image: url('./assets/background.jpg');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  opacity: 0.35;
+  filter: contrast(118%) brightness(1.04);
+  pointer-events: none;
+  will-change: opacity;
+}
+
+/* 3. Frosted glass translucent veil with geometric grid matching Login page (.login-section) */
+body.is-student-portal:not(.dark-theme) section,
+body.is-student-portal:not(.dark-theme) main:not(.flex-grow-1.position-relative.bg-white),
+body.is-instructor-portal:not(.dark-theme) section,
+body.is-instructor-portal:not(.dark-theme) main {
+  position: relative;
+  z-index: 1;
+  flex: 1 0 auto;
+  margin-bottom: 0 !important;
+  background:
+    radial-gradient(circle at 82% 25%, rgba(13, 148, 136, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 18% 75%, rgba(245, 158, 11, 0.10) 0%, transparent 42%),
+    radial-gradient(circle at 50% 90%, rgba(13, 148, 136, 0.08) 0%, transparent 55%),
+    linear-gradient(rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 148, 136, 0.035) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%) !important;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px, 100% 100% !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* 4. Ensure containers sit cleanly above the backdrop */
+body.is-student-portal section > .container,
+body.is-student-portal main > .container,
+body.is-instructor-portal section > .container,
+body.is-instructor-portal main > .container {
+  position: relative;
+  z-index: 2;
+}
+
+/* 5. Ensure footer in student and instructor portals attaches seamlessly with no gap */
+body.is-student-portal footer.footer-wrapper,
+body.is-instructor-portal footer.footer-wrapper {
+  margin-top: auto !important;
+  margin-bottom: 0 !important;
+  position: relative;
+  z-index: 10;
+}

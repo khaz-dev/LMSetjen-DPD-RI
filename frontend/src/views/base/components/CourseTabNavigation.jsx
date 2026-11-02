@@ -49,7 +49,7 @@ const CourseTabNavigation = ({ activeTab, setActiveTab, course }) => {
 
     return (
         <div className="course-tab-bar mb-3">
-            <div className="course-tab-scroll d-flex align-items-center gap-2 p-1 bg-white rounded-3 shadow-xs border">
+            <div className="course-tab-scroll d-flex align-items-center gap-2">
                 {tabs.map((tab) => {
                     const isActive = activeTab === tab.key;
                     return (
