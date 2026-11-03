@@ -872,7 +872,8 @@ const DiscussionTab = ({
                             className={`qa-filter-tab-btn ${(!discussionFilters.tab || discussionFilters.tab === 'all') ? 'active' : ''}`}
                             onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'all' }))}
                         >
-                            <i className="fas fa-layer-group me-1"></i>Semua Diskusi
+                            <i className="fas fa-layer-group"></i>
+                            <span className="qa-tab-label">Semua Diskusi</span>
                             <span className="qa-tab-count">{qaStats.total}</span>
                         </button>
                         <button
@@ -880,7 +881,8 @@ const DiscussionTab = ({
                             className={`qa-filter-tab-btn ${discussionFilters.tab === 'unsolved' ? 'active' : ''}`}
                             onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'unsolved' }))}
                         >
-                            <i className="fas fa-clock me-1"></i>Belum Terjawab
+                            <i className="fas fa-clock"></i>
+                            <span className="qa-tab-label">Belum Terjawab</span>
                             <span className="qa-tab-count">{qaStats.unsolved}</span>
                         </button>
                         <button
@@ -888,7 +890,8 @@ const DiscussionTab = ({
                             className={`qa-filter-tab-btn ${discussionFilters.tab === 'solved' ? 'active' : ''}`}
                             onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'solved' }))}
                         >
-                            <i className="fas fa-check-circle me-1"></i>Terjawab
+                            <i className="fas fa-check-circle"></i>
+                            <span className="qa-tab-label">Terjawab</span>
                             <span className="qa-tab-count">{qaStats.solved}</span>
                         </button>
                         <button
@@ -896,7 +899,8 @@ const DiscussionTab = ({
                             className={`qa-filter-tab-btn ${discussionFilters.tab === 'instructor' ? 'active' : ''}`}
                             onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'instructor' }))}
                         >
-                            <i className="fas fa-chalkboard-user me-1"></i>Dijawab Instruktur
+                            <i className="fas fa-chalkboard-user"></i>
+                            <span className="qa-tab-label">Dijawab Instruktur</span>
                             <span className="qa-tab-count">{qaStats.instructor}</span>
                         </button>
                         <button
@@ -904,7 +908,8 @@ const DiscussionTab = ({
                             className={`qa-filter-tab-btn ${discussionFilters.tab === 'my_questions' ? 'active' : ''}`}
                             onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'my_questions' }))}
                         >
-                            <i className="fas fa-user me-1"></i>Pertanyaan Saya
+                            <i className="fas fa-user"></i>
+                            <span className="qa-tab-label">Pertanyaan Saya</span>
                             <span className="qa-tab-count">{qaStats.myQuestions}</span>
                         </button>
                         <button
@@ -912,7 +917,8 @@ const DiscussionTab = ({
                             className={`qa-filter-tab-btn ${discussionFilters.tab === 'popular' ? 'active' : ''}`}
                             onClick={() => setDiscussionFilters(prev => ({ ...prev, tab: 'popular' }))}
                         >
-                            <i className="fas fa-fire me-1 text-danger"></i>Populer
+                            <i className="fas fa-fire text-danger"></i>
+                            <span className="qa-tab-label">Populer</span>
                         </button>
                     </div>
 

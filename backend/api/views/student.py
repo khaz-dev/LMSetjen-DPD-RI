@@ -1997,14 +1997,12 @@ class StudentQuizListAPIView(generics.ListAPIView):
             
             if pre_post_quiz:
                 attempts = api_models.QuizAttempt.objects.filter(user=user, quiz=pre_post_quiz).order_by('date_attempted')
-                pre_att = attempts.filter(attempt_type='pre_test').first() or attempts.first()
+                pre_att = attempts.filter(attempt_type='pre_test').first()
                 if pre_att:
                     pre_test_completed = True
                     pre_test_score = float(pre_att.score)
                 post_att = attempts.filter(attempt_type='post_test').first()
-                if not post_att and attempts.count() >= 2:
-                    post_att = attempts.last()
-                if post_att and post_att != pre_att:
+                if post_att:
                     post_test_completed = True
                     post_test_score = float(post_att.score)
 
@@ -2017,14 +2015,7 @@ class StudentQuizListAPIView(generics.ListAPIView):
 
             for quiz_data in serializer.data:
                 quiz = api_models.Quiz.objects.get(quiz_id=quiz_data['quiz_id'])
-                today_attempts = api_models.QuizAttempt.get_daily_attempts_count(user, quiz)
-                can_attempt = api_models.QuizAttempt.can_attempt_quiz(user, quiz)
                 best_attempt = api_models.QuizAttempt.objects.filter(user=user, quiz=quiz).order_by('-score').first()
-                
-                quiz_data['today_attempts'] = today_attempts
-                quiz_data['can_attempt'] = can_attempt
-                quiz_data['best_score'] = best_attempt.score if best_attempt else 0
-                quiz_data['is_passed'] = best_attempt.is_passed if best_attempt else False
 
                 if quiz.quiz_type == 'pre_post_test':
                     quiz_data['has_pre_test'] = pre_test_completed
@@ -2032,26 +2023,42 @@ class StudentQuizListAPIView(generics.ListAPIView):
                     quiz_data['has_post_test'] = post_test_completed
                     quiz_data['post_test_score'] = post_test_score
                     quiz_data['can_take_post_test'] = can_take_post_test
+                    quiz_data['best_score'] = max(pre_test_score, post_test_score)
                     
                     if not pre_test_completed:
                         quiz_data['current_mode'] = 'pre_test'
                         quiz_data['is_locked'] = False
                         quiz_data['lock_reason'] = None
+                        quiz_data['can_attempt'] = True
+                        quiz_data['today_attempts'] = 0
+                        quiz_data['is_passed'] = False
                     elif not post_test_completed:
                         quiz_data['current_mode'] = 'post_test'
+                        quiz_data['today_attempts'] = 0
+                        quiz_data['is_passed'] = False
                         if can_take_post_test:
                             quiz_data['is_locked'] = False
                             quiz_data['lock_reason'] = None
+                            quiz_data['can_attempt'] = True
                         else:
                             quiz_data['is_locked'] = True
                             quiz_data['lock_reason'] = "Selesaikan seluruh materi kurikulum dan kuis kursus terlebih dahulu untuk membuka Post-test"
+                            quiz_data['can_attempt'] = False
                     else:
                         quiz_data['current_mode'] = 'completed'
-                        quiz_data['is_locked'] = False
-                        quiz_data['lock_reason'] = None
-                        quiz_data['is_passed'] = True
+                        quiz_data['is_locked'] = True
+                        quiz_data['lock_reason'] = "Pre-test dan Post-test telah selesai dikerjakan"
+                        quiz_data['can_attempt'] = False
+                        quiz_data['today_attempts'] = 1
+                        quiz_data['is_passed'] = bool(post_att and post_att.is_passed)
                 else:
-                    # Regular quiz logic
+                    today_attempts = api_models.QuizAttempt.get_daily_attempts_count(user, quiz, attempt_type='quiz')
+                    can_attempt = api_models.QuizAttempt.can_attempt_quiz(user, quiz, attempt_type='quiz')
+                    
+                    quiz_data['today_attempts'] = today_attempts
+                    quiz_data['can_attempt'] = can_attempt
+                    quiz_data['best_score'] = best_attempt.score if best_attempt else 0
+                    quiz_data['is_passed'] = best_attempt.is_passed if best_attempt else False
                     quiz_data['current_mode'] = 'quiz'
                     if pre_post_quiz and not pre_test_completed:
                         quiz_data['is_locked'] = True
@@ -2090,12 +2097,6 @@ class StudentQuizDetailAPIView(generics.RetrieveAPIView):
         if user_id:
             try:
                 user = User.objects.get(id=user_id)
-                if not api_models.QuizAttempt.can_attempt_quiz(user, quiz):
-                    return Response(
-                        {"error": "Maximum daily attempts (3) reached for this quiz"},
-                        status=status.HTTP_403_FORBIDDEN
-                    )
-                
                 # Get the serialized data
                 serializer = self.get_serializer(quiz)
                 quiz_data = serializer.data
@@ -2108,16 +2109,55 @@ class StudentQuizDetailAPIView(generics.RetrieveAPIView):
                     quiz_data['questions'] = shuffled_questions
 
                 # Add attempt information
-                today_attempts = api_models.QuizAttempt.get_daily_attempts_count(user, quiz)
-                can_attempt = api_models.QuizAttempt.can_attempt_quiz(user, quiz)
-                best_attempt = api_models.QuizAttempt.objects.filter(
-                    user=user, quiz=quiz
-                ).order_by('-score').first()
-                
-                quiz_data['today_attempts'] = today_attempts
-                quiz_data['can_attempt'] = can_attempt
-                quiz_data['best_score'] = best_attempt.score if best_attempt else 0
-                quiz_data['is_passed'] = best_attempt.is_passed if best_attempt else False
+                if quiz.quiz_type == 'pre_post_test':
+                    pre_att = api_models.QuizAttempt.objects.filter(user=user, quiz=quiz, attempt_type='pre_test').first()
+                    post_att = api_models.QuizAttempt.objects.filter(user=user, quiz=quiz, attempt_type='post_test').first()
+                    has_pre = bool(pre_att)
+                    has_post = bool(post_att)
+
+                    enrollment = api_models.EnrolledCourse.objects.filter(user=user, course=quiz.course).first()
+                    can_take_post = (enrollment.is_course_completed() and enrollment.are_all_quizzes_passed()) if enrollment else False
+
+                    quiz_data['has_pre_test'] = has_pre
+                    quiz_data['has_post_test'] = has_post
+                    quiz_data['pre_test_score'] = float(pre_att.score) if pre_att else 0
+                    quiz_data['post_test_score'] = float(post_att.score) if post_att else 0
+                    quiz_data['can_take_post_test'] = can_take_post
+
+                    if not has_pre:
+                        quiz_data['current_mode'] = 'pre_test'
+                        quiz_data['can_attempt'] = True
+                        quiz_data['today_attempts'] = 0
+                        quiz_data['is_locked'] = False
+                        quiz_data['lock_reason'] = None
+                        quiz_data['is_passed'] = False
+                    elif not has_post:
+                        quiz_data['current_mode'] = 'post_test'
+                        quiz_data['can_attempt'] = can_take_post
+                        quiz_data['today_attempts'] = 0
+                        quiz_data['is_locked'] = not can_take_post
+                        quiz_data['lock_reason'] = None if can_take_post else "Selesaikan seluruh materi kurikulum dan kuis kursus terlebih dahulu untuk membuka Post-test"
+                        quiz_data['is_passed'] = False
+                    else:
+                        quiz_data['current_mode'] = 'completed'
+                        quiz_data['can_attempt'] = False
+                        quiz_data['today_attempts'] = 1
+                        quiz_data['is_locked'] = True
+                        quiz_data['lock_reason'] = "Pre-test dan Post-test telah selesai dikerjakan"
+                        quiz_data['is_passed'] = bool(post_att and post_att.is_passed)
+
+                    quiz_data['best_score'] = max(quiz_data['pre_test_score'], quiz_data['post_test_score'])
+                else:
+                    today_attempts = api_models.QuizAttempt.get_daily_attempts_count(user, quiz, attempt_type='quiz')
+                    can_attempt = api_models.QuizAttempt.can_attempt_quiz(user, quiz, attempt_type='quiz')
+                    best_attempt = api_models.QuizAttempt.objects.filter(
+                        user=user, quiz=quiz
+                    ).order_by('-score').first()
+
+                    quiz_data['today_attempts'] = today_attempts
+                    quiz_data['can_attempt'] = can_attempt
+                    quiz_data['best_score'] = best_attempt.score if best_attempt else 0
+                    quiz_data['is_passed'] = best_attempt.is_passed if best_attempt else False
                 
                 return Response(quiz_data)
                 
@@ -2164,10 +2204,28 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                 user = User.objects.get(id=user_id)
                 quiz = api_models.Quiz.objects.get(quiz_id=quiz_id)
                 
+                # Determine attempt_type
+                req_attempt_type = request.data.get('attempt_type')
+                if quiz.quiz_type == 'pre_post_test':
+                    has_pre = api_models.QuizAttempt.objects.filter(user=user, quiz=quiz, attempt_type='pre_test').exists()
+                    if req_attempt_type == 'pre_test' or not has_pre:
+                        final_attempt_type = 'pre_test'
+                        is_pre_test = True
+                    else:
+                        final_attempt_type = 'post_test'
+                        is_pre_test = False
+                else:
+                    final_attempt_type = 'quiz'
+                    is_pre_test = False
+
                 # Check if user can attempt
-                if not api_models.QuizAttempt.can_attempt_quiz(user, quiz):
+                if not api_models.QuizAttempt.can_attempt_quiz(user, quiz, attempt_type=final_attempt_type):
+                    err_msg = "Pre-test sudah pernah dikerjakan dan telah dikunci" if final_attempt_type == 'pre_test' else (
+                        "Post-test sudah pernah dikerjakan dan telah dikunci" if final_attempt_type == 'post_test' else
+                        "Batas maksimum 3 percobaan harian telah tercapai"
+                    )
                     return Response(
-                        {"error": "Maximum daily attempts (3) reached"},
+                        {"error": err_msg},
                         status=status.HTTP_403_FORBIDDEN
                     )
                 
@@ -2201,20 +2259,6 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                 from datetime import timedelta
                 from decimal import Decimal
                 time_taken_duration = timedelta(seconds=time_taken) if time_taken else None
-                
-                # Determine attempt_type
-                req_attempt_type = request.data.get('attempt_type')
-                if quiz.quiz_type == 'pre_post_test':
-                    existing_attempts = api_models.QuizAttempt.objects.filter(user=user, quiz=quiz)
-                    if not existing_attempts.exists() or req_attempt_type == 'pre_test':
-                        final_attempt_type = 'pre_test'
-                        is_pre_test = True
-                    else:
-                        final_attempt_type = 'post_test'
-                        is_pre_test = False
-                else:
-                    final_attempt_type = 'quiz'
-                    is_pre_test = False
 
                 attempt = api_models.QuizAttempt.objects.create(
                     user=user,
@@ -2236,8 +2280,8 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                 print(f"Quiz attempt created - score: {attempt.score}, is_passed: {attempt.is_passed}, pass_status: {attempt.pass_status}")
                 
                 # Calculate updated attempt information after submission
-                today_attempts = api_models.QuizAttempt.get_daily_attempts_count(user, quiz)
-                can_attempt = api_models.QuizAttempt.can_attempt_quiz(user, quiz)
+                today_attempts = api_models.QuizAttempt.get_daily_attempts_count(user, quiz, attempt_type=final_attempt_type)
+                can_attempt = api_models.QuizAttempt.can_attempt_quiz(user, quiz, attempt_type=final_attempt_type)
                 attempts_left = max(0, 3 - today_attempts)
                 
                 print(f"After submission - today_attempts: {today_attempts}, can_attempt: {can_attempt}, attempts_left: {attempts_left}")

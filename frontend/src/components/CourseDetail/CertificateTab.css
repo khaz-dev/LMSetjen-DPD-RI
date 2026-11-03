@@ -37,6 +37,15 @@
     align-items: center;
     gap: 0.75rem;
     height: 100%;
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.status-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .status-card.completed {
@@ -982,14 +991,17 @@
 .status-card {
     background: #ffffff !important;
     border-radius: 9px !important;
-    padding: 0.5rem 0.65rem !important;
+    padding: 0.55rem 0.75rem !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
     border: 1px solid #e2e8f0 !important;
     transition: all 0.2s ease !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0.55rem !important;
+    gap: 0.65rem !important;
     height: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
 }
 
 .status-card.completed {
@@ -1027,11 +1039,21 @@
     color: #ffffff !important;
 }
 
+.status-content {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
 .status-content h6 {
     margin: 0 0 1px 0 !important;
     font-weight: 700 !important;
     font-size: 0.78rem !important;
     color: #0f172a !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 .status-content p {
@@ -1039,13 +1061,20 @@
     font-weight: 700 !important;
     font-size: 0.84rem !important;
     color: #334155 !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 .status-content small {
     color: #64748b !important;
     font-size: 0.7rem !important;
     display: block !important;
-    line-height: 1.2 !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 /* Certificate Issued Card - When certificate already exists */

@@ -321,5 +321,12 @@ class IsOwnerOrStaff(permissions.BasePermission):
         if hasattr(obj, 'user_id'):
             return obj.user_id == request.user.id
             
+        # If obj has course attribute (e.g. Quiz accessed in course context by enrolled student)
+        if hasattr(obj, 'course'):
+            user_id = view.kwargs.get('user_id')
+            if user_id is not None:
+                return str(request.user.id) == str(user_id)
+            return True
+            
         return False
 

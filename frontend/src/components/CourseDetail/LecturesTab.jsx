@@ -1332,7 +1332,7 @@ const LecturesTab = ({
                 >
                     <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
                         <div className="d-flex align-items-center gap-3">
-                            <div className={`step-badge-icon rounded-circle d-flex align-items-center justify-content-center ${hasCompletedPretest ? 'bg-success text-white' : 'bg-teal text-white'}`} style={{ width: '36px', height: '36px', fontSize: '0.95rem' }}>
+                            <div className={`step-badge-icon rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 ${hasCompletedPretest ? 'bg-success text-white' : 'bg-teal text-white'}`} style={{ width: '38px', height: '38px', minWidth: '38px', minHeight: '38px', flexShrink: 0, aspectRatio: '1 / 1', fontSize: '0.95rem' }}>
                                 <i className={`fas ${hasCompletedPretest ? 'fa-check' : 'fa-clipboard-check'}`}></i>
                             </div>
                             <div>
@@ -1525,9 +1525,7 @@ const LecturesTab = ({
                                                 <div className={`lesson-progress-indicator ${lessonLockStatus.locked ? "locked" : isQuizPassed ? "completed" : ""}`}>
                                                     {isQuizPassed ? (
                                                         <i className="fas fa-check text-success" style={{ fontSize: "11px" }}></i>
-                                                    ) : lessonLockStatus.locked ? (
-                                                        <i className="fas fa-lock text-muted" style={{ fontSize: "11px" }}></i>
-                                                    ) : (
+                                                    ) : lessonLockStatus.locked ? null : (
                                                         <i className="fas fa-clipboard-check text-warning" style={{ fontSize: "12px" }}></i>
                                                     )}
                                                 </div>
@@ -1758,7 +1756,7 @@ const LecturesTab = ({
                 >
                     <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
                         <div className="d-flex align-items-center gap-3">
-                            <div className={`step-badge-icon rounded-circle d-flex align-items-center justify-content-center ${hasCompletedPosttest ? 'bg-success text-white' : !canTakePostTest ? 'bg-secondary text-white' : 'bg-danger text-white'}`} style={{ width: '36px', height: '36px', fontSize: '0.95rem' }}>
+                            <div className={`step-badge-icon rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 ${hasCompletedPosttest ? 'bg-success text-white' : !canTakePostTest ? 'bg-secondary text-white' : 'bg-danger text-white'}`} style={{ width: '38px', height: '38px', minWidth: '38px', minHeight: '38px', flexShrink: 0, aspectRatio: '1 / 1', fontSize: '0.95rem' }}>
                                 <i className={`fas ${hasCompletedPosttest ? 'fa-check' : !canTakePostTest ? 'fa-lock' : 'fa-award'}`}></i>
                             </div>
                             <div>

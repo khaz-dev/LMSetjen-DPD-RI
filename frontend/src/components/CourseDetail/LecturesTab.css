@@ -248,6 +248,10 @@
     background: #f59e0b;
 }
 
+.lesson-progress-indicator.locked {
+    background: #e2e8f0;
+}
+
 /* ==========================================================================
    Lesson Play Button (Compact 32px)
    ========================================================================== */
@@ -469,4 +473,29 @@
     border-radius: 12px;
     display: inline-flex;
     align-items: center;
+}
+
+/* Step Badge Circle Icon for Pre-test & Post-test cards */
+.step-badge-icon {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
+    flex: 0 0 38px !important;
+    flex-shrink: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+.step-badge-icon i {
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }

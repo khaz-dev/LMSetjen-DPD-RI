@@ -1797,17 +1797,14 @@ class EnrolledCourse(models.Model):
         pre_post_quiz = Quiz.objects.filter(course=self.course, quiz_type='pre_post_test', is_active=True).first()
         if not pre_post_quiz:
             return True
-        return QuizAttempt.objects.filter(user=self.user, quiz=pre_post_quiz).exists()
+        return QuizAttempt.objects.filter(user=self.user, quiz=pre_post_quiz, attempt_type='pre_test').exists()
 
     def has_completed_post_test(self):
         """Check if post-test has been completed (if course has pre_post_test)"""
         pre_post_quiz = Quiz.objects.filter(course=self.course, quiz_type='pre_post_test', is_active=True).first()
         if not pre_post_quiz:
             return True
-        has_post = QuizAttempt.objects.filter(user=self.user, quiz=pre_post_quiz, attempt_type='post_test').exists()
-        if has_post:
-            return True
-        return QuizAttempt.objects.filter(user=self.user, quiz=pre_post_quiz).count() >= 2
+        return QuizAttempt.objects.filter(user=self.user, quiz=pre_post_quiz, attempt_type='post_test').exists()
 
     def is_certificate_eligible(self):
         """Check if user is eligible for certificate (lessons complete + regular quizzes passed + post-test complete)"""
@@ -2036,22 +2033,41 @@ class QuizAttempt(models.Model):
         super().save(*args, **kwargs)
 
     @classmethod
-    def get_daily_attempts_count(cls, user, quiz, date=None):
+    def get_daily_attempts_count(cls, user, quiz, date=None, attempt_type=None):
         """Get the number of attempts by a user for a specific quiz on a given date"""
         if date is None:
             date = timezone.now().date()
         
-        return cls.objects.filter(
+        qs = cls.objects.filter(
             user=user,
             quiz=quiz,
             date_attempted__date=date
-        ).count()
+        )
+        if attempt_type:
+            qs = qs.filter(attempt_type=attempt_type)
+        return qs.count()
 
     @classmethod
-    def can_attempt_quiz(cls, user, quiz):
-        """Check if user can attempt the quiz (max 3 attempts per day)"""
+    def can_attempt_quiz(cls, user, quiz, attempt_type=None):
+        """
+        Check if user can attempt the quiz:
+        - For pre_post_test: Pre-test and Post-test are each taken ONLY ONCE.
+          They are only locked once submitted (QuizAttempt exists).
+          Before submission, user can attempt and retry freely until clicking submit.
+        - For regular quiz: max 3 attempts per day.
+        """
+        if getattr(quiz, 'quiz_type', '') == 'pre_post_test':
+            if attempt_type == 'pre_test':
+                return not cls.objects.filter(user=user, quiz=quiz, attempt_type='pre_test').exists()
+            elif attempt_type == 'post_test':
+                return not cls.objects.filter(user=user, quiz=quiz, attempt_type='post_test').exists()
+            else:
+                has_pre = cls.objects.filter(user=user, quiz=quiz, attempt_type='pre_test').exists()
+                has_post = cls.objects.filter(user=user, quiz=quiz, attempt_type='post_test').exists()
+                return not (has_pre and has_post)
+
         today = timezone.now().date()
-        attempts_today = cls.get_daily_attempts_count(user, quiz, today)
+        attempts_today = cls.get_daily_attempts_count(user, quiz, today, attempt_type='quiz')
         return attempts_today < 3
 
     @property

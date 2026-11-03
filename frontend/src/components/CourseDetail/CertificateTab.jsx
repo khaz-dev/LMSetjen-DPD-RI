@@ -346,7 +346,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                 {/* Eligibility Status - Dynamic 2 or 3 Column Grid */}
                 <div className="eligibility-section mb-2">
                     <div className="row g-2">
-                        <div className={hasPrePostTest ? "col-4" : "col-6"}>
+                        <div className={isInline ? "col-12" : (hasPrePostTest ? "col-12 col-md-4" : "col-12 col-md-6")}>
                             <div className={`status-card ${allLessonsCompleted ? 'completed' : 'incomplete'}`}>
                                 <div className="status-icon">
                                     <i className={`fas ${allLessonsCompleted ? 'fa-check-circle' : 'fa-clock'}`}></i>
@@ -360,7 +360,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                                 </div>
                             </div>
                         </div>
-                        <div className={hasPrePostTest ? "col-4" : "col-6"}>
+                        <div className={isInline ? "col-12" : (hasPrePostTest ? "col-12 col-md-4" : "col-12 col-md-6")}>
                             <div className={`status-card ${allQuizzesPassed ? 'completed' : 'incomplete'}`}>
                                 <div className="status-icon">
                                     <i className={`fas ${allQuizzesPassed ? 'fa-check-circle' : 'fa-hourglass-half'}`}></i>
@@ -377,7 +377,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                             </div>
                         </div>
                         {hasPrePostTest && (
-                            <div className="col-4">
+                            <div className={isInline ? "col-12" : "col-12 col-md-4"}>
                                 <div className={`status-card ${postTestCompleted ? 'completed' : 'incomplete'}`}>
                                     <div className="status-icon">
                                         <i className={`fas ${postTestCompleted ? 'fa-check-circle' : 'fa-clipboard-check'}`}></i>
