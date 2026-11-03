@@ -74,6 +74,15 @@ const VideoPlayerUnggah = forwardRef(({
         setCompletionQuestion(null);
         // ✨ PHASE 40.1: Only use is_completed - is_fully_watched causes FULL MODE prematurely at 95% progress
         setAllowVideoAccess(variantItem?.is_completed || false);
+
+        // Reset/sync playback time and duration for new variantItem
+        const itemDur = parseTimeToSeconds(variantItem?.duration) || parseTimeToSeconds(variantItem?.content_duration) || 0;
+        if (itemDur > 0) {
+            setDuration(itemDur);
+        } else {
+            setDuration(0);
+        }
+        setCurrentTime(seekPosition && seekPosition > 0 ? seekPosition : 0);
     }, [variantItem?.variant_item_id]);
     
     // ✨ PHASE 47 FIX: Reset playing state when lesson becomes null/empty
@@ -87,21 +96,65 @@ const VideoPlayerUnggah = forwardRef(({
     const containerRef = useRef(null);
     const mouseInactiveTimer = useRef(null);
 
+    // Helper to parse duration string (e.g. "00:01:44", "01:44", "1m 44s", or raw seconds)
+    const parseTimeToSeconds = (val) => {
+        if (!val) return 0;
+        if (typeof val === 'number') return isFinite(val) && val > 0 ? val : 0;
+        if (typeof val === 'string') {
+            if (val.includes(':')) {
+                const parts = val.split(':').map(p => parseFloat(p) || 0);
+                if (parts.length === 3) {
+                    return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+                } else if (parts.length === 2) {
+                    return (parts[0] * 60) + parts[1];
+                }
+            }
+            let total = 0;
+            let matched = false;
+            const h = val.match(/(\d+)\s*h/i);
+            const m = val.match(/(\d+)\s*m/i);
+            const s = val.match(/(\d+)\s*s/i);
+            if (h) { total += parseInt(h[1], 10) * 3600; matched = true; }
+            if (m) { total += parseInt(m[1], 10) * 60; matched = true; }
+            if (s) { total += parseInt(s[1], 10); matched = true; }
+            if (matched) return total;
+            
+            const num = parseFloat(val);
+            if (!isNaN(num) && isFinite(num) && num > 0) return num;
+        }
+        return 0;
+    };
+
     // Format video timer for display - "00:00 | 00:00 | x%" format
+    // Persentase dihitung secara akurat: (detik saat ini / durasi total maks) * 100%
     const formatVideoTimer = () => {
-        const hours = Math.floor(currentTime / 3600);
-        const minutes = Math.floor((currentTime % 3600) / 60);
-        const seconds = Math.floor(currentTime % 60);
+        const effectiveDuration = (duration && isFinite(duration) && duration > 0)
+            ? duration
+            : (videoRef.current?.duration && isFinite(videoRef.current.duration) && videoRef.current.duration > 0)
+                ? videoRef.current.duration
+                : (parseTimeToSeconds(variantItem?.duration) || parseTimeToSeconds(variantItem?.content_duration) || 0);
+
+        const curTime = (typeof currentTime === 'number' && !isNaN(currentTime) && currentTime >= 0)
+            ? currentTime
+            : (videoRef.current?.currentTime || 0);
+
+        const hours = Math.floor(curTime / 3600);
+        const minutes = Math.floor((curTime % 3600) / 60);
+        const seconds = Math.floor(curTime % 60);
         
-        const durationHours = Math.floor(duration / 3600);
-        const durationMinutes = Math.floor((duration % 3600) / 60);
-        const durationSeconds = Math.floor(duration % 60);
+        const durationHours = Math.floor(effectiveDuration / 3600);
+        const durationMinutes = Math.floor((effectiveDuration % 3600) / 60);
+        const durationSeconds = Math.floor(effectiveDuration % 60);
         
-        const percentage = duration > 0 ? Math.round((currentTime / duration) * 100) : 0;
+        // Perhitungan persentase valid: (detik saat ini / maks waktu) * 100%
+        let percentage = 0;
+        if (effectiveDuration > 0) {
+            percentage = Math.min(100, Math.max(0, (curTime / effectiveDuration) * 100));
+        }
         
         // Format current time
         let currentTimeStr;
-        if (durationHours > 0) {
+        if (durationHours > 0 || hours > 0) {
             currentTimeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         } else {
             currentTimeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
@@ -115,7 +168,16 @@ const VideoPlayerUnggah = forwardRef(({
             durationStr = `${String(durationMinutes).padStart(2, '0')}:${String(durationSeconds).padStart(2, '0')}`;
         }
         
-        return `${currentTimeStr} | ${durationStr} | ${percentage}%`;
+        // Format persentase dengan 1 desimal jika bukan integer genap agar user melihat perhitungan real-time
+        const percentageStr = percentage <= 0
+            ? '0%'
+            : percentage >= 100
+                ? '100%'
+                : percentage % 1 === 0
+                    ? `${percentage.toFixed(0)}%`
+                    : `${percentage.toFixed(1)}%`;
+        
+        return `${currentTimeStr} | ${durationStr} | ${percentageStr}`;
     };
 
     if (!variantItem?.file) {
@@ -599,25 +661,36 @@ const VideoPlayerUnggah = forwardRef(({
                             onRateChange={handleRateChange}
                             onContextMenu={(e) => { if (!allowVideoAccess) e.preventDefault(); }}
                             onLoadedMetadata={() => {
-                                if (videoRef.current) {
+                                if (videoRef.current && isFinite(videoRef.current.duration) && videoRef.current.duration > 0) {
                                     setDuration(videoRef.current.duration);
                                 }
                             }}
                             onTimeUpdate={() => {
-                                if (videoRef.current && videoRef.current.duration) {
-                                    setCurrentTime(videoRef.current.currentTime);
-                                    if (videoRef.current.currentTime > maxTimeWatchedRef.current) {
-                                        maxTimeWatchedRef.current = videoRef.current.currentTime;
+                                if (videoRef.current) {
+                                    const curTime = videoRef.current.currentTime || 0;
+                                    setCurrentTime(curTime);
+                                    if (curTime > maxTimeWatchedRef.current) {
+                                        maxTimeWatchedRef.current = curTime;
                                     }
-                                    const percentage = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+
+                                    const vidDur = videoRef.current.duration;
+                                    const effectiveDur = (vidDur && isFinite(vidDur) && vidDur > 0)
+                                        ? vidDur
+                                        : (duration > 0 ? duration : (parseTimeToSeconds(variantItem?.duration) || parseTimeToSeconds(variantItem?.content_duration) || 0));
+
+                                    if (vidDur && isFinite(vidDur) && vidDur > 0 && Math.abs(vidDur - duration) > 0.5) {
+                                        setDuration(vidDur);
+                                    }
+
+                                    const percentage = effectiveDur > 0 ? (curTime / effectiveDur) * 100 : 0;
                                     setProgressPercentage(Math.round(percentage));
                                     
                                     // ✨ PHASE 13.2: Auto-unlock Full Mode at 95%+ progress and stop tracking
                                     if (percentage >= 95 && !progressStoppedRef.current) {
                                         console.log('[VideoPlayerUnggah] 🎓 PHASE 13.2: Progress reached 95%+ - switching to FULL MODE and stopping progress tracking', {
                                             percentage: percentage.toFixed(2),
-                                            currentTime: videoRef.current.currentTime.toFixed(2),
-                                            duration: videoRef.current.duration.toFixed(2)
+                                            currentTime: curTime.toFixed(2),
+                                            duration: effectiveDur.toFixed(2)
                                         });
                                         progressStoppedRef.current = true;
                                         setAllowVideoAccess(true);  // Unlock Full Mode
@@ -626,14 +699,14 @@ const VideoPlayerUnggah = forwardRef(({
                                     
                                     // ✨ PHASE 13.2: Only send progress updates until 95% is reached
                                     // Once at 95%+, stop wasting bandwidth and API calls on duplicate data
-                                    if (!progressStoppedRef.current && onProgressRef.current) {
+                                    if (!progressStoppedRef.current && onProgressRef.current && effectiveDur > 0) {
                                         if (Math.random() < 0.1) {
                                         }
                                         onProgressRef.current({
-                                            played: videoRef.current.currentTime / videoRef.current.duration,
+                                            played: curTime / effectiveDur,
                                             loaded: 1,
-                                            duration: videoRef.current.duration,
-                                            currentTime: videoRef.current.currentTime
+                                            duration: effectiveDur,
+                                            currentTime: curTime
                                         });
                                     }
                                 }
