@@ -8888,6 +8888,9 @@ body.modern-course-active {
         min-width: 0;
         display: flex;
         flex-direction: column;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
     }
 }
 
@@ -9053,8 +9056,10 @@ body.modern-course-active {
     box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05) !important;
     display: flex !important;
     flex-direction: column !important;
-    height: 100% !important;
-    overflow: hidden !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
 }
 
 .cert-side-nav-pills {
@@ -9111,11 +9116,17 @@ body.modern-course-active {
 .cert-side-body {
     flex: 1 1 auto !important;
     padding: 0.75rem 0.95rem !important;
-    overflow-y: auto !important;
-    max-height: 480px !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+    max-height: none !important;
+    height: auto !important;
 }
 
 .cert-side-pane {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     animation: fadeInCertPane 0.25s ease !important;
 }
 
