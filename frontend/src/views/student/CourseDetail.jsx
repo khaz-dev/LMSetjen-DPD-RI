@@ -1698,11 +1698,7 @@ function CourseDetail() {
     // ✨ PHASE 16: FIXED - Auto-play should be TRUE when user clicks a fresh lesson
 
     const handlePlayLessonWithAutoplay = (lesson) => {
-
-        if (activeTab === 'quiz') {
-            handleQuizClose();
-        }
-
+        ensurePlayerVisible();
         setVariantItem(lesson);
 
         // ✨ PHASE 16: FIX - Set autoplay to TRUE for fresh lesson loads
@@ -3538,6 +3534,32 @@ function CourseDetail() {
         }
 
     };
+
+    const ensurePlayerVisible = useCallback(() => {
+        let switched = false;
+        if (activeTab === 'quiz') {
+            handleQuizClose();
+            switched = true;
+        }
+        if (selectedGame) {
+            setSelectedGame(null);
+            switched = true;
+        }
+        if (activeTab === 'certificate' || activeTab === 'review' || activeTab === 'gamification' || activeTab === 'quiz') {
+            setActiveTab('notes');
+            const notesTabBtn = document.querySelector('#notes-tab');
+            if (notesTabBtn && window.bootstrap?.Tab) {
+                window.bootstrap.Tab.getOrCreateInstance(notesTabBtn).show();
+            }
+            switched = true;
+        }
+        setTimeout(() => {
+            if (videoPlayerContainerRef.current) {
+                videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 50);
+        return switched;
+    }, [activeTab, selectedGame]);
 
 
 
@@ -9664,7 +9686,8 @@ function CourseDetail() {
 
                                                 variantItem={variantItem}
 
-                                                setVariantItem={handlePlayLessonWithAutoplay}  // ✨ PHASE 4.103: Use autoplay handler
+                                                setVariantItem={handlePlayLessonWithAutoplay}
+                                                onShowPlayer={ensurePlayerVisible}  // ✨ PHASE 4.103: Use autoplay handler
 
                                                 isVideoPlaying={isVideoPlaying}  // ✨ PHASE 4.105: Pass video playing state
 

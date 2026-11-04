@@ -522,112 +522,259 @@ class Course(models.Model):
             target_course.save()
             print(f"[Content Copy] [OK] Course metadata synced")
             
-            # ✨ PHASE 4.77: Clear existing content BEFORE copying to prevent duplicates
+            # ✨ Smart Content Synchronization: Clear non-progress items or full wipe if requested
             if clear_target:
-                print(f"[Content Copy] Clearing existing content from target course...")
+                print(f"[Content Copy] Full clearing existing content from target course...")
                 target_course.curriculum.all().delete()
                 target_course.quizzes.all().delete()
                 target_course.features.all().delete()
                 target_course.requirements.all().delete()
                 target_course.learning_outcomes.all().delete()
-                # target_course.games is synced via smart upsert in STEP 6 to preserve student attempts
-                print(f"[Content Copy] [OK] Target course content cleared")
+                print(f"[Content Copy] [OK] Target course content fully cleared")
+            else:
+                # Features, requirements, and outcomes have no student progress - clean refresh prevents duplicates
+                target_course.features.all().delete()
+                target_course.requirements.all().delete()
+                target_course.learning_outcomes.all().delete()
+                print(f"[Content Copy] [OK] Non-progress metadata items refreshed")
             
             try:
-                # STEP 1: Copy quizzes (Kuis) with all questions and choices FIRST so items can reference them
-                print("[Content Copy] Copying quizzes (Kuis) with questions and choices...")
-                quiz_map = {}  # Map old quiz IDs to new ones
-                for quiz in self.quizzes.all():
-                    new_quiz = Quiz.objects.create(
-                        course=target_course,
-                        title=quiz.title,
-                        description=quiz.description,
-                        quiz_type=quiz.quiz_type,
-                        presentation_mode=quiz.presentation_mode,
-                        is_active=quiz.is_active,
-                    )
-                    quiz_map[quiz.id] = new_quiz
-                    
-                    # Copy quiz questions and their choices
-                    print(f"[Content Copy] Copying questions for quiz: {quiz.title}")
-                    question_map = {}
-                    for question in quiz.questions.all():
-                        new_question = QuizQuestion.objects.create(
-                            quiz=new_quiz,
-                            question_text=question.question_text,
-                            order=question.order,
-                        )
-                        question_map[question.id] = new_question
-                        
-                        # Copy quiz choices (answers) for this question
-                        for choice in question.choices.all():
-                            QuizChoice.objects.create(
-                                question=new_question,
-                                choice_text=choice.choice_text,
-                                is_correct=choice.is_correct,
-                                order=choice.order,
-                            )
-                    
-                    print(f"[Content Copy] [OK] Copied {quiz.questions.count()} questions with choices")
-                
-                print(f"[Content Copy] [OK] Copied {len(quiz_map)} quizzes")
+                # STEP 1: Sync quizzes (Kuis, Pre-test, Post-test) intelligently to preserve QuizAttempts
+                print("[Content Copy] Syncing quizzes (Kuis, Pre-test, Post-test)...")
+                quiz_map = {}  # Map old quiz IDs to new/updated ones
+                existing_target_quizzes = list(target_course.quizzes.all())
+                used_target_quiz_ids = set()
 
-                # STEP 2: Copy curriculum variants (Bagian)
-                print("[Content Copy] Copying curriculum sections (Bagian)...")
-                variant_map = {}  # Map old variant IDs to new ones
-                for variant in self.curriculum.all():
-                    new_variant = Variant.objects.create(
-                        course=target_course,
-                        title=variant.title,
-                        order=variant.order,
-                    )
-                    variant_map[variant.id] = new_variant
+                for quiz in self.quizzes.all():
+                    target_quiz = None
+                    if quiz.quiz_type == 'pre_post_test':
+                        # Match pre_post_test by quiz_type
+                        target_quiz = next((q for q in existing_target_quizzes if q.quiz_type == 'pre_post_test' and q.id not in used_target_quiz_ids), None)
                     
-                    # Copy variant items (Pelajaran - lessons or inserted Quizzes)
-                    print(f"[Content Copy] Copying lessons for section: {variant.title}")
-                    for item in variant.variant_items.all():
-                        new_item = VariantItem.objects.create(
-                            variant=new_variant,
-                            title=item.title,
-                            description=item.description,
-                            file=item.file,
-                            duration=item.duration,
-                            preview=item.preview,
-                            order=item.order,
-                            item_type=getattr(item, 'item_type', 'lesson'),
-                            quiz=quiz_map.get(item.quiz_id) if getattr(item, 'quiz_id', None) else None,
-                            learning_module=item.learning_module,
-                        )
-                        
-                        # ✨ NEW FIX: Copy lesson completion questions (Pertanyaan Penyelesaian Pelajaran)
-                        if hasattr(item, 'completion_question') and item.completion_question:
-                            original_question = item.completion_question
-                            print(f"[Content Copy] Copying completion question for lesson: {item.title}")
-                            
-                            # Create new completion question linked to new variant item
-                            new_question = LessonCompletionQuestion.objects.create(
-                                variant_item=new_item,
-                                question_text=original_question.question_text,
-                                question_type=original_question.question_type,
-                                correct_answer_text=original_question.correct_answer_text,
-                                case_sensitive=original_question.case_sensitive,
+                    if not target_quiz:
+                        # Match by title
+                        target_quiz = next((q for q in existing_target_quizzes if q.title == quiz.title and q.id not in used_target_quiz_ids), None)
+
+                    if not target_quiz:
+                        # Match by quiz_type if any unused
+                        target_quiz = next((q for q in existing_target_quizzes if q.quiz_type == quiz.quiz_type and q.id not in used_target_quiz_ids), None)
+
+                    if target_quiz:
+                        used_target_quiz_ids.add(target_quiz.id)
+                        target_quiz.title = quiz.title
+                        target_quiz.description = quiz.description
+                        target_quiz.quiz_type = quiz.quiz_type
+                        target_quiz.presentation_mode = quiz.presentation_mode
+                        target_quiz.is_active = quiz.is_active
+                        target_quiz.save()
+                        print(f"[Content Copy] [OK] Updated existing quiz '{target_quiz.title}' (ID: {target_quiz.id}, preserving student QuizAttempts)")
+
+                        # Sync questions & choices for this quiz
+                        target_quiz.questions.all().delete()
+                        for question in quiz.questions.all():
+                            new_q = QuizQuestion.objects.create(
+                                quiz=target_quiz,
+                                question_text=question.question_text,
+                                order=question.order,
                             )
-                            
-                            # Copy all question choices (for multiple choice/multi-select)
-                            for choice in original_question.choices.all():
-                                LessonCompletionQuestionChoice.objects.create(
-                                    question=new_question,
+                            for choice in question.choices.all():
+                                QuizChoice.objects.create(
+                                    question=new_q,
                                     choice_text=choice.choice_text,
                                     is_correct=choice.is_correct,
                                     order=choice.order,
                                 )
-                            
-                            print(f"[Content Copy] [OK] Copied completion question with {original_question.choices.count()} choices")
-                    
-                    print(f"[Content Copy] [OK] Copied {variant.variant_items.count()} lessons (including completion questions)")
-                
-                print(f"[Content Copy] [OK] Copied {len(variant_map)} curriculum sections")
-                
+                        quiz_map[quiz.id] = target_quiz
+                    else:
+                        new_quiz = Quiz.objects.create(
+                            course=target_course,
+                            title=quiz.title,
+                            description=quiz.description,
+                            quiz_type=quiz.quiz_type,
+                            presentation_mode=quiz.presentation_mode,
+                            is_active=quiz.is_active,
+                        )
+                        used_target_quiz_ids.add(new_quiz.id)
+                        for question in quiz.questions.all():
+                            new_q = QuizQuestion.objects.create(
+                                quiz=new_quiz,
+                                question_text=question.question_text,
+                                order=question.order,
+                            )
+                            for choice in question.choices.all():
+                                QuizChoice.objects.create(
+                                    question=new_q,
+                                    choice_text=choice.choice_text,
+                                    is_correct=choice.is_correct,
+                                    order=choice.order,
+                                )
+                        quiz_map[quiz.id] = new_quiz
+                        print(f"[Content Copy] [OK] Created new quiz '{new_quiz.title}' (ID: {new_quiz.id})")
+
+                # Handle obsolete target quizzes no longer in draft
+                for obsolete_quiz in target_course.quizzes.exclude(id__in=used_target_quiz_ids):
+                    if obsolete_quiz.attempts.exists():
+                        obsolete_quiz.is_active = False
+                        obsolete_quiz.save()
+                        print(f"[Content Copy] [OK] Deactivated obsolete quiz with attempts: '{obsolete_quiz.title}' (ID: {obsolete_quiz.id})")
+                    else:
+                        obsolete_quiz.delete()
+                        print(f"[Content Copy] [OK] Deleted obsolete quiz with no attempts: '{obsolete_quiz.title}' (ID: {obsolete_quiz.id})")
+
+                print(f"[Content Copy] [OK] Synced {len(quiz_map)} quizzes")
+
+                # STEP 2: Sync curriculum sections (Bagian) & lessons (Pelajaran) intelligently
+                print("[Content Copy] Syncing curriculum sections & lessons...")
+                variant_map = {}
+                existing_target_variants = list(target_course.curriculum.all())
+                used_target_variant_ids = set()
+
+                for variant in self.curriculum.all():
+                    # Match existing variant by order or title
+                    target_variant = next((v for v in existing_target_variants if (v.order == variant.order or v.title == variant.title) and v.id not in used_target_variant_ids), None)
+                    if not target_variant and existing_target_variants:
+                        target_variant = next((v for v in existing_target_variants if v.id not in used_target_variant_ids), None)
+
+                    if target_variant:
+                        used_target_variant_ids.add(target_variant.id)
+                        target_variant.title = variant.title
+                        target_variant.order = variant.order
+                        target_variant.save()
+                    else:
+                        target_variant = Variant.objects.create(
+                            course=target_course,
+                            title=variant.title,
+                            order=variant.order,
+                        )
+                        used_target_variant_ids.add(target_variant.id)
+                    variant_map[variant.id] = target_variant
+
+                    existing_target_items = list(target_variant.variant_items.all())
+                    used_target_item_ids = set()
+
+                    for item in variant.variant_items.all():
+                        target_item = None
+                        target_quiz_for_item = quiz_map.get(item.quiz_id) if getattr(item, 'quiz_id', None) else None
+
+                        # Match quiz items by quiz
+                        if getattr(item, 'item_type', 'lesson') == 'quiz' and target_quiz_for_item:
+                            target_item = next((ti for ti in existing_target_items if ti.quiz_id == target_quiz_for_item.id and ti.id not in used_target_item_ids), None)
+
+                        # Match lesson items by order + title, or order, or title
+                        if not target_item:
+                            target_item = next((ti for ti in existing_target_items if ti.order == item.order and ti.title == item.title and ti.id not in used_target_item_ids), None)
+                        if not target_item:
+                            target_item = next((ti for ti in existing_target_items if ti.order == item.order and ti.id not in used_target_item_ids), None)
+                        if not target_item:
+                            target_item = next((ti for ti in existing_target_items if ti.title == item.title and ti.id not in used_target_item_ids), None)
+
+                        if target_item:
+                            used_target_item_ids.add(target_item.id)
+                            target_item.title = item.title
+                            target_item.description = item.description
+                            target_item.file = item.file
+                            target_item.duration = item.duration
+                            target_item.preview = item.preview
+                            target_item.order = item.order
+                            target_item.item_type = getattr(item, 'item_type', 'lesson')
+                            target_item.quiz = target_quiz_for_item
+                            target_item.learning_module = item.learning_module
+                            target_item.save()
+                            print(f"[Content Copy] [OK] Updated existing lesson '{target_item.title}' (ID: {target_item.id}, preserving CompletedLesson/VideoProgress)")
+
+                            # Sync completion question
+                            if hasattr(item, 'completion_question') and item.completion_question:
+                                orig_q = item.completion_question
+                                if hasattr(target_item, 'completion_question') and target_item.completion_question:
+                                    tq = target_item.completion_question
+                                    tq.question_text = orig_q.question_text
+                                    tq.question_type = orig_q.question_type
+                                    tq.correct_answer_text = orig_q.correct_answer_text
+                                    tq.case_sensitive = orig_q.case_sensitive
+                                    tq.save()
+                                    tq.choices.all().delete()
+                                    for choice in orig_q.choices.all():
+                                        LessonCompletionQuestionChoice.objects.create(
+                                            question=tq,
+                                            choice_text=choice.choice_text,
+                                            is_correct=choice.is_correct,
+                                            order=choice.order,
+                                        )
+                                else:
+                                    new_q = LessonCompletionQuestion.objects.create(
+                                        variant_item=target_item,
+                                        question_text=orig_q.question_text,
+                                        question_type=orig_q.question_type,
+                                        correct_answer_text=orig_q.correct_answer_text,
+                                        case_sensitive=orig_q.case_sensitive,
+                                    )
+                                    for choice in orig_q.choices.all():
+                                        LessonCompletionQuestionChoice.objects.create(
+                                            question=new_q,
+                                            choice_text=choice.choice_text,
+                                            is_correct=choice.is_correct,
+                                            order=choice.order,
+                                        )
+                            elif hasattr(target_item, 'completion_question') and target_item.completion_question:
+                                target_item.completion_question.delete()
+                        else:
+                            new_item = VariantItem.objects.create(
+                                variant=target_variant,
+                                title=item.title,
+                                description=item.description,
+                                file=item.file,
+                                duration=item.duration,
+                                preview=item.preview,
+                                order=item.order,
+                                item_type=getattr(item, 'item_type', 'lesson'),
+                                quiz=target_quiz_for_item,
+                                learning_module=item.learning_module,
+                            )
+                            used_target_item_ids.add(new_item.id)
+                            print(f"[Content Copy] [OK] Created new lesson '{new_item.title}' (ID: {new_item.id})")
+
+                            if hasattr(item, 'completion_question') and item.completion_question:
+                                orig_q = item.completion_question
+                                new_q = LessonCompletionQuestion.objects.create(
+                                    variant_item=new_item,
+                                    question_text=orig_q.question_text,
+                                    question_type=orig_q.question_type,
+                                    correct_answer_text=orig_q.correct_answer_text,
+                                    case_sensitive=orig_q.case_sensitive,
+                                )
+                                for choice in orig_q.choices.all():
+                                    LessonCompletionQuestionChoice.objects.create(
+                                        question=new_q,
+                                        choice_text=choice.choice_text,
+                                        is_correct=choice.is_correct,
+                                        order=choice.order,
+                                    )
+
+                    # Obsolete items in target variant
+                    for obsolete_item in target_variant.variant_items.exclude(id__in=used_target_item_ids):
+                        has_progress = (
+                            CompletedLesson.objects.filter(variant_item=obsolete_item).exists() or
+                            VideoProgress.objects.filter(variant_item=obsolete_item).exists()
+                        )
+                        if not has_progress:
+                            obsolete_item.delete()
+                            print(f"[Content Copy] [OK] Deleted obsolete lesson '{obsolete_item.title}' with no progress")
+                        else:
+                            print(f"[Content Copy] [OK] Preserved obsolete lesson '{obsolete_item.title}' with active student progress")
+
+                # Obsolete variants in target course
+                for obsolete_variant in target_course.curriculum.exclude(id__in=used_target_variant_ids):
+                    has_progress = (
+                        CompletedLesson.objects.filter(variant_item__variant=obsolete_variant).exists() or
+                        VideoProgress.objects.filter(variant_item__variant=obsolete_variant).exists()
+                    )
+                    if not has_progress:
+                        obsolete_variant.delete()
+                        print(f"[Content Copy] [OK] Deleted obsolete section '{obsolete_variant.title}' with no progress")
+                    else:
+                        print(f"[Content Copy] [OK] Preserved obsolete section '{obsolete_variant.title}' with active student progress")
+
+                print(f"[Content Copy] [OK] Synced {len(variant_map)} curriculum sections")
                 # STEP 3: Copy course features (Fitur)
                 print("[Content Copy] Copying course features (Fitur)...")
                 for feature in self.features.all():

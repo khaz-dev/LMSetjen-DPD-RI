@@ -31,7 +31,8 @@ const LecturesTab = ({
     prePostQuiz = null,
     hasCompletedPosttest = true,
     canTakePostTest = false,
-    postTestLockReason = null
+    postTestLockReason = null,
+    onShowPlayer = null
 }) => {
     // Video player ref
     const playerRef = useRef(null);
@@ -346,23 +347,28 @@ const LecturesTab = ({
             return;
         }
         
+        // Ensure the player column is visible if user was on another tab (e.g., gamification, quiz, certificate)
+        const switchedView = typeof onShowPlayer === 'function' ? onShowPlayer() : false;
         
         // ✨ PHASE 4.106: Check if clicking the same video that's currently selected
         const isSameVideo = variantItem?.variant_item_id === variant_item.variant_item_id;
         
         if (isSameVideo) {
-            // ✨ PHASE 4.107: Same video is selected - toggle play/pause (works when paused too!)
-            // ✨ PHASE 4.142+: For toggle operations, use very short lock (50ms) to prevent accidental double-toggles
+            // ✨ PHASE 4.107: Same video is selected
             isClickingLessonRef.current = true;
             setIsClickingLessonUI(true);
             
-            toggleVideoPlayPause();
+            if (!switchedView) {
+                toggleVideoPlayPause();
+            } else if (!isVideoPlaying && typeof toggleVideoPlayPause === 'function') {
+                toggleVideoPlayPause();
+            }
             
             // Reset immediately for play/pause toggle - no UI blocking needed
             setTimeout(() => {
                 isClickingLessonRef.current = false;
                 setIsClickingLessonUI(false);
-            }, 50);  // Much shorter - just prevents accidental double-click
+            }, 50);
         } else {
             // ✨ PHASE 4.107: Different video - start playing the new video
             // Only block UI when switching videos

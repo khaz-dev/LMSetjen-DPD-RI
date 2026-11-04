@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import apiInstance from "../../utils/axios";
 import Toast from "../../views/plugin/Toast";
 import UserData from "../../views/plugin/UserData";
@@ -26,6 +26,220 @@ const GAME_META = {
         icon: "fas fa-clone",
         badgeClass: "badge-memory"
     }
+};
+
+
+// ==========================================
+// TRUE INTERSECTING CROSSWORD (TTS) GENERATOR
+// ==========================================
+const generateCrosswordGrid = (items) => {
+    if (!items || items.length === 0) return null;
+
+    const cleanedItems = items.map((item, originalIndex) => ({
+        originalIndex,
+        clue: item.clue || "",
+        answer: (item.answer || "").toUpperCase().replace(/[^A-Z0-9]/g, "")
+    })).filter(it => it.answer.length >= 2);
+
+    if (cleanedItems.length === 0) return null;
+
+    // Sort by length descending for best intersections
+    const sorted = [...cleanedItems].sort((a, b) => b.answer.length - a.answer.length);
+
+    const grid = {}; // 'r,c' -> char
+    const placed = []; // [{ item, row, col, direction, wordId }]
+
+    const canPlace = (word, startR, startC, direction) => {
+        const dr = direction === 'across' ? 0 : 1;
+        const dc = direction === 'across' ? 1 : 0;
+        const pr = direction === 'across' ? 1 : 0;
+        const pc = direction === 'across' ? 0 : 1;
+
+        // Check cell before
+        if (grid[(startR - dr) + ',' + (startC - dc)] !== undefined) return false;
+        // Check cell after
+        if (grid[(startR + word.length * dr) + ',' + (startC + word.length * dc)] !== undefined) return false;
+
+        let intersections = 0;
+        for (let i = 0; i < word.length; i++) {
+            const r = startR + i * dr;
+            const c = startC + i * dc;
+            const existing = grid[r + ',' + c];
+
+            if (existing !== undefined) {
+                if (existing !== word[i]) return false;
+                intersections++;
+            } else {
+                // Must not touch adjacent cells on perpendicular axis
+                if (grid[(r + pr) + ',' + (c + pc)] !== undefined) return false;
+                if (grid[(r - pr) + ',' + (c - pc)] !== undefined) return false;
+            }
+        }
+        return intersections;
+    };
+
+    // Place first word across at 0, 0
+    const first = sorted[0];
+    for (let i = 0; i < first.answer.length; i++) {
+        grid['0,' + i] = first.answer[i];
+    }
+    placed.push({ item: first, row: 0, col: 0, direction: 'across', wordId: 0 });
+
+    // Place remaining words
+    for (let sIdx = 1; sIdx < sorted.length; sIdx++) {
+        const target = sorted[sIdx];
+        const word = target.answer;
+        let best = null;
+        let bestScore = -99999;
+
+        for (const p of placed) {
+            const pWord = p.item.answer;
+            const candDir = p.direction === 'across' ? 'down' : 'across';
+            const pDr = p.direction === 'across' ? 0 : 1;
+            const pDc = p.direction === 'across' ? 1 : 0;
+            const cDr = candDir === 'across' ? 0 : 1;
+            const cDc = candDir === 'across' ? 1 : 0;
+
+            for (let pi = 0; pi < pWord.length; pi++) {
+                for (let wi = 0; wi < word.length; wi++) {
+                    if (pWord[pi] === word[wi]) {
+                        const intR = p.row + pi * pDr;
+                        const intC = p.col + pi * pDc;
+
+                        const candR = intR - wi * cDr;
+                        const candC = intC - wi * cDc;
+
+                        const inter = canPlace(word, candR, candC, candDir);
+                        if (inter !== false && inter > 0) {
+                            const score = inter * 30 - (Math.abs(candR) + Math.abs(candC));
+                            if (score > bestScore) {
+                                bestScore = score;
+                                best = { item: target, row: candR, col: candC, direction: candDir, wordId: sIdx };
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!best) {
+            // Fallback: place parallel with gap
+            let maxR = -9999;
+            for (const key of Object.keys(grid)) {
+                const r = parseInt(key.split(',')[0], 10);
+                if (r > maxR) maxR = r;
+            }
+            best = { item: target, row: maxR + 2, col: 0, direction: 'across', wordId: sIdx };
+        }
+
+        const dr = best.direction === 'across' ? 0 : 1;
+        const dc = best.direction === 'across' ? 1 : 0;
+        for (let i = 0; i < word.length; i++) {
+            grid[(best.row + i * dr) + ',' + (best.col + i * dc)] = word[i];
+        }
+        placed.push(best);
+    }
+
+    // Find bounding box
+    let minR = 9999, maxR = -9999, minC = 9999, maxC = -9999;
+    for (const key of Object.keys(grid)) {
+        const [r, c] = key.split(',').map(Number);
+        if (r < minR) minR = r;
+        if (r > maxR) maxR = r;
+        if (c < minC) minC = c;
+        if (c > maxC) maxC = c;
+    }
+
+    const rows = maxR - minR + 1;
+    const cols = maxC - minC + 1;
+
+    // Shift coordinates so minR = 0, minC = 0
+    placed.forEach(p => {
+        p.row -= minR;
+        p.col -= minC;
+    });
+
+    // Create 2D matrix
+    const matrix = Array.from({ length: rows }, () =>
+        Array.from({ length: cols }, () => ({
+            isBlock: true,
+            char: '',
+            number: null,
+            acrossWordId: null,
+            downWordId: null
+        }))
+    );
+
+    placed.forEach(p => {
+        const dr = p.direction === 'across' ? 0 : 1;
+        const dc = p.direction === 'across' ? 1 : 0;
+        for (let i = 0; i < p.item.answer.length; i++) {
+            const r = p.row + i * dr;
+            const c = p.col + i * dc;
+            matrix[r][c].isBlock = false;
+            matrix[r][c].char = p.item.answer[i];
+            if (p.direction === 'across') {
+                matrix[r][c].acrossWordId = p.wordId;
+            } else {
+                matrix[r][c].downWordId = p.wordId;
+            }
+        }
+    });
+
+    // Assign Clue Numbers
+    let clueCounter = 1;
+    const acrossClues = [];
+    const downClues = [];
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (matrix[r][c].isBlock) continue;
+
+            const acrossWord = placed.find(p => p.direction === 'across' && p.row === r && p.col === c);
+            const downWord = placed.find(p => p.direction === 'down' && p.row === r && p.col === c);
+
+            if (acrossWord || downWord) {
+                matrix[r][c].number = clueCounter;
+                if (acrossWord) {
+                    acrossWord.number = clueCounter;
+                    acrossClues.push({
+                        number: clueCounter,
+                        wordId: acrossWord.wordId,
+                        clue: acrossWord.item.clue,
+                        answer: acrossWord.item.answer,
+                        row: acrossWord.row,
+                        col: acrossWord.col,
+                        length: acrossWord.item.answer.length,
+                        direction: 'across'
+                    });
+                }
+                if (downWord) {
+                    downWord.number = clueCounter;
+                    downClues.push({
+                        number: clueCounter,
+                        wordId: downWord.wordId,
+                        clue: downWord.item.clue,
+                        answer: downWord.item.answer,
+                        row: downWord.row,
+                        col: downWord.col,
+                        length: downWord.item.answer.length,
+                        direction: 'down'
+                    });
+                }
+                clueCounter++;
+            }
+        }
+    }
+
+    return {
+        rows,
+        cols,
+        matrix,
+        placedWords: placed,
+        acrossClues,
+        downClues,
+        allClues: [...acrossClues, ...downClues].sort((a, b) => a.number - b.number)
+    };
 };
 
 const GamePlayer = ({
@@ -57,11 +271,17 @@ const GamePlayer = ({
     const [submissionResult, setSubmissionResult] = useState(null);
     const [isMuted, setIsMuted] = useState(() => gameAudio.getMuted());
     const [isBgmActive, setIsBgmActive] = useState(() => !gameAudio.getBGMMuted());
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const arenaCardRef = useRef(null);
 
     // Mini-game specific states
-    // 1. Crossword
-    const [crosswordAnswers, setCrosswordAnswers] = useState({});
-    const [activeClueIndex, setActiveClueIndex] = useState(0);
+    // 1. Crossword (True Intersecting Teka Teki Silang)
+    const [crosswordLayout, setCrosswordLayout] = useState(null);
+    const [crosswordGridValues, setCrosswordGridValues] = useState({}); // `${r}_${c}` -> char
+    const [activeCell, setActiveCell] = useState(null); // { r, c }
+    const [activeWordId, setActiveWordId] = useState(null);
+    const [activeDirection, setActiveDirection] = useState("across");
+    const hiddenInputRef = useRef(null);
 
     // 2. Word Search
     const [wsGrid, setWsGrid] = useState([]);
@@ -97,7 +317,56 @@ const GamePlayer = ({
         setIsBgmActive(active);
     };
 
+    // Fullscreen toggle handler
+    const handleToggleFullscreen = () => {
+        if (!arenaCardRef.current) return;
+        const elem = arenaCardRef.current;
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(() => {
+                    setIsFullscreen(true);
+                });
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else {
+                setIsFullscreen(prev => !prev);
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+            setIsFullscreen(false);
+        }
+    };
+
+    // Fullscreen change listener (sync state when user presses Esc)
+    useEffect(() => {
+        const onFsChange = () => {
+            const isFs = Boolean(
+                document.fullscreenElement ||
+                document.webkitFullscreenElement
+            );
+            setIsFullscreen(isFs);
+        };
+        document.addEventListener('fullscreenchange', onFsChange);
+        document.addEventListener('webkitfullscreenchange', onFsChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', onFsChange);
+            document.removeEventListener('webkitfullscreenchange', onFsChange);
+        };
+    }, []);
+
     const handleCloseArena = () => {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+        setIsFullscreen(false);
         gameAudio.stopBGM();
         if (onCloseGame) {
             onCloseGame();
@@ -115,7 +384,11 @@ const GamePlayer = ({
             setWsSelectedCells([]);
             setWsFoundWords([]);
             setWsFoundCells([]);
-            setCrosswordAnswers({});
+            setCrosswordLayout(null);
+            setCrosswordGridValues({});
+            setActiveCell(null);
+            setActiveWordId(null);
+            setActiveDirection("across");
         }
     }, [activeGame?.game_id]);
 
@@ -162,12 +435,15 @@ const GamePlayer = ({
 
         if (gType === "crossword") {
             const items = gData.items || [];
-            const initialAns = {};
-            items.forEach((_, idx) => {
-                initialAns[idx] = "";
-            });
-            setCrosswordAnswers(initialAns);
-            setActiveClueIndex(0);
+            const layout = generateCrosswordGrid(items);
+            setCrosswordLayout(layout);
+            setCrosswordGridValues({});
+            if (layout && layout.placedWords.length > 0) {
+                const firstWord = layout.acrossClues[0] || layout.downClues[0] || layout.placedWords[0];
+                setActiveWordId(firstWord.wordId);
+                setActiveDirection(firstWord.direction);
+                setActiveCell({ r: firstWord.row, c: firstWord.col });
+            }
         } else if (gType === "word_search") {
             initWordSearch(gData.words || []);
         } else if (gType === "anagram") {
@@ -371,38 +647,268 @@ const GamePlayer = ({
         setMemoryMoves(0);
     };
 
-    // 1. Crossword Handlers
-    const handleCrosswordLetterChange = (clueIdx, letterIdx, val) => {
+    // 1. True Crossword (Teka Teki Silang) Handlers & Helpers
+    const activeClue = useMemo(() => {
+        if (!crosswordLayout || activeWordId === null) return null;
+        return (
+            crosswordLayout.acrossClues.find(c => c.wordId === activeWordId && c.direction === activeDirection) ||
+            crosswordLayout.downClues.find(c => c.wordId === activeWordId && c.direction === activeDirection) ||
+            crosswordLayout.acrossClues.find(c => c.wordId === activeWordId) ||
+            crosswordLayout.downClues.find(c => c.wordId === activeWordId)
+        );
+    }, [crosswordLayout, activeWordId, activeDirection]);
+
+    const activeWordCellsSet = useMemo(() => {
+        const set = new Set();
+        if (!crosswordLayout || activeWordId === null) return set;
+        const activeWord = crosswordLayout.placedWords.find(p => p.wordId === activeWordId);
+        if (!activeWord) return set;
+
+        const dr = activeWord.direction === "across" ? 0 : 1;
+        const dc = activeWord.direction === "across" ? 1 : 0;
+        for (let i = 0; i < activeWord.item.answer.length; i++) {
+            set.add(`${activeWord.row + i * dr}_${activeWord.col + i * dc}`);
+        }
+        return set;
+    }, [crosswordLayout, activeWordId]);
+
+    const isWordCorrect = useCallback((word) => {
+        const dr = word.direction === "across" ? 0 : 1;
+        const dc = word.direction === "across" ? 1 : 0;
+        for (let i = 0; i < word.item.answer.length; i++) {
+            const r = word.row + i * dr;
+            const c = word.col + i * dc;
+            if ((crosswordGridValues[`${r}_${c}`] || "").trim() !== word.item.answer[i]) {
+                return false;
+            }
+        }
+        return true;
+    }, [crosswordGridValues]);
+
+    const isWordFilled = useCallback((word) => {
+        const dr = word.direction === "across" ? 0 : 1;
+        const dc = word.direction === "across" ? 1 : 0;
+        for (let i = 0; i < word.item.answer.length; i++) {
+            const r = word.row + i * dr;
+            const c = word.col + i * dc;
+            if (!(crosswordGridValues[`${r}_${c}`] || "").trim()) {
+                return false;
+            }
+        }
+        return true;
+    }, [crosswordGridValues]);
+
+    const solvedWordsCount = useMemo(() => {
+        if (!crosswordLayout) return 0;
+        return crosswordLayout.placedWords.filter(isWordFilled).length;
+    }, [crosswordLayout, isWordFilled]);
+
+    const handleCellInput = (char) => {
+        if (!activeCell || !crosswordLayout) return;
+        const upper = char.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        if (!upper) return;
+
         gameAudio.playKeyTick();
-        const item = activeGame.game_data.items[clueIdx];
-        const targetLen = item.answer.length;
-        const currentAnswer = (crosswordAnswers[clueIdx] || "").padEnd(targetLen, " ");
-        const chars = currentAnswer.split("");
-        chars[letterIdx] = (val || " ").toUpperCase();
-        const newAns = chars.join("");
+        const cellKey = `${activeCell.r}_${activeCell.c}`;
+        setCrosswordGridValues(prev => ({
+            ...prev,
+            [cellKey]: upper[0]
+        }));
 
-        setCrosswordAnswers({
-            ...crosswordAnswers,
-            [clueIdx]: newAns
-        });
-
-        if (val && letterIdx < targetLen - 1) {
-            const nextInput = document.getElementById(`cw-arena-input-${clueIdx}-${letterIdx + 1}`);
-            if (nextInput) nextInput.focus();
+        // Advance cursor to next cell in the active word
+        const activeWord = crosswordLayout.placedWords.find(p => p.wordId === activeWordId);
+        if (activeWord) {
+            const dr = activeWord.direction === "across" ? 0 : 1;
+            const dc = activeWord.direction === "across" ? 1 : 0;
+            for (let i = 0; i < activeWord.item.answer.length - 1; i++) {
+                const curR = activeWord.row + i * dr;
+                const curC = activeWord.col + i * dc;
+                if (curR === activeCell.r && curC === activeCell.c) {
+                    setActiveCell({ r: activeWord.row + (i + 1) * dr, c: activeWord.col + (i + 1) * dc });
+                    break;
+                }
+            }
         }
     };
 
+    const handleCellBackspace = () => {
+        if (!activeCell || !crosswordLayout) return;
+        const cellKey = `${activeCell.r}_${activeCell.c}`;
+        const activeWord = crosswordLayout.placedWords.find(p => p.wordId === activeWordId);
+
+        if (crosswordGridValues[cellKey]) {
+            setCrosswordGridValues(prev => {
+                const next = { ...prev };
+                delete next[cellKey];
+                return next;
+            });
+        } else if (activeWord) {
+            const dr = activeWord.direction === "across" ? 0 : 1;
+            const dc = activeWord.direction === "across" ? 1 : 0;
+            for (let i = 1; i < activeWord.item.answer.length; i++) {
+                const curR = activeWord.row + i * dr;
+                const curC = activeWord.col + i * dc;
+                if (curR === activeCell.r && curC === activeCell.c) {
+                    const prevR = activeWord.row + (i - 1) * dr;
+                    const prevC = activeWord.col + (i - 1) * dc;
+                    setActiveCell({ r: prevR, c: prevC });
+                    setCrosswordGridValues(prev => {
+                        const next = { ...prev };
+                        delete next[`${prevR}_${prevC}`];
+                        return next;
+                    });
+                    break;
+                }
+            }
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (!activeCell || !crosswordLayout) return;
+        const { r, c } = activeCell;
+
+        if (e.key === "Backspace") {
+            e.preventDefault();
+            handleCellBackspace();
+        } else if (e.key === "ArrowRight") {
+            e.preventDefault();
+            if (c + 1 < crosswordLayout.cols && !crosswordLayout.matrix[r][c + 1].isBlock) {
+                setActiveCell({ r, c: c + 1 });
+                const cellAcrossWord = crosswordLayout.placedWords.find(p => p.direction === "across" && p.row === r && c + 1 >= p.col && c + 1 < p.col + p.item.answer.length);
+                if (cellAcrossWord) {
+                    setActiveDirection("across");
+                    setActiveWordId(cellAcrossWord.wordId);
+                }
+            }
+        } else if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            if (c - 1 >= 0 && !crosswordLayout.matrix[r][c - 1].isBlock) {
+                setActiveCell({ r, c: c - 1 });
+            }
+        } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (r + 1 < crosswordLayout.rows && !crosswordLayout.matrix[r + 1][c].isBlock) {
+                setActiveCell({ r: r + 1, c });
+                const cellDownWord = crosswordLayout.placedWords.find(p => p.direction === "down" && p.col === c && r + 1 >= p.row && r + 1 < p.row + p.item.answer.length);
+                if (cellDownWord) {
+                    setActiveDirection("down");
+                    setActiveWordId(cellDownWord.wordId);
+                }
+            }
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (r - 1 >= 0 && !crosswordLayout.matrix[r - 1][c].isBlock) {
+                setActiveCell({ r: r - 1, c });
+            }
+        } else if (e.key === "Tab" || e.key === "Enter") {
+            e.preventDefault();
+            cycleClue(e.shiftKey ? -1 : 1);
+        } else if (/^[a-zA-Z0-9]$/.test(e.key)) {
+            e.preventDefault();
+            handleCellInput(e.key);
+        }
+    };
+
+    const handleCellClick = (r, c) => {
+        if (!crosswordLayout) return;
+        const cell = crosswordLayout.matrix[r][c];
+        if (cell.isBlock) return;
+
+        gameAudio.playTileSelect();
+
+        // If clicking already active cell and it's an intersection:
+        if (activeCell && activeCell.r === r && activeCell.c === c) {
+            if (cell.acrossWordId !== null && cell.downWordId !== null) {
+                const nextDir = activeDirection === "across" ? "down" : "across";
+                const nextWordId = nextDir === "across" ? cell.acrossWordId : cell.downWordId;
+                setActiveDirection(nextDir);
+                setActiveWordId(nextWordId);
+                hiddenInputRef.current?.focus();
+                return;
+            }
+        }
+
+        setActiveCell({ r, c });
+
+        if (activeDirection === "across" && cell.acrossWordId !== null) {
+            setActiveWordId(cell.acrossWordId);
+        } else if (activeDirection === "down" && cell.downWordId !== null) {
+            setActiveWordId(cell.downWordId);
+        } else if (cell.acrossWordId !== null) {
+            setActiveDirection("across");
+            setActiveWordId(cell.acrossWordId);
+        } else if (cell.downWordId !== null) {
+            setActiveDirection("down");
+            setActiveWordId(cell.downWordId);
+        }
+
+        hiddenInputRef.current?.focus();
+    };
+
+    const handleClueSelect = (clue) => {
+        gameAudio.playSelect();
+        setActiveWordId(clue.wordId);
+        setActiveDirection(clue.direction);
+
+        const dr = clue.direction === "across" ? 0 : 1;
+        const dc = clue.direction === "across" ? 1 : 0;
+        let targetCell = { r: clue.row, c: clue.col };
+
+        for (let i = 0; i < clue.length; i++) {
+            const curR = clue.row + i * dr;
+            const curC = clue.col + i * dc;
+            if (!crosswordGridValues[`${curR}_${curC}`]) {
+                targetCell = { r: curR, c: curC };
+                break;
+            }
+        }
+
+        setActiveCell(targetCell);
+        hiddenInputRef.current?.focus();
+    };
+
+    const cycleClue = (delta) => {
+        if (!crosswordLayout || !crosswordLayout.allClues?.length) return;
+        const currentIdx = crosswordLayout.allClues.findIndex(
+            c => c.wordId === activeWordId && c.direction === activeDirection
+        );
+        let nextIdx = (currentIdx + delta + crosswordLayout.allClues.length) % crosswordLayout.allClues.length;
+        const nextClue = crosswordLayout.allClues[nextIdx];
+        if (nextClue) {
+            handleClueSelect(nextClue);
+        }
+    };
+
+    const clearActiveWord = () => {
+        if (!crosswordLayout || activeWordId === null) return;
+        const activeWord = crosswordLayout.placedWords.find(p => p.wordId === activeWordId);
+        if (!activeWord) return;
+
+        const dr = activeWord.direction === "across" ? 0 : 1;
+        const dc = activeWord.direction === "across" ? 1 : 0;
+        setCrosswordGridValues(prev => {
+            const next = { ...prev };
+            for (let i = 0; i < activeWord.item.answer.length; i++) {
+                delete next[`${activeWord.row + i * dr}_${activeWord.col + i * dc}`];
+            }
+            return next;
+        });
+        setActiveCell({ r: activeWord.row, c: activeWord.col });
+        hiddenInputRef.current?.focus();
+    };
+
     const submitCrossword = () => {
-        const items = activeGame.game_data.items || [];
+        if (!crosswordLayout) return;
+        const totalWords = crosswordLayout.placedWords.length;
         let correctCount = 0;
-        items.forEach((item, idx) => {
-            const userAns = (crosswordAnswers[idx] || "").trim().toUpperCase();
-            if (userAns === item.answer.trim().toUpperCase()) {
+
+        crosswordLayout.placedWords.forEach(w => {
+            if (isWordCorrect(w)) {
                 correctCount++;
             }
         });
 
-        const score = items.length > 0 ? Math.round((correctCount / items.length) * 100) : 0;
+        const score = totalWords > 0 ? Math.round((correctCount / totalWords) * 100) : 0;
         finalizeAttempt(score);
     };
 
@@ -740,7 +1246,8 @@ const GamePlayer = ({
     const hasAttempts = attemptsLeft > 0;
 
     return (
-        <div className="game-player-arena-card">
+        <div ref={arenaCardRef} className={`game-player-arena-card ${isFullscreen ? "is-fullscreen" : ""}`}>
+
             {/* Arena Header: Left title + Right Controls (Sound, Timer, Close Button flush on far right) */}
             <div className="game-arena-header">
                 <div className="game-arena-header-left">
@@ -781,6 +1288,19 @@ const GamePlayer = ({
                             {Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, "0")}
                         </div>
                     )}
+
+                    <button
+                        type="button"
+                        className={`btn-fullscreen-toggle ${isFullscreen ? "active" : ""}`}
+                        onClick={handleToggleFullscreen}
+                        title={isFullscreen ? "Keluar Layar Penuh (Esc)" : "Mode Layar Penuh"}
+                        aria-label="Toggle Fullscreen"
+                    >
+                        <i className={`fas ${isFullscreen ? "fa-compress" : "fa-expand"}`}></i>
+                        <span className="d-none d-sm-inline">
+                            {isFullscreen ? "Normal" : "Layar Penuh"}
+                        </span>
+                    </button>
 
                     <button
                         type="button"
@@ -859,80 +1379,201 @@ const GamePlayer = ({
                 {/* STAGE 2: PLAYING MINI-GAME */}
                 {gameStage === "playing" && (
                     <div className="game-arena-board-wrap">
-                        {/* 1. Crossword */}
+                        {/* 1. True Intersecting Crossword (Teka Teki Silang) */}
                         {activeGame.game_type === "crossword" && (
                             <div className="crossword-board-container">
-                                <div className="crossword-clues-list">
-                                    <div className="fw-bold small text-muted text-uppercase mb-2">Pilih Pertanyaan / Clue:</div>
-                                    {(activeGame.game_data?.items || []).map((item, idx) => (
-                                        <div 
-                                            key={idx} 
-                                            className={`crossword-clue-item ${activeClueIndex === idx ? "active" : ""}`}
-                                            onClick={() => {
-                                                setActiveClueIndex(idx);
-                                                gameAudio.playSelect();
-                                            }}
-                                        >
-                                            <strong>{idx + 1}.</strong> {item.clue}
-                                            <span className="badge bg-light text-dark ms-2">({item.answer?.length || 0} Huruf)</span>
+                                {/* Active Clue Banner with Controls */}
+                                {activeClue && (
+                                    <div className="cw-active-clue-banner shadow-sm">
+                                        <div className="cw-clue-banner-left">
+                                            <span className={`badge ${activeClue.direction === 'across' ? 'bg-primary' : 'bg-info text-dark'} px-2 py-1 flex-shrink-0`}>
+                                                <i className={`fas ${activeClue.direction === 'across' ? 'fa-arrows-alt-h' : 'fa-arrows-alt-v'} me-1`}></i>
+                                                {activeClue.number} {activeClue.direction === 'across' ? 'Mendatar' : 'Menurun'}
+                                            </span>
+                                            <span className="cw-active-clue-text" title={activeClue.clue}>
+                                                {activeClue.clue}
+                                            </span>
+                                            <span className="badge bg-light text-muted border flex-shrink-0">
+                                                {activeClue.length} Huruf
+                                            </span>
                                         </div>
-                                    ))}
-                                </div>
-
-                                {activeGame.game_data?.items?.[activeClueIndex] && (
-                                    <div className="card p-4 text-center bg-light border-0 shadow-sm rounded-3">
-                                        <div className="small text-muted mb-1">
-                                            Pertanyaan #{activeClueIndex + 1}:
-                                        </div>
-                                        <h6 className="fw-bold mb-3">{activeGame.game_data.items[activeClueIndex].clue}</h6>
-                                        
-                                        <div className="crossword-inputs-group mb-4">
-                                            {Array.from({ length: activeGame.game_data.items[activeClueIndex].answer.length }).map((_, letterIdx) => {
-                                                const currentVal = (crosswordAnswers[activeClueIndex] || "")[letterIdx] || "";
-                                                return (
-                                                    <input 
-                                                        key={letterIdx}
-                                                        id={`cw-arena-input-${activeClueIndex}-${letterIdx}`}
-                                                        type="text"
-                                                        maxLength={1}
-                                                        className="crossword-cell-input"
-                                                        value={currentVal.trim()}
-                                                        onChange={(e) => handleCrosswordLetterChange(activeClueIndex, letterIdx, e.target.value)}
-                                                    />
-                                                );
-                                            })}
-                                        </div>
-
-                                        <div className="d-flex justify-content-between align-items-center">
-                                            <button 
+                                        <div className="cw-clue-banner-right">
+                                            <button
                                                 type="button"
-                                                className="btn btn-sm btn-outline-secondary"
-                                                disabled={activeClueIndex === 0}
-                                                onClick={() => {
-                                                    setActiveClueIndex(prev => prev - 1);
-                                                    gameAudio.playSelect();
-                                                }}
+                                                className="btn btn-sm btn-outline-secondary px-2 py-1"
+                                                onClick={() => cycleClue(-1)}
+                                                title="Pertanyaan Sebelumnya"
                                             >
-                                                <i className="fas fa-chevron-left me-1"></i>Sebelumnya
+                                                <i className="fas fa-chevron-left"></i>
                                             </button>
-                                            <button 
+                                            <button
                                                 type="button"
-                                                className="btn btn-sm btn-outline-secondary"
-                                                disabled={activeClueIndex >= activeGame.game_data.items.length - 1}
-                                                onClick={() => {
-                                                    setActiveClueIndex(prev => prev + 1);
-                                                    gameAudio.playSelect();
-                                                }}
+                                                className="btn btn-sm btn-outline-secondary px-2 py-1"
+                                                onClick={() => cycleClue(1)}
+                                                title="Pertanyaan Berikutnya"
                                             >
-                                                Berikutnya<i className="fas fa-chevron-right ms-1"></i>
+                                                <i className="fas fa-chevron-right"></i>
                                             </button>
                                         </div>
                                     </div>
                                 )}
 
-                                <div className="text-end mt-3">
-                                    <button 
-                                        type="button" 
+                                {/* Main Crossword Layout: Board + Clues Panel */}
+                                <div className="cw-main-layout mt-3">
+                                    {/* Left Side: Interlocking Grid */}
+                                    <div className="cw-board-wrapper">
+                                        <input
+                                            ref={hiddenInputRef}
+                                            type="text"
+                                            className="cw-hidden-input"
+                                            value=""
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (val) {
+                                                    handleCellInput(val[val.length - 1]);
+                                                }
+                                            }}
+                                            onKeyDown={handleKeyDown}
+                                            autoComplete="off"
+                                            autoCorrect="off"
+                                            autoCapitalize="characters"
+                                            spellCheck="false"
+                                        />
+
+                                        <div 
+                                            className="cw-grid-table-container"
+                                            tabIndex={0}
+                                            onKeyDown={handleKeyDown}
+                                        >
+                                            <div 
+                                                className="cw-grid-table"
+                                                style={{
+                                                    gridTemplateColumns: `repeat(${crosswordLayout?.cols || 1}, 1fr)`,
+                                                    maxWidth: `${(crosswordLayout?.cols || 1) * 44}px`
+                                                }}
+                                            >
+                                                {crosswordLayout?.matrix.map((row, r) => 
+                                                    row.map((cell, c) => {
+                                                        const key = `${r}_${c}`;
+                                                        if (cell.isBlock) {
+                                                            return <div key={key} className="cw-cell cw-block-cell" />;
+                                                        }
+
+                                                        const isWordActive = activeWordCellsSet.has(key);
+                                                        const isCursorActive = activeCell?.r === r && activeCell?.c === c;
+                                                        const userChar = crosswordGridValues[key] || "";
+
+                                                        return (
+                                                            <div
+                                                                key={key}
+                                                                className={`cw-cell cw-letter-cell ${isWordActive ? "cw-word-active" : ""} ${isCursorActive ? "cw-cursor-active" : ""}`}
+                                                                onClick={() => handleCellClick(r, c)}
+                                                            >
+                                                                {cell.number && (
+                                                                    <span className="cw-number-tag">{cell.number}</span>
+                                                                )}
+                                                                <span className="cw-char-val">{userChar}</span>
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="cw-sub-controls d-flex justify-content-between align-items-center mt-2 px-1">
+                                            <span className="small text-muted">
+                                                <i className="fas fa-keyboard me-1 text-primary"></i>
+                                                Ketik huruf atau klik sel kotak untuk mengisi
+                                            </span>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-danger border-0 py-0 px-2"
+                                                onClick={clearActiveWord}
+                                                title="Kosongkan kata yang sedang dipilih"
+                                            >
+                                                <i className="fas fa-eraser me-1"></i>Hapus Kata
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Right Side: Clues Lists */}
+                                    <div className="cw-clues-wrapper">
+                                        {/* Mendatar (Across) */}
+                                        <div className="cw-clues-column mb-3">
+                                            <div className="cw-clues-header d-flex align-items-center gap-2 mb-2">
+                                                <i className="fas fa-arrows-alt-h text-primary"></i>
+                                                <span className="fw-bold small text-uppercase">Mendatar</span>
+                                            </div>
+                                            <div className="cw-clues-scroll-list">
+                                                {crosswordLayout?.acrossClues.map(clue => {
+                                                    const isSelected = activeWordId === clue.wordId && activeDirection === "across";
+                                                    const wordObj = crosswordLayout.placedWords.find(p => p.wordId === clue.wordId);
+                                                    const isFilled = wordObj ? isWordFilled(wordObj) : false;
+
+                                                    return (
+                                                        <div
+                                                            key={`across-${clue.number}`}
+                                                            className={`cw-clue-item ${isSelected ? "active" : ""} ${isFilled ? "filled" : ""}`}
+                                                            onClick={() => handleClueSelect(clue)}
+                                                        >
+                                                            <span className="cw-clue-badge">{clue.number}</span>
+                                                            <div className="cw-clue-content">
+                                                                <div className="cw-clue-text">{clue.clue}</div>
+                                                                <div className="cw-clue-meta">
+                                                                    <span>{clue.length} Huruf</span>
+                                                                    {isFilled && <i className="fas fa-check-circle text-success ms-1"></i>}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Menurun (Down) */}
+                                        <div className="cw-clues-column">
+                                            <div className="cw-clues-header d-flex align-items-center gap-2 mb-2">
+                                                <i className="fas fa-arrows-alt-v text-info"></i>
+                                                <span className="fw-bold small text-uppercase">Menurun</span>
+                                            </div>
+                                            <div className="cw-clues-scroll-list">
+                                                {crosswordLayout?.downClues.map(clue => {
+                                                    const isSelected = activeWordId === clue.wordId && activeDirection === "down";
+                                                    const wordObj = crosswordLayout.placedWords.find(p => p.wordId === clue.wordId);
+                                                    const isFilled = wordObj ? isWordFilled(wordObj) : false;
+
+                                                    return (
+                                                        <div
+                                                            key={`down-${clue.number}`}
+                                                            className={`cw-clue-item ${isSelected ? "active" : ""} ${isFilled ? "filled" : ""}`}
+                                                            onClick={() => handleClueSelect(clue)}
+                                                        >
+                                                            <span className="cw-clue-badge down">{clue.number}</span>
+                                                            <div className="cw-clue-content">
+                                                                <div className="cw-clue-text">{clue.clue}</div>
+                                                                <div className="cw-clue-meta">
+                                                                    <span>{clue.length} Huruf</span>
+                                                                    {isFilled && <i className="fas fa-check-circle text-success ms-1"></i>}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Bottom Submission Bar */}
+                                <div className="cw-footer-bar d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <span className="badge bg-light text-dark border px-3 py-2 fs-6">
+                                            <i className="fas fa-check-double text-primary me-2"></i>
+                                            {solvedWordsCount} / {crosswordLayout?.placedWords.length || 0} Kata Terisi
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
                                         className="btn btn-success fw-bold px-4 shadow-sm"
                                         onClick={submitCrossword}
                                     >

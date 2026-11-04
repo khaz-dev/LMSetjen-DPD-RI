@@ -1442,17 +1442,16 @@ class CourseApprovalAPIView(APIView):
                     # 3. Copies fresh content from draft version
                     # 4. Prevents duplication while minimizing data loss
                     
-                    print(f"[Admin Approval] [CRITICAL] Deleting old published version content to prevent duplication...")
-                    published.curriculum.all().delete()
-                    published.quizzes.all().delete()
+                    print(f"[Admin Approval] [CRITICAL] Refreshing non-progress metadata and smart-syncing content...")
                     published.features.all().delete()
                     published.requirements.all().delete()
                     published.learning_outcomes.all().delete()
-                    print(f"[Admin Approval] [OK] Old content deleted from published version")
+                    print(f"[Admin Approval] [OK] Features, requirements, and outcomes refreshed")
                     
-                    # Now sync fresh content from draft (clear_target=False since we already deleted manually)
+                    # Smart sync curriculum, quizzes, and games via intelligent upsert (clear_target=False)
+                    # This guarantees student progress (CompletedLesson, VideoProgress, QuizAttempt, CourseGameAttempt) is preserved!
                     course._copy_content_to(published, clear_target=False)
-                    print(f"[Admin Approval] [OK] Fresh draft content synced to published version (no duplication)")
+                    print(f"[Admin Approval] [OK] Fresh draft content smart-synced to published version (no duplication, progress preserved)")
                 else:
                     print(f"[Admin Approval] [OK] Published copy just created, content already in place")
                 
