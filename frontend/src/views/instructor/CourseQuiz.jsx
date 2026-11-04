@@ -912,6 +912,14 @@ function CourseQuiz() {
                                             <i className="fas fa-arrow-left"></i>
                                             <span>Perbarui Kursus</span>
                                         </Link>
+                                        <Link
+                                            to={`/instructor/edit-course/${param?.course_id}/gamification/`}
+                                            className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-2"
+                                            title="Kelola Gamifikasi Kursus"
+                                        >
+                                            <i className="fas fa-gamepad"></i>
+                                            <span>Gamifikasi</span>
+                                        </Link>
                                         {activeTab === "overview" ? (
                                             <button
                                                 type="button"

@@ -2261,3 +2261,56 @@ class CourseLearningOutcomeDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 
 
+
+
+# =====================================================================
+# Gamification Management API Views (Instructor & Admin)
+# =====================================================================
+@method_decorator(csrf_exempt, name='dispatch')
+class CourseGameListCreateAPIView(generics.ListCreateAPIView):
+    """
+    List games for a course or create a new game.
+    """
+    serializer_class = api_serializer.CourseGameSerializer
+    permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
+    pagination_class = None
+
+    def get_queryset(self):
+        course_id = self.request.query_params.get('course_id')
+        if course_id:
+            return api_models.CourseGame.objects.filter(course__course_id=course_id).order_by('order', 'date')
+        return api_models.CourseGame.objects.all().order_by('order', 'date')
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.request.user
+        return context
+
+    def perform_create(self, serializer):
+        course_id = self.request.data.get('course_id')
+        course = api_models.Course.objects.get(course_id=course_id)
+        serializer.save(course=course)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CourseGameDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete a course game.
+    """
+    serializer_class = api_serializer.CourseGameSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    lookup_field = 'game_id'
+
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(user, 'is_admin', False) or getattr(user, 'is_staff', False):
+            return api_models.CourseGame.objects.all()
+        # Instructor can manage games for their courses
+        return api_models.CourseGame.objects.filter(course__teacher__user=user)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['user'] = self.request.user
+        return context

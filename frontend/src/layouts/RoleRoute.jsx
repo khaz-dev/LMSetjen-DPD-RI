@@ -21,7 +21,7 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const loggedIn = useAuthStore((state) => state.isLoggedIn());
-    const { currentRole, availableRoles, rolesLoading, fetchAvailableRoles } = useRoles();
+    const { currentRole, availableRoles, rolesLoading, fetchAvailableRoles, setCurrentRole, setAvailableRoles } = useRoles();
     const [hasCheckedRole, setHasCheckedRole] = useState(false);
     const [shouldRender, setShouldRender] = useState(false);
     const isPromptingRef = useRef(false);
@@ -64,17 +64,22 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
 
         const userData = UserData();
         
-        // Determine user's active role
-        const rawActiveRole = currentRole || userData?.current_role || userData?.role || 'student';
-        const activeRole = normalizeRole(rawActiveRole);
+        // Check active role from both context and fresh token from cookie
+        const contextRole = normalizeRole(currentRole);
+        const tokenRole = normalizeRole(userData?.current_role || userData?.role);
         
         // Normalize allowed roles
         const normalizedAllowedRoles = allowedRoles.map(role => normalizeRole(role));
         
-        // CHECK 1: Does current active role match allowed roles?
-        const isCurrentRoleAllowed = normalizedAllowedRoles.includes(activeRole);
+        // CHECK 1: Does current active role (from either context or token) match allowed roles?
+        const isContextRoleAllowed = contextRole && normalizedAllowedRoles.includes(contextRole);
+        const isTokenRoleAllowed = tokenRole && normalizedAllowedRoles.includes(tokenRole);
         
-        if (isCurrentRoleAllowed) {
+        if (isContextRoleAllowed || isTokenRoleAllowed) {
+            // Keep context in sync with valid token role if needed
+            if (isTokenRoleAllowed && contextRole !== tokenRole && setCurrentRole) {
+                setCurrentRole(tokenRole);
+            }
             setShouldRender(true);
             setHasCheckedRole(true);
             return;
@@ -104,9 +109,10 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
             targetRole = 'admin';
         }
 
-        const currentRoleDisplay = getRoleLabel(activeRole);
+        const effectiveActiveRole = tokenRole || contextRole || 'student';
+        const currentRoleDisplay = getRoleLabel(effectiveActiveRole);
         const requiredRolesDisplay = normalizedAllowedRoles.map(r => getRoleLabel(r)).join(' atau ');
-        const activeDashboardUrl = getRoleDashboardUrl(activeRole);
+        const activeDashboardUrl = getRoleDashboardUrl(effectiveActiveRole);
 
         // CASE A: User HAS the role, but must switch active role first to access!
         if (targetRole) {
@@ -150,6 +156,12 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
                     try {
                         const switchRes = await switchRole(targetRole);
                         if (switchRes.success) {
+                            if (setCurrentRole) {
+                                setCurrentRole(switchRes.current_role || targetRole);
+                            }
+                            if (setAvailableRoles && switchRes.available_roles) {
+                                setAvailableRoles(switchRes.available_roles);
+                            }
                             if (fetchAvailableRoles) {
                                 await fetchAvailableRoles();
                             }

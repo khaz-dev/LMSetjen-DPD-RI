@@ -1,0 +1,305 @@
+/* ========================================================================
+   Course Gamification Management - Compact Modern Instructor Theme
+   Platform LMSetjen DPD RI
+   ======================================================================== */
+
+.course-gamification-container {
+    --primary-teal: #0f766e;
+    --primary-teal-dark: #115e59;
+    --primary-teal-light: #f0fdfa;
+    --primary-teal-border: #99f6e4;
+    --neutral-50: #f8fafc;
+    --neutral-100: #f1f5f9;
+    --neutral-200: #e2e8f0;
+    --neutral-300: #cbd5e1;
+    --neutral-600: #475569;
+    --neutral-700: #334155;
+    --neutral-800: #1e293b;
+    --neutral-900: #0f172a;
+    font-family: inherit;
+    color: var(--neutral-800);
+}
+
+/* 1. Header Card (Matching LMS Setjen DPD RI Header Pattern) */
+.gamification-header-card {
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 12px;
+    padding: 0.95rem 1.25rem;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    margin-bottom: 1rem !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.gamification-header-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0f766e 0%, #14b8a6 50%, #0d9488 100%);
+}
+
+.gamification-header-title {
+    font-size: 1.15rem;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    color: var(--neutral-900);
+    font-weight: 700;
+}
+
+.gamification-header-desc {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--neutral-600);
+}
+
+/* Button & Nav Styling */
+.btn-teal-primary {
+    background: #0f766e;
+    color: #ffffff;
+    border: 1px solid #0f766e;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-teal-primary:hover {
+    background: #115e59;
+    color: #ffffff;
+    border-color: #115e59;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+}
+
+/* 2. Compact Type Selector */
+.compact-type-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .compact-type-selector {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.compact-type-btn {
+    background: #ffffff;
+    border: 1.5px solid var(--neutral-200);
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: left;
+}
+
+.compact-type-btn:hover {
+    border-color: var(--primary-teal);
+    background: var(--neutral-50);
+}
+
+.compact-type-btn.active {
+    border-color: var(--primary-teal);
+    background: var(--primary-teal-light);
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
+}
+
+.compact-type-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.icon-crossword { background: #e0f2fe; color: #0284c7; }
+.icon-wordsearch { background: #fef3c7; color: #d97706; }
+.icon-anagram { background: #ede9fe; color: #7c3aed; }
+.icon-memory { background: #dcfce7; color: #16a34a; }
+
+.compact-type-info {
+    min-width: 0;
+}
+
+.compact-type-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--neutral-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-truncate: ellipsis;
+}
+
+.compact-type-sub {
+    font-size: 0.7rem;
+    color: var(--neutral-600);
+    white-space: nowrap;
+}
+
+/* 3. Compact Builder Box */
+.compact-builder-box {
+    background: #ffffff;
+    border: 1px solid var(--neutral-200);
+    border-radius: 12px;
+    padding: 1.15rem 1.35rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    margin-bottom: 1.25rem;
+}
+
+.compact-section-title {
+    font-size: 0.925rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-label-compact {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--neutral-700);
+    margin-bottom: 0.25rem;
+}
+
+.form-control-compact {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.65rem;
+    border-radius: 7px;
+    border: 1px solid var(--neutral-300);
+}
+
+.form-control-compact:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
+}
+
+/* Items List in Builder */
+.compact-items-container {
+    background: var(--neutral-50);
+    border: 1px solid var(--neutral-200);
+    border-radius: 9px;
+    padding: 0.65rem;
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+.compact-item-row {
+    background: #ffffff;
+    border: 1px solid var(--neutral-200);
+    border-radius: 7px;
+    padding: 0.45rem 0.7rem;
+    margin-bottom: 0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    transition: all 0.15s ease;
+}
+
+.compact-item-row:hover {
+    border-color: var(--neutral-300);
+}
+
+.compact-item-row:last-child {
+    margin-bottom: 0;
+}
+
+.item-index-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--neutral-100);
+    color: var(--neutral-600);
+    font-weight: 700;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* 4. Games List - Modern Compact Card / Row */
+.compact-game-item {
+    background: #ffffff;
+    border: 1px solid var(--neutral-200);
+    border-radius: 10px;
+    padding: 0.85rem 1.15rem;
+    margin-bottom: 0.65rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.18s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.compact-game-item:hover {
+    border-color: var(--primary-teal-border);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    transform: translateY(-1px);
+}
+
+.game-badge-pill {
+    font-size: 0.725rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.badge-crossword { background: #e0f2fe; color: #0369a1; }
+.badge-wordsearch { background: #fef3c7; color: #b45309; }
+.badge-anagram { background: #ede9fe; color: #6d28d9; }
+.badge-memory { background: #dcfce7; color: #15803d; }
+
+.stat-chip {
+    font-size: 0.75rem;
+    color: var(--neutral-600);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--neutral-100);
+    padding: 0.2rem 0.55rem;
+    border-radius: 5px;
+}
+
+/* 5. Compact Empty State */
+.compact-empty-card {
+    background: #ffffff;
+    border: 1.5px dashed var(--neutral-300);
+    border-radius: 12px;
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.compact-empty-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--primary-teal-light);
+    color: var(--primary-teal);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+}
+
+/* 6. Compact Preview Box */
+.compact-preview-card {
+    background: #f8fafc;
+    border: 1.5px dashed var(--neutral-300);
+    border-radius: 10px;
+    padding: 1.15rem;
+}

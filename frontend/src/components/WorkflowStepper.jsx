@@ -98,6 +98,14 @@ const WorkflowStepper = ({ currentStep, courseId, courseData }) => {
         },
         {
             id: 4,
+            name: 'Gamifikasi',
+            icon: 'fa-gamepad',
+            path: `/instructor/edit-course/${courseId}/gamification/`,
+            description: 'TTS & Mini Game',
+            isComplete: Array.isArray(course.games) ? course.games.length > 0 : true
+        },
+        {
+            id: 5,
             name: 'Publikasikan',
             icon: 'fa-rocket',
             path: `/instructor/edit-course/${courseId}/`,

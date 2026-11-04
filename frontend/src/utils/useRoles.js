@@ -4,14 +4,14 @@
  * Phase 4: Multi-role support hook
  * 
  * Usage:
- *   const { availableRoles, currentRole, rolesLoading, fetchAvailableRoles } = useRoles();
+ *   const { availableRoles, currentRole, rolesLoading, fetchAvailableRoles, setCurrentRole, setAvailableRoles } = useRoles();
  *   
  *   if (availableRoles.includes('admin')) {
  *     // User has admin role
  *   }
  *   
- *   if (currentRole === 'teacher') {
- *     // User is currently in teacher role
+ *   if (currentRole === 'teacher' || currentRole === 'instructor') {
+ *     // User is currently in instructor role
  *   }
  */
 
@@ -27,7 +27,9 @@ export const useRoles = () => {
       availableRoles: [],
       currentRole: null,
       rolesLoading: false,
-      fetchAvailableRoles: () => {}
+      fetchAvailableRoles: () => Promise.resolve(null),
+      setCurrentRole: () => {},
+      setAvailableRoles: () => {}
     };
   }
   

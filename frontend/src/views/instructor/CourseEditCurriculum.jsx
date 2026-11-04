@@ -4355,6 +4355,15 @@ function CourseEditCurriculum() {
                                             <i className="fas fa-question-circle"></i>
                                             <span>Kuis</span>
                                         </Link>
+                                        <Link
+                                            to={`/instructor/edit-course/${param?.course_id}/gamification/`}
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center"
+                                            style={{ padding: "0.35rem 0.65rem", fontSize: "0.8125rem", gap: "5px" }}
+                                            title="Kelola Gamifikasi Kursus"
+                                        >
+                                            <i className="fas fa-gamepad"></i>
+                                            <span>Gamifikasi</span>
+                                        </Link>
                                         <button
                                             type="button"
                                             className="btn btn-sm btn-teal d-inline-flex align-items-center"

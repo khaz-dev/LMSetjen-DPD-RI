@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import useAxios from "../../utils/useAxios";
 import Toast from "../plugin/Toast";
 import BaseHeader from "../partials/BaseHeader";
@@ -15,7 +15,7 @@ import "./InstructorCoursePreview.css";
 
 const convertEmbedUrlToViewable = (fileUrl, videoSource) => {
     if (!fileUrl) return null;
-    
+
     if (videoSource === "youtube") {
         const youtubeMatch = fileUrl.match(/embed\/([a-zA-Z0-9_-]{11})/);
         if (youtubeMatch?.[1]) {
@@ -27,7 +27,7 @@ const convertEmbedUrlToViewable = (fileUrl, videoSource) => {
             return `https://drive.google.com/file/d/${driveMatch[1]}/view`;
         }
     }
-    
+
     return fileUrl;
 };
 
@@ -39,49 +39,101 @@ const getYouTubeEmbedUrl = (url) => {
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : url;
 };
 
+const GAME_TYPE_META = {
+    crossword: {
+        label: "Teka-Teki Silang",
+        icon: "fas fa-border-all",
+        badgeClass: "game-badge-crossword",
+        color: "#0284c7"
+    },
+    word_search: {
+        label: "Cari Kata (Word Search)",
+        icon: "fas fa-search",
+        badgeClass: "game-badge-wordsearch",
+        color: "#0d9488"
+    },
+    anagram: {
+        label: "Susun Kata (Anagram)",
+        icon: "fas fa-random",
+        badgeClass: "game-badge-anagram",
+        color: "#d97706"
+    },
+    memory_match: {
+        label: "Pencocokan Memori",
+        icon: "fas fa-th-large",
+        badgeClass: "game-badge-memory",
+        color: "#7c3aed"
+    }
+};
+
 function InstructorCoursePreview() {
     const { course_id } = useParams();
     const navigate = useNavigate();
-    const searchParams = new URLSearchParams(window.location.search);
+    const [searchParams] = useSearchParams();
     const viewMode = searchParams.get('view'); // 'published' or null for draft
-    
+
     const [loading, setLoading] = useState(true);
     const [course, setCourse] = useState(null);
     const [activeTab, setActiveTab] = useState("curriculum"); // 'curriculum', 'quizzes', 'overview', 'all'
     const [expandedSections, setExpandedSections] = useState({});
     const [expandedQuizzes, setExpandedQuizzes] = useState({});
+    const [expandedGames, setExpandedGames] = useState({});
     const [showIntroVideoModal, setShowIntroVideoModal] = useState(false);
     const [showIntroVideoInline, setShowIntroVideoInline] = useState(false);
     const [expandedLecturePreview, setExpandedLecturePreview] = useState({});
 
     useEffect(() => {
         fetchCourseDetail();
-    }, [course_id]);
+    }, [course_id, viewMode]);
 
     const fetchCourseDetail = async () => {
         try {
             setLoading(true);
             const response = await useAxios.get(`teacher/course-detail/${course_id}/`);
             console.log("[InstructorCoursePreview] Course data:", response.data);
-            
-            if (viewMode === 'published' && response.data?.published_version) {
-                console.log("[InstructorCoursePreview] Displaying published version", response.data.published_version);
-                setCourse(response.data.published_version);
+
+            let loadedCourse = response.data;
+            if (viewMode === 'published') {
+                if (response.data?.published_version) {
+                    console.log("[InstructorCoursePreview] Displaying published version", response.data.published_version);
+                    loadedCourse = {
+                        ...response.data.published_version,
+                        // Preserve published_version reference so toggle buttons work
+                        published_version: response.data.published_version,
+                        review_submitted_date: response.data.review_submitted_date
+                    };
+                } else {
+                    Toast().fire({
+                        icon: "info",
+                        title: "Belum Ada Versi Publikasi",
+                        text: "Kursus ini masih draf dan belum pernah dipublikasikan."
+                    });
+                    navigate(`/instructor/preview-course/${course_id}/`);
+                    return;
+                }
             } else {
-                setCourse(response.data);
+                loadedCourse = response.data;
             }
 
+            setCourse(loadedCourse);
+
             // Auto-expand the first section by default for convenience
-            if (response.data?.curriculum?.length > 0) {
-                const firstSectionId = response.data.curriculum[0].id || response.data.curriculum[0].variant_id;
+            if (loadedCourse?.curriculum?.length > 0) {
+                const firstSectionId = loadedCourse.curriculum[0].id || loadedCourse.curriculum[0].variant_id;
                 if (firstSectionId) {
                     setExpandedSections({ [firstSectionId]: true });
                 }
             }
-            if (response.data?.quizzes?.length > 0) {
-                const firstQuizId = response.data.quizzes[0].id || response.data.quizzes[0].quiz_id;
+            if (loadedCourse?.quizzes?.length > 0) {
+                const firstQuizId = loadedCourse.quizzes[0].id || loadedCourse.quizzes[0].quiz_id;
                 if (firstQuizId) {
                     setExpandedQuizzes({ [firstQuizId]: true });
+                }
+            }
+            if (loadedCourse?.games?.length > 0) {
+                const firstGameId = loadedCourse.games[0].id || loadedCourse.games[0].game_id;
+                if (firstGameId) {
+                    setExpandedGames({ [firstGameId]: true });
                 }
             }
         } catch (error) {
@@ -131,6 +183,23 @@ function InstructorCoursePreview() {
         setExpandedQuizzes(newState);
     };
 
+    const toggleGame = (gameId) => {
+        setExpandedGames(prev => ({
+            ...prev,
+            [gameId]: !prev[gameId]
+        }));
+    };
+
+    const toggleAllGames = () => {
+        if (!course?.games) return;
+        const allExpanded = course.games.every(g => expandedGames[g.id || g.game_id]);
+        const newState = {};
+        course.games.forEach(g => {
+            newState[g.id || g.game_id] = !allExpanded;
+        });
+        setExpandedGames(newState);
+    };
+
     const toggleLecturePreview = (lectureId) => {
         setExpandedLecturePreview(prev => ({
             ...prev,
@@ -166,7 +235,8 @@ function InstructorCoursePreview() {
                 questions += q.questions?.length || q.question_count || 0;
             });
         }
-        return { sections, lectures, quizzes, questions, curriculumQuizzes };
+        const games = course.games?.length || 0;
+        return { sections, lectures, quizzes, questions, curriculumQuizzes, games };
     }, [course]);
 
     // ✨ Pre/Post-Test detection
@@ -183,6 +253,11 @@ function InstructorCoursePreview() {
         if (!course?.quizzes?.length) return false;
         return course.quizzes.every(q => expandedQuizzes[q.id || q.quiz_id]);
     }, [course, expandedQuizzes]);
+
+    const isAllGamesExpanded = useMemo(() => {
+        if (!course?.games?.length) return false;
+        return course.games.every(g => expandedGames[g.id || g.game_id]);
+    }, [course, expandedGames]);
 
     if (loading) {
         return (
@@ -216,7 +291,7 @@ function InstructorCoursePreview() {
                             </div>
                             <h4 className="fw-bold mt-3 mb-2">Kursus Tidak Ditemukan</h4>
                             <p className="text-muted mb-4">Data kursus tidak dapat dimuat atau telah dihapus.</p>
-                            <button 
+                            <button
                                 className="btn btn-teal px-4"
                                 onClick={() => navigate("/instructor/courses/")}
                             >
@@ -242,7 +317,7 @@ function InstructorCoursePreview() {
                     <div className="container">
                         <div className="icp-topbar-inner">
                             <div className="icp-topbar-left">
-                                <button 
+                                <button
                                     className="btn btn-sm btn-outline-secondary icp-btn-back"
                                     onClick={() => navigate(`/instructor/edit-course/${course_id}/`)}
                                     title="Kembali ke halaman edit kursus"
@@ -263,7 +338,7 @@ function InstructorCoursePreview() {
 
                             <div className="icp-topbar-actions">
                                 {isPublished ? (
-                                    <button 
+                                    <button
                                         className="btn btn-sm btn-outline-teal"
                                         onClick={() => navigate(`/instructor/preview-course/${course_id}/`)}
                                         title="Lihat versi draf saat ini"
@@ -272,7 +347,7 @@ function InstructorCoursePreview() {
                                         <span>Lihat Draf</span>
                                     </button>
                                 ) : course.published_version ? (
-                                    <button 
+                                    <button
                                         className="btn btn-sm btn-outline-teal"
                                         onClick={() => navigate(`/instructor/preview-course/${course_id}/?view=published`)}
                                         title="Lihat versi yang sedang aktif dipublikasikan"
@@ -282,7 +357,7 @@ function InstructorCoursePreview() {
                                     </button>
                                 ) : null}
 
-                                <button 
+                                <button
                                     className="btn btn-sm btn-teal d-flex align-items-center gap-1 shadow-sm"
                                     onClick={() => navigate(`/instructor/edit-course/${course_id}/`)}
                                 >
@@ -296,6 +371,33 @@ function InstructorCoursePreview() {
 
                 {/* Main Content Area */}
                 <div className="container py-3">
+                    {/* Published View Alert Banner */}
+                    {isPublished && (
+                        <div className="alert alert-info border-0 shadow-sm d-flex align-items-center justify-content-between mb-3 py-2 px-3 rounded-3" style={{ backgroundColor: "#e0f2fe", borderLeft: "4px solid #0284c7" }}>
+                            <div className="d-flex align-items-center gap-2 small text-dark">
+                                <i className="fas fa-globe text-primary fs-5"></i>
+                                <div>
+                                    <strong>Mode Pratinjau Versi Publikasi:</strong> Anda sedang melihat isi materi yang sedang aktif diakses oleh peserta saat ini. Perubahan baru pada draf (seperti materi atau game baru) belum muncul di sini sebelum diajukan dan disetujui admin.
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-primary flex-shrink-0 ms-3 d-inline-flex align-items-center justify-content-center gap-1 shadow-sm text-nowrap"
+                                style={{
+                                    fontSize: "0.8rem",
+                                    fontWeight: 600,
+                                    padding: "6px 14px",
+                                    borderRadius: "6px",
+                                    lineHeight: 1.4,
+                                    whiteSpace: "nowrap"
+                                }}
+                                onClick={() => navigate(`/instructor/preview-course/${course_id}/`)}
+                            >
+                                <i className="fas fa-code-branch"></i>
+                                <span>Beralih ke Draf</span>
+                            </button>
+                        </div>
+                    )}
                     <div className="row g-3">
                         {/* LEFT COLUMN: Main Course Content (8 Cols) */}
                         <div className="col-lg-8">
@@ -329,7 +431,7 @@ function InstructorCoursePreview() {
                                         )}
                                     </div>
                                     <h2 className="icp-hero-title">{course.title}</h2>
-                                    
+
                                     {/* Course Tags */}
                                     {course.tags && Array.isArray(course.tags) && course.tags.length > 0 && (
                                         <div className="icp-hero-tags">
@@ -344,34 +446,42 @@ function InstructorCoursePreview() {
 
                                 {/* Compact Tab Bar */}
                                 <div className="icp-nav-tabs">
-                                    <button 
+                                    <button
                                         className={`icp-nav-tab ${activeTab === 'curriculum' ? 'active' : ''}`}
                                         onClick={() => setActiveTab('curriculum')}
                                     >
-                                        <i className="fas fa-layer-group me-1.5"></i>
+                                        <i className="fas fa-layer-group me-1"></i>
                                         <span>Kurikulum</span>
                                         <span className="icp-tab-counter">{stats.sections} Bagian • {stats.lectures} Pelajaran{stats.curriculumQuizzes > 0 ? ` • ${stats.curriculumQuizzes} Kuis` : ''}</span>
                                     </button>
-                                    <button 
+                                    <button
                                         className={`icp-nav-tab ${activeTab === 'quizzes' ? 'active' : ''}`}
                                         onClick={() => setActiveTab('quizzes')}
                                     >
-                                        <i className="fas fa-tasks me-1.5"></i>
+                                        <i className="fas fa-tasks me-1"></i>
                                         <span>Kuis</span>
                                         <span className="icp-tab-counter">{stats.quizzes} Kuis</span>
                                     </button>
-                                    <button 
+                                    <button
+                                        className={`icp-nav-tab ${activeTab === 'gamification' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('gamification')}
+                                    >
+                                        <i className="fas fa-gamepad me-1"></i>
+                                        <span>Gamifikasi</span>
+                                        <span className="icp-tab-counter">{stats.games} Game</span>
+                                    </button>
+                                    <button
                                         className={`icp-nav-tab ${activeTab === 'overview' ? 'active' : ''}`}
                                         onClick={() => setActiveTab('overview')}
                                     >
-                                        <i className="fas fa-info-circle me-1.5"></i>
+                                        <i className="fas fa-info-circle me-1"></i>
                                         <span>Deskripsi & Video</span>
                                     </button>
-                                    <button 
+                                    <button
                                         className={`icp-nav-tab ${activeTab === 'all' ? 'active' : ''}`}
                                         onClick={() => setActiveTab('all')}
                                     >
-                                        <i className="fas fa-list-ul me-1.5"></i>
+                                        <i className="fas fa-list-ul me-1"></i>
                                         <span>Semua Konten</span>
                                     </button>
                                 </div>
@@ -393,7 +503,7 @@ function InstructorCoursePreview() {
                                             </div>
                                         </div>
                                         {course.curriculum && course.curriculum.length > 0 && (
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-light border icp-btn-toggle-all"
                                                 onClick={toggleAllSections}
                                             >
@@ -415,7 +525,7 @@ function InstructorCoursePreview() {
                                                             </div>
                                                             <div>
                                                                 <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                                                                    <span className="badge bg-success text-white px-2 py-0.5" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>
+                                                                    <span className="badge bg-success text-white px-2 py-0" style={{ fontSize: '10px', letterSpacing: '0px' }}>
                                                                         LANGKAH 1 (OTOMATIS)
                                                                     </span>
                                                                     <span className="fw-bold text-dark" style={{ fontSize: '0.95rem' }}>Pre-Test Diagnostik</span>
@@ -472,7 +582,7 @@ function InstructorCoursePreview() {
 
                                                     return (
                                                         <div key={sectionId} className={`icp-section-block ${isExpanded ? 'is-open' : ''}`}>
-                                                            <div 
+                                                            <div
                                                                 className="icp-section-head"
                                                                 onClick={() => toggleSection(sectionId)}
                                                             >
@@ -501,12 +611,12 @@ function InstructorCoursePreview() {
                                                                                 const lectureId = lecture.id || lecture.variant_item_id || `lec-${idx}-${lIdx}`;
                                                                                 const isQuiz = lecture.item_type === "quiz" || Boolean(lecture.quiz_id) || Boolean(lecture.quiz);
                                                                                 const targetQuiz = isQuiz ? ((course.quizzes || []).find(q => String(q.quiz_id) === String(lecture.quiz_id || (typeof lecture.quiz === 'object' ? lecture.quiz.quiz_id : lecture.quiz))) || lecture.quiz_detail) : null;
-                                                                                const isVideo = !isQuiz && (lecture.file_type === "video" || 
-                                                                                                lecture.content_type === "video" || 
-                                                                                                lecture.file?.includes('youtube') || 
-                                                                                                lecture.file?.includes('youtu.be') || 
-                                                                                                lecture.file?.includes('drive.google') ||
-                                                                                                lecture.file?.includes('/media/'));
+                                                                                const isVideo = !isQuiz && (lecture.file_type === "video" ||
+                                                                                    lecture.content_type === "video" ||
+                                                                                    lecture.file?.includes('youtube') ||
+                                                                                    lecture.file?.includes('youtu.be') ||
+                                                                                    lecture.file?.includes('drive.google') ||
+                                                                                    lecture.file?.includes('/media/'));
                                                                                 const isLecturePreviewOpen = !!expandedLecturePreview[lectureId];
 
                                                                                 return (
@@ -560,13 +670,13 @@ function InstructorCoursePreview() {
                                                                                                     </div>
                                                                                                 )}
                                                                                             </div>
-                                                                                            
+
                                                                                             {isQuiz ? (
                                                                                                 <div className="icp-lecture-action">
                                                                                                     <button
                                                                                                         type="button"
                                                                                                         className="btn btn-xs btn-outline-warning text-dark fw-semibold d-inline-flex align-items-center gap-1 shadow-xs"
-                                                                                                        style={{ borderRadius: '6px', fontSize: '0.75rem', padding: '0.2rem 0.55rem' }}
+                                                                                                        style={{ borderRadius: '6px', fontSize: '0.75rem', padding: '0.2rem 05rem' }}
                                                                                                         onClick={() => {
                                                                                                             setActiveTab('quizzes');
                                                                                                             const qKey = targetQuiz?.id || targetQuiz?.quiz_id;
@@ -591,9 +701,9 @@ function InstructorCoursePreview() {
                                                                                                             {isLecturePreviewOpen ? 'Tutup' : 'Lihat'}
                                                                                                         </button>
                                                                                                     ) : (
-                                                                                                        <a 
-                                                                                                            href={lecture.file} 
-                                                                                                            target="_blank" 
+                                                                                                        <a
+                                                                                                            href={lecture.file}
+                                                                                                            target="_blank"
                                                                                                             rel="noopener noreferrer"
                                                                                                             className="btn btn-xs btn-outline-secondary"
                                                                                                         >
@@ -653,8 +763,8 @@ function InstructorCoursePreview() {
                                                                                                 {lecture.completion_question.choices && lecture.completion_question.choices.length > 0 && (
                                                                                                     <div className="icp-completion-choices">
                                                                                                         {lecture.completion_question.choices.map((choice, cIdx) => (
-                                                                                                            <div 
-                                                                                                                key={cIdx} 
+                                                                                                            <div
+                                                                                                                key={cIdx}
                                                                                                                 className={`icp-choice-mini ${choice.is_correct ? 'correct' : ''}`}
                                                                                                             >
                                                                                                                 <span className="icp-choice-circle">
@@ -699,7 +809,7 @@ function InstructorCoursePreview() {
                                                             </div>
                                                             <div>
                                                                 <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                                                                    <span className="badge bg-danger text-white px-2 py-0.5" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>
+                                                                    <span className="badge bg-danger text-white px-2 py-0" style={{ fontSize: '10px', letterSpacing: '0px' }}>
                                                                         LANGKAH AKHIR (OTOMATIS)
                                                                     </span>
                                                                     <span className="fw-bold text-dark" style={{ fontSize: '0.95rem' }}>Post-Test Evaluasi Akhir</span>
@@ -758,7 +868,7 @@ function InstructorCoursePreview() {
                                             </div>
                                         </div>
                                         {course.quizzes && course.quizzes.length > 0 && (
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-light border icp-btn-toggle-all"
                                                 onClick={toggleAllQuizzes}
                                             >
@@ -785,13 +895,13 @@ function InstructorCoursePreview() {
 
                                                     return (
                                                         <div key={quizId} className={`icp-section-block ${isExpanded ? 'is-open' : ''}`}>
-                                                            <div 
+                                                            <div
                                                                 className="icp-section-head"
                                                                 onClick={() => toggleQuiz(quizId)}
                                                             >
                                                                 <div className="d-flex align-items-center gap-2 flex-grow-1 flex-wrap">
                                                                     {isPrePost ? (
-                                                                        <span className="badge text-white px-2.5 py-1" style={{ background: 'linear-gradient(135deg, #059669 0%, #dc2626 100%)', fontSize: '11px', borderRadius: '6px' }}>
+                                                                        <span className="badge text-white px-2 py-1" style={{ background: 'linear-gradient(135deg, #059669 0%, #dc2626 100%)', fontSize: '11px', borderRadius: '6px' }}>
                                                                             <i className="fas fa-clipboard-check me-1"></i>Pre & Post-Test
                                                                         </span>
                                                                     ) : (
@@ -820,7 +930,7 @@ function InstructorCoursePreview() {
                                                             {isExpanded && (
                                                                 <div className="icp-section-body">
                                                                     {isPrePost && (
-                                                                        <div className="alert alert-light border rounded-2 p-2.5 mx-3 mt-2 mb-2 d-flex align-items-center gap-2 small text-secondary" style={{ backgroundColor: '#f8fafc', borderLeft: '4px solid #059669' }}>
+                                                                        <div className="alert alert-light border rounded-2 p-2 mx-3 mt-2 mb-2 d-flex align-items-center gap-2 small text-secondary" style={{ backgroundColor: '#f8fafc', borderLeft: '4px solid #059669' }}>
                                                                             <i className="fas fa-info-circle text-success fs-5"></i>
                                                                             <div>
                                                                                 <strong>Kuis Terpadu Pre-Test & Post-Test:</strong> Soal pada kuis ini digunakan sebagai <em>Pre-Test Diagnostik</em> di awal kursus (tanpa passing grade) serta sebagai <em>Post-Test Evaluasi Akhir</em> setelah seluruh materi tuntas (passing grade 70%).
@@ -847,11 +957,11 @@ function InstructorCoursePreview() {
                                                                                         <span className="icp-q-num">Soal {qIdx + 1}</span>
                                                                                         <span className="icp-q-text">{question.question_text}</span>
                                                                                     </div>
-                                                                                    
+
                                                                                     <div className="icp-quiz-choices-grid">
                                                                                         {question.choices && question.choices.length > 0 ? (
                                                                                             question.choices.map((choice, cIdx) => (
-                                                                                                <div 
+                                                                                                <div
                                                                                                     key={choice.id || choice.choice_id || cIdx}
                                                                                                     className={`icp-choice-card ${choice.is_correct ? 'is-correct-choice' : ''}`}
                                                                                                 >
@@ -885,6 +995,250 @@ function InstructorCoursePreview() {
                                 </div>
                             )}
 
+                            {/* TAB: GAMIFICATION */}
+                            {(activeTab === 'gamification' || activeTab === 'all') && (
+                                <div className="icp-card mb-3">
+                                    <div className="icp-card-header d-flex align-items-center justify-content-between">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <div className="icp-card-header-icon icon-game">
+                                                <i className="fas fa-gamepad"></i>
+                                            </div>
+                                            <div>
+                                                <h3 className="icp-card-title mb-0">Gamifikasi Pembelajaran</h3>
+                                                <span className="icp-card-subtitle">
+                                                    {stats.games} Mini-Game Interaktif Tersedia
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="d-flex align-items-center gap-2">
+                                            {course.games && course.games.length > 0 && (
+                                                <button
+                                                    className="btn btn-sm btn-light border icp-btn-toggle-all"
+                                                    onClick={toggleAllGames}
+                                                >
+                                                    <i className={`fas fa-${isAllGamesExpanded ? 'compress-arrows-alt' : 'expand-arrows-alt'} me-1`}></i>
+                                                    {isAllGamesExpanded ? 'Tutup Semua' : 'Buka Semua'}
+                                                </button>
+                                            )}
+                                            <button
+                                                className="btn btn-sm btn-teal d-flex align-items-center gap-1 shadow-sm"
+                                                onClick={() => navigate(`/instructor/edit-course/${course_id}/gamification/`)}
+                                            >
+                                                <i className="fas fa-plus-circle"></i>
+                                                <span>Kelola Game</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="icp-card-body p-0">
+                                        {(!course.games || course.games.length === 0) ? (
+                                            <div className="icp-empty-state py-4">
+                                                <i className="fas fa-gamepad mb-2 text-secondary" style={{ fontSize: "2rem", opacity: 0.65 }}></i>
+                                                <h6 className="fw-bold text-dark mb-1">Belum Ada Mini-Game Gamifikasi</h6>
+                                                <p className="text-muted small mb-3 mx-auto" style={{ maxWidth: "460px", fontSize: "0.82rem", lineHeight: "1.45" }}>
+                                                    {isPublished
+                                                        ? "Belum ada mini-game yang terpublikasi pada versi ini. Game yang Anda buat di draf akan aktif untuk peserta setelah diajukan dan disetujui admin."
+                                                        : "Tingkatkan interaktivitas kursus dengan mini-game edukasi (Teka-Teki Silang, Cari Kata, Susun Kata, dan Memory Match)."}
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1 shadow-sm"
+                                                    style={{ fontSize: "0.8rem", fontWeight: 600, padding: "5px 14px", borderRadius: "6px" }}
+                                                    onClick={() => navigate(`/instructor/edit-course/${course_id}/gamification/`)}
+                                                >
+                                                    <i className="fas fa-plus"></i>
+                                                    <span>{isPublished ? "Kelola Game di Draf" : "Buat Game Pembelajaran"}</span>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="icp-accordion">
+                                                {course.games.map((game, gIndex) => {
+                                                    const gameId = game.id || game.game_id || `game-${gIndex}`;
+                                                    const isExpanded = !!expandedGames[gameId];
+                                                    const meta = GAME_TYPE_META[game.game_type] || {
+                                                        label: game.game_type,
+                                                        icon: "fas fa-gamepad",
+                                                        badgeClass: "game-badge",
+                                                        color: "#0d9488"
+                                                    };
+                                                    const gameData = game.game_data || {};
+                                                    let itemCount = 0;
+                                                    if (game.game_type === "crossword") {
+                                                        itemCount = gameData.items?.length || 0;
+                                                    } else if (game.game_type === "word_search") {
+                                                        itemCount = gameData.words?.length || 0;
+                                                    } else if (game.game_type === "anagram") {
+                                                        itemCount = gameData.items?.length || 0;
+                                                    } else if (game.game_type === "memory_match") {
+                                                        itemCount = gameData.pairs?.length || 0;
+                                                    }
+
+                                                    return (
+                                                        <div key={gameId} className={`icp-section-block ${isExpanded ? 'is-open' : ''}`}>
+                                                            <div
+                                                                className="icp-section-head"
+                                                                onClick={() => toggleGame(gameId)}
+                                                            >
+                                                                <div className="d-flex align-items-center gap-2 flex-grow-1 flex-wrap">
+                                                                    <span className={`icp-section-badge ${meta.badgeClass}`}>
+                                                                        <i className={`${meta.icon} me-1`}></i>
+                                                                        {meta.label}
+                                                                    </span>
+                                                                    <span className="icp-section-name">{game.title || "Game Tanpa Judul"}</span>
+                                                                    {game.is_active !== undefined && (
+                                                                        <span className={`icp-pill-micro ${game.is_active ? 'pill-active' : 'pill-inactive'}`}>
+                                                                            {game.is_active ? 'Aktif' : 'Nonaktif'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="d-flex align-items-center gap-3">
+                                                                    <span className="icp-section-counter">
+                                                                        {itemCount} {game.game_type === 'memory_match' ? 'Pasangan' : 'Item'} • Max {game.max_attempts}x Coba • +{game.points_reward} XP
+                                                                    </span>
+                                                                    <i className={`fas fa-chevron-down icp-arrow ${isExpanded ? 'rotate' : ''}`}></i>
+                                                                </div>
+                                                            </div>
+
+                                                            {isExpanded && (
+                                                                <div className="icp-section-body p-3">
+                                                                    {/* Game Description */}
+                                                                    {game.description && (
+                                                                        <div className="icp-quiz-desc-box mb-3" style={{ whiteSpace: "pre-line" }}>
+                                                                            <i className="fas fa-info-circle text-teal me-2 mt-1 flex-shrink-0"></i>
+                                                                            <div>
+                                                                                <strong className="d-block mb-1 text-dark">Petunjuk Pengerjaan:</strong>
+                                                                                <span>{game.description}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Game Parameters Bar */}
+                                                                    <div className="d-flex align-items-center gap-2 flex-wrap mb-3 p-2 bg-light rounded border">
+                                                                        <span className="badge bg-white text-dark border">
+                                                                            <i className="fas fa-redo text-teal me-1"></i>
+                                                                            Maksimal Coba: <strong>{game.max_attempts} Kali</strong>
+                                                                        </span>
+                                                                        <span className="badge bg-white text-dark border">
+                                                                            <i className="fas fa-trophy text-warning me-1"></i>
+                                                                            Reward: <strong>+{game.points_reward} XP</strong>
+                                                                        </span>
+                                                                        <span className="badge bg-white text-dark border">
+                                                                            <i className="fas fa-clock text-info me-1"></i>
+                                                                            Waktu: <strong>{game.time_limit_seconds > 0 ? `${game.time_limit_seconds} Detik` : "Tanpa Batas Waktu"}</strong>
+                                                                        </span>
+                                                                        <button
+                                                                            className="btn btn-sm btn-outline-secondary ms-auto py-0 px-2"
+                                                                            style={{ fontSize: "0.75rem" }}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                navigate(`/instructor/edit-course/${course_id}/gamification/`);
+                                                                            }}
+                                                                        >
+                                                                            <i className="fas fa-edit me-1"></i>Edit di Builder
+                                                                        </button>
+                                                                    </div>
+
+                                                                    {/* Game Content Items Preview */}
+                                                                    <div className="icp-game-preview-content">
+                                                                        {/* CROSSWORD PREVIEW */}
+                                                                        {game.game_type === "crossword" && (
+                                                                            <div className="row g-2">
+                                                                                {(gameData.items || []).map((item, idx) => (
+                                                                                    <div key={idx} className="col-md-6">
+                                                                                        <div className="icp-game-preview-card h-100">
+                                                                                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                                                <span className="badge bg-teal-subtle text-teal">
+                                                                                                    Pertanyaan {idx + 1}
+                                                                                                </span>
+                                                                                                <span className="badge bg-dark font-monospace">
+                                                                                                    {item.answer || "____"}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <div className="small text-secondary">
+                                                                                                {item.clue || "Petunjuk belum diisi"}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* WORD SEARCH PREVIEW */}
+                                                                        {game.game_type === "word_search" && (
+                                                                            <div>
+                                                                                <div className="small text-muted mb-2">
+                                                                                    Ukuran Kotak: <strong>{gameData.gridSize || 10}x{gameData.gridSize || 10}</strong> • Daftar kata tersembunyi yang harus ditemukan:
+                                                                                </div>
+                                                                                <div className="d-flex flex-wrap gap-2">
+                                                                                    {(gameData.words || []).map((w, idx) => {
+                                                                                        const wordText = typeof w === "object" ? w.word : w;
+                                                                                        const hintText = typeof w === "object" ? w.hint : "";
+                                                                                        return (
+                                                                                            <div key={idx} className="badge bg-light text-dark border p-2 text-start">
+                                                                                                <div className="font-monospace fw-bold text-teal">{wordText}</div>
+                                                                                                {hintText && <div className="text-muted fw-normal small">{hintText}</div>}
+                                                                                            </div>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* ANAGRAM PREVIEW */}
+                                                                        {game.game_type === "anagram" && (
+                                                                            <div className="row g-2">
+                                                                                {(gameData.items || []).map((item, idx) => (
+                                                                                    <div key={idx} className="col-md-6">
+                                                                                        <div className="icp-game-preview-card h-100">
+                                                                                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                                                <span className="badge bg-warning-subtle text-dark">
+                                                                                                    Kata {idx + 1}
+                                                                                                </span>
+                                                                                                <span className="font-monospace fw-bold text-teal">
+                                                                                                    {item.word}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <div className="small text-secondary">
+                                                                                                {item.clue || "Petunjuk belum diatur"}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* MEMORY MATCH PREVIEW */}
+                                                                        {game.game_type === "memory_match" && (
+                                                                            <div className="row g-2">
+                                                                                {(gameData.pairs || []).map((pair, idx) => (
+                                                                                    <div key={idx} className="col-md-6">
+                                                                                        <div className="icp-game-preview-card h-100">
+                                                                                            <div className="d-flex align-items-center gap-2 mb-1">
+                                                                                                <span className="badge bg-purple-subtle text-purple" style={{ backgroundColor: "#f3e8ff", color: "#7e22ce" }}>
+                                                                                                    Pasangan {idx + 1}
+                                                                                                </span>
+                                                                                                <strong className="text-dark font-monospace">{pair.term}</strong>
+                                                                                            </div>
+                                                                                            <div className="small text-secondary p-1 bg-light rounded border">
+                                                                                                {pair.definition}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* TAB 3: DESCRIPTION & INTRO VIDEO */}
                             {(activeTab === 'overview' || activeTab === 'all') && (
                                 <>
@@ -901,7 +1255,7 @@ function InstructorCoursePreview() {
                                                         <span className="icp-card-subtitle">Pratinjau video intro resmi</span>
                                                     </div>
                                                 </div>
-                                                <button 
+                                                <button
                                                     className={`btn btn-xs ${showIntroVideoInline ? 'btn-teal' : 'btn-outline-teal'}`}
                                                     onClick={() => setShowIntroVideoInline(!showIntroVideoInline)}
                                                 >
@@ -936,7 +1290,7 @@ function InstructorCoursePreview() {
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <div 
+                                                    <div
                                                         className="icp-video-placeholder-banner"
                                                         onClick={() => setShowIntroVideoInline(true)}
                                                     >
@@ -966,7 +1320,7 @@ function InstructorCoursePreview() {
                                         </div>
                                         <div className="icp-card-body">
                                             {course.description ? (
-                                                <div 
+                                                <div
                                                     className="icp-rich-description"
                                                     dangerouslySetInnerHTML={{ __html: course.description }}
                                                 />
@@ -995,7 +1349,7 @@ function InstructorCoursePreview() {
                                             }}
                                         />
                                         {course.file && (
-                                            <button 
+                                            <button
                                                 className="icp-thumbnail-play-overlay"
                                                 onClick={() => setShowIntroVideoModal(true)}
                                                 title="Lihat Video Pengantar"
@@ -1025,18 +1379,30 @@ function InstructorCoursePreview() {
                                             <span className="icp-m-num">{stats.quizzes}</span>
                                             <span className="icp-m-label">Kuis</span>
                                         </div>
+                                        <div className="icp-micro-stat-divider"></div>
+                                        <div className="icp-micro-stat-item">
+                                            <span className="icp-m-num">{stats.games}</span>
+                                            <span className="icp-m-label">Game</span>
+                                        </div>
                                     </div>
 
                                     {/* Action Buttons */}
                                     <div className="icp-sidebar-action-box p-3 pt-0">
-                                        <button 
+                                        <button
                                             className="btn btn-teal w-100 mb-2 d-flex align-items-center justify-content-center gap-2 shadow-sm"
                                             onClick={() => navigate(`/instructor/edit-course/${course_id}/`)}
                                         >
                                             <i className="fas fa-edit"></i>
                                             <span>Lanjut Edit Kursus</span>
                                         </button>
-                                        <button 
+                                        <button
+                                            className="btn btn-outline-teal btn-sm w-100 mb-2 d-flex align-items-center justify-content-center gap-2"
+                                            onClick={() => navigate(`/instructor/edit-course/${course_id}/gamification/`)}
+                                        >
+                                            <i className="fas fa-gamepad"></i>
+                                            <span>Kelola Gamifikasi</span>
+                                        </button>
+                                        <button
                                             className="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center gap-2"
                                             onClick={() => navigate(`/instructor/courses/`)}
                                         >
@@ -1135,14 +1501,14 @@ function InstructorCoursePreview() {
 
             {/* Intro Video Modal */}
             {showIntroVideoModal && course.file && (
-                <div 
-                    className="modal fade show d-block icp-video-modal-backdrop" 
-                    tabIndex="-1" 
+                <div
+                    className="modal fade show d-block icp-video-modal-backdrop"
+                    tabIndex="-1"
                     role="dialog"
                     onClick={() => setShowIntroVideoModal(false)}
                 >
-                    <div 
-                        className="modal-dialog modal-lg modal-dialog-centered" 
+                    <div
+                        className="modal-dialog modal-lg modal-dialog-centered"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="modal-content border-0 shadow-lg icp-modal-content">
@@ -1151,9 +1517,9 @@ function InstructorCoursePreview() {
                                     <i className="fas fa-play-circle text-teal"></i>
                                     <span>Video Pengantar: {course.title}</span>
                                 </h6>
-                                <button 
-                                    type="button" 
-                                    className="btn-close" 
+                                <button
+                                    type="button"
+                                    className="btn-close"
                                     onClick={() => setShowIntroVideoModal(false)}
                                     aria-label="Close"
                                 ></button>

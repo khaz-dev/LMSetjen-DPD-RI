@@ -530,6 +530,7 @@ class Course(models.Model):
                 target_course.features.all().delete()
                 target_course.requirements.all().delete()
                 target_course.learning_outcomes.all().delete()
+                target_course.games.all().delete()
                 print(f"[Content Copy] [OK] Target course content cleared")
             
             try:
@@ -659,6 +660,23 @@ class Course(models.Model):
                     )
                 print(f"[Content Copy] [OK] Copied {self.learning_outcomes.count()} learning outcomes")
                 
+                # STEP 6: Copy course games (Gamifikasi)
+                print("[Content Copy] Copying course games (Gamifikasi)...")
+                for game in self.games.all():
+                    CourseGame.objects.create(
+                        course=target_course,
+                        title=game.title,
+                        description=game.description,
+                        game_type=game.game_type,
+                        game_data=game.game_data,
+                        max_attempts=game.max_attempts,
+                        points_reward=game.points_reward,
+                        time_limit_seconds=game.time_limit_seconds,
+                        is_active=game.is_active,
+                        order=game.order,
+                    )
+                print(f"[Content Copy] [OK] Copied {self.games.count()} games")
+
                 # ✨ PHASE 7.5 FIX: Copy tags (course categorization metadata)
                 print("[Content Copy] Copying course tags...")
                 target_course.tags.set(self.tags.all())
@@ -754,6 +772,7 @@ class Course(models.Model):
             self.features.all().delete()
             self.requirements.all().delete()
             self.learning_outcomes.all().delete()
+            self.games.all().delete()
             print(f"[Restore] [OK] Deleted draft content")
             
             # Re-copy from published version (clear_target=False since we already deleted above)
@@ -1805,6 +1824,16 @@ class EnrolledCourse(models.Model):
         if not pre_post_quiz:
             return True
         return QuizAttempt.objects.filter(user=self.user, quiz=pre_post_quiz, attempt_type='post_test').exists()
+
+    def are_all_games_completed(self):
+        """Check if all active course games have been completed (attempted) by the student"""
+        active_games = self.course.games.filter(is_active=True)
+        if not active_games.exists():
+            return True
+        for game in active_games:
+            if not game.attempts.filter(user=self.user).exists():
+                return False
+        return True
 
     def is_certificate_eligible(self):
         """Check if user is eligible for certificate (lessons complete + regular quizzes passed + post-test complete)"""
@@ -4891,6 +4920,71 @@ class UploadedFile(models.Model):
 
     def __str__(self):
         return f"File {self.file_id} ({self.file_name}) by {self.uploaded_by.username}"
+
+
+
+# =====================================================================
+# Gamification System: Course Games & Student Attempts
+# =====================================================================
+
+class CourseGame(models.Model):
+    GAME_TYPE_CHOICES = (
+        ('crossword', 'Teka Teki Silang'),
+        ('word_search', 'Word Search'),
+        ('anagram', 'Anagram'),
+        ('memory_match', 'Memory Match'),
+    )
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="games")
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    game_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    game_type = models.CharField(max_length=30, choices=GAME_TYPE_CHOICES)
+    game_data = models.JSONField(default=dict, blank=True, help_text="Konfigurasi game (kata, clue, pairs, dll)")
+    max_attempts = models.PositiveIntegerField(default=3)
+    points_reward = models.PositiveIntegerField(default=50)
+    time_limit_seconds = models.PositiveIntegerField(default=0, help_text="Batas waktu pengerjaan dalam detik (0 = tanpa batas)")
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=1)
+    date = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "Course Game"
+        verbose_name_plural = "Course Games"
+        ordering = ['order', 'date']
+
+    def __str__(self):
+        return f"{self.course.title} - {self.get_game_type_display()}: {self.title}"
+
+    def get_user_attempts_count(self, user):
+        return self.attempts.filter(user=user).count()
+
+    def can_user_attempt(self, user):
+        return self.get_user_attempts_count(user) < self.max_attempts
+
+    def get_user_best_attempt(self, user):
+        return self.attempts.filter(user=user).order_by('-score', 'time_taken').first()
+
+
+class CourseGameAttempt(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="game_attempts")
+    game = models.ForeignKey(CourseGame, on_delete=models.CASCADE, related_name="attempts")
+    attempt_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
+    attempt_number = models.PositiveIntegerField(default=1)
+    score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  # Skala 0 - 100
+    is_passed = models.BooleanField(default=False)
+    time_taken = models.PositiveIntegerField(default=0, help_text="Waktu pengerjaan dalam detik")
+    answers_data = models.JSONField(default=dict, blank=True)
+    points_awarded = models.PositiveIntegerField(default=0)
+    date_attempted = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "Course Game Attempt"
+        verbose_name_plural = "Course Game Attempts"
+        ordering = ['-date_attempted']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.game.title} - Attempt #{self.attempt_number} ({self.score}%)"
 
 
 

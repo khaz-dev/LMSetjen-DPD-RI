@@ -1,4 +1,5 @@
 import Swal from "sweetalert2";
+import "./toast-mobile.css";
 
 function Toast(){
     const Toast = Swal.mixin({
@@ -7,56 +8,50 @@ function Toast(){
         showConfirmButton: false,
         timer: 2500,
         timerProgressBar: true,
+        backdrop: false,
         didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
             
-            // Ensure consistent styling even during loading states
-            toast.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif';
-            toast.style.borderRadius = '12px';
-            toast.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
-            toast.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-            toast.style.backdropFilter = 'blur(15px)';
-            toast.style.webkitBackdropFilter = 'blur(15px)';
+            // Consistent compact glassmorphic styling
+            toast.style.fontFamily = "'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+            toast.style.borderRadius = '10px';
+            toast.style.boxShadow = '0 10px 25px -4px rgba(15, 23, 42, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.06)';
+            toast.style.backdropFilter = 'blur(14px)';
+            toast.style.webkitBackdropFilter = 'blur(14px)';
             toast.style.position = 'relative';
-            toast.style.paddingRight = '48px';
+            toast.style.paddingRight = '32px';
+            toast.style.paddingLeft = '10px';
+            toast.style.paddingTop = '8px';
+            toast.style.paddingBottom = '8px';
             
-            // ✨ PHASE 4.58: Manually add close button since showCloseButton doesn't work for toasts
+            // Compact close button
             const closeButton = document.createElement('button');
             closeButton.innerHTML = '✕';
             closeButton.type = 'button';
             closeButton.className = 'toast-close-btn';
-            closeButton.onmouseenter = () => {
-                closeButton.style.color = '#2d3748';
-                closeButton.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
-                closeButton.style.opacity = '1';
-            };
-            closeButton.onmouseleave = () => {
-                closeButton.style.color = '#718096';
-                closeButton.style.backgroundColor = 'transparent';
-                closeButton.style.opacity = '0.8';
-            };
-            // ✨ PHASE 4.59: Fix close button - use Swal.close() instead of hideLoading()
+            closeButton.setAttribute('aria-label', 'Tutup Notifikasi');
             closeButton.onclick = () => Swal.close();
             
-            // Style close button
+            // Style close button compact
             closeButton.style.position = 'absolute';
-            closeButton.style.right = '8px';
-            closeButton.style.top = '8px';
+            closeButton.style.right = '6px';
+            closeButton.style.top = '50%';
+            closeButton.style.transform = 'translateY(-50%)';
             closeButton.style.background = 'transparent';
             closeButton.style.border = 'none';
-            closeButton.style.fontSize = '20px';
+            closeButton.style.fontSize = '13px';
             closeButton.style.cursor = 'pointer';
-            closeButton.style.color = '#718096';
+            closeButton.style.color = '#94a3b8';
             closeButton.style.padding = '0';
-            closeButton.style.width = '32px';
-            closeButton.style.height = '32px';
+            closeButton.style.width = '22px';
+            closeButton.style.height = '22px';
             closeButton.style.display = 'flex';
             closeButton.style.alignItems = 'center';
             closeButton.style.justifyContent = 'center';
-            closeButton.style.transition = 'all 0.2s ease';
-            closeButton.style.borderRadius = '6px';
-            closeButton.style.opacity = '0.8';
+            closeButton.style.transition = 'all 0.15s ease';
+            closeButton.style.borderRadius = '5px';
+            closeButton.style.opacity = '0.85';
             closeButton.style.fontWeight = 'bold';
             
             // Append close button to toast
@@ -66,48 +61,36 @@ function Toast(){
             popup: 'modern-toast',
             timerProgressBar: 'modern-progress-bar'
         },
-        background: 'rgba(255, 255, 255, 0.98)',
+        background: 'rgba(255, 255, 255, 0.96)',
         showClass: {
-            popup: 'animate__animated animate__slideInRight animate__faster'
+            popup: 'swal2-toast-animate-in'
         },
         hideClass: {
-            popup: 'animate__animated animate__slideOutRight animate__faster'
+            popup: 'swal2-toast-animate-out'
         },
-        // Enhanced mobile support - removed incompatible parameters for toasts
         allowEscapeKey: true,
-        // Prevent style conflicts during network delays
         scrollbarPadding: false,
-        // Better performance on mobile
-        animation: false // Disable complex animations on slower connections
-    })
+        animation: true
+    });
 
-    return Toast
+    return Toast;
 }
 
-// Enhanced logout confirmation dialog with mobile optimization
+// Enhanced logout confirmation dialog with compact styling
 function LogoutConfirmation() {
-    // Detect slow connection and adjust accordingly
-    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const isSlowConnection = connection && (
-        connection.effectiveType === 'slow-2g' || 
-        connection.effectiveType === '2g' ||
-        connection.downlink < 1
-    );
-
-    // Use a completely clean implementation
     return Swal.fire({
         title: 'Konfirmasi Logout',
         html: `
-            <div style="color: #4a5568; font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">
+            <div style="color: #475569; font-size: 0.86rem; line-height: 1.45; margin-bottom: 0.25rem;">
                 Apakah Anda yakin ingin keluar dari sistem?<br>
-                <small style="color: #718096;">Anda perlu login kembali untuk mengakses akun.</small>
+                <small style="color: #64748b;">Anda perlu login kembali untuk mengakses akun.</small>
             </div>
         `,
         icon: 'question',
         iconColor: '#0d9488',
         showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-sign-out-alt me-2"></i>Ya, Keluar',
-        cancelButtonText: '<i class="fas fa-times me-2"></i>Batal',
+        confirmButtonText: '<i class="fas fa-sign-out-alt me-1"></i> Ya, Keluar',
+        cancelButtonText: '<i class="fas fa-times me-1"></i> Batal',
         reverseButtons: true,
         focusConfirm: false,
         focusCancel: true,
@@ -115,27 +98,27 @@ function LogoutConfirmation() {
         allowEscapeKey: true,
         buttonsStyling: true,
         confirmButtonColor: '#0d9488',
-        cancelButtonColor: '#e53e3e'
+        cancelButtonColor: '#64748b'
     });
 }
 
-   // ✨ PHASE 4.82: Delete confirmation dialog with proper centering
+// Delete confirmation dialog with compact styling
 function DeleteConfirmation({ title = "Konfirmasi Penghapusan", text = "Apakah Anda yakin ingin menghapus item ini? Tindakan ini tidak dapat dibatalkan." }) {
     return Swal.fire({
         title: title,
-        html: `<div style="text-align: center; color: #4a5568; font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">
+        html: `<div style="text-align: center; color: #475569; font-size: 0.86rem; line-height: 1.45; margin-bottom: 0.25rem;">
                 ${text}
-                <br><small style="color: #718096;">Tindakan ini bersifat permanen.</small>
+                <br><small style="color: #64748b;">Tindakan ini bersifat permanen.</small>
             </div>`,
         icon: 'warning',
-        iconColor: '#e53e3e',
+        iconColor: '#f43f5e',
         showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-trash me-2"></i>Ya, Hapus',
-        cancelButtonText: '<i class="fas fa-times me-2"></i>Batal',
+        confirmButtonText: '<i class="fas fa-trash me-1"></i> Ya, Hapus',
+        cancelButtonText: '<i class="fas fa-times me-1"></i> Batal',
         reverseButtons: true,
         focusCancel: true,
-        confirmButtonColor: '#e53e3e',
-        cancelButtonColor: '#0d9488',
+        confirmButtonColor: '#f43f5e',
+        cancelButtonColor: '#64748b',
         buttonsStyling: true,
         allowEscapeKey: true,
         allowOutsideClick: false,

@@ -525,35 +525,33 @@ function CourseEdit() {
         // Check minimum requirements
         if (!canPublish) {
             await Swal.fire({
-                title: "Tidak Dapat Menerbitkan Kursus Belum",
+                title: "Persyaratan Minimum Belum Terpenuhi",
                 html: `
                     <div class="text-start">
-                        <p class="mb-3">Kursus Anda <strong>"${courseData?.title}"</strong> tidak memenuhi persyaratan minimum untuk penerbitan.</p>
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                            <strong>Persyaratan yang Hilang:</strong>
-                            <ul class="mt-2 mb-0">
-                                ${curriculumCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> Tidak ada bagian kurikulum yang ditambahkan</li>' : ""}
-                                ${lecturesCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> Tidak ada pelajaran yang diunggah</li>' : ""}
-                                ${quizzesCount === 0 ? '<li><i class="fas fa-times text-danger me-1"></i> Tidak ada kuis yang ditambahkan</li>' : ""}
+                        <p class="mb-2">Kursus <strong>"${courseData?.title}"</strong> belum memenuhi syarat minimum untuk penerbitan:</p>
+                        <div class="alert alert-danger mb-2">
+                            <i class="fas fa-exclamation-circle me-1"></i>
+                            <strong>Persyaratan yang Belum Lengkap:</strong>
+                            <ul class="mt-1 mb-0 small ps-3">
+                                ${curriculumCount === 0 ? '<li>Belum ada bagian kurikulum yang dibuat</li>' : ""}
+                                ${lecturesCount === 0 ? '<li>Belum ada pelajaran yang diunggah</li>' : ""}
+                                ${quizzesCount === 0 ? '<li>Belum ada kuis yang ditambahkan</li>' : ""}
                             </ul>
                         </div>
-                        <div class="alert alert-info mt-3">
-                            <i class="fas fa-info-circle me-2"></i>
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
                             <strong>Langkah Selanjutnya:</strong>
-                            <ol class="mt-2 mb-0">
-                                ${curriculumCount === 0 ? '<li>Klik "Kelola Kurikulum" untuk menambahkan bagian kursus</li>' : ""}
-                                ${lecturesCount === 0 ? "<li>Tambahkan pelajaran ke bagian kurikulum Anda</li>" : ""}
-                                ${quizzesCount === 0 ? '<li>Klik "Kelola Kuis" untuk menambahkan kuis untuk kursus Anda</li>' : ""}
-                                <li>Kembali ke sini dan klik "Terbitkan Kursus"</li>
+                            <ol class="mt-1 mb-0 small ps-3">
+                                ${curriculumCount === 0 ? '<li>Buka "Kelola Kurikulum" untuk membuat bagian kursus</li>' : ""}
+                                ${lecturesCount === 0 ? "<li>Unggah pelajaran ke dalam kurikulum</li>" : ""}
+                                ${quizzesCount === 0 ? '<li>Buka "Kelola Kuis" untuk menambahkan evaluasi kuis</li>' : ""}
                             </ol>
                         </div>
                     </div>
                 `,
                 icon: "warning",
-                confirmButtonText: "Mengerti",
-                confirmButtonColor: "#3085d6",
-                width: 600
+                confirmButtonText: '<i class="fas fa-check me-1"></i> Mengerti',
+                confirmButtonColor: "#0d9488"
             });
             return;
         }
@@ -562,48 +560,47 @@ function CourseEdit() {
         // ✨ PHASE 4.71: Enhanced for republication of published courses
         const isRepublication = courseData?.platform_status === "Published";
         const result = await Swal.fire({
-            title: isRepublication ? "Ajukan Perubahan Kursus untuk Publikasi?" : "Ajukan Kursus untuk Publikasi?",
+            title: isRepublication ? "Ajukan Perubahan Kursus?" : "Ajukan Publikasi Kursus?",
             html: `
                 <div class="text-start">
                     ${isRepublication ? `
-                        <p class="mb-3">Apakah Anda siap untuk mengajukan perubahan pada <strong>"${courseData?.title}"</strong> untuk persetujuan publikasi dari admin?</p>
-                        <div class="alert alert-success">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Informasi Update Publikasi:</strong>
-                            <ul class="mt-2 mb-0 small">
-                                <li><i class="fas fa-cloud-upload-alt me-1"></i> Perubahan Anda akan diajukan untuk persetujuan admin</li>
-                                <li><i class="fas fa-sync me-1"></i> Admin akan meninjau perubahan dan konten terbaru</li>
-                                <li><i class="fas fa-check-circle me-1"></i> Jika disetujui, perubahan akan langsung berlaku untuk siswa</li>
-                                <li><i class="fas fa-history me-1"></i> Kursus tetap dapat diakses siswa selama proses review</li>
+                        <p class="mb-2">Ajukan perubahan terbaru pada <strong>"${courseData?.title}"</strong> untuk diverifikasi admin?</p>
+                        <div class="alert alert-success mb-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Ringkasan Update:</strong>
+                            <ul class="mt-1 mb-0 small ps-3">
+                                <li>Perubahan materi akan ditinjau oleh admin</li>
+                                <li>Kursus tetap aktif & dapat diakses siswa selama review</li>
+                                <li>Pembaruan langsung aktif setelah disetujui</li>
                             </ul>
                         </div>
                     ` : `
-                        <p class="mb-3">Apakah Anda siap untuk mengajukan <strong>"${courseData?.title}"</strong> untuk persetujuan publikasi dari admin?</p>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Alur Persetujuan Publikasi:</strong>
-                            <ul class="mt-2 mb-0 small">
-                                <li><i class="fas fa-paper-plane me-1"></i> Kursus Anda akan diajukan untuk persetujuan publikasi</li>
-                                <li><i class="fas fa-clock me-1"></i> Admin akan meninjau konten dan kualitas kursus Anda</li>
-                                <li><i class="fas fa-check-circle me-1"></i> Jika disetujui, kursus akan dipublikasikan dan tersedia untuk siswa</li>
-                                <li><i class="fas fa-times-circle me-1"></i> Jika ditolak, Anda akan menerima alasan penolakan untuk diperbaiki</li>
+                        <p class="mb-2">Ajukan <strong>"${courseData?.title}"</strong> untuk persetujuan publikasi oleh admin?</p>
+                        <div class="alert alert-info mb-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Alur Verifikasi:</strong>
+                            <ul class="mt-1 mb-0 small ps-3">
+                                <li>Admin meninjau kesiapan kurikulum & kualitas materi</li>
+                                <li>Kursus akan otomatis tayang setelah disetujui</li>
+                                <li>Jika ada catatan revisi, Anda akan menerima feedback</li>
                             </ul>
                         </div>
                     `}
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div class="alert alert-warning mb-0">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
                         <strong>Catatan:</strong>
-                        <p class="mb-0 mt-1 small">Pastikan kursus Anda sudah lengkap dengan kurikulum, pelajaran, dan kuis berkualitas untuk meningkatkan peluang persetujuan publikasi.</p>
+                        <p class="mb-0 mt-1 small">Pastikan kurikulum dan pelajaran sudah lengkap untuk mempercepat proses persetujuan.</p>
                     </div>
                 </div>
             `,
             icon: "question",
             showCancelButton: true,
-            confirmButtonColor: "#0f766e",
-            cancelButtonColor: "#6c757d",
-            confirmButtonText: isRepublication ? "Ya, Ajukan Perubahan untuk Publikasi" : "Ya, Ajukan Publikasi Kursus",
-            cancelButtonText: "Belum",
-            width: 600
+            confirmButtonColor: "#0d9488",
+            cancelButtonColor: "#64748b",
+            confirmButtonText: isRepublication ? '<i class="fas fa-paper-plane me-1"></i> Ya, Ajukan Perubahan' : '<i class="fas fa-paper-plane me-1"></i> Ya, Ajukan Publikasi',
+            cancelButtonText: '<i class="fas fa-times me-1"></i> Batal',
+            reverseButtons: true,
+            focusCancel: true
         });
 
         // ✨ PHASE 4.36: Submit for review workflow
@@ -740,35 +737,30 @@ function CourseEdit() {
 
         // Confirm restore action
         const result = await Swal.fire({
-            title: "Kembalikan Kursus ke Versi Terpublikasi?",
+            title: "Kembalikan ke Versi Terpublikasi?",
             html: `
                 <div class="text-start">
-                    <p class="mb-3">Apakah Anda yakin ingin mengembalikan <strong>"${courseData?.title}"</strong> ke versi yang dipublikasikan terakhir?</p>
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Peringatan:</strong>
-                        <p class="mb-0 mt-2 small">
-                            Semua perubahan yang Anda buat sejak kursus dipublikasikan akan dihapus dan tidak dapat dipulihkan.
-                            Ini termasuk:
-                        </p>
-                        <ul class="mt-2 mb-0 small">
-                            <li>Perubahan kurikulum dan pelajaran</li>
-                            <li>Perubahan kuis dan pertanyaan</li>
-                            <li>Perubahan metadata kursus (judul, deskripsi, dll)</li>
+                    <p class="mb-2">Kembalikan <strong>"${courseData?.title}"</strong> ke versi publikasi terakhir?</p>
+                    <div class="alert alert-warning mb-0">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>Peringatan Penting:</strong>
+                        <p class="mb-1 mt-1 small">Semua perubahan draft sejak publikasi terakhir akan dibatalkan permanen, meliputi:</p>
+                        <ul class="mb-0 small ps-3">
+                            <li>Draft bagian kurikulum dan pelajaran baru</li>
+                            <li>Perubahan kuis dan materi evaluasi</li>
+                            <li>Perubahan metadata atau info kursus</li>
                         </ul>
-                    </div>
-                    <div class="alert alert-info mt-2">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Tindakan ini tidak dapat dibatalkan!</strong>
                     </div>
                 </div>
             `,
             icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#6c757d",
-            confirmButtonText: "Ya, Kembalikan",
-            cancelButtonText: "Batal"
+            confirmButtonColor: "#f43f5e",
+            cancelButtonColor: "#64748b",
+            confirmButtonText: '<i class="fas fa-undo me-1"></i> Ya, Kembalikan',
+            cancelButtonText: '<i class="fas fa-times me-1"></i> Batal',
+            reverseButtons: true,
+            focusCancel: true
         });
 
         if (!result.isConfirmed) {

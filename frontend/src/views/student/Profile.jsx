@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext, useRef, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { switchRoleAndNavigate } from "../../utils/roleUtils";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
@@ -158,6 +159,7 @@ const getCroppedImage = (image, crop, fileName) => {
 };
 
 function Profile() {
+    const navigate = useNavigate();
     // Contexts & Hooks
     const profileContext = useContext(ProfileContext);
     const [profile, setProfile] = profileContext || [null, () => {}];
@@ -1354,9 +1356,14 @@ function Profile() {
                                                                     Jika Anda mengajar kursus, data profil dan biografi kepakaran otomatis terhubung dengan kartu instruktur publik tanpa perlu mengisi ulang data dasar.
                                                                 </p>
                                                                 {hasInstructorRole ? (
-                                                                    <Link to="/instructor/profile/" className="btn-switch-role-view">
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => switchRoleAndNavigate('instructor', '/instructor/profile/', navigate)} 
+                                                                        className="btn-switch-role-view"
+                                                                        title="Beralih peran ke Instruktur dan buka pengaturan profil"
+                                                                    >
                                                                         <i className="fas fa-arrow-right-arrow-left me-1"></i> Buka Pengaturan Profil Instruktur
-                                                                    </Link>
+                                                                    </button>
                                                                 ) : (
                                                                     <span className="text-muted small">Hubungi admin untuk aktivasi peran pengajar.</span>
                                                                 )}
@@ -1367,15 +1374,30 @@ function Profile() {
                                                             <div className="role-quick-shortcuts">
                                                                 <span className="shortcuts-label">Akses Cepat Instruktur:</span>
                                                                 <div className="shortcuts-links-row">
-                                                                    <Link to="/instructor/courses/" className="shortcut-chip">
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => switchRoleAndNavigate('instructor', '/instructor/courses/', navigate)} 
+                                                                        className="shortcut-chip"
+                                                                        title="Beralih peran ke Instruktur dan buka kursus diajar"
+                                                                    >
                                                                         <i className="fas fa-book-open"></i> Kursus Diajar
-                                                                    </Link>
-                                                                    <Link to="/instructor/reviews/" className="shortcut-chip">
+                                                                    </button>
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => switchRoleAndNavigate('instructor', '/instructor/reviews/', navigate)} 
+                                                                        className="shortcut-chip"
+                                                                        title="Beralih peran ke Instruktur dan buka ulasan"
+                                                                    >
                                                                         <i className="fas fa-star text-warning"></i> Ulasan
-                                                                    </Link>
-                                                                    <Link to="/instructor/dashboard/" className="shortcut-chip">
+                                                                    </button>
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => switchRoleAndNavigate('instructor', '/instructor/dashboard/', navigate)} 
+                                                                        className="shortcut-chip"
+                                                                        title="Beralih peran ke Instruktur dan buka dasbor"
+                                                                    >
                                                                         <i className="fas fa-chalkboard"></i> Dasbor Instruktur
-                                                                    </Link>
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         )}

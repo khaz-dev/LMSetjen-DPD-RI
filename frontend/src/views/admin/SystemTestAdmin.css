@@ -1,0 +1,163 @@
+/* System Test & UI Showcase Styles */
+
+.admin-page-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+}
+
+.system-test-page {
+    flex: 1 0 auto !important;
+    display: flex;
+    flex-direction: column;
+    background: #f8fafc;
+    padding: 1.5rem 0 50px;
+}
+
+.admin-page-wrapper > .footer-wrapper {
+    margin-top: auto !important;
+}
+
+.system-test-header {
+    background: #ffffff;
+    padding: 24px 28px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    margin-bottom: 24px;
+}
+
+.system-test-header h1 {
+    font-size: 24px;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.system-test-tabs {
+    display: flex;
+    gap: 8px;
+    background: #e2e8f0;
+    padding: 6px;
+    border-radius: 10px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.test-tab-btn {
+    border: none;
+    background: transparent;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #475569;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.test-tab-btn:hover {
+    color: #0f172a;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.test-tab-btn.active {
+    background: #ffffff;
+    color: #0d9488;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+}
+
+.test-card {
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.test-card .card-header {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.system-test-page .form-range::-webkit-slider-thumb {
+    background-color: #0d9488 !important;
+}
+
+.system-test-page .form-range::-moz-range-thumb {
+    background-color: #0d9488 !important;
+}
+
+.system-test-page .form-range:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 1px #fff, 0 0 0 0.25rem rgba(13, 148, 136, 0.25) !important;
+}
+
+.text-teal {
+    color: #0d9488 !important;
+}
+
+.code-snippet-box {
+    background: #0f172a !important;
+    border: 1px solid #334155;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.code-snippet-box pre {
+    color: #38bdf8;
+    margin: 0;
+}
+
+/* Custom SweetAlert Content inside dialog */
+.swal-custom-content p {
+    color: #475569;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+/* Sub-tle background classes */
+.bg-primary-subtle {
+    background-color: #e0f2fe !important;
+}
+
+.border-primary-subtle {
+    border-color: #bae6fd !important;
+}
+
+.bg-success-subtle {
+    background-color: #ecfdf5 !important;
+}
+
+.border-success-subtle {
+    border-color: #a7f3d0 !important;
+}
+
+.bg-danger-subtle {
+    background-color: #fef2f2 !important;
+}
+
+.border-danger-subtle {
+    border-color: #fecaca !important;
+}
+
+@media (max-width: 768px) {
+    .system-test-header {
+        padding: 16px;
+    }
+
+    .system-test-header h1 {
+        font-size: 20px;
+    }
+
+    .system-test-tabs {
+        padding: 4px;
+    }
+
+    .test-tab-btn {
+        font-size: 12.5px;
+        padding: 6px 12px;
+    }
+}
+

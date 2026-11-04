@@ -14,14 +14,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRoles } from '../utils/useRoles';
-import { switchRole } from '../utils/roleUtils';
+import { switchRole, getRoleDashboardUrl } from '../utils/roleUtils';
 import Toast from '../views/plugin/Toast';
 import useAxios from '../utils/useAxios';
 import './RoleIndicator.css';
 
 const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) => {
   const navigate = useNavigate();
-  const { currentRole, availableRoles, rolesLoading, fetchAvailableRoles } = useRoles();
+  const { currentRole, availableRoles, rolesLoading, fetchAvailableRoles, setCurrentRole, setAvailableRoles } = useRoles();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const dropdownRef = useRef(null);
@@ -88,7 +88,7 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
     return normalizeRole(role) === normalizeRole(currentRole);
   };
 
-  // Handle role switch
+  // Handle role switch - changes role first, then navigates
   const handleRoleSwitch = async (role) => {
     if (isRoleActive(role)) {
       setIsDropdownOpen(false);
@@ -96,59 +96,50 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
     }
 
     setIsSwitching(true);
+    setIsDropdownOpen(false);
+
     try {
-      // Determine destination dashboard URL based on role
-      const getRoleDashboardUrl = (switchedRole) => {
-        const normalizedRole = normalizeRole(switchedRole);
-        
-        switch (normalizedRole) {
-          case 'student':
-            return '/student/dashboard/';
-          case 'instructor':
-            return '/instructor/dashboard/';
-          case 'admin':
-            return '/admin/dashboard/';
-          default:
-            return '/';
-        }
-      };
+      const targetRoleLabel = roleLabels[normalizeRole(role)] || role;
 
-      // Callback to navigate to role-specific dashboard after role switch
-      const onRoleSwitchCallback = (newRole, newAvailableRoles) => {
-        console.log('Role switch callback triggered, new role:', newRole);
-        // Delay to ensure RolesContext updates before navigation
-        setTimeout(() => {
-          const dashboardUrl = getRoleDashboardUrl(newRole);
-          console.log(`Navigating to ${dashboardUrl} for role: ${newRole}`);
-          navigate(dashboardUrl);
-          // Trigger a full refresh of available roles
-          fetchAvailableRoles();
-        }, 300);
-        return Promise.resolve();
-      };
+      Toast().fire({
+        icon: 'info',
+        title: 'Memproses...',
+        text: `Beralih ke peran ${targetRoleLabel}...`,
+        timer: 1500,
+        showConfirmButton: false
+      });
 
-      const result = await switchRole(role, { onRoleSwitch: onRoleSwitchCallback });
+      // 1. Perform role switch in backend API, update cookies & Zustand store & trigger authRoleChanged
+      const result = await switchRole(role);
       
       if (result.success) {
         const newRole = result.current_role;
+        
+        // 2. Synchronously update RolesContext state before navigating
+        if (setCurrentRole) {
+          setCurrentRole(newRole);
+        }
+        if (result.available_roles && setAvailableRoles) {
+          setAvailableRoles(result.available_roles);
+        }
+
         Toast().fire({
           icon: 'success',
           title: 'Peran Berhasil Beralih',
           html: `Anda sekarang dalam mode <strong>${roleLabels[normalizeRole(newRole)] || newRole}</strong>`,
-          timer: 3000
+          timer: 2000,
+          showConfirmButton: false
         });
-        
-        // Close dropdown after successful switch
-        setIsDropdownOpen(false);
-        
-        // Navigate to role-specific dashboard - callback above will trigger this
+
+        // 3. Navigate to target dashboard only AFTER the role switch has succeeded
+        const dashboardUrl = getRoleDashboardUrl(newRole);
+        navigate(dashboardUrl, { replace: true });
       } else {
-        setIsSwitching(false);
         Toast().fire({
           icon: 'error',
-          title: 'Kesalahan',
-          text: result.error || 'Gagal beralih peran',
-          timer: 5174
+          title: 'Gagal Beralih Peran',
+          text: result.error || 'Terjadi kesalahan saat beralih peran',
+          timer: 4000
         });
       }
     } catch (error) {
@@ -157,8 +148,9 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
         icon: 'error',
         title: 'Kesalahan',
         text: 'Terjadi kesalahan saat beralih peran',
-        timer: 5174
+        timer: 4000
       });
+    } finally {
       setIsSwitching(false);
     }
   };

@@ -5,47 +5,7 @@
 /* Toast & Dialog Styles */
 /* ============================== */
 
-.modern-toast {
-    border-radius: 15px !important;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    backdrop-filter: blur(15px) !important;
-    font-family: 'Inter', sans-serif !important;
-}
-
-/* Modal dialog variant of modern-toast with proper centering */
-.modern-toast-dialog {
-    padding-right: 0 !important;
-    text-align: center !important;
-}
-
-.modern-toast-dialog .swal2-icon {
-    margin: 0 auto 1rem auto !important;
-}
-
-.modern-swal-title {
-    text-align: center !important;
-    margin: 0 auto !important;
-}
-
-.modern-swal-html {
-    text-align: center !important;
-}
-
-.modern-progress-bar {
-    background: linear-gradient(90deg, #0d9488 0%, #0f766e 100%) !important;
-    border-radius: 0 0 15px 15px !important;
-    height: 4px !important;
-}
-
-.modern-logout-dialog {
-    border-radius: 20px !important;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    backdrop-filter: blur(15px) !important;
-    font-family: 'Inter', sans-serif !important;
-    padding: 2rem !important;
-}
+/* Toast & Dialog styles centralized in toast-mobile.css */
 
 .modern-confirm-btn {
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;

@@ -47,6 +47,29 @@ const convertEmbedUrlToViewable = (fileUrl, videoSource) => {
     return fileUrl;
 };
 
+const GAME_TYPE_META = {
+    crossword: {
+        label: "Teka-Teki Silang (TTS)",
+        icon: "fas fa-border-all",
+        badgeClass: "bg-info text-white"
+    },
+    word_search: {
+        label: "Cari Kata (Word Search)",
+        icon: "fas fa-search",
+        badgeClass: "bg-teal text-white"
+    },
+    anagram: {
+        label: "Susun Kata (Anagram)",
+        icon: "fas fa-random",
+        badgeClass: "bg-warning text-dark"
+    },
+    memory_match: {
+        label: "Pencocokan Memori (Memory Match)",
+        icon: "fas fa-th-large",
+        badgeClass: "bg-purple text-white"
+    }
+};
+
 function AdminCourseReviewDetail() {
     const { course_id } = useParams();
     const navigate = useNavigate();
@@ -55,6 +78,7 @@ function AdminCourseReviewDetail() {
     const [course, setCourse] = useState(null);
     const [expandedSections, setExpandedSections] = useState({});
     const [expandedQuizzes, setExpandedQuizzes] = useState({});
+    const [expandedGames, setExpandedGames] = useState({});
     const [approving, setApproving] = useState(false);
     const [showIntroVideoPreview, setShowIntroVideoPreview] = useState(false);
     const [expandedLecturePreview, setExpandedLecturePreview] = useState({});
@@ -70,6 +94,12 @@ function AdminCourseReviewDetail() {
             const response = await apiInstance.get(`teacher/course-detail/${course_id}/`);
             console.log("[AdminCourseReviewDetail] Course data:", response.data);
             setCourse(response.data);
+            if (response.data?.games?.length > 0) {
+                const firstGameId = response.data.games[0].id || response.data.games[0].game_id;
+                if (firstGameId) {
+                    setExpandedGames({ [firstGameId]: true });
+                }
+            }
         } catch (error) {
             Toast().fire({
                 icon: "error",
@@ -93,6 +123,13 @@ function AdminCourseReviewDetail() {
         setExpandedQuizzes(prev => ({
             ...prev,
             [quizId]: !prev[quizId]
+        }));
+    };
+
+    const toggleGame = (gameId) => {
+        setExpandedGames(prev => ({
+            ...prev,
+            [gameId]: !prev[gameId]
         }));
     };
 
@@ -333,6 +370,10 @@ function AdminCourseReviewDetail() {
                                             <div className="acrd-stat">
                                                 <div className="acrd-stat-number">{course.quizzes?.length || 0}</div>
                                                 <div className="acrd-stat-label">Kuis</div>
+                                            </div>
+                                            <div className="acrd-stat">
+                                                <div className="acrd-stat-number">{course.games?.length || 0}</div>
+                                                <div className="acrd-stat-label">Gamifikasi</div>
                                             </div>
                                         </div>
 
@@ -781,6 +822,178 @@ function AdminCourseReviewDetail() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Gamifikasi Pembelajaran */}
+                        {course.games && course.games.length > 0 ? (
+                            <div className="acrd-card mb-4">
+                                <h3 className="acrd-section-title">
+                                    <i className="fas fa-gamepad me-2 text-teal"></i>
+                                    Gamifikasi Pembelajaran ({course.games.length} Game)
+                                </h3>
+                                <div className="acrd-quizzes-list">
+                                    {course.games.map((game, idx) => {
+                                        const gameId = game.id || game.game_id || `game-${idx}`;
+                                        const isExpanded = !!expandedGames[gameId];
+                                        const meta = GAME_TYPE_META[game.game_type] || {
+                                            label: game.game_type,
+                                            icon: "fas fa-gamepad",
+                                            badgeClass: "bg-teal text-white"
+                                        };
+                                        const gameData = game.game_data || {};
+                                        let itemCount = 0;
+                                        if (game.game_type === "crossword") itemCount = gameData.items?.length || 0;
+                                        else if (game.game_type === "word_search") itemCount = gameData.words?.length || 0;
+                                        else if (game.game_type === "anagram") itemCount = gameData.items?.length || 0;
+                                        else if (game.game_type === "memory_match") itemCount = gameData.pairs?.length || 0;
+
+                                        return (
+                                            <div key={gameId} className="acrd-quiz-item">
+                                                <button
+                                                    type="button"
+                                                    className="acrd-quiz-header-btn"
+                                                    onClick={() => toggleGame(gameId)}
+                                                >
+                                                    <span className="badge px-2.5 py-1 text-white flex-shrink-0" style={{ backgroundColor: "#0d9488", fontSize: "0.75rem", borderRadius: "6px" }}>
+                                                        <i className={`${meta.icon} me-1`}></i>
+                                                        {meta.label}
+                                                    </span>
+                                                    <span className="acrd-quiz-title ms-2 text-truncate">{game.title || "Game Tanpa Judul"}</span>
+                                                    {game.is_active !== undefined && (
+                                                        <span className={`badge ${game.is_active ? 'bg-success' : 'bg-secondary'} ms-auto me-2`}>
+                                                            {game.is_active ? 'Aktif' : 'Nonaktif'}
+                                                        </span>
+                                                    )}
+                                                    <i className={`fas fa-chevron-down transition-icon ${isExpanded ? 'expanded' : ''}`}></i>
+                                                </button>
+
+                                                {isExpanded && (
+                                                    <div className="acrd-quiz-content">
+                                                        {/* Description */}
+                                                        {game.description && (
+                                                            <div className="alert alert-info mb-3" style={{ whiteSpace: "pre-line" }}>
+                                                                <strong><i className="fas fa-info-circle me-1"></i>Petunjuk Pengerjaan:</strong>
+                                                                <div className="mt-1">{game.description}</div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Game Stats & Parameters */}
+                                                        <div className="d-flex align-items-center gap-2 flex-wrap mb-3 p-2 bg-light rounded border">
+                                                            <span className="badge bg-white text-dark border">
+                                                                <i className="fas fa-redo text-teal me-1"></i>
+                                                                Maksimal Coba: <strong>{game.max_attempts}x</strong>
+                                                            </span>
+                                                            <span className="badge bg-white text-dark border">
+                                                                <i className="fas fa-trophy text-warning me-1"></i>
+                                                                Reward: <strong>+{game.points_reward} XP</strong>
+                                                            </span>
+                                                            <span className="badge bg-white text-dark border">
+                                                                <i className="fas fa-clock text-info me-1"></i>
+                                                                Waktu: <strong>{game.time_limit_seconds > 0 ? `${game.time_limit_seconds} Detik` : "Tanpa Batas"}</strong>
+                                                            </span>
+                                                            <span className="badge bg-white text-dark border">
+                                                                <i className="fas fa-layer-group text-primary me-1"></i>
+                                                                Jumlah: <strong>{itemCount} {game.game_type === 'memory_match' ? 'Pasangan' : 'Item'}</strong>
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Content Items Review */}
+                                                        <div className="acrd-game-items-review">
+                                                            {/* Crossword Review */}
+                                                            {game.game_type === "crossword" && (
+                                                                <div className="row g-2">
+                                                                    {(gameData.items || []).map((item, qIdx) => (
+                                                                        <div key={qIdx} className="col-md-6">
+                                                                            <div className="p-2.5 bg-white border rounded h-100 shadow-sm">
+                                                                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                                    <span className="badge bg-info-subtle text-info fw-bold" style={{ fontSize: "0.75rem" }}>
+                                                                                        Soal {qIdx + 1}
+                                                                                    </span>
+                                                                                    <span className="badge bg-dark font-monospace">
+                                                                                        {item.answer || "____"}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div className="small text-secondary mt-1">
+                                                                                    {item.clue || "Petunjuk belum diisi"}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Word Search Review */}
+                                                            {game.game_type === "word_search" && (
+                                                                <div>
+                                                                    <div className="small text-muted mb-2">
+                                                                        Matriks Kotak: <strong>{gameData.gridSize || 10}x{gameData.gridSize || 10}</strong> • Daftar kata tersembunyi:
+                                                                    </div>
+                                                                    <div className="d-flex flex-wrap gap-2">
+                                                                        {(gameData.words || []).map((w, wIdx) => {
+                                                                            const wordText = typeof w === "object" ? w.word : w;
+                                                                            const hintText = typeof w === "object" ? w.hint : "";
+                                                                            return (
+                                                                                <div key={wIdx} className="badge bg-white text-dark border p-2 text-start">
+                                                                                    <div className="font-monospace fw-bold text-teal" style={{ fontSize: "0.85rem" }}>{wordText}</div>
+                                                                                    {hintText && <div className="text-muted small fw-normal">{hintText}</div>}
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Anagram Review */}
+                                                            {game.game_type === "anagram" && (
+                                                                <div className="row g-2">
+                                                                    {(gameData.items || []).map((item, aIdx) => (
+                                                                        <div key={aIdx} className="col-md-6">
+                                                                            <div className="p-2.5 bg-white border rounded h-100 shadow-sm">
+                                                                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                                    <span className="badge bg-warning-subtle text-dark fw-bold" style={{ fontSize: "0.75rem" }}>
+                                                                                        Kata {aIdx + 1}
+                                                                                    </span>
+                                                                                    <span className="font-monospace fw-bold text-teal">
+                                                                                        {item.word}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div className="small text-secondary mt-1">
+                                                                                    {item.clue || "Petunjuk belum diatur"}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Memory Match Review */}
+                                                            {game.game_type === "memory_match" && (
+                                                                <div className="row g-2">
+                                                                    {(gameData.pairs || []).map((pair, pIdx) => (
+                                                                        <div key={pIdx} className="col-md-6">
+                                                                            <div className="p-2.5 bg-white border rounded h-100 shadow-sm">
+                                                                                <div className="d-flex align-items-center gap-2 mb-1.5">
+                                                                                    <span className="badge" style={{ backgroundColor: "#f3e8ff", color: "#7e22ce", fontSize: "0.75rem" }}>
+                                                                                        Pasangan {pIdx + 1}
+                                                                                    </span>
+                                                                                    <strong className="text-dark font-monospace">{pair.term}</strong>
+                                                                                </div>
+                                                                                <div className="small text-secondary p-1.5 bg-light rounded border">
+                                                                                    {pair.definition}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ) : null}
 
                         {/* Action Buttons */}
                         <div className="acrd-card acrd-actions mb-4">

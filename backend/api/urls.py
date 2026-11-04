@@ -98,6 +98,11 @@ urlpatterns = [
     path("student/quiz-attempts/<user_id>/", api_views.StudentQuizAttemptsAPIView.as_view()),
     path("student/quiz-attempts/<user_id>/<quiz_id>/", api_views.StudentQuizAttemptsAPIView.as_view()),
 
+    # Student Gamification Endpoints
+    path("student/game-list/<user_id>/<course_id>/", api_views.StudentCourseGameListAPIView.as_view()),
+    path("student/game-detail/<user_id>/<game_id>/", api_views.StudentCourseGameDetailAPIView.as_view()),
+    path("student/game-submit/<user_id>/", api_views.StudentCourseGameSubmitAPIView.as_view()),
+
     # Certificate Endpoints
     path("student/certificate-eligibility/<user_id>/<course_id>/", api_views.StudentCertificateEligibilityAPIView.as_view()),
     path("student/certificate-generate/", api_views.StudentCertificateGenerateAPIView.as_view()),
@@ -157,6 +162,10 @@ urlpatterns = [
     path("quiz/question/detail/<question_id>/", api_views.QuizQuestionDetailAPIView.as_view()),
     path("quiz/choice/list-create/", api_views.QuizChoiceListCreateAPIView.as_view()),
     path("quiz/choice/detail/<choice_id>/", api_views.QuizChoiceDetailAPIView.as_view()),
+
+    # Gamification Management API Endpoints
+    path("game/list-create/", api_views.CourseGameListCreateAPIView.as_view()),
+    path("game/detail/<game_id>/", api_views.CourseGameDetailAPIView.as_view()),
 
     # ⚠️ DEPRECATED (Phase 3): File Upload APIs - Server-side file storage no longer used
     # Kept for backward compatibility only. Will be removed in a future version.

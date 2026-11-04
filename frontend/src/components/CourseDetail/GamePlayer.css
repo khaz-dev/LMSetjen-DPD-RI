@@ -1,0 +1,767 @@
+/* ========================================================================
+   Game Player Column & Game Arena Styling (Course Detail Stage)
+   Seamless player column replacement for Gamification
+   ======================================================================== */
+
+.game-player-column {
+    min-width: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+}
+
+/* Standby Card in Left Column when no game is actively selected */
+.game-player-standby {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 2.75rem 2rem;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 520px;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-standby-content {
+    max-width: 580px;
+    margin: 0 auto;
+}
+
+.game-standby-icon-circle {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 1.25rem;
+    box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.4);
+    position: relative;
+}
+
+.game-standby-icon-circle.locked-circle {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+}
+
+.game-standby-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.6rem;
+}
+
+.game-standby-subtitle {
+    color: #64748b;
+    font-size: 0.925rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.game-standby-chips {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.game-standby-chip {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.775rem;
+    font-weight: 600;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Arena Card when a game is loaded */
+.game-player-arena-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+    min-height: 540px;
+    display: flex;
+    flex-direction: column;
+    overflow: visible; /* Needed for popovers on top edge */
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Header inside Arena: Perfectly aligned on single row with close button sticking right */
+.game-arena-header {
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    width: 100%;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+}
+
+.game-arena-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.game-arena-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.game-arena-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-shrink: 0;
+    margin-left: auto; /* Push firmly to far right corner */
+}
+
+/* Music BGM Toggle Button */
+.btn-music-toggle {
+    height: 36px;
+    padding: 0 0.75rem;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #475569;
+    font-size: 0.825rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-music-toggle:hover {
+    background: #f0fdfa;
+    border-color: #0d9488;
+}
+
+.btn-music-toggle.active {
+    background: #f0fdfa;
+    border-color: #0d9488;
+    color: #0f766e;
+}
+
+/* Audio Sound Toggle Button */
+.btn-sound-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    padding: 0;
+    cursor: pointer;
+}
+
+.btn-sound-toggle:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: scale(1.04);
+}
+
+.btn-sound-toggle:active {
+    transform: scale(0.96);
+}
+
+/* Live Timer in Arena */
+.game-arena-timer-badge {
+    background: #f8fafc;
+    color: #0f172a;
+    border: 1px solid #e2e8f0;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.95rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    height: 36px;
+    box-sizing: border-box;
+}
+
+/* Tutup Arena Button */
+.btn-close-arena {
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    color: #475569 !important;
+    padding: 0.35rem 0.85rem !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+    height: 36px !important;
+    box-sizing: border-box !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer;
+}
+
+.btn-close-arena:hover {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #b91c1c !important;
+    transform: translateY(-1px);
+}
+
+.btn-close-arena:active {
+    transform: translateY(0);
+}
+
+/* Arena Body */
+.game-arena-body {
+    flex: 1 1 auto;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.game-arena-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.game-arena-body::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+
+.game-arena-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* Mini Game Boards in Arena */
+.game-arena-board-wrap {
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+}
+
+/* Card Results */
+.game-result-score-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: #ffffff;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+}
+
+.game-result-score-circle.passed {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+}
+
+.game-result-score-circle.failed {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+}
+
+/* Crossword styles */
+.crossword-board-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.crossword-clues-list {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.85rem;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.crossword-clue-item {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.35rem;
+    cursor: pointer;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+}
+
+.crossword-clue-item:hover, .crossword-clue-item.active {
+    background: #f0fdfa;
+    border-color: #0d9488;
+}
+
+.crossword-inputs-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.crossword-cell-input {
+    width: 42px;
+    height: 46px;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 2px solid #cbd5e1;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.15s;
+    background: #ffffff;
+    font-family: monospace;
+}
+
+.crossword-cell-input:focus {
+    border-color: #0d9488;
+    background: #f0fdfa;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+/* Word Search styles */
+.wordsearch-layout {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .wordsearch-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.wordsearch-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+    background: #f1f5f9;
+    padding: 8px;
+    border-radius: 12px;
+    user-select: none;
+}
+
+.ws-cell {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #1e293b;
+    font-family: monospace;
+}
+
+.ws-cell:hover {
+    background: #e2e8f0;
+}
+
+.ws-cell.selected {
+    background: #0d9488;
+    color: #ffffff;
+    border-color: #0d9488;
+    transform: scale(0.95);
+}
+
+.ws-cell.found {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+}
+
+.ws-words-panel {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.ws-target-word {
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    margin-bottom: 0.35rem;
+    font-size: 0.825rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    font-family: monospace;
+    font-weight: 600;
+}
+
+.ws-target-word.found {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #047857;
+    text-decoration: line-through;
+}
+
+/* Anagram styles (Single word & Multi-word phrase support) */
+.anagram-words-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.85rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.anagram-word-group {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.anagram-word-spacer {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.2rem;
+    user-select: none;
+}
+
+.anagram-word-spacer .badge {
+    font-size: 0.68rem;
+    padding: 0.25rem 0.5rem;
+    background: #f1f5f9 !important;
+    border: 1px dashed #cbd5e1 !important;
+    color: #64748b !important;
+    font-weight: 600;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.anagram-slots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    min-height: 48px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.anagram-slot {
+    width: 44px;
+    height: 48px;
+    background: #f8fafc;
+    border: 2px dashed #94a3b8;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    cursor: pointer;
+    font-family: monospace;
+    transition: all 0.15s ease;
+}
+
+.anagram-slot.filled {
+    background: #f0fdfa;
+    border-style: solid;
+    border-color: #0d9488;
+    color: #0d9488;
+}
+
+.anagram-letter-bank {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.anagram-tile {
+    width: 44px;
+    height: 48px;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1e293b;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.15s;
+    font-family: monospace;
+}
+
+.anagram-tile:hover {
+    transform: translateY(-2px);
+    border-color: #0d9488;
+    color: #0d9488;
+    box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2);
+}
+
+.anagram-tile.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* ========================================================================
+   Memory Match 3D Interactive Flip Animation & Truncation with Popover
+   ======================================================================== */
+.memory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    max-width: 720px;
+    margin: 0 auto;
+    perspective: 1200px;
+}
+
+@media (max-width: 576px) {
+    .memory-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+}
+
+.memory-card-wrap {
+    aspect-ratio: 1 / 1;
+    perspective: 1200px;
+    position: relative;
+    user-select: none;
+}
+
+.memory-card-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+/* Card Flipped 3D state */
+.memory-card-inner.is-flipped {
+    transform: rotateY(180deg);
+}
+
+/* Card Matched State: Pulse & Glow */
+.memory-card-inner.is-matched {
+    transform: rotateY(180deg);
+    cursor: default;
+    animation: memoryMatchPulse 0.5s ease-in-out;
+}
+
+@keyframes memoryMatchPulse {
+    0% {
+        transform: rotateY(180deg) scale(1);
+    }
+    50% {
+        transform: rotateY(180deg) scale(1.06);
+        box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+    }
+    100% {
+        transform: rotateY(180deg) scale(1);
+    }
+}
+
+/* Shared Card Faces */
+.memory-card-face {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 12px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* 1. Front Face (Covered / Hidden Card with question mark) */
+.memory-card-face.face-front {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border: 2px solid #475569;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.memory-card-wrap:hover .memory-card-inner:not(.is-flipped) .face-front {
+    border-color: #38bdf8;
+    color: #38bdf8;
+    box-shadow: 0 6px 14px rgba(14, 165, 233, 0.25);
+    transform: translateY(-2px);
+}
+
+.memory-card-face.face-front i {
+    font-size: 1.85rem;
+    transition: transform 0.2s ease;
+}
+
+.memory-card-wrap:hover .memory-card-inner:not(.is-flipped) .face-front i {
+    transform: scale(1.15);
+}
+
+/* 2. Back Face (Revealed Content: Term or Definition) */
+.memory-card-face.face-back {
+    background: #f0fdfa;
+    border: 2px solid #0d9488;
+    color: #0f766e;
+    transform: rotateY(180deg);
+    padding: 0.55rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+}
+
+.memory-card-inner.is-matched .face-back {
+    background: #ecfdf5;
+    border-color: #10b981;
+    color: #047857;
+}
+
+/* Badge indicating "Istilah" or "Definisi" */
+.memory-card-type-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 12px;
+    background: rgba(13, 148, 136, 0.12);
+    color: #0f766e;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.memory-card-inner.is-matched .memory-card-type-badge {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+/* Clamped text inside the card - will never overflow outside border */
+.memory-card-content {
+    flex: 1 1 auto;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.15rem;
+    overflow: hidden;
+}
+
+.memory-card-text {
+    font-size: 0.815rem;
+    font-weight: 600;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+}
+
+/* Floating Hover Popover to show full text when truncated */
+.memory-card-hover-popover {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.45;
+    padding: 0.65rem 0.85rem;
+    border-radius: 9px;
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.4);
+    width: max-content;
+    max-width: 250px;
+    z-index: 150;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    text-align: left;
+    border: 1px solid #334155;
+}
+
+.memory-card-hover-popover::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #0f172a transparent transparent transparent;
+}
+
+/* Show hover popover on card hover when flipped */
+.memory-card-wrap:hover .memory-card-inner.is-flipped .memory-card-hover-popover,
+.memory-card-wrap:hover .memory-card-inner.is-matched .memory-card-hover-popover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}

@@ -7,30 +7,55 @@
  * - Switch user's current role
  * - Get available roles
  * - Update JWT tokens after role switch
+ * - Synchronize role across state, context, and router navigation
  */
 
 import apiInstance from './axios';
 import Cookie from 'js-cookie';
 import { useAuthStore } from '../store/auth.jsx';
+import jwtDecode from 'jwt-decode';
+import Toast from '../views/plugin/Toast';
+
+/**
+ * Map role to its dashboard URL
+ * 
+ * @param {string} role - Role name (student, teacher, instructor, admin)
+ * @returns {string} - Dashboard URL
+ */
+export const getRoleDashboardUrl = (role) => {
+  const r = (role || '').toLowerCase().trim();
+  if (r === 'admin') return '/admin/dashboard/';
+  if (r === 'teacher' || r === 'instructor') return '/instructor/dashboard/';
+  if (r === 'student') return '/student/dashboard/';
+  return '/';
+};
+
+/**
+ * Get human readable display label for role
+ * 
+ * @param {string} role - Role name
+ * @returns {string} - Label in Indonesian
+ */
+export const getRoleDisplayName = (role) => {
+  const r = (role || '').toLowerCase().trim();
+  if (r === 'admin') return 'Administrator';
+  if (r === 'teacher' || r === 'instructor') return 'Instruktur';
+  if (r === 'student') return 'Peserta';
+  return role || 'Pengguna';
+};
 
 /**
  * Switch user's active role
  * 
- * @param {string} role - Target role to switch to (student, teacher, admin)
+ * @param {string} role - Target role to switch to (student, teacher, instructor, admin)
  * @param {object} options - Optional configuration
- * @param {function} options.onRoleSwitch - Callback to refresh RolesContext (e.g., from App.jsx)
+ * @param {function} options.onRoleSwitch - Callback to refresh RolesContext
  * @returns {Promise} - Response with new tokens and role info
- * 
- * Example:
- *   const result = await switchRole('teacher', { onRoleSwitch: () => window.location.reload() });
- *   if (result.success) {
- *     // Role switched successfully
- *     console.log('New role:', result.current_role);
- *   }
  */
 export const switchRole = async (role, options = {}) => {
   try {
-    console.log(`PHASE 4.17: Switching to role: ${role}`);
+    const normalizedTargetRole = role.toLowerCase().trim() === 'teacher' ? 'instructor' : role.toLowerCase().trim();
+    console.log(`[RoleSystem] Switching to role: ${normalizedTargetRole}`);
     
     // Explicitly guarantee Authorization header from cookies or options
     const token = options.accessToken || Cookie.get('access_token');
@@ -41,21 +66,21 @@ export const switchRole = async (role, options = {}) => {
       };
     }
     
-    const response = await apiInstance.post(`auth/select-role/`, {
-      role: role.toLowerCase().trim()
+    const response = await apiInstance.post('auth/select-role/', {
+      role: normalizedTargetRole
     }, config);
     
     if (response.data.success) {
-      console.log('PHASE 4.17: Role switched successfully');
+      console.log('[RoleSystem] Role switched successfully in backend');
       
-      // Update JWT tokens
+      // 1. Update JWT tokens in cookies
       const { access_token, refresh_token } = response.data;
       if (access_token && refresh_token) {
         updateAuthTokens(access_token, refresh_token);
-        console.log('PHASE 4.17: Auth tokens updated in cookies');
+        console.log('[RoleSystem] Auth tokens updated in cookies');
       }
       
-      // Update Zustand store
+      // 2. Update Zustand store
       const currentUser = useAuthStore.getState().allUserData;
       const updatedUser = {
         ...currentUser,
@@ -63,11 +88,26 @@ export const switchRole = async (role, options = {}) => {
         available_roles: response.data.available_roles
       };
       useAuthStore.getState().setUser(updatedUser);
-      console.log('PHASE 4.17: Zustand store updated');
+      console.log('[RoleSystem] Zustand store updated');
       
-      // Call callback to refresh RolesContext if provided (from App.jsx)
+      // 3. Dispatch global window event so React root (App.jsx) and components immediately update context
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('authRoleChanged', {
+            detail: {
+              current_role: response.data.current_role,
+              available_roles: response.data.available_roles
+            }
+          }));
+          console.log('[RoleSystem] Dispatched authRoleChanged event');
+        }
+      } catch (evtErr) {
+        console.warn('Could not dispatch authRoleChanged event', evtErr);
+      }
+
+      // 4. Call callback to refresh RolesContext if provided
       if (options.onRoleSwitch && typeof options.onRoleSwitch === 'function') {
-        console.log('PHASE 4.17: Calling onRoleSwitch callback to refresh RolesContext');
+        console.log('[RoleSystem] Calling onRoleSwitch callback');
         await options.onRoleSwitch(response.data.current_role, response.data.available_roles);
       }
       
@@ -85,7 +125,7 @@ export const switchRole = async (role, options = {}) => {
     };
     
   } catch (error) {
-    console.error('PHASE 4.17: Error switching role:', error);
+    console.error('[RoleSystem] Error switching role:', error);
 
     if (error.response?.status === 400) {
       return {
@@ -123,23 +163,100 @@ export const switchRole = async (role, options = {}) => {
 };
 
 /**
+ * Switch role first, and then navigate to destination page.
+ * Guarantees that token, cookies, Zustand, and React context are 100% updated BEFORE page navigation.
+ * 
+ * @param {string} role - Target role to switch to (student, instructor, admin)
+ * @param {string|null} destinationUrl - Optional target URL (defaults to role dashboard)
+ * @param {function|null} navigateFn - React Router navigate function
+ * @returns {Promise<object>} - Result of role switch
+ */
+export const switchRoleAndNavigate = async (role, destinationUrl = null, navigateFn = null) => {
+  const targetRole = (role || '').toLowerCase().trim();
+  const normalizedTarget = (targetRole === 'teacher') ? 'instructor' : targetRole;
+  const destUrl = destinationUrl || getRoleDashboardUrl(normalizedTarget);
+  
+  // Check active role
+  let currentActiveRole = '';
+  try {
+    const rawUserData = useAuthStore.getState().allUserData;
+    currentActiveRole = rawUserData?.current_role || rawUserData?.role || '';
+  } catch (e) {}
+  
+  if (!currentActiveRole) {
+    const token = Cookie.get('access_token') || Cookie.get('refresh_token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        currentActiveRole = decoded?.current_role || decoded?.role || '';
+      } catch (e) {}
+    }
+  }
+  
+  const normalizedActive = (currentActiveRole === 'teacher') ? 'instructor' : currentActiveRole.toLowerCase().trim();
+  
+  // If already in target role, navigate directly without API call
+  if (normalizedActive === normalizedTarget) {
+    if (navigateFn) {
+      navigateFn(destUrl);
+    } else if (typeof window !== 'undefined') {
+      window.location.href = destUrl;
+    }
+    return { success: true, current_role: normalizedTarget };
+  }
+
+  // Show transition notification
+  Toast().fire({
+    icon: 'info',
+    title: 'Memproses...',
+    text: `Beralih ke peran ${getRoleDisplayName(normalizedTarget)}...`,
+    timer: 1500,
+    showConfirmButton: false
+  });
+
+  // Switch role FIRST: updates backend DB, cookies, Zustand, and dispatches authRoleChanged event
+  const result = await switchRole(normalizedTarget);
+  
+  if (result.success) {
+    Toast().fire({
+      icon: 'success',
+      title: 'Peran Berhasil Beralih',
+      text: `Anda sekarang aktif dalam peran ${getRoleDisplayName(result.current_role)}`,
+      timer: 2000,
+      showConfirmButton: false
+    });
+
+    // Navigate to destination ONLY AFTER role switch has fully settled
+    if (navigateFn) {
+      navigateFn(destUrl, { replace: true });
+    } else if (typeof window !== 'undefined') {
+      window.location.href = destUrl;
+    }
+  } else {
+    Toast().fire({
+      icon: 'error',
+      title: 'Gagal Beralih Peran',
+      text: result.error || 'Terjadi kesalahan saat beralih peran',
+      timer: 4000
+    });
+  }
+  
+  return result;
+};
+
+/**
  * Fetch available roles for current user
  * 
  * @returns {Promise} - Available roles and current role
- * 
- * Example:
- *   const roles = await getAvailableRoles();
- *   console.log('Available:', roles.available_roles); // ['student', 'teacher']
- *   console.log('Current:', roles.current_role);      // 'student'
  */
 export const getAvailableRoles = async () => {
   try {
-    console.log('PHASE 4: Fetching available roles');
+    console.log('[RoleSystem] Fetching available roles');
     
-    const response = await apiInstance.get(`auth/available-roles/`);
+    const response = await apiInstance.get('auth/available-roles/');
     
     if (response.data.success) {
-      console.log('PHASE 4: Available roles:', response.data.available_roles);
+      console.log('[RoleSystem] Available roles:', response.data.available_roles);
       return {
         success: true,
         available_roles: response.data.available_roles || [],
@@ -156,7 +273,7 @@ export const getAvailableRoles = async () => {
     };
     
   } catch (error) {
-    console.error('PHASE 4: Error fetching available roles:', error);
+    console.error('[RoleSystem] Error fetching available roles:', error);
     return {
       success: false,
       available_roles: [],
@@ -173,12 +290,10 @@ export const getAvailableRoles = async () => {
  * @param {string} refresh_token - New refresh token
  */
 const updateAuthTokens = (access_token, refresh_token) => {
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const isHttps = window.location.protocol === 'https:';
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
 
   const cookieOptions = {
     expires: 1,
-    // Use protocol-aware secure flag to avoid silently dropped cookies on non-HTTPS staging/tests.
     secure: isHttps,
     sameSite: isHttps ? 'Strict' : 'Lax',
     path: '/'
@@ -190,7 +305,7 @@ const updateAuthTokens = (access_token, refresh_token) => {
     expires: 7
   });
   
-  console.log('PHASE 4: Tokens updated');
+  console.log('[RoleSystem] Tokens updated in cookies');
 };
 
 /**
@@ -198,10 +313,6 @@ const updateAuthTokens = (access_token, refresh_token) => {
  * 
  * @param {string|array} requiredRoles - Role(s) to check for
  * @returns {boolean} - True if user has the role(s)
- * 
- * Example:
- *   if (hasRole('admin')) { console.log('show admin panel'); }
- *   if (hasRole(['teacher', 'admin'])) { console.log('show instructor features'); }
  */
 export const hasRole = (requiredRoles) => {
   try {
@@ -216,7 +327,7 @@ export const hasRole = (requiredRoles) => {
     
     return userRoles.includes(requiredRoles);
   } catch (error) {
-    console.error('PHASE 4: Error checking role:', error);
+    console.error('[RoleSystem] Error checking role:', error);
     return false;
   }
 };
@@ -226,9 +337,6 @@ export const hasRole = (requiredRoles) => {
  * 
  * @param {string|array} requiredRoles - Role(s) to check for
  * @returns {boolean} - True if current role matches
- * 
- * Example:
- *   if (isCurrentRole('admin')) { console.log('user is in admin mode'); }
  */
 export const isCurrentRole = (requiredRoles) => {
   try {
@@ -243,13 +351,16 @@ export const isCurrentRole = (requiredRoles) => {
     
     return currentRole === requiredRoles;
   } catch (error) {
-    console.error('PHASE 4: Error checking current role:', error);
+    console.error('[RoleSystem] Error checking current role:', error);
     return false;
   }
 };
 
 export default {
   switchRole,
+  switchRoleAndNavigate,
+  getRoleDashboardUrl,
+  getRoleDisplayName,
   getAvailableRoles,
   hasRole,
   isCurrentRole

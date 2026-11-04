@@ -116,37 +116,76 @@ const LoadingFallback = () => (
 function App() {
     const [wishlistCount, setWishlistCount] = useState(0);
     const [profile, setProfile] = useState(null);
-    // PHASE 4: State for multi-role support
-    const [availableRoles, setAvailableRoles] = useState([]);
-    const [currentRole, setCurrentRole] = useState(null);
+    // PHASE 4: State for multi-role support with lazy initialization from token
+    const [availableRoles, setAvailableRoles] = useState(() => {
+        try {
+            const u = UserData();
+            if (u?.available_roles && Array.isArray(u.available_roles) && u.available_roles.length > 0) {
+                return u.available_roles;
+            }
+            if (u?.roles && typeof u.roles === 'string') {
+                return u.roles.split(',').map(r => r.trim()).filter(Boolean);
+            }
+        } catch (e) {}
+        return [];
+    });
+    const [currentRole, setCurrentRole] = useState(() => {
+        try {
+            const u = UserData();
+            return u?.current_role || u?.role || null;
+        } catch (e) {
+            return null;
+        }
+    });
     const [rolesLoading, setRolesLoading] = useState(false);
+
+    // Global listener for role change events across the application
+    useEffect(() => {
+        const handleAuthRoleChanged = (e) => {
+            const detail = e.detail;
+            if (detail?.current_role) {
+                setCurrentRole(detail.current_role);
+            }
+            if (detail?.available_roles && Array.isArray(detail.available_roles)) {
+                setAvailableRoles(detail.available_roles);
+            }
+        };
+
+        window.addEventListener('authRoleChanged', handleAuthRoleChanged);
+        return () => window.removeEventListener('authRoleChanged', handleAuthRoleChanged);
+    }, []);
     
     // ✨ PHASE 4.177: Fetch guards to prevent duplicate API calls in React Strict Mode
     const hasFetchedRef = useRef(false);
 
-    // PHASE 4: Fetch available roles for multi-role users
+    // PHASE 4: Fetch available roles for multi-role users (returns Promise)
     const fetchAvailableRoles = () => {
         try {
             const userData = UserData();
             if (userData?.user_id) {
                 setRolesLoading(true);
-                useAxios.get(`auth/available-roles/`).then((res) => {
-                    setAvailableRoles(res.data.available_roles || []);
-                    setCurrentRole(res.data.current_role || null);
+                return useAxios.get(`auth/available-roles/`).then((res) => {
+                    const roles = res.data.available_roles || [];
+                    const activeRole = res.data.current_role || null;
+                    setAvailableRoles(roles);
+                    setCurrentRole(activeRole);
                     setRolesLoading(false);
+                    return res.data;
                 }).catch((error) => {
                     // Fallback: try to get roles from user data
                     if (userData?.roles) {
-                        const roles = userData.roles.split(',').map(r => r.trim());
+                        const roles = userData.roles.split(',').map(r => r.trim()).filter(Boolean);
                         setAvailableRoles(roles);
                         setCurrentRole(userData.current_role || userData.role || roles[0]);
                     }
                     setRolesLoading(false);
+                    return null;
                 });
             }
         } catch (error) {
             setRolesLoading(false);
         }
+        return Promise.resolve(null);
     };
 
     const refreshWishlistCount = () => {
@@ -212,9 +251,16 @@ function App() {
         [profile]
     );
 
-    // PHASE 4: Memoize roles context value
+    // PHASE 4: Memoize roles context value (including direct state setters)
     const rolesContextValue = useMemo(
-        () => ({ availableRoles, currentRole, rolesLoading, fetchAvailableRoles }),
+        () => ({ 
+            availableRoles, 
+            currentRole, 
+            rolesLoading, 
+            fetchAvailableRoles, 
+            setCurrentRole, 
+            setAvailableRoles 
+        }),
         [availableRoles, currentRole, rolesLoading]
     );
 

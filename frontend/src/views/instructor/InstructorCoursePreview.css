@@ -423,6 +423,10 @@ body:has(.icp-wrapper)::after {
     background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
 }
 
+.icp-card-header-icon.icon-game {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+}
+
 .icp-card-header-icon.icon-video {
     background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
 }
@@ -1235,4 +1239,35 @@ body:has(.icp-wrapper)::after {
 
 .shadow-xs {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+
+/* Gamification Preview Badges & Cards */
+.icp-section-badge.game-badge {
+    background: #0d9488;
+}
+.icp-section-badge.game-badge-crossword {
+    background: #0284c7;
+}
+.icp-section-badge.game-badge-wordsearch {
+    background: #0d9488;
+}
+.icp-section-badge.game-badge-anagram {
+    background: #d97706;
+}
+.icp-section-badge.game-badge-memory {
+    background: #7c3aed;
+}
+
+.icp-game-preview-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.icp-game-preview-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }

@@ -57,6 +57,8 @@ import {
 } from "../../components/CourseDetail/QAMarkdownTools";
 
 import DiscussionTab from "../../components/CourseDetail/DiscussionTab";
+import GamificationTab from "../../components/CourseDetail/GamificationTab";
+import GamePlayer from "../../components/CourseDetail/GamePlayer";
 
 import CreateQuestionModal from "../../components/CourseDetail/CreateQuestionModal";
 
@@ -154,6 +156,29 @@ function CourseDetail() {
 
     const [selectedQuiz, setSelectedQuiz] = useState(null);
 
+    // Gamification Selected Game for GamePlayer Arena
+    const [selectedGame, setSelectedGame] = useState(null);
+
+    const handleSelectGame = (game) => {
+        setSelectedGame(game);
+        setActiveTab('gamification');
+        const gamificationTabBtn = document.querySelector('#gamification-tab');
+        if (gamificationTabBtn && !gamificationTabBtn.classList.contains('active')) {
+            const tabInstance = window.bootstrap?.Tab?.getOrCreateInstance(gamificationTabBtn);
+            if (tabInstance) tabInstance.show();
+        }
+        setTimeout(() => {
+            const playerCol = document.querySelector('.game-player-column');
+            if (playerCol) {
+                playerCol.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
+    };
+
+    const handleCloseGame = () => {
+        setSelectedGame(null);
+    };
+
 
 
     // ✨ Pre-test, Post-test & Sequential Progression Helpers
@@ -192,7 +217,21 @@ function CourseDetail() {
 
     const allRegularQuizzesPassed = regularQuizzes.length === 0 || regularQuizzes.every(q => q.is_passed);
 
-    const canTakePostTest = hasPrePostTest && allLessonsCompleted && allRegularQuizzesPassed;
+    // Gamifikasi completion check: semua mini-game harus sudah dikerjakan/lulus
+    const courseGames = course?.course?.games || course?.games || [];
+    const allGamesCompleted = courseGames.length === 0 || courseGames.every(g => (g.user_is_passed || (g.user_attempts_count || 0) > 0));
+
+    const canTakePostTest = hasPrePostTest && allLessonsCompleted && allRegularQuizzesPassed && allGamesCompleted;
+
+    const postTestLockReason = !hasPrePostTest
+        ? null
+        : !allLessonsCompleted
+            ? 'Selesaikan seluruh materi kurikulum kursus terlebih dahulu untuk membuka Post-test.'
+            : !allRegularQuizzesPassed
+                ? 'Selesaikan dan luluskan semua kuis materi terlebih dahulu untuk membuka Post-test.'
+                : !allGamesCompleted
+                    ? 'Selesaikan seluruh mini-game pada tab Gamifikasi terlebih dahulu untuk membuka Post-test.'
+                    : null;
 
 
 
@@ -840,6 +879,20 @@ function CourseDetail() {
 
                     }, 50);
 
+                } else if (tabName === 'gamification') {
+
+                    setTimeout(() => {
+
+                        const targetCol = document.querySelector('.game-player-column');
+
+                        if (targetCol) {
+
+                            targetCol.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                        }
+
+                    }, 50);
+
                 } else if (tabName === 'certificate') {
 
                     setTimeout(() => {
@@ -937,18 +990,34 @@ function CourseDetail() {
         }
 
         const handleMouseMove = (e) => {
-            if (!inlineQuizContainerRef.current) return;
+            const quizCol = document.querySelector('.quiz-player-column.has-active-quiz');
+            const inlineContainer = inlineQuizContainerRef.current;
+            const targetEl = inlineContainer || quizCol;
+            if (!targetEl) return;
 
-            const rect = inlineQuizContainerRef.current.getBoundingClientRect();
-            const isInside =
+            const rect = targetEl.getBoundingClientRect();
+            let isInside = (
                 e.clientX >= rect.left &&
                 e.clientX <= rect.right &&
                 e.clientY >= rect.top &&
-                e.clientY <= rect.bottom;
+                e.clientY <= rect.bottom
+            );
 
-            setIsMouseInQuizArea(isInside);
+            if (!isInside && quizCol) {
+                const colRect = quizCol.getBoundingClientRect();
+                isInside = (
+                    e.clientX >= colRect.left &&
+                    e.clientX <= colRect.right &&
+                    e.clientY >= colRect.top &&
+                    e.clientY <= colRect.bottom
+                );
+            }
 
-            if (!isInside && !showLeftQuizNotification) {
+            if (isInside) {
+                setIsMouseInQuizArea(true);
+                setShowLeftQuizNotification(false);
+            } else {
+                setIsMouseInQuizArea(false);
                 setShowLeftQuizNotification(true);
             }
         };
@@ -3607,6 +3676,7 @@ function CourseDetail() {
 
             setQuizStartTime(Date.now());
             setIsMouseInQuizArea(true);
+            setShowLeftQuizNotification(false);
             setTimeout(() => {
                 inlineQuizContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 60);
@@ -8089,11 +8159,25 @@ function CourseDetail() {
                                     )}
 
                                     {activeTab === 'quiz' && (
-<div className={`quiz-player-column ${isQuizActive && selectedQuiz && !showQuizResult ? 'has-active-quiz' : ''}`}>
+<div
+    className={`quiz-player-column ${isQuizActive && selectedQuiz && !showQuizResult ? 'has-active-quiz' : ''}`}
+    onMouseEnter={() => {
+        if (isQuizActive) {
+            setIsMouseInQuizArea(true);
+            setShowLeftQuizNotification(false);
+        }
+    }}
+    onMouseMove={() => {
+        if (isQuizActive && (!isMouseInQuizArea || showLeftQuizNotification)) {
+            setIsMouseInQuizArea(true);
+            setShowLeftQuizNotification(false);
+        }
+    }}
+>
 
-                                        {/* Left Quiz Area Notification */}
+                                        {/* Left Quiz Area Notification - Only render when pointer leaves quiz */}
 
-                                        {isQuizActive && showLeftQuizNotification && (
+                                        {isQuizActive && !isMouseInQuizArea && showLeftQuizNotification && (
 
                                             <div className="left-quiz-notification mb-2">
 
@@ -8115,6 +8199,13 @@ function CourseDetail() {
                                                 onMouseEnter={() => {
                                                     if (isQuizActive) {
                                                         setIsMouseInQuizArea(true);
+                                                        setShowLeftQuizNotification(false);
+                                                    }
+                                                }}
+                                                onMouseMove={() => {
+                                                    if (isQuizActive && (!isMouseInQuizArea || showLeftQuizNotification)) {
+                                                        setIsMouseInQuizArea(true);
+                                                        setShowLeftQuizNotification(false);
                                                     }
                                                 }}
                                                 onMouseLeave={() => {
@@ -8126,6 +8217,7 @@ function CourseDetail() {
                                                 onTouchStart={() => {
                                                     if (isQuizActive) {
                                                         setIsMouseInQuizArea(true);
+                                                        setShowLeftQuizNotification(false);
                                                     }
                                                 }}
                                             >
@@ -8998,7 +9090,22 @@ function CourseDetail() {
                                     </div>
                                     )}
 
-                                    {activeTab !== 'certificate' && activeTab !== 'review' && activeTab !== 'quiz' && (
+                                    {activeTab === 'gamification' && (
+                                        <div className="game-player-column">
+                                            <GamePlayer
+                                                course={course}
+                                                activeGame={selectedGame}
+                                                onSelectGame={handleSelectGame}
+                                                onCloseGame={handleCloseGame}
+                                                onGameCompleted={fetchCourseDetail}
+                                                pretestRequired={pretestRequired}
+                                                hasCompletedPretest={hasCompletedPretest}
+                                                onStartPretest={handleStartPretest}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {activeTab !== 'certificate' && activeTab !== 'review' && activeTab !== 'quiz' && activeTab !== 'gamification' && (
 <div
 
                                         ref={videoPlayerContainerRef}
@@ -9178,6 +9285,20 @@ function CourseDetail() {
                                     </li>
 
                                     <li className="nav-item" role="presentation">
+                                        <button className="nav-link" id="gamification-tab" data-bs-toggle="tab" data-bs-target="#gamification" type="button" role="tab">
+                                            <i className="fas fa-gamepad me-1"></i>
+                                            <span>Gamifikasi</span>
+                                            {pretestRequired && !hasCompletedPretest ? (
+                                                <i className="fas fa-lock text-warning ms-1" title="Terkunci - Selesaikan Pre-test terlebih dahulu" style={{ fontSize: '0.75rem' }}></i>
+                                            ) : (
+                                                (course?.course?.games?.length > 0 || course?.games?.length > 0) && (
+                                                    <span className="tab-pill-counter">{course?.course?.games?.length || course?.games?.length}</span>
+                                                )
+                                            )}
+                                        </button>
+                                    </li>
+
+                                    <li className="nav-item" role="presentation">
 
                                         <button className="nav-link" id="certificate-tab" data-bs-toggle="tab" data-bs-target="#certificate" type="button" role="tab">
 
@@ -9327,6 +9448,17 @@ function CourseDetail() {
 
 
 
+
+                                    {/* Gamification Tab */}
+                                    <GamificationTab
+                                        course={course}
+                                        pretestRequired={pretestRequired}
+                                        hasCompletedPretest={hasCompletedPretest}
+                                        onStartPretest={handleStartPretest}
+                                        onGameCompleted={fetchCourseDetail}
+                                        selectedGame={selectedGame}
+                                        onSelectGame={handleSelectGame}
+                                    />
 
                                     {/* Certificate Tab */}
 
@@ -9532,6 +9664,8 @@ function CourseDetail() {
                                                 prePostQuiz={prePostQuiz}
 
                                                 canTakePostTest={canTakePostTest}
+
+                                                postTestLockReason={postTestLockReason}
 
                                                 hasCompletedPosttest={hasCompletedPosttest}
 

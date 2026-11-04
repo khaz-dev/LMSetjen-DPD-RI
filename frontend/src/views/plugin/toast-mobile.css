@@ -1,171 +1,954 @@
-/* Enhanced Toast styles for better mobile performance */
-.modern-toast {
-    border-radius: 12px !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    backdrop-filter: blur(15px) !important;
-    -webkit-backdrop-filter: blur(15px) !important;
-    font-family: 'system-ui', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    /* Performance optimizations for mobile */
-    will-change: transform, opacity !important;
-    transform: translateZ(0) !important;
-    backface-visibility: hidden !important;
-    position: relative !important;
-    padding-right: 48px !important;
+/* ==========================================================================
+   ✨ LMSetjen DPD RI - Modern Compact SweetAlert2 & Toast Notification Redesign
+   High-density, low-whitespace, eye-catching glassmorphic styling
+   Applies across the platform: Modals, Dialogs, Question/Warning/Success/Error/Info,
+   and Top-Right Notification Toasts.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. GLOBAL MODAL CONTAINER & BACKDROP
+   Only apply backdrop to modal dialogs, NEVER to toasts!
+   -------------------------------------------------------------------------- */
+.swal2-container:not(.swal2-top-end):not(.swal2-top-start):not(.swal2-top):not(.swal2-top-right):not(.swal2-top-left):not(.swal2-bottom-end):not(.swal2-bottom-start):not(.swal2-bottom):not(.swal2-bottom-right):not(.swal2-bottom-left).swal2-backdrop-show:not(:has(.swal2-toast)):not(:has(.modern-toast:not(.modern-toast-dialog))),
+.swal2-container:not(.swal2-top-end):not(.swal2-top-start):not(.swal2-top):not(.swal2-top-right):not(.swal2-top-left):not(.swal2-bottom-end):not(.swal2-bottom-start):not(.swal2-bottom):not(.swal2-bottom-right):not(.swal2-bottom-left).swal2-noanimation:not(:has(.swal2-toast)):not(:has(.modern-toast:not(.modern-toast-dialog))) {
+    background: rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+    transition: background-color 0.2s ease !important;
+    z-index: 99999 !important;
 }
 
-/* ✨ PHASE 4.82: Modal dialog variant of modern-toast with proper centering */
-.modern-toast-dialog {
-    padding-right: 0 !important;  /* Remove padding-right used for toast close buttons */
-    text-align: center !important;
-}
-
-.modern-toast-dialog .swal2-icon {
-    margin: 0 auto 1rem auto !important;  /* Center the icon */
-}
-
-.modern-swal-title {
-    text-align: center !important;
-    margin: 0 auto !important;
-}
-
-.modern-swal-html {
-    text-align: center !important;
-}
-
-/* ✨ PHASE 4.58: Toast Close Button Styling */
-.toast-close-btn {
-    position: absolute !important;
-    right: 8px !important;
-    top: 8px !important;
+/* Ensure toast container is ALWAYS completely transparent with NO backdrop blur */
+body.swal2-toast-shown .swal2-container,
+.swal2-container:has(.swal2-toast),
+.swal2-container:has(.modern-toast:not(.modern-toast-dialog)),
+.swal2-container.swal2-top-end,
+.swal2-container.swal2-top-right,
+.swal2-container.swal2-top-start,
+.swal2-container.swal2-top-left,
+.swal2-container.swal2-top,
+.swal2-container.swal2-bottom-end,
+.swal2-container.swal2-bottom-start,
+.swal2-container.swal2-bottom-left,
+.swal2-container.swal2-bottom-right,
+.swal2-container.swal2-bottom {
     background: transparent !important;
-    border: none !important;
-    color: #718096 !important;
-    font-size: 20px !important;
-    cursor: pointer !important;
-    padding: 0 !important;
-    width: 32px !important;
-    height: 32px !important;
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    pointer-events: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. SWEETALERT2 MODAL POPUP (swal2-popup.swal2-modal)
+   Compact, sleek, zero excessive blank space
+   -------------------------------------------------------------------------- */
+.swal2-popup.swal2-modal {
+    position: relative !important;
+    padding: 1.15rem 1.35rem 1.1rem 1.35rem !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    background: #ffffff !important;
+    box-shadow: 0 20px 35px -10px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(15, 23, 42, 0.04) !important;
+    max-width: min(500px, 92vw) !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Snappy entrance animation for swal2-show */
+@keyframes swal2-compact-show {
+    0% {
+        opacity: 0;
+        transform: scale(0.94) translateY(6px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.swal2-popup.swal2-modal.swal2-show {
+    animation: swal2-compact-show 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. COMPACT ICONS (Reduced from bulky 80px down to sleek 48px badge)
+   Eliminates up to 60-70px of wasted vertical whitespace
+   -------------------------------------------------------------------------- */
+.swal2-popup.swal2-modal .swal2-icon {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    margin: 0.25rem auto 0.65rem auto !important;
+    border-width: 2.5px !important;
+    border-style: solid !important;
+    border-radius: 50% !important;
+    box-sizing: border-box !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    transition: all 0.2s ease !important;
+    user-select: none !important;
+}
+
+/* --- QUESTION ICON (swal2-icon-question) --- */
+@keyframes swal2-question-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.2), 0 4px 12px rgba(13, 148, 136, 0.15);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15), 0 6px 16px rgba(13, 148, 136, 0.25);
+    }
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-question {
+    border-color: #0d9488 !important;
+    color: #0d9488 !important;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.08) 0%, rgba(45, 212, 191, 0.16) 100%) !important;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12), 0 4px 12px rgba(13, 148, 136, 0.15) !important;
+    animation: swal2-question-pulse 2.4s ease-in-out infinite !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-question .swal2-icon-content {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: #0d9488 !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    width: 100% !important;
+}
+
+/* --- WARNING ICON (swal2-icon-warning) --- */
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-warning {
+    border-color: #f59e0b !important;
+    color: #f59e0b !important;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(251, 191, 36, 0.16) 100%) !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12), 0 4px 12px rgba(245, 158, 11, 0.15) !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-warning .swal2-icon-content {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: #d97706 !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* --- SUCCESS ICON (swal2-success, swal2-icon-success) --- */
+.swal2-popup.swal2-modal .swal2-icon.swal2-success,
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-success {
+    border-color: #10b981 !important;
+    color: #10b981 !important;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(52, 211, 153, 0.16) 100%) !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12), 0 4px 12px rgba(16, 185, 129, 0.15) !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-success [class^='swal2-success-line'],
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-success [class^='swal2-success-line'] {
+    height: 3px !important;
+    background-color: #10b981 !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-success .swal2-success-line-tip,
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-success .swal2-success-line-tip {
+    top: 25px !important;
+    left: 8px !important;
+    width: 14px !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-success .swal2-success-line-long,
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-success .swal2-success-line-long {
+    top: 21px !important;
+    right: 8px !important;
+    width: 24px !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-success .swal2-success-ring,
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-success .swal2-success-ring {
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-success .swal2-success-circular-line-left,
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-success .swal2-success-circular-line-right,
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-success .swal2-success-fix {
+    display: none !important;
+}
+
+/* --- ERROR ICON (swal2-error, swal2-icon-error) --- */
+.swal2-popup.swal2-modal .swal2-icon.swal2-error,
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-error {
+    border-color: #f43f5e !important;
+    color: #f43f5e !important;
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(251, 113, 133, 0.16) 100%) !important;
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12), 0 4px 12px rgba(244, 63, 94, 0.15) !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-error [class^='swal2-x-mark-line'],
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-error [class^='swal2-x-mark-line'] {
+    height: 3px !important;
+    width: 22px !important;
+    background-color: #f43f5e !important;
+    top: 22px !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-error .swal2-x-mark-line-left,
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-error .swal2-x-mark-line-left {
+    left: 11px !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-error .swal2-x-mark-line-right,
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-error .swal2-x-mark-line-right {
+    right: 11px !important;
+}
+
+/* --- INFO ICON (swal2-icon-info) --- */
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-info {
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(56, 189, 248, 0.16) 100%) !important;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12), 0 4px 12px rgba(2, 132, 199, 0.15) !important;
+}
+
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-info .swal2-icon-content {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #0284c7 !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. MODAL TYPOGRAPHY & INNER ELEMENTS
+   -------------------------------------------------------------------------- */
+.swal2-popup.swal2-modal .swal2-title {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin: 0.1rem 0 0.45rem 0 !important;
+    padding: 0 !important;
+    line-height: 1.35 !important;
+    letter-spacing: -0.01em !important;
+    text-align: center !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container {
+    margin: 0.15rem 0 0.65rem 0 !important;
+    padding: 0 !important;
+    font-size: 0.85rem !important;
+    line-height: 1.45 !important;
+    color: #334155 !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container p {
+    margin-bottom: 0.45rem !important;
+    color: #334155 !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container p:last-child {
+    margin-bottom: 0 !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container strong {
+    font-weight: 600 !important;
+    color: #0f172a !important;
+}
+
+/* Compact alert banners inside modals */
+.swal2-popup.swal2-modal .swal2-html-container .alert {
+    padding: 0.55rem 0.75rem !important;
+    margin-top: 0.35rem !important;
+    margin-bottom: 0.45rem !important;
+    border-radius: 8px !important;
+    font-size: 0.815rem !important;
+    line-height: 1.4 !important;
+    border-width: 1px !important;
+    border-left-width: 3.5px !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container .alert:last-child {
+    margin-bottom: 0 !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container .alert-info {
+    background: rgba(14, 165, 233, 0.08) !important;
+    border-color: rgba(14, 165, 233, 0.25) !important;
+    border-left-color: #0284c7 !important;
+    color: #0369a1 !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container .alert-success {
+    background: rgba(16, 185, 129, 0.08) !important;
+    border-color: rgba(16, 185, 129, 0.25) !important;
+    border-left-color: #059669 !important;
+    color: #047857 !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container .alert-warning {
+    background: rgba(245, 158, 11, 0.08) !important;
+    border-color: rgba(245, 158, 11, 0.25) !important;
+    border-left-color: #d97706 !important;
+    color: #b45309 !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container .alert-danger {
+    background: rgba(239, 68, 68, 0.08) !important;
+    border-color: rgba(239, 68, 68, 0.25) !important;
+    border-left-color: #dc2626 !important;
+    color: #b91c1c !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container .alert ul,
+.swal2-popup.swal2-modal .swal2-html-container .alert ol {
+    margin: 0.25rem 0 0 0 !important;
+    padding-left: 1.15rem !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container .alert li {
+    margin-bottom: 0.2rem !important;
+    font-size: 0.8rem !important;
+}
+
+.swal2-popup.swal2-modal .swal2-html-container .alert li:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   5. MODAL ACTIONS & BUTTONS
+   -------------------------------------------------------------------------- */
+.swal2-popup.swal2-modal .swal2-actions {
+    margin: 0.75rem auto 0.15rem auto !important;
+    padding: 0 !important;
+    gap: 8px !important;
+    width: 100% !important;
+    justify-content: center !important;
+}
+
+.swal2-popup.swal2-modal .swal2-styled {
+    min-height: 36px !important;
+    padding: 0.45rem 1.15rem !important;
+    font-size: 0.84rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    letter-spacing: 0.01em !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.swal2-popup.swal2-modal .swal2-styled:hover {
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12) !important;
+}
+
+.swal2-popup.swal2-modal .swal2-styled:active {
+    transform: translateY(0) !important;
+}
+
+/* Confirm Button - LMS Teal Gradient */
+.swal2-popup.swal2-modal .swal2-styled.swal2-confirm {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3) !important;
+}
+
+.swal2-popup.swal2-modal .swal2-styled.swal2-confirm:hover {
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4) !important;
+}
+
+/* Cancel Button - Subtle Slate */
+.swal2-popup.swal2-modal .swal2-styled.swal2-cancel {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+.swal2-popup.swal2-modal .swal2-styled.swal2-cancel:hover {
+    background: #e2e8f0 !important;
+    color: #1e293b !important;
+    border-color: #94a3b8 !important;
+}
+
+/* Modal close button */
+.swal2-popup.swal2-modal .swal2-close {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 18px !important;
+    top: 10px !important;
+    right: 10px !important;
     border-radius: 6px !important;
-    opacity: 0.8 !important;
+    color: #94a3b8 !important;
+    transition: all 0.15s ease !important;
+}
+
+.swal2-popup.swal2-modal .swal2-close:hover {
+    color: #1e293b !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* --------------------------------------------------------------------------
+   6. TOP-RIGHT NOTIFICATION TOAST REDESIGN (swal2-toast, modern-toast)
+   Compact, sleek, zero excess blank space, positioned below admin navbar
+   -------------------------------------------------------------------------- */
+body.swal2-toast-shown .swal2-container.swal2-top-end,
+body.swal2-toast-shown .swal2-container.swal2-top-right,
+.swal2-container.swal2-top-end,
+.swal2-container.swal2-top-right {
+    inset: 84px 12px auto auto !important;
+    top: 84px !important;
+    right: 12px !important;
+    padding: 0 !important;
+    width: auto !important;
+    max-width: 440px !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+}
+
+body.swal2-toast-shown .swal2-container.swal2-top-start,
+body.swal2-toast-shown .swal2-container.swal2-top-left,
+.swal2-container.swal2-top-start,
+.swal2-container.swal2-top-left {
+    inset: 84px auto auto 12px !important;
+    top: 84px !important;
+    left: 12px !important;
+    padding: 0 !important;
+    width: auto !important;
+    max-width: 440px !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+}
+
+body.swal2-toast-shown .swal2-container.swal2-top,
+.swal2-container.swal2-top {
+    inset: 84px auto auto 50% !important;
+    top: 84px !important;
+    transform: translateX(-50%) !important;
+    padding: 0 !important;
+    width: auto !important;
+    max-width: 440px !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+}
+
+.swal2-popup.swal2-toast,
+.modern-toast:not(.modern-toast-dialog) {
+    position: relative !important;
+    padding: 10px 38px 10px 14px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.06) !important;
+    width: auto !important;
+    min-width: 320px !important;
+    max-width: 440px !important;
+    display: grid !important;
+    grid-template-columns: 28px 1fr !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 3px !important;
+    align-items: center !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
+    will-change: transform, opacity !important;
+    pointer-events: auto !important;
+}
+
+/* Smooth entrance & exit animations for toast */
+@keyframes swal2-toast-in {
+    0% {
+        opacity: 0;
+        transform: translateX(25px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes swal2-toast-out {
+    0% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(25px) scale(0.96);
+    }
+}
+
+.swal2-toast-animate-in,
+.animate__slideInRight {
+    animation: swal2-toast-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.swal2-toast-animate-out,
+.animate__slideOutRight {
+    animation: swal2-toast-out 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+/* Status-specific left accent borders */
+.swal2-popup.swal2-toast.swal2-icon-success,
+.modern-toast.swal2-icon-success {
+    border-left: 3.5px solid #10b981 !important;
+}
+
+.swal2-popup.swal2-toast.swal2-icon-error,
+.modern-toast.swal2-icon-error {
+    border-left: 3.5px solid #f43f5e !important;
+}
+
+.swal2-popup.swal2-toast.swal2-icon-warning,
+.modern-toast.swal2-icon-warning {
+    border-left: 3.5px solid #f59e0b !important;
+}
+
+.swal2-popup.swal2-toast.swal2-icon-info,
+.swal2-popup.swal2-toast.swal2-icon-question,
+.modern-toast.swal2-icon-info,
+.modern-toast.swal2-icon-question {
+    border-left: 3.5px solid #0d9488 !important;
+}
+
+/* Toast Icon Base (Consistent 28px diameter across all variants) */
+.swal2-popup.swal2-toast .swal2-icon,
+.modern-toast .swal2-icon {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    align-self: center !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* --- TOAST SUCCESS ICON (Consistent centered ring & crisp checkmark) --- */
+.swal2-popup.swal2-toast .swal2-icon.swal2-success,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-success,
+.modern-toast .swal2-icon.swal2-success,
+.modern-toast .swal2-icon.swal2-icon-success {
+    border: none !important;
+    background: transparent !important;
+    position: relative !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+}
+
+/* Centered 28px Ring */
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-ring,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-success .swal2-success-ring,
+.modern-toast .swal2-icon.swal2-success .swal2-success-ring,
+.modern-toast .swal2-icon.swal2-icon-success .swal2-success-ring {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 28px !important;
+    height: 28px !important;
+    border: 2.5px solid #10b981 !important;
+    border-radius: 50% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 1 !important;
+    display: block !important;
+}
+
+/* Hide circular background masks that glitch and block the checkmark */
+.swal2-popup.swal2-toast .swal2-icon.swal2-success [class^='swal2-success-circular-line'],
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-fix,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-success [class^='swal2-success-circular-line'],
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-success .swal2-success-fix,
+.modern-toast .swal2-icon.swal2-success [class^='swal2-success-circular-line'],
+.modern-toast .swal2-icon.swal2-success .swal2-success-fix,
+.modern-toast .swal2-icon.swal2-icon-success [class^='swal2-success-circular-line'],
+.modern-toast .swal2-icon.swal2-icon-success .swal2-success-fix {
+    display: none !important;
+}
+
+/* Checkmark lines base */
+.swal2-popup.swal2-toast .swal2-icon.swal2-success [class^='swal2-success-line'],
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-success [class^='swal2-success-line'],
+.modern-toast .swal2-icon.swal2-success [class^='swal2-success-line'],
+.modern-toast .swal2-icon.swal2-icon-success [class^='swal2-success-line'] {
+    position: absolute !important;
+    height: 2.5px !important;
+    background-color: #10b981 !important;
+    border-radius: 2px !important;
+    z-index: 2 !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Checkmark Tip (Short leg - begins from upper-left and meets seamlessly at elbow) */
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-line-tip,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-success .swal2-success-line-tip,
+.modern-toast .swal2-icon.swal2-success .swal2-success-line-tip,
+.modern-toast .swal2-icon.swal2-icon-success .swal2-success-line-tip {
+    width: 7.5px !important;
+    height: 2.5px !important;
+    top: 12px !important;
+    left: 5.5px !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: rotate(45deg) !important;
+    transform-origin: 0 50% !important;
+    animation: toast-check-tip 0.18s ease-out forwards !important;
+}
+
+/* Seamless joint cap at the elbow to prevent any gap on high-DPI or subpixel rendering */
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-line-tip::after,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-success .swal2-success-line-tip::after,
+.modern-toast .swal2-icon.swal2-success .swal2-success-line-tip::after,
+.modern-toast .swal2-icon.swal2-icon-success .swal2-success-line-tip::after {
+    content: '' !important;
+    position: absolute !important;
+    right: -1px !important;
+    top: 0 !important;
+    width: 2.5px !important;
+    height: 2.5px !important;
+    background-color: #10b981 !important;
+    border-radius: 50% !important;
+    display: block !important;
+}
+
+/* Checkmark Long leg - begins from elbow and extends to upper-right */
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-line-long,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-success .swal2-success-line-long,
+.modern-toast .swal2-icon.swal2-success .swal2-success-line-long,
+.modern-toast .swal2-icon.swal2-icon-success .swal2-success-line-long {
+    width: 13px !important;
+    height: 2.5px !important;
+    top: 17.2px !important;
+    left: 9.6px !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: rotate(-45deg) !important;
+    transform-origin: 0 50% !important;
+    animation: toast-check-long 0.22s 0.10s ease-out forwards !important;
+}
+
+@keyframes toast-check-tip {
+    0% { width: 0; opacity: 0; }
+    100% { width: 7.5px; opacity: 1; }
+}
+
+@keyframes toast-check-long {
+    0% { width: 0; opacity: 0; }
+    100% { width: 13px; opacity: 1; }
+}
+
+/* --- TOAST ERROR ICON (Consistent 28px ring & true cross mark) --- */
+.swal2-popup.swal2-toast .swal2-icon.swal2-error,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-error,
+.modern-toast .swal2-icon.swal2-error,
+.modern-toast .swal2-icon.swal2-icon-error {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    border: 2.5px solid #f43f5e !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-error .swal2-x-mark,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-error .swal2-x-mark,
+.modern-toast .swal2-icon.swal2-error .swal2-x-mark,
+.modern-toast .swal2-icon.swal2-icon-error .swal2-x-mark {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-error [class^='swal2-x-mark-line'],
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-error [class^='swal2-x-mark-line'],
+.modern-toast .swal2-icon.swal2-error [class^='swal2-x-mark-line'],
+.modern-toast .swal2-icon.swal2-icon-error [class^='swal2-x-mark-line'] {
+    position: absolute !important;
+    height: 2.5px !important;
+    width: 13px !important;
+    background-color: #f43f5e !important;
+    border-radius: 2px !important;
+    top: 50% !important;
+    left: 50% !important;
+    margin: 0 !important;
+    z-index: 2 !important;
+    display: block !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-error .swal2-x-mark-line-left,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-error .swal2-x-mark-line-left,
+.modern-toast .swal2-icon.swal2-error .swal2-x-mark-line-left,
+.modern-toast .swal2-icon.swal2-icon-error .swal2-x-mark-line-left {
+    transform: translate(-50%, -50%) rotate(45deg) !important;
+    animation: toast-x-line-left 0.2s ease-out forwards !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-error .swal2-x-mark-line-right,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-error .swal2-x-mark-line-right,
+.modern-toast .swal2-icon.swal2-error .swal2-x-mark-line-right,
+.modern-toast .swal2-icon.swal2-icon-error .swal2-x-mark-line-right {
+    transform: translate(-50%, -50%) rotate(-45deg) !important;
+    animation: toast-x-line-right 0.2s 0.06s ease-out forwards !important;
+}
+
+@keyframes toast-x-line-left {
+    0% { transform: translate(-50%, -50%) rotate(45deg) scaleX(0); opacity: 0; }
+    100% { transform: translate(-50%, -50%) rotate(45deg) scaleX(1); opacity: 1; }
+}
+
+@keyframes toast-x-line-right {
+    0% { transform: translate(-50%, -50%) rotate(-45deg) scaleX(0); opacity: 0; }
+    100% { transform: translate(-50%, -50%) rotate(-45deg) scaleX(1); opacity: 1; }
+}
+
+/* --- TOAST WARNING & INFO ICONS (Consistent 28px ring & clear glyphs) --- */
+.swal2-popup.swal2-toast .swal2-icon.swal2-warning,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-warning,
+.modern-toast .swal2-icon.swal2-warning,
+.modern-toast .swal2-icon.swal2-icon-warning {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    border: 2.5px solid #f59e0b !important;
+    border-radius: 50% !important;
+    color: #f59e0b !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-info,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-info,
+.swal2-popup.swal2-toast .swal2-icon.swal2-question,
+.swal2-popup.swal2-toast .swal2-icon.swal2-icon-question,
+.modern-toast .swal2-icon.swal2-info,
+.modern-toast .swal2-icon.swal2-icon-info,
+.modern-toast .swal2-icon.swal2-question,
+.modern-toast .swal2-icon.swal2-icon-question {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    border: 2.5px solid #0d9488 !important;
+    border-radius: 50% !important;
+    color: #0d9488 !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon .swal2-icon-content,
+.modern-toast .swal2-icon .swal2-icon-content {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Toast Typography */
+.swal2-popup.swal2-toast .swal2-title,
+.modern-toast:not(.modern-toast-dialog) .swal2-title {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.35 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+.swal2-popup.swal2-toast .swal2-html-container,
+.modern-toast:not(.modern-toast-dialog) .swal2-html-container {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    font-size: 0.775rem !important;
+    color: #64748b !important;
+    margin: 2px 0 0 0 !important;
+    padding: 0 !important;
+    line-height: 1.35 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+.swal2-popup.swal2-toast .swal2-html-container:empty,
+.modern-toast:not(.modern-toast-dialog) .swal2-html-container:empty {
+    display: none !important;
+}
+
+/* Toast Close Button */
+.toast-close-btn {
+    position: absolute !important;
+    right: 6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: transparent !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    width: 22px !important;
+    height: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+    border-radius: 5px !important;
+    opacity: 0.85 !important;
     font-weight: bold !important;
     outline: none !important;
 }
 
 .toast-close-btn:hover {
     opacity: 1 !important;
-    color: #2d3748 !important;
-    background-color: rgba(0, 0, 0, 0.05) !important;
+    color: #1e293b !important;
+    background-color: rgba(0, 0, 0, 0.06) !important;
 }
 
 .toast-close-btn:active {
-    transform: scale(0.95) !important;
+    transform: translateY(-50%) scale(0.92) !important;
 }
 
+/* Toast Timer Progress Bar */
+.swal2-popup.swal2-toast .swal2-timer-progress-bar,
 .modern-progress-bar {
-    background: var(--theme-gradient) !important;
-    border-radius: 0 0 12px 12px !important;
-    height: 4px !important;
+    background: linear-gradient(90deg, #0d9488 0%, #2dd4bf 100%) !important;
+    border-radius: 0 0 10px 10px !important;
+    height: 2.5px !important;
+}
+
+/* --------------------------------------------------------------------------
+   7. MODAL DIALOG VARIANT & CONFIRMATIONS (modern-toast-dialog, Logout, Delete)
+   -------------------------------------------------------------------------- */
+.modern-toast-dialog {
+    padding-right: 1.35rem !important;
+    text-align: center !important;
+}
+
+.modern-toast-dialog .swal2-icon {
+    margin: 0.25rem auto 0.65rem auto !important;
+}
+
+.modern-swal-title {
+    text-align: center !important;
+    margin: 0 auto 0.45rem auto !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+
+.modern-swal-html {
+    text-align: center !important;
+    font-size: 0.85rem !important;
+    line-height: 1.45 !important;
 }
 
 .modern-logout-dialog {
-    border-radius: 16px !important;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    font-family: 'system-ui', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    /* Mobile optimizations */
-    max-width: 90vw !important;
-    max-height: 90vh !important;
-    overflow: hidden !important;
+    border-radius: 14px !important;
+    box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.22) !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    padding: 1.25rem 1.4rem !important;
+    max-width: 440px !important;
 }
 
 .modern-confirm-btn {
-    background: var(--theme-gradient) !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
     border: none !important;
-    border-radius: 10px !important;
-    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    padding: 0.45rem 1.15rem !important;
     font-weight: 600 !important;
     color: white !important;
-    transition: all 0.3s ease !important;
-    font-size: 0.95rem !important;
-    min-width: 120px !important;
-    /* Mobile touch optimization */
-    touch-action: manipulation !important;
-    -webkit-tap-highlight-color: transparent !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    font-size: 0.84rem !important;
+    min-height: 36px !important;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3) !important;
 }
 
 .modern-confirm-btn:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4) !important;
 }
 
 .modern-cancel-btn {
-    background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%) !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 12px 24px !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 0.45rem 1.15rem !important;
     font-weight: 600 !important;
-    color: white !important;
-    transition: all 0.3s ease !important;
-    font-size: 0.95rem !important;
-    min-width: 120px !important;
-    /* Mobile touch optimization */
-    touch-action: manipulation !important;
-    -webkit-tap-highlight-color: transparent !important;
+    color: #475569 !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    font-size: 0.84rem !important;
+    min-height: 36px !important;
 }
 
 .modern-cancel-btn:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 6px 20px rgba(229, 62, 62, 0.4) !important;
-}
-
-/* Loading spinner for logout state */
-@keyframes mobile-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Subtle pulse animation for seamless loading */
-@keyframes subtle-pulse {
-    0% { 
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% { 
-        opacity: 0.95;
-        transform: scale(0.98);
-    }
-    100% { 
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* Custom loading state for logout confirmation */
-.modern-confirm-btn:disabled,
-.modern-cancel-btn:disabled {
-    cursor: not-allowed !important;
-}
-
-.modern-confirm-btn .fa-spinner {
-    animation: mobile-spin 1s linear infinite !important;
-}
-
-/* Seamless loading overlay styles */
-.modern-confirm-btn {
-    position: relative !important;
-    overflow: hidden !important;
+    background: #e2e8f0 !important;
+    color: #1e293b !important;
+    transform: translateY(-1.5px) !important;
 }
 
 /* Prevent SweetAlert2 default loading overlay */
@@ -173,69 +956,124 @@
     display: none !important;
 }
 
-/* Maintain consistent design during loading */
-.swal2-loading .swal2-styled.swal2-confirm {
-    background: var(--theme-gradient) !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 12px 24px !important;
-    font-weight: 600 !important;
-    color: white !important;
-    font-size: 0.95rem !important;
+/* --------------------------------------------------------------------------
+   8. DARK THEME COMPATIBILITY (body.dark-theme)
+   -------------------------------------------------------------------------- */
+body.dark-theme .swal2-popup.swal2-modal {
+    background: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.5) !important;
 }
 
-.swal2-loading .swal2-styled.swal2-cancel {
-    background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%) !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 12px 24px !important;
-    font-weight: 600 !important;
-    color: white !important;
-    font-size: 0.95rem !important;
+body.dark-theme .swal2-popup.swal2-modal .swal2-title {
+    color: #f8fafc !important;
 }
 
-/* Reduce motion for slow connections */
-@media (prefers-reduced-motion: reduce) {
-    .modern-toast,
-    .modern-logout-dialog,
-    .modern-confirm-btn,
-    .modern-cancel-btn {
-        transition: none !important;
-        animation: none !important;
-    }
+body.dark-theme .swal2-popup.swal2-modal .swal2-html-container {
+    color: #cbd5e1 !important;
 }
 
-/* Mobile responsive adjustments */
+body.dark-theme .swal2-popup.swal2-modal .swal2-html-container p {
+    color: #cbd5e1 !important;
+}
+
+body.dark-theme .swal2-popup.swal2-modal .swal2-html-container strong {
+    color: #f8fafc !important;
+}
+
+body.dark-theme .swal2-popup.swal2-modal .swal2-styled.swal2-cancel {
+    background: #334155 !important;
+    color: #cbd5e1 !important;
+    border-color: #475569 !important;
+}
+
+body.dark-theme .swal2-popup.swal2-modal .swal2-styled.swal2-cancel:hover {
+    background: #475569 !important;
+    color: #f8fafc !important;
+}
+
+body.dark-theme .swal2-popup.swal2-modal .swal2-close {
+    color: #64748b !important;
+}
+
+body.dark-theme .swal2-popup.swal2-modal .swal2-close:hover {
+    color: #f8fafc !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.dark-theme .swal2-popup.swal2-toast,
+body.dark-theme .modern-toast {
+    background: rgba(30, 41, 59, 0.96) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.dark-theme .swal2-popup.swal2-toast .swal2-title,
+body.dark-theme .modern-toast .swal2-title {
+    color: #f8fafc !important;
+}
+
+body.dark-theme .toast-close-btn {
+    color: #94a3b8 !important;
+}
+
+body.dark-theme .toast-close-btn:hover {
+    color: #f8fafc !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Dark mode alerts inside modals */
+body.dark-theme .swal2-popup.swal2-modal .swal2-html-container .alert-info {
+    background: rgba(14, 165, 233, 0.15) !important;
+    border-color: rgba(14, 165, 233, 0.3) !important;
+    color: #7dd3fc !important;
+}
+
+body.dark-theme .swal2-popup.swal2-modal .swal2-html-container .alert-success {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    color: #6ee7b7 !important;
+}
+
+body.dark-theme .swal2-popup.swal2-modal .swal2-html-container .alert-warning {
+    background: rgba(245, 158, 11, 0.15) !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    color: #fcd34d !important;
+}
+
+body.dark-theme .swal2-popup.swal2-modal .swal2-html-container .alert-danger {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+    color: #fca5a5 !important;
+}
+
+/* --------------------------------------------------------------------------
+   9. RESPONSIVE MOBILE ADJUSTMENTS
+   -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
-    .modern-toast {
-        margin: 10px !important;
-        max-width: calc(100vw - 20px) !important;
-        font-size: 0.9rem !important;
+    .swal2-popup.swal2-modal {
+        margin: 12px !important;
+        padding: 1rem 1.15rem !important;
+        max-width: calc(100vw - 24px) !important;
     }
-    
-    .modern-logout-dialog {
-        margin: 20px !important;
-        padding: 1.5rem !important;
-    }
-    
-    .modern-confirm-btn,
-    .modern-cancel-btn {
-        padding: 14px 20px !important;
-        font-size: 0.9rem !important;
-        min-width: 100px !important;
-    }
-}
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .modern-toast {
-        border: 2px solid #000 !important;
-        background: #fff !important;
-        color: #000 !important;
+    .swal2-popup.swal2-modal .swal2-title {
+        font-size: 1.05rem !important;
     }
-    
-    .modern-logout-dialog {
-        border: 2px solid #000 !important;
-        background: #fff !important;
+
+    .swal2-popup.swal2-toast,
+    .modern-toast {
+        margin: 8px !important;
+        max-width: calc(100vw - 16px) !important;
+        padding: 0.5rem 2rem 0.5rem 0.75rem !important;
+    }
+
+    .swal2-popup.swal2-modal .swal2-actions {
+        flex-direction: column-reverse !important;
+        gap: 6px !important;
+    }
+
+    .swal2-popup.swal2-modal .swal2-styled {
+        width: 100% !important;
     }
 }

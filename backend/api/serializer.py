@@ -1156,6 +1156,16 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
         except Exception as e:
             # If quiz serialization fails, continue without quizzes
             pass
+
+        # Serialize games for student gamification tab
+        games = []
+        try:
+            from . import serializer as ser
+            game_objs = course.games.filter(is_active=True).order_by('order', 'date')
+            if game_objs.exists():
+                games = ser.CourseGameSerializer(game_objs, many=True, context=self.context).data
+        except Exception as e:
+            pass
         
         # Serialize teacher for instructor info display
         teacher = None
@@ -1218,6 +1228,7 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
                 'tags': tags or [],
                 'total_jam_pelatihan': int(total_jp),  # ✨ PHASE 4.228: Include calculated JP
                 'quizzes': quizzes,  # ✨ PHASE 4.229: Include quizzes for student quiz tab
+                'games': games,  # Gamification games
                 'teacher': teacher,  # ✨ PHASE 4.230: Include teacher for instructor info display
             }
         except Exception as e:
@@ -1229,6 +1240,7 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
                 'tags': tags or [],  # ✨ PHASE 7.5h FIX: Include tags in fallback
                 'total_jam_pelatihan': int(total_jp),
                 'quizzes': quizzes,
+                'games': games,
                 'teacher': teacher,
             }
 
@@ -1465,7 +1477,9 @@ class CourseSerializer(serializers.ModelSerializer):
     # ✨ PHASE 4.71: Fix quizzes field to return array instead of count
     # Frontend checks: Array.isArray(courseData.quizzes) && courseData.quizzes.length > 0
     # So we must return the actual Quiz objects, not just a count
-    quizzes = serializers.SerializerMethodField()  # ✨ PHASE 4.71: Return actual quiz objects for canPublish logic
+    quizzes = serializers.SerializerMethodField()
+    games = serializers.SerializerMethodField()  # ✨ PHASE 4.71: Return actual quiz objects for canPublish logic
+    games = serializers.SerializerMethodField()  # Course Gamification activities
     teacher = BasicTeacherSerializer(read_only=True)  # ✨ PHASE 4.39: Explicit teacher serialization with full details
     qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.16: Add QA count for instructor QA page
     # ✨ PHASE 4.228: Add total_jam_pelatihan (JP) calculated from course lectures
@@ -1473,7 +1487,7 @@ class CourseSerializer(serializers.ModelSerializer):
     learning_module = LearningModuleSerializer(read_only=True)
     
     class Meta:
-        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan", "course_type", "learning_module"]
+        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan", "course_type", "learning_module", "games"]
         model = api_models.Course
 
     
@@ -1508,6 +1522,12 @@ class CourseSerializer(serializers.ModelSerializer):
         from . import serializer as ser  # Lazy import to avoid circular reference
         quizzes = obj.quizzes.all()
         return ser.QuizSerializer(quizzes, many=True).data if quizzes.exists() else []
+
+    def get_games(self, obj):
+        """Return array of course game objects for instructor & student view"""
+        from . import serializer as ser
+        games = obj.games.filter(is_active=True).order_by('order', 'date')
+        return ser.CourseGameSerializer(games, many=True, context=self.context).data if games.exists() else []
 
     def get_completed_lesson(self, obj):
         """✨ PHASE 11.202+: Return only VALID completed lessons
@@ -1667,6 +1687,7 @@ class CourseEditSerializer(serializers.ModelSerializer):
     curriculum = VariantSerializer(many=True, required=False, read_only=True)
     lectures = VariantItemSerializer(many=True, required=False, read_only=True)
     quizzes = serializers.SerializerMethodField()
+    games = serializers.SerializerMethodField()
     # ✨ PHASE 4.85: Added missing course metadata fields
     features = CourseFeatureSerializer(many=True, read_only=True, required=False)
     requirements = CourseRequirementSerializer(many=True, read_only=True, required=False)
@@ -1685,7 +1706,7 @@ class CourseEditSerializer(serializers.ModelSerializer):
         # ✨ PHASE 4.85: Added "features", "requirements", "learning_outcomes"
         # ✨ PHASE 7.13: Added "qa_count" to CourseEditSerializer
         # ✨ PHASE 7.5 FIX: Added "tags" to return saved tags in edit form
-        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
+        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "games", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
         model = api_models.Course
     
     def get_quizzes(self, obj):
@@ -1693,6 +1714,12 @@ class CourseEditSerializer(serializers.ModelSerializer):
         from . import serializer as ser  # Import to avoid circular reference
         quizzes = obj.quizzes.all()
         return ser.QuizSerializer(quizzes, many=True, read_only=True).data
+
+    def get_games(self, obj):
+        """Return array of course game objects for instructor preview and editing"""
+        from . import serializer as ser
+        games = obj.games.all().order_by('order', 'date')
+        return ser.CourseGameSerializer(games, many=True, context=self.context).data if games.exists() else []
     
     def get_published_version(self, obj):
         """
@@ -1743,6 +1770,27 @@ class CourseEditSerializer(serializers.ModelSerializer):
                         many=True,
                         read_only=True
                     ).data,
+                    'games': ser.CourseGameSerializer(
+                        published_copies.games.filter(is_active=True).order_by('order', 'date'),
+                        many=True,
+                        read_only=True
+                    ).data if published_copies.games.exists() else [],
+                    # ✨ Features, Requirements, and Learning Outcomes for published preview
+                    'features': ser.CourseFeatureSerializer(
+                        published_copies.features.all(),
+                        many=True,
+                        read_only=True
+                    ).data if published_copies.features.exists() else [],
+                    'requirements': ser.CourseRequirementSerializer(
+                        published_copies.requirements.all(),
+                        many=True,
+                        read_only=True
+                    ).data if published_copies.requirements.exists() else [],
+                    'learning_outcomes': ser.CourseLearningOutcomeSerializer(
+                        published_copies.learning_outcomes.all(),
+                        many=True,
+                        read_only=True
+                    ).data if published_copies.learning_outcomes.exists() else [],
                     # ✨ PHASE 7.13: Add qa_count for published version
                     # Frontend needs correct question count from published course, not draft
                     'qa_count': api_models.Question_Answer.objects.filter(course=published_copies).count(),
@@ -3576,3 +3624,90 @@ class InstructorActivityStatsSerializer(serializers.Serializer):
     completion_rate = serializers.FloatField()
     course_activity_breakdown = serializers.ListField(child=serializers.DictField())
     recent_student_activities = ActivityLogListSerializer(many=True, read_only=True)
+
+
+# =====================================================================
+# Gamification Serializers: CourseGame & CourseGameAttempt
+# =====================================================================
+
+class CourseGameSerializer(serializers.ModelSerializer):
+    course_id = serializers.SerializerMethodField()
+    course_title = serializers.SerializerMethodField()
+    user_attempts_count = serializers.SerializerMethodField()
+    user_best_score = serializers.SerializerMethodField()
+    user_can_attempt = serializers.SerializerMethodField()
+    user_is_passed = serializers.SerializerMethodField()
+    attempts = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = api_models.CourseGame
+        fields = [
+            'game_id', 'title', 'description', 'game_type', 'game_data',
+            'max_attempts', 'points_reward', 'time_limit_seconds',
+            'is_active', 'order', 'date', 'course_id', 'course_title',
+            'user_attempts_count', 'user_best_score', 'user_can_attempt',
+            'user_is_passed', 'attempts'
+        ]
+
+    def get_course_id(self, obj):
+        return obj.course.course_id if obj.course else None
+
+    def get_course_title(self, obj):
+        return obj.course.title if obj.course else None
+
+    def get_user_attempts_count(self, obj):
+        user = self.context.get('user')
+        if user and user.is_authenticated:
+            return obj.get_user_attempts_count(user)
+        return 0
+
+    def get_user_best_score(self, obj):
+        user = self.context.get('user')
+        if user and user.is_authenticated:
+            best = obj.get_user_best_attempt(user)
+            return float(best.score) if best else 0
+        return 0
+
+    def get_user_can_attempt(self, obj):
+        user = self.context.get('user')
+        if user and user.is_authenticated:
+            return obj.can_user_attempt(user)
+        return True
+
+    def get_user_is_passed(self, obj):
+        user = self.context.get('user')
+        if user and user.is_authenticated:
+            return obj.attempts.filter(user=user, is_passed=True).exists()
+        return False
+
+    def get_attempts(self, obj):
+        user = self.context.get('user')
+        if user and user.is_authenticated:
+            user_attempts = obj.attempts.filter(user=user).order_by('attempt_number')
+            return CourseGameAttemptSerializer(user_attempts, many=True).data
+        return []
+
+
+class CourseGameAttemptSerializer(serializers.ModelSerializer):
+    game_title = serializers.SerializerMethodField()
+    game_type = serializers.SerializerMethodField()
+    user_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = api_models.CourseGameAttempt
+        fields = [
+            'attempt_id', 'game', 'game_title', 'game_type', 'attempt_number',
+            'score', 'is_passed', 'time_taken', 'answers_data', 'points_awarded',
+            'date_attempted', 'user_name'
+        ]
+        read_only_fields = ['attempt_id', 'date_attempted', 'points_awarded']
+
+    def get_game_title(self, obj):
+        return obj.game.title if obj.game else None
+
+    def get_game_type(self, obj):
+        return obj.game.game_type if obj.game else None
+
+    def get_user_name(self, obj):
+        return obj.user.full_name or obj.user.username if obj.user else None
+

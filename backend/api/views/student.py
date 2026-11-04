@@ -107,7 +107,25 @@ class StudentSummaryAPIView(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        user_id = self.kwargs.get('user_id')
+        course_id = self.kwargs.get('course_id')
+        is_pretest_locked = False
+        if user_id and course_id:
+            try:
+                user = User.objects.get(id=user_id)
+                course = api_models.Course.objects.filter(course_id=course_id).first()
+                if course:
+                    pre_post_quiz = api_models.Quiz.objects.filter(course=course, quiz_type='pre_post_test', is_active=True).first()
+                    if pre_post_quiz:
+                        has_pre = api_models.QuizAttempt.objects.filter(user=user, quiz=pre_post_quiz, attempt_type='pre_test').exists()
+                        is_pretest_locked = not has_pre
+            except Exception:
+                pass
+
+        data = list(serializer.data)
+        for item in data:
+            item['is_pretest_locked'] = is_pretest_locked
+        return Response(data)
     
 
 
@@ -2009,7 +2027,8 @@ class StudentQuizListAPIView(generics.ListAPIView):
             enrollment = api_models.EnrolledCourse.objects.filter(user=user, course=course).first() if course else None
             all_lessons_completed = enrollment.is_course_completed() if enrollment else False
             all_regular_quizzes_passed = enrollment.are_all_quizzes_passed() if enrollment else False
-            can_take_post_test = all_lessons_completed and all_regular_quizzes_passed
+            all_games_completed = enrollment.are_all_games_completed() if enrollment else True
+            can_take_post_test = all_lessons_completed and all_regular_quizzes_passed and all_games_completed
 
             prev_regular_passed = True
 
@@ -2042,7 +2061,14 @@ class StudentQuizListAPIView(generics.ListAPIView):
                             quiz_data['can_attempt'] = True
                         else:
                             quiz_data['is_locked'] = True
-                            quiz_data['lock_reason'] = "Selesaikan seluruh materi kurikulum dan kuis kursus terlebih dahulu untuk membuka Post-test"
+                            if not all_games_completed:
+                                quiz_data['lock_reason'] = "Selesaikan seluruh mini-game pada tab Gamifikasi terlebih dahulu untuk membuka Post-test"
+                            elif not all_lessons_completed:
+                                quiz_data['lock_reason'] = "Selesaikan seluruh materi kurikulum kursus terlebih dahulu untuk membuka Post-test"
+                            elif not all_regular_quizzes_passed:
+                                quiz_data['lock_reason'] = "Selesaikan dan luluskan semua kuis materi terlebih dahulu untuk membuka Post-test"
+                            else:
+                                quiz_data['lock_reason'] = "Selesaikan seluruh materi kurikulum, kuis, dan gamifikasi kursus terlebih dahulu untuk membuka Post-test"
                             quiz_data['can_attempt'] = False
                     else:
                         quiz_data['current_mode'] = 'completed'
@@ -2217,6 +2243,26 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                 else:
                     final_attempt_type = 'quiz'
                     is_pre_test = False
+
+                # Check prerequisites for post-test (lessons + quizzes + gamification)
+                if final_attempt_type == 'post_test':
+                    enrollment = api_models.EnrolledCourse.objects.filter(user=user, course=quiz.course).first()
+                    if enrollment:
+                        if not enrollment.are_all_games_completed():
+                            return Response(
+                                {"error": "Post-test terkunci. Anda harus menyelesaikan seluruh tantangan mini-game pada tab Gamifikasi terlebih dahulu."},
+                                status=status.HTTP_403_FORBIDDEN
+                            )
+                        if not enrollment.is_course_completed():
+                            return Response(
+                                {"error": "Post-test terkunci. Anda harus menyelesaikan seluruh materi kurikulum terlebih dahulu."},
+                                status=status.HTTP_403_FORBIDDEN
+                            )
+                        if not enrollment.are_all_quizzes_passed():
+                            return Response(
+                                {"error": "Post-test terkunci. Anda harus menyelesaikan dan lulus seluruh kuis materi terlebih dahulu."},
+                                status=status.HTTP_403_FORBIDDEN
+                            )
 
                 # Check if user can attempt
                 if not api_models.QuizAttempt.can_attempt_quiz(user, quiz, attempt_type=final_attempt_type):
@@ -3653,3 +3699,158 @@ class StudentActivityStatsAPIView(APIView):
 
 
 
+
+
+# =====================================================================
+# Student Gamification API Views
+# =====================================================================
+class StudentCourseGameListAPIView(generics.ListAPIView):
+    """List all active games for a specific course with user progress"""
+    serializer_class = api_serializer.CourseGameSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
+    pagination_class = None
+
+    def get_queryset(self):
+        course_id = self.kwargs.get('course_id')
+        return api_models.CourseGame.objects.filter(
+            course__course_id=course_id,
+            is_active=True
+        ).order_by('order', 'date')
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        user_id = self.kwargs.get('user_id')
+        if user_id:
+            try:
+                context['user'] = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                context['user'] = self.request.user
+        else:
+            context['user'] = self.request.user
+        return context
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class StudentCourseGameDetailAPIView(generics.RetrieveAPIView):
+    """Retrieve details for a specific game for student"""
+    serializer_class = api_serializer.CourseGameSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
+    lookup_field = 'game_id'
+
+    def get_queryset(self):
+        return api_models.CourseGame.objects.filter(is_active=True)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        user_id = self.kwargs.get('user_id')
+        if user_id:
+            try:
+                context['user'] = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                context['user'] = self.request.user
+        else:
+            context['user'] = self.request.user
+        return context
+
+
+class StudentCourseGameSubmitAPIView(APIView):
+    """Submit attempt for a course game"""
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request, user_id):
+        game_id = request.data.get('game_id')
+        score = request.data.get('score', 0)
+        time_taken = request.data.get('time_taken', 0)
+        answers_data = request.data.get('answers_data', {})
+        is_passed = request.data.get('is_passed', False)
+
+        try:
+            user = User.objects.get(id=user_id)
+            game = api_models.CourseGame.objects.get(game_id=game_id)
+
+            # Check if pre-test is completed for courses requiring pre-test
+            pre_post_quiz = api_models.Quiz.objects.filter(course=game.course, quiz_type='pre_post_test', is_active=True).first()
+            if pre_post_quiz:
+                has_pre = api_models.QuizAttempt.objects.filter(user=user, quiz=pre_post_quiz, attempt_type='pre_test').exists()
+                if not has_pre:
+                    return Response(
+                        {"error": "Gamifikasi terkunci. Anda harus menyelesaikan Pre-test Diagnostik terlebih dahulu."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+
+            attempts_count = game.get_user_attempts_count(user)
+            if attempts_count >= game.max_attempts:
+                return Response(
+                    {"error": f"Batas maksimum {game.max_attempts} percobaan untuk game ini telah tercapai."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Convert score to float / decimal
+            score_val = float(score) if score is not None else 0.0
+            if score_val < 0:
+                score_val = 0.0
+            elif score_val > 100:
+                score_val = 100.0
+
+            attempt_number = attempts_count + 1
+            has_passed = is_passed or (score_val >= 70.0)
+
+            # Check if this user has already earned points for this game
+            already_passed = game.attempts.filter(user=user, is_passed=True).exists()
+            points_awarded = 0
+            if has_passed and not already_passed:
+                points_awarded = game.points_reward
+
+            attempt = api_models.CourseGameAttempt.objects.create(
+                user=user,
+                game=game,
+                attempt_number=attempt_number,
+                score=score_val,
+                is_passed=has_passed,
+                time_taken=int(time_taken) if time_taken else 0,
+                answers_data=answers_data if isinstance(answers_data, dict) else {},
+                points_awarded=points_awarded
+            )
+
+            # Award student ranking points
+            if points_awarded > 0:
+                try:
+                    api_models.StudentPoints.add_points(
+                        user=user,
+                        points=points_awarded,
+                        category='points_earned',
+                        course_id=game.course.course_id,
+                        description=f"Menyelesaikan mini game {game.title} ({game.get_game_type_display()})"
+                    )
+                except Exception as e:
+                    print(f"Error adding student points: {e}")
+
+            today_attempts = attempts_count + 1
+            attempts_left = max(0, game.max_attempts - today_attempts)
+            can_attempt = attempts_left > 0
+
+            return Response({
+                "message": "Game attempt submitted successfully",
+                "attempt": api_serializer.CourseGameAttemptSerializer(attempt).data,
+                "score": score_val,
+                "is_passed": has_passed,
+                "points_awarded": points_awarded,
+                "attempt_number": attempt_number,
+                "attempts_left": attempts_left,
+                "can_attempt": can_attempt,
+                "max_attempts": game.max_attempts
+            }, status=status.HTTP_201_CREATED)
+
+        except User.DoesNotExist:
+            return Response({"error": "User tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except api_models.CourseGame.DoesNotExist:
+            return Response({"error": "Game tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

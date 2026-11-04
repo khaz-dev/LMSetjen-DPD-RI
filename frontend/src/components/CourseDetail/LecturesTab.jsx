@@ -30,7 +30,8 @@ const LecturesTab = ({
     onSelectQuiz = null,
     prePostQuiz = null,
     hasCompletedPosttest = true,
-    canTakePostTest = false
+    canTakePostTest = false,
+    postTestLockReason = null
 }) => {
     // Video player ref
     const playerRef = useRef(null);
@@ -1343,6 +1344,11 @@ const LecturesTab = ({
                                 <small className="text-muted d-block mt-1">
                                     {prePostQuiz.title} &bull; {prePostQuiz.total_questions || prePostQuiz.questions?.length || 0} Soal
                                 </small>
+                                {postTestLockReason && !canTakePostTest && !hasCompletedPosttest && (
+                                    <small className="text-danger d-block mt-1" style={{ fontSize: '11px' }}>
+                                        <i className="fas fa-lock me-1"></i>{postTestLockReason}
+                                    </small>
+                                )}
                             </div>
                         </div>
                         <div>
@@ -1743,8 +1749,8 @@ const LecturesTab = ({
                             Toast().fire({
                                 icon: 'warning',
                                 title: 'Post-test Terkunci',
-                                text: 'Selesaikan seluruh materi kurikulum dan luluskan semua kuis terlebih dahulu untuk membuka Post-test.',
-                                timer: 4000
+                                text: postTestLockReason || 'Selesaikan seluruh materi kurikulum, kuis, dan gamifikasi terlebih dahulu untuk membuka Post-test.',
+                                timer: 4500
                             });
                             return;
                         }
@@ -1775,7 +1781,7 @@ const LecturesTab = ({
                                     <i className="fas fa-check-circle me-1"></i>Selesai ({Math.round(prePostQuiz.post_test_score || 0)}%)
                                 </span>
                             ) : !canTakePostTest ? (
-                                <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
+                                <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" title={postTestLockReason || 'Terkunci'}>
                                     <i className="fas fa-lock me-1"></i>Terkunci
                                 </span>
                             ) : (

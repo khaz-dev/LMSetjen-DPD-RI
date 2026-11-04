@@ -281,6 +281,13 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                             >
                                 <i className="fas fa-layer-group"></i>
                             </Link>
+                            <Link
+                                to={`/instructor/edit-course/${course.course_id}/gamification/`}
+                                className="btn course-action-btn course-action-btn-sm btn-gamification"
+                                title="Kelola Gamifikasi Kursus"
+                            >
+                                <i className="fas fa-gamepad"></i>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -432,6 +439,13 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                             title="Kelola Kurikulum & Materi"
                         >
                             <i className="fas fa-layer-group"></i>
+                        </Link>
+                        <Link
+                            to={`/instructor/edit-course/${course.course_id}/gamification/`}
+                            className="btn course-action-btn course-action-btn-sm btn-gamification"
+                            title="Kelola Gamifikasi Kursus"
+                        >
+                            <i className="fas fa-gamepad"></i>
                         </Link>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext, useRef, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { switchRoleAndNavigate } from "../../utils/roleUtils";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import Sidebar from "./Partials/Sidebar";
@@ -158,6 +159,7 @@ const getCroppedImage = (image, crop, fileName) => {
 };
 
 function Profile() {
+    const navigate = useNavigate();
     // Contexts & Hooks
     const profileContext = useContext(ProfileContext);
     const [profile, setProfile] = profileContext || [null, () => { }];
@@ -1413,27 +1415,52 @@ function Profile() {
                                                                 <p className="student-sync-desc mb-2">
                                                                     Sebagai peserta pelatihan, data profil Anda (nama, NIP, golongan, unit kerja) otomatis sinkron dengan data utama di atas. Tidak ada duplikasi akun atau formulir terpisah.
                                                                 </p>
-                                                                <Link to="/student/profile/" className="btn-switch-role-view">
+                                                                <button 
+                                                                    type="button" 
+                                                                    onClick={() => switchRoleAndNavigate('student', '/student/profile/', navigate)} 
+                                                                    className="btn-switch-role-view"
+                                                                    title="Beralih peran ke Siswa dan buka profil siswa"
+                                                                >
                                                                     <i className="fas fa-arrow-right-arrow-left me-1"></i> Buka Halaman Profil Siswa
-                                                                </Link>
+                                                                </button>
                                                             </div>
                                                         </div>
 
                                                         <div className="role-quick-shortcuts">
                                                             <span className="shortcuts-label">Akses Cepat Peserta:</span>
                                                             <div className="shortcuts-links-row">
-                                                                <Link to="/student/courses/" className="shortcut-chip">
+                                                                <button 
+                                                                    type="button" 
+                                                                    onClick={() => switchRoleAndNavigate('student', '/student/courses/', navigate)} 
+                                                                    className="shortcut-chip"
+                                                                    title="Beralih peran ke Siswa dan buka kursus diikuti"
+                                                                >
                                                                     <i className="fas fa-play-circle"></i> Kursus Diikuti
-                                                                </Link>
-                                                                <Link to="/student/sertifikat/" className="shortcut-chip">
+                                                                </button>
+                                                                <button 
+                                                                    type="button" 
+                                                                    onClick={() => switchRoleAndNavigate('student', '/student/sertifikat/', navigate)} 
+                                                                    className="shortcut-chip"
+                                                                    title="Beralih peran ke Siswa dan buka sertifikat"
+                                                                >
                                                                     <i className="fas fa-award text-amber"></i> Sertifikat Saya
-                                                                </Link>
-                                                                <Link to="/student/activities/" className="shortcut-chip">
+                                                                </button>
+                                                                <button 
+                                                                    type="button" 
+                                                                    onClick={() => switchRoleAndNavigate('student', '/student/activities/', navigate)} 
+                                                                    className="shortcut-chip"
+                                                                    title="Beralih peran ke Siswa dan buka riwayat belajar"
+                                                                >
                                                                     <i className="fas fa-clock-rotate-left"></i> Riwayat Belajar
-                                                                </Link>
-                                                                <Link to="/student/dashboard/" className="shortcut-chip">
+                                                                </button>
+                                                                <button 
+                                                                    type="button" 
+                                                                    onClick={() => switchRoleAndNavigate('student', '/student/dashboard/', navigate)} 
+                                                                    className="shortcut-chip"
+                                                                    title="Beralih peran ke Siswa dan buka dasbor siswa"
+                                                                >
                                                                     <i className="fas fa-gauge-high"></i> Dasbor Siswa
-                                                                </Link>
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>

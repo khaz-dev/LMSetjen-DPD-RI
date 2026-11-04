@@ -870,6 +870,8 @@
     align-items: center;
     text-decoration: none;
     transition: all 0.2s;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .btn-switch-role-view:hover {
@@ -910,6 +912,8 @@
     align-items: center;
     gap: 0.3rem;
     transition: all 0.15s ease;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .shortcut-chip:hover {

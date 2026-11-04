@@ -27,7 +27,8 @@
 
     .course-unified-layout-row .course-main-left-column .course-player-column,
     .course-unified-layout-row .course-main-left-column .certificate-display-column,
-    .course-unified-layout-row .course-main-left-column .quiz-player-column {
+    .course-unified-layout-row .course-main-left-column .quiz-player-column,
+    .course-unified-layout-row .course-main-left-column .game-player-column {
         width: 100% !important;
         max-width: 100% !important;
         flex: 0 0 auto !important;
@@ -6748,29 +6749,30 @@ body.modern-course-active {
     animation-delay: 0.4s;
 }
 
-/* ✨ Left Quiz Notification - Fixed Positioned */
+/* ✨ Left Quiz Notification - Inline Alert */
 .left-quiz-notification {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 40px;
-    border-radius: 20px;
-    text-align: center;
-    z-index: 10000;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    border: 3px solid #e74c3c;
-    max-width: 400px;
-    animation: slideInDown 0.4s ease;
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    background: #fffbeb;
+    padding: 0.5rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    font-size: 0.82rem;
+    z-index: 5;
+    box-shadow: none;
+    max-width: 100%;
+    animation: fadeIn 0.3s ease;
 }
 
 /* ✨ Notification Icon */
 .notification-icon {
-    font-size: 48px;
-    color: #e74c3c;
-    margin-bottom: 20px;
-    display: block;
+    font-size: 1rem;
+    color: #d97706;
+    margin-bottom: 0;
+    display: inline-block;
 }
 
 /* ✨ Notification Title */
@@ -9319,6 +9321,12 @@ body.modern-course-active {
 
 /* Left Quiz Area Notification - Clean & Compact */
 .left-quiz-notification {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    z-index: 5 !important;
+    max-width: 100% !important;
     padding: 0.5rem 0.85rem !important;
     background: #fffbeb !important;
     border: 1px solid #fde68a !important;
@@ -9327,6 +9335,16 @@ body.modern-course-active {
     font-size: 0.82rem !important;
     display: flex !important;
     align-items: center !important;
+    box-shadow: none !important;
+}
+
+/* Sembunyikan notifikasi jika pointer berada di area kuis */
+.quiz-player-column.has-active-quiz:hover .left-quiz-notification,
+.quiz-player-column.has-active-quiz:focus-within .left-quiz-notification {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
 /* Redesigned Compact Inline Quiz Fullscreen Container */
