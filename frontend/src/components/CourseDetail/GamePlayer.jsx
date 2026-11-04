@@ -67,6 +67,7 @@ const GamePlayer = ({
     const [wsGrid, setWsGrid] = useState([]);
     const [wsFoundWords, setWsFoundWords] = useState([]);
     const [wsSelectedCells, setWsSelectedCells] = useState([]);
+    const [wsFoundCells, setWsFoundCells] = useState([]);
 
     // 3. Anagram
     const [anagramCurrentIdx, setAnagramCurrentIdx] = useState(0);
@@ -113,6 +114,7 @@ const GamePlayer = ({
             setMatchedCardIds([]);
             setWsSelectedCells([]);
             setWsFoundWords([]);
+            setWsFoundCells([]);
             setCrosswordAnswers({});
         }
     }, [activeGame?.game_id]);
@@ -177,47 +179,155 @@ const GamePlayer = ({
         }
     };
 
-    // Helper: Init Word Search
+    // Helper: Calculate straight-line coordinates between two cells (horizontal, vertical, diagonal)
+    const getCellsBetween = (cellA, cellB) => {
+        if (!cellA || !cellB) return null;
+        const dr = cellB.r - cellA.r;
+        const dc = cellB.c - cellA.c;
+        const absR = Math.abs(dr);
+        const absC = Math.abs(dc);
+
+        if (dr === 0 && dc === 0) return [cellA];
+        // Straight line check: same row, same col, or exact 45-deg diagonal
+        if (dr !== 0 && dc !== 0 && absR !== absC) {
+            return null;
+        }
+
+        const steps = Math.max(absR, absC);
+        const stepR = dr === 0 ? 0 : (dr > 0 ? 1 : -1);
+        const stepC = dc === 0 ? 0 : (dc > 0 ? 1 : -1);
+
+        const cells = [];
+        for (let i = 0; i <= steps; i++) {
+            cells.push({
+                r: cellA.r + i * stepR,
+                c: cellA.c + i * stepC
+            });
+        }
+        return cells;
+    };
+
+    // Helper: Init Word Search (supports 8 directions: horizontal, vertical, diagonal, and reverse)
     const initWordSearch = (wordsList) => {
-        const size = 10;
-        const grid = Array(size).fill(null).map(() => Array(size).fill(""));
         const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-        const validWords = wordsList.map(w => 
-            (typeof w === "object" ? w.word : w).toUpperCase().replace(/[^A-Z]/g, "")
-        );
+        const validWords = wordsList
+            .map(w => (typeof w === "object" ? w.word : w).toUpperCase().replace(/[^A-Z]/g, ""))
+            .filter(Boolean);
 
-        validWords.forEach((word) => {
-            if (!word || word.length > size) return;
+        if (validWords.length === 0) {
+            setWsGrid([]);
+            setWsFoundWords([]);
+            setWsSelectedCells([]);
+            setWsFoundCells([]);
+            return;
+        }
+
+        // 8 directions: horizontal, vertical, diagonal down, diagonal up, and reverse
+        const WS_DIRECTIONS = [
+            { name: "horizontal", dr: 0, dc: 1 },
+            { name: "horizontal_rev", dr: 0, dc: -1 },
+            { name: "vertical", dr: 1, dc: 0 },
+            { name: "vertical_rev", dr: -1, dc: 0 },
+            { name: "diagonal_down_right", dr: 1, dc: 1 },
+            { name: "diagonal_down_left", dr: 1, dc: -1 },
+            { name: "diagonal_up_right", dr: -1, dc: 1 },
+            { name: "diagonal_up_left", dr: -1, dc: -1 },
+        ];
+
+        const getRandomCoord = (dirComponent, wordLen, gridSize) => {
+            if (dirComponent === 1) {
+                const maxStart = gridSize - wordLen;
+                return Math.floor(Math.random() * (maxStart + 1));
+            } else if (dirComponent === -1) {
+                const minStart = wordLen - 1;
+                return minStart + Math.floor(Math.random() * (gridSize - minStart));
+            } else {
+                return Math.floor(Math.random() * gridSize);
+            }
+        };
+
+        const maxLen = Math.max(...validWords.map(w => w.length));
+        // Dynamic grid size: accommodates words longer than 10 characters with breathing space
+        const size = Math.max(12, maxLen <= 10 ? 12 : maxLen + 1);
+
+        // Sort longest words first for optimal placement without collisions
+        const sortedWords = [...validWords].sort((a, b) => b.length - a.length);
+        const grid = Array(size).fill(null).map(() => Array(size).fill(""));
+
+        // Direction usage tracking to encourage balanced variety across all 8 directions
+        const dirUsage = {};
+        WS_DIRECTIONS.forEach(d => { dirUsage[d.name] = 0; });
+
+        sortedWords.forEach((word) => {
             let placed = false;
-            let tries = 0;
-            while (!placed && tries < 50) {
-                tries++;
-                const isHorizontal = Math.random() > 0.5;
-                const row = Math.floor(Math.random() * (isHorizontal ? size : size - word.length + 1));
-                const col = Math.floor(Math.random() * (isHorizontal ? size - word.length + 1 : size));
 
-                let canPlace = true;
-                for (let i = 0; i < word.length; i++) {
-                    const r = isHorizontal ? row : row + i;
-                    const c = isHorizontal ? col + i : col;
-                    if (grid[r][c] !== "" && grid[r][c] !== word[i]) {
-                        canPlace = false;
+            // Prioritize less-used directions with random jitter
+            const candidateDirs = [...WS_DIRECTIONS].sort((a, b) => {
+                return (dirUsage[a.name] - dirUsage[b.name]) + (Math.random() - 0.5) * 1.5;
+            });
+
+            for (const dir of candidateDirs) {
+                for (let tries = 0; tries < 60; tries++) {
+                    const row = getRandomCoord(dir.dr, word.length, size);
+                    const col = getRandomCoord(dir.dc, word.length, size);
+
+                    let canPlace = true;
+                    for (let i = 0; i < word.length; i++) {
+                        const r = row + i * dir.dr;
+                        const c = col + i * dir.dc;
+                        if (grid[r][c] !== "" && grid[r][c] !== word[i]) {
+                            canPlace = false;
+                            break;
+                        }
+                    }
+
+                    if (canPlace) {
+                        for (let i = 0; i < word.length; i++) {
+                            grid[row + i * dir.dr][col + i * dir.dc] = word[i];
+                        }
+                        placed = true;
+                        dirUsage[dir.name]++;
                         break;
                     }
                 }
+                if (placed) break;
+            }
 
-                if (canPlace) {
-                    for (let i = 0; i < word.length; i++) {
-                        const r = isHorizontal ? row : row + i;
-                        const c = isHorizontal ? col + i : col;
-                        grid[r][c] = word[i];
+            // Fallback: systematic scan across entire grid if random search did not find spot
+            if (!placed) {
+                outer:
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        for (const dir of WS_DIRECTIONS) {
+                            const endRow = r + (word.length - 1) * dir.dr;
+                            const endCol = c + (word.length - 1) * dir.dc;
+                            if (endRow < 0 || endRow >= size || endCol < 0 || endCol >= size) continue;
+
+                            let canPlace = true;
+                            for (let i = 0; i < word.length; i++) {
+                                const curR = r + i * dir.dr;
+                                const curC = c + i * dir.dc;
+                                if (grid[curR][curC] !== "" && grid[curR][curC] !== word[i]) {
+                                    canPlace = false;
+                                    break;
+                                }
+                            }
+                            if (canPlace) {
+                                for (let i = 0; i < word.length; i++) {
+                                    grid[r + i * dir.dr][c + i * dir.dc] = word[i];
+                                }
+                                placed = true;
+                                dirUsage[dir.name]++;
+                                break outer;
+                            }
+                        }
                     }
-                    placed = true;
                 }
             }
         });
 
+        // Fill empty spaces with random uppercase letters
         for (let r = 0; r < size; r++) {
             for (let c = 0; c < size; c++) {
                 if (grid[r][c] === "") {
@@ -229,6 +339,7 @@ const GamePlayer = ({
         setWsGrid(grid);
         setWsFoundWords([]);
         setWsSelectedCells([]);
+        setWsFoundCells([]);
     };
 
     // Helper: Init Memory Match
@@ -295,38 +406,71 @@ const GamePlayer = ({
         finalizeAttempt(score);
     };
 
-    // 2. Word Search Handlers
+    // 2. Word Search Handlers (supports first-to-last letter line selection and letter-by-letter)
     const handleWsCellClick = (r, c) => {
-        const newSelection = [...wsSelectedCells];
-        const existingIdx = newSelection.findIndex(cell => cell.r === r && cell.c === c);
-
-        if (existingIdx !== -1) {
-            newSelection.splice(existingIdx, 1);
-            gameAudio.playTileDeselect();
-        } else {
-            newSelection.push({ r, c, char: wsGrid[r][c] });
-            gameAudio.playTileSelect();
-        }
-        setWsSelectedCells(newSelection);
-
-        const formedWord = newSelection.map(cell => cell.char).join("");
-        const reverseFormed = formedWord.split("").reverse().join("");
-        const targetWords = (activeGame.game_data.words || []).map(w => 
+        const clickedCell = { r, c, char: wsGrid[r][c] };
+        const targetWords = (activeGame.game_data?.words || []).map(w => 
             (typeof w === "object" ? w.word : w).toUpperCase().replace(/[^A-Z]/g, "")
-        );
+        ).filter(Boolean);
 
-        const matchedWord = targetWords.find(w => (w === formedWord || w === reverseFormed) && !wsFoundWords.includes(w));
-        if (matchedWord) {
-            const updatedFound = [...wsFoundWords, matchedWord];
-            setWsFoundWords(updatedFound);
-            setWsSelectedCells([]);
-            gameAudio.playWordFound();
-            Toast().fire({ icon: "success", title: `Kata ditemukan: ${matchedWord}!` });
+        // Case 1: Active selection exists
+        if (wsSelectedCells.length > 0) {
+            // Clicking the only selected cell again -> deselect
+            if (wsSelectedCells.length === 1 && wsSelectedCells[0].r === r && wsSelectedCells[0].c === c) {
+                setWsSelectedCells([]);
+                gameAudio.playTileDeselect();
+                return;
+            }
 
-            if (updatedFound.length >= targetWords.length) {
-                finalizeAttempt(100);
+            const startCell = wsSelectedCells[0];
+            const lineCells = getCellsBetween(startCell, clickedCell);
+
+            if (lineCells) {
+                const newSelection = lineCells.map(pos => ({
+                    r: pos.r,
+                    c: pos.c,
+                    char: wsGrid[pos.r][pos.c]
+                }));
+
+                const formedWord = newSelection.map(cell => cell.char).join("");
+                const reverseFormed = formedWord.split("").reverse().join("");
+
+                const matchedWord = targetWords.find(w => 
+                    (w === formedWord || w === reverseFormed) && !wsFoundWords.includes(w)
+                );
+
+                if (matchedWord) {
+                    const updatedFound = [...wsFoundWords, matchedWord];
+                    setWsFoundWords(updatedFound);
+
+                    // Mark all cells in this line permanently as found
+                    setWsFoundCells(prev => {
+                        const newCoords = newSelection.map(cell => ({ r: cell.r, c: cell.c }));
+                        const existingKeys = new Set(prev.map(p => `${p.r}-${p.c}`));
+                        const toAdd = newCoords.filter(coord => !existingKeys.has(`${coord.r}-${coord.c}`));
+                        return [...prev, ...toAdd];
+                    });
+
+                    setWsSelectedCells([]);
+                    gameAudio.playWordFound();
+                    Toast().fire({ icon: "success", title: `Kata ditemukan: ${matchedWord}!` });
+
+                    if (updatedFound.length >= targetWords.length) {
+                        finalizeAttempt(100);
+                    }
+                    return;
+                } else {
+                    // Update active selection path along the straight line
+                    setWsSelectedCells(newSelection);
+                    gameAudio.playTileSelect();
+                    return;
+                }
             }
         }
+
+        // Case 2: Start new selection
+        setWsSelectedCells([clickedCell]);
+        gameAudio.playTileSelect();
     };
 
     const submitWordSearch = () => {
@@ -802,17 +946,32 @@ const GamePlayer = ({
                         {activeGame.game_type === "word_search" && (
                             <div className="wordsearch-layout">
                                 <div>
-                                    <div className="small text-muted mb-2">
-                                        Klik huruf untuk memilih kata kunci yang tersembunyi di dalam papan:
+                                    <div className="small text-muted mb-2 d-flex justify-content-between align-items-center flex-wrap gap-1">
+                                        <span>
+                                            <i className="fas fa-info-circle me-1"></i>
+                                            Pilih kata (horizontal, vertikal, diagonal & terbalik):
+                                        </span>
+                                        {wsSelectedCells.length > 0 && (
+                                            <span className="badge bg-teal text-white px-2 py-0.5 font-monospace" style={{ fontSize: "11px" }}>
+                                                {wsSelectedCells.map(c => c.char).join("")}
+                                            </span>
+                                        )}
                                     </div>
-                                    <div className="wordsearch-grid">
+                                    <div 
+                                        className="wordsearch-grid"
+                                        style={{
+                                            gridTemplateColumns: `repeat(${wsGrid.length || 10}, 1fr)`,
+                                            maxWidth: wsGrid.length > 13 ? "580px" : "480px"
+                                        }}
+                                    >
                                         {wsGrid.map((row, r) => 
                                             row.map((char, c) => {
                                                 const isSelected = wsSelectedCells.some(cell => cell.r === r && cell.c === c);
+                                                const isFound = wsFoundCells.some(cell => cell.r === r && cell.c === c);
                                                 return (
                                                     <div 
                                                         key={`${r}-${c}`}
-                                                        className={`ws-cell ${isSelected ? "selected" : ""}`}
+                                                        className={`ws-cell ${isFound ? "found" : ""} ${isSelected ? "selected" : ""}`}
                                                         onClick={() => handleWsCellClick(r, c)}
                                                     >
                                                         {char}
@@ -824,11 +983,17 @@ const GamePlayer = ({
                                 </div>
 
                                 <div className="ws-words-panel">
-                                    <h6 className="fw-bold mb-3">Kata yang Dicari:</h6>
+                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 className="fw-bold mb-0">Kata yang Dicari:</h6>
+                                        <span className="badge bg-light text-dark border">
+                                            {wsFoundWords.length} / {(activeGame.game_data?.words || []).length}
+                                        </span>
+                                    </div>
                                     <div className="word-targets-list">
                                         {(activeGame.game_data?.words || []).map((w, idx) => {
                                             const wordStr = (typeof w === "object" ? w.word : w).toUpperCase();
-                                            const isFound = wsFoundWords.includes(wordStr);
+                                            const cleanWord = wordStr.replace(/[^A-Z]/g, "");
+                                            const isFound = wsFoundWords.includes(cleanWord);
                                             return (
                                                 <div key={idx} className={`ws-target-word ${isFound ? "found" : ""}`}>
                                                     <span>{wordStr}</span>
@@ -846,7 +1011,9 @@ const GamePlayer = ({
                                                 setWsSelectedCells([]);
                                                 gameAudio.playTileDeselect();
                                             }}
+                                            disabled={wsSelectedCells.length === 0}
                                         >
+                                            <i className="fas fa-undo me-1"></i>
                                             Reset Seleksi
                                         </button>
                                         <button 
@@ -854,6 +1021,7 @@ const GamePlayer = ({
                                             className="btn btn-success fw-bold w-100" 
                                             onClick={submitWordSearch}
                                         >
+                                            <i className="fas fa-paper-plane me-1"></i>
                                             Kumpulkan Hasil
                                         </button>
                                     </div>

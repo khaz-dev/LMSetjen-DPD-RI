@@ -1600,6 +1600,20 @@
     margin-top: 0rem;
 }
 
+.instructor-course-edit-page .management-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+@media (min-width: 576px) {
+    .instructor-course-edit-page .management-buttons {
+        justify-content: flex-end;
+        margin-left: auto;
+    }
+}
+
 .form-status-info {
     display: flex;
     align-items: center;

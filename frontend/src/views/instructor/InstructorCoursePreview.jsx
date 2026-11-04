@@ -263,13 +263,13 @@ function InstructorCoursePreview() {
         return (
             <>
                 <BaseHeader />
-                <section className="icp-wrapper py-4">
+                <section className="icp-wrapper icp-loading-wrapper py-4">
                     <div className="container">
                         <div className="icp-loading-box">
-                            <div className="spinner-border text-teal" role="status">
+                            <div className="spinner-border text-teal" role="status" style={{ width: "2.75rem", height: "2.75rem", borderWidth: "0.25rem" }}>
                                 <span className="visually-hidden">Memuat...</span>
                             </div>
-                            <h6 className="mt-3 fw-bold text-dark">Memuat Pratinjau Kursus...</h6>
+                            <h5 className="mt-3 fw-bold text-dark mb-1">Memuat Pratinjau Kursus...</h5>
                             <p className="text-muted small mb-0">Menyiapkan data draf dan kurikulum</p>
                         </div>
                     </div>
@@ -283,7 +283,7 @@ function InstructorCoursePreview() {
         return (
             <>
                 <BaseHeader />
-                <section className="icp-wrapper py-4">
+                <section className="icp-wrapper icp-loading-wrapper py-4">
                     <div className="container">
                         <div className="icp-error-card">
                             <div className="icp-error-icon">

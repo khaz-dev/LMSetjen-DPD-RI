@@ -910,7 +910,15 @@ function CourseQuiz() {
                                             title="Kembali ke Pengaturan Dasar Kursus"
                                         >
                                             <i className="fas fa-arrow-left"></i>
-                                            <span>Perbarui Kursus</span>
+                                            <span>Detail Kursus</span>
+                                        </Link>
+                                        <Link
+                                            to={`/instructor/edit-course/${param?.course_id}/curriculum/`}
+                                            className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-2"
+                                            title="Kelola Kurikulum Kursus"
+                                        >
+                                            <i className="fas fa-list"></i>
+                                            <span>Kurikulum</span>
                                         </Link>
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/gamification/`}
@@ -919,6 +927,15 @@ function CourseQuiz() {
                                         >
                                             <i className="fas fa-gamepad"></i>
                                             <span>Gamifikasi</span>
+                                        </Link>
+                                        <Link
+                                            to={`/instructor/preview-course/${param?.course_id}/`}
+                                            target="_blank"
+                                            className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-2"
+                                            title="Pratinjau Kursus"
+                                        >
+                                            <i className="fas fa-eye"></i>
+                                            <span>Pratinjau</span>
                                         </Link>
                                         {activeTab === "overview" ? (
                                             <button

@@ -224,18 +224,45 @@ body:has(.icp-wrapper)::after {
 }
 
 .btn-outline-teal {
-    background: transparent;
+    background: transparent !important;
+    background-color: transparent !important;
     color: var(--icp-teal-primary) !important;
-    border: 1px solid var(--icp-teal-primary);
+    border: 1px solid var(--icp-teal-primary) !important;
     border-radius: 8px;
     font-weight: 600;
     transition: all 0.2s ease;
 }
 
-.btn-outline-teal:hover {
-    background: var(--icp-teal-subtle);
-    color: var(--icp-teal-dark) !important;
-    border-color: var(--icp-teal-dark);
+.btn-outline-teal:hover,
+.icp-topbar-actions .btn-outline-teal:hover {
+    background: var(--icp-teal-primary) !important;
+    background-color: var(--icp-teal-primary) !important;
+    color: #ffffff !important;
+    border-color: var(--icp-teal-primary) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 118, 110, 0.25);
+}
+
+.btn-outline-teal:hover *,
+.icp-topbar-actions .btn-outline-teal:hover * {
+    color: #ffffff !important;
+}
+
+.btn-outline-teal:active,
+.btn-outline-teal:focus,
+.icp-topbar-actions .btn-outline-teal:active,
+.icp-topbar-actions .btn-outline-teal:focus {
+    background: var(--icp-teal-dark) !important;
+    background-color: var(--icp-teal-dark) !important;
+    color: #ffffff !important;
+    border-color: var(--icp-teal-dark) !important;
+}
+
+.btn-outline-teal:active *,
+.btn-outline-teal:focus *,
+.icp-topbar-actions .btn-outline-teal:active *,
+.icp-topbar-actions .btn-outline-teal:focus * {
+    color: #ffffff !important;
 }
 
 .text-teal {
@@ -1071,16 +1098,36 @@ body:has(.icp-wrapper)::after {
 /* ========================================================================
    EMPTY STATES & LOADING
    ======================================================================== */
+.icp-loading-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: calc(100vh - 160px);
+    width: 100%;
+}
+
+.icp-loading-wrapper > .container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100%;
+}
+
 .icp-loading-box,
 .icp-error-card {
     background: #ffffff;
     border: 1px solid var(--icp-border-color);
     border-radius: var(--icp-radius-md);
-    padding: 3rem 1.5rem;
+    padding: 3rem 2rem;
     text-align: center;
-    max-width: 500px;
-    margin: 2rem auto;
-    box-shadow: var(--icp-shadow-sm);
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .icp-error-icon {

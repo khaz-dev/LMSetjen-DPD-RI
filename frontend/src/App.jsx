@@ -71,6 +71,7 @@ const CourseCreate = lazy(() => import("./views/instructor/CourseCreate"));
 const CourseEdit = lazy(() => import("./views/instructor/CourseEdit"));
 const CourseEditCurriculum = lazy(() => import("./views/instructor/CourseEditCurriculum"));
 const CourseQuiz = lazy(() => import("./views/instructor/CourseQuiz"));
+const CourseGamification = lazy(() => import("./views/instructor/CourseGamification"));
 const InstructorCoursePreview = lazy(() => import("./views/instructor/InstructorCoursePreview"));
 
 // Admin Routes
@@ -511,6 +512,16 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <CourseQuiz />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/instructor/edit-course/:course_id/gamification/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                            <CourseGamification />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }

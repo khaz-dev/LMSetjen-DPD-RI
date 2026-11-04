@@ -158,6 +158,17 @@ function CourseDetail() {
 
     // Gamification Selected Game for GamePlayer Arena
     const [selectedGame, setSelectedGame] = useState(null);
+    const [gamificationRefreshKey, setGamificationRefreshKey] = useState(0);
+
+    const handleGameCompleted = async () => {
+        try {
+            await fetchCourseDetail(true);
+        } catch (err) {
+            console.error("Error updating course detail after game completion:", err);
+        } finally {
+            setGamificationRefreshKey(prev => prev + 1);
+        }
+    };
 
     const handleSelectGame = (game) => {
         setSelectedGame(game);
@@ -1698,7 +1709,7 @@ function CourseDetail() {
 
         // This allows iframe to auto-play when page loads. Resume will override this to false.
 
-        setAutoplayVideo(true);
+        setAutoplayVideo(false);
 
         localStorage.setItem("lms_current_lesson", JSON.stringify({
 
@@ -2308,7 +2319,7 @@ function CourseDetail() {
             if (lessonData && lessonData.variant_item_id) {
                 setVariantItem(lessonData);
 
-                setAutoplayVideo(true);  // ✨ PHASE 12.15: Enable autoplay on hard refresh restoration
+                setAutoplayVideo(false);  // ✨ PHASE 12.15: Enable autoplay on hard refresh restoration
 
             }
 
@@ -4357,6 +4368,13 @@ function CourseDetail() {
             setQuestions(res.data.question_answer);
 
             setStudentReview(res.data.review);
+
+            if (selectedGame && res.data?.course?.games) {
+                const updatedSelectedGame = res.data.course.games.find(g => g.game_id === selectedGame.game_id);
+                if (updatedSelectedGame) {
+                    setSelectedGame(updatedSelectedGame);
+                }
+            }
 
 
 
@@ -9097,7 +9115,7 @@ function CourseDetail() {
                                                 activeGame={selectedGame}
                                                 onSelectGame={handleSelectGame}
                                                 onCloseGame={handleCloseGame}
-                                                onGameCompleted={fetchCourseDetail}
+                                                onGameCompleted={handleGameCompleted}
                                                 pretestRequired={pretestRequired}
                                                 hasCompletedPretest={hasCompletedPretest}
                                                 onStartPretest={handleStartPretest}
@@ -9455,9 +9473,10 @@ function CourseDetail() {
                                         pretestRequired={pretestRequired}
                                         hasCompletedPretest={hasCompletedPretest}
                                         onStartPretest={handleStartPretest}
-                                        onGameCompleted={fetchCourseDetail}
+                                        onGameCompleted={handleGameCompleted}
                                         selectedGame={selectedGame}
                                         onSelectGame={handleSelectGame}
+                                        refreshKey={gamificationRefreshKey}
                                     />
 
                                     {/* Certificate Tab */}

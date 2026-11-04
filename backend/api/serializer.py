@@ -3649,6 +3649,18 @@ class CourseGameSerializer(serializers.ModelSerializer):
             'user_is_passed', 'attempts'
         ]
 
+    def _get_user(self):
+        user = self.context.get('user')
+        if user and user.is_authenticated:
+            return user
+        current_user = self.context.get('current_user')
+        if current_user and current_user.is_authenticated:
+            return current_user
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user and request.user.is_authenticated:
+            return request.user
+        return None
+
     def get_course_id(self, obj):
         return obj.course.course_id if obj.course else None
 
@@ -3656,33 +3668,33 @@ class CourseGameSerializer(serializers.ModelSerializer):
         return obj.course.title if obj.course else None
 
     def get_user_attempts_count(self, obj):
-        user = self.context.get('user')
-        if user and user.is_authenticated:
+        user = self._get_user()
+        if user:
             return obj.get_user_attempts_count(user)
         return 0
 
     def get_user_best_score(self, obj):
-        user = self.context.get('user')
-        if user and user.is_authenticated:
+        user = self._get_user()
+        if user:
             best = obj.get_user_best_attempt(user)
             return float(best.score) if best else 0
         return 0
 
     def get_user_can_attempt(self, obj):
-        user = self.context.get('user')
-        if user and user.is_authenticated:
+        user = self._get_user()
+        if user:
             return obj.can_user_attempt(user)
         return True
 
     def get_user_is_passed(self, obj):
-        user = self.context.get('user')
-        if user and user.is_authenticated:
+        user = self._get_user()
+        if user:
             return obj.attempts.filter(user=user, is_passed=True).exists()
         return False
 
     def get_attempts(self, obj):
-        user = self.context.get('user')
-        if user and user.is_authenticated:
+        user = self._get_user()
+        if user:
             user_attempts = obj.attempts.filter(user=user).order_by('attempt_number')
             return CourseGameAttemptSerializer(user_attempts, many=True).data
         return []

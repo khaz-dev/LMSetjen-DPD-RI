@@ -380,12 +380,13 @@
 
 .wordsearch-grid {
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
+    grid-template-columns: repeat(12, 1fr);
     gap: 4px;
     background: #f1f5f9;
     padding: 8px;
     border-radius: 12px;
     user-select: none;
+    margin: 0 auto;
 }
 
 .ws-cell {
@@ -397,11 +398,13 @@
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: clamp(0.72rem, 1.8vw, 0.95rem);
     cursor: pointer;
     transition: all 0.15s;
     color: #1e293b;
     font-family: monospace;
+    user-select: none;
+    line-height: 1;
 }
 
 .ws-cell:hover {
@@ -418,7 +421,23 @@
 .ws-cell.found {
     background: #10b981;
     color: #ffffff;
-    border-color: #10b981;
+    border-color: #059669;
+    font-weight: 800;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    transition: all 0.2s ease-in-out;
+}
+
+.ws-cell.found:hover {
+    background: #059669;
+    color: #ffffff;
+}
+
+.ws-cell.found.selected {
+    background: #0f766e;
+    color: #ffffff;
+    border-color: #115e59;
+    box-shadow: 0 0 0 2px #34d399, 0 2px 6px rgba(13, 148, 136, 0.4);
+    transform: scale(0.95);
 }
 
 .ws-words-panel {

@@ -200,9 +200,14 @@ class StudentCourseDetailAPIView(generics.RetrieveAPIView):
         if user_id:
             try:
                 user = User.objects.get(id=user_id)
+                context['user'] = user
                 context['current_user'] = user
             except User.DoesNotExist:
-                context['current_user'] = None
+                context['user'] = getattr(self.request, 'user', None)
+                context['current_user'] = getattr(self.request, 'user', None)
+        else:
+            context['user'] = getattr(self.request, 'user', None)
+            context['current_user'] = getattr(self.request, 'user', None)
         
         return context
         

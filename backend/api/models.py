@@ -530,7 +530,7 @@ class Course(models.Model):
                 target_course.features.all().delete()
                 target_course.requirements.all().delete()
                 target_course.learning_outcomes.all().delete()
-                target_course.games.all().delete()
+                # target_course.games is synced via smart upsert in STEP 6 to preserve student attempts
                 print(f"[Content Copy] [OK] Target course content cleared")
             
             try:
@@ -660,22 +660,68 @@ class Course(models.Model):
                     )
                 print(f"[Content Copy] [OK] Copied {self.learning_outcomes.count()} learning outcomes")
                 
-                # STEP 6: Copy course games (Gamifikasi)
-                print("[Content Copy] Copying course games (Gamifikasi)...")
+                # STEP 6: Sync course games (Gamifikasi) intelligently
+                print("[Content Copy] Syncing course games (Gamifikasi)...")
+                existing_target_games = {}
+                for tg in target_course.games.all():
+                    existing_target_games.setdefault(tg.game_type, []).append(tg)
+                
+                synced_target_game_ids = set()
+
                 for game in self.games.all():
-                    CourseGame.objects.create(
-                        course=target_course,
-                        title=game.title,
-                        description=game.description,
-                        game_type=game.game_type,
-                        game_data=game.game_data,
-                        max_attempts=game.max_attempts,
-                        points_reward=game.points_reward,
-                        time_limit_seconds=game.time_limit_seconds,
-                        is_active=game.is_active,
-                        order=game.order,
-                    )
-                print(f"[Content Copy] [OK] Copied {self.games.count()} games")
+                    matching_target_games = existing_target_games.get(game.game_type, [])
+                    if matching_target_games:
+                        # Prefer target game that already has student attempts, or the first one
+                        primary_game = next((g for g in matching_target_games if g.attempts.exists()), matching_target_games[0])
+                        primary_game.title = game.title
+                        primary_game.description = game.description
+                        primary_game.game_data = game.game_data
+                        primary_game.max_attempts = game.max_attempts
+                        primary_game.points_reward = game.points_reward
+                        primary_game.time_limit_seconds = game.time_limit_seconds
+                        primary_game.is_active = game.is_active
+                        primary_game.order = game.order
+                        primary_game.save()
+                        synced_target_game_ids.add(primary_game.id)
+                        print(f"[Content Copy] [OK] Updated existing game '{primary_game.title}' (ID: {primary_game.id}, type: {game.game_type})")
+
+                        # If there are duplicate games for this game_type in target_course (from past bugs):
+                        for extra_game in matching_target_games:
+                            if extra_game.id != primary_game.id:
+                                if extra_game.attempts.exists():
+                                    extra_game.is_active = False
+                                    extra_game.save()
+                                    print(f"[Content Copy] [OK] Deactivated duplicate game with attempts ID {extra_game.id}")
+                                else:
+                                    extra_game.delete()
+                                    print(f"[Content Copy] [OK] Cleaned up duplicate game ID {extra_game.id}")
+                    else:
+                        new_game = CourseGame.objects.create(
+                            course=target_course,
+                            title=game.title,
+                            description=game.description,
+                            game_type=game.game_type,
+                            game_data=game.game_data,
+                            max_attempts=game.max_attempts,
+                            points_reward=game.points_reward,
+                            time_limit_seconds=game.time_limit_seconds,
+                            is_active=game.is_active,
+                            order=game.order,
+                        )
+                        synced_target_game_ids.add(new_game.id)
+                        print(f"[Content Copy] [OK] Created new game '{new_game.title}' (ID: {new_game.id}, type: {game.game_type})")
+
+                # Handle target games no longer present in draft
+                for obsolete_game in target_course.games.exclude(id__in=synced_target_game_ids):
+                    if obsolete_game.attempts.exists():
+                        obsolete_game.is_active = False
+                        obsolete_game.save()
+                        print(f"[Content Copy] [OK] Deactivated obsolete game with attempts: '{obsolete_game.title}' (ID: {obsolete_game.id})")
+                    else:
+                        obsolete_game.delete()
+                        print(f"[Content Copy] [OK] Deleted obsolete game with no attempts: '{obsolete_game.title}' (ID: {obsolete_game.id})")
+
+                print(f"[Content Copy] [OK] Synced {self.games.count()} games")
 
                 # ✨ PHASE 7.5 FIX: Copy tags (course categorization metadata)
                 print("[Content Copy] Copying course tags...")

@@ -38,7 +38,8 @@ const GamificationTab = ({
     onStartPretest = null,
     onGameCompleted = null,
     selectedGame = null,
-    onSelectGame = null
+    onSelectGame = null,
+    refreshKey = 0
 }) => {
     const isPretestLocked = pretestRequired && !hasCompletedPretest;
     const userData = UserData();
@@ -52,20 +53,40 @@ const GamificationTab = ({
     });
     const [isLoading, setIsLoading] = useState(true);
 
+    // Sync state immediately if course.games prop changes with updated attempts
+    useEffect(() => {
+        const propGames = course?.course?.games || course?.games;
+        if (Array.isArray(propGames) && propGames.length > 0) {
+            setGames(propGames);
+            setIsLoading(false);
+        }
+    }, [course]);
+
     // Fetch Games for student
-    const fetchGames = async () => {
+    const fetchGames = async (silent = false) => {
         if (!courseId) {
             setIsLoading(false);
             return;
         }
         try {
-            setIsLoading(true);
+            if (!silent && games.length === 0) {
+                setIsLoading(true);
+            }
             const url = userId 
                 ? `student/game-list/${userId}/${courseId}/`
                 : `game/list-create/?course_id=${courseId}`;
             const res = await apiInstance.get(url);
             const raw = res.data?.results || res.data;
-            setGames(Array.isArray(raw) ? raw : []);
+            const fetched = Array.isArray(raw) ? raw : [];
+            setGames(fetched);
+
+            // Keep selectedGame in GamePlayer updated with fresh attempts count & status
+            if (selectedGame && onSelectGame) {
+                const refreshed = fetched.find(g => g.game_id === selectedGame.game_id);
+                if (refreshed) {
+                    onSelectGame(refreshed);
+                }
+            }
         } catch (error) {
             console.error("Error fetching games for student:", error);
             const fallback = course?.course?.games || course?.games;
@@ -89,11 +110,11 @@ const GamificationTab = ({
 
     useEffect(() => {
         if (courseId) {
-            fetchGames();
+            fetchGames(games.length > 0);
         } else if (course) {
             setIsLoading(false);
         }
-    }, [courseId, userId]);
+    }, [courseId, userId, refreshKey]);
 
     // Handle user selecting/starting a game
     const handleOpenGame = (game) => {

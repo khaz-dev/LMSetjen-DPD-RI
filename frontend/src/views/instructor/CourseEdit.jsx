@@ -1007,6 +1007,15 @@ function CourseEdit() {
                                         </Link>
 
                                         <Link
+                                            to={`/instructor/edit-course/${param?.course_id}/gamification/`}
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2"
+                                            title="Kelola Gamifikasi Kursus"
+                                        >
+                                            <i className="fas fa-gamepad"></i>
+                                            <span>Gamifikasi</span>
+                                        </Link>
+
+                                        <Link
                                             to={`/instructor/preview-course/${param?.course_id}/`}
                                             target="_blank"
                                             className="btn btn-sm btn-teal d-inline-flex align-items-center gap-2"
@@ -1342,7 +1351,7 @@ function CourseEdit() {
 
                                     {/* Enhanced Action Buttons */}
                                     <div className="action-buttons d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
-                                        {/* ✨ PHASE 4.169: Preview Buttons Section (Left) - Always Visible */}
+                                        {/* ✨ PHASE 4.169: Preview Buttons Section & Auto-save Status (Left) - Always Visible & In Line */}
                                         <div className="preview-buttons d-flex flex-wrap gap-2 align-items-center">
                                             {/* Preview Draft Version Button - Always available */}
                                             <Link
@@ -1369,12 +1378,9 @@ function CourseEdit() {
                                                     <span>Pratinjau Publis</span>
                                                 </Link>
                                             )}
-                                        </div>
 
-                                        {/* ✨ PHASE 4.169: Status Info and Management Buttons (Right) */}
-                                        <div className="form-status-and-actions d-flex flex-column flex-sm-row align-items-center gap-3">
-                                            <div className="form-status-info">
-                                                {/* ✨ PHASE 4.168: Auto-save status indicator */}
+                                            {/* Auto-save status indicator */}
+                                            <div className="form-status-info ms-sm-2">
                                                 {autoSaveStatus === "saving" ? (
                                                     <div className="text-info small d-flex align-items-center">
                                                         <span className="spinner-border spinner-border-sm me-1.5" style={{ width: "13px", height: "13px", display: "inline-block" }}></span>
@@ -1404,26 +1410,34 @@ function CourseEdit() {
                                                     </div>
                                                 )}
                                             </div>
+                                        </div>
 
-                                            {/* ✨ PHASE 4.169: Management buttons */}
-                                            <div className="management-buttons d-flex flex-wrap gap-2">
-                                                <Link
-                                                    to={`/instructor/edit-course/${param?.course_id}/curriculum/`}
-                                                    className="btn btn-update-course"
-                                                    style={{ background: "linear-gradient(135deg, #0f766e 0%, #115e59 100%)" }}
-                                                >
-                                                    <i className="fas fa-list me-2"></i>
-                                                    Kelola Kurikulum
-                                                </Link>
-                                                <Link
-                                                    to={`/instructor/edit-course/${param?.course_id}/quiz/`}
-                                                    className="btn btn-update-course"
-                                                    style={{ background: "linear-gradient(135deg, #e67e22 0%, #d35400 100%)" }}
-                                                >
-                                                    <i className="fas fa-question-circle me-2"></i>
-                                                    Kelola Kuis
-                                                </Link>
-                                            </div>
+                                        {/* ✨ PHASE 4.169: Management buttons - Stick to the right, in line with preview buttons */}
+                                        <div className="management-buttons d-flex flex-wrap gap-2 align-items-center justify-content-sm-end ms-sm-auto">
+                                            <Link
+                                                to={`/instructor/edit-course/${param?.course_id}/curriculum/`}
+                                                className="btn btn-update-course"
+                                                style={{ background: "linear-gradient(135deg, #0f766e 0%, #115e59 100%)" }}
+                                            >
+                                                <i className="fas fa-list me-2"></i>
+                                                Kelola Kurikulum
+                                            </Link>
+                                            <Link
+                                                to={`/instructor/edit-course/${param?.course_id}/quiz/`}
+                                                className="btn btn-update-course"
+                                                style={{ background: "linear-gradient(135deg, #e67e22 0%, #d35400 100%)" }}
+                                            >
+                                                <i className="fas fa-question-circle me-2"></i>
+                                                Kelola Kuis
+                                            </Link>
+                                            <Link
+                                                to={`/instructor/edit-course/${param?.course_id}/gamification/`}
+                                                className="btn btn-update-course"
+                                                style={{ background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)" }}
+                                            >
+                                                <i className="fas fa-gamepad me-2"></i>
+                                                Kelola Gamifikasi
+                                            </Link>
                                         </div>
                                     </div>
 
