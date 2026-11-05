@@ -1470,6 +1470,26 @@
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  max-height: 540px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.performance-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.performance-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.performance-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.performance-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .performance-list-item {

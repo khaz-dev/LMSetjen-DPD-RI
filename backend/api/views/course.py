@@ -1714,11 +1714,26 @@ class CourseEnrollmentAPIView(generics.CreateAPIView):
                 teacher=course.teacher
             )
 
-            # Create notification
+            # Create notification for student
             api_models.Notification.objects.create(
                 user=user,
-                type="Course Enrollment Completed"
+                course=course,
+                type="Course Enrollment Completed",
+                title=f"Pendaftaran Berhasil: {course.title}",
+                message=f"Selamat! Anda telah resmi terdaftar pada materi '{course.title}'. Selamat belajar!",
+                seen=False
             )
+            # Notify instructor as well
+            if course.teacher and course.teacher.user:
+                api_models.Notification.objects.create(
+                    user=course.teacher.user,
+                    teacher=course.teacher,
+                    course=course,
+                    type="Course Enrollment Completed",
+                    title=f"Peserta Baru: {user.full_name}",
+                    message=f"Peserta {user.full_name} telah bergabung dan mendaftar pada kursus '{course.title}'.",
+                    seen=False
+                )
 
             return Response({
                 "message": "Successfully enrolled in course",

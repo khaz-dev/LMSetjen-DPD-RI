@@ -99,6 +99,7 @@ urlpatterns = [
     path("student/quiz-attempts/<user_id>/<quiz_id>/", api_views.StudentQuizAttemptsAPIView.as_view()),
 
     # Student Gamification Endpoints
+    path("student/course-leaderboard/<course_id>/", api_views.CourseLeaderboardAPIView.as_view(), name="course-leaderboard"),
     path("student/game-list/<user_id>/<course_id>/", api_views.StudentCourseGameListAPIView.as_view()),
     path("student/game-detail/<user_id>/<game_id>/", api_views.StudentCourseGameDetailAPIView.as_view()),
     path("student/game-submit/<user_id>/", api_views.StudentCourseGameSubmitAPIView.as_view()),
@@ -110,11 +111,15 @@ urlpatterns = [
     path("student/certificate-save-pdf/", api_views.StudentCertificateSavePDFAPIView.as_view()),  # ✨ PHASE 4.210: Deprecated - kept for backward compatibility
     path("student/certificate-image/<certificate_id>/", api_views.StudentCertificateImageAPIView.as_view()),  # ✨ PHASE 4.221: Serve certificate image by certificate_id
     path("student/certificate-download/<course_id>/<user_id>/", api_views.StudentCertificateDownloadAPIView.as_view()),  # ✨ PHASE 4.222: Download certificate image by course_id and user_id
-    path("student/certificates/<user_id>/", api_views.StudentCertificateListAPIView.as_view()),  # ✨ PHASE 4.228: List all student certificates for "Sertifikat Kursus" page
+    path("student/certificates/<user_id>/", api_views.StudentCertificateListAPIView.as_view()),
+    path("student/noti-list/<user_id>/", api_views.StudentNotificationListAPIView.as_view()),
+    path("student/noti-detail/<user_id>/<noti_id>/", api_views.StudentNotificationDetailAPIView.as_view()),
+    path("student/noti-mark-all-read/<user_id>/", api_views.StudentNotificationMarkAllReadAPIView.as_view()),  # ✨ PHASE 4.228: List all student certificates for "Sertifikat Kursus" page
     path("certificate/validate/<validation_token>/", api_views.CertificateValidationAPIView.as_view(), name="certificate-validate"),
 
 
     # Teacher Routes
+    path("teacher/verify-student-integrity/", api_views.TeacherVerifyStudentIntegrityAPIView.as_view()),
     path("teacher/summary/<teacher_id>/", api_views.TeacherSummaryAPIView.as_view()),
     path("teacher/detail/<teacher_id>/", api_views.TeacherDetailAPIView.as_view()),  # ✨ PHASE 4.43: Public teacher detail endpoint
     path("teacher/profile/<user_id>/", api_views.TeacherProfileAPIView.as_view()),
@@ -140,6 +145,7 @@ urlpatterns = [
     path("teacher/question-answer-list/<teacher_id>/", api_views.TeacherQuestionAnswerListAPIView.as_view()),
     path("teacher/noti-list/<teacher_id>/", api_views.TeacherNotificationListAPIView.as_view()),
     path("teacher/noti-detail/<teacher_id>/<noti_id>", api_views.TeacherNotificationDetailAPIView.as_view()),
+    path("teacher/noti-mark-all-read/<teacher_id>/", api_views.TeacherNotificationMarkAllReadAPIView.as_view()),
     path("teacher/course-create/", api_views.CourseCreateAPIView.as_view()),
     path("teacher/course-update/<teacher_id>/<course_id>/", api_views.CourseUpdateAPIView.as_view()),
     path("teacher/course-detail/<course_id>/", api_views.TeacherCourseDetailAPIView.as_view()),

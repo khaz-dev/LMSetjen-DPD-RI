@@ -262,6 +262,21 @@
     box-shadow: 0 4px 10px rgba(15, 118, 110, 0.3) !important;
 }
 
+.btn-evaluation {
+    background: #fffbeb !important;
+    border: 1.5px solid #fde68a !important;
+    color: #b45309 !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+}
+
+.btn-evaluation:hover:not(:disabled) {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: #ffffff !important;
+    border-color: #d97706 !important;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3) !important;
+}
+
 .btn-view {
     background: #ffffff !important;
     border: 1.5px solid #cbd5e1 !important;

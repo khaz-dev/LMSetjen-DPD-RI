@@ -24,6 +24,26 @@
     gap: 0.65rem;
     display: flex;
     flex-direction: column;
+    max-height: 540px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.instructor-activity-display.compact .activities-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.instructor-activity-display.compact .activities-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.instructor-activity-display.compact .activities-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.instructor-activity-display.compact .activities-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 /* ✨ Compact Activity Item */

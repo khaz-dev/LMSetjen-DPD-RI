@@ -85,6 +85,7 @@ export const switchRole = async (role, options = {}) => {
       const updatedUser = {
         ...currentUser,
         current_role: response.data.current_role,
+        role: response.data.current_role,
         available_roles: response.data.available_roles
       };
       useAuthStore.getState().setUser(updatedUser);

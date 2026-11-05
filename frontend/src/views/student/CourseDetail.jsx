@@ -58,6 +58,7 @@ import {
 
 import DiscussionTab from "../../components/CourseDetail/DiscussionTab";
 import GamificationTab from "../../components/CourseDetail/GamificationTab";
+import LeaderboardTab from "../../components/CourseDetail/LeaderboardTab";
 import GamePlayer from "../../components/CourseDetail/GamePlayer";
 
 import CreateQuestionModal from "../../components/CourseDetail/CreateQuestionModal";
@@ -1045,6 +1046,44 @@ function CourseDetail() {
             if (document.hidden) {
                 setIsMouseInQuizArea(false);
                 setShowLeftQuizNotification(true);
+
+                if (isSubmittingQuizRef.current || showQuizResult) return;
+
+                quizViolationsRef.current += 1;
+                const vCount = quizViolationsRef.current;
+                setQuizViolations(vCount);
+
+                if (vCount === 1) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '⚠️ Peringatan Integritas (1/3)',
+                        html: '<p class="fw-semibold">Anda terdeteksi meninggalkan halaman atau berpindah tab ujian!</p><div class="alert alert-warning py-2 text-start small mb-0"><strong>Integritas Akademik:</strong> Membuka tab atau aplikasi lain selama ujian dilarang.<br><strong>Toleransi tersisa: 2 kali lagi.</strong> Jika mencapai 3 kali, ujian akan otomatis dihentikan dan diserahkan ke sistem.</div>',
+                        confirmButtonText: 'Saya Mengerti, Kembali ke Ujian',
+                        confirmButtonColor: '#0f766e',
+                        allowOutsideClick: false
+                    });
+                } else if (vCount === 2) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '🚨 Peringatan Keras Integritas (2/3)!',
+                        html: '<p class="text-danger fw-bold">Anda meninggalkan jendela ujian untuk kedua kalinya!</p><div class="alert alert-danger py-2 text-start small mb-0"><strong>PERINGATAN TERAKHIR:</strong> Jika Anda berpindah tab atau meminimalisir jendela sekali lagi, ujian akan <strong>OTOMATIS TERKUNCI & DISERAHKAN</strong> ke sistem apa adanya.</div>',
+                        confirmButtonText: 'Kembali Mengerjakan Ujian',
+                        confirmButtonColor: '#d97706',
+                        allowOutsideClick: false
+                    });
+                } else if (vCount >= 3) {
+                    isSubmittingQuizRef.current = true;
+                    Swal.fire({
+                        icon: 'error',
+                        title: '⛔ Ujian Terkunci Otomatis (3/3)',
+                        html: '<p class="fw-bold text-danger">Batas toleransi perpindahan jendela (3x) telah terlampaui.</p><p class="text-muted small">Demi menjamin validitas dan integritas peringkat, ujian Anda telah dihentikan dan diserahkan secara otomatis ke sistem.</p>',
+                        confirmButtonText: 'Tutup & Lihat Hasil',
+                        confirmButtonColor: '#dc2626',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        submitQuiz(3);
+                    });
+                }
             }
         };
 
@@ -1155,17 +1194,38 @@ function CourseDetail() {
 
 
 
+        // Anti-Cheat: Context Menu & Developer Tools Blockers
+        const handleContextMenu = (e) => {
+            e.preventDefault();
+            return false;
+        };
+
+        const handleKeyDown = (e) => {
+            // Block F12 (Inspect Element)
+            if (e.key === 'F12') {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Block Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+U, Ctrl+Shift+I/J/C
+            if (e.ctrlKey || e.metaKey) {
+                const k = e.key.toLowerCase();
+                if (['c', 'v', 'x', 'u', 'a', 'p', 's'].includes(k) || (e.shiftKey && ['i', 'j', 'c'].includes(k))) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }
+        };
+
         // Add event listeners
-
         document.addEventListener('copy', handleCopy, true);
-
         document.addEventListener('cut', handleCut, true);
-
         document.addEventListener('paste', handlePaste, true);
-
         document.addEventListener('selectstart', handleSelectStart, true);
-
         document.addEventListener('mousedown', handleMouseDown, true);
+        document.addEventListener('contextmenu', handleContextMenu, true);
+        document.addEventListener('keydown', handleKeyDown, true);
 
 
 
@@ -1174,14 +1234,12 @@ function CourseDetail() {
             // Cleanup: remove all event listeners and restore scroll
 
             document.removeEventListener('copy', handleCopy, true);
-
             document.removeEventListener('cut', handleCut, true);
-
             document.removeEventListener('paste', handlePaste, true);
-
             document.removeEventListener('selectstart', handleSelectStart, true);
-
             document.removeEventListener('mousedown', handleMouseDown, true);
+            document.removeEventListener('contextmenu', handleContextMenu, true);
+            document.removeEventListener('keydown', handleKeyDown, true);
 
             document.body.style.overflow = 'unset';
             document.documentElement.style.overflow = 'unset';
@@ -2420,6 +2478,9 @@ function CourseDetail() {
     const lastElementRef = useRef();
 
     const quizTimerRef = useRef(null);
+    const [quizViolations, setQuizViolations] = useState(0);
+    const quizViolationsRef = useRef(0);
+    const isSubmittingQuizRef = useRef(false);
 
     const saveCounterRef = useRef(0);
 
@@ -3710,6 +3771,9 @@ function CourseDetail() {
             setQuizStartTime(Date.now());
             setIsMouseInQuizArea(true);
             setShowLeftQuizNotification(false);
+            quizViolationsRef.current = 0;
+            setQuizViolations(0);
+            isSubmittingQuizRef.current = false;
             setTimeout(() => {
                 inlineQuizContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 60);
@@ -3986,9 +4050,11 @@ function CourseDetail() {
 
 
 
-    const submitQuiz = async () => {
+    const submitQuiz = async (forcedViolations = null) => {
 
-        if (!selectedQuiz || !isQuizActive) return;
+        if (!selectedQuiz) return;
+        if (isSubmittingQuizRef.current && forcedViolations === null) return;
+        isSubmittingQuizRef.current = true;
 
 
 
@@ -4032,16 +4098,13 @@ function CourseDetail() {
 
 
 
+            const violationsCount = forcedViolations !== null ? forcedViolations : quizViolationsRef.current;
             const submissionData = {
-
                 quiz_id: selectedQuiz.quiz_id,
-
                 answers: formattedAnswers,
-
                 time_taken: timeTaken,
-
-                attempt_type: finalAttemptType
-
+                attempt_type: finalAttemptType,
+                tab_switch_violations: violationsCount
             };
 
 
@@ -4177,16 +4240,13 @@ function CourseDetail() {
 
 
 
+            const violationsCount = forcedViolations !== null ? forcedViolations : quizViolationsRef.current;
             const submissionData = {
-
                 quiz_id: selectedQuiz.quiz_id,
-
                 answers: formattedAnswers,
-
                 time_taken: timeTaken,
-
-                attempt_type: finalAttemptType
-
+                attempt_type: finalAttemptType,
+                tab_switch_violations: violationsCount
             };
 
 
@@ -8205,12 +8265,18 @@ function CourseDetail() {
         if (isQuizActive) {
             setIsMouseInQuizArea(true);
             setShowLeftQuizNotification(false);
+            quizViolationsRef.current = 0;
+            setQuizViolations(0);
+            isSubmittingQuizRef.current = false;
         }
     }}
     onMouseMove={() => {
         if (isQuizActive && (!isMouseInQuizArea || showLeftQuizNotification)) {
             setIsMouseInQuizArea(true);
             setShowLeftQuizNotification(false);
+            quizViolationsRef.current = 0;
+            setQuizViolations(0);
+            isSubmittingQuizRef.current = false;
         }
     }}
 >
@@ -8899,6 +8965,83 @@ function CourseDetail() {
 
 
 
+                                                            {/* Transparansi Evaluasi Pre-Test vs Post-Test (Learning Gain) */}
+                                                            {quizResult.learning_comparison && (
+                                                                <div className="quiz-learning-gain-card p-3 my-2.5 rounded-3 border bg-white shadow-xs">
+                                                                    <div className="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                                                                        <span className="fw-bold text-slate-800 small text-uppercase">
+                                                                            <i className="fas fa-chart-line text-teal me-1.5"></i> Evaluasi Efektivitas Pembelajaran
+                                                                        </span>
+                                                                        <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2.5 py-1 fw-semibold">
+                                                                            {quizResult.learning_comparison.normalized_gain > 0 
+                                                                                ? `Kompetensi Meningkat (+${quizResult.learning_comparison.normalized_gain}% Normalized Gain)` 
+                                                                                : 'Hasil Evaluasi Tercatat'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="row g-2 align-items-center text-center">
+                                                                        <div className="col-4">
+                                                                            <div className="p-2 rounded bg-light border">
+                                                                                <small className="text-muted d-block" style={{ fontSize: '11px' }}>Pre-Test</small>
+                                                                                <strong className="fs-6 text-slate-700">{quizResult.learning_comparison.pre_score}%</strong>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="col-4">
+                                                                            <div className="p-2 rounded bg-teal-subtle border border-teal-subtle">
+                                                                                <small className="text-teal d-block fw-semibold" style={{ fontSize: '11px' }}>Lonjakan Nilai</small>
+                                                                                <strong className="fs-6 text-teal">
+                                                                                    {quizResult.learning_comparison.improvement >= 0 ? '+' : ''}{quizResult.learning_comparison.improvement} Poin
+                                                                                </strong>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="col-4">
+                                                                            <div className="p-2 rounded bg-light border">
+                                                                                <small className="text-muted d-block" style={{ fontSize: '11px' }}>Post-Test</small>
+                                                                                <strong className="fs-6 text-slate-700">{quizResult.learning_comparison.post_score}%</strong>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Lencana Transparansi Integritas Anti-Cheat */}
+                                                            {quizResult.integrity && (
+                                                                quizResult.integrity.is_valid ? (
+                                                                    <div className="quiz-integrity-transparency-card valid p-2.5 my-2 rounded-3 border border-success-subtle bg-success-subtle text-dark">
+                                                                        <div className="d-flex align-items-center gap-2">
+                                                                            <div className="p-1.5 rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '28px', height: '28px' }}>
+                                                                                <i className="fas fa-shield-halved" style={{ fontSize: '13px' }}></i>
+                                                                            </div>
+                                                                            <div className="flex-grow-1 min-w-0">
+                                                                                <div className="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                                                                    <span className="fw-bold text-success small">Ujian Terverifikasi Bebas Kecurangan (Valid)</span>
+                                                                                    <span className="badge bg-success text-white" style={{ fontSize: '10px' }}>Integritas Sah</span>
+                                                                                </div>
+                                                                                <small className="text-muted d-block" style={{ fontSize: '11px', lineHeight: '1.4' }}>
+                                                                                    Dikerjakan secara tertib dengan durasi waktu wajar dan tanpa anomali perpindahan layar ({quizResult.integrity.tab_switch_violations || 0} pelanggaran tab).
+                                                                                </small>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="quiz-integrity-transparency-card pending p-2.5 my-2 rounded-3 border border-warning-subtle bg-warning-subtle text-dark">
+                                                                        <div className="d-flex align-items-start gap-2">
+                                                                            <div className="p-1.5 rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '28px', height: '28px' }}>
+                                                                                <i className="fas fa-triangle-exclamation" style={{ fontSize: '13px' }}></i>
+                                                                            </div>
+                                                                            <div className="flex-grow-1 min-w-0">
+                                                                                <div className="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                                                                    <span className="fw-bold text-warning-emphasis small">Menunggu Peninjauan Instruktur</span>
+                                                                                    <span className="badge bg-warning text-dark border border-warning" style={{ fontSize: '10px' }}>Pace Cepat</span>
+                                                                                </div>
+                                                                                <small className="text-secondary d-block mt-0.5" style={{ fontSize: '11px', lineHeight: '1.4' }}>
+                                                                                    Durasi pengerjaan Anda terdeteksi sangat singkat. Nilai berhasil disimpan, namun penerbitan sertifikat digital ditahan sementara menunggu pengesahan pengajar.
+                                                                                </small>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )
+                                                            )}
+
                                                             <div className="quiz-result-summary">
 
                                                                 <i className={`fas ${isPreTest || quizResult.passed ? "fa-lightbulb text-amber" : "fa-info-circle text-teal-accent"} me-2`}></i>
@@ -8911,7 +9054,7 @@ function CourseDetail() {
 
                                                                         : isPostTest
 
-                                                                            ? "Evaluasi pembelajaran lengkap! Silakan buka Tab Sertifikat untuk mengunduh sertifikat resmi."
+                                                                            ? "Evaluasi pembelajaran lengkap! Silakan buka Tab Sertifikat untuk memeriksa status penerbitan sertifikat resmi."
 
                                                                             : quizResult.passed
 
@@ -9360,6 +9503,24 @@ function CourseDetail() {
 
                                     </li>
 
+                                    <li className="nav-item" role="presentation">
+
+                                        <button className="nav-link" id="leaderboard-tab" data-bs-toggle="tab" data-bs-target="#leaderboard" type="button" role="tab">
+
+                                            <i className="fas fa-trophy me-1 text-amber"></i>
+
+                                            <span>Peringkat</span>
+
+                                            <span className="tab-pill-counter counter-leaderboard" title="Papan Peringkat Peserta">
+
+                                                <i className="fas fa-star" style={{ fontSize: "0.65rem" }}></i>
+
+                                            </span>
+
+                                        </button>
+
+                                    </li>
+
 
 
                                 </ul>
@@ -9549,6 +9710,15 @@ function CourseDetail() {
 
                                         </div>
 
+                                    </div>
+
+                                    {/* Leaderboard Tab */}
+                                    <div className="tab-pane fade" id="leaderboard" role="tabpanel">
+                                        <LeaderboardTab
+                                            courseId={course?.course?.course_id || course?.course_id || param.enrollment_id}
+                                            enrollmentId={param.enrollment_id}
+                                            activeTab={activeTab}
+                                        />
                                     </div>
 
 

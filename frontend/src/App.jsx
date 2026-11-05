@@ -73,6 +73,7 @@ const CourseEditCurriculum = lazy(() => import("./views/instructor/CourseEditCur
 const CourseQuiz = lazy(() => import("./views/instructor/CourseQuiz"));
 const CourseGamification = lazy(() => import("./views/instructor/CourseGamification"));
 const InstructorCoursePreview = lazy(() => import("./views/instructor/InstructorCoursePreview"));
+const CourseEvaluation = lazy(() => import("./views/instructor/CourseEvaluation"));
 
 // Admin Routes
 const DashboardAdmin = lazy(() => import("./views/admin/DashboardAdmin"));
@@ -532,6 +533,26 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <InstructorCoursePreview />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/instructor/courses/:course_id/evaluation/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                            <CourseEvaluation />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/instructor/course-evaluation/:course_id/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                            <CourseEvaluation />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }

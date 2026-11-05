@@ -88,6 +88,8 @@ function InstructorActivityDisplay({
                 if (filters.success) {
                     params.append('success', filters.success);
                 }
+                params.append('page', page);
+                params.append('page_size', maxDisplay);
                 params.append('limit', maxDisplay);
                 params.append('offset', (page - 1) * maxDisplay);
 
@@ -244,7 +246,7 @@ function InstructorActivityDisplay({
             {/* Activities List */}
             <div className="activities-list">
                 {activities.length > 0 ? (
-                    activities.map((activity) => {
+                    activities.slice(0, maxDisplay).map((activity) => {
                         const actType = getActivityIcon(activity.activity_type);
 
                         // ✨ Sleek compact variant for modern dashboard

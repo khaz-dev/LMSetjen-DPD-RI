@@ -2306,6 +2306,12 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                 print(f"Final score: {score}% ({correct_answers}/{total_questions})")
                 print(f"Score type: {type(score)}, Score >= 80: {score >= 80}")
                 
+                # Anti-Cheat Verification: Validasi durasi manusiawi & pelanggaran tab switch
+                tab_switch_violations = int(request.data.get('tab_switch_violations', 0))
+                min_realistic_quiz_time = max(5, total_questions * 3)
+                actual_quiz_time = int(time_taken) if time_taken else 0
+                is_suspicious_quiz_speed = (actual_quiz_time < min_realistic_quiz_time and total_questions > 0)
+
                 # Create quiz attempt record
                 from datetime import timedelta
                 from decimal import Decimal
@@ -2337,6 +2343,65 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                 
                 print(f"After submission - today_attempts: {today_attempts}, can_attempt: {can_attempt}, attempts_left: {attempts_left}")
                 
+                # Check integrity status & learning comparison for student transparency
+                enrollment = api_models.EnrolledCourse.objects.filter(user=user, course=quiz.course).first()
+                integrity_info = enrollment.check_integrity_status() if enrollment else {"is_valid": True, "status": "verified", "reasons": []}
+
+                learning_comparison = None
+                if final_attempt_type == 'post_test' and getattr(quiz, 'quiz_type', '') == 'pre_post_test':
+                    pre_att = api_models.QuizAttempt.objects.filter(
+                        user=user, quiz=quiz, attempt_type='pre_test'
+                    ).order_by('date_attempted').first()
+                    if pre_att:
+                        pre_sc = float(pre_att.score)
+                        post_sc = float(score)
+                        gain = round(post_sc - pre_sc, 1)
+                        norm_gain = round((gain / (100.0 - pre_sc) * 100.0), 1) if pre_sc < 100 else 0.0
+                        learning_comparison = {
+                            "has_pre": True,
+                            "pre_score": pre_sc,
+                            "post_score": post_sc,
+                            "improvement": gain,
+                            "normalized_gain": norm_gain
+                        }
+
+                # ✨ Notifikasi otomatis saat post-test selesai
+                if final_attempt_type == 'post_test':
+                    try:
+                        if integrity_info.get("status") == "pending_review":
+                            # Notifikasi Instruktur
+                            if course.teacher and course.teacher.user:
+                                reasons_str = "; ".join(integrity_info.get("reasons", [])) or "Durasi atau perpindahan fokus tidak wajar"
+                                api_models.Notification.objects.create(
+                                    user=course.teacher.user,
+                                    teacher=course.teacher,
+                                    course=course,
+                                    type="Exam Review Needed",
+                                    title=f"Verifikasi Integritas Ujian: {user.full_name}",
+                                    message=f"Peserta {user.full_name} telah menyelesaikan Post-Test pada materi '{course.title}' dengan indikasi anomali ({reasons_str}). Harap tinjau di Halaman Evaluasi Kursus.",
+                                    seen=False
+                                )
+                            # Notifikasi Siswa
+                            api_models.Notification.objects.create(
+                                user=user,
+                                course=course,
+                                type="Exam Pending Review",
+                                title=f"Ujian Selesai - Menunggu Peninjauan: {course.title}",
+                                message=f"Pengerjaan Post-Test Anda untuk materi '{course.title}' telah dicatat dan saat ini memerlukan peninjauan integritas oleh Instruktur.",
+                                seen=False
+                            )
+                        elif integrity_info.get("is_valid", True) and attempt.is_passed:
+                            api_models.Notification.objects.create(
+                                user=user,
+                                course=course,
+                                type="Exam Verified",
+                                title=f"Selamat! Anda Lulus Ujian - {course.title}",
+                                message=f"Selamat! Anda telah menyelesaikan dan lulus evaluasi Post-Test materi '{course.title}' dengan nilai {round(score, 1)}.",
+                                seen=False
+                            )
+                    except Exception as notif_sub_err:
+                        print(f"Error creating post-test notification: {notif_sub_err}")
+
                 # Serialize the attempt
                 attempt_serializer = api_serializer.QuizAttemptSerializer(attempt)
                 
@@ -2353,7 +2418,17 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                     "today_attempts": today_attempts,
                     "can_attempt": can_attempt,
                     "attempts_left": attempts_left,
-                    "max_daily_attempts": 3
+                    "max_daily_attempts": 3,
+                    "is_pre_test": final_attempt_type == 'pre_test',
+                    "is_post_test": final_attempt_type == 'post_test',
+                    "integrity": {
+                        "is_valid": integrity_info.get("is_valid", True),
+                        "status": integrity_info.get("status", "verified"),
+                        "reasons": integrity_info.get("reasons", []),
+                        "tab_switch_violations": tab_switch_violations,
+                        "is_suspicious_quiz_speed": is_suspicious_quiz_speed
+                    },
+                    "learning_comparison": learning_comparison
                 }, status=status.HTTP_201_CREATED)
                 
             except api_models.Quiz.DoesNotExist:
@@ -2458,6 +2533,7 @@ class StudentCertificateEligibilityAPIView(APIView):
                     post_test_completed = True
                     post_test_score = float(post_att.score)
 
+            integrity_info = enrollment.check_integrity_status()
             return Response({
                 'is_eligible': is_eligible,
                 'completion_percentage': round(enrollment.completion_percentage()),
@@ -2469,6 +2545,7 @@ class StudentCertificateEligibilityAPIView(APIView):
                 'pre_test_score': pre_test_score,
                 'post_test_score': post_test_score,
                 'learning_gain': round(post_test_score - pre_test_score, 1) if (pre_test_completed and post_test_completed) else 0,
+                'integrity': integrity_info,
                 'certificate': certificate,
                 'quiz_results': quiz_results
             }, status=status.HTTP_200_OK)
@@ -2507,11 +2584,19 @@ class StudentCertificateGenerateAPIView(APIView):
                 enrollment_id=enrollment_id, user=user, course=course
             )
             
-            # Check eligibility
+            # Check eligibility and integrity status
+            integrity_info = enrollment.check_integrity_status()
             if not enrollment.is_certificate_eligible():
+                if not integrity_info.get('is_valid', True):
+                    reasons_str = " ".join(integrity_info.get('reasons', []))
+                    return Response({
+                        'error': 'Penerbitan Sertifikat Ditangguhkan',
+                        'detail': f'Sertifikat ditangguhkan karena anomali integritas ujian: {reasons_str} Silakan hubungi instruktur kursus Anda untuk verifikasi kelulusan.',
+                        'integrity': integrity_info
+                    }, status=status.HTTP_400_BAD_REQUEST)
                 return Response({
                     'error': 'Not eligible for certificate',
-                    'detail': 'Complete all lessons and pass all quizzes to generate certificate'
+                    'detail': 'Selesaikan seluruh materi pelajaran dan lulus seluruh kuis untuk menerbitkan sertifikat.'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
             # Create or get existing certificate
@@ -3807,10 +3892,15 @@ class StudentCourseGameSubmitAPIView(APIView):
             attempt_number = attempts_count + 1
             has_passed = is_passed or (score_val >= 70.0)
 
+            # Anti-Cheat: Validasi batas waktu manusiawi pengerjaan game
+            # Mini game dengan skor >= 70% mustahil diselesaikan manusia dalam < 8 detik
+            actual_game_time = int(time_taken) if time_taken else 0
+            is_game_speed_anomaly = (actual_game_time < 8 and score_val >= 70.0)
+
             # Check if this user has already earned points for this game
             already_passed = game.attempts.filter(user=user, is_passed=True).exists()
             points_awarded = 0
-            if has_passed and not already_passed:
+            if has_passed and not already_passed and not is_game_speed_anomaly:
                 points_awarded = game.points_reward
 
             attempt = api_models.CourseGameAttempt.objects.create(
@@ -3859,3 +3949,460 @@ class StudentCourseGameSubmitAPIView(APIView):
             return Response({"error": "Game tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# =====================================================================
+# Course Leaderboard: Peringkat Siswa Per Kursus (Composite Mastery XP)
+# =====================================================================
+
+class CourseLeaderboardAPIView(APIView):
+    """
+    API endpoint untuk Papan Peringkat Peserta Kursus (Course Leaderboard).
+    Menghitung skor gabungan (Composite Course Mastery XP) dari:
+    1. Kuis Materi (Quiz Mastery Score) - Bobot 25% (0 - 250 XP)
+    2. Efektivitas Pembelajaran (Learning Gain Pre-to-Post Test) - Bobot 35% (0 - 350 XP)
+    3. Skor & Waktu Gamifikasi (Gamification Mastery & Speed) - Bobot 20% (0 - 200 XP)
+    4. Kecepatan & Ketuntasan Kursus (Completion Pace) - Bobot 20% (0 - 200 XP)
+    
+    Total Course XP: 0 - 1.000 XP
+    Terhubung langsung dengan StudentPoints & profil global siswa LMS Setjen DPD RI.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, course_id):
+        # 1. Resolusi course berdasarkan id, course_id (ShortUUID), slug, atau enrollment_id
+        course = None
+        if str(course_id).isdigit():
+            course = api_models.Course.objects.filter(id=int(course_id)).first()
+        if not course:
+            course = api_models.Course.objects.filter(course_id=str(course_id)).first()
+        if not course:
+            course = api_models.Course.objects.filter(slug=str(course_id)).first()
+        if not course:
+            enr = api_models.EnrolledCourse.objects.filter(enrollment_id=str(course_id)).select_related('course').first()
+            if enr:
+                course = enr.course
+
+        if not course:
+            return Response(
+                {"error": f"Kursus dengan ID '{course_id}' tidak ditemukan"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Current user resolution
+        current_user = request.user if (request.user and request.user.is_authenticated) else None
+        req_user_id = request.query_params.get('user_id')
+        if req_user_id and not current_user:
+            current_user = User.objects.filter(id=req_user_id).first()
+
+        # Resolusi seluruh ID versi terkait dalam satu keluarga kursus (Draft & Published Copy)
+        related_course_ids = course.get_related_course_ids() if hasattr(course, 'get_related_course_ids') else {course.id}
+
+        # 2. Ambil seluruh peserta terdaftar di kursus ini (termasuk versi terbitan / salinan draft)
+        enrollments = api_models.EnrolledCourse.objects.filter(course_id__in=related_course_ids).select_related('user', 'user__profile')
+        enrolled_users_dict = {}
+        for enr in enrollments:
+            if enr.user and enr.user.id not in enrolled_users_dict:
+                enrolled_users_dict[enr.user.id] = (enr.user, enr)
+
+        # 3. Komponen pembelajaran kursus (representatif unik)
+        all_regular = api_models.Quiz.objects.filter(course_id__in=related_course_ids, quiz_type='quiz', is_active=True)
+        seen_quiz_titles = set()
+        regular_quizzes = []
+        for q in all_regular:
+            if q.title not in seen_quiz_titles:
+                seen_quiz_titles.add(q.title)
+                regular_quizzes.append(q)
+
+        pre_post_quiz = api_models.Quiz.objects.filter(course_id__in=related_course_ids, quiz_type='pre_post_test', is_active=True).first()
+
+        all_games = api_models.CourseGame.objects.filter(course_id__in=related_course_ids, is_active=True)
+        seen_game_keys = set()
+        course_games = []
+        for g in all_games:
+            key = f"{g.game_type}:{g.title}"
+            if key not in seen_game_keys:
+                seen_game_keys.add(key)
+                course_games.append(g)
+
+        leaderboard_data = []
+
+        for uid, (user, enr) in enrolled_users_dict.items():
+            # A. Kuis Reguler (Quiz Mastery)
+            quiz_scores = []
+            passed_quizzes_count = 0
+            for q in regular_quizzes:
+                best_att = api_models.QuizAttempt.objects.filter(user=user, quiz__course_id__in=related_course_ids, quiz__title=q.title).order_by('-score').first()
+                if best_att:
+                    s = float(best_att.score)
+                    quiz_scores.append(s)
+                    if best_att.is_passed:
+                        passed_quizzes_count += 1
+                else:
+                    quiz_scores.append(0.0)
+
+            if regular_quizzes:
+                avg_quiz_score = round(sum(quiz_scores) / len(quiz_scores), 1)
+                quiz_points = round((avg_quiz_score / 100.0) * 250.0, 1)
+            else:
+                avg_quiz_score = 100.0
+                quiz_points = 250.0 if enr.is_course_completed() else round((enr.completion_percentage() / 100.0) * 250.0, 1)
+
+            # B. Efektivitas Pembelajaran (Learning Gain Pre-to-Post Test)
+            pre_att = None
+            post_att = None
+            if pre_post_quiz:
+                pre_att = api_models.QuizAttempt.objects.filter(user=user, quiz__course_id__in=related_course_ids, quiz__quiz_type='pre_post_test', attempt_type='pre_test').order_by('date_attempted').first()
+                post_att = api_models.QuizAttempt.objects.filter(user=user, quiz__course_id__in=related_course_ids, quiz__quiz_type='pre_post_test', attempt_type='post_test').order_by('-score').first()
+
+            has_pre = pre_att is not None
+            has_post = post_att is not None
+            pre_score = float(pre_att.score) if has_pre else None
+            post_score = float(post_att.score) if has_post else None
+
+            if has_pre and has_post:
+                score_improvement = round(post_score - pre_score, 1)
+                if pre_score < 100.0:
+                    raw_gain = ((post_score - pre_score) / (100.0 - pre_score)) * 100.0
+                    normalized_gain = round(max(0.0, min(100.0, raw_gain)), 1)
+                else:
+                    normalized_gain = 100.0 if post_score >= 100.0 else 0.0
+
+                if normalized_gain >= 70.0 or score_improvement >= 40.0:
+                    gain_status = "Efektivitas Sangat Tinggi"
+                    gain_badge = "success"
+                elif normalized_gain >= 30.0 or score_improvement >= 20.0:
+                    gain_status = "Efektivitas Sedang"
+                    gain_badge = "primary"
+                else:
+                    gain_status = "Peningkatan Stabil"
+                    gain_badge = "info"
+
+                post_comp = (post_score / 100.0) * 200.0
+                gain_comp = (max(0.0, score_improvement) / 100.0) * 150.0
+                learning_points = round(post_comp + gain_comp, 1)
+
+            elif has_pre:
+                score_improvement = 0.0
+                normalized_gain = 0.0
+                gain_status = "Sedang Belajar"
+                gain_badge = "warning"
+                learning_points = round((pre_score / 100.0) * 50.0, 1)
+            else:
+                score_improvement = 0.0
+                normalized_gain = 0.0
+                gain_status = "Belum Pre-test"
+                gain_badge = "secondary"
+                learning_points = 0.0
+
+            # C. Gamifikasi (Skor & Waktu Game)
+            completed_games_count = 0
+            game_scores = []
+            total_game_time = 0
+            game_reward_points = 0
+
+            for game in course_games:
+                best_ga = api_models.CourseGameAttempt.objects.filter(user=user, game__course_id__in=related_course_ids, game__game_type=game.game_type).order_by('-score', 'time_taken').first()
+                if best_ga:
+                    completed_games_count += 1
+                    game_scores.append(float(best_ga.score))
+                    total_game_time += int(best_ga.time_taken)
+                    game_reward_points += int(best_ga.points_awarded)
+
+            if course_games:
+                avg_game_score = round(sum(game_scores) / len(course_games), 1) if game_scores else 0.0
+                game_base_xp = (avg_game_score / 100.0) * 160.0
+                # Speed & completeness bonus
+                completion_bonus = 40.0 if (completed_games_count == len(course_games) and len(course_games) > 0) else (completed_games_count * 8.0)
+                gamification_points = round(min(200.0, game_base_xp + completion_bonus), 1)
+            else:
+                avg_game_score = 100.0
+                gamification_points = 200.0
+
+            # D. Kecepatan & Ketuntasan Kursus (Completion Pace)
+            start_time = pre_att.date_attempted if pre_att else enr.date
+            cert = api_models.Certificate.objects.filter(user=user, course_id__in=related_course_ids, is_valid=True).first()
+            
+            is_completed = False
+            finish_time = None
+            if post_att and post_att.is_passed:
+                finish_time = post_att.date_attempted
+                is_completed = True
+            elif cert:
+                finish_time = cert.date
+                is_completed = True
+
+            duration_seconds = None
+            duration_human = "Sedang Belajar"
+            if is_completed and finish_time and start_time:
+                raw_diff = (finish_time - start_time).total_seconds()
+                delta_sec = max(60, int(abs(raw_diff)))
+                duration_seconds = delta_sec
+                days = delta_sec // 86400
+                hours = (delta_sec % 86400) // 3600
+                minutes = (delta_sec % 3600) // 60
+                seconds = delta_sec % 60
+                if days > 0:
+                    duration_human = f"{days}h {hours}j {minutes}m"
+                elif hours > 0:
+                    duration_human = f"{hours} jam {minutes} menit"
+                elif minutes > 0:
+                    duration_human = f"{minutes} menit {seconds} dtk"
+                else:
+                    duration_human = f"{seconds} detik"
+
+                # Anti-Cheat: Verifikasi ambang batas waktu wajar ketuntasan kursus
+                # Menyelesaikan seluruh materi kurikulum, kuis materi, game, dan post-test mustahil dilakukan manusia dalam < 3 menit (180 detik)
+                MIN_COURSE_COMPLETION_SECONDS = 180
+                is_pace_anomaly = (delta_sec < MIN_COURSE_COMPLETION_SECONDS)
+
+                # Pace Score (120 XP base + up to 80 XP speed bonus)
+                if is_pace_anomaly:
+                    # Anomali kecepatan: gugurkan seluruh bonus kecepatan demi keabsahan peringkat
+                    pace_bonus = 0.0
+                    duration_human = f"{duration_human} (Diverifikasi)"
+                elif delta_sec <= 3600:
+                    pace_bonus = 80.0
+                elif delta_sec <= 14400:
+                    pace_bonus = 60.0
+                elif delta_sec <= 86400:
+                    pace_bonus = 45.0
+                elif delta_sec <= 259200:
+                    pace_bonus = 30.0
+                elif delta_sec <= 604800:
+                    pace_bonus = 20.0
+                else:
+                    pace_bonus = 10.0
+                pace_points = round(120.0 + pace_bonus, 1)
+            else:
+                completion_pct = enr.completion_percentage()
+                pace_points = round((completion_pct / 100.0) * 100.0, 1)
+
+            # E. Total Course Mastery XP (Maksimal 1.000 XP)
+            total_course_xp = int(round(quiz_points + learning_points + gamification_points + pace_points))
+
+            # F. Global Student Points & Profile Data
+            sp = api_models.StudentPoints.objects.filter(user=user).first()
+            lifetime_pts = sp.lifetime_points if sp else 0
+            if lifetime_pts >= 2000:
+                level_name = "Master DPD RI"
+                level_icon = "fas fa-crown"
+                level_color = "#f59e0b"
+            elif lifetime_pts >= 1000:
+                level_name = "Pakar Inovasi"
+                level_icon = "fas fa-award"
+                level_color = "#8b5cf6"
+            elif lifetime_pts >= 500:
+                level_name = "Pembelajar Unggul"
+                level_icon = "fas fa-medal"
+                level_color = "#06b6d4"
+            elif lifetime_pts >= 100:
+                level_name = "Siswa Aktif"
+                level_icon = "fas fa-star"
+                level_color = "#10b981"
+            else:
+                level_name = "Pemula"
+                level_icon = "fas fa-seedling"
+                level_color = "#64748b"
+
+            avatar_url = None
+            try:
+                if hasattr(user, 'profile') and user.profile and user.profile.image:
+                    avatar_url = user.profile.image.url if hasattr(user.profile.image, "url") else str(user.profile.image)
+            except Exception:
+                avatar_url = None
+
+            full_display_name = user.get_full_name() or user.username
+            is_me = (current_user and current_user.id == user.id)
+
+            student_integrity = enr.check_integrity_status()
+            leaderboard_data.append({
+                "user_id": user.id,
+                "username": user.username,
+                "full_name": full_display_name,
+                "avatar": avatar_url,
+                "is_current_user": is_me,
+                "total_points": total_course_xp,
+                "integrity_check": {
+                    "is_valid": student_integrity["is_valid"],
+                    "status": student_integrity["status"],
+                    "is_manual_approved": student_integrity["is_manual_approved"],
+                    "reasons": student_integrity["reasons"],
+                    "has_certificate": cert is not None and cert.is_valid,
+                    "certificate_id": cert.certificate_id if cert else None
+                },
+                "quiz_stats": {
+                    "total_quizzes": len(regular_quizzes),
+                    "passed_quizzes": passed_quizzes_count,
+                    "avg_score": avg_quiz_score,
+                    "points": quiz_points
+                },
+                "learning_stats": {
+                    "has_pre": has_pre,
+                    "has_post": has_post,
+                    "pre_score": pre_score,
+                    "post_score": post_score,
+                    "improvement": score_improvement,
+                    "normalized_gain": normalized_gain,
+                    "status": gain_status,
+                    "badge": gain_badge,
+                    "points": learning_points
+                },
+                "gamification_stats": {
+                    "total_games": len(course_games),
+                    "completed_games": completed_games_count,
+                    "avg_score": avg_game_score,
+                    "total_time_seconds": total_game_time,
+                    "total_reward_points": game_reward_points,
+                    "points": gamification_points
+                },
+                "completion_stats": {
+                    "is_completed": is_completed,
+                    "start_time": start_time,
+                    "finish_time": finish_time,
+                    "duration_seconds": duration_seconds,
+                    "duration_human": duration_human,
+                    "points": pace_points
+                },
+                "global_stats": {
+                    "lifetime_points": lifetime_pts,
+                    "level_name": level_name,
+                    "level_icon": level_icon,
+                    "level_color": level_color
+                }
+            })
+
+        # 4. Urutkan Leaderboard:
+        def sort_key(item):
+            comp_order = 0 if item["completion_stats"]["is_completed"] else 1
+            dur = item["completion_stats"]["duration_seconds"] if item["completion_stats"]["duration_seconds"] is not None else 99999999
+            post_sc = item["learning_stats"]["post_score"] if item["learning_stats"]["post_score"] is not None else -1
+            return (-item["total_points"], comp_order, -post_sc, dur)
+
+        leaderboard_data.sort(key=sort_key)
+
+        # Sematkan Rank Position & Badge Medali
+        for idx, item in enumerate(leaderboard_data, start=1):
+            item["rank"] = idx
+            if idx == 1:
+                item["medal"] = "gold"
+            elif idx == 2:
+                item["medal"] = "silver"
+            elif idx == 3:
+                item["medal"] = "bronze"
+            else:
+                item["medal"] = None
+
+        # Ambil statistik user yang sedang login jika ada
+        my_stats = None
+        if current_user:
+            for item in leaderboard_data:
+                if item["user_id"] == current_user.id:
+                    my_stats = item
+                    break
+
+        # Top 3 Podium
+        podium = leaderboard_data[:3]
+
+        # 5. Data Evaluasi & Ulasan Kursus (Level 1 Kirkpatrick - Kepuasan & Feedback Peserta)
+        reviews_qs = api_models.Review.objects.filter(course_id__in=related_course_ids, active=True).select_related('user', 'user__profile').order_by('-date')
+        reviews_list = []
+        rating_dist = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+        total_rating_sum = 0
+        for r in reviews_qs:
+            rating = int(r.rating or 0)
+            if rating in rating_dist:
+                rating_dist[rating] += 1
+            total_rating_sum += rating
+
+            prof = getattr(r.user, 'profile', None)
+            user_name = prof.full_name if (prof and prof.full_name) else (r.user.get_full_name() or r.user.username)
+            avatar = None
+            if prof and prof.image:
+                avatar = prof.image.url if hasattr(prof.image, 'url') else str(prof.image)
+
+            reviews_list.append({
+                "id": r.id,
+                "user_id": r.user.id,
+                "full_name": user_name,
+                "avatar": avatar,
+                "rating": rating,
+                "review": r.review,
+                "reply": r.reply,
+                "date": r.date.strftime("%d %b %Y") if r.date else "",
+                "formatted_date": r.date.isoformat() if r.date else None
+            })
+
+        reviews_count = len(reviews_list)
+        avg_rating = round(total_rating_sum / reviews_count, 1) if reviews_count > 0 else 0.0
+        satisfaction_pct = round((sum(rating_dist[k] for k in [4, 5]) / reviews_count) * 100) if reviews_count > 0 else 0
+
+        evaluation_data = {
+            "total_reviews": reviews_count,
+            "average_rating": avg_rating,
+            "satisfaction_rate": satisfaction_pct,
+            "rating_distribution": rating_dist,
+            "reviews": reviews_list
+        }
+
+        return Response({
+            "course": {
+                "id": course.id,
+                "course_id": course.course_id,
+                "title": course.title,
+                "image": (course.image.url if hasattr(course.image, "url") else str(course.image)) if course.image else None,
+                "total_students": len(leaderboard_data)
+            },
+            "my_stats": my_stats,
+            "podium": podium,
+            "leaderboard": leaderboard_data,
+            "evaluation": evaluation_data,
+            "scoring_formula": {
+                "quiz_weight": "25% (Maks 250 XP)",
+                "learning_gain_weight": "35% (Maks 350 XP)",
+                "gamification_weight": "20% (Maks 200 XP)",
+                "completion_pace_weight": "20% (Maks 200 XP)",
+                "total_max_xp": 1000
+            }
+        }, status=status.HTTP_200_OK)
+
+
+# ==================== STUDENT NOTIFICATION API VIEWS ====================
+
+class StudentNotificationListAPIView(generics.ListAPIView):
+    """List notifikasi in-app untuk siswa (Anti-IDOR protected)"""
+    serializer_class = api_serializer.NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get_queryset(self):
+        user_id = self.kwargs.get('user_id')
+        if not self.request.user.is_staff and str(self.request.user.id) != str(user_id):
+            return api_models.Notification.objects.none()
+        return api_models.Notification.objects.filter(user_id=user_id, teacher__isnull=True).order_by('-date')
+
+
+class StudentNotificationDetailAPIView(generics.RetrieveUpdateAPIView):
+    """Detail dan update status seen notifikasi siswa"""
+    serializer_class = api_serializer.NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get_object(self):
+        user_id = self.kwargs.get('user_id')
+        noti_id = self.kwargs.get('noti_id')
+        if not self.request.user.is_staff and str(self.request.user.id) != str(user_id):
+            raise PermissionDenied("Akses ditolak")
+        return api_models.Notification.objects.get(user_id=user_id, id=noti_id)
+
+
+class StudentNotificationMarkAllReadAPIView(APIView):
+    """Tandai seluruh notifikasi siswa sebagai telah dibaca"""
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request, user_id):
+        if not request.user.is_staff and str(request.user.id) != str(user_id):
+            return Response({"error": "Akses ditolak"}, status=status.HTTP_403_FORBIDDEN)
+        updated = api_models.Notification.objects.filter(user_id=user_id, teacher__isnull=True, seen=False).update(seen=True)
+        return Response({"success": True, "updated_count": updated}, status=status.HTTP_200_OK)

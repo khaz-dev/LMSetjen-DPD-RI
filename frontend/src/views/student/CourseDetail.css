@@ -888,6 +888,11 @@ body.modern-course-active {
     color: #ffffff !important;
 }
 
+.tab-pill-counter.counter-leaderboard {
+    background: #f59e0b !important;
+    color: #ffffff !important;
+}
+
 .tab-content-modern {
     padding: 1rem 1.15rem !important;
 }

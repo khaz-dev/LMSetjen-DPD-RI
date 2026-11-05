@@ -412,34 +412,83 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                 {isFullyComplete ? (
                     <div className="certificate-actions mb-2">
                         {!certificate ? (
-                            <div className="generate-section">
-                                <div className="congratulations-card">
-                                    <div className="congratulations-content">
-                                        <div className="d-flex align-items-center justify-content-center gap-2 mb-1">
-                                            <i className="fas fa-award congratulations-icon"></i>
-                                            <h6 className="mb-0 fw-bold">Selamat! Kursus Telah Tuntas 🎉</h6>
+                            eligibilityData?.integrity && !eligibilityData.integrity.is_valid ? (
+                                <div className="generate-section">
+                                    <div className="card border-warning-subtle bg-warning-subtle text-dark p-3 rounded-3 shadow-xs">
+                                        <div className="d-flex align-items-start gap-3">
+                                            <div className="p-2.5 rounded-circle bg-warning text-dark flex-shrink-0 d-flex align-items-center justify-content-center" style={{ width: '44px', height: '44px', fontSize: '1.25rem' }}>
+                                                <i className="fas fa-shield-halved"></i>
+                                            </div>
+                                            <div className="flex-grow-1">
+                                                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                                                    <h6 className="fw-bold mb-0 text-warning-emphasis">
+                                                        <i className="fas fa-clock-rotate-left me-1.5"></i> Peninjauan Integritas Ujian Sedang Berlangsung
+                                                    </h6>
+                                                    <span className="badge bg-warning text-dark border border-warning px-2.5 py-1">
+                                                        <i className="fas fa-hourglass-half me-1"></i> Menunggu Verifikasi Instruktur
+                                                    </span>
+                                                </div>
+                                                <p className="small mb-2 text-secondary" style={{ lineHeight: '1.5' }}>
+                                                    Hasil kuis dan modul Anda telah tuntas, namun sistem anti-cheat mencatat anomali pada durasi pengerjaan. Demi menjaga standar kompetensi dan keabsahan sertifikat ASN Setjen DPD RI, penerbitan sertifikat digital memerlukan pengesahan manual oleh Instruktur kursus.
+                                                </p>
+                                                {eligibilityData.integrity.reasons && eligibilityData.integrity.reasons.length > 0 && (
+                                                    <div className="p-2 rounded bg-white border border-warning-subtle small font-monospace text-muted mb-2">
+                                                        <i className="fas fa-circle-info text-warning me-1"></i>
+                                                        {eligibilityData.integrity.reasons.join(", ")}
+                                                    </div>
+                                                )}
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-dark fw-semibold"
+                                                        onClick={checkEligibility}
+                                                        title="Periksa kembali status verifikasi"
+                                                    >
+                                                        <i className="fas fa-sync-alt me-1.5"></i> Periksa Ulang Status
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p className="congratulations-desc mb-2">
-                                            Semua materi dan penilaian telah berhasil diselesaikan. Silakan buat sertifikat resmi Anda sekarang.
-                                        </p>
-                                        <button 
-                                            className="btn btn-sm generate-btn"
-                                            onClick={generateCertificate}
-                                            disabled={generating}
-                                        >
-                                            {generating ? (
-                                                <>
-                                                    <div className="spinner-border spinner-border-sm me-2"></div>
-                                                    Memproses Sertifikat...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <i className="fas fa-award me-1"></i>
-                                                    Terbitkan Sertifikat Resmi
-                                                </>
-                                            )}
-                                        </button>
                                     </div>
+                                </div>
+                            ) : (
+                                <div className="generate-section">
+                                    <div className="congratulations-card">
+                                        <div className="congratulations-content">
+                                            <div className="d-flex align-items-center justify-content-center gap-2 mb-1">
+                                                <i className="fas fa-award congratulations-icon"></i>
+                                                <h6 className="mb-0 fw-bold">Selamat! Kursus Telah Tuntas 🎉</h6>
+                                            </div>
+                                            <p className="congratulations-desc mb-2">
+                                                Semua materi dan penilaian telah berhasil diselesaikan secara berintegritas. Silakan terbitkan sertifikat resmi Anda sekarang.
+                                            </p>
+                                            <button 
+                                                className="btn btn-sm generate-btn"
+                                                onClick={generateCertificate}
+                                                disabled={generating}
+                                            >
+                                                {generating ? (
+                                                    <>
+                                                        <div className="spinner-border spinner-border-sm me-2"></div>
+                                                        Memproses Sertifikat...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-award me-1"></i>
+                                                        Terbitkan Sertifikat Resmi
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        ) : (!certificate.is_valid || certificate.integrity_status === 'rejected') ? (
+                            <div className="alert alert-danger border-danger-subtle d-flex align-items-center gap-3 p-3 rounded-3">
+                                <i className="fas fa-ban fa-2x text-danger flex-shrink-0"></i>
+                                <div>
+                                    <h6 className="fw-bold mb-1">Sertifikat Ditangguhkan / Dibatalkan</h6>
+                                    <p className="small mb-0">Sertifikat digital untuk kursus ini telah dibatalkan atau ditangguhkan oleh instruktur kursus karena pelanggaran integritas ujian. Silakan hubungi instruktur Anda.</p>
                                 </div>
                             </div>
                         ) : (
@@ -457,7 +506,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                                         </div>
                                     </div>
                                     <span className="badge-cert-status">
-                                        <i className="fas fa-check-circle me-1"></i>Terverifikasi
+                                        <i className="fas fa-check-circle me-1"></i>Terverifikasi Sah
                                     </span>
                                 </div>
                                 <div className="cert-issued-body mt-2 pt-2 border-top">

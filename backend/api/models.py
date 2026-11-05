@@ -80,6 +80,11 @@ NOTI_TYPE = (
     ("Draft", "Draft"),
     ("Course Published", "Course Published"),
     ("Course Enrollment Completed", "Course Enrollment Completed"),
+    ("Exam Verified", "Exam Verified"),
+    ("Exam Reset", "Exam Reset"),
+    ("Exam Rejected", "Exam Rejected"),
+    ("Exam Review Needed", "Exam Review Needed"),
+    ("Exam Pending Review", "Exam Pending Review"),
 )
 
 # ✨ PHASE 4.18: Video source types for course intro videos
@@ -307,8 +312,25 @@ class Course(models.Model):
         
         super(Course, self).save(*args, **kwargs)
 
+    def get_related_course_ids(self):
+        """
+        Returns all course IDs associated with this course family
+        (self, parent draft course, and all published/draft copies).
+        """
+        related = {self.id}
+        if self.parent_course_id:
+            related.add(self.parent_course_id)
+            related.update(
+                Course.objects.filter(parent_course_id=self.parent_course_id).values_list('id', flat=True)
+            )
+        related.update(
+            Course.objects.filter(parent_course=self).values_list('id', flat=True)
+        )
+        return related
+
     def students(self):
-        return EnrolledCourse.objects.filter(course=self)
+        related_ids = self.get_related_course_ids()
+        return EnrolledCourse.objects.filter(course_id__in=related_ids)
     
     def curriculum(self):
         return Variant.objects.filter(course=self)
@@ -317,7 +339,8 @@ class Course(models.Model):
         return VariantItem.objects.filter(variant__course=self)
     
     def average_rating(self):
-        average_rating = Review.objects.filter(course=self, active=True).aggregate(avg_rating=models.Avg('rating'))
+        related_ids = self.get_related_course_ids()
+        average_rating = Review.objects.filter(course_id__in=related_ids, active=True).aggregate(avg_rating=models.Avg('rating'))
         return average_rating['avg_rating']
     
     # ✨ PHASE 4.60: Versioning support methods
@@ -995,10 +1018,12 @@ class Course(models.Model):
             return True, "Kursus berhasil dikembalikan ke versi yang dipublikasikan"
     
     def rating_count(self):
-        return Review.objects.filter(course=self, active=True).count()
+        related_ids = self.get_related_course_ids()
+        return Review.objects.filter(course_id__in=related_ids, active=True).count()
     
     def reviews(self):
-        return Review.objects.filter(course=self, active=True)
+        related_ids = self.get_related_course_ids()
+        return Review.objects.filter(course_id__in=related_ids, active=True)
     
 class Variant(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="curriculum")
@@ -1444,6 +1469,14 @@ class Certificate(models.Model):
     certificate_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     validation_token = ShortUUIDField(unique=True, length=12, max_length=20, alphabet="abcdefghijklmnopqrstuvwxyz0123456789", editable=False)
     is_valid = models.BooleanField(default=True)
+    INTEGRITY_CHOICES = (
+        ('verified', 'Terverifikasi Valid'),
+        ('pending_review', 'Menunggu Verifikasi Instruktur'),
+        ('rejected', 'Ditolak / Terindikasi Curang'),
+    )
+    integrity_status = models.CharField(max_length=30, choices=INTEGRITY_CHOICES, default='verified')
+    integrity_verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_certificates')
+    integrity_verified_at = models.DateTimeField(null=True, blank=True)
     date = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
@@ -1922,6 +1955,14 @@ class EnrolledCourse(models.Model):
     # Removed order_item reference to CartOrderItem
     enrollment_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date = models.DateTimeField(default=timezone.now)
+    INTEGRITY_CHOICES = (
+        ('verified', 'Terverifikasi Valid'),
+        ('pending_review', 'Menunggu Verifikasi Instruktur'),
+        ('rejected', 'Ditolak / Terindikasi Curang'),
+    )
+    integrity_status = models.CharField(max_length=30, choices=INTEGRITY_CHOICES, default='verified')
+    manual_integrity_approved = models.BooleanField(default=False, help_text="Verifikasi manual oleh instruktur untuk mengizinkan penerbitan sertifikat")
+    integrity_notes = models.TextField(blank=True, null=True, help_text="Catatan atau alasan anomali integritas")
 
     def __str__(self):
         return self.course.title
@@ -2028,12 +2069,104 @@ class EnrolledCourse(models.Model):
                 return False
         return True
 
+    def check_integrity_status(self):
+        """
+        Evaluasi integritas pengerjaan kuis/ujian dan durasi ketuntasan kursus.
+        Returns dict:
+        {
+            'is_valid': bool,
+            'status': 'verified' | 'pending_review' | 'rejected',
+            'is_manual_approved': bool,
+            'reasons': list of str,
+            'duration_seconds': int | None,
+            'post_test_duration_seconds': int | None
+        }
+        """
+        if self.integrity_status == 'rejected':
+            return {
+                'is_valid': False,
+                'status': 'rejected',
+                'is_manual_approved': False,
+                'reasons': [self.integrity_notes or "Ujian ditandai tidak sah oleh instruktur karena indikasi kecurangan."],
+                'duration_seconds': None,
+                'post_test_duration_seconds': None
+            }
+
+        if self.manual_integrity_approved:
+            return {
+                'is_valid': True,
+                'status': 'verified',
+                'is_manual_approved': True,
+                'reasons': ["Telah diverifikasi dan disahkan secara manual oleh Instruktur."],
+                'duration_seconds': None,
+                'post_test_duration_seconds': None
+            }
+
+        reasons = []
+        is_suspicious = False
+
+        # 1. Cek Post-Test attempt
+        pre_post_quiz = Quiz.objects.filter(course=self.course, quiz_type='pre_post_test', is_active=True).first()
+        post_att = None
+        pre_att = None
+        if pre_post_quiz:
+            attempts = QuizAttempt.objects.filter(user=self.user, quiz=pre_post_quiz).order_by('date_attempted')
+            pre_att = attempts.filter(attempt_type='pre_test').first() or attempts.first()
+            post_att = attempts.filter(attempt_type='post_test').first()
+            if not post_att and attempts.count() >= 2:
+                post_att = attempts.last()
+
+        post_test_sec = None
+        if post_att and post_att != pre_att:
+            if post_att.time_taken:
+                post_test_sec = int(post_att.time_taken.total_seconds())
+                min_realistic_post_time = max(15, post_att.total_questions * 3)
+                if post_test_sec < min_realistic_post_time and post_att.total_questions > 0:
+                    is_suspicious = True
+                    reasons.append(f"Kecepatan pengerjaan Post-Test tidak wajar ({post_test_sec} detik untuk {post_att.total_questions} butir soal).")
+
+        # 2. Cek Total Ketuntasan Kursus (Completion Pace)
+        start_time = pre_att.date_attempted if pre_att else self.date
+        finish_time = post_att.date_attempted if (post_att and post_att.is_passed) else None
+        delta_sec = None
+        if start_time and finish_time:
+            raw_diff = (finish_time - start_time).total_seconds()
+            delta_sec = max(0, int(abs(raw_diff)))
+            # Ambang batas wajar ketuntasan materi + ujian minimal 3 menit (180 detik)
+            if delta_sec < 180 and self.course.lectures().count() > 0:
+                is_suspicious = True
+                reasons.append(f"Ketuntasan seluruh materi & ujian selesai dalam waktu {delta_sec} detik (< 3 menit).")
+
+        if is_suspicious:
+            return {
+                'is_valid': False,
+                'status': 'pending_review',
+                'is_manual_approved': False,
+                'reasons': reasons,
+                'duration_seconds': delta_sec,
+                'post_test_duration_seconds': post_test_sec
+            }
+
+        return {
+            'is_valid': True,
+            'status': 'verified',
+            'is_manual_approved': False,
+            'reasons': ["Hasil ujian dan ketuntasan materi terverifikasi sah dan berintegritas."],
+            'duration_seconds': delta_sec,
+            'post_test_duration_seconds': post_test_sec
+        }
+
     def is_certificate_eligible(self):
-        """Check if user is eligible for certificate (lessons complete + regular quizzes passed + post-test complete)"""
-        return self.is_course_completed() and self.are_all_quizzes_passed() and self.has_completed_post_test()
+        """Check if user is eligible for certificate (lessons complete + regular quizzes passed + post-test complete + integrity check passed)"""
+        base_eligible = self.is_course_completed() and self.are_all_quizzes_passed() and self.has_completed_post_test()
+        if not base_eligible:
+            return False
+        integrity = self.check_integrity_status()
+        return integrity['is_valid']
     
     def get_or_create_certificate(self):
-        """Get existing certificate or create new one if eligible"""
+        """Get existing certificate or create new one if eligible and integrity check passed"""
+        integrity = self.check_integrity_status()
         if not self.is_certificate_eligible():
             return None, False
         
@@ -2041,8 +2174,22 @@ class EnrolledCourse(models.Model):
             course=self.course,
             user=self.user,
             enrollment=self,
-            defaults={'is_valid': True}
+            defaults={
+                'is_valid': True,
+                'integrity_status': 'verified' if integrity['is_valid'] else 'pending_review'
+            }
         )
+        if not created and certificate:
+            if not integrity['is_valid'] and not self.manual_integrity_approved:
+                if certificate.is_valid:
+                    certificate.is_valid = False
+                    certificate.integrity_status = 'pending_review'
+                    certificate.save(update_fields=['is_valid', 'integrity_status'])
+            elif self.manual_integrity_approved and not certificate.is_valid:
+                certificate.is_valid = True
+                certificate.integrity_status = 'verified'
+                certificate.save(update_fields=['is_valid', 'integrity_status'])
+
         return certificate, created
     
 class Note(models.Model):
@@ -2085,7 +2232,7 @@ class Review(models.Model):
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
-    # Removed order and order_item references
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
     review = models.ForeignKey(Review, on_delete=models.SET_NULL, null=True, blank=True)
     type = models.CharField(max_length=100, choices=NOTI_TYPE)
     title = models.CharField(max_length=1000, null=True, blank=True)  # Phase 4.36 - notification title
@@ -4738,6 +4885,8 @@ class ActivityLog(models.Model):
         ('student_unenrolled', 'Hapus Siswa'),
         ('announcement_posted', 'Posting Pengumuman'),
         ('grade_recorded', 'Berikan Nilai'),
+        ('exam_verified', 'Pengesahan Integritas Ujian'),
+        ('exam_reset', 'Reset Ujian Post-Test'),
         # ✨ Reviews & Testimonials
         ('review_updated', 'Update Review'),
         ('review_deleted', 'Hapus Review'),

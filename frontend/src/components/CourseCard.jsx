@@ -1,11 +1,11 @@
 import React, { memo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { moment } from "../utils/dayjs";
-import { 
-    getImageUrl, 
-    getLevelBadgeStyle, 
-    getLevelText, 
-    getActualCourseStatus 
+import {
+    getImageUrl,
+    getLevelBadgeStyle,
+    getLevelText,
+    getActualCourseStatus
 } from "../utils/courseUtils.js";
 import { calculateTotalDuration, parseDurationToSeconds } from "../utils/durationUtils";
 import useAxios from "../utils/useAxios";
@@ -20,7 +20,7 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
     // Calculate course completion
     const hasCurriculum = course.curriculum?.length > 0;
     const hasLessons = course.curriculum?.some(variant => variant.items?.length > 0);
-    
+
     // Quizzes check
     const hasQuiz = (() => {
         if (!course.quizzes) return false;
@@ -36,52 +36,52 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
         }
         return false;
     })();
-    
+
     // Calculate progress percentage
     const calculateProgress = () => {
         let completed = 0;
         const total = 4;
-        
+
         if (course.title && course.description) completed++; // Basic info
         if (hasCurriculum) completed++; // Has curriculum
         if (hasLessons) completed++; // Has lessons
         if (hasQuiz) completed++; // Has quiz
-        
+
         return Math.round((completed / total) * 100);
     };
-    
+
     const progress = calculateProgress();
-    
+
     // Calculate total JP (Jam Pelajaran) from course lectures (1 JP = 45 mins)
     const calculateTotalJP = (lectures) => {
         if (!lectures || !Array.isArray(lectures)) return 0;
-        
+
         let totalSeconds = 0;
         lectures.forEach(lecture => {
             if (lecture.content_duration) {
                 totalSeconds += parseDurationToSeconds(lecture.content_duration);
             }
         });
-        
+
         return Math.ceil(totalSeconds / 2700);
     };
-    
+
     // Check if this is a published course
     const isPublished = course.is_published_version === true;
-    
+
     // Edit button - creates draft automatically for published courses
     const handleEditCourse = async (e) => {
         if (e) e.preventDefault();
-        
+
         try {
             if (isPublished) {
                 setEditingCourse(true);
                 const response = await useAxios.post(`teacher/course-edit-published/${course.course_id}/`);
-                
+
                 if (response.data?.success) {
                     const draftCourseId = response.data.course?.course_id;
                     const isNew = response.data.is_new;
-                    
+
                     if (isNew) {
                         Toast().fire({
                             icon: "success",
@@ -89,7 +89,7 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                             text: "Anda sekarang dapat mengedit kursus ini"
                         });
                     }
-                    
+
                     setTimeout(() => {
                         navigate(`/instructor/edit-course/${draftCourseId}/`);
                     }, 400);
@@ -114,10 +114,10 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
             setEditingCourse(false);
         }
     };
-    
+
     // Get actual course status
     const courseStatus = getActualCourseStatus(course);
-    
+
     // Determine next step
     const getNextStep = () => {
         if (!hasCurriculum) {
@@ -151,9 +151,11 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
             color: "#16a34a"
         };
     };
-    
+
     const nextStep = getNextStep();
-    const studentsCount = course.students?.length || 0;
+    const studentsCount = Array.isArray(course.students)
+        ? course.students.length
+        : (typeof course.students === "number" ? course.students : (course.students_count || 0));
     const lecturesCount = course.lectures?.length || 0;
     const durationInfo = lecturesCount > 0 ? calculateTotalDuration(course.lectures) : null;
     const totalJP = lecturesCount > 0 ? calculateTotalJP(course.lectures) : 0;
@@ -177,7 +179,7 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                                 e.target.src = "/images/placeholders/default-course.svg";
                             }}
                         />
-                        <span 
+                        <span
                             className="list-thumb-status-badge"
                             style={{ background: courseStatus.color }}
                             title={courseStatus.text}
@@ -189,8 +191,8 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                     {/* Middle Info */}
                     <div className="list-course-body">
                         <div className="list-meta-chips">
-                            <span 
-                                className="badge level-badge-sm" 
+                            <span
+                                className="badge level-badge-sm"
                                 style={{ background: getLevelBadgeStyle(course.level) }}
                             >
                                 {getLevelText(course.level)}
@@ -215,8 +217,8 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                             </span>
                         </div>
 
-                        <h4 
-                            className="course-title list-course-title mb-1" 
+                        <h4
+                            className="course-title list-course-title mb-1"
                             title={course.title}
                             onClick={handleEditCourse}
                         >
@@ -227,8 +229,8 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                         {!isPublished && courseStatus.status === "Draft" && (
                             <div className="list-progress-wrapper">
                                 <div className="list-progress-track">
-                                    <div 
-                                        className="list-progress-fill" 
+                                    <div
+                                        className="list-progress-fill"
                                         style={{ width: `${progress}%`, background: nextStep.color }}
                                     ></div>
                                 </div>
@@ -242,9 +244,9 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
 
                     {/* Right Actions */}
                     <div className="list-course-actions">
-                        <span 
+                        <span
                             className="status-pill-badge"
-                            style={{ 
+                            style={{
                                 color: courseStatus.color,
                                 backgroundColor: `${courseStatus.color}15`,
                                 borderColor: `${courseStatus.color}35`
@@ -254,8 +256,8 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                             {courseStatus.text}
                         </span>
 
-                        <div className="d-flex align-items-center gap-1.5 mt-2">
-                            <button 
+                        <div className="d-flex align-items-center gap-1 mt-2">
+                            <button
                                 className="btn course-action-btn course-action-btn-sm btn-edit"
                                 onClick={handleEditCourse}
                                 disabled={editingCourse}
@@ -264,8 +266,17 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                                 <i className={`fas ${editingCourse ? "fa-spinner fa-spin" : "fa-pen-to-square"} me-1`}></i>
                                 {editingCourse ? "Membuka..." : "Edit"}
                             </button>
-                            
-                            <button 
+
+                            <Link
+                                to={`/instructor/courses/${course.course_id}/evaluation/`}
+                                className="btn course-action-btn course-action-btn-sm btn-evaluation"
+                                title="Evaluasi efektivitas belajar, ranking, dan integritas peserta kursus"
+                            >
+                                <i className="fas fa-chart-line me-1"></i>
+                                Evaluasi
+                            </Link>
+
+                            <button
                                 className="btn course-action-btn course-action-btn-sm btn-view"
                                 onClick={() => window.open(`/course-detail/${course.slug}/`, "_blank")}
                                 title="Pratinjau Kursus"
@@ -319,15 +330,15 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
 
                     {/* Top Badges */}
                     <div className="course-card-top-badges">
-                        <span 
-                            className="badge level-badge" 
+                        <span
+                            className="badge level-badge"
                             style={{ background: getLevelBadgeStyle(course.level) }}
                         >
                             {getLevelText(course.level)}
                         </span>
-                        
-                        <span 
-                            className="badge status-badge" 
+
+                        <span
+                            className="badge status-badge"
                             style={{ background: courseStatus.color }}
                         >
                             <i className={`fas ${courseStatus.icon} me-1`}></i>
@@ -365,8 +376,8 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                     </div>
 
                     {/* Course Title */}
-                    <h4 
-                        className="course-title" 
+                    <h4
+                        className="course-title"
                         title={course.title}
                         onClick={handleEditCourse}
                     >
@@ -386,24 +397,24 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                                 </span>
                             </div>
                             <div className="progress course-progress-track">
-                                <div 
-                                    className="progress-bar" 
-                                    role="progressbar" 
-                                    style={{ 
+                                <div
+                                    className="progress-bar"
+                                    role="progressbar"
+                                    style={{
                                         width: `${progress}%`,
                                         background: `linear-gradient(90deg, ${nextStep.color} 0%, ${nextStep.color}dd 100%)`,
                                     }}
-                                    aria-valuenow={progress} 
-                                    aria-valuemin="0" 
+                                    aria-valuenow={progress}
+                                    aria-valuemin="0"
                                     aria-valuemax="100"
                                 ></div>
                             </div>
-                            <Link 
-                                to={nextStep.link} 
+                            <Link
+                                to={nextStep.link}
                                 className="draft-next-step-link"
                                 style={{ color: nextStep.color, borderColor: `${nextStep.color}40` }}
                             >
-                                <span className="d-flex align-items-center gap-1.5 text-truncate">
+                                <span className="d-flex align-items-center gap-1 text-truncate">
                                     <i className={`fas ${nextStep.icon}`}></i>
                                     <span>{nextStep.label}</span>
                                 </span>
@@ -414,17 +425,26 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
 
                     {/* Action Buttons */}
                     <div className="course-actions">
-                        <button 
+                        <button
                             className="btn course-action-btn course-action-btn-sm btn-edit flex-fill"
                             onClick={handleEditCourse}
                             disabled={editingCourse}
                             title="Edit konten kursus"
                         >
-                            <i className={`fas ${editingCourse ? "fa-spinner fa-spin" : "fa-pen-to-square"} me-1.5`}></i>
+                            <i className={`fas ${editingCourse ? "fa-spinner fa-spin" : "fa-pen-to-square"} me-1`}></i>
                             {editingCourse ? "Membuka..." : "Edit Kursus"}
                         </button>
-                        
-                        <button 
+
+                        <Link
+                            to={`/instructor/courses/${course.course_id}/evaluation/`}
+                            className="btn course-action-btn course-action-btn-sm btn-evaluation flex-fill"
+                            title="Evaluasi efektivitas belajar, ranking, dan integritas peserta kursus"
+                        >
+                            <i className="fas fa-chart-line me-1"></i>
+                            Evaluasi Kursus
+                        </Link>
+
+                        <button
                             className="btn course-action-btn course-action-btn-sm btn-view"
                             onClick={() => window.open(`/course-detail/${course.slug}/`, "_blank")}
                             title="Buka halaman publik kursus"

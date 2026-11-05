@@ -1244,6 +1244,11 @@ class RankedInstructorsAPIView(generics.ListAPIView):
 
 
 # ✨ PHASE 53 EXTENDED: Instructor Activities for Dashboard
+class InstructorActivityPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 class InstructorActivitiesAPIView(generics.ListAPIView):
     """
     PHASE 53+: Hybrid Aktivitas Terbaru - Student + Instructor Activities
@@ -1263,7 +1268,7 @@ class InstructorActivitiesAPIView(generics.ListAPIView):
     """
     serializer_class = api_serializer.ActivityLogListSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
+    pagination_class = InstructorActivityPagination
     
     def get_queryset(self):
         """Filter activities for instructor's courses - BOTH student and instructor activities"""
@@ -1322,7 +1327,7 @@ class InstructorCourseActivitiesAPIView(generics.ListAPIView):
     """
     serializer_class = api_serializer.ActivityLogListSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
+    pagination_class = InstructorActivityPagination
     
     def get_queryset(self):
         """Get both student and instructor activities for instructor's course"""
@@ -1687,3 +1692,243 @@ class InstructorPointsBreakdownAPIView(APIView):
 
 
 
+
+
+class TeacherVerifyStudentIntegrityAPIView(APIView):
+    """
+    Instruktur / Pengajar memverifikasi atau menganulir status integritas ujian peserta kursus,
+    serta memberikan izin penerbitan sertifikat atau mereset pengerjaan Post-Test yang terindikasi curang.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        try:
+            course_id = request.data.get('course_id')
+            user_id = request.data.get('user_id')
+            action = request.data.get('action') # 'approve' | 'reject' | 'reset_post_test'
+            notes = request.data.get('notes', '')
+
+            user = request.user
+            is_staff = getattr(user, 'is_staff', False) or getattr(user, 'is_admin', False)
+            teacher = api_models.Teacher.objects.filter(user=user).first()
+
+            course = api_models.Course.objects.filter(course_id=course_id).first()
+            if not course:
+                return Response({"error": "Kursus tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+            related_course_ids = course.get_related_course_ids()
+            if not is_staff and (not teacher or (course.teacher != teacher and not api_models.Course.objects.filter(id__in=related_course_ids, teacher=teacher).exists())):
+                return Response({"error": "Akses ditolak. Anda bukan pengajar untuk kursus ini."}, status=status.HTTP_403_FORBIDDEN)
+
+            target_student = User.objects.filter(id=user_id).first()
+            if not target_student:
+                return Response({"error": "Peserta tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+            enrollment = api_models.EnrolledCourse.objects.filter(user=target_student, course_id__in=related_course_ids).first()
+            if not enrollment:
+                return Response({"error": "Data enrollment peserta tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+            if action == 'approve':
+                enrollment.manual_integrity_approved = True
+                enrollment.integrity_status = 'verified'
+                enrollment.integrity_notes = notes or f"Disahkan dan diverifikasi secara manual oleh Instruktur {user.full_name}."
+                enrollment.save(update_fields=['manual_integrity_approved', 'integrity_status', 'integrity_notes'])
+
+                # Update or validate existing certificate
+                cert = api_models.Certificate.objects.filter(user=target_student, course_id__in=related_course_ids).first()
+                if cert:
+                    cert.is_valid = True
+                    cert.integrity_status = 'verified'
+                    cert.integrity_verified_by = user
+                    cert.integrity_verified_at = timezone.now()
+                    cert.save(update_fields=['is_valid', 'integrity_status', 'integrity_verified_by', 'integrity_verified_at'])
+
+                # ✨ Notifikasi Otomatis ke Siswa & Instruktur
+                try:
+                    # 1. Notifikasi Siswa
+                    api_models.Notification.objects.create(
+                        user=target_student,
+                        course=course,
+                        type="Exam Verified", 
+                        title=f"Hasil Ujian Disahkan - {course.title}",
+                        message=f"Selamat! Hasil evaluasi ujian Anda untuk materi '{course.title}' telah diverifikasi dan disahkan oleh Instruktur {user.full_name}. Hak penerbitan sertifikat kelulusan telah dibuka.",
+                        seen=False
+                    )
+                    api_models.ActivityLog.objects.create(
+                        user=target_student,
+                        activity_type='quiz_passed',
+                        role_at_time='student',
+                        course=course,
+                        title=f"Hasil Ujian Disahkan: {course.title}",
+                        description=f"Integritas ujian Post-Test telah disahkan secara resmi oleh Instruktur {user.full_name}.",
+                        success=True,
+                        metadata={'verified_by': user.full_name, 'action': 'approve', 'course_id': course.id}
+                    )
+                    # 2. Notifikasi & Log Instruktur
+                    if teacher:
+                        api_models.Notification.objects.create(
+                            user=user,
+                            teacher=teacher,
+                            course=course,
+                            type="Exam Verified", 
+                            title=f"Pengesahan Ujian Berhasil: {target_student.full_name}",
+                            message=f"Anda telah memverifikasi dan mengesahkan integritas hasil ujian peserta {target_student.full_name} pada materi '{course.title}'.",
+                            seen=False
+                        )
+                    api_models.ActivityLog.objects.create(
+                        user=user,
+                        activity_type='grade_recorded',
+                        role_at_time='instructor',
+                        course=course,
+                        title=f"Mengesahkan Ujian Peserta: {target_student.full_name}",
+                        description=f"Memverifikasi integritas ujian {target_student.full_name} untuk kursus {course.title}.",
+                        success=True,
+                        metadata={'student_name': target_student.full_name, 'student_id': target_student.id, 'action': 'approve', 'course_id': course.id}
+                    )
+                except Exception as notif_e:
+                    print(f"Error creating notification: {notif_e}")
+
+                return Response({
+                    "success": True,
+                    "message": f"Hasil ujian {target_student.full_name} berhasil diverifikasi dan disahkan. Siswa kini berhak menerbitkan sertifikat.",
+                    "integrity_status": "verified"
+                }, status=status.HTTP_200_OK)
+
+            elif action == 'reject':
+                enrollment.manual_integrity_approved = False
+                enrollment.integrity_status = 'rejected'
+                enrollment.integrity_notes = notes or f"Dibatalkan oleh instruktur {user.full_name} karena indikasi pelanggaran integritas ujian."
+                enrollment.save(update_fields=['manual_integrity_approved', 'integrity_status', 'integrity_notes'])
+
+                cert = api_models.Certificate.objects.filter(user=target_student, course_id__in=related_course_ids).first()
+                if cert:
+                    cert.is_valid = False
+                    cert.integrity_status = 'rejected'
+                    cert.integrity_verified_by = user
+                    cert.integrity_verified_at = timezone.now()
+                    cert.save(update_fields=['is_valid', 'integrity_status', 'integrity_verified_by', 'integrity_verified_at'])
+
+                # ✨ Notifikasi Otomatis Penolakan
+                try:
+                    api_models.Notification.objects.create(
+                        user=target_student,
+                        course=course,
+                        type="Exam Rejected", 
+                        title=f"Hasil Ujian Tidak Disahkan - {course.title}",
+                        message=f"Hasil evaluasi ujian Anda untuk materi '{course.title}' tidak disahkan oleh Instruktur {user.full_name}. Catatan: {enrollment.integrity_notes}",
+                        seen=False
+                    )
+                    if teacher:
+                        api_models.Notification.objects.create(
+                            user=user,
+                            teacher=teacher,
+                            course=course,
+                            type="Exam Rejected", 
+                            title=f"Penolakan Ujian: {target_student.full_name}",
+                            message=f"Anda telah menolak integritas hasil ujian peserta {target_student.full_name} pada materi '{course.title}'.",
+                            seen=False
+                        )
+                except Exception as notif_e:
+                    print(f"Error creating notification: {notif_e}")
+
+                return Response({
+                    "success": True,
+                    "message": f"Hasil ujian {target_student.full_name} ditolak. Sertifikat dibekukan.",
+                    "integrity_status": "rejected"
+                }, status=status.HTTP_200_OK)
+
+            elif action == 'reset_post_test':
+                pre_post_quiz = api_models.Quiz.objects.filter(course_id__in=related_course_ids, quiz_type='pre_post_test', is_active=True).first()
+                if pre_post_quiz:
+                    attempts = api_models.QuizAttempt.objects.filter(user=target_student, quiz=pre_post_quiz)
+                    pre_att = attempts.filter(attempt_type='pre_test').first() or attempts.order_by('date_attempted').first()
+                    post_attempts = attempts.filter(attempt_type='post_test')
+                    if not post_attempts.exists() and attempts.count() >= 2:
+                        post_attempts = attempts.exclude(id=pre_att.id if pre_att else None)
+                    post_attempts.delete()
+
+                enrollment.manual_integrity_approved = False
+                enrollment.integrity_status = 'verified'
+                enrollment.integrity_notes = "Ujian Post-test telah di-reset oleh Instruktur untuk kesempatan ujian ulang."
+                enrollment.save(update_fields=['manual_integrity_approved', 'integrity_status', 'integrity_notes'])
+
+                # Hapus sertifikat lama jika ada agar siswa harus lulus ulang
+                api_models.Certificate.objects.filter(user=target_student, course_id__in=related_course_ids).delete()
+
+                # ✨ Notifikasi Otomatis Reset Ujian
+                try:
+                    # 1. Notifikasi Siswa
+                    api_models.Notification.objects.create(
+                        user=target_student,
+                        course=course,
+                        type="Exam Reset", 
+                        title=f"Ujian Post-Test Di-reset - {course.title}",
+                        message=f"Ujian Post-Test Anda untuk materi '{course.title}' telah di-reset oleh Instruktur {user.full_name}. Kesempatan ujian ulang telah dibuka, silakan kerjakan kembali dengan tertib dan jujur.",
+                        seen=False
+                    )
+                    api_models.ActivityLog.objects.create(
+                        user=target_student,
+                        activity_type='quiz_attempted',
+                        role_at_time='student',
+                        course=course,
+                        title=f"Ujian Post-Test Di-reset: {course.title}",
+                        description=f"Post-Test di-reset oleh Instruktur {user.full_name} untuk kesempatan ujian ulang.",
+                        success=True,
+                        metadata={'reset_by': user.full_name, 'action': 'reset_post_test', 'course_id': course.id}
+                    )
+                    # 2. Notifikasi & Log Instruktur
+                    if teacher:
+                        api_models.Notification.objects.create(
+                            user=user,
+                            teacher=teacher,
+                            course=course,
+                            type="Exam Reset", 
+                            title=f"Reset Ujian: {target_student.full_name}",
+                            message=f"Anda telah mereset percobaan Post-Test peserta {target_student.full_name} pada materi '{course.title}'.",
+                            seen=False
+                        )
+                    api_models.ActivityLog.objects.create(
+                        user=user,
+                        activity_type='quiz_updated',
+                        role_at_time='instructor',
+                        course=course,
+                        title=f"Reset Ujian Peserta: {target_student.full_name}",
+                        description=f"Mereset percobaan Post-Test peserta {target_student.full_name} untuk kursus {course.title}.",
+                        success=True,
+                        metadata={'student_name': target_student.full_name, 'student_id': target_student.id, 'action': 'reset_post_test', 'course_id': course.id}
+                    )
+                except Exception as notif_e:
+                    print(f"Error creating notification: {notif_e}")
+
+                return Response({
+                    "success": True,
+                    "message": f"Ujian Post-Test {target_student.full_name} berhasil di-reset. Peserta kini dapat mengerjakan ulang tes dengan benar.",
+                    "integrity_status": "reset"
+                }, status=status.HTTP_200_OK)
+
+            else:
+                return Response({"error": "Aksi tidak dikenal (pilihan: approve, reject, reset_post_test)"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response({"error": f"Terjadi kesalahan: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TeacherNotificationMarkAllReadAPIView(APIView):
+    """Tandai semua notifikasi instruktur sebagai telah dibaca (Anti-IDOR protected)"""
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request, teacher_id):
+        try:
+            teacher = api_models.Teacher.objects.filter(id=teacher_id).first()
+            if not teacher:
+                return Response({"error": "Pengajar tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+            
+            if not request.user.is_staff and teacher.user != request.user:
+                return Response({"error": "Akses ditolak"}, status=status.HTTP_403_FORBIDDEN)
+
+            updated = api_models.Notification.objects.filter(teacher=teacher, seen=False).update(seen=True)
+            return Response({"success": True, "updated_count": updated}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

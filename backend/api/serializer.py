@@ -849,7 +849,7 @@ class CertificateSerializer(serializers.ModelSerializer):
     class Meta:
         fields = [
             'id', 'course', 'user', 'enrollment', 'certificate_id', 'formatted_certificate_id',
-            'validation_token', 'is_valid', 'date', 'course_title', 'course_slug', 'course_level',
+            'validation_token', 'is_valid', 'integrity_status', 'date', 'course_title', 'course_slug', 'course_level',
             'course_category', 'course_image', 'student_name', 
             'instructor_name', 'qr_code_url', 'image_file_url', 'pdf_file_url', 'created_at', 'updated_at'
         ]
@@ -1085,10 +1085,21 @@ class QuestionAnswerMessageReportSerializer(serializers.ModelSerializer):
 
 
 class NotificationSerializer(serializers.ModelSerializer):
+    course_data = serializers.SerializerMethodField()
 
     class Meta:
         fields = '__all__'
         model = api_models.Notification
+
+    def get_course_data(self, obj):
+        if getattr(obj, 'course', None):
+            return {
+                "id": obj.course.id,
+                "course_id": getattr(obj.course, 'course_id', obj.course.id),
+                "title": obj.course.title,
+                "slug": getattr(obj.course, 'slug', None)
+            }
+        return None
 
 
 class CountrySerializer(serializers.ModelSerializer):

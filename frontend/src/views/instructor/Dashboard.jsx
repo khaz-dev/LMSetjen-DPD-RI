@@ -426,7 +426,7 @@ function Dashboard() {
                             <div className="row g-3 mb-3">
                                 {/* Kursus Berkinerja Terbaik */}
                                 <div className="col-lg-6 mb-3">
-                                    <div className="performance-panel-modern h-50">
+                                    <div className="performance-panel-modern h-100">
                                         <div className="panel-header d-flex justify-content-between align-items-center">
                                             <h5 className="panel-title d-flex align-items-center gap-2 mb-0">
                                                 <i className="fas fa-trophy text-warning"></i>
@@ -439,7 +439,7 @@ function Dashboard() {
                                         <div className="performance-content">
                                             {bestCourses.length > 0 ? (
                                                 <div className="performance-list">
-                                                    {bestCourses.slice(0, 4).map((course, index) => (
+                                                    {bestCourses.slice(0, 10).map((course, index) => (
                                                         <div key={course.id || index} className="performance-list-item">
                                                             <div className={`course-rank-badge rank-${index + 1 <= 3 ? index + 1 : 'other'}`}>
                                                                 {index === 0 ? <i className="fas fa-crown"></i> : `#${index + 1}`}
@@ -511,7 +511,7 @@ function Dashboard() {
                                         </div>
                                         <div className="activity-panel-body">
                                             <InstructorActivityDisplay 
-                                                maxDisplay={4} 
+                                                maxDisplay={10} 
                                                 showViewAll={false} 
                                                 variant="compact" 
                                                 showFilters={false} 

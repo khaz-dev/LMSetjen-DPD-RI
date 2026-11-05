@@ -111,10 +111,10 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
 
       // 1. Perform role switch in backend API, update cookies & Zustand store & trigger authRoleChanged
       const result = await switchRole(role);
-      
+
       if (result.success) {
         const newRole = result.current_role;
-        
+
         // 2. Synchronously update RolesContext state before navigating
         if (setCurrentRole) {
           setCurrentRole(newRole);
@@ -133,7 +133,7 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
 
         // 3. Navigate to target dashboard only AFTER the role switch has succeeded
         const dashboardUrl = getRoleDashboardUrl(newRole);
-        navigate(dashboardUrl, { replace: true });
+        navigate(dashboardUrl, { replace: true, state: { roleSwitchedTo: newRole } });
       } else {
         Toast().fire({
           icon: 'error',
@@ -171,7 +171,7 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
   if (compact) {
     return (
       <div className="role-indicator compact" ref={dropdownRef}>
-        <button 
+        <button
           className={`role-badge-compact ${getCurrentRoleBadgeColor()}`}
           type="button"
           onClick={() => (availableRoles?.length || 0) > 1 && setIsDropdownOpen(!isDropdownOpen)}

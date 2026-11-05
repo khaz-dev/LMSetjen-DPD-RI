@@ -10,6 +10,7 @@ import { logout } from "../../utils/auth";
 import Toast, { LogoutConfirmation } from "../plugin/Toast";
 import { getImageUrl } from "../../utils/courseUtils";  // ✨ PHASE 4.77: Image URL utility
 import RoleIndicator from "../../components/RoleIndicator";
+import InAppNotificationBell from "../../components/Notification/InAppNotificationBell";
 import './BaseHeader.css';
 
 // Module-level cache for trending searches across page navigations
@@ -859,6 +860,7 @@ function BaseHeader() {
                         {/* User menu */}
                         {isLoggedIn() ? (
                             <div className="user-menu d-flex align-items-center gap-2">
+                                <InAppNotificationBell />
                                 <RoleIndicator compact={true} />
                                 {currentMenuType === 'admin' ? (
                                     <div 

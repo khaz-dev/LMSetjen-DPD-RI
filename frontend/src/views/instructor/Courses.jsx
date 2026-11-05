@@ -99,7 +99,10 @@ function Courses() {
         }).length;
 
         const totalStudents = courses.reduce((acc, c) => {
-            return acc + (c.students?.length || 0);
+            const count = Array.isArray(c.students)
+                ? c.students.length
+                : (typeof c.students === "number" ? c.students : (c.students_count || 0));
+            return acc + count;
         }, 0);
 
         return {
@@ -210,10 +213,16 @@ function Courses() {
                                     <div className="courses-header-card">
                                 <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <div className="courses-header-meta">
-                                        <h2 className="courses-title mb-1">
-                                            <i className="fas fa-graduation-cap text-teal me-2"></i>
-                                            Kursus Saya
-                                        </h2>
+                                        <div className="d-flex align-items-center gap-2.5 mb-1 flex-wrap">
+                                            <h2 className="courses-title mb-0">
+                                                <i className="fas fa-graduation-cap text-teal me-2"></i>
+                                                Kursus Saya
+                                            </h2>
+                                            <span className="courses-counter-pill">
+                                                <i className="fas fa-book-open me-1.5"></i>
+                                                <span>{courses.length} Kursus</span>
+                                            </span>
+                                        </div>
                                         <p className="courses-subtitle mb-0">
                                             Kelola, pantau, dan publikasikan program pelatihan Anda di LMSetjen DPD RI
                                         </p>
@@ -230,11 +239,6 @@ function Courses() {
                                             <i className={`fas fa-sync-alt me-1.5 ${isRefreshing ? "fa-spin" : ""}`}></i>
                                             Segarkan
                                         </button>
-
-                                        <span className="courses-counter-pill">
-                                            <i className="fas fa-book-open me-2"></i>
-                                            <span>{courses.length} Kursus</span>
-                                        </span>
 
                                         <Link 
                                             to="/instructor/create-course/" 
