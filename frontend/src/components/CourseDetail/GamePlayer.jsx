@@ -392,6 +392,16 @@ const GamePlayer = ({
         }
     }, [activeGame?.game_id]);
 
+    // Auto-focus hidden input when crossword game starts so first click won't cause focus/layout jump
+    useEffect(() => {
+        if (gameStage === "playing" && activeGame?.game_type === "crossword") {
+            const t = setTimeout(() => {
+                hiddenInputRef.current?.focus({ preventScroll: true });
+            }, 80);
+            return () => clearTimeout(t);
+        }
+    }, [gameStage, activeGame?.game_type]);
+
     // Timer effect
     useEffect(() => {
         if (gameStage === "playing") {
@@ -823,7 +833,7 @@ const GamePlayer = ({
                 const nextWordId = nextDir === "across" ? cell.acrossWordId : cell.downWordId;
                 setActiveDirection(nextDir);
                 setActiveWordId(nextWordId);
-                hiddenInputRef.current?.focus();
+                hiddenInputRef.current?.focus({ preventScroll: true });
                 return;
             }
         }
@@ -842,7 +852,7 @@ const GamePlayer = ({
             setActiveWordId(cell.downWordId);
         }
 
-        hiddenInputRef.current?.focus();
+        hiddenInputRef.current?.focus({ preventScroll: true });
     };
 
     const handleClueSelect = (clue) => {
@@ -864,7 +874,7 @@ const GamePlayer = ({
         }
 
         setActiveCell(targetCell);
-        hiddenInputRef.current?.focus();
+        hiddenInputRef.current?.focus({ preventScroll: true });
     };
 
     const cycleClue = (delta) => {
@@ -894,7 +904,7 @@ const GamePlayer = ({
             return next;
         });
         setActiveCell({ r: activeWord.row, c: activeWord.col });
-        hiddenInputRef.current?.focus();
+        hiddenInputRef.current?.focus({ preventScroll: true });
     };
 
     const submitCrossword = () => {
@@ -1400,17 +1410,21 @@ const GamePlayer = ({
                                         <div className="cw-clue-banner-right">
                                             <button
                                                 type="button"
-                                                className="btn btn-sm btn-outline-secondary px-2 py-1"
+                                                className="cw-clue-nav-btn"
+                                                onMouseDown={(e) => e.preventDefault()}
                                                 onClick={() => cycleClue(-1)}
                                                 title="Pertanyaan Sebelumnya"
+                                                aria-label="Pertanyaan Sebelumnya"
                                             >
                                                 <i className="fas fa-chevron-left"></i>
                                             </button>
                                             <button
                                                 type="button"
-                                                className="btn btn-sm btn-outline-secondary px-2 py-1"
+                                                className="cw-clue-nav-btn"
+                                                onMouseDown={(e) => e.preventDefault()}
                                                 onClick={() => cycleClue(1)}
                                                 title="Pertanyaan Berikutnya"
+                                                aria-label="Pertanyaan Berikutnya"
                                             >
                                                 <i className="fas fa-chevron-right"></i>
                                             </button>
@@ -1467,6 +1481,7 @@ const GamePlayer = ({
                                                             <div
                                                                 key={key}
                                                                 className={`cw-cell cw-letter-cell ${isWordActive ? "cw-word-active" : ""} ${isCursorActive ? "cw-cursor-active" : ""}`}
+                                                                onMouseDown={(e) => e.preventDefault()}
                                                                 onClick={() => handleCellClick(r, c)}
                                                             >
                                                                 {cell.number && (
@@ -1514,7 +1529,11 @@ const GamePlayer = ({
                                                         <div
                                                             key={`across-${clue.number}`}
                                                             className={`cw-clue-item ${isSelected ? "active" : ""} ${isFilled ? "filled" : ""}`}
-                                                            onClick={() => handleClueSelect(clue)}
+                                                            onMouseDown={(e) => e.preventDefault()}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                handleClueSelect(clue);
+                                                            }}
                                                         >
                                                             <span className="cw-clue-badge">{clue.number}</span>
                                                             <div className="cw-clue-content">
@@ -1546,7 +1565,11 @@ const GamePlayer = ({
                                                         <div
                                                             key={`down-${clue.number}`}
                                                             className={`cw-clue-item ${isSelected ? "active" : ""} ${isFilled ? "filled" : ""}`}
-                                                            onClick={() => handleClueSelect(clue)}
+                                                            onMouseDown={(e) => e.preventDefault()}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                handleClueSelect(clue);
+                                                            }}
                                                         >
                                                             <span className="cw-clue-badge down">{clue.number}</span>
                                                             <div className="cw-clue-content">

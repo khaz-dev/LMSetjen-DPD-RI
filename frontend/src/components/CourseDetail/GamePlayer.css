@@ -385,9 +385,12 @@
     background: #ffffff;
     border: 1.5px solid #0d9488;
     border-radius: 10px;
-    padding: 0.65rem 1rem;
-    animation: fadeIn 0.2s ease;
+    padding: 0 0.85rem;
     overflow: hidden;
+    height: 50px;
+    min-height: 50px;
+    max-height: 50px;
+    flex-shrink: 0;
 }
 
 .cw-clue-banner-left {
@@ -413,8 +416,36 @@
 .cw-clue-banner-right {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.4rem;
     flex-shrink: 0;
+}
+
+/* Compact Navigation Buttons inside Clue Banner */
+.cw-clue-nav-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.cw-clue-nav-btn:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.cw-clue-nav-btn:active {
+    transform: scale(0.95);
 }
 
 /* Main Split: Left Grid, Right Clues */
@@ -442,14 +473,22 @@
     align-items: center;
     position: relative;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    align-self: start;
 }
 
 .cw-hidden-input {
     position: absolute;
-    opacity: 0;
-    pointer-events: none;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 0;
     height: 0;
+    opacity: 0;
+    pointer-events: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    outline: none;
 }
 
 .cw-grid-table-container {
@@ -481,7 +520,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 2px;
-    transition: background-color 0.15s ease, transform 0.1s ease;
+    transition: background-color 0.15s ease;
 }
 
 .cw-block-cell {
