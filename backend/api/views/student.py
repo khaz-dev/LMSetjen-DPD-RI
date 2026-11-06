@@ -4215,12 +4215,35 @@ class CourseLeaderboardAPIView(APIView):
             full_display_name = user.get_full_name() or user.username
             is_me = (current_user and current_user.id == user.id)
 
+            # Get employee / ASN profile metadata
+            nip = "-"
+            unit_kerja = "-"
+            jabatan = "-"
+            golongan = "-"
+            try:
+                prof = getattr(user, 'profile', None)
+                if prof:
+                    nip = prof.nip or "-"
+                    if prof.organization_unit:
+                        unit_kerja = getattr(prof.organization_unit, 'name', str(prof.organization_unit))
+                    if prof.position:
+                        jabatan = getattr(prof.position, 'name', str(prof.position))
+                    golongan = prof.golongan or "-"
+            except Exception:
+                pass
+
             student_integrity = enr.check_integrity_status()
             leaderboard_data.append({
                 "user_id": user.id,
                 "username": user.username,
                 "full_name": full_display_name,
                 "avatar": avatar_url,
+                "employee_info": {
+                    "nip": nip,
+                    "unit_kerja": unit_kerja,
+                    "jabatan": jabatan,
+                    "golongan": golongan
+                },
                 "is_current_user": is_me,
                 "total_points": total_course_xp,
                 "integrity_check": {

@@ -269,7 +269,7 @@ const CourseSidebar = ({
 
                     {/* Badge GRATIS */}
                     <div
-                        className="position-absolute top-0 end-0 m-2.5 badge"
+                        className="position-absolute top-0 end-0 m-2 badge"
                         style={{
                             background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                             color: 'white',
@@ -286,15 +286,15 @@ const CourseSidebar = ({
                 </div>
 
                 {/* Card Body */}
-                <div className="card-body p-3.5 p-lg-4">
+                <div className="card-body p-3 p-lg-4">
                     {/* Course Access / Target Audience Info */}
                     <div className="p-3 rounded-3 bg-light border mb-3">
                         <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom border-light-subtle">
-                            <span className={`badge ${course?.target_audience === 'umum' ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-teal-subtle text-teal border border-teal-subtle'} rounded-pill px-2.5 py-1 fw-semibold`} style={{ fontSize: '0.74rem' }}>
-                                <i className={course?.target_audience === 'umum' ? "fas fa-globe me-1.5" : "fas fa-shield-halved me-1.5"}></i>
+                            <span className={`badge ${course?.target_audience === 'umum' ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-teal-subtle text-teal border border-teal-subtle'} rounded-pill px-2 py-1 fw-semibold`} style={{ fontSize: '0.74rem' }}>
+                                <i className={course?.target_audience === 'umum' ? "fas fa-globe me-1" : "fas fa-shield-halved me-1"}></i>
                                 {course?.target_audience === 'umum' ? 'Akses Publik' : 'Pelatihan Kedinasan'}
                             </span>
-                            <span className="badge bg-emerald-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill fw-semibold" style={{ fontSize: '0.72rem' }}>
+                            <span className="badge bg-emerald-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold" style={{ fontSize: '0.72rem' }}>
                                 <i className="fas fa-check-circle me-1"></i>100% Gratis
                             </span>
                         </div>
@@ -320,11 +320,11 @@ const CourseSidebar = ({
                     </div>
 
                     {/* Primary Action Button */}
-                    <div className="mb-3.5">
+                    <div className="mb-3">
                         {isInstructorCourse && !isStudentMode ? (
                             <button
                                 onClick={() => navigate(`/instructor/edit-course/${course.course_id}/`)}
-                                className="btn w-100 text-white fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center shadow-sm"
+                                className="btn w-100 text-white fw-bold py-2 rounded-3 d-flex align-items-center justify-content-center shadow-sm"
                                 style={{
                                     background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                                     border: 'none',
@@ -337,7 +337,7 @@ const CourseSidebar = ({
                         ) : isEnrolled ? (
                             <button
                                 onClick={() => navigate('/student/courses/')}
-                                className="btn w-100 text-white fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center shadow-sm"
+                                className="btn w-100 text-white fw-bold py-2 rounded-3 d-flex align-items-center justify-content-center shadow-sm"
                                 style={{
                                     background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                                     border: 'none',
@@ -351,7 +351,7 @@ const CourseSidebar = ({
                             <button
                                 onClick={handleEnrollment}
                                 disabled={loading}
-                                className="btn w-100 text-white fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center shadow-sm"
+                                className="btn w-100 text-white fw-bold py-2 rounded-3 d-flex align-items-center justify-content-center shadow-sm"
                                 style={{
                                     background: loading ? '#94a3b8' : 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
                                     border: 'none',
@@ -375,13 +375,13 @@ const CourseSidebar = ({
                     </div>
 
                     {/* Secondary Action Buttons (Side by Side to save vertical space) */}
-                    <div className="row g-2.5 mb-2 mt-2 pb-1">
+                    <div className="row g-2 mb-2 mt-2 pb-1">
                         {!isInstructor && (
                             <div className="col-6">
                                 <button
                                     onClick={handleWishlist}
                                     disabled={isLoadingWishlist}
-                                    className={`btn btn-sm w-100 py-2.5 rounded-3 fw-medium d-flex align-items-center justify-content-center gap-2 ${isInWishlist
+                                    className={`btn btn-sm w-100 py-2 rounded-3 fw-medium d-flex align-items-center justify-content-center gap-2 ${isInWishlist
                                         ? 'btn-danger text-white'
                                         : 'btn-outline-secondary'
                                         }`}
@@ -402,7 +402,7 @@ const CourseSidebar = ({
 
                         <div className={!isInstructor ? "col-6" : "col-12"}>
                             <button
-                                className="btn btn-sm btn-outline-secondary w-100 py-2.5 rounded-3 fw-medium d-flex align-items-center justify-content-center gap-2"
+                                className="btn btn-sm btn-outline-secondary w-100 py-2 rounded-3 fw-medium d-flex align-items-center justify-content-center gap-2"
                                 style={{ fontSize: '0.82rem' }}
                                 onClick={() => {
                                     if (navigator.share) {

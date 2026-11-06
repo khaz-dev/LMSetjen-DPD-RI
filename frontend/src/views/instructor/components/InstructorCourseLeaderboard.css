@@ -463,3 +463,520 @@
     border-color: #cbd5e1;
     box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
 }
+
+/* ==========================================================================
+   5. Ekspor & Cetak Laporan (Excel & PDF Modal)
+   ========================================================================== */
+.icl-btn-excel {
+    background: #0f766e !important;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25) !important;
+}
+
+.icl-btn-excel:hover:not(:disabled) {
+    background: #0d5f58 !important;
+    box-shadow: 0 4px 10px rgba(15, 118, 110, 0.35) !important;
+}
+
+.icl-btn-pdf {
+    background: #be123c !important;
+    box-shadow: 0 2px 6px rgba(190, 18, 60, 0.25) !important;
+}
+
+.icl-btn-pdf:hover:not(:disabled) {
+    background: #9f1239 !important;
+    box-shadow: 0 4px 10px rgba(190, 18, 60, 0.35) !important;
+}
+
+/* ==========================================================================
+   Print / PDF Modal Overlay & A4 Landscape Recap Document
+   ========================================================================== */
+
+/* Full Screen Overlay - Higher priority than navbar (z-index: 2100) */
+.icl-print-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    min-width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    max-height: 100vh !important;
+    inset: 0 !important;
+    margin: 0 !important;
+    padding: 1.5rem !important;
+    box-sizing: border-box !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    z-index: 999999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+/* Modal Window Container - Clean Light Modern Theme */
+.icl-print-modal-container {
+    background: #ffffff !important;
+    border-radius: 12px;
+    width: 96vw;
+    max-width: 1320px;
+    height: 94vh;
+    max-height: 94vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    border: 1px solid #cbd5e1;
+    z-index: 1000000 !important;
+    animation: iclModalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes iclModalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.97) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Modal Top Bar / Action Controls - Light Theme */
+.icl-print-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1.4rem;
+    background: #ffffff;
+    color: #0f172a;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.icl-modal-badge-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #f0fdfa;
+    border: 1px solid #ccfbf1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+/* Modal Body / Paper Workspace Viewer - Clean Soft Light Gray Previewer */
+.icl-print-modal-body {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background: #f1f5f9; /* Clean soft slate-100 viewer background */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* Printable A4 Landscape Document Sheet
+   Standard A4 Landscape dimensions: 297mm width x 210mm height */
+.printable-recap-sheet {
+    background: #ffffff !important;
+    margin: 0 auto;
+    width: 297mm;
+    min-width: 297mm;
+    min-height: 210mm;
+    padding: 8mm 12mm;
+    box-sizing: border-box;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9);
+    border-radius: 3px;
+    color: #0f172a;
+    font-family: 'Times New Roman', Times, serif, 'Calibri', 'Segoe UI', sans-serif;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Official Letterhead (Kop Surat Resmi DPD RI) - Compact */
+.kop-surat-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding-bottom: 6px;
+    border-bottom: 3px double #0f172a;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.kop-logo {
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.kop-text-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.kop-title-main {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-bottom: 1px;
+    text-transform: uppercase;
+}
+
+.kop-title-sub {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+    margin-bottom: 1px;
+    letter-spacing: 0.3px;
+}
+
+.kop-title-dept {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #0f766e;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    letter-spacing: 0.2px;
+}
+
+.kop-address {
+    font-size: 0.70rem;
+    color: #475569;
+    font-style: italic;
+    line-height: 1.3;
+    margin-bottom: 0;
+}
+
+/* Document Title & Number */
+.doc-heading-wrapper {
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.doc-report-title {
+    font-size: 1.02rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #0f172a;
+    letter-spacing: 0.4px;
+    margin-bottom: 1px;
+}
+
+.doc-report-sub {
+    font-size: 0.74rem;
+    color: #475569;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+/* Compact 3-Column Info Strip */
+.doc-info-strip {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 4px 12px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    font-size: 0.73rem;
+}
+
+.doc-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.doc-info-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.doc-info-key {
+    font-weight: 600;
+    color: #475569;
+    min-width: 82px;
+    font-size: 0.71rem;
+    flex-shrink: 0;
+}
+
+.doc-info-sep {
+    color: #94a3b8;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.doc-info-val {
+    color: #0f172a;
+    font-size: 0.72rem;
+    word-break: break-word;
+}
+
+.badge-jp {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 700;
+    font-size: 0.69rem;
+    border: 1px solid #bae6fd;
+}
+
+/* High-Density Printable Table */
+.doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.71rem;
+    margin-bottom: 10px;
+}
+
+.doc-table th {
+    background: #0f766e !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    text-align: center;
+    padding: 4px 4px;
+    border: 1px solid #0d5f58;
+    white-space: nowrap;
+    font-size: 0.70rem;
+    letter-spacing: 0.2px;
+}
+
+.doc-table td {
+    padding: 3.5px 4px;
+    border: 1px solid #cbd5e1;
+    color: #1e293b;
+    vertical-align: middle;
+    font-size: 0.71rem;
+    line-height: 1.25;
+}
+
+.doc-table tr:nth-child(even) td {
+    background: #f8fafc;
+}
+
+.doc-table-summary-row td {
+    background: #f1f5f9 !important;
+    font-weight: 700;
+    border-top: 2px solid #0f766e !important;
+    border-bottom: 2px solid #0f766e !important;
+    padding: 4px 4px;
+    font-size: 0.71rem;
+}
+
+/* Badges inside document */
+.doc-status-badge {
+    display: inline-block;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.doc-status-badge.status-done {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.doc-status-badge.status-active {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.doc-integ-badge {
+    font-weight: 700;
+    font-size: 0.68rem;
+}
+
+.doc-integ-badge.integ-valid {
+    color: #15803d;
+}
+
+.doc-integ-badge.integ-manual {
+    color: #0369a1;
+}
+
+.doc-integ-badge.integ-flag {
+    color: #b91c1c;
+    background: #fee2e2;
+    padding: 1px 3px;
+    border-radius: 2px;
+}
+
+/* Formal Signature Block - Compact */
+.doc-signature-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: auto;
+    padding: 6px 15mm 0 15mm;
+    font-size: 0.73rem;
+    page-break-inside: avoid;
+}
+
+.doc-signature-col {
+    text-align: center;
+    width: 210px;
+    line-height: 1.3;
+}
+
+.doc-signature-space {
+    height: 44px;
+}
+
+.doc-signature-name {
+    font-weight: 700;
+    text-decoration: underline;
+    margin-bottom: 1px;
+    font-size: 0.74rem;
+}
+
+.doc-signature-role {
+    font-size: 0.68rem;
+    color: #475569;
+}
+
+.doc-stamp-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 8px;
+}
+
+.doc-stamp-box {
+    border: 2px dashed #0f766e;
+    border-radius: 6px;
+    padding: 5px 12px;
+    text-align: center;
+    background: #f0fdfa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 140px;
+}
+
+.doc-stamp-box i {
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+}
+
+.doc-stamp-title {
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: #0f766e;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+}
+
+.doc-stamp-sub {
+    font-size: 0.60rem;
+    color: #0d9488;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* Media Print Isolation for Exact A4 Landscape Output */
+@media print {
+    @page {
+        size: A4 landscape;
+        margin: 6mm 8mm;
+    }
+
+    /* Sembunyikan elemen utama di body selain modal */
+    body > *:not(.icl-print-modal-overlay) {
+        display: none !important;
+    }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    /* Isolate and print only the recap document */
+    body > .icl-print-modal-overlay {
+        visibility: visible !important;
+        position: static !important;
+        width: 100% !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    .icl-print-modal-container {
+        box-shadow: none !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        background: transparent !important;
+        visibility: visible !important;
+    }
+
+    .icl-print-modal-body {
+        padding: 0 !important;
+        background: transparent !important;
+        overflow: visible !important;
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    #printable-recap-document,
+    #printable-recap-document * {
+        visibility: visible !important;
+    }
+
+    #printable-recap-document {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    .printable-recap-sheet {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        min-height: auto !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+}

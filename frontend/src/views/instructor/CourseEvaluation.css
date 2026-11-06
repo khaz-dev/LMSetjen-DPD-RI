@@ -299,6 +299,32 @@
     white-space: nowrap;
 }
 
+.ce-btn-excel {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.ce-btn-excel:hover {
+    background: #166534;
+    color: #ffffff;
+    border-color: #166534;
+    box-shadow: 0 2px 6px rgba(22, 101, 52, 0.25);
+}
+
+.ce-btn-pdf {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #9f1239;
+}
+
+.ce-btn-pdf:hover {
+    background: #be123c;
+    color: #ffffff;
+    border-color: #be123c;
+    box-shadow: 0 2px 6px rgba(190, 18, 60, 0.25);
+}
+
 .ce-btn-edit {
     background: #f8fafc;
     border: 1px solid #cbd5e1;

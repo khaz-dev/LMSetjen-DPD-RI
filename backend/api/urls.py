@@ -119,6 +119,7 @@ urlpatterns = [
 
 
     # Teacher Routes
+    path("teacher/course/<course_id>/export-recap/", api_views.TeacherCourseExportRecapAPIView.as_view(), name="teacher-course-export-recap"),
     path("teacher/verify-student-integrity/", api_views.TeacherVerifyStudentIntegrityAPIView.as_view()),
     path("teacher/summary/<teacher_id>/", api_views.TeacherSummaryAPIView.as_view()),
     path("teacher/detail/<teacher_id>/", api_views.TeacherDetailAPIView.as_view()),  # ✨ PHASE 4.43: Public teacher detail endpoint

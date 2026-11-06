@@ -1932,3 +1932,333 @@ class TeacherNotificationMarkAllReadAPIView(APIView):
             return Response({"success": True, "updated_count": updated}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TeacherCourseExportRecapAPIView(APIView):
+    """
+    Ekspor Laporan Rekapitulasi Pelatihan & Kehadiran Pegawai/Peserta ke file Excel (.xlsx).
+    Kop Dokumen Resmi Sekretariat Jenderal DPD RI dengan statistik evaluasi, efektivitas belajar,
+    status integritas ujian, dan lembar evaluasi kepuasan peserta.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request, course_id):
+        import io
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        from api.views.student import CourseLeaderboardAPIView
+
+        # 1. Resolusi course & validasi hak akses
+        course = None
+        if str(course_id).isdigit():
+            course = api_models.Course.objects.filter(id=int(course_id)).first()
+        if not course:
+            course = api_models.Course.objects.filter(course_id=str(course_id)).first()
+        if not course:
+            course = api_models.Course.objects.filter(slug=str(course_id)).first()
+
+        if not course:
+            return Response({"error": "Kursus tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        is_staff = getattr(user, 'is_staff', False) or getattr(user, 'is_admin', False)
+        teacher = api_models.Teacher.objects.filter(user=user).first()
+        related_course_ids = course.get_related_course_ids() if hasattr(course, 'get_related_course_ids') else {course.id}
+
+        if not is_staff and (not teacher or (course.teacher != teacher and not api_models.Course.objects.filter(id__in=related_course_ids, teacher=teacher).exists())):
+            return Response({"error": "Akses ditolak. Anda bukan pengajar untuk kursus ini."}, status=status.HTTP_403_FORBIDDEN)
+
+        # 2. Ambil data analitik & leaderboard dari CourseLeaderboardAPIView
+        lb_view = CourseLeaderboardAPIView()
+        lb_response = lb_view.get(request, course_id)
+        if lb_response.status_code != 200:
+            return Response({"error": "Gagal mengagregasi data rekapitulasi kursus"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        data = lb_response.data
+        leaderboard = data.get("leaderboard", [])
+        evaluation = data.get("evaluation", {})
+        total_students = len(leaderboard)
+        completed_students = sum(1 for s in leaderboard if s.get("completion_stats", {}).get("is_completed"))
+        completion_pct = round((completed_students / total_students * 100), 1) if total_students > 0 else 0.0
+
+        # Hitung JP
+        total_jp = 0
+        try:
+            lectures = course.lectures() if callable(getattr(course, 'lectures', None)) else getattr(course, 'lectures', [])
+            total_sec = sum(l.content_duration_seconds for l in lectures if hasattr(l, 'content_duration_seconds') and l.content_duration_seconds)
+            total_jp = max(1, (total_sec + 2699) // 2700) if total_sec else 2
+        except Exception:
+            total_jp = 2
+
+        # 3. Bangun Workbook Excel
+        wb = openpyxl.Workbook()
+        
+        # Styles
+        font_header_title = Font(name="Calibri", size=13, bold=True, color="0F766E")
+        font_instansi = Font(name="Calibri", size=11, bold=True, color="1E293B")
+        font_meta_lbl = Font(name="Calibri", size=10, bold=True, color="334155")
+        font_meta_val = Font(name="Calibri", size=10, color="0F172A")
+        
+        font_th = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+        fill_th = PatternFill(start_color="0F766E", end_color="0F766E", fill_type="solid")
+        fill_alt = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+        fill_white = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+        
+        border_thin = Border(
+            left=Side(style='thin', color='CBD5E1'),
+            right=Side(style='thin', color='CBD5E1'),
+            top=Side(style='thin', color='CBD5E1'),
+            bottom=Side(style='thin', color='CBD5E1')
+        )
+        border_th = Border(
+            left=Side(style='thin', color='0D665F'),
+            right=Side(style='thin', color='0D665F'),
+            top=Side(style='medium', color='0D665F'),
+            bottom=Side(style='medium', color='0D665F')
+        )
+        
+        align_center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        align_left = Alignment(horizontal="left", vertical="center")
+        align_right = Alignment(horizontal="right", vertical="center")
+
+        # ----------------- SHEET 1: REKAPITULASI PELATIHAN -----------------
+        ws1 = wb.active
+        ws1.title = "Rekapitulasi Pelatihan"
+        ws1.views.sheetView[0].showGridLines = True
+
+        # Kop Instansi
+        ws1.merge_cells("A1:U1")
+        ws1["A1"] = "SEKRETARIAT JENDERAL DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA"
+        ws1["A1"].font = font_instansi
+        ws1["A1"].alignment = align_center
+
+        ws1.merge_cells("A2:U2")
+        ws1["A2"] = "PUSAT PENGEMBANGAN KOMPETENSI APARATUR SIPIL NEGARA (LMS SETJEN DPD RI)"
+        ws1["A2"].font = Font(name="Calibri", size=10, bold=True, color="475569")
+        ws1["A2"].alignment = align_center
+
+        ws1.merge_cells("A3:U3")
+        ws1["A3"] = "LAPORAN REKAPITULASI EVALUASI PELATIHAN & KEHADIRAN PEGAWAI"
+        ws1["A3"].font = font_header_title
+        ws1["A3"].alignment = align_center
+
+        # Metadata Kursus
+        ws1["A5"] = "Judul Pelatihan:"
+        ws1["A5"].font = font_meta_lbl
+        ws1["B5"] = course.title
+        ws1["B5"].font = Font(name="Calibri", size=10, bold=True)
+
+        ws1["A6"] = "Instruktur / Pengajar:"
+        ws1["A6"].font = font_meta_lbl
+        ws1["B6"] = course.teacher.user.get_full_name() if (course.teacher and course.teacher.user) else "-"
+        ws1["B6"].font = font_meta_val
+
+        ws1["A7"] = "Beban Jam Pelajaran:"
+        ws1["A7"].font = font_meta_lbl
+        ws1["B7"] = f"{total_jp} JP"
+        ws1["B7"].font = font_meta_val
+
+        ws1["G5"] = "Kategori / Tingkat:"
+        ws1["G5"].font = font_meta_lbl
+        ws1["H5"] = f"{getattr(course.category, 'title', '-')} ({course.level or 'Semua Tingkat'})"
+        ws1["H5"].font = font_meta_val
+
+        ws1["G6"] = "Total Peserta / Kelulusan:"
+        ws1["G6"].font = font_meta_lbl
+        ws1["H6"] = f"{total_students} Pegawai ({completed_students} Tuntas - {completion_pct}%)"
+        ws1["H6"].font = font_meta_val
+
+        ws1["G7"] = "Waktu Unduh Rekap:"
+        ws1["G7"].font = font_meta_lbl
+        ws1["H7"] = timezone.now().strftime("%d %B %Y %H:%M WIB")
+        ws1["H7"].font = font_meta_val
+
+        # Headers Tabel Peserta
+        headers1 = [
+            "No", "Peringkat", "NIP", "Nama Pegawai", "Unit Kerja", "Jabatan", "Gol.",
+            "Tgl Terdaftar", "Tgl Selesai", "Durasi Belajar", "Status Ketuntasan",
+            "Pre-Test", "Post-Test", "Peningkatan", "N-Gain (%)", "Efektivitas Belajar",
+            "Rata-rata Kuis", "Skor Gamifikasi", "Total Poin (XP)", "Status Integritas Ujian", "No. Sertifikat"
+        ]
+
+        row_th = 9
+        for col_idx, h in enumerate(headers1, start=1):
+            cell = ws1.cell(row=row_th, column=col_idx, value=h)
+            cell.font = font_th
+            cell.fill = fill_th
+            cell.alignment = align_center
+            cell.border = border_th
+        ws1.row_dimensions[row_th].height = 28
+
+        # Isi Baris Data Peserta
+        for idx, s in enumerate(leaderboard, start=1):
+            r_idx = row_th + idx
+            emp = s.get("employee_info", {})
+            ls = s.get("learning_stats", {})
+            cs = s.get("completion_stats", {})
+            qs = s.get("quiz_stats", {})
+            gs = s.get("gamification_stats", {})
+            integ = s.get("integrity_check", {})
+
+            # Dates
+            st_date = cs.get("start_time")
+            st_fmt = st_date[:10] if isinstance(st_date, str) and len(st_date) >= 10 else "-"
+            fn_date = cs.get("finish_time")
+            fn_fmt = fn_date[:10] if isinstance(fn_date, str) and len(fn_date) >= 10 else ("-" if not cs.get("is_completed") else "Tuntas")
+
+            # Status Ketuntasan
+            status_tuntas = "Tuntas" if cs.get("is_completed") else "Sedang Belajar"
+
+            # Integritas
+            is_valid_int = integ.get("is_valid", True)
+            is_manual = integ.get("is_manual_approved", False)
+            if is_manual:
+                integ_txt = "Disahkan Manual"
+            elif is_valid_int:
+                integ_txt = "Valid"
+            else:
+                integ_txt = "Perlu Investigasi"
+
+            row_vals = [
+                idx,
+                f"#{idx}",
+                emp.get("nip", "-"),
+                s.get("full_name", s.get("username", "-")),
+                emp.get("unit_kerja", "-"),
+                emp.get("jabatan", "-"),
+                emp.get("golongan", "-"),
+                st_fmt,
+                fn_fmt,
+                cs.get("duration_human", "-"),
+                status_tuntas,
+                ls.get("pre_score") if ls.get("pre_score") is not None else "-",
+                ls.get("post_score") if ls.get("post_score") is not None else "-",
+                f"+{ls.get('improvement', 0)}" if ls.get("has_pre") and ls.get("has_post") else "-",
+                f"{ls.get('normalized_gain', 0)}%" if ls.get("has_pre") and ls.get("has_post") else "-",
+                ls.get("status", "-"),
+                qs.get("avg_score", 0),
+                gs.get("points", 0),
+                s.get("total_points", 0),
+                integ_txt,
+                integ.get("certificate_id") or "-"
+            ]
+
+            fill_row = fill_white if idx % 2 == 0 else fill_alt
+            for col_idx, val in enumerate(row_vals, start=1):
+                cell = ws1.cell(row=r_idx, column=col_idx, value=val)
+                cell.font = Font(name="Calibri", size=9.5)
+                cell.fill = fill_row
+                cell.border = border_thin
+                
+                # Alignments
+                if col_idx in [1, 2, 8, 9, 10, 11, 12, 13, 14, 15, 20]:
+                    cell.alignment = align_center
+                elif col_idx in [17, 18, 19]:
+                    cell.alignment = align_right
+                else:
+                    cell.alignment = align_left
+
+            ws1.row_dimensions[r_idx].height = 20
+
+        # Freeze Panes
+        ws1.freeze_panes = "A10"
+
+        # Auto-adjust column widths
+        for col in ws1.columns:
+            max_len = 0
+            col_letter = get_column_letter(col[0].column)
+            for cell in col:
+                # ignore merged title rows
+                if cell.row < 9:
+                    continue
+                val_str = str(cell.value or "")
+                if len(val_str) > max_len:
+                    max_len = len(val_str)
+            ws1.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+        # ----------------- SHEET 2: EVALUASI KEPUASAN & REVIEW -----------------
+        ws2 = wb.create_sheet(title="Evaluasi Kepuasan")
+        ws2.views.sheetView[0].showGridLines = True
+
+        ws2.merge_cells("A1:E1")
+        ws2["A1"] = "EVALUASI KEPUASAN & MASUKAN PESERTA PELATIHAN"
+        ws2["A1"].font = font_header_title
+        ws2["A1"].alignment = align_center
+
+        ws2["A3"] = "Rata-rata Penilaian:"
+        ws2["A3"].font = font_meta_lbl
+        ws2["B3"] = f"{evaluation.get('average_rating', 0)} / 5.0 Bintang"
+        ws2["B3"].font = font_meta_val
+
+        ws2["A4"] = "Tingkat Kepuasan Peserta:"
+        ws2["A4"].font = font_meta_lbl
+        ws2["B4"] = f"{evaluation.get('satisfaction_rate', 0)}%"
+        ws2["B4"].font = font_meta_val
+
+        ws2["A5"] = "Total Masukan Masuk:"
+        ws2["A5"].font = font_meta_lbl
+        ws2["B5"] = f"{evaluation.get('total_reviews', 0)} Ulasan"
+        ws2["B5"].font = font_meta_val
+
+        headers2 = ["No", "Nama Peserta", "Rating (Bintang)", "Tanggal", "Ulasan & Masukan Pegawai"]
+        row_th2 = 7
+        for col_idx, h in enumerate(headers2, start=1):
+            cell = ws2.cell(row=row_th2, column=col_idx, value=h)
+            cell.font = font_th
+            cell.fill = fill_th
+            cell.alignment = align_center
+            cell.border = border_th
+        ws2.row_dimensions[row_th2].height = 26
+
+        reviews = evaluation.get("reviews", [])
+        for idx, rev in enumerate(reviews, start=1):
+            r_idx = row_th2 + idx
+            r_vals = [
+                idx,
+                rev.get("full_name", "-"),
+                f"{rev.get('rating', 0)} Bintang",
+                rev.get("date", "-"),
+                rev.get("review", "-")
+            ]
+            fill_row = fill_white if idx % 2 == 0 else fill_alt
+            for col_idx, val in enumerate(r_vals, start=1):
+                cell = ws2.cell(row=r_idx, column=col_idx, value=val)
+                cell.font = Font(name="Calibri", size=9.5)
+                cell.fill = fill_row
+                cell.border = border_thin
+                if col_idx in [1, 3, 4]:
+                    cell.alignment = align_center
+                else:
+                    cell.alignment = align_left
+
+            ws2.row_dimensions[r_idx].height = 22
+
+        for col in ws2.columns:
+            max_len = 0
+            col_letter = get_column_letter(col[0].column)
+            for cell in col:
+                if cell.row < 7:
+                    continue
+                val_str = str(cell.value or "")
+                if len(val_str) > max_len:
+                    max_len = len(val_str)
+            ws2.column_dimensions[col_letter].width = min(max(max_len + 4, 12), 60)
+
+        # 4. Generate Output Buffer
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        clean_title = "".join(c for c in course.title if c.isalnum() or c in (' ', '_', '-')).strip().replace(' ', '_')[:35]
+        timestamp = timezone.now().strftime("%Y%m%d_%H%M")
+        filename = f"Rekapitulasi_Pelatihan_{clean_title}_{timestamp}.xlsx"
+
+        response = HttpResponse(
+            output.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+        return response

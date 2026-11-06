@@ -129,6 +129,30 @@ function CourseEvaluation() {
 
                                         {/* Right-aligned Action Buttons */}
                                         <div className="ce-header-actions">
+                                            <button
+                                                type="button"
+                                                className="ce-action-btn ce-btn-excel"
+                                                onClick={() => {
+                                                    const excelBtn = document.getElementById("btn-trigger-excel");
+                                                    if (excelBtn) excelBtn.click();
+                                                }}
+                                                title="Unduh Rekapitulasi Pelatihan format Excel (.xlsx)"
+                                            >
+                                                <i className="fas fa-file-excel"></i>
+                                                <span>Unduh Excel</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="ce-action-btn ce-btn-pdf"
+                                                onClick={() => {
+                                                    const pdfBtn = document.getElementById("btn-trigger-pdf");
+                                                    if (pdfBtn) pdfBtn.click();
+                                                }}
+                                                title="Cetak atau Unduh Laporan Rekapitulasi Resmi format PDF"
+                                            >
+                                                <i className="fas fa-file-pdf"></i>
+                                                <span>Cetak PDF</span>
+                                            </button>
                                             <Link
                                                 to={`/instructor/edit-course/${course_id}/`}
                                                 className="ce-action-btn ce-btn-edit"

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import useAxios from "../../../utils/useAxios";
 import Toast from "../../plugin/Toast";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../../utils/constants";
+import logoSetjenDPD from "../../../assets/logo/logo-setjen-dpd.png";
 import "./InstructorCourseLeaderboard.css";
 
 function InstructorCourseLeaderboard({ courseId, courseTitle }) {
@@ -10,6 +12,8 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
     const [refreshing, setRefreshing] = useState(false);
     const [activeFilter, setActiveFilter] = useState("overall"); // overall | gain | speed | games | integrity | evaluation
     const [verifyingUserId, setVerifyingUserId] = useState(null);
+    const [downloadingExcel, setDownloadingExcel] = useState(false);
+    const [showPrintModal, setShowPrintModal] = useState(false);
 
     const handleVerifyIntegrity = async (userId, action) => {
         const actionTitle = action === 'approve'
@@ -89,6 +93,21 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
             fetchLeaderboard();
         }
     }, [courseId]);
+
+    // Lock body & html scroll when print modal is open to ensure full overlay coverage
+    useEffect(() => {
+        if (showPrintModal) {
+            document.body.style.overflow = "hidden";
+            document.documentElement.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+            document.documentElement.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+            document.documentElement.style.overflow = "";
+        };
+    }, [showPrintModal]);
 
     // KPI Metrics calculation
     const classAnalytics = useMemo(() => {
@@ -205,6 +224,65 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
         return list;
     }, [leaderboardData, activeFilter]);
 
+    // Export to Excel (.xlsx) function via backend endpoint
+    const exportExcel = async () => {
+        if (!courseId) return;
+        if (!leaderboardData?.leaderboard || leaderboardData.leaderboard.length === 0) {
+            Toast().fire({ icon: "warning", title: "Tidak ada data peserta untuk diekspor" });
+            return;
+        }
+
+        try {
+            setDownloadingExcel(true);
+            Toast().fire({
+                icon: "info",
+                title: "Menyiapkan berkas Excel...",
+                timer: 2000
+            });
+
+            const response = await useAxios.get(`teacher/course/${courseId}/export-recap/`, {
+                responseType: 'blob'
+            });
+
+            let filename = `Rekapitulasi_Pelatihan_${courseTitle ? courseTitle.replace(/[^a-zA-Z0-9]/g, "_") : "Kursus"}.xlsx`;
+            const contentDisposition = response.headers?.['content-disposition'];
+            if (contentDisposition) {
+                const match = contentDisposition.match(/filename="?([^";]+)"?/);
+                if (match && match[1]) {
+                    filename = match[1];
+                }
+            }
+
+            const blob = new Blob([response.data], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            Toast().fire({
+                icon: "success",
+                title: "Berkas Excel Berhasil Diunduh",
+                text: filename
+            });
+        } catch (err) {
+            console.error("Error downloading excel report, falling back to CSV:", err);
+            Toast().fire({
+                icon: "warning",
+                title: "Mengunduh via mode cadangan (CSV)...",
+                timer: 2000
+            });
+            exportCSV();
+        } finally {
+            setDownloadingExcel(false);
+        }
+    };
+
     // Export to CSV function
     const exportCSV = () => {
         if (!leaderboardData?.leaderboard || leaderboardData.leaderboard.length === 0) {
@@ -214,8 +292,9 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
 
         const headers = [
             "Peringkat",
+            "NIP",
             "Nama Peserta",
-            "Username",
+            "Unit Kerja",
             "Total Kursus XP",
             "Pre-Test Score (%)",
             "Post-Test Score (%)",
@@ -226,15 +305,18 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
             "Gamifikasi XP",
             "Durasi Ketuntasan",
             "Status Kelulusan",
-            "Status Integritas"
+            "Status Integritas",
+            "No. Sertifikat"
         ];
 
         const rows = leaderboardData.leaderboard.map((s, idx) => {
             const isSuspicious = s.completion_stats.duration_seconds && s.completion_stats.duration_seconds < 180;
+            const emp = s.employee_info || {};
             return [
                 idx + 1,
+                `"${emp.nip || "-"}"`,
                 `"${s.full_name}"`,
-                `"${s.username}"`,
+                `"${emp.unit_kerja || "-"}"`,
                 s.total_points,
                 s.learning_stats.pre_score !== null ? s.learning_stats.pre_score : "-",
                 s.learning_stats.post_score !== null ? s.learning_stats.post_score : "-",
@@ -245,7 +327,8 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                 s.gamification_stats.points,
                 `"${s.completion_stats.duration_human}"`,
                 s.completion_stats.is_completed ? "Tuntas" : "Sedang Belajar",
-                isSuspicious ? "Perlu Verifikasi (Kecepatan Tidak Wajar)" : "Valid / Lulus Verifikasi"
+                isSuspicious ? "Perlu Verifikasi" : "Valid",
+                `"${s.integrity_check?.certificate_id || "-"}"`
             ];
         });
 
@@ -287,7 +370,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                     </div>
                     <button
                         type="button"
-                        className="btn btn-sm btn-light border fw-semibold d-inline-flex align-items-center gap-1.5 py-1 px-2.5"
+                        className="btn btn-sm btn-light border fw-semibold d-inline-flex align-items-center gap-1 py-1 px-2"
                         style={{ fontSize: "0.78rem" }}
                         onClick={() => fetchLeaderboard(true)}
                         disabled={refreshing}
@@ -460,15 +543,27 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                     </button>
                 </div>
 
-                <div className="ms-auto d-flex align-items-center">
+                <div className="ms-auto d-flex align-items-center gap-2">
                     <button
+                        id="btn-trigger-excel"
                         type="button"
-                        className="icl-export-btn"
-                        onClick={exportCSV}
-                        title="Unduh rekapitulasi nilai dan integritas siswa ke file CSV/Excel"
+                        className="icl-export-btn icl-btn-excel"
+                        onClick={exportExcel}
+                        disabled={downloadingExcel}
+                        title="Unduh rekapitulasi nilai dan integritas siswa ke file Excel (.xlsx)"
                     >
-                        <i className="fas fa-file-excel"></i>
-                        <span>Ekspor Rekapitulasi CSV</span>
+                        <i className={`fas ${downloadingExcel ? "fa-spinner fa-spin" : "fa-file-excel"} me-1`}></i>
+                        <span>{downloadingExcel ? "Mengunduh..." : "Ekspor Excel"}</span>
+                    </button>
+                    <button
+                        id="btn-trigger-pdf"
+                        type="button"
+                        className="icl-export-btn icl-btn-pdf"
+                        onClick={() => setShowPrintModal(true)}
+                        title="Cetak atau simpan laporan rekapitulasi pelatihan ke format PDF"
+                    >
+                        <i className="fas fa-file-pdf me-1"></i>
+                        <span>Cetak / PDF</span>
                     </button>
                 </div>
             </div>
@@ -492,8 +587,8 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                 <div className="icl-eval-count-text">
                                     Berdasarkan <strong>{evaluationData?.total_reviews || 0} ulasan</strong> peserta kursus
                                 </div>
-                                <div className="mt-2.5">
-                                    <span className="badge bg-success-subtle text-success border border-success-subtle px-3 py-1.5 rounded-pill fw-semibold">
+                                <div className="mt-2">
+                                    <span className="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-semibold">
                                         <i className="fas fa-heart me-1"></i> {evaluationData?.satisfaction_rate || 0}% Peserta Sangat Puas
                                     </span>
                                 </div>
@@ -545,7 +640,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                 {evaluationData.reviews.map((rev) => (
                                     <div key={rev.id} className="icl-review-item">
                                         <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-                                            <div className="d-flex align-items-center gap-2.5">
+                                            <div className="d-flex align-items-center gap-2">
                                                 <img
                                                     src={rev.avatar ? getMediaUrl(rev.avatar) : DEFAULT_IMAGE_URL}
                                                     alt={rev.full_name}
@@ -571,13 +666,13 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                 <small className="text-muted">{rev.date}</small>
                                             </div>
                                         </div>
-                                        <div className="icl-review-body mt-2.5">
+                                        <div className="icl-review-body mt-2">
                                             <p className="mb-0 text-slate-700 font-monospace" style={{ fontSize: "0.9rem", lineHeight: "1.6" }}>
                                                 "{rev.review}"
                                             </p>
                                         </div>
                                         {rev.reply && (
-                                            <div className="icl-instructor-reply mt-2 p-2.5 rounded bg-light border-start border-teal border-3">
+                                            <div className="icl-instructor-reply mt-2 p-2 rounded bg-light border-start border-teal border-3">
                                                 <small className="fw-bold text-teal d-block mb-1">
                                                     <i className="fas fa-reply me-1"></i> Balasan Instruktur:
                                                 </small>
@@ -661,7 +756,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                             <span className="badge bg-warning-subtle text-warning border border-warning-subtle">
                                                                 Pre-Test: {student.learning_stats.pre_score}%
                                                             </span>
-                                                            <div className="small text-muted mt-0.5">Menunggu Post-test</div>
+                                                            <div className="small text-muted mt-0">Menunggu Post-test</div>
                                                         </div>
                                                     ) : (
                                                         <span className="text-muted small">Belum Pre-test</span>
@@ -689,7 +784,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                             <span className="badge bg-success text-white">
                                                                 <i className="fas fa-check-circle me-1"></i> Tuntas
                                                             </span>
-                                                            <div className="small text-muted mt-0.5">
+                                                            <div className="small text-muted mt-0">
                                                                 {student.completion_stats.duration_human}
                                                             </div>
                                                         </div>
@@ -712,8 +807,8 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                             <div className="d-flex align-items-center gap-1 mt-1">
                                                                 <button
                                                                     type="button"
-                                                                    className="btn btn-xs btn-success py-0.5 px-2 fw-semibold"
-                                                                    style={{ fontSize: "10.5px", borderRadius: "5px" }}
+                                                                    className="btn btn-xs btn-success py-0 px-2 fw-semibold"
+                                                                    style={{ fontSize: "10px", borderRadius: "5px" }}
                                                                     title="Sahkan hasil ujian & izinkan penerbitan sertifikat"
                                                                     onClick={() => handleVerifyIntegrity(student.user_id, 'approve')}
                                                                     disabled={verifyingUserId === student.user_id}
@@ -722,8 +817,8 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                                 </button>
                                                                 <button
                                                                     type="button"
-                                                                    className="btn btn-xs btn-outline-warning py-0.5 px-2 fw-semibold text-dark"
-                                                                    style={{ fontSize: "10.5px", borderRadius: "5px" }}
+                                                                    className="btn btn-xs btn-outline-warning py-0 px-2 fw-semibold text-dark"
+                                                                    style={{ fontSize: "10px", borderRadius: "5px" }}
                                                                     title="Reset Post-Test peserta untuk ujian ulang"
                                                                     onClick={() => handleVerifyIntegrity(student.user_id, 'reset_post_test')}
                                                                     disabled={verifyingUserId === student.user_id}
@@ -751,7 +846,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                             </span>
                                                             <button
                                                                 type="button"
-                                                                className="btn btn-xs btn-outline-warning py-0.5 px-2 mt-0.5"
+                                                                className="btn btn-xs btn-outline-warning py-0 px-2 mt-0"
                                                                 style={{ fontSize: "10px", borderRadius: "4px" }}
                                                                 onClick={() => handleVerifyIntegrity(student.user_id, 'reset_post_test')}
                                                                 disabled={verifyingUserId === student.user_id}
@@ -772,8 +867,8 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                             <div className="d-flex align-items-center gap-1 mt-1">
                                                                 <button
                                                                     type="button"
-                                                                    className="btn btn-xs btn-success py-0.5 px-2 fw-semibold"
-                                                                    style={{ fontSize: "10.5px", borderRadius: "5px" }}
+                                                                    className="btn btn-xs btn-success py-0 px-2 fw-semibold"
+                                                                    style={{ fontSize: "10px", borderRadius: "5px" }}
                                                                     title="Sahkan hasil ujian & izinkan penerbitan sertifikat"
                                                                     onClick={() => handleVerifyIntegrity(student.user_id, 'approve')}
                                                                     disabled={verifyingUserId === student.user_id}
@@ -804,6 +899,284 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                         </table>
                     </div>
                 </div>
+            )}
+
+            {/* 5. Formal Print & PDF Export Modal (Rendered at Root Body via Portal) */}
+            {showPrintModal && typeof document !== "undefined" && createPortal(
+                <div className="icl-print-modal-overlay" onClick={(e) => {
+                    if (e.target.classList.contains("icl-print-modal-overlay")) {
+                        setShowPrintModal(false);
+                    }
+                }}>
+                    <div className="icl-print-modal-container">
+                        {/* Top Bar / Header */}
+                        <div className="icl-print-modal-header no-print">
+                            <div className="d-flex align-items-center gap-2.5">
+                                <div className="icl-modal-badge-icon">
+                                    <i className="fas fa-file-invoice text-teal"></i>
+                                </div>
+                                <div>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <h6 className="mb-0 fw-bold text-dark">Pratinjau Dokumen Rekapitulasi Pelatihan</h6>
+                                        <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                            <i className="fas fa-file-pdf me-1"></i>A4 Landscape (297 x 210 mm)
+                                        </span>
+                                    </div>
+                                    <span className="small text-muted">Format Standar Resmi Kedinasan Sekretariat Jenderal DPD RI</span>
+                                </div>
+                            </div>
+                            <div className="d-flex align-items-center gap-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-success d-flex align-items-center gap-1.5 px-3 py-1.5 fw-semibold"
+                                    onClick={exportExcel}
+                                    disabled={downloadingExcel}
+                                    title="Unduh versi spreadsheet Excel (.xlsx)"
+                                >
+                                    <i className={`fas ${downloadingExcel ? "fa-spinner fa-spin" : "fa-file-excel"}`}></i>
+                                    <span>Unduh Excel</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-teal d-flex align-items-center gap-1.5 px-3 py-1.5 fw-semibold text-white shadow-sm"
+                                    style={{ background: "#0f766e", borderColor: "#0d5f58", borderRadius: "6px" }}
+                                    onClick={() => window.print()}
+                                    title="Buka dialog cetak browser (Simpan sebagai PDF)"
+                                >
+                                    <i className="fas fa-print"></i>
+                                    <span>Cetak / Simpan PDF</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary px-2.5 py-1.5"
+                                    onClick={() => setShowPrintModal(false)}
+                                    title="Tutup dialog pratinjau"
+                                >
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="icl-print-modal-body">
+                            {/* Document Container that will be printed */}
+                            <div id="printable-recap-document" className="printable-recap-sheet">
+                                {/* Kop Surat Resmi */}
+                                <div className="kop-surat-wrapper">
+                                    <img
+                                        src={logoSetjenDPD}
+                                        alt="Logo Setjen DPD RI"
+                                        className="kop-logo"
+                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
+                                    <div className="kop-text-block">
+                                        <div className="kop-title-main">SEKRETARIAT JENDERAL DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA</div>
+                                        <div className="kop-title-dept">BIRO ORGANISASI KEANGGOTAAN DAN KEPEGAWAIAN</div>
+                                        <div className="kop-address">
+                                            Kompleks Parlemen, Jalan Jenderal Gatot Subroto No. 6, Senayan, Jakarta Pusat 10270<br />
+                                            Laman: https://lms.dpd.go.id | Pos-el: sdm@dpd.go.id | Telepon: (021) 57897475
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Title & Document Number */}
+                                <div className="doc-heading-wrapper">
+                                    <div className="doc-report-title">
+                                        LAPORAN REKAPITULASI PELATIHAN DAN KEHADIRAN PESERTA
+                                    </div>
+                                    <div className="doc-report-sub">
+                                        Nomor: LAP-LMS/{courseId}/2026 &bull; Dokumen Resmi Penyelenggaraan Pelatihan Pegawai Setjen DPD RI
+                                    </div>
+                                </div>
+
+                                {/* Compact 3-Column Info Strip */}
+                                <div className="doc-info-strip">
+                                    <div className="doc-info-col">
+                                        <div className="doc-info-row">
+                                            <span className="doc-info-key">Nama Pelatihan</span>
+                                            <span className="doc-info-sep">:</span>
+                                            <span className="doc-info-val fw-bold text-dark">{courseTitle || leaderboardData?.course?.title || "-"}</span>
+                                        </div>
+                                        <div className="doc-info-row">
+                                            <span className="doc-info-key">Kategori / Tingkat</span>
+                                            <span className="doc-info-sep">:</span>
+                                            <span className="doc-info-val">{leaderboardData?.course?.category || "Kompetensi ASN"} ({leaderboardData?.course?.level || "Semua Tingkat"})</span>
+                                        </div>
+                                        <div className="doc-info-row">
+                                            <span className="doc-info-key">Beban Belajar</span>
+                                            <span className="doc-info-sep">:</span>
+                                            <span className="doc-info-val badge-jp">{leaderboardData?.course?.total_jp || 2} Jam Pelajaran (JP)</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-info-col">
+                                        <div className="doc-info-row">
+                                            <span className="doc-info-key">Instruktur</span>
+                                            <span className="doc-info-sep">:</span>
+                                            <span className="doc-info-val">{leaderboardData?.course?.teacher_name || "Instruktur Internal DPD RI"}</span>
+                                        </div>
+                                        <div className="doc-info-row">
+                                            <span className="doc-info-key">Penyelenggara</span>
+                                            <span className="doc-info-sep">:</span>
+                                            <span className="doc-info-val">Bagian Sumber Daya Manusia</span>
+                                        </div>
+                                        <div className="doc-info-row">
+                                            <span className="doc-info-key">Waktu Unduh</span>
+                                            <span className="doc-info-sep">:</span>
+                                            <span className="doc-info-val">{new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-info-col">
+                                        <div className="doc-info-row">
+                                            <span className="doc-info-key">Total Peserta</span>
+                                            <span className="doc-info-sep">:</span>
+                                            <span className="doc-info-val fw-bold">{classAnalytics.totalStudents} Pegawai ({classAnalytics.completedStudents} Tuntas - {classAnalytics.completionRate}%)</span>
+                                        </div>
+                                        <div className="doc-info-row">
+                                            <span className="doc-info-key">Rata-rata Skor</span>
+                                            <span className="doc-info-sep">:</span>
+                                            <span className="doc-info-val">Pre: <strong>{classAnalytics.avgPreScore}</strong> | Post: <strong>{classAnalytics.avgPostScore}</strong></span>
+                                        </div>
+                                        <div className="doc-info-row">
+                                            <span className="doc-info-key">Efektivitas Belajar</span>
+                                            <span className="doc-info-sep">:</span>
+                                            <span className="doc-info-val text-teal fw-bold">Peningkatan Gain +{classAnalytics.avgGain}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Tabel Rekapitulasi Lengkap */}
+                                <table className="doc-table">
+                                    <thead>
+                                        <tr>
+                                            <th style={{ width: "32px" }}>No</th>
+                                            <th style={{ width: "45px" }}>Rank</th>
+                                            <th style={{ width: "115px" }}>NIP</th>
+                                            <th>Nama Lengkap Pegawai</th>
+                                            <th>Unit Kerja</th>
+                                            <th style={{ width: "65px" }}>Status</th>
+                                            <th style={{ width: "48px" }}>Pre</th>
+                                            <th style={{ width: "48px" }}>Post</th>
+                                            <th style={{ width: "52px" }}>Gain</th>
+                                            <th style={{ width: "60px" }}>N-Gain</th>
+                                            <th style={{ width: "50px" }}>Kuis</th>
+                                            <th style={{ width: "62px" }}>Total XP</th>
+                                            <th style={{ width: "80px" }}>Integritas</th>
+                                            <th style={{ width: "115px" }}>No. Sertifikat</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {leaderboardData?.leaderboard && leaderboardData.leaderboard.length > 0 ? (
+                                            leaderboardData.leaderboard.map((s, idx) => {
+                                                const emp = s.employee_info || {};
+                                                const ls = s.learning_stats || {};
+                                                const cs = s.completion_stats || {};
+                                                const isSuspicious = cs.duration_seconds && cs.duration_seconds < 180;
+                                                const integ = s.integrity_check || {};
+                                                const integText = integ.is_manual_approved ? "Disahkan" : isSuspicious ? "Investigasi" : "Valid";
+
+                                                return (
+                                                    <tr key={s.user_id || idx}>
+                                                        <td style={{ textAlign: "center" }}>{idx + 1}</td>
+                                                        <td style={{ textAlign: "center", fontWeight: 700 }}>
+                                                            {idx === 0 ? "🥇 #1" : idx === 1 ? "🥈 #2" : idx === 2 ? "🥉 #3" : `#${idx + 1}`}
+                                                        </td>
+                                                        <td style={{ textAlign: "center", fontFamily: "Consolas, monospace", fontSize: "0.72rem" }}>
+                                                            {emp.nip || "-"}
+                                                        </td>
+                                                        <td style={{ fontWeight: 600 }}>{s.full_name}</td>
+                                                        <td style={{ fontSize: "0.73rem" }}>{emp.unit_kerja || "-"}</td>
+                                                        <td style={{ textAlign: "center" }}>
+                                                            <span className={`doc-status-badge ${cs.is_completed ? "status-done" : "status-active"}`}>
+                                                                {cs.is_completed ? "Tuntas" : "Belajar"}
+                                                            </span>
+                                                        </td>
+                                                        <td style={{ textAlign: "center" }}>{ls.pre_score !== null ? ls.pre_score : "-"}</td>
+                                                        <td style={{ textAlign: "center", fontWeight: 700 }}>{ls.post_score !== null ? ls.post_score : "-"}</td>
+                                                        <td style={{ textAlign: "center", color: ls.improvement > 0 ? "#0f766e" : "inherit", fontWeight: 600 }}>
+                                                            {ls.has_pre && ls.has_post ? `+${ls.improvement}` : "-"}
+                                                        </td>
+                                                        <td style={{ textAlign: "center", fontWeight: 600 }}>
+                                                            {ls.has_pre && ls.has_post ? `${ls.normalized_gain}%` : "-"}
+                                                        </td>
+                                                        <td style={{ textAlign: "center" }}>{s.quiz_stats?.avg_score ?? "-"}</td>
+                                                        <td style={{ textAlign: "right", fontWeight: 700 }}>{s.total_points}</td>
+                                                        <td style={{ textAlign: "center", fontSize: "0.72rem" }}>
+                                                            <span className={`doc-integ-badge ${integ.is_manual_approved ? "integ-manual" : isSuspicious ? "integ-flag" : "integ-valid"}`}>
+                                                                {integText}
+                                                            </span>
+                                                        </td>
+                                                        <td style={{ textAlign: "center", fontSize: "0.70rem", fontFamily: "Consolas, monospace" }}>
+                                                            {integ.certificate_id || "-"}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="14" style={{ textAlign: "center", padding: "1.5rem" }}>
+                                                    Belum ada data peserta terdaftar pada kursus ini.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                    {leaderboardData?.leaderboard && leaderboardData.leaderboard.length > 0 && (
+                                        <tfoot>
+                                            <tr className="doc-table-summary-row">
+                                                <td colSpan="6" style={{ textAlign: "center", fontWeight: 700 }}>
+                                                    RATA-RATA / KETUNTASAN KELAS ({classAnalytics.totalStudents} PESERTA)
+                                                </td>
+                                                <td style={{ textAlign: "center", fontWeight: 700 }}>{classAnalytics.avgPreScore}</td>
+                                                <td style={{ textAlign: "center", fontWeight: 700 }}>{classAnalytics.avgPostScore}</td>
+                                                <td style={{ textAlign: "center", fontWeight: 700, color: "#0f766e" }}>+{classAnalytics.avgGain}</td>
+                                                <td style={{ textAlign: "center", fontWeight: 700 }}>{classAnalytics.avgGain > 0 ? `${classAnalytics.avgGain}%` : "-"}</td>
+                                                <td style={{ textAlign: "center", fontWeight: 700 }}>{classAnalytics.avgQuizScore}</td>
+                                                <td style={{ textAlign: "right", fontWeight: 700 }}>
+                                                    {Math.round(leaderboardData.leaderboard.reduce((acc, s) => acc + (s.total_points || 0), 0) / leaderboardData.leaderboard.length)}
+                                                </td>
+                                                <td colSpan="2" style={{ textAlign: "center", fontSize: "0.70rem", fontStyle: "italic" }}>
+                                                    {classAnalytics.completionRate}% Tuntas
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    )}
+                                </table>
+
+                                {/* Kolom Tanda Tangan Formal */}
+                                <div className="doc-signature-row">
+                                    <div className="doc-signature-col">
+                                        <div>Mengetahui,</div>
+                                        <div style={{ fontWeight: 700 }}>Pengajar / Instruktur Pelatihan</div>
+                                        <div className="doc-signature-space"></div>
+                                        <div className="doc-signature-name">
+                                            {leaderboardData?.course?.teacher_name || "Instruktur Pelatihan"}
+                                        </div>
+                                        <div className="doc-signature-role">Tenaga Pengajar Setjen DPD RI</div>
+                                    </div>
+
+                                    <div className="doc-stamp-col">
+                                        <div className="doc-stamp-box">
+                                            <i className="fas fa-certificate text-teal"></i>
+                                            <span className="doc-stamp-title">TERVERIFIKASI SISTEM</span>
+                                            <span className="doc-stamp-sub">LMS SETJEN DPD RI</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-signature-col">
+                                        <div>Jakarta, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                                        <div style={{ fontWeight: 700 }}>Bagian Pengembangan Sumber Daya Manusia</div>
+                                        <div className="doc-signature-space"></div>
+                                        <div className="doc-signature-name">
+                                            Kepala Bagian Pengembangan SDM
+                                        </div>
+                                        <div className="doc-signature-role">Bagian Pengembangan Sumber Daya Manusia</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );
