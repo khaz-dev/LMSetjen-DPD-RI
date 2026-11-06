@@ -593,6 +593,23 @@
 }
 
 /* Right: Endorsement & Signature */
+.cert-dual-signature-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 36px;
+}
+
+.cert-instructor-col,
+.cert-official-col {
+    min-width: 220px;
+}
+
+.cert-sig-placeholder {
+    height: 70px;
+    width: 140px;
+    border-bottom: 1px dashed rgba(100, 116, 139, 0.4);
+}
+
 .cert-footer-signature {
     text-align: center;
     display: flex;

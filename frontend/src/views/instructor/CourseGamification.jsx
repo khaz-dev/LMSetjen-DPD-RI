@@ -457,6 +457,14 @@ function CourseGamification() {
                                                 <i className="fas fa-question-circle"></i>
                                                 <span>Kuis</span>
                                             </Link>
+                                            <Link
+                                                to={`/instructor/edit-course/${course_id}/certificate/`}
+                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-1"
+                                                title="Kelola Desain Sertifikat Kursus"
+                                            >
+                                                <i className="fas fa-certificate"></i>
+                                                <span>Sertifikat</span>
+                                            </Link>
                                             {!showForm && (
                                                 <button
                                                     type="button"

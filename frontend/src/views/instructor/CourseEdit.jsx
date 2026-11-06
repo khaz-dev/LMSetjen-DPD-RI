@@ -947,8 +947,8 @@ function CourseEdit() {
 
                             {/* 1. Header Card (Compact & Modern) */}
                             <div className="course-edit-header-card mb-2">
-                                <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                    <div>
+                                <div className="d-flex align-items-center justify-content-between flex-nowrap gap-3">
+                                    <div className="flex-grow-1 min-w-0" style={{ minWidth: 0 }}>
                                         <div className="d-flex align-items-center gap-2 mb-1">
                                             <span className={`badge ${
                                                 courseData?.platform_status === "Published" ? "bg-emerald-subtle text-emerald" :
@@ -969,19 +969,21 @@ function CourseEdit() {
                                                 ID: #{courseData?.id || param?.course_id}
                                             </span>
                                         </div>
-                                        <h2 className="header-title mb-0">
-                                            <i className="fas fa-edit text-teal me-2"></i>
-                                            Edit Kursus{courseData?.title ? `: ${courseData.title.length > 35 ? courseData.title.substring(0, 35) + "..." : courseData.title}` : ""}
+                                        <h2 className="header-title mb-0 text-truncate" title={courseData?.title}>
+                                            <i className="fas fa-edit text-teal me-2 flex-shrink-0"></i>
+                                            <span className="text-truncate">
+                                                Edit Kursus{courseData?.title ? `: ${courseData.title}` : ""}
+                                            </span>
                                         </h2>
-                                        <p className="header-subtitle mb-0">
+                                        <p className="header-subtitle mb-0 text-truncate">
                                             Perbarui informasi dasar, media pengantar, silabus, dan kuis kursus
                                         </p>
                                     </div>
 
-                                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                                    <div className="d-flex align-items-center gap-2 flex-nowrap flex-shrink-0 ms-auto">
                                         <Link 
                                             to="/instructor/courses/" 
-                                            className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2"
+                                            className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2 text-nowrap"
                                             title="Kembali ke Daftar Kursus"
                                         >
                                             <i className="fas fa-arrow-left"></i>
@@ -990,7 +992,7 @@ function CourseEdit() {
 
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/curriculum/`}
-                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2"
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2 text-nowrap"
                                             title="Kelola Kurikulum & Materi"
                                         >
                                             <i className="fas fa-list"></i>
@@ -999,7 +1001,7 @@ function CourseEdit() {
 
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/quiz/`}
-                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2"
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2 text-nowrap"
                                             title="Kelola Kuis Kursus"
                                         >
                                             <i className="fas fa-question-circle"></i>
@@ -1008,7 +1010,7 @@ function CourseEdit() {
 
                                         <Link
                                             to={`/instructor/edit-course/${param?.course_id}/gamification/`}
-                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2"
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2 text-nowrap"
                                             title="Kelola Gamifikasi Kursus"
                                         >
                                             <i className="fas fa-gamepad"></i>
@@ -1016,9 +1018,18 @@ function CourseEdit() {
                                         </Link>
 
                                         <Link
+                                            to={`/instructor/edit-course/${param?.course_id}/certificate/`}
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2 text-nowrap"
+                                            title="Kelola Desain Sertifikat Kursus"
+                                        >
+                                            <i className="fas fa-certificate"></i>
+                                            <span>Sertifikat</span>
+                                        </Link>
+
+                                        <Link
                                             to={`/instructor/preview-course/${param?.course_id}/`}
                                             target="_blank"
-                                            className="btn btn-sm btn-teal d-inline-flex align-items-center gap-2"
+                                            className="btn btn-sm btn-teal d-inline-flex align-items-center gap-2 text-nowrap"
                                             title="Pratinjau Kursus"
                                         >
                                             <i className="fas fa-eye"></i>
@@ -1437,6 +1448,14 @@ function CourseEdit() {
                                             >
                                                 <i className="fas fa-gamepad me-2"></i>
                                                 Kelola Gamifikasi
+                                            </Link>
+                                            <Link
+                                                to={`/instructor/edit-course/${param?.course_id}/certificate/`}
+                                                className="btn btn-update-course"
+                                                style={{ background: "linear-gradient(135deg, #0d5c3a 0%, #064e3b 100%)" }}
+                                            >
+                                                <i className="fas fa-certificate me-2"></i>
+                                                Desain Sertifikat
                                             </Link>
                                         </div>
                                     </div>

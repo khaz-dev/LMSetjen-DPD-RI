@@ -106,6 +106,14 @@ const WorkflowStepper = ({ currentStep, courseId, courseData }) => {
         },
         {
             id: 5,
+            name: 'Sertifikat',
+            icon: 'fa-certificate',
+            path: `/instructor/edit-course/${courseId}/certificate/`,
+            description: 'Desain sertifikat',
+            isComplete: true
+        },
+        {
+            id: 6,
             name: 'Publikasikan',
             icon: 'fa-rocket',
             path: `/instructor/edit-course/${courseId}/`,

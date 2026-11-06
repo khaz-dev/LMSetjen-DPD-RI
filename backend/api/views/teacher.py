@@ -2284,3 +2284,199 @@ class TeacherCourseExportRecapAPIView(APIView):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         response['Access-Control-Expose-Headers'] = 'Content-Disposition'
         return response
+
+
+# ============================================================================
+# ✨ INSTRUCTOR COURSE CERTIFICATE TEMPLATE MANAGEMENT
+# ============================================================================
+
+@method_decorator(csrf_exempt, name='dispatch')
+class TeacherCourseCertificateTemplateAPIView(APIView):
+    """
+    Endpoint Instruktur untuk membaca dan mengelola template sertifikat khusus per kursus.
+    Jika 'use_system_default' bernilai True, kursus otomatis menggunakan sertifikat default sistem LMSetjen DPD RI.
+    Jika 'use_system_default' bernilai False, kursus menggunakan kustomisasi yang dibuat instruktur.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def _get_course_and_verify(self, request, course_id):
+        try:
+            course = api_models.Course.objects.get(course_id=course_id)
+        except api_models.Course.DoesNotExist:
+            return None, Response({'error': 'Kursus tidak ditemukan'}, status=status.HTTP_404_NOT_FOUND)
+
+        is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+        if course.teacher.user != request.user and not is_admin:
+            return None, Response({'error': 'Akses ditolak. Anda bukan instruktur pengampu kursus ini.'}, status=status.HTTP_403_FORBIDDEN)
+
+        return course, None
+
+    def get(self, request, course_id):
+        course, err_response = self._get_course_and_verify(request, course_id)
+        if err_response:
+            return err_response
+
+        template = getattr(course, 'certificate_template', None)
+        system_default = api_models.CertificateTemplateConfig.get_active_config()
+        effective_template = api_models.CertificateTemplateConfig.get_template_for_course(course)
+
+        data = {
+            'use_system_default': template.use_system_default if template else True,
+            'template': api_serializer.CertificateTemplateConfigSerializer(template, context={'request': request}).data if template else None,
+            'effective_template': api_serializer.CertificateTemplateConfigSerializer(effective_template, context={'request': request}).data,
+            'system_default': api_serializer.CertificateTemplateConfigSerializer(system_default, context={'request': request}).data,
+            'course': {
+                'id': course.id,
+                'course_id': course.course_id,
+                'title': course.title,
+                'slug': course.slug,
+                'level': course.level,
+                'category': course.category.title if course.category else 'Umum',
+                'teacher_name': course.teacher.full_name if course.teacher else '',
+            }
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def post(self, request, course_id):
+        course, err_response = self._get_course_and_verify(request, course_id)
+        if err_response:
+            return err_response
+
+        template, created = api_models.CertificateTemplateConfig.objects.get_or_create(
+            course=course,
+            defaults={
+                'template_name': f"Template Khusus - {course.title[:40]}",
+                'use_system_default': False,
+                'is_active': True,
+            }
+        )
+
+        data = request.data
+        use_default_val = data.get('use_system_default')
+        if use_default_val is not None:
+            if isinstance(use_default_val, str):
+                template.use_system_default = use_default_val.lower() in ('true', '1', 'yes')
+            else:
+                template.use_system_default = bool(use_default_val)
+
+        # Update styling fields
+        text_fields = [
+            'template_name', 'primary_color', 'accent_color', 'title_font', 'body_font',
+            'agency_sup', 'agency_main', 'agency_sub',
+            'certificate_title', 'certificate_subtitle', 'statement_text',
+            'signatory_title', 'signatory_sub_title', 'signatory_name', 'signatory_nip',
+            'instructor_title'
+        ]
+        for f in text_fields:
+            if f in data and data[f] is not None:
+                setattr(template, f, data[f])
+
+        # Boolean toggles
+        bool_fields = ['show_gold_seal', 'show_watermark', 'show_bpsdm_logo', 'show_qr_code', 'show_instructor_signature', 'is_active']
+        for f in bool_fields:
+            if f in data:
+                val = data[f]
+                if isinstance(val, str):
+                    setattr(template, f, val.lower() in ('true', '1', 'yes'))
+                else:
+                    setattr(template, f, bool(val))
+
+        # Handle PPTX template upload
+        pptx_feedback = None
+        if 'pptx_template' in request.FILES:
+            uploaded_pptx = request.FILES['pptx_template']
+            template.pptx_template = uploaded_pptx
+            try:
+                from api.certificate_template_generator import inspect_pptx_placeholders
+                pptx_feedback = inspect_pptx_placeholders(uploaded_pptx)
+            except Exception as e:
+                logger.warning(f"Could not inspect PPTX placeholders: {e}")
+
+        # Handle custom background upload
+        if 'custom_background' in request.FILES:
+            template.custom_background = request.FILES['custom_background']
+        elif data.get('remove_custom_background') in (True, 'true', '1'):
+            if template.custom_background:
+                template.custom_background.delete(save=False)
+            template.custom_background = None
+
+        # Handle instructor signature upload
+        if 'instructor_signature_image' in request.FILES:
+            template.instructor_signature_image = request.FILES['instructor_signature_image']
+        elif data.get('remove_instructor_signature') in (True, 'true', '1'):
+            if template.instructor_signature_image:
+                template.instructor_signature_image.delete(save=False)
+            template.instructor_signature_image = None
+
+        template.save()
+
+        effective = api_models.CertificateTemplateConfig.get_template_for_course(course)
+        return Response({
+            'message': 'Konfigurasi template sertifikat kursus berhasil disimpan.',
+            'use_system_default': template.use_system_default,
+            'template': api_serializer.CertificateTemplateConfigSerializer(template, context={'request': request}).data,
+            'effective_template': api_serializer.CertificateTemplateConfigSerializer(effective, context={'request': request}).data,
+            'pptx_feedback': pptx_feedback
+        }, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class TeacherCourseCertificateTemplateResetAPIView(APIView):
+    """Reset template sertifikat kursus agar kembali menggunakan default sistem LMSetjen DPD RI."""
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request, course_id):
+        try:
+            course = api_models.Course.objects.get(course_id=course_id)
+        except api_models.Course.DoesNotExist:
+            return Response({'error': 'Kursus tidak ditemukan'}, status=status.HTTP_404_NOT_FOUND)
+
+        is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+        if course.teacher.user != request.user and not is_admin:
+            return Response({'error': 'Akses ditolak.'}, status=status.HTTP_403_FORBIDDEN)
+
+        template = getattr(course, 'certificate_template', None)
+        if template:
+            template.use_system_default = True
+            template.save()
+
+        default_config = api_models.CertificateTemplateConfig.get_active_config()
+        return Response({
+            'message': 'Template sertifikat kursus berhasil di-reset ke Default Sistem LMSetjen DPD RI.',
+            'use_system_default': True,
+            'effective_template': api_serializer.CertificateTemplateConfigSerializer(default_config, context={'request': request}).data
+        }, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class TeacherCourseCertificateTemplateDownloadPPTXAPIView(APIView):
+    """Download master PowerPoint (.pptx) template yang disesuaikan untuk kursus ini."""
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request, course_id):
+        try:
+            course = api_models.Course.objects.get(course_id=course_id)
+        except api_models.Course.DoesNotExist:
+            return Response({'error': 'Kursus tidak ditemukan'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            from api.certificate_template_generator import create_default_certificate_pptx
+            effective_config = api_models.CertificateTemplateConfig.get_template_for_course(course)
+            pptx_stream = create_default_certificate_pptx(config=effective_config, course=course)
+
+            clean_title = "".join(c for c in course.title if c.isalnum() or c in (' ', '_', '-')).strip().replace(' ', '_')[:30]
+            filename = f"Master_Template_Sertifikat_{clean_title}_{course.course_id}.pptx"
+
+            response = HttpResponse(
+                pptx_stream.getvalue(),
+                content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            )
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+            return response
+        except Exception as e:
+            logger.error(f"[TeacherCourseCertificatePPTX] Error generating PPTX: {e}")
+            return Response({'error': f'Gagal menghasilkan master PPTX: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

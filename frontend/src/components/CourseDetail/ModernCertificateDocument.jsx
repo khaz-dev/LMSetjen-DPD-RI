@@ -279,27 +279,72 @@ const ModernCertificateDocument = React.forwardRef(({
                     ) : <div className="cert-footer-seal" />}
 
                     {/* Right: Instructor Endorsement & Signature */}
-                    <div className="cert-footer-signature">
-                        <div className="cert-sig-date">Jakarta, {certDate}</div>
-                        <div className="cert-sig-title">{cfg.signatory_title || 'Instruktur / Fasilitator Kursus,'}</div>
-                        <div className="cert-sig-img-container">
-                            <img
-                                src={cfg.stamp_image_url || STEMPEL_SEKJEN_BASE64}
-                                alt="Stempel Resmi Sekretariat Jenderal DPD RI"
-                                className="cert-official-stamp"
-                            />
-                            <img
-                                src={cfg.signature_image_url || TTD_OKK_BASE64}
-                                alt="Tanda Tangan Pejabat"
-                                className="cert-sig-image"
-                            />
+                    {cfg.show_instructor_signature ? (
+                        <div className="cert-dual-signature-wrapper">
+                            <div className="cert-footer-signature cert-instructor-col">
+                                <div className="cert-sig-date">&nbsp;</div>
+                                <div className="cert-sig-title">{cfg.instructor_title || 'Instruktur Pengampu Kursus,'}</div>
+                                <div className="cert-sig-img-container">
+                                    {cfg.instructor_signature_url ? (
+                                        <img
+                                            src={cfg.instructor_signature_url}
+                                            alt="Tanda Tangan Instruktur"
+                                            className="cert-sig-image"
+                                        />
+                                    ) : (
+                                        <div className="cert-sig-placeholder" />
+                                    )}
+                                </div>
+                                <div className="cert-sig-line" />
+                                <div className="cert-instructor-name">{instructorName}</div>
+                                <div className="cert-instructor-title">Fasilitator Pembelajaran</div>
+                            </div>
+
+                            <div className="cert-footer-signature cert-official-col">
+                                <div className="cert-sig-date">Jakarta, {certDate}</div>
+                                <div className="cert-sig-title">{cfg.signatory_title || 'Kepala Biro OKK,'}</div>
+                                <div className="cert-sig-img-container">
+                                    <img
+                                        src={cfg.stamp_image_url || STEMPEL_SEKJEN_BASE64}
+                                        alt="Stempel Resmi Sekretariat Jenderal DPD RI"
+                                        className="cert-official-stamp"
+                                    />
+                                    <img
+                                        src={cfg.signature_image_url || TTD_OKK_BASE64}
+                                        alt="Tanda Tangan Pejabat"
+                                        className="cert-sig-image"
+                                    />
+                                </div>
+                                <div className="cert-sig-line" />
+                                <div className="cert-instructor-name">{cfg.signatory_name || 'Dr. Fitriani, A.P., M.Si.'}</div>
+                                <div className="cert-instructor-title">
+                                    {cfg.signatory_nip ? `NIP. ${cfg.signatory_nip}` : (cfg.signatory_sub_title || 'Sekretariat Jenderal DPD RI')}
+                                </div>
+                            </div>
                         </div>
-                        <div className="cert-sig-line" />
-                        <div className="cert-instructor-name">{cfg.signatory_name || instructorName}</div>
-                        <div className="cert-instructor-title">
-                            {cfg.signatory_nip ? `NIP. ${cfg.signatory_nip}` : (cfg.signatory_sub_title || 'Tenaga Pengajar & Verifikator Kompetensi')}
+                    ) : (
+                        <div className="cert-footer-signature">
+                            <div className="cert-sig-date">Jakarta, {certDate}</div>
+                            <div className="cert-sig-title">{cfg.signatory_title || 'Instruktur / Fasilitator Kursus,'}</div>
+                            <div className="cert-sig-img-container">
+                                <img
+                                    src={cfg.stamp_image_url || STEMPEL_SEKJEN_BASE64}
+                                    alt="Stempel Resmi Sekretariat Jenderal DPD RI"
+                                    className="cert-official-stamp"
+                                />
+                                <img
+                                    src={cfg.signature_image_url || TTD_OKK_BASE64}
+                                    alt="Tanda Tangan Pejabat"
+                                    className="cert-sig-image"
+                                />
+                            </div>
+                            <div className="cert-sig-line" />
+                            <div className="cert-instructor-name">{cfg.signatory_name || instructorName}</div>
+                            <div className="cert-instructor-title">
+                                {cfg.signatory_nip ? `NIP. ${cfg.signatory_nip}` : (cfg.signatory_sub_title || 'Tenaga Pengajar & Verifikator Kompetensi')}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

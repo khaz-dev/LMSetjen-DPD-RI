@@ -1,0 +1,541 @@
+/* ==========================================================================
+   CourseCertificateDesign.css
+   Compact, Modern, and Eye-Catching Certificate Studio for Instructors
+   LMSetjen DPD RI Platform
+   ========================================================================== */
+
+/* ==========================================================================
+   CONTAINER & LAYOUT SYNCHRONIZATION WITH SITE HEADER (.header-container)
+   Aligns left and right borders pixel-perfectly with main header (max-width: 1400px)
+   ========================================================================== */
+.instructor-course-certificate-page {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    min-height: 100vh;
+    background: transparent;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    overflow: visible !important;
+    overflow-x: clip;
+}
+
+.instructor-course-certificate-page .container,
+.instructor-course-certificate-page .header-container-aligned {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    position: relative;
+    z-index: 1;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Header Row Alignment: exact match with header-container boundaries */
+.instructor-course-certificate-page .row.instructor-header-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.instructor-course-certificate-page .row.instructor-header-row > .col-xl-12,
+.instructor-course-certificate-page .row.instructor-header-row > .col-lg-12,
+.instructor-course-certificate-page .row.instructor-header-row > .col-md-12,
+.instructor-course-certificate-page .row.instructor-header-row > .col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+.instructor-header-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow: visible !important;
+}
+
+/* Main layout row below Header: Matches exact width and boundaries of instructor-header-row */
+.instructor-course-certificate-page > .container > .row:not(.instructor-header-row),
+.instructor-course-certificate-page .container > .row:has(.instructor-sidebar-column) {
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0 !important;
+    overflow: visible !important;
+}
+
+/* Sidebar column reset */
+.instructor-course-certificate-page .row > .instructor-sidebar-column {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Content column (col-lg-9 col-md-8 col-12 transition-all):
+   Stretches across all remaining space with right edge perfectly flush with instructor-header-row */
+.instructor-course-certificate-page .col-lg-9.transition-all,
+.instructor-course-certificate-page .row:has(.instructor-sidebar-column) > .col-lg-9,
+.instructor-course-certificate-page .row:has(.instructor-sidebar-column) > .col-md-8,
+.instructor-course-certificate-page .row:has(.instructor-sidebar-column) > .transition-all,
+.instructor-course-certificate-page > .container > .row:not(.instructor-header-row) > .col-lg-9,
+.instructor-course-certificate-page .container > .row:not(.instructor-header-row) > .col-lg-9 {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   UNIFIED COMMAND BAR (Compact, Modern Header & Mode Switcher)
+   Eliminates stacked giant cards and excessive blank vertical space
+   ========================================================================== */
+.cert-command-bar {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.85rem 1.15rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    position: relative;
+    overflow: visible;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.cert-command-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+    background: linear-gradient(90deg, #0d5c3a 0%, #c59b27 50%, #0d5c3a 100%);
+    pointer-events: none;
+}
+
+.cert-command-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.3;
+}
+
+.cert-command-desc {
+    font-size: 0.825rem;
+    color: #64748b;
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+/* Segmented Mode Switcher */
+.cert-segmented-control {
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    gap: 3px;
+}
+
+.cert-segment-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.cert-segment-btn:hover:not(.active) {
+    color: #0d5c3a;
+    background: rgba(13, 92, 58, 0.06);
+}
+
+.cert-segment-btn.active {
+    background: #0d5c3a;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(13, 92, 58, 0.25);
+}
+
+.cert-segment-btn .segment-badge {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.cert-segment-btn.active .segment-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+.cert-segment-btn:not(.active) .segment-badge {
+    background: #e2e8f0;
+    color: #64748b;
+}
+
+/* ==========================================================================
+   LIVE PREVIEW EASEL (Light-Mode Interactive Studio)
+   Pixel-accurate scaled viewport with eliminated excess whitespace
+   ========================================================================== */
+.cert-preview-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.cert-preview-card-header {
+    background: #ffffff;
+    padding: 0.75rem 1.15rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.cert-preview-stage {
+    background-color: #f8fafc;
+    background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+    background-size: 16px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1.25rem 1rem;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Viewport exactly matches scaled certificate dimensions (1414 * scale) x (1000 * scale) */
+.cert-preview-viewport {
+    position: relative;
+    overflow: hidden;
+    margin: auto;
+    flex-shrink: 0;
+    background: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.18), 0 5px 12px -3px rgba(15, 23, 42, 0.08);
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cert-preview-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cert-preview-footer {
+    background: #ffffff;
+    padding: 0.65rem 1.15rem;
+    font-size: 0.8rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* ==========================================================================
+   CUSTOMIZATION EDITOR CARD
+   ========================================================================== */
+.cert-editor-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Compact Nav Pills */
+.cert-nav-pills {
+    display: flex;
+    background: #f8fafc;
+    padding: 5px;
+    border-bottom: 1px solid #e2e8f0;
+    gap: 4px;
+    overflow-x: auto;
+}
+
+.cert-nav-pill-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.cert-nav-pill-btn:hover {
+    color: #0d5c3a;
+    background: #e2e8f0;
+}
+
+.cert-nav-pill-btn.active {
+    background: #ffffff;
+    color: #0d5c3a;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   OFFICIAL DEFAULT PROFILE BANNER (When System Default Mode is Active)
+   ========================================================================== */
+.cert-default-profile-box {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+    border: 1.5px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 1.15rem;
+}
+
+.cert-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
+    margin-top: 0.85rem;
+    margin-bottom: 0.85rem;
+}
+
+.cert-spec-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    transition: border-color 0.15s ease;
+}
+
+.cert-spec-item:hover {
+    border-color: #0d5c3a;
+}
+
+.cert-spec-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    background: rgba(13, 92, 58, 0.08);
+    color: #0d5c3a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.cert-spec-label {
+    font-size: 0.72rem;
+    color: #64748b;
+    display: block;
+    line-height: 1.2;
+}
+
+.cert-spec-val {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+/* Preset Buttons */
+.cert-preset-btn {
+    border-color: #e2e8f0;
+    background: #ffffff;
+    transition: all 0.15s ease;
+    border-radius: 8px;
+}
+
+.cert-preset-btn:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.cert-preset-btn.active-preset {
+    border-color: #0d5c3a !important;
+    background: #f0fdf4 !important;
+    color: #0d5c3a !important;
+    box-shadow: 0 0 0 2px rgba(13, 92, 58, 0.18);
+}
+
+.color-swatch-chip {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    display: inline-block;
+}
+
+/* Compact Dropzone */
+.cert-dropzone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    padding: 1.15rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cert-dropzone:hover,
+.cert-dropzone.dragging {
+    border-color: #0d5c3a !important;
+    background: #f0fdf4;
+}
+
+/* Variable Dictionary Tag Cloud */
+.cert-var-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.6rem;
+}
+
+.cert-var-chip {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.74rem;
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #0d5c3a;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.cert-var-chip:hover {
+    background: #0d5c3a;
+    color: #ffffff;
+    border-color: #0d5c3a;
+    box-shadow: 0 2px 5px rgba(13, 92, 58, 0.2);
+}
+
+/* Action Sticky Footer */
+.cert-editor-footer {
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* ==========================================================================
+   UTILITIES & COLORS
+   ========================================================================== */
+.btn-teal-primary {
+    background-color: #0d5c3a;
+    border-color: #0d5c3a;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.btn-teal-primary:hover,
+.btn-teal-primary:focus {
+    background-color: #09432a;
+    border-color: #09432a;
+    color: #ffffff;
+}
+
+.btn-outline-teal {
+    border-color: #0d5c3a;
+    color: #0d5c3a;
+}
+
+.btn-outline-teal:hover {
+    background-color: #0d5c3a;
+    color: #ffffff;
+}
+
+.bg-teal {
+    background-color: #0d5c3a !important;
+}
+
+.bg-teal-subtle {
+    background-color: #e6f4ea !important;
+}
+
+.text-teal {
+    color: #0d5c3a !important;
+}
+
+.border-teal {
+    border-color: #0d5c3a !important;
+}
+
+.fs-7 {
+    font-size: 0.85rem !important;
+}
+
+.fs-8 {
+    font-size: 0.78rem !important;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}

@@ -1508,9 +1508,23 @@ class Certificate(models.Model):
 
 class CertificateTemplateConfig(models.Model):
     """
-    Model konfigurasi template sertifikat dinamis untuk Admin LMSetjen DPD RI.
+    Model konfigurasi template sertifikat dinamis untuk Admin LMSetjen DPD RI dan Instruktur Kursus.
     Mendukung master PPTX, background kustom, palet warna, tipografi, dan teks kop/pengesahan.
+    Hierarki: Jika course terisi dan use_system_default=False, maka kursus menggunakan template kustom ini.
+    Jika tidak, kursus otomatis fallback ke template default sistem LMSetjen DPD RI.
     """
+    course = models.OneToOneField(
+        'Course',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='certificate_template',
+        help_text="Jika diisi, template ini khusus untuk kursus bersangkutan. Jika null, template ini adalah default global sistem."
+    )
+    use_system_default = models.BooleanField(
+        default=True,
+        help_text="Jika True pada level kursus, kursus menggunakan default sistem LMSetjen DPD RI."
+    )
     template_name = models.CharField(max_length=150, default="Template Resmi Setjen DPD RI")
     is_active = models.BooleanField(default=True)
     pptx_template = models.FileField(upload_to='certificates/templates/pptx/', null=True, blank=True)
@@ -1525,21 +1539,26 @@ class CertificateTemplateConfig(models.Model):
     # Lembaga & Kop
     agency_sup = models.CharField(max_length=255, default="SEKRETARIAT JENDERAL")
     agency_main = models.CharField(max_length=255, default="DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA")
-    agency_sub = models.CharField(max_length=255, default="PUSAT PENGEMBANGAN KOMPETENSI APARATUR (PUSPEK)")
+    agency_sub = models.CharField(max_length=255, default="PUSAT PENGEMBANGAN SUMBER DAYA MANUSIA APARATUR")
     
     # Judul Sertifikat & Pernyataan
     certificate_title = models.CharField(max_length=150, default="SERTIFIKAT KELULUSAN")
     certificate_subtitle = models.CharField(max_length=255, default="Certificate of Completion")
     statement_text = models.TextField(
-        default="Diberikan dengan bangga sebagai pengakuan atas dedikasi, integritas, dan kelulusan menyeluruh dalam program pembelajaran:"
+        default="Telah berhasil dan berintegritas menyelesaikan seluruh materi pembelajaran mandiri, penugasan studi kasus, serta memenuhi standar evaluasi kelulusan pada program:"
     )
     
-    # Pengesahan Penandatangan
-    signatory_title = models.CharField(max_length=255, default="Kepala Pusat Pengembangan Kompetensi Aparatur")
+    # Pengesahan Penandatangan Resmi (Biro OKK)
+    signatory_title = models.CharField(max_length=255, default="Kepala Biro Organisasi Keanggotaan dan Kepegawaian")
     signatory_sub_title = models.CharField(max_length=255, default="Sekretariat Jenderal DPD RI")
-    signatory_name = models.CharField(max_length=255, default="Dr. Ir. H. M. Fahrizal, M.M.")
-    signatory_nip = models.CharField(max_length=100, default="19780512 200312 1 002")
+    signatory_name = models.CharField(max_length=255, default="Dr. Fitriani, A.P., M.Si.")
+    signatory_nip = models.CharField(max_length=100, default="19741017 199311 2 001")
     
+    # Kustomisasi Instruktur (Opsional pada level kursus)
+    instructor_signature_image = models.FileField(upload_to='certificates/templates/signatures/', null=True, blank=True, help_text="Tanda tangan digital instruktur pengampu")
+    instructor_title = models.CharField(max_length=255, default="Instruktur Pengampu Kursus", null=True, blank=True, help_text="Gelar / Peran instruktur pada sertifikat")
+    show_instructor_signature = models.BooleanField(default=False, help_text="Tampilkan tanda tangan instruktur pengampu bersanding dengan pejabat pengesah")
+
     # Elemen Visual Toggles
     show_gold_seal = models.BooleanField(default=True)
     show_watermark = models.BooleanField(default=True)
@@ -1554,17 +1573,56 @@ class CertificateTemplateConfig(models.Model):
         verbose_name_plural = "Certificate Template Configs"
 
     def __str__(self):
-        return f"{self.template_name} ({'Aktif' if self.is_active else 'Non-aktif'})"
+        prefix = f"[{self.course.title[:30]}] " if self.course else "[SISTEM DEFAULT] "
+        status_str = "Default Sistem" if (self.course and self.use_system_default) else ("Aktif" if self.is_active else "Non-aktif")
+        return f"{prefix}{self.template_name} ({status_str})"
 
     @classmethod
     def get_active_config(cls):
-        config = cls.objects.filter(is_active=True).first()
+        """Ambil template default global sistem LMSetjen DPD RI."""
+        config = cls.objects.filter(course__isnull=True, is_active=True).first()
         if not config:
             config = cls.objects.create(
                 template_name="Template Resmi Setjen DPD RI",
-                is_active=True
+                is_active=True,
+                signatory_title="Kepala Biro Organisasi Keanggotaan dan Kepegawaian",
+                signatory_sub_title="Sekretariat Jenderal DPD RI",
+                signatory_name="Dr. Fitriani, A.P., M.Si.",
+                signatory_nip="19741017 199311 2 001",
+                agency_sub="PUSAT PENGEMBANGAN SUMBER DAYA MANUSIA APARATUR",
+                statement_text="Telah berhasil dan berintegritas menyelesaikan seluruh materi pembelajaran mandiri, penugasan studi kasus, serta memenuhi standar evaluasi kelulusan pada program:"
             )
         return config
+
+    @classmethod
+    def get_template_for_course(cls, course_or_id):
+        """
+        Resolusi cerdas berjenjang:
+        1. Cek apakah kursus memiliki kustomisasi template spesifik dengan use_system_default=False dan is_active=True.
+        2. Jika ada, gunakan template khusus kursus tersebut.
+        3. Jika tidak ada / use_system_default=True, fallback otomatis ke template default sistem LMSetjen DPD RI.
+        """
+        if not course_or_id:
+            return cls.get_active_config()
+            
+        course = None
+        if isinstance(course_or_id, Course):
+            course = course_or_id
+        else:
+            try:
+                course = Course.objects.filter(course_id=str(course_or_id)).first() or Course.objects.filter(id=course_or_id).first()
+            except Exception:
+                pass
+                
+        if course:
+            try:
+                template = getattr(course, 'certificate_template', None)
+                if template and not template.use_system_default and template.is_active:
+                    return template
+            except Exception:
+                pass
+                
+        return cls.get_active_config()
 
     
 class CompletedLesson(models.Model):

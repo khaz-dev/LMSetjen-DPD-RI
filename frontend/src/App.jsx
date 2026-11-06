@@ -72,6 +72,7 @@ const CourseEdit = lazy(() => import("./views/instructor/CourseEdit"));
 const CourseEditCurriculum = lazy(() => import("./views/instructor/CourseEditCurriculum"));
 const CourseQuiz = lazy(() => import("./views/instructor/CourseQuiz"));
 const CourseGamification = lazy(() => import("./views/instructor/CourseGamification"));
+const CourseCertificateDesign = lazy(() => import("./views/instructor/CourseCertificateDesign"));
 const InstructorCoursePreview = lazy(() => import("./views/instructor/InstructorCoursePreview"));
 const CourseEvaluation = lazy(() => import("./views/instructor/CourseEvaluation"));
 
@@ -525,6 +526,26 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["teacher", "instructor"]}>
                                             <CourseGamification />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/instructor/edit-course/:course_id/certificate/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                            <CourseCertificateDesign />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/instructor/courses/:course_id/certificate/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                            <CourseCertificateDesign />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }

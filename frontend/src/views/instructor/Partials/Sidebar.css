@@ -762,7 +762,8 @@
     .modern-students .row:has(.instructor-sidebar),
     .instructor-notification-page .row:has(.instructor-sidebar),
     .instructor-qa-detail-page .row:has(.instructor-sidebar),
-    .instructor-password-page .row:has(.instructor-sidebar) {
+    .instructor-password-page .row:has(.instructor-sidebar),
+    .instructor-course-certificate-page .row:has(.instructor-sidebar) {
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
@@ -864,7 +865,8 @@
     .instructor-course-edit-page > .container > .row > .col-lg-9,
     .course-edit-container > .container > .row > .col-lg-9,
     .course-quiz-container > .container > .row > .col-lg-9,
-    .course-quiz-page > .container > .row > .col-lg-9 {
+    .course-quiz-page > .container > .row > .col-lg-9,
+    .instructor-course-certificate-page > .container > .row > .col-lg-9 {
         flex: 1 1 auto !important;
         max-width: 100% !important;
         transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -893,7 +895,8 @@
     .instructor-course-edit-page > .container > .row > .col-md-8,
     .course-edit-container > .container > .row > .col-md-8,
     .course-quiz-container > .container > .row > .col-md-8,
-    .course-quiz-page > .container > .row > .col-md-8 {
+    .course-quiz-page > .container > .row > .col-md-8,
+    .instructor-course-certificate-page > .container > .row > .col-md-8 {
         flex: 1 1 auto !important;
         max-width: 100% !important;
         transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), 

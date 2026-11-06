@@ -125,6 +125,9 @@ urlpatterns = [
 
     # Teacher Routes
     path("teacher/course/<course_id>/export-recap/", api_views.TeacherCourseExportRecapAPIView.as_view(), name="teacher-course-export-recap"),
+    path("teacher/course/<course_id>/certificate-template/", api_views.TeacherCourseCertificateTemplateAPIView.as_view(), name="teacher-course-certificate-template"),
+    path("teacher/course/<course_id>/certificate-template/reset/", api_views.TeacherCourseCertificateTemplateResetAPIView.as_view(), name="teacher-course-certificate-template-reset"),
+    path("teacher/course/<course_id>/certificate-template/download-pptx/", api_views.TeacherCourseCertificateTemplateDownloadPPTXAPIView.as_view(), name="teacher-course-certificate-template-download-pptx"),
     path("teacher/verify-student-integrity/", api_views.TeacherVerifyStudentIntegrityAPIView.as_view()),
     path("teacher/summary/<teacher_id>/", api_views.TeacherSummaryAPIView.as_view()),
     path("teacher/detail/<teacher_id>/", api_views.TeacherDetailAPIView.as_view()),  # ✨ PHASE 4.43: Public teacher detail endpoint

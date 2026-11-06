@@ -29,11 +29,15 @@ function CertificateTab({
     const [templateConfig, setTemplateConfig] = useState(null);
     const certificateRef = useRef();
 
-    // Fetch active certificate template config
+    // Fetch active certificate template config (cascading course vs system default)
     useEffect(() => {
         const fetchTemplateConfig = async () => {
             try {
-                const res = await apiInstance.get('/certificate/template-config/');
+                const targetCourseId = course?.course?.course_id || course?.course_id;
+                const endpoint = targetCourseId 
+                    ? `/certificate/template-config/?course_id=${targetCourseId}` 
+                    : '/certificate/template-config/';
+                const res = await apiInstance.get(endpoint);
                 if (res.data) {
                     setTemplateConfig(res.data);
                 }
@@ -42,7 +46,7 @@ function CertificateTab({
             }
         };
         fetchTemplateConfig();
-    }, []);
+    }, [course]);
 
     // Use WebP with PNG fallback for better performance
     const certificateBackground = certificateBackgroundWebP || certificateBackgroundPNG;

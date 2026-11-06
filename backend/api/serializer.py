@@ -887,13 +887,19 @@ class CertificateSerializer(serializers.ModelSerializer):
 
     def get_student_position(self, obj):
         try:
-            return obj.user.profile.position or ''
+            profile = getattr(obj.user, 'profile', None)
+            if profile and profile.position:
+                return getattr(profile.position, 'name', None) or getattr(profile.position, 'title', None) or str(profile.position)
+            return ''
         except Exception:
             return ''
 
     def get_student_organization_unit(self, obj):
         try:
-            return obj.user.profile.organization_unit or ''
+            profile = getattr(obj.user, 'profile', None)
+            if profile and profile.organization_unit:
+                return getattr(profile.organization_unit, 'name', None) or str(profile.organization_unit)
+            return ''
         except Exception:
             return ''
 
@@ -964,21 +970,24 @@ class CertificateSerializer(serializers.ModelSerializer):
 
 class CertificateTemplateConfigSerializer(serializers.ModelSerializer):
     """
-    Serializer konfigurasi template sertifikat admin Setjen DPD RI.
+    Serializer konfigurasi template sertifikat dinamis (Admin Setjen DPD RI & Instruktur Kursus).
     """
     pptx_template_url = serializers.SerializerMethodField(read_only=True)
     custom_background_url = serializers.SerializerMethodField(read_only=True)
+    instructor_signature_url = serializers.SerializerMethodField(read_only=True)
+    course_id_str = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = api_models.CertificateTemplateConfig
         fields = [
-            'id', 'template_name', 'is_active',
+            'id', 'course', 'course_id_str', 'use_system_default', 'template_name', 'is_active',
             'pptx_template', 'pptx_template_url',
             'custom_background', 'custom_background_url',
             'primary_color', 'accent_color', 'title_font', 'body_font',
             'agency_sup', 'agency_main', 'agency_sub',
             'certificate_title', 'certificate_subtitle', 'statement_text',
             'signatory_title', 'signatory_sub_title', 'signatory_name', 'signatory_nip',
+            'instructor_signature_image', 'instructor_signature_url', 'instructor_title', 'show_instructor_signature',
             'show_gold_seal', 'show_watermark', 'show_bpsdm_logo', 'show_qr_code',
             'created_at', 'updated_at'
         ]
@@ -997,6 +1006,19 @@ class CertificateTemplateConfigSerializer(serializers.ModelSerializer):
             if request:
                 return request.build_absolute_uri(obj.custom_background.url)
             return obj.custom_background.url
+        return None
+
+    def get_instructor_signature_url(self, obj):
+        request = self.context.get('request')
+        if getattr(obj, 'instructor_signature_image', None):
+            if request:
+                return request.build_absolute_uri(obj.instructor_signature_image.url)
+            return obj.instructor_signature_image.url
+        return None
+
+    def get_course_id_str(self, obj):
+        if getattr(obj, 'course', None):
+            return obj.course.course_id
         return None
 
 
@@ -3409,7 +3431,7 @@ class RankedStudentSerializer(serializers.Serializer):
     def get_position_name(self, obj):
         try:
             if obj.user and hasattr(obj.user, 'profile') and obj.user.profile and obj.user.profile.position:
-                return obj.user.profile.position.title
+                return getattr(obj.user.profile.position, 'name', None) or getattr(obj.user.profile.position, 'title', None) or str(obj.user.profile.position)
         except:
             pass
         return None
@@ -3573,7 +3595,7 @@ class RankedInstructorSerializer(serializers.Serializer):
     def get_position_name(self, obj):
         try:
             if obj.user and hasattr(obj.user, 'profile') and obj.user.profile and obj.user.profile.position:
-                return obj.user.profile.position.title
+                return getattr(obj.user.profile.position, 'name', None) or getattr(obj.user.profile.position, 'title', None) or str(obj.user.profile.position)
         except:
             pass
         return None

@@ -1953,7 +1953,11 @@ class CertificateTemplateConfigPublicAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            config = api_models.CertificateTemplateConfig.get_active_config()
+            course_id = request.query_params.get('course_id') or request.query_params.get('course')
+            if course_id:
+                config = api_models.CertificateTemplateConfig.get_template_for_course(course_id)
+            else:
+                config = api_models.CertificateTemplateConfig.get_active_config()
             serializer = api_serializer.CertificateTemplateConfigSerializer(config, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
@@ -2070,14 +2074,14 @@ class AdminCertificateResetDefaultAPIView(APIView):
             config.body_font = "'Montserrat', sans-serif"
             config.agency_sup = "SEKRETARIAT JENDERAL"
             config.agency_main = "DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA"
-            config.agency_sub = "PUSAT PENGEMBANGAN KOMPETENSI APARATUR (PUSPEK)"
+            config.agency_sub = "PUSAT PENGEMBANGAN SUMBER DAYA MANUSIA APARATUR"
             config.certificate_title = "SERTIFIKAT KELULUSAN"
             config.certificate_subtitle = "Certificate of Completion"
-            config.statement_text = "Diberikan dengan bangga sebagai pengakuan atas dedikasi, integritas, dan kelulusan menyeluruh dalam program pembelajaran:"
-            config.signatory_title = "Kepala Pusat Pengembangan Kompetensi Aparatur"
+            config.statement_text = "Telah berhasil dan berintegritas menyelesaikan seluruh materi pembelajaran mandiri, penugasan studi kasus, serta memenuhi standar evaluasi kelulusan pada program:"
+            config.signatory_title = "Kepala Biro Organisasi Keanggotaan dan Kepegawaian"
             config.signatory_sub_title = "Sekretariat Jenderal DPD RI"
-            config.signatory_name = "Dr. Ir. H. M. Fahrizal, M.M."
-            config.signatory_nip = "19780512 200312 1 002"
+            config.signatory_name = "Dr. Fitriani, A.P., M.Si."
+            config.signatory_nip = "19741017 199311 2 001"
             config.show_gold_seal = True
             config.show_watermark = True
             config.show_bpsdm_logo = True
