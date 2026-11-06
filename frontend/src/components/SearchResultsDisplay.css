@@ -132,14 +132,14 @@
     flex-wrap: wrap;
 }
 
-.metric-item {
+.results-metrics .metric-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     color: #666;
 }
 
-.metric-item i {
+.results-metrics .metric-item i {
     color: #4285f4;
     font-size: 1.1rem;
 }

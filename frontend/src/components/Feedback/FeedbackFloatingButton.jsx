@@ -9,6 +9,15 @@ import './FeedbackFloatingButton.css';
  * Allows users to easily access feedback form from any page
  */
 const FeedbackFloatingButton = () => {
+    // Jangan tampilkan tombol feedback jika sedang berada di dalam iframe (misalnya Scorm/Course Player)
+    // atau di halaman khusus pemutar modul (/modules/:moduleId/player/)
+    const isInsideIframe = typeof window !== 'undefined' && window.self !== window.top;
+    const isPlayerPage = typeof window !== 'undefined' && window.location.pathname.includes('/modules/') && window.location.pathname.includes('/player');
+
+    if (isInsideIframe || isPlayerPage) {
+        return null;
+    }
+
     const feedback = useFeedback();
     const [isVisible, setIsVisible] = useState(true);
     const [recentCountdown, setRecentCountdown] = useState(0);

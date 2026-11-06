@@ -51,12 +51,14 @@
     font-size: 0.95rem;
 }
 
-.header-stats {
+.testimonials-admin-page .header-stats,
+.testimonials-admin-container .header-stats {
     display: flex;
     gap: 2rem;
 }
 
-.stat-item {
+.testimonials-admin-page .stat-item,
+.testimonials-admin-container .stat-item {
     text-align: center;
     padding: 1rem;
     background: rgba(102, 126, 234, 0.1);
@@ -701,7 +703,8 @@
         align-items: flex-start;
     }
 
-    .header-stats {
+    .testimonials-admin-page .header-stats,
+    .testimonials-admin-container .header-stats {
         width: 100%;
         justify-content: space-around;
     }

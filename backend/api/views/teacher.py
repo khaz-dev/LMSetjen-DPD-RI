@@ -107,10 +107,14 @@ class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
             # Instructor must use "Edit Versi Terbaru" to create a draft first
             if course.is_published_version:
                 # 🔒 SECURITY: Use logging instead of print
+                is_for_edit = self.request.query_params.get('for_edit') == 'true'
                 import logging
                 logger = logging.getLogger('api')
-                logger.warning(f"[Teacher Course Detail] [FAIL] Attempt to edit published course directly: {course.title}")
-                # Return None to signal published course (will be handled in get method)
+                if is_for_edit:
+                    logger.warning(f"[Teacher Course Detail] [FAIL] Attempt to edit published course directly: {course.title}")
+                else:
+                    logger.info(f"[Teacher Course Detail] [OK] Loading published course for viewing/evaluation: {course.title}")
+                # Return course with signal (will be handled in get method)
                 setattr(course, '_is_published_version_attempt', True)
                 return course
             
@@ -134,16 +138,26 @@ class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
         try:
             course = self.get_object()
             
-            # Check if this is a published course access attempt
+            # Check if this is a published course access attempt for editing
+            is_view_mode = (
+                request.query_params.get('mode') in ['view', 'readonly', 'evaluation']
+                or request.query_params.get('readonly') == 'true'
+                or request.query_params.get('view_only') == 'true'
+            )
+            is_for_edit = request.query_params.get('for_edit') == 'true'
+            
+            # Block direct editing of published course (instructors must create draft)
+            # Allow read-only operations such as course evaluation, gamification preview, review, etc.
             if hasattr(course, '_is_published_version_attempt') and course._is_published_version_attempt:
-                return Response({
-                    "detail": {
-                        "error": "Cannot edit published course directly",
-                        "message": "Untuk mengedit kursus yang sudah dipublikasikan, gunakan tombol 'Edit Versi Terbaru' untuk membuat draft editing.",
-                        "action": "edit_published",
-                        "published_course_id": str(course.course_id)
-                    }
-                }, status=status.HTTP_403_FORBIDDEN)
+                if is_for_edit:
+                    return Response({
+                        "detail": {
+                            "error": "Cannot edit published course directly",
+                            "message": "Untuk mengedit kursus yang sudah dipublikasikan, gunakan tombol 'Edit Versi Terbaru' untuk membuat draft editing.",
+                            "action": "edit_published",
+                            "published_course_id": str(course.course_id)
+                        }
+                    }, status=status.HTTP_403_FORBIDDEN)
             
             serializer = self.get_serializer(course)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -163,6 +177,14 @@ class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
                 {"detail": "Failed to retrieve course"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    def destroy(self, request, *args, **kwargs):
+        """[*] PHASE 4.76: Prevent direct deletion of published courses"""
+        course = self.get_object()
+        if course.is_published_version:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Kursus yang sudah dipublikasikan tidak dapat dihapus secara langsung.")
+        return super().destroy(request, *args, **kwargs)
             
     def retrieve(self, request, *args, **kwargs):
         try:

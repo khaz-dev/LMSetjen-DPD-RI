@@ -75,7 +75,9 @@
   border-left: 4px solid #115e59;
 }
 
-.metric-label {
+.metric-card .metric-label,
+.sq-widget .metric-label,
+.search-quality-widget .metric-label {
   font-size: 0.85rem;
   color: #6c757d;
   text-transform: uppercase;
@@ -88,7 +90,9 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-.metric-value {
+.metric-card .metric-value,
+.sq-widget .metric-value,
+.search-quality-widget .metric-value {
   font-size: 2rem;
   font-weight: 700;
   color: #0f766e;
@@ -303,11 +307,13 @@
     padding: 0.5rem;
   }
 
-  .metric-value {
+  .metric-card .metric-value,
+  .sq-widget .metric-value {
     font-size: 1.5rem;
   }
 
-  .status-value {
+  .status-card .status-value,
+  .sq-widget .status-value {
     font-size: 1.5rem;
   }
 

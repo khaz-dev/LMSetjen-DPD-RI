@@ -13,7 +13,7 @@ export const useCourseData = (courseId) => {
             setLoading(true);
             setError(null);
             
-            const response = await useAxios.get(`/teacher/course-detail/${courseId}/`);
+            const response = await useAxios.get(`/teacher/course-detail/${courseId}/?for_edit=true`);
             
             if (response?.data) {
                 setCourseData(response.data);

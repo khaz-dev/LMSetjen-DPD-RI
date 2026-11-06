@@ -94,8 +94,8 @@ class StudentSummaryAPIView(generics.ListAPIView):
         except User.DoesNotExist:
             raise Http404("User tidak ditemukan.")
 
-        total_courses = api_models.EnrolledCourse.objects.filter(user=user).count()
-        completed_lessons = api_models.CompletedLesson.objects.filter(user=user).count()
+        total_courses = api_models.EnrolledCourse.objects.filter(user=user, course__platform_status='Published').count()
+        completed_lessons = api_models.CompletedLesson.objects.filter(user=user, course__platform_status='Published').count()
         achieved_certificates = api_models.Certificate.objects.filter(user=user).count()
 
         return [{
@@ -187,10 +187,25 @@ class StudentCourseDetailAPIView(generics.RetrieveAPIView):
         except User.DoesNotExist:
             raise Http404("User not found")
         
-        try:
-            return api_models.EnrolledCourse.objects.get(user=user, enrollment_id=enrollment_id)
-        except api_models.EnrolledCourse.DoesNotExist:
-            raise Http404("Enrollment not found")
+        # 1. Cari berdasarkan enrollment_id eksak
+        enr = api_models.EnrolledCourse.objects.filter(user=user, enrollment_id=enrollment_id).first()
+        if enr:
+            return enr
+
+        # 2. Cari jika parameter berupa course slug, course_id, atau id numerik
+        course_query = Q(slug=enrollment_id) | Q(course_id=enrollment_id)
+        if str(enrollment_id).isdigit():
+            course_query |= Q(id=int(enrollment_id))
+
+        matched_courses = api_models.Course.objects.filter(course_query)
+        if matched_courses.exists():
+            for c in matched_courses:
+                related_ids = c.get_related_course_ids() if hasattr(c, 'get_related_course_ids') else {c.id}
+                enr = api_models.EnrolledCourse.objects.filter(user=user, course_id__in=related_ids).first()
+                if enr:
+                    return enr
+
+        raise Http404("Enrollment not found")
     
     # ✨ PHASE 7.24.3: Pass user to serializer context so get_user_liked can check likes
     def get_serializer_context(self):
@@ -2234,6 +2249,7 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
             try:
                 user = User.objects.get(id=user_id)
                 quiz = api_models.Quiz.objects.get(quiz_id=quiz_id)
+                course = quiz.course
                 
                 # Determine attempt_type
                 req_attempt_type = request.data.get('attempt_type')
@@ -4016,6 +4032,32 @@ class CourseLeaderboardAPIView(APIView):
 
         pre_post_quiz = api_models.Quiz.objects.filter(course_id__in=related_course_ids, quiz_type='pre_post_test', is_active=True).first()
 
+        # Modul E-Learning SCORM kurikulum kursus
+        scorm_variant_items = api_models.VariantItem.objects.filter(
+            variant__course_id__in=related_course_ids,
+            learning_module__isnull=False
+        ).select_related('learning_module')
+        
+        seen_scorm_ids = set()
+        course_scorm_modules = []
+        for it in scorm_variant_items:
+            if it.learning_module_id and it.learning_module_id not in seen_scorm_ids:
+                seen_scorm_ids.add(it.learning_module_id)
+                course_scorm_modules.append(it.learning_module)
+                
+        # Jika tidak ada di variant item kurikulum, periksa di level Course
+        if not course_scorm_modules:
+            course_modules = api_models.Course.objects.filter(
+                id__in=related_course_ids,
+                learning_module__isnull=False
+            ).values_list('learning_module_id', flat=True).distinct()
+            for mid in course_modules:
+                if mid and mid not in seen_scorm_ids:
+                    lm = api_models.LearningModule.objects.filter(id=mid).first()
+                    if lm:
+                        seen_scorm_ids.add(mid)
+                        course_scorm_modules.append(lm)
+
         all_games = api_models.CourseGame.objects.filter(course_id__in=related_course_ids, is_active=True)
         seen_game_keys = set()
         course_games = []
@@ -4028,7 +4070,9 @@ class CourseLeaderboardAPIView(APIView):
         leaderboard_data = []
 
         for uid, (user, enr) in enrolled_users_dict.items():
-            # A. Kuis Reguler (Quiz Mastery)
+            completion_pct = enr.completion_percentage()
+
+            # A. Kuis Reguler & Evaluasi SCORM (Quiz Mastery)
             quiz_scores = []
             passed_quizzes_count = 0
             for q in regular_quizzes:
@@ -4041,12 +4085,29 @@ class CourseLeaderboardAPIView(APIView):
                 else:
                     quiz_scores.append(0.0)
 
-            if regular_quizzes:
-                avg_quiz_score = round(sum(quiz_scores) / len(quiz_scores), 1)
+            # Sertakan skor tes/kuis dari paket SCORM
+            scorm_scores = []
+            passed_scorm_count = 0
+            for sm in course_scorm_modules:
+                sm_prog = api_models.UserProgress.objects.filter(user=user, learning_module=sm).first()
+                if sm_prog:
+                    s_score = float(sm_prog.score_raw or 0.0)
+                    scorm_scores.append(s_score)
+                    if sm_prog.lesson_status in ['passed', 'completed']:
+                        passed_scorm_count += 1
+                else:
+                    scorm_scores.append(0.0)
+
+            total_eval_items = len(regular_quizzes) + len(course_scorm_modules)
+            all_eval_scores = quiz_scores + scorm_scores
+            total_passed_eval = passed_quizzes_count + passed_scorm_count
+
+            if total_eval_items > 0:
+                avg_quiz_score = round(sum(all_eval_scores) / len(all_eval_scores), 1)
                 quiz_points = round((avg_quiz_score / 100.0) * 250.0, 1)
             else:
-                avg_quiz_score = 100.0
-                quiz_points = 250.0 if enr.is_course_completed() else round((enr.completion_percentage() / 100.0) * 250.0, 1)
+                avg_quiz_score = 100.0 if enr.is_course_completed() else round(float(completion_pct), 1)
+                quiz_points = 250.0 if enr.is_course_completed() else round((float(completion_pct) / 100.0) * 250.0, 1)
 
             # B. Efektivitas Pembelajaran (Learning Gain Pre-to-Post Test)
             pre_att = None
@@ -4116,8 +4177,10 @@ class CourseLeaderboardAPIView(APIView):
                 completion_bonus = 40.0 if (completed_games_count == len(course_games) and len(course_games) > 0) else (completed_games_count * 8.0)
                 gamification_points = round(min(200.0, game_base_xp + completion_bonus), 1)
             else:
-                avg_game_score = 100.0
-                gamification_points = 200.0
+                # Opsi A: Jika kursus tidak memiliki modul game tersendiri, poin gamifikasi (maks 200 XP)
+                # diberikan/dinormalisasi bertahap mengikuti persentase ketuntasan materi kursus (0% = 0 XP, 100% = 200 XP)
+                avg_game_score = 100.0 if enr.is_course_completed() else round(float(completion_pct), 1)
+                gamification_points = 200.0 if enr.is_course_completed() else round((float(completion_pct) / 100.0) * 200.0, 1)
 
             # D. Kecepatan & Ketuntasan Kursus (Completion Pace)
             start_time = pre_att.date_attempted if pre_att else enr.date
@@ -4175,8 +4238,7 @@ class CourseLeaderboardAPIView(APIView):
                     pace_bonus = 10.0
                 pace_points = round(120.0 + pace_bonus, 1)
             else:
-                completion_pct = enr.completion_percentage()
-                pace_points = round((completion_pct / 100.0) * 100.0, 1)
+                pace_points = round((float(completion_pct) / 100.0) * 100.0, 1)
 
             # E. Total Course Mastery XP (Maksimal 1.000 XP)
             total_course_xp = int(round(quiz_points + learning_points + gamification_points + pace_points))
@@ -4255,8 +4317,8 @@ class CourseLeaderboardAPIView(APIView):
                     "certificate_id": cert.certificate_id if cert else None
                 },
                 "quiz_stats": {
-                    "total_quizzes": len(regular_quizzes),
-                    "passed_quizzes": passed_quizzes_count,
+                    "total_quizzes": total_eval_items,
+                    "passed_quizzes": total_passed_eval,
                     "avg_score": avg_quiz_score,
                     "points": quiz_points
                 },

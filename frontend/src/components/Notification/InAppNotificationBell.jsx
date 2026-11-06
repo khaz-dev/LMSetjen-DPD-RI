@@ -131,10 +131,12 @@ function InAppNotificationBell() {
         setIsOpen(false);
 
         const courseId = noti.course_data?.course_id || noti.course_data?.id || noti.course;
+        const enrollmentId = noti.course_data?.enrollment_id;
 
         if (isInstructorMode) {
             // Navigasi Pengajar
-            if (noti.type === 'Exam Review Needed' && courseId) {
+            // Notifikasi ujian (peninjauan, pengesahan, penolakan, reset) atau pendaftaran siswa baru diarahkan ke halaman evaluasi kursus
+            if (['Exam Review Needed', 'Course Enrollment Completed', 'Exam Verified', 'Exam Rejected', 'Exam Reset'].includes(noti.type) && courseId) {
                 navigate(`/instructor/courses/${courseId}/evaluation/`);
             } else if (courseId) {
                 navigate(`/instructor/courses/`);
@@ -143,9 +145,9 @@ function InAppNotificationBell() {
             }
         } else {
             // Navigasi Siswa
-            if (courseId) {
-                const targetSlug = noti.course_data?.slug || courseId;
-                navigate(`/student/courses/${targetSlug}/`);
+            const studentTarget = enrollmentId || noti.course_data?.slug || courseId;
+            if (studentTarget) {
+                navigate(`/student/courses/${studentTarget}/`);
             } else {
                 navigate('/student/courses/');
             }
@@ -285,10 +287,6 @@ function InAppNotificationBell() {
                     <div className="in-app-noti-header">
                         <div className="d-flex align-items-center justify-content-between w-100 mb-2">
                             <div className="d-flex align-items-center gap-2">
-                                <span className={`noti-role-badge ${isInstructorMode ? 'instructor' : 'student'}`}>
-                                    <i className={isInstructorMode ? 'fas fa-chalkboard-user me-1' : 'fas fa-graduation-cap me-1'}></i>
-                                    {isInstructorMode ? 'Pengajar' : 'Siswa'}
-                                </span>
                                 <h6 className="in-app-noti-title mb-0">
                                     {isInstructorMode ? 'Notifikasi Pengajar' : 'Notifikasi Siswa'}
                                 </h6>

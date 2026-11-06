@@ -530,7 +530,9 @@
   margin: 16px -24px -24px -24px;
 }
 
-.stat-item {
+.analytics-widgets .stat-item,
+.analytics-widget .stat-item,
+.widget-stats .stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;

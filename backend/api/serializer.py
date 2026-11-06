@@ -374,10 +374,26 @@ class AdminUserCreateSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    enrollment_count = serializers.SerializerMethodField()
+    material_count = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ['id', 'title', 'image', 'slug', 'course_count']
+        fields = ['id', 'title', 'image', 'slug', 'course_count', 'enrollment_count', 'material_count']
         model = api_models.Category
+
+    def get_enrollment_count(self, obj):
+        return api_models.EnrolledCourse.objects.filter(
+            course__category=obj,
+            course__platform_status="Published",
+            course__is_published_version=True
+        ).count()
+
+    def get_material_count(self, obj):
+        return api_models.VariantItem.objects.filter(
+            variant__course__category=obj,
+            variant__course__platform_status="Published",
+            variant__course__is_published_version=True
+        ).count()
 
 
 class CategoryManagementSerializer(serializers.ModelSerializer):
@@ -783,14 +799,25 @@ class VariantItemSerializer(serializers.ModelSerializer):
             return False
 
     def get_learning_module_info(self, obj):
-        """Include SCORM / H5P metadata and player url if learning_module is linked"""
+        """Include SCORM / H5P metadata, player url, and user progress/score if learning_module is linked"""
         if obj.learning_module:
+            request = self.context.get('request')
+            user = self.context.get('user') or self.context.get('current_user') or (request.user if request and request.user.is_authenticated else None)
+            user_progress = None
+            if user:
+                user_progress = api_models.UserProgress.objects.filter(
+                    user=user,
+                    learning_module=obj.learning_module
+                ).first()
             return {
                 "id": obj.learning_module.id,
                 "judul": obj.learning_module.judul,
                 "module_type": obj.learning_module.module_type,
                 "player_url": obj.learning_module.player_url,
                 "entry_file": obj.learning_module.entry_file,
+                "score_raw": user_progress.score_raw if user_progress else 0.0,
+                "lesson_status": user_progress.lesson_status if user_progress else 'not attempted',
+                "completed_at": user_progress.completed_at if user_progress else None,
             }
         return None
 
@@ -1093,11 +1120,18 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     def get_course_data(self, obj):
         if getattr(obj, 'course', None):
+            enrollment_id = None
+            if getattr(obj, 'user', None):
+                related_ids = obj.course.get_related_course_ids() if hasattr(obj.course, 'get_related_course_ids') else {obj.course.id}
+                enr = api_models.EnrolledCourse.objects.filter(user=obj.user, course_id__in=related_ids).first()
+                if enr:
+                    enrollment_id = enr.enrollment_id
             return {
                 "id": obj.course.id,
                 "course_id": getattr(obj.course, 'course_id', obj.course.id),
                 "title": obj.course.title,
-                "slug": getattr(obj.course, 'slug', None)
+                "slug": getattr(obj.course, 'slug', None),
+                "enrollment_id": enrollment_id
             }
         return None
 

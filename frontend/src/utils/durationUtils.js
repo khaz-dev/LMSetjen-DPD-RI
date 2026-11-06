@@ -9,29 +9,46 @@
  * @returns {number} Total seconds
  */
 export const parseDurationToSeconds = (durationString) => {
+    if (typeof durationString === 'number') {
+        return isNaN(durationString) || durationString < 0 ? 0 : Math.round(durationString);
+    }
     if (!durationString || typeof durationString !== 'string') {
         return 0;
     }
     
     const duration = durationString.toLowerCase().trim();
+    if (!duration || duration === '0' || duration === '0s' || duration === '0m' || duration === '0m 0s') {
+        return 0;
+    }
+
+    // Check for HH:MM:SS or MM:SS format (e.g. "02:15:00", "2:15:00", "05:30")
+    if (duration.includes(':')) {
+        const parts = duration.split(':').map((p) => parseFloat(p) || 0);
+        if (parts.length === 3) {
+            return Math.round(parts[0] * 3600 + parts[1] * 60 + parts[2]);
+        } else if (parts.length === 2) {
+            return Math.round(parts[0] * 60 + parts[1]);
+        }
+    }
+    
     let totalSeconds = 0;
     
-    // Parse hours
-    const hoursMatch = duration.match(/(\d+)\s*h/);
+    // Parse hours (e.g. "2h", "2 hours", "2 jam")
+    const hoursMatch = duration.match(/(\d+)\s*(?:h|jam|hours?)/);
     if (hoursMatch) {
-        totalSeconds += parseInt(hoursMatch[1]) * 3600;
+        totalSeconds += parseInt(hoursMatch[1], 10) * 3600;
     }
     
-    // Parse minutes
-    const minutesMatch = duration.match(/(\d+)\s*m/);
+    // Parse minutes (e.g. "15m", "15 mins", "15 menit")
+    const minutesMatch = duration.match(/(\d+)\s*(?:m|menit|mins?|minutes?)/);
     if (minutesMatch) {
-        totalSeconds += parseInt(minutesMatch[1]) * 60;
+        totalSeconds += parseInt(minutesMatch[1], 10) * 60;
     }
     
-    // Parse seconds
-    const secondsMatch = duration.match(/(\d+)\s*s/);
+    // Parse seconds (e.g. "30s", "30 detik", "30 secs")
+    const secondsMatch = duration.match(/(\d+)\s*(?:s|detik|secs?|seconds?)/);
     if (secondsMatch) {
-        totalSeconds += parseInt(secondsMatch[1]);
+        totalSeconds += parseInt(secondsMatch[1], 10);
     }
     
     return totalSeconds;
@@ -99,10 +116,16 @@ export const calculateTotalDuration = (items, durationKey = 'content_duration') 
     }
     
     const totalSeconds = items.reduce((total, item) => {
-        const durationString = item[durationKey];
-        if (!durationString) return total;
+        if (!item) return total;
+        // Priority 1: Direct numeric duration_seconds
+        if (typeof item.duration_seconds === 'number' && item.duration_seconds > 0) {
+            return total + item.duration_seconds;
+        }
+        // Priority 2: Specified durationKey
+        const val = item[durationKey] || item.duration || item.content_duration;
+        if (!val) return total;
         
-        return total + parseDurationToSeconds(durationString);
+        return total + parseDurationToSeconds(val);
     }, 0);
     
     return {

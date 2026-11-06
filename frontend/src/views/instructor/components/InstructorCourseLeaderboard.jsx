@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
+import Swal from "sweetalert2";
 import useAxios from "../../../utils/useAxios";
 import Toast from "../../plugin/Toast";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../../utils/constants";
@@ -15,19 +16,70 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
     const [downloadingExcel, setDownloadingExcel] = useState(false);
     const [showPrintModal, setShowPrintModal] = useState(false);
 
-    const handleVerifyIntegrity = async (userId, action) => {
-        const actionTitle = action === 'approve'
-            ? 'Sahkan Kelulusan Siswa?'
-            : action === 'reject'
-                ? 'Tolak Hasil Ujian Siswa?'
-                : 'Reset Ujian Post-Test Siswa?';
-        const actionText = action === 'approve'
-            ? 'Tindakan ini akan mengesahkan integritas ujian peserta dan mengizinkan penerbitan sertifikat digital.'
-            : action === 'reject'
-                ? 'Tindakan ini akan membatalkan kelulusan dan menahan sertifikat peserta.'
-                : 'Tindakan ini akan menghapus riwayat Post-Test peserta terkait dan memberi kesempatan ujian ulang.';
+    const handleVerifyIntegrity = async (userId, action, studentName = 'Peserta') => {
+        let actionTitle = 'Konfirmasi Tindakan Integritas';
+        let actionHtml = '';
+        let confirmBtnText = 'Ya, Lanjutkan';
+        let confirmBtnColor = '#0f766e';
+        let iconType = 'question';
+        let iconColor = '#0f766e';
 
-        if (!window.confirm(`${actionTitle}\n\n${actionText}`)) {
+        if (action === 'approve') {
+            actionTitle = `Sahkan Kelulusan ${studentName}?`;
+            actionHtml = `
+                <div class="text-start mt-2">
+                    <p class="text-muted mb-2">Tindakan ini akan mengesahkan integritas hasil belajar & ujian peserta <strong>${studentName}</strong> serta mengizinkan penerbitan <strong>sertifikat digital</strong>.</p>
+                    <div class="alert alert-info py-2 px-3 small mb-0" style="background-color: #f0fdfa; border-color: #ccfbf1; color: #0f766e;">
+                        <i class="fas fa-info-circle me-1"></i> Peserta akan otomatis menerima notifikasi resmi bahwa kelulusannya telah disahkan oleh Instruktur.
+                    </div>
+                </div>
+            `;
+            confirmBtnText = '<i class="fas fa-check-circle me-1"></i> Ya, Sahkan';
+            confirmBtnColor = '#0f766e';
+            iconType = 'question';
+            iconColor = '#0f766e';
+        } else if (action === 'reject') {
+            actionTitle = `Tolak Hasil Ujian ${studentName}?`;
+            actionHtml = `
+                <div class="text-start mt-2">
+                    <p class="text-muted mb-2">Tindakan ini akan <strong>membatalkan kelulusan</strong> dan menahan sertifikat peserta karena indikasi ketidaksesuaian integritas ujian.</p>
+                </div>
+            `;
+            confirmBtnText = '<i class="fas fa-ban me-1"></i> Ya, Tolak';
+            confirmBtnColor = '#dc2626';
+            iconType = 'warning';
+            iconColor = '#ef4444';
+        } else {
+            actionTitle = `Reset Post-Test ${studentName}?`;
+            actionHtml = `
+                <div class="text-start mt-2">
+                    <p class="text-muted mb-2">Tindakan ini akan <strong>menghapus riwayat Post-Test</strong> peserta terkait dan memberikan kesempatan untuk melakukan ujian ulang.</p>
+                    <div class="alert alert-warning py-2 px-3 small mb-0">
+                        <i class="fas fa-exclamation-triangle me-1"></i> Skor Post-Test sebelumnya akan direset dan siswa dapat mengerjakan kembali Post-Test.
+                    </div>
+                </div>
+            `;
+            confirmBtnText = '<i class="fas fa-redo me-1"></i> Ya, Reset Ujian';
+            confirmBtnColor = '#d97706';
+            iconType = 'warning';
+            iconColor = '#f59e0b';
+        }
+
+        const result = await Swal.fire({
+            title: actionTitle,
+            html: actionHtml,
+            icon: iconType,
+            iconColor: iconColor,
+            showCancelButton: true,
+            confirmButtonText: confirmBtnText,
+            cancelButtonText: '<i class="fas fa-times me-1"></i> Batal',
+            confirmButtonColor: confirmBtnColor,
+            cancelButtonColor: '#64748b',
+            reverseButtons: true,
+            focusCancel: true
+        });
+
+        if (!result.isConfirmed) {
             return;
         }
 
@@ -747,9 +799,12 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                             <div className="fw-bold text-emerald">
                                                                 +{student.learning_stats.improvement} Poin ({student.learning_stats.normalized_gain}% Gain)
                                                             </div>
-                                                            <small className="text-muted">
+                                                            <small className="text-muted d-block">
                                                                 Pre: {student.learning_stats.pre_score}% &rarr; Post: {student.learning_stats.post_score}%
                                                             </small>
+                                                            <span className="badge bg-light text-slate-700 border small mt-1">
+                                                                {student.learning_stats.points} XP
+                                                            </span>
                                                         </div>
                                                     ) : student.learning_stats.has_pre ? (
                                                         <div>
@@ -757,25 +812,37 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                                 Pre-Test: {student.learning_stats.pre_score}%
                                                             </span>
                                                             <div className="small text-muted mt-0">Menunggu Post-test</div>
+                                                            <span className="badge bg-light text-slate-700 border small mt-1">
+                                                                {student.learning_stats.points} XP
+                                                            </span>
                                                         </div>
                                                     ) : (
-                                                        <span className="text-muted small">Belum Pre-test</span>
+                                                        <span className="text-muted small">Belum Pre-test (0 XP)</span>
                                                     )}
                                                 </td>
                                                 <td className="text-center">
                                                     <div className="fw-bold text-slate-700">
                                                         {student.quiz_stats.avg_score}%
                                                     </div>
-                                                    <small className="text-muted">
-                                                        {student.quiz_stats.passed_quizzes}/{student.quiz_stats.total_quizzes} Lulus
+                                                    <small className="text-muted d-block">
+                                                        {student.quiz_stats.total_quizzes > 0
+                                                            ? `${student.quiz_stats.passed_quizzes}/${student.quiz_stats.total_quizzes} Lulus`
+                                                            : `${student.quiz_stats.points} XP (Progres)`}
                                                     </small>
+                                                    {student.quiz_stats.total_quizzes > 0 && (
+                                                        <span className="badge bg-light text-slate-700 border small mt-1">
+                                                            {student.quiz_stats.points} XP
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="text-center">
                                                     <div className="fw-bold text-slate-700">
                                                         {student.gamification_stats.points} XP
                                                     </div>
                                                     <small className="text-muted">
-                                                        {student.gamification_stats.completed_games}/{student.gamification_stats.total_games} Game Selesai
+                                                        {student.gamification_stats.total_games > 0
+                                                            ? `${student.gamification_stats.completed_games}/${student.gamification_stats.total_games} Game Selesai`
+                                                            : `${student.gamification_stats.avg_score}% Progres`}
                                                     </small>
                                                 </td>
                                                 <td className="text-center">
@@ -787,11 +854,19 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                             <div className="small text-muted mt-0">
                                                                 {student.completion_stats.duration_human}
                                                             </div>
+                                                            <span className="badge bg-light text-slate-700 border small mt-1">
+                                                                {student.completion_stats.points} XP (Pace)
+                                                            </span>
                                                         </div>
                                                     ) : (
-                                                        <span className="badge bg-light text-secondary border">
-                                                            Sedang Belajar
-                                                        </span>
+                                                        <div>
+                                                            <span className="badge bg-light text-secondary border">
+                                                                Sedang Belajar
+                                                            </span>
+                                                            <div className="small text-muted mt-1">
+                                                                {student.completion_stats.points} XP
+                                                            </div>
+                                                        </div>
                                                     )}
                                                 </td>
                                                 <td className="text-center">
@@ -810,7 +885,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                                     className="btn btn-xs btn-success py-0 px-2 fw-semibold"
                                                                     style={{ fontSize: "10px", borderRadius: "5px" }}
                                                                     title="Sahkan hasil ujian & izinkan penerbitan sertifikat"
-                                                                    onClick={() => handleVerifyIntegrity(student.user_id, 'approve')}
+                                                                    onClick={() => handleVerifyIntegrity(student.user_id, 'approve', student.full_name)}
                                                                     disabled={verifyingUserId === student.user_id}
                                                                 >
                                                                     <i className="fas fa-check me-1"></i>Sahkan
@@ -820,7 +895,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                                     className="btn btn-xs btn-outline-warning py-0 px-2 fw-semibold text-dark"
                                                                     style={{ fontSize: "10px", borderRadius: "5px" }}
                                                                     title="Reset Post-Test peserta untuk ujian ulang"
-                                                                    onClick={() => handleVerifyIntegrity(student.user_id, 'reset_post_test')}
+                                                                    onClick={() => handleVerifyIntegrity(student.user_id, 'reset_post_test', student.full_name)}
                                                                     disabled={verifyingUserId === student.user_id}
                                                                 >
                                                                     <i className="fas fa-rotate-right me-1"></i>Reset
@@ -848,7 +923,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                                 type="button"
                                                                 className="btn btn-xs btn-outline-warning py-0 px-2 mt-0"
                                                                 style={{ fontSize: "10px", borderRadius: "4px" }}
-                                                                onClick={() => handleVerifyIntegrity(student.user_id, 'reset_post_test')}
+                                                                onClick={() => handleVerifyIntegrity(student.user_id, 'reset_post_test', student.full_name)}
                                                                 disabled={verifyingUserId === student.user_id}
                                                                 title="Beri kesempatan ujian ulang"
                                                             >
@@ -870,7 +945,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                                     className="btn btn-xs btn-success py-0 px-2 fw-semibold"
                                                                     style={{ fontSize: "10px", borderRadius: "5px" }}
                                                                     title="Sahkan hasil ujian & izinkan penerbitan sertifikat"
-                                                                    onClick={() => handleVerifyIntegrity(student.user_id, 'approve')}
+                                                                    onClick={() => handleVerifyIntegrity(student.user_id, 'approve', student.full_name)}
                                                                     disabled={verifyingUserId === student.user_id}
                                                                 >
                                                                     <i className="fas fa-check me-1"></i>Sahkan

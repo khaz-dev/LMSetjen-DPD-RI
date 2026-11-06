@@ -543,8 +543,7 @@
 }
 
 .stat-card-compact .stat-number,
-.instructor-dashboard .stat-card-compact .stat-number,
-.stat-number {
+.instructor-dashboard .stat-card-compact .stat-number {
   font-size: 1.85rem !important;
   font-weight: 800 !important;
   color: #1e293b !important;
@@ -555,8 +554,7 @@
 
 .stat-card-compact .stat-label,
 .instructor-dashboard .stat-card-compact .stat-label,
-.stat-card-compact.theme-amber .stat-label,
-.stat-label {
+.stat-card-compact.theme-amber .stat-label {
   font-size: 0.82rem !important;
   font-weight: 600 !important;
   color: #64748b !important;
@@ -572,7 +570,7 @@
 }
 
 .stat-card-compact .stat-footer,
-.stat-footer {
+.instructor-dashboard .stat-card-compact .stat-footer {
   margin-top: 0.85rem;
   padding-top: 0.65rem;
   border-top: 1px solid #f1f5f9;

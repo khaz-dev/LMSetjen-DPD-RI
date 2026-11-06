@@ -1164,13 +1164,13 @@ function CourseQuiz() {
                                                             <p className="quiz-description text-secondary" title={quiz.description}>{quiz.description}</p>
                                                         )}
                                                         <div className="quiz-stats d-flex flex-row align-items-center flex-wrap">
-                                                            <div className="stat-item d-inline-flex flex-row align-items-center">
+                                                            <div className="quiz-stat-pill stat-item d-inline-flex flex-row align-items-center">
                                                                 <i className="fas fa-question me-1" style={{ color: '#0f766e' }}></i>
-                                                                <span>{quiz.total_questions || 0} Pertanyaan</span>
+                                                                <span className="quiz-stat-text">{quiz.total_questions || 0} Pertanyaan</span>
                                                             </div>
-                                                            <div className="stat-item d-inline-flex flex-row align-items-center">
+                                                            <div className="quiz-stat-pill stat-item d-inline-flex flex-row align-items-center">
                                                                 <i className="fas fa-calendar text-success me-1"></i>
-                                                                <span>{new Date(quiz.date).toLocaleDateString()}</span>
+                                                                <span className="quiz-stat-text">{new Date(quiz.date).toLocaleDateString()}</span>
                                                             </div>
                                                         </div>
                                                     </div>

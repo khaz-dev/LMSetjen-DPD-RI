@@ -304,8 +304,10 @@ urlpatterns = [
     
     # ✨ E-Learning SCORM 1.2 & H5P Integration Endpoints
     path("teacher/upload-elearning-module/", scorm_views.UploadElearningModuleAPIView.as_view(), name="upload-elearning-module"),
-    path("api/v1/modules/<int:module_id>/tracking/", scorm_views.SCORMTrackingAPIView.as_view(), name="scorm_tracking_api"),
-    path("api/v1/modules/<int:module_id>/detail/", scorm_views.ModuleDetailAPIView.as_view(), name="scorm_module_detail"),
+    path("modules/<int:module_id>/tracking/", scorm_views.SCORMTrackingAPIView.as_view(), name="scorm_tracking_api"),
+    path("modules/<int:module_id>/detail/", scorm_views.ModuleDetailAPIView.as_view(), name="scorm_module_detail"),
+    path("api/v1/modules/<int:module_id>/tracking/", scorm_views.SCORMTrackingAPIView.as_view(), name="scorm_tracking_api_v1"),
+    path("api/v1/modules/<int:module_id>/detail/", scorm_views.ModuleDetailAPIView.as_view(), name="scorm_module_detail_v1"),
     path("modules/<int:module_id>/player/", scorm_views.scorm_player_view, name="scorm_player"),
 ]
 

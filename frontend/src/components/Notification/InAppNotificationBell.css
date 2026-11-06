@@ -59,10 +59,27 @@
     color: #ffffff;
     font-size: 0.65rem;
     font-weight: 700;
-    line-height: 18px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     border: 2px solid #ffffff;
     box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+    box-sizing: border-box;
+}
+
+@keyframes notiBadgePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.in-app-noti-badge.animate-pulse {
+    animation: notiBadgePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Notification Dropdown Container (Clean Light Card) */

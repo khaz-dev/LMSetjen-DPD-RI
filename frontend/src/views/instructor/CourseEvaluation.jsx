@@ -25,7 +25,7 @@ function CourseEvaluation() {
             if (!course_id) return;
             try {
                 setLoading(true);
-                const response = await useAxios.get(`teacher/course-detail/${course_id}/`);
+                const response = await useAxios.get(`teacher/course-detail/${course_id}/?mode=evaluation`);
                 if (response.data) {
                     setCourse(response.data);
                 }

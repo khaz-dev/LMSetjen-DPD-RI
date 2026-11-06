@@ -28,6 +28,20 @@ const ScormPlayer = ({
     ? `/modules/${moduleId}/player/`
     : (variantItem?.learning_module_info?.player_url || variantItem?.file);
 
+  // Check if current lesson is already completed
+  const isLessonAlreadyCompleted = useCallback(() => {
+    if (variantItem?.is_completed) return true;
+    if (!course || !course.completed_lesson) return false;
+    const targetVId = String(variantItem?.variant_item_id || variantItem?.id || "");
+    const targetId = String(variantItem?.id || "");
+    return course.completed_lesson.some(cl => {
+      const clVId = String(cl.variant_item?.variant_item_id || cl.variant_item?.id || "");
+      const clId = String(cl.variant_item?.id || "");
+      return (targetVId && (clVId === targetVId || clId === targetVId)) ||
+             (targetId && (clId === targetId || clVId === targetId));
+    });
+  }, [variantItem, course]);
+
   // Callback to sync SCORM status to backend
   const handleTrackingSync = useCallback(async (cmiPayload) => {
     if (!moduleId) return;
@@ -44,8 +58,9 @@ const ScormPlayer = ({
         const status = response.data.lesson_status.toLowerCase();
         setLessonStatus(status);
 
-        if ((status === "completed" || status === "passed") && handleMarkLessonAsCompleted) {
-          handleMarkLessonAsCompleted(variantItem?.variant_item_id || variantItem?.id);
+        const alreadyDone = isLessonAlreadyCompleted();
+        if ((status === "completed" || status === "passed") && !alreadyDone && handleMarkLessonAsCompleted) {
+          handleMarkLessonAsCompleted(variantItem?.variant_item_id || variantItem?.id, true);
           Toast().fire({
             icon: "success",
             title: "Modul Berhasil Diselesaikan!",
@@ -59,7 +74,7 @@ const ScormPlayer = ({
     } finally {
       setSyncing(false);
     }
-  }, [moduleId, courseId, course, variantItem, handleMarkLessonAsCompleted]);
+  }, [moduleId, courseId, course, variantItem, handleMarkLessonAsCompleted, isLessonAlreadyCompleted]);
 
   // Setup window.API for SCORM 1.2 on window object so any iframe finding window.parent.API works directly
   useEffect(() => {
@@ -148,10 +163,26 @@ const ScormPlayer = ({
     }
   };
 
+  // Listen for SCORM status updates posted from inner ModulePlayerPage iframe
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data?.type === 'SCORM_MODULE_STATUS') {
+        const status = event.data.status?.toLowerCase();
+        if (status) setLessonStatus(status);
+        const wasAlreadyCompleted = event.data?.wasAlreadyCompleted || isLessonAlreadyCompleted();
+        if ((status === 'completed' || status === 'passed') && !wasAlreadyCompleted && handleMarkLessonAsCompleted) {
+          handleMarkLessonAsCompleted(variantItem?.variant_item_id || variantItem?.id, true);
+        }
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [variantItem, course, handleMarkLessonAsCompleted, isLessonAlreadyCompleted]);
+
   return (
     <div 
       ref={containerRef}
-      className={`scorm-player-wrapper rounded-3 overflow-hidden shadow-sm mb-4 border ${fullscreen ? "bg-dark p-0" : "bg-white"}`}
+      className={`scorm-player-wrapper rounded-3 overflow-hidden shadow-sm mb-4 border ${fullscreen ? "p-0" : ""}`}
       style={{
         width: "100%",
         height: fullscreen ? "100vh" : "680px",
@@ -160,93 +191,18 @@ const ScormPlayer = ({
         position: fullscreen ? "fixed" : "relative",
         top: 0,
         left: 0,
-        zIndex: fullscreen ? 99999 : 1
+        zIndex: fullscreen ? 99999 : 1,
+        backgroundColor: "#ffffff",
+        borderColor: "#e2e8f0",
+        padding: 0,
+        margin: 0
       }}
     >
-      {/* Player Header Bar */}
-      <div 
-        className="player-control-bar px-3 py-2 text-white d-flex align-items-center justify-content-between"
-        style={{ backgroundColor: "#1e293b", minHeight: "50px" }}
-      >
-        <div className="d-flex align-items-center gap-2 overflow-hidden">
-          <span 
-            className="badge px-2 py-1"
-            style={{ backgroundColor: "#0f766e", fontSize: "11px", letterSpacing: "0.5px" }}
-          >
-            <i className="fas fa-cubes me-1"></i>
-            {variantItem?.file_type === "h5p" ? "H5P INTERACTIVE" : "SCORM 1.2"}
-          </span>
-
-          <span className="fw-semibold text-truncate text-light small" style={{ maxWidth: "450px" }}>
-            {variantItem?.title || "Modul Pembelajaran Interaktif"}
-          </span>
-
-          <span className={`badge ms-2 ${
-            lessonStatus === "completed" || lessonStatus === "passed"
-              ? "bg-success"
-              : lessonStatus === "failed"
-              ? "bg-danger"
-              : "bg-warning text-dark"
-          }`}>
-            {lessonStatus}
-          </span>
-        </div>
-
-        <div className="d-flex align-items-center gap-2">
-          {syncing && (
-            <span className="small text-warning d-flex align-items-center gap-1 me-2">
-              <span className="spinner-border spinner-border-sm" role="status"></span>
-              Menyimpan...
-            </span>
-          )}
-
-          <button 
-            type="button" 
-            className="btn btn-sm btn-outline-light py-1 px-2"
-            onClick={handleRefresh}
-            title="Muat Ulang Modul"
-          >
-            <i className="fas fa-redo"></i>
-          </button>
-
-          <button 
-            type="button" 
-            className="btn btn-sm btn-outline-light py-1 px-2"
-            onClick={toggleFullscreen}
-            title={fullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
-          >
-            <i className={fullscreen ? "fas fa-compress" : "fas fa-expand"}></i>
-          </button>
-
-          {moduleId && (
-            <a 
-              href={`/modules/${moduleId}/player/`} 
-              target="_blank" 
-              rel="noreferrer"
-              className="btn btn-sm btn-teal text-white py-1 px-2"
-              style={{ backgroundColor: "#0f766e" }}
-              title="Buka di Tab Baru"
-            >
-              <i className="fas fa-external-link-alt me-1"></i>
-              Tab Baru
-            </a>
-          )}
-
-          {onClose && (
-            <button
-              type="button"
-              className="btn btn-sm btn-danger py-1 px-2"
-              onClick={onClose}
-              title="Tutup Player"
-            >
-              <i className="fas fa-times"></i>
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* iFrame Container */}
-      <div className="iframe-viewport position-relative flex-grow-1 bg-light">
+      <div 
+        className="iframe-viewport position-relative flex-grow-1 w-100 h-100 bg-white"
+        style={{ display: "flex", flexDirection: "column", padding: 0, margin: 0, overflow: "hidden" }}
+      >
         {loading && (
           <div 
             className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-white"
@@ -264,6 +220,7 @@ const ScormPlayer = ({
             src={playerSrc}
             title={variantItem?.title || "E-Learning Player"}
             className="w-100 h-100 border-0"
+            style={{ display: "block", width: "100%", height: "100%", border: 0, margin: 0, padding: 0 }}
             allow="fullscreen; autoplay"
             allowFullScreen
             onLoad={() => setLoading(false)}

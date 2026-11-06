@@ -8,7 +8,6 @@ function Toast(){
         showConfirmButton: false,
         timer: 2500,
         timerProgressBar: true,
-        backdrop: false,
         didOpen: (toast) => {
             toast.addEventListener('mouseenter', Swal.stopTimer);
             toast.addEventListener('mouseleave', Swal.resumeTimer);

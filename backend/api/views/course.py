@@ -171,23 +171,42 @@ class PublicStatsAPIView(generics.GenericAPIView):
                 except:
                     total_materials = 0
             
-            # 7. Platform rating (average of all course ratings)
+            # 7. Platform rating (average of all course ratings) and total verified reviews
             try:
-                platform_rating = api_models.Review.objects.filter(
+                review_stats = api_models.Review.objects.filter(
                     active=True
-                ).aggregate(avg_rating=Avg('rating'))['avg_rating'] or 4.8
+                ).aggregate(avg_rating=Avg('rating'), count=Count('id'))
+                platform_rating = review_stats['avg_rating'] or 4.8
                 platform_rating = round(float(platform_rating), 1)
+                total_reviews = review_stats['count'] or 0
             except:
                 platform_rating = 4.8
+                total_reviews = 0
+            
+            # 8. Total discussion Q&A / interactions
+            try:
+                total_discussions = api_models.Question_Answer.objects.count()
+            except:
+                total_discussions = 0
+
+            # 9. Total active course categories
+            try:
+                total_categories = api_models.Category.objects.filter(active=True).count()
+            except:
+                total_categories = 0
             
             return Response({
                 'total_courses': total_courses,
                 'total_students': total_students,
                 'total_teachers': total_teachers,
+                'total_enrollments': total_enrollments,
                 'completion_rate': completion_rate,
                 'total_certificates': total_certificates,
                 'total_materials': total_materials,
                 'platform_rating': platform_rating,
+                'total_reviews': total_reviews,
+                'total_discussions': total_discussions,
+                'total_categories': total_categories,
                 'timestamp': timezone.now().isoformat()
             }, status=status.HTTP_200_OK)
             
@@ -201,10 +220,15 @@ class PublicStatsAPIView(generics.GenericAPIView):
                 'total_courses': 0,
                 'total_students': 0,
                 'total_teachers': 0,
+                'total_enrollments': 0,
                 'completion_rate': 0,
                 'total_certificates': 0,
                 'total_materials': 0,
-                'platform_rating': 4.8
+                'platform_rating': 4.8,
+                'total_reviews': 0,
+                'total_discussions': 0,
+                'total_categories': 0,
+                'timestamp': timezone.now().isoformat()
             }, status=status.HTTP_200_OK)
 
 

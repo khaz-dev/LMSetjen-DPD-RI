@@ -87,6 +87,7 @@ const AdminCourseReviewDetail = lazy(() => import("./views/admin/AdminCourseRevi
 const ReportsAdmin = lazy(() => import("./views/admin/ReportsAdmin"));
 // ✨ PHASE 11.1: Admin Feedback Management
 const AdminFeedback = lazy(() => import("./views/admin/AdminFeedback"));
+const SystemTestAdmin = lazy(() => import("./views/admin/SystemTestAdmin"));
 
 // Loading component for Suspense fallback - Centered spinner
 const LoadingFallback = () => (
@@ -632,6 +633,21 @@ function App() {
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }
+                            />
+                            {/* Admin System Testing & Diagnostics */}
+                            <Route
+                                path="/admin/system-test/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["admin"]}>
+                                            <SystemTestAdmin />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/admin/system-test"
+                                element={<Navigate to="/admin/system-test/" replace />}
                             />
                             {/* Backward compatibility redirects */}
                             <Route

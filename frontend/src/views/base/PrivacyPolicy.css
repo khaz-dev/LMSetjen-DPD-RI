@@ -378,7 +378,7 @@ body:has(.privacy-policy-wrapper)::after {
   min-width: 0;
 }
 
-.stat-label {
+.stat-pill .stat-label {
   display: block;
   font-size: 0.68rem;
   text-transform: uppercase;
@@ -387,7 +387,7 @@ body:has(.privacy-policy-wrapper)::after {
   line-height: 1.2;
 }
 
-.stat-val {
+.stat-pill .stat-val {
   display: block;
   font-size: 0.85rem;
   font-weight: 700;

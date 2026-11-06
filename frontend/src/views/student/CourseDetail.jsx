@@ -4053,10 +4053,9 @@ function CourseDetail() {
     const submitQuiz = async (forcedViolations = null) => {
 
         if (!selectedQuiz) return;
-        if (isSubmittingQuizRef.current && forcedViolations === null) return;
+        const validForced = typeof forcedViolations === 'number' ? forcedViolations : null;
+        if (isSubmittingQuizRef.current && validForced === null) return;
         isSubmittingQuizRef.current = true;
-
-
 
         try {
 
@@ -4070,35 +4069,31 @@ function CourseDetail() {
 
             }
 
-
-
             setIsQuizActive(false);
 
             const endTime = Date.now();
 
             const timeTaken = quizStartTime ? Math.floor((endTime - quizStartTime) / 1000) : 0;
 
-
-
             // Convert quizAnswers object to the format expected by backend
+            const currentAnswers = currentQuizStateRef.current?.answers || quizAnswers;
 
-            const formattedAnswers = Object.entries(quizAnswers).map(([questionId, choiceId]) => ({
+            const formattedAnswers = Object.entries(currentAnswers).map(([questionId, choiceId]) => ({
 
-                question_id: questionId,
+                question_id: String(questionId),
 
-                choice_id: choiceId.toString()
+                choice_id: choiceId != null ? String(choiceId) : ""
 
             }));
-
-
 
             const isPreTest = selectedQuiz.quiz_type === 'pre_post_test' && (!selectedQuiz.has_pre_test || selectedQuiz.current_mode === 'pre_test');
 
             const finalAttemptType = selectedQuiz.quiz_type === 'pre_post_test' ? (isPreTest ? 'pre_test' : 'post_test') : 'quiz';
 
+            const violationsCount = validForced !== null 
+                ? validForced 
+                : (typeof quizViolationsRef.current === 'number' ? quizViolationsRef.current : 0);
 
-
-            const violationsCount = forcedViolations !== null ? forcedViolations : quizViolationsRef.current;
             const submissionData = {
                 quiz_id: selectedQuiz.quiz_id,
                 answers: formattedAnswers,
@@ -4107,11 +4102,7 @@ function CourseDetail() {
                 tab_switch_violations: violationsCount
             };
 
-
-
             const response = await useAxios.post(`student/quiz-submit/${UserData()?.user_id}/`, submissionData);
-
-
 
             if (response.data) {
 
@@ -4119,13 +4110,9 @@ function CourseDetail() {
 
                 setShowQuizResult(true);
 
-
-
                 // Clear quiz progress since quiz is completed
 
                 clearQuizProgress(selectedQuiz);
-
-
 
                 // Update the selected quiz with new attempt information
 
@@ -4147,8 +4134,6 @@ function CourseDetail() {
 
                 }
 
-
-
                 // Refresh course data and quizzes immediately
                 if (course?.course?.id) {
                     await fetchQuizzes(course.course.id);
@@ -4158,6 +4143,7 @@ function CourseDetail() {
             }
 
         } catch (error) {
+            console.error("Error submitting quiz:", error);
 
             Toast().fire({
 
@@ -4169,6 +4155,8 @@ function CourseDetail() {
 
             setIsQuizActive(false);
 
+        } finally {
+            isSubmittingQuizRef.current = false;
         }
 
     };
@@ -4240,7 +4228,7 @@ function CourseDetail() {
 
 
 
-            const violationsCount = forcedViolations !== null ? forcedViolations : quizViolationsRef.current;
+            const violationsCount = typeof quizViolationsRef.current === 'number' ? quizViolationsRef.current : 0;
             const submissionData = {
                 quiz_id: selectedQuiz.quiz_id,
                 answers: formattedAnswers,
@@ -4446,6 +4434,11 @@ function CourseDetail() {
         useAxios.get(`student/course-detail/${UserData()?.user_id}/${param.enrollment_id}/`).then((res) => {
 
             setCourse(res.data);
+
+            // Jika URL saat ini menggunakan slug atau ID selain enrollment_id resmi, selaraskan URL
+            if (res.data?.enrollment_id && param.enrollment_id !== res.data.enrollment_id) {
+                navigate(`/student/courses/${res.data.enrollment_id}/`, { replace: true });
+            }
 
             setQuestions(res.data.question_answer);
 
@@ -8787,7 +8780,7 @@ function CourseDetail() {
 
                                                                             className="btn btn-sm btn-success"
 
-                                                                            onClick={submitQuiz}
+                                                                            onClick={() => submitQuiz()}
 
                                                                         >
 

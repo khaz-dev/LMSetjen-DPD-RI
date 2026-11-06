@@ -187,7 +187,8 @@
   gap: 1rem;
 }
 
-.metric-item {
+.search-dashboard-components .metric-item,
+.quality-metrics-grid .metric-item {
   padding: 1rem;
   background: #f9f9f9;
   border-radius: 8px;
@@ -564,7 +565,7 @@
     grid-template-columns: 1fr;
   }
 
-  .stat-value {
+  .search-dashboard-components .stat-value {
     font-size: 1.1rem;
   }
 

@@ -170,7 +170,9 @@ class SCORMTrackingAPIView(APIView):
                 progress.variant_item = variant_item
 
         # Update field jika dikirim
+        previously_completed = progress.lesson_status in ['passed', 'completed']
         is_completed_now = False
+        is_newly_completed = False
         if lesson_status:
             norm_status = str(lesson_status).lower()
             valid_statuses = dict(api_models.UserProgress.LESSON_STATUS_CHOICES)
@@ -178,6 +180,7 @@ class SCORMTrackingAPIView(APIView):
                 progress.lesson_status = norm_status
                 if norm_status in ['passed', 'completed']:
                     is_completed_now = True
+                    is_newly_completed = not previously_completed
                     if not progress.completed_at:
                         progress.completed_at = timezone.now()
 
@@ -221,7 +224,8 @@ class SCORMTrackingAPIView(APIView):
             "lesson_status": progress.lesson_status,
             "score_raw": progress.score_raw,
             "lesson_location": progress.lesson_location,
-            "completed": progress.lesson_status in ['passed', 'completed']
+            "completed": progress.lesson_status in ['passed', 'completed'],
+            "is_newly_completed": is_newly_completed
         }, status=status.HTTP_200_OK)
 
 

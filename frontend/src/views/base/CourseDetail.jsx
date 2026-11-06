@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
@@ -150,48 +151,30 @@ function CourseDetail() {
         }
     };
 
-    // Function to handle preview video
+    // Function to handle preview video / scorm / document
     const handlePreviewClick = (videoItem) => {
-        // Reset video first to ensure clean state
-        setPreviewVideo(null);
+        // Clean up any stray backdrops before opening
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
 
-        // Use setTimeout to ensure state is reset before setting new video
+        setPreviewVideo(videoItem);
+
         setTimeout(() => {
-            setPreviewVideo(videoItem);
-
-            // Trigger modal after state is set
-            setTimeout(() => {
-                const modalElement = document.getElementById("lessonPreviewModal");
-                if (modalElement) {
-                    const modal = new window.bootstrap.Modal(modalElement);
-                    modal.show();
-                }
-            }, 100);
+            const modalElement = document.getElementById("lessonPreviewModal");
+            if (modalElement && window.bootstrap?.Modal) {
+                const modal = window.bootstrap.Modal.getOrCreateInstance(modalElement);
+                modal.show();
+            }
         }, 50);
     };
 
-    // ✨ PHASE 4.43.3: Handle modal close to pause all videos/iframes
+    // Safety cleanup on unmount: ensure no orphaned backdrops linger
     useEffect(() => {
-        const modalElement = document.getElementById("lessonPreviewModal");
-        if (!modalElement) return;
-
-        const handleModalHidden = () => {
-            // Stop all videos
-            const videos = modalElement.querySelectorAll("video");
-            videos.forEach(video => {
-                video.pause();
-                video.currentTime = 0;
-            });
-
-            // Reset preview state
-            setPreviewVideo(null);
-        };
-
-        // Listen for Bootstrap modal hidden event
-        modalElement.addEventListener("hidden.bs.modal", handleModalHidden);
-
         return () => {
-            modalElement.removeEventListener("hidden.bs.modal", handleModalHidden);
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
         };
     }, []);
 
@@ -237,155 +220,115 @@ function CourseDetail() {
         };
     }, [course?.file]); // Re-run when video source changes
 
-    // Add modal event listeners to pause videos when modals close
-    // Enhanced with multiple event types for better reliability
-    // This runs after modals are rendered (when course/previewVideo exist)
+    // Add modal event listeners to pause videos when modals close and manage cleanup cleanly
     useEffect(() => {
-        // Wait for next tick to ensure modals are in DOM
-        const setupListeners = () => {
-            const coursePreviewModalElement = document.getElementById("coursePreviewModal");
-            const lessonPreviewModalElement = document.getElementById("lessonPreviewModal");
+        const coursePreviewModalElement = document.getElementById("coursePreviewModal");
+        const lessonPreviewModalElement = document.getElementById("lessonPreviewModal");
 
-            // ✨ PHASE 4.43.9: Handlers for Course Preview Modal
-            const handleCourseModalHidden = () => {
-                // Pause all videos in the modal using direct DOM query
-                const videos = document.querySelectorAll("#coursePreviewModal video");
-                videos.forEach(video => {
-                    video.pause();
-                    video.currentTime = 0;
-                    video.blur();
-                });
-
-                // Stop iframes (Google Drive videos)
-                const iframes = document.querySelectorAll("#coursePreviewModal iframe");
-                iframes.forEach(iframe => {
-                    iframe.src = "about:blank";
-                });
-
-                // Also pause video via ref as backup
-                const videoElement = videoRef.current;
-                if (videoElement) {
-                    videoElement.pause();
-                    videoElement.currentTime = 0;
-                    videoElement.blur();
-                }
-            };
-
-            // ✨ PHASE 4.43.9: Reset iframe src when course preview modal is shown again
-            const handleCourseModalShown = () => {
-                // Reset iframe src to actual video URL when modal is shown
-                const iframes = document.querySelectorAll("#coursePreviewModal iframe");
-                if (iframes.length > 0 && course?.file) {
-                    const videoUrl = convertGoogleDriveUrlToPreview(course.file);
-                    iframes.forEach(iframe => {
-                        iframe.src = videoUrl;
-                    });
-                }
-            };
-
-            const handleLessonModalHidden = () => {
-                // Pause all video elements
-                const videos = document.querySelectorAll("#lessonPreviewModal video");
-                videos.forEach(video => {
-                    video.pause();
-                    video.currentTime = 0;
-                    video.blur();
-                });
-
-                // Stop iframes (Google Drive videos)
-                const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
-                iframes.forEach(iframe => {
-                    iframe.src = "about:blank";
-                });
-
-                // Reset preview video state
-                setPreviewVideo(null);
-            };
-
-            // ✨ PHASE 4.43.9: Reset iframe src when lesson preview modal is shown again
-            const handleLessonModalShown = () => {
-                // Reset iframe src to actual video URL when modal is shown
-                const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
-                if (iframes.length > 0 && previewVideo) {
-                    const videoUrl = convertGoogleDriveUrlToPreview(previewVideo.file || previewVideo.video_url);
-                    iframes.forEach(iframe => {
-                        iframe.src = videoUrl;
-                    });
-                }
-            };
-
-            // Handle backdrop clicks (clicking outside modal)
-            const handleBackdropClick = (e) => {
-                // Check if click is on the modal backdrop (not the modal content)
-                if (e.target.classList.contains("modal")) {
-                    // Determine which modal and pause appropriate video
-                    if (e.target.id === "coursePreviewModal") {
-                        handleCourseModalHidden();
-                    } else if (e.target.id === "lessonPreviewModal") {
-                        handleLessonModalHidden();
-                    }
-                }
-            };
-
-            // Handle ESC key press
-            const handleEscKey = (e) => {
-                if (e.key === "Escape") {
-                    // Check which modal is open and pause video
-                    const courseModal = document.getElementById("coursePreviewModal");
-                    const lessonModal = document.getElementById("lessonPreviewModal");
-
-                    if (courseModal && courseModal.classList.contains("show")) {
-                        handleCourseModalHidden();
-                    }
-                    if (lessonModal && lessonModal.classList.contains("show")) {
-                        handleLessonModalHidden();
-                    }
-                }
-            };
-
-            // Add Bootstrap modal event listeners
-            // Use 'hide.bs.modal' to pause video BEFORE the modal is hidden
-            // Use 'show.bs.modal' to reset iframe src when modal is opened
-            // This prevents aria-hidden warnings and ensures video stops immediately
-            if (coursePreviewModalElement) {
-                coursePreviewModalElement.addEventListener("hide.bs.modal", handleCourseModalHidden);
-                coursePreviewModalElement.addEventListener("show.bs.modal", handleCourseModalShown);
-                coursePreviewModalElement.addEventListener("click", handleBackdropClick);
+        // Handlers for Course Preview Modal
+        const handleCourseModalHide = () => {
+            const videos = document.querySelectorAll("#coursePreviewModal video");
+            videos.forEach(video => {
+                video.pause();
+            });
+            if (videoRef.current) {
+                videoRef.current.pause();
             }
-
-            if (lessonPreviewModalElement) {
-                lessonPreviewModalElement.addEventListener("hide.bs.modal", handleLessonModalHidden);
-                lessonPreviewModalElement.addEventListener("show.bs.modal", handleLessonModalShown);
-                lessonPreviewModalElement.addEventListener("click", handleBackdropClick);
-            }
-
-            // Add ESC key listener
-            document.addEventListener("keydown", handleEscKey);
-
-            // Return cleanup function
-            return () => {
-                if (coursePreviewModalElement) {
-                    coursePreviewModalElement.removeEventListener("hide.bs.modal", handleCourseModalHidden);
-                    coursePreviewModalElement.removeEventListener("show.bs.modal", handleCourseModalShown);
-                    coursePreviewModalElement.removeEventListener("click", handleBackdropClick);
-                }
-                if (lessonPreviewModalElement) {
-                    lessonPreviewModalElement.removeEventListener("hide.bs.modal", handleLessonModalHidden);
-                    lessonPreviewModalElement.removeEventListener("show.bs.modal", handleLessonModalShown);
-                    lessonPreviewModalElement.removeEventListener("click", handleBackdropClick);
-                }
-                document.removeEventListener("keydown", handleEscKey);
-            };
         };
 
-        // Use setTimeout to ensure modals are rendered in DOM
-        const timeoutId = setTimeout(setupListeners, 100);
+        const handleCourseModalHidden = () => {
+            const videos = document.querySelectorAll("#coursePreviewModal video");
+            videos.forEach(video => {
+                video.pause();
+                video.currentTime = 0;
+            });
+            const iframes = document.querySelectorAll("#coursePreviewModal iframe");
+            iframes.forEach(iframe => {
+                iframe.src = "about:blank";
+            });
+            if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.currentTime = 0;
+            }
+            // Clean up any rogue backdrops and restore scrolling
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        };
 
-        // Cleanup timeout on unmount
+        const handleCourseModalShown = () => {
+            const iframes = document.querySelectorAll("#coursePreviewModal iframe");
+            if (iframes.length > 0 && course?.file) {
+                const videoUrl = convertGoogleDriveUrlToPreview(course.file);
+                iframes.forEach(iframe => {
+                    iframe.src = videoUrl;
+                });
+            }
+        };
+
+        // Handlers for Lesson Preview Modal
+        const handleLessonModalHide = () => {
+            const videos = document.querySelectorAll("#lessonPreviewModal video");
+            videos.forEach(video => {
+                video.pause();
+            });
+        };
+
+        const handleLessonModalHidden = () => {
+            const videos = document.querySelectorAll("#lessonPreviewModal video");
+            videos.forEach(video => {
+                video.pause();
+                video.currentTime = 0;
+            });
+            const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
+            iframes.forEach(iframe => {
+                iframe.src = "about:blank";
+            });
+            // Reset preview video state AFTER modal is completely hidden
+            setPreviewVideo(null);
+            // Clean up any rogue backdrops and restore scrolling
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        };
+
+        const handleLessonModalShown = () => {
+            const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
+            if (iframes.length > 0 && previewVideo) {
+                const videoUrl = convertGoogleDriveUrlToPreview(previewVideo.file || previewVideo.video_url);
+                iframes.forEach(iframe => {
+                    iframe.src = videoUrl;
+                });
+            }
+        };
+
+        if (coursePreviewModalElement) {
+            coursePreviewModalElement.addEventListener("hide.bs.modal", handleCourseModalHide);
+            coursePreviewModalElement.addEventListener("hidden.bs.modal", handleCourseModalHidden);
+            coursePreviewModalElement.addEventListener("show.bs.modal", handleCourseModalShown);
+        }
+
+        if (lessonPreviewModalElement) {
+            lessonPreviewModalElement.addEventListener("hide.bs.modal", handleLessonModalHide);
+            lessonPreviewModalElement.addEventListener("hidden.bs.modal", handleLessonModalHidden);
+            lessonPreviewModalElement.addEventListener("show.bs.modal", handleLessonModalShown);
+        }
+
         return () => {
-            clearTimeout(timeoutId);
+            if (coursePreviewModalElement) {
+                coursePreviewModalElement.removeEventListener("hide.bs.modal", handleCourseModalHide);
+                coursePreviewModalElement.removeEventListener("hidden.bs.modal", handleCourseModalHidden);
+                coursePreviewModalElement.removeEventListener("show.bs.modal", handleCourseModalShown);
+            }
+            if (lessonPreviewModalElement) {
+                lessonPreviewModalElement.removeEventListener("hide.bs.modal", handleLessonModalHide);
+                lessonPreviewModalElement.removeEventListener("hidden.bs.modal", handleLessonModalHidden);
+                lessonPreviewModalElement.removeEventListener("show.bs.modal", handleLessonModalShown);
+            }
         };
-    }, [course?.file, previewVideo]); // Re-run when modals are rendered
+    }, [course?.file, previewVideo]);
 
     const getTabContent = () => {
         switch (activeTab) {
@@ -919,158 +862,231 @@ function CourseDetail() {
                 </div>
             </section>
 
-            {/* Course Preview Modal - Compact Design */}
-            {course?.file && (
-                <div className="modal fade" id="coursePreviewModal" tabIndex={-1} aria-labelledby="coursePreviewModalLabel" aria-hidden="true">
-                    <div className="modal-dialog modal-xl modal-dialog-centered">
-                        <div className="modal-content border-0" style={{ borderRadius: "20px", overflow: "hidden" }}>
-                            <div
-                                className="modal-header border-0 text-white position-relative"
-                                style={{
-                                    background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                                    padding: "0.75rem 1.25rem",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: "1rem",
-                                    flexWrap: "nowrap"
-                                }}
-                            >
-                                <div className="d-flex align-items-center flex-grow-1" style={{ zIndex: 2, position: "relative" }}>
-                                    <div
-                                        className="me-2"
-                                        style={{
-                                            width: "32px",
-                                            height: "32px",
-                                            background: "rgba(255, 255, 255, 0.2)",
-                                            borderRadius: "8px",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center"
-                                        }}
-                                    >
-                                        <i className="fas fa-play text-white" style={{ fontSize: "0.9rem" }}></i>
-                                    </div>
-                                    <div className="flex-grow-1">
-                                        <h6 className="mb-0 fw-bold" style={{ fontSize: "0.95rem" }}>
-                                            Preview Kursus
-                                        </h6>
-                                        <small style={{ fontSize: "0.75rem", opacity: 0.9 }}>
-                                            {course.title}
-                                        </small>
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    className="btn btn-sm"
-                                    data-bs-dismiss="modal"
-                                    aria-label="Close"
-                                    style={{
-                                        zIndex: 3,
-                                        position: "relative",
-                                        width: "32px",
-                                        height: "32px",
-                                        minWidth: "32px",
-                                        minHeight: "32px",
-                                        borderRadius: "50%",
-                                        background: "rgba(255, 255, 255, 0.2)",
-                                        border: "2px solid rgba(255, 255, 255, 0.3)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        padding: 0,
-                                        transition: "all 0.3s ease",
-                                        flexShrink: 0
-                                    }}
-                                    onClick={(e) => {
-                                        // ✨ PHASE 4.43.8: Stop both video and iframe content before closing
-                                        e.currentTarget.blur();
-                                        const videos = document.querySelectorAll("#coursePreviewModal video");
-                                        videos.forEach(video => {
-                                            video.pause();
-                                            video.currentTime = 0;
-                                        });
-                                        const iframes = document.querySelectorAll("#coursePreviewModal iframe");
-                                        iframes.forEach(iframe => {
-                                            iframe.src = "about:blank";
-                                        });
-                                        const videoElement = videoRef.current;
-                                        if (videoElement) {
-                                            videoElement.pause();
-                                            videoElement.currentTime = 0;
-                                        }
-                                        const modalElement = document.getElementById("coursePreviewModal");
-                                        if (modalElement) {
-                                            const modal = window.bootstrap.Modal.getInstance(modalElement);
-                                            if (modal) {
-                                                modal.hide();
-                                            }
-                                        }
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.target.style.background = "rgba(255, 255, 255, 0.3)";
-                                        e.target.style.transform = "scale(1.1)";
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.target.style.background = "rgba(255, 255, 255, 0.2)";
-                                        e.target.style.transform = "scale(1)";
-                                    }}
-                                >
-                                    <i className="fas fa-times text-white" style={{ fontSize: "1rem" }}></i>
-                                </button>
-                            </div>
-                            <div className="modal-body p-0 bg-dark" style={{ minHeight: "400px", maxHeight: "calc(100vh - 100px)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                                <div style={{ width: "100%", maxWidth: "100%", position: "relative" }}>
-                                    {(() => {
-                                        const videoUrl = convertGoogleDriveUrlToPreview(course.file);
-                                        const isYouTubeEmbed = videoUrl && (videoUrl.includes('youtube.com/embed') || videoUrl.includes('youtube-nocookie.com/embed') || videoUrl.includes('youtu.be'));
-
-                                        return isYouTubeEmbed ? (
-                                            <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden" }}>
-                                                <iframe
-                                                    key={videoUrl}
-                                                    src={videoUrl}
-                                                    style={{ border: "none", borderRadius: "8px" }}
-                                                    sandbox="allow-same-origin allow-scripts allow-presentation"
-                                                    allowFullScreen
-                                                    title="Course Preview"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden", backgroundColor: "#000" }}>
-                                                <video
-                                                    key={videoUrl}
-                                                    ref={videoRef}
-                                                    src={videoUrl}
-                                                    style={{ objectFit: "contain", backgroundColor: "#000" }}
-                                                    controls
-                                                />
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
-                            </div>
+            {/* Floating Wishlist Button - Hidden for teachers/instructors, stacked above feedback button */}
+            {course && !isLoading && !isTeacher && (
+                <div
+                    className="floating-wishlist-container"
+                    style={{
+                        position: "fixed",
+                        bottom: "92px",
+                        right: "24px",
+                        zIndex: 1035,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        pointerEvents: "auto"
+                    }}
+                >
+                    {/* Text label (shows when in wishlist) */}
+                    {isInWishlist && (
+                        <div
+                            className="floating-wishlist-label"
+                            style={{
+                                background: "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)",
+                                color: "white",
+                                padding: "8px 16px",
+                                borderRadius: "30px",
+                                fontWeight: "600",
+                                fontSize: "0.82rem",
+                                boxShadow: "0 4px 15px rgba(255, 107, 107, 0.4)",
+                                border: "2px solid rgba(255, 255, 255, 0.3)",
+                                whiteSpace: "nowrap",
+                                animation: "fadeInRight 0.3s ease",
+                                zIndex: 1035
+                            }}
+                        >
+                            Tersimpan di Wishlist
                         </div>
-                    </div>
+                    )}
+
+                    <button
+                        onClick={handleWishlist}
+                        disabled={isLoadingWishlist}
+                        className="btn floating-wishlist-button"
+                        aria-label={isInWishlist ? "Hapus dari Wishlist" : "Simpan ke Wishlist"}
+                        title={isInWishlist ? "Hapus dari Wishlist" : "Simpan ke Wishlist"}
+                        style={{
+                            width: "56px",
+                            height: "56px",
+                            borderRadius: "50%",
+                            background: isInWishlist
+                                ? "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)"
+                                : "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                            border: "3px solid rgba(255, 255, 255, 0.3)",
+                            boxShadow: "0 4px 16px rgba(13, 148, 136, 0.3)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: isLoadingWishlist ? "not-allowed" : "pointer",
+                            transition: "all 0.3s ease",
+                            padding: 0,
+                            flexShrink: 0,
+                            zIndex: 1035,
+                            position: "relative"
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isLoadingWishlist) {
+                                e.currentTarget.style.transform = "scale(1.1) translateY(-3px)";
+                                e.currentTarget.style.boxShadow = "0 12px 35px rgba(102, 126, 234, 0)";
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "scale(1) translateY(0)";
+                            e.currentTarget.style.boxShadow = "0 8px 25px rgba(102, 126, 234, 0.4)";
+                        }}
+                    >
+                        {isLoadingWishlist ? (
+                            <i className="fas fa-spinner fa-spin text-white" style={{ fontSize: "1rem" }}></i>
+                        ) : (
+                            <i
+                                className={`${isInWishlist ? "fas" : "far"} fa-heart text-white`}
+                                style={{
+                                    fontSize: "1rem",
+                                    animation: isInWishlist ? "heartBeat 0s" : "none"
+                                }}
+                            ></i>
+                        )}
+                    </button>
                 </div>
             )}
 
-            {/* Lesson Preview Modal - Adaptive Design (SCORM / PDF / Video) */}
-            {previewVideo && (() => {
-                const isScormModal = previewVideo.file_type === "scorm" ||
-                    previewVideo.learning_module_info ||
-                    (previewVideo.title && previewVideo.title.toLowerCase().includes('scorm')) ||
-                    (course?.title && course?.title.toLowerCase().includes('scorm')) ||
-                    course?.file_type === 'scorm';
+            </div>
+            {/* End of .course-detail */}
 
-                const isPdfModal = previewVideo.file_type === "pdf" ||
-                    previewVideo.file_type === "document" ||
-                    (typeof previewVideo.file === 'string' && previewVideo.file.toLowerCase().endsWith('.pdf'));
+            {/* Course Preview Modal - Compact Design (Rendered via Portal to document.body) */}
+            {typeof document !== "undefined" && createPortal(
+                <div className="modal fade" id="coursePreviewModal" tabIndex={-1} aria-labelledby="coursePreviewModalLabel" aria-hidden="true" style={{ zIndex: 1065 }}>
+                    <div className="modal-dialog modal-xl modal-dialog-centered">
+                        {course?.file && (
+                            <div className="modal-content border-0" style={{ borderRadius: "20px", overflow: "hidden" }}>
+                                <div
+                                    className="modal-header border-0 text-white position-relative"
+                                    style={{
+                                        background: "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
+                                        padding: "0.75rem 1.25rem",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        gap: "1rem",
+                                        flexWrap: "nowrap"
+                                    }}
+                                >
+                                    <div className="d-flex align-items-center flex-grow-1" style={{ zIndex: 2, position: "relative" }}>
+                                        <div
+                                            className="me-2"
+                                            style={{
+                                                width: "32px",
+                                                height: "32px",
+                                                background: "rgba(255, 255, 255, 0.2)",
+                                                borderRadius: "8px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center"
+                                            }}
+                                        >
+                                            <i className="fas fa-play text-white" style={{ fontSize: "0.9rem" }}></i>
+                                        </div>
+                                        <div className="flex-grow-1">
+                                            <h6 className="mb-0 fw-bold" style={{ fontSize: "0.95rem" }}>
+                                                Preview Kursus
+                                            </h6>
+                                            <small style={{ fontSize: "0.75rem", opacity: 0.9 }}>
+                                                {course.title}
+                                            </small>
+                                        </div>
+                                    </div>
 
-                return (
-                    <div className="modal fade" id="lessonPreviewModal" tabIndex={-1} aria-labelledby="lessonPreviewModalLabel" aria-hidden="true">
-                        <div className="modal-dialog modal-xl modal-dialog-centered">
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"
+                                        style={{
+                                            zIndex: 3,
+                                            position: "relative",
+                                            width: "32px",
+                                            height: "32px",
+                                            minWidth: "32px",
+                                            minHeight: "32px",
+                                            borderRadius: "50%",
+                                            background: "rgba(255, 255, 255, 0.2)",
+                                            border: "2px solid rgba(255, 255, 255, 0.3)",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            padding: 0,
+                                            transition: "all 0.3s ease",
+                                            flexShrink: 0
+                                        }}
+                                        onClick={(e) => {
+                                            e.currentTarget.blur();
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.background = "rgba(255, 255, 255, 0.3)";
+                                            e.target.style.transform = "scale(1.1)";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.background = "rgba(255, 255, 255, 0.2)";
+                                            e.target.style.transform = "scale(1)";
+                                        }}
+                                    >
+                                        <i className="fas fa-times text-white" style={{ fontSize: "1rem" }}></i>
+                                    </button>
+                                </div>
+                                <div className="modal-body p-0 bg-dark" style={{ minHeight: "400px", maxHeight: "calc(100vh - 100px)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                                    <div style={{ width: "100%", maxWidth: "100%", position: "relative" }}>
+                                        {(() => {
+                                            const videoUrl = convertGoogleDriveUrlToPreview(course.file);
+                                            const isYouTubeEmbed = videoUrl && (videoUrl.includes('youtube.com/embed') || videoUrl.includes('youtube-nocookie.com/embed') || videoUrl.includes('youtu.be'));
+
+                                            return isYouTubeEmbed ? (
+                                                <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden" }}>
+                                                    <iframe
+                                                        key={videoUrl}
+                                                        src={videoUrl}
+                                                        style={{ border: "none", borderRadius: "8px" }}
+                                                        sandbox="allow-same-origin allow-scripts allow-presentation"
+                                                        allowFullScreen
+                                                        title="Course Preview"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="ratio ratio-16x9" style={{ borderRadius: "8px", overflow: "hidden", backgroundColor: "#000" }}>
+                                                    <video
+                                                        key={videoUrl}
+                                                        ref={videoRef}
+                                                        src={videoUrl}
+                                                        style={{ objectFit: "contain", backgroundColor: "#000" }}
+                                                        controls
+                                                    />
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Lesson Preview Modal - Adaptive Design (SCORM / PDF / Video, Rendered via Portal to document.body) */}
+            {typeof document !== "undefined" && createPortal(
+                <div className="modal fade" id="lessonPreviewModal" tabIndex={-1} aria-labelledby="lessonPreviewModalLabel" aria-hidden="true" style={{ zIndex: 1065 }}>
+                    <div className="modal-dialog modal-xl modal-dialog-centered">
+                        {previewVideo && (() => {
+                            const isScormModal = previewVideo.file_type === "scorm" ||
+                                previewVideo.learning_module_info ||
+                                (previewVideo.title && previewVideo.title.toLowerCase().includes('scorm')) ||
+                                (course?.title && course?.title.toLowerCase().includes('scorm')) ||
+                                course?.file_type === 'scorm';
+
+                            const isPdfModal = previewVideo.file_type === "pdf" ||
+                                previewVideo.file_type === "document" ||
+                                (typeof previewVideo.file === 'string' && previewVideo.file.toLowerCase().endsWith('.pdf'));
+
+                            return (
                             <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "16px", overflow: "hidden" }}>
                                 <div
                                     className="modal-header border-0 text-white position-relative"
@@ -1159,23 +1175,6 @@ function CourseDetail() {
                                         }}
                                         onClick={(e) => {
                                             e.currentTarget.blur();
-                                            const videos = document.querySelectorAll("#lessonPreviewModal video");
-                                            videos.forEach(video => {
-                                                video.pause();
-                                                video.currentTime = 0;
-                                            });
-                                            const iframes = document.querySelectorAll("#lessonPreviewModal iframe");
-                                            iframes.forEach(iframe => {
-                                                iframe.src = "about:blank";
-                                            });
-                                            setPreviewVideo(null);
-                                            const modalElement = document.getElementById("lessonPreviewModal");
-                                            if (modalElement) {
-                                                const modal = window.bootstrap.Modal.getInstance(modalElement);
-                                                if (modal) {
-                                                    modal.hide();
-                                                }
-                                            }
                                         }}
                                         onMouseEnter={(e) => {
                                             e.target.style.background = "rgba(255, 255, 255, 0.3)";
@@ -1363,100 +1362,13 @@ function CourseDetail() {
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        );
+                    })()}
                     </div>
-                );
-            })()}
-
-            {/* Floating Wishlist Button - Hidden for teachers/instructors, stacked above feedback button */}
-            {course && !isLoading && !isTeacher && (
-                <div
-                    className="floating-wishlist-container"
-                    style={{
-                        position: "fixed",
-                        bottom: "92px",
-                        right: "24px",
-                        zIndex: 1035,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        pointerEvents: "auto"
-                    }}
-                >
-                    {/* Text label (shows when in wishlist) */}
-                    {isInWishlist && (
-                        <div
-                            className="floating-wishlist-label"
-                            style={{
-                                background: "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)",
-                                color: "white",
-                                padding: "8px 16px",
-                                borderRadius: "30px",
-                                fontWeight: "600",
-                                fontSize: "0.82rem",
-                                boxShadow: "0 4px 15px rgba(255, 107, 107, 0.4)",
-                                border: "2px solid rgba(255, 255, 255, 0.3)",
-                                whiteSpace: "nowrap",
-                                animation: "fadeInRight 0.3s ease",
-                                zIndex: 1035
-                            }}
-                        >
-                            Tersimpan di Wishlist
-                        </div>
-                    )}
-
-                    <button
-                        onClick={handleWishlist}
-                        disabled={isLoadingWishlist}
-                        className="btn floating-wishlist-button"
-                        aria-label={isInWishlist ? "Hapus dari Wishlist" : "Simpan ke Wishlist"}
-                        title={isInWishlist ? "Hapus dari Wishlist" : "Simpan ke Wishlist"}
-                        style={{
-                            width: "56px",
-                            height: "56px",
-                            borderRadius: "50%",
-                            background: isInWishlist
-                                ? "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)"
-                                : "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                            border: "3px solid rgba(255, 255, 255, 0.3)",
-                            boxShadow: "0 4px 16px rgba(13, 148, 136, 0.3)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: isLoadingWishlist ? "not-allowed" : "pointer",
-                            transition: "all 0.3s ease",
-                            padding: 0,
-                            flexShrink: 0,
-                            zIndex: 1035,
-                            position: "relative"
-                        }}
-                        onMouseEnter={(e) => {
-                            if (!isLoadingWishlist) {
-                                e.currentTarget.style.transform = "scale(1.1) translateY(-3px)";
-                                e.currentTarget.style.boxShadow = "0 12px 35px rgba(102, 126, 234, 0)";
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "scale(1) translateY(0)";
-                            e.currentTarget.style.boxShadow = "0 8px 25px rgba(102, 126, 234, 0.4)";
-                        }}
-                    >
-                        {isLoadingWishlist ? (
-                            <i className="fas fa-spinner fa-spin text-white" style={{ fontSize: "1rem" }}></i>
-                        ) : (
-                            <i
-                                className={`${isInWishlist ? "fas" : "far"} fa-heart text-white`}
-                                style={{
-                                    fontSize: "1rem",
-                                    animation: isInWishlist ? "heartBeat 0s" : "none"
-                                }}
-                            ></i>
-                        )}
-                    </button>
-                </div>
+                </div>,
+                document.body
             )}
 
-            </div>
             <Footer />
         </>
     );

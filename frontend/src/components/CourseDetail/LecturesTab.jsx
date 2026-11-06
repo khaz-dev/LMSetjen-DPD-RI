@@ -62,26 +62,18 @@ const LecturesTab = ({
 
     // Helper function to check if a lesson is completed
     const isLessonCompleted = (variantItem) => {
-        // ✨ PHASE 4.145: Guard against null course data (may not be loaded yet)
+        // Guard against null course data (may not be loaded yet)
         if (!course || !course.completed_lesson || !variantItem) return false;
         
-        // ✨ PHASE 12.2: Check each lesson  
-        const isCompleted = course.completed_lesson.some(cl => {
-            // Use consistent variant_item_id field throughout
-            return cl.variant_item?.variant_item_id === variantItem.variant_item_id;
+        const targetVId = String(variantItem.variant_item_id || variantItem.id || "");
+        const targetId = String(variantItem.id || "");
+
+        return course.completed_lesson.some(cl => {
+            const clVId = String(cl.variant_item?.variant_item_id || cl.variant_item?.id || "");
+            const clId = String(cl.variant_item?.id || "");
+            return (targetVId && (clVId === targetVId || clId === targetVId)) ||
+                   (targetId && (clId === targetId || clVId === targetId));
         });
-        
-        // ✨ PHASE 12.16: Debug logging
-        if (variantItem.variant_item_id === '136922') {
-            console.log(`[PHASE 12.16] isLessonCompleted check for lesson 136922:`, {
-                itemId: variantItem.variant_item_id,
-                completedLessonsCount: course.completed_lesson?.length || 0,
-                completedLessonsIds: course.completed_lesson?.map(cl => cl.variant_item?.variant_item_id) || [],
-                isCompleted: isCompleted
-            });
-        }
-        
-        return isCompleted;
     };
 
     // Helper functions for file handling
@@ -122,6 +114,10 @@ const LecturesTab = ({
     };
 
     const getFileTypeIcon = (fileUrl, variantItem = null) => {
+        if (variantItem?.learning_module_info || variantItem?.learning_module || variantItem?.file_type === 'scorm' || variantItem?.file_type === 'h5p') {
+            return variantItem?.learning_module_info?.module_type === 'h5p' ? "fas fa-layer-group" : "fas fa-cubes";
+        }
+
         // ✨ PHASE 4.10: Check for video content from all sources
         if (variantItem && isVideoContent(variantItem)) {
             return "fas fa-video";
@@ -141,6 +137,10 @@ const LecturesTab = ({
     };
 
     const getFileTypeLabel = (fileUrl, variantItem = null) => {
+        if (variantItem?.learning_module_info || variantItem?.learning_module || variantItem?.file_type === 'scorm' || variantItem?.file_type === 'h5p') {
+            return variantItem?.learning_module_info?.module_type === 'h5p' ? "H5P Interactive" : "SCORM 1.2";
+        }
+
         // ✨ PHASE 4.10: Check for video content from all sources
         if (variantItem && isVideoContent(variantItem)) {
             return "Video";
@@ -160,6 +160,10 @@ const LecturesTab = ({
     };
 
     const getFileTypeTitle = (fileUrl, variantItem = null) => {
+        if (variantItem?.learning_module_info || variantItem?.learning_module || variantItem?.file_type === 'scorm' || variantItem?.file_type === 'h5p') {
+            return "Buka modul e-learning";
+        }
+
         // ✨ PHASE 4.10: Check if it's video content from all sources
         if (variantItem && isVideoContent(variantItem)) {
             return "Putar video";
@@ -555,17 +559,11 @@ const LecturesTab = ({
         }
         
         // Use helper function to check completion status consistently
-        const variantItem = { variant_item_id: variantItemId };
+        const variantItem = { variant_item_id: variantItemId, id: variantItemId };
         const isAlreadyCompleted = isLessonCompleted(variantItem);
         
-        // If auto-completion and already completed, just show notification and return early
+        // If auto-completion and already completed, return silently without showing repeated toasts
         if (isAlreadyCompleted && isAutoComplete) {
-            Toast().fire({
-                icon: "info",
-                title: "Pelajaran Sudah Diselesaikan!",
-                text: "Pelajaran ini sudah ditandai sebagai selesai.",
-                timer: 2000
-            });
             return;
         }
 
@@ -684,6 +682,8 @@ const LecturesTab = ({
                     [key]: "Updated",
                 });
                 
+                const isAlreadyMarkedInBackend = response?.data?.message === "Course already marked as completed";
+
                 // Show appropriate notification based on the action performed
                 if (isAlreadyCompleted && !isAutoComplete) {
                     Toast().fire({
@@ -692,15 +692,15 @@ const LecturesTab = ({
                         text: "Pelajaran telah ditandai sebagai belum selesai. Kemajuan video telah disetel ulang.",
                         timer: 2000
                     });
-                } else if (!isAlreadyCompleted && !isAutoComplete) {
-                    // ✨ PHASE 39.3: Only show notification for MANUAL completion, not auto-completion
+                } else if (!isAlreadyCompleted && !isAutoComplete && !isAlreadyMarkedInBackend) {
+                    // Only show notification for MANUAL completion and only if truly newly completed
                     Toast().fire({
                         icon: "success",
                         title: "Pelajaran Ditandai Selesai!",
                         timer: 2000
                     });
                 }
-                // ✨ PHASE 39.3: Removed auto-completion notification - no Toast shown for isAutoComplete
+                // Removed auto-completion notification - no Toast shown for isAutoComplete
             } else {
                 // ✨ PHASE 12.3: API rejected completion - show informative message
                 Toast().fire({
@@ -1711,10 +1711,29 @@ const LecturesTab = ({
                                                                     Terkunci
                                                                 </small>
                                                             ) : progressStatus.status === "completed" ? (
-                                                                <small className="lesson-status-badge completed">
-                                                                    <i className="fas fa-check-circle me-1"></i>
-                                                                    Diselesaikan
-                                                                </small>
+                                                                <>
+                                                                    <small className="lesson-status-badge completed">
+                                                                        <i className="fas fa-check-circle me-1"></i>
+                                                                        Diselesaikan
+                                                                    </small>
+                                                                    {(() => {
+                                                                        const hasScorm = Boolean(l.learning_module_info || l.learning_module || l.file_type === 'scorm');
+                                                                        const scormScore = l.learning_module_info?.score_raw;
+                                                                        if (hasScorm && scormScore !== undefined && scormScore !== null && Number(scormScore) > 0) {
+                                                                            return (
+                                                                                <span 
+                                                                                    className="badge px-3 py-1.5 rounded-pill fw-bold border shadow-xs d-inline-flex align-items-center gap-1.5 ms-1"
+                                                                                    style={{ backgroundColor: "#f0fdf4", color: "#15803d", borderColor: "#bbf7d0", fontSize: "0.8rem" }}
+                                                                                    title={`Nilai Modul SCORM: ${scormScore}`}
+                                                                                >
+                                                                                    <i className="fas fa-award text-success"></i>
+                                                                                    <span>Skor: {scormScore}</span>
+                                                                                </span>
+                                                                            );
+                                                                        }
+                                                                        return null;
+                                                                    })()}
+                                                                </>
                                                             ) : progressStatus.status === "in-progress" ? (
                                                                 <small className="lesson-status-badge in-progress">
                                                                     <i className="fas fa-play-circle me-1"></i>

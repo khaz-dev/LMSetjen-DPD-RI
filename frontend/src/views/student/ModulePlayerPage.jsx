@@ -16,6 +16,7 @@ const ModulePlayerPage = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
+  const initialStatusRef = useRef(null);
 
   // Fetch module detail & current progress from backend
   const fetchModuleData = useCallback(async () => {
@@ -28,6 +29,9 @@ const ModulePlayerPage = () => {
         const status = res.data.progress?.lesson_status || "incomplete";
         setLessonStatus(status);
         setScore(res.data.progress?.score_raw || 0);
+        if (initialStatusRef.current === null) {
+          initialStatusRef.current = String(status).toLowerCase();
+        }
       }
     } catch (err) {
       console.error("[ModulePlayerPage] Error fetching module:", err);
@@ -40,6 +44,19 @@ const ModulePlayerPage = () => {
       setLoading(false);
     }
   }, [moduleId]);
+
+  // Remove global 60px navbar padding from index.html inside the module player window
+  useEffect(() => {
+    document.body.classList.add("module-player-active");
+    document.body.style.setProperty("padding-top", "0px", "important");
+    document.body.style.setProperty("margin", "0px", "important");
+
+    return () => {
+      document.body.classList.remove("module-player-active");
+      document.body.style.removeProperty("padding-top");
+      document.body.style.removeProperty("margin");
+    };
+  }, []);
 
   useEffect(() => {
     fetchModuleData();
@@ -63,8 +80,29 @@ const ModulePlayerPage = () => {
       if (res?.data?.lesson_status) {
         const updatedStatus = res.data.lesson_status.toLowerCase();
         setLessonStatus(updatedStatus);
+        if (cmiData["cmi.core.score.raw"] !== undefined) {
+          setScore(Number(cmiData["cmi.core.score.raw"]) || 0);
+        }
 
-        if (updatedStatus === "passed" || updatedStatus === "completed") {
+        const wasAlreadyCompleted = 
+          initialStatusRef.current === "passed" || 
+          initialStatusRef.current === "completed" ||
+          res?.data?.is_newly_completed === false;
+
+        // Notify parent iframe container (e.g. CourseDetail / ScormPlayer)
+        if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: 'SCORM_MODULE_STATUS',
+            status: updatedStatus,
+            score: cmiData["cmi.core.score.raw"],
+            moduleId: moduleId,
+            wasAlreadyCompleted: wasAlreadyCompleted
+          }, '*');
+        }
+
+        // Only show celebratory toast if newly completed during this session
+        if ((updatedStatus === "passed" || updatedStatus === "completed") && !wasAlreadyCompleted) {
+          initialStatusRef.current = updatedStatus;
           Toast().fire({
             icon: "success",
             title: "Selamat!",
@@ -159,17 +197,19 @@ const ModulePlayerPage = () => {
     }
   };
 
+  const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
+
   const getStatusBadgeClass = () => {
     switch (lessonStatus) {
       case "passed":
       case "completed":
-        return "bg-success";
+        return "bg-success text-white";
       case "failed":
-        return "bg-danger";
+        return "bg-danger text-white";
       case "incomplete":
         return "bg-warning text-dark";
       default:
-        return "bg-secondary";
+        return "bg-secondary text-white";
     }
   };
 
@@ -178,50 +218,63 @@ const ModulePlayerPage = () => {
   return (
     <div 
       ref={containerRef}
-      className="module-player-page-container d-flex flex-column vh-100 bg-dark text-white overflow-hidden"
+      className="module-player-page-container d-flex flex-column vh-100 bg-white text-dark overflow-hidden"
     >
       {/* Top Navbar */}
       <header 
         className="d-flex align-items-center justify-content-between px-3 py-2 border-bottom border-secondary"
-        style={{ backgroundColor: "#0f172a", minHeight: "56px", zIndex: 100 }}
+        style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", minHeight: "52px", zIndex: 100 }}
       >
         <div className="d-flex align-items-center gap-2 overflow-hidden">
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-light d-flex align-items-center gap-1 py-1 px-2.5 me-1"
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                navigate("/instructor/create-course/");
-              }
-            }}
-            title="Kembali"
-          >
-            <i className="fas fa-arrow-left"></i>
-            <span className="d-none d-sm-inline">Kembali</span>
-          </button>
+          {!isEmbedded && (
+            <button
+              type="button"
+              className="btn btn-sm btn-light border text-slate-700 d-flex align-items-center gap-1 py-1 px-2.5 me-1"
+              style={{ backgroundColor: "#ffffff", borderColor: "#cbd5e1", color: "#334155" }}
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate("/student/courses/");
+                }
+              }}
+              title="Kembali"
+            >
+              <i className="fas fa-arrow-left"></i>
+              <span className="d-none d-sm-inline">Kembali</span>
+            </button>
+          )}
 
           <span 
-            className="badge px-2 py-1 text-uppercase"
+            className="badge px-2 py-1 text-uppercase text-white"
             style={{ backgroundColor: "#0f766e", fontSize: "11px", letterSpacing: "0.5px" }}
           >
             <i className="fas fa-cubes me-1"></i>
             {module?.module_type === "h5p" ? "H5P Interactive" : "SCORM 1.2"}
           </span>
 
-          <h6 className="mb-0 text-truncate text-light fw-semibold" style={{ maxWidth: "450px" }}>
+          <h6 className="mb-0 text-truncate fw-semibold" style={{ maxWidth: "450px", color: "#1e293b" }}>
             {module?.judul || "Memuat Modul E-Learning..."}
           </h6>
 
           <span className={`badge ms-2 text-capitalize ${getStatusBadgeClass()}`}>
             {lessonStatus}
           </span>
+
+          {score > 0 && (
+            <span 
+              className="badge ms-1 d-flex align-items-center gap-1 border"
+              style={{ backgroundColor: "#eff6ff", color: "#1d4ed8", borderColor: "#bfdbfe" }}
+            >
+              <i className="fas fa-star text-warning"></i>
+              <span>Nilai: {score}</span>
+            </span>
+          )}
         </div>
 
         <div className="d-flex align-items-center gap-2">
           {syncing && (
-            <span className="small text-warning d-flex align-items-center gap-1.5 me-2">
+            <span className="small d-flex align-items-center gap-1.5 me-2" style={{ color: "#0f766e" }}>
               <span className="spinner-border spinner-border-sm" role="status"></span>
               Menyimpan...
             </span>
@@ -229,7 +282,8 @@ const ModulePlayerPage = () => {
 
           <button
             type="button"
-            className="btn btn-sm btn-outline-light py-1 px-2.5"
+            className="btn btn-sm btn-light border py-1 px-2.5"
+            style={{ backgroundColor: "#ffffff", borderColor: "#cbd5e1", color: "#334155" }}
             onClick={handleRefresh}
             title="Muat Ulang Modul"
           >
@@ -239,7 +293,8 @@ const ModulePlayerPage = () => {
 
           <button
             type="button"
-            className="btn btn-sm btn-outline-light py-1 px-2.5"
+            className="btn btn-sm btn-light border py-1 px-2.5"
+            style={{ backgroundColor: "#ffffff", borderColor: "#cbd5e1", color: "#334155" }}
             onClick={toggleFullscreen}
             title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
           >

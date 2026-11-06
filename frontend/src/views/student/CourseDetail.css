@@ -7909,27 +7909,32 @@ body.modern-course-active {
 }
 
 /* Filter group wrapper */
-.filter-group {
+.filter-controls-container .filter-group,
+.note-filter-controls .filter-group {
     flex: 1 1 auto;
 }
 
 /* Filter search input - 50% width */
-.filter-group.filter-search {
+.filter-controls-container .filter-group.filter-search,
+.note-filter-controls .filter-group.filter-search {
     flex-basis: 50%;
 }
 
 /* Filter bagian dropdown - 25% width */
-.filter-group.filter-bagian {
+.filter-controls-container .filter-group.filter-bagian,
+.note-filter-controls .filter-group.filter-bagian {
     flex-basis: 25%;
 }
 
 /* Filter pelajaran dropdown - 25% width */
-.filter-group.filter-pelajaran {
+.filter-controls-container .filter-group.filter-pelajaran,
+.note-filter-controls .filter-group.filter-pelajaran {
     flex-basis: 25%;
 }
 
 /* Filter color dropdown - 20% width */
-.filter-group.filter-color {
+.filter-controls-container .filter-group.filter-color,
+.note-filter-controls .filter-group.filter-color {
     flex-basis: 20%;
 }
 
@@ -7946,7 +7951,8 @@ body.modern-course-active {
 }
 
 /* Filter label style */
-.filter-label {
+.filter-controls-container .filter-label,
+.note-filter-controls .filter-label {
     display: block;
     font-size: 1rem;
     font-weight: 600;
@@ -7975,8 +7981,10 @@ body.modern-course-active {
 }
 
 /* Filter input field base styles */
-.filter-input,
-.filter-select {
+.filter-controls-container .filter-input,
+.filter-controls-container .filter-select,
+.note-filter-controls .filter-input,
+.note-filter-controls .filter-select {
     width: 100%;
     font-size: 1rem;
     border-radius: 12px;
@@ -7989,7 +7997,8 @@ body.modern-course-active {
     outline: none;
 }
 
-.filter-select {
+.filter-controls-container .filter-select,
+.note-filter-controls .filter-select {
     cursor: pointer;
 }
 

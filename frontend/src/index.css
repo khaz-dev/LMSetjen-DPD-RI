@@ -1230,3 +1230,11 @@ body.is-instructor-portal footer.footer-wrapper {
   position: relative;
   z-index: 10;
 }
+
+/* 6. Ensure ModulePlayerPage and any embedded SCORM player iframe has NO padding-top on body */
+body:has(.module-player-page-container),
+body.module-player-active {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  margin: 0 !important;
+}

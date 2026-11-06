@@ -8,7 +8,7 @@ import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
-import { calculateTotalDuration, parseDurationToSeconds, formatDurationWithJP } from "../../utils/durationUtils";
+import { calculateTotalDuration, parseDurationToSeconds, formatDurationWithJP, formatDuration } from "../../utils/durationUtils";
 import { getImageUrl } from "../../utils/courseUtils";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import { usePageCache } from "../../utils/usePageCache";
@@ -36,8 +36,8 @@ function Dashboard() {
         if (!userId) return { stats: {}, courses: [], progressData: [] };
 
         const promises = await Promise.all([
-            useAxios.get(`student/summary/${userId}/`).then((res) => res.data[0] || {}),
-            useAxios.get(`student/course-list/${userId}/`).then((res) => {
+            useAxios.get(`student/summary/${userId}/?t=${Date.now()}`).then((res) => res.data[0] || {}),
+            useAxios.get(`student/course-list/${userId}/?t=${Date.now()}`).then((res) => {
                 return Array.isArray(res.data) ? res.data : (res.data?.results || []);
             })
         ]);
@@ -63,6 +63,15 @@ function Dashboard() {
             }
 
             const totalDuration = calculateTotalDuration(course.lectures || []);
+            let courseDurationFormatted = totalDuration.formatted;
+            let courseDurationWithJP = totalDuration.withJP;
+
+            // Fallback if lectures duration is 0 but course model has total_jam_pelatihan (JP)
+            if ((!totalDuration || totalDuration.withJP === "0m 0s (0JP)") && course.course?.total_jam_pelatihan > 0) {
+                const jpSecs = course.course.total_jam_pelatihan * 2700;
+                courseDurationFormatted = formatDuration(jpSecs);
+                courseDurationWithJP = formatDurationWithJP(jpSecs);
+            }
 
             return {
                 ...course,
@@ -73,8 +82,8 @@ function Dashboard() {
                 completedQuizzes: passedQuizzes,
                 quizProgress: totalQuizzes > 0 ? Math.round((passedQuizzes / totalQuizzes) * 100) : 0,
                 lessonProgress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
-                courseDurationFormatted: totalDuration.formatted,
-                courseDurationWithJP: totalDuration.withJP
+                courseDurationFormatted,
+                courseDurationWithJP
             };
         });
 
@@ -86,7 +95,7 @@ function Dashboard() {
     }, []);
 
     // Page cache hook for instant navigation without loading stutter
-    const { data: cachedData, loading: fetching } = usePageCache(
+    const { data: cachedData, loading: fetching, refetch } = usePageCache(
         `student-dashboard-${userData?.user_id || "guest"}`,
         fetchData,
         {
@@ -103,6 +112,19 @@ function Dashboard() {
         }
     }, [cachedData]);
 
+    // Live auto-refresh when tab gains focus or progress is updated
+    useEffect(() => {
+        const handleRefresh = () => {
+            if (refetch) refetch();
+        };
+        window.addEventListener("focus", handleRefresh);
+        window.addEventListener("studentProgressUpdated", handleRefresh);
+        return () => {
+            window.removeEventListener("focus", handleRefresh);
+            window.removeEventListener("studentProgressUpdated", handleRefresh);
+        };
+    }, [refetch]);
+
     // Active learning courses in progress
     const activeCoursesCount = useMemo(() => {
         return progressData.filter((c) => c.progressPercentage > 0 && c.progressPercentage < 100).length;
@@ -113,6 +135,11 @@ function Dashboard() {
         return progressData.filter((c) => c.progressPercentage === 100).length;
     }, [progressData]);
 
+    // Not started courses count
+    const notStartedCoursesCount = useMemo(() => {
+        return progressData.filter((c) => (c.progressPercentage || 0) === 0).length;
+    }, [progressData]);
+
     // Average progress percentage across all courses
     const averageProgress = useMemo(() => {
         if (progressData.length === 0) return 0;
@@ -120,16 +147,62 @@ function Dashboard() {
         return Math.round(total / progressData.length);
     }, [progressData]);
 
+    // Total aggregate lessons, quizzes, and completed items across all courses
+    const learningMetrics = useMemo(() => {
+        let totalLessons = 0;
+        let completedLessons = 0;
+        let totalQuizzes = 0;
+        let completedQuizzes = 0;
+
+        progressData.forEach((c) => {
+            totalLessons += (c.totalLessons || 0);
+            completedLessons += (c.completedLessons || 0);
+            totalQuizzes += (c.totalQuizzes || 0);
+            completedQuizzes += (c.completedQuizzes || 0);
+        });
+
+        const totalItems = totalLessons + totalQuizzes;
+        const completedItems = completedLessons + completedQuizzes;
+        const itemsPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+        return {
+            totalLessons,
+            completedLessons,
+            totalQuizzes,
+            completedQuizzes,
+            totalItems,
+            completedItems,
+            itemsPercentage
+        };
+    }, [progressData]);
+
     // Total content duration with JP
     const totalLearningTime = useMemo(() => {
-        if (courses.length === 0) return "0h 0m (0 JP)";
-        const allLectures = courses.flatMap((c) => c.lectures || []);
-        return calculateTotalDuration(allLectures).withJP;
+        if (courses.length === 0) return "0m 0s (0 JP)";
+        let totalSeconds = 0;
+        courses.forEach((c) => {
+            const lectures = c.lectures || [];
+            let courseSecs = 0;
+            lectures.forEach((l) => {
+                if (typeof l.duration_seconds === 'number' && l.duration_seconds > 0) {
+                    courseSecs += l.duration_seconds;
+                } else if (l.content_duration) {
+                    courseSecs += parseDurationToSeconds(l.content_duration);
+                } else if (l.duration) {
+                    courseSecs += parseDurationToSeconds(l.duration);
+                }
+            });
+            if (courseSecs === 0 && c.course?.total_jam_pelatihan > 0) {
+                courseSecs = c.course.total_jam_pelatihan * 2700;
+            }
+            totalSeconds += courseSecs;
+        });
+        return formatDurationWithJP(totalSeconds);
     }, [courses]);
 
     // Completed content duration with JP
     const completedLearningTime = useMemo(() => {
-        if (courses.length === 0) return "0h 0m (0 JP)";
+        if (courses.length === 0) return "0m 0s (0 JP)";
         let totalSeconds = 0;
 
         courses.forEach((c) => {
@@ -137,12 +210,23 @@ function Dashboard() {
             const lectures = c.lectures || [];
 
             const completedVariantItemIds = new Set(
-                completedLessonIds.map((cl) => cl.variant_item?.id || cl.variant_item?.variant_item_id || cl.id)
+                completedLessonIds.map((cl) => {
+                    const id = cl.variant_item?.id || cl.variant_item?.variant_item_id || cl.variant_item_id || cl.id;
+                    return String(id);
+                })
             );
 
             lectures.forEach((lecture) => {
-                if (completedVariantItemIds.has(lecture.id)) {
-                    totalSeconds += parseDurationToSeconds(lecture.content_duration);
+                const lid = String(lecture.id);
+                const lvid = String(lecture.variant_item_id);
+                if (completedVariantItemIds.has(lid) || completedVariantItemIds.has(lvid)) {
+                    if (typeof lecture.duration_seconds === 'number' && lecture.duration_seconds > 0) {
+                        totalSeconds += lecture.duration_seconds;
+                    } else if (lecture.content_duration) {
+                        totalSeconds += parseDurationToSeconds(lecture.content_duration);
+                    } else if (lecture.duration) {
+                        totalSeconds += parseDurationToSeconds(lecture.duration);
+                    }
                 }
             });
         });
@@ -275,20 +359,26 @@ function Dashboard() {
 
                                     {/* Right Side: Compact Radial Dial */}
                                     <div className="dash-hero-right">
-                                        <div className="dash-progress-widget">
+                                        <div
+                                            className="dash-progress-widget"
+                                            title={`Rata-rata Capaian Belajar: ${averageProgress}% dari ${progressData.length} kursus terdaftar (${learningMetrics.completedItems} dari ${learningMetrics.totalItems} modul & kuis selesai)`}
+                                        >
                                             <div
                                                 className="dash-progress-ring"
                                                 style={{ "--progress": averageProgress || 0 }}
                                             >
                                                 <div className="dash-progress-inner">
                                                     <span className="dash-progress-num">{averageProgress || 0}%</span>
-                                                    <span className="dash-progress-sub">Tuntas</span>
+                                                    <span className="dash-progress-sub">Rerata</span>
                                                 </div>
                                             </div>
                                             <div className="dash-progress-meta">
                                                 <span className="dash-progress-meta-title">Rata-rata Capaian</span>
                                                 <span className="dash-progress-meta-desc">
-                                                    {completedCoursesCount} dari {stats.total_courses || courses.length || 0} Kursus Selesai
+                                                    {completedCoursesCount} dari {progressData.length || stats.total_courses || 0} Kursus Selesai
+                                                </span>
+                                                <span className="dash-progress-meta-sub">
+                                                    {learningMetrics.completedItems} dari {learningMetrics.totalItems} Materi & Kuis Tuntas
                                                 </span>
                                             </div>
                                         </div>
@@ -308,7 +398,7 @@ function Dashboard() {
                                         <div className="kpi-content">
                                             <span className="kpi-label">Total Kursus</span>
                                             <div className="kpi-val-row">
-                                                <h3 className="kpi-value">{stats.total_courses || courses.length || 0}</h3>
+                                                <h3 className="kpi-value">{progressData.length || stats.total_courses || 0}</h3>
                                                 <span className="kpi-pill">Terdaftar</span>
                                             </div>
                                         </div>
@@ -336,10 +426,12 @@ function Dashboard() {
                                             <i className="fas fa-check-double"></i>
                                         </div>
                                         <div className="kpi-content">
-                                            <span className="kpi-label">Materi Selesai</span>
+                                            <span className="kpi-label">Materi & Kuis Tuntas</span>
                                             <div className="kpi-val-row">
-                                                <h3 className="kpi-value">{stats.completed_lessons || 0}</h3>
-                                                <span className="kpi-pill">Pelajaran</span>
+                                                <h3 className="kpi-value">{learningMetrics.completedItems}</h3>
+                                                <span className="kpi-pill">
+                                                    {learningMetrics.completedLessons} Pelajaran{learningMetrics.completedQuizzes > 0 ? ` • ${learningMetrics.completedQuizzes} Kuis` : ""}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -354,7 +446,7 @@ function Dashboard() {
                                             <span className="kpi-label">Kursus Selesai</span>
                                             <div className="kpi-val-row">
                                                 <h3 className="kpi-value">{completedCoursesCount}</h3>
-                                                <span className="kpi-pill">Sertifikat</span>
+                                                <span className="kpi-pill">{stats.achieved_certificates || 0} Sertifikat</span>
                                             </div>
                                         </div>
                                     </div>
@@ -389,9 +481,12 @@ function Dashboard() {
 
                                 <div className="strip-divider"></div>
 
-                                <div className="strip-item strip-item-progress">
+                                <div
+                                    className="strip-item strip-item-progress"
+                                    title={`Rata-rata progres dari ${progressData.length} kursus terdaftar (${averageProgress}%). Total materi & kuis selesai: ${learningMetrics.completedItems} dari ${learningMetrics.totalItems} (${learningMetrics.itemsPercentage}%)`}
+                                >
                                     <div className="strip-progress-header">
-                                        <span className="strip-label">Akumulasi Capaian Belajar</span>
+                                        <span className="strip-label">Rata-rata Capaian Belajar</span>
                                         <span className="strip-pct">{averageProgress}%</span>
                                     </div>
                                     <div className="dash-mini-progress">
@@ -399,6 +494,16 @@ function Dashboard() {
                                             className="dash-mini-progress-bar"
                                             style={{ width: `${averageProgress}%` }}
                                         ></div>
+                                    </div>
+                                    <div className="strip-progress-footer">
+                                        <span className="strip-sub-info">
+                                            {learningMetrics.completedItems} dari {learningMetrics.totalItems} Materi & Kuis Selesai
+                                        </span>
+                                        {progressData.length > 0 && (
+                                            <span className="strip-sub-breakdown">
+                                                {activeCoursesCount} Berjalan • {notStartedCoursesCount} Baru
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
 
@@ -545,10 +650,19 @@ function Dashboard() {
                                                                                     <i className="fas fa-book-open text-teal me-1"></i>
                                                                                     {course.totalLessons} Pelajaran
                                                                                 </span>
+                                                                                {course.totalQuizzes > 0 && (
+                                                                                    <>
+                                                                                        <span className="dash-card-meta-divider">•</span>
+                                                                                        <span className="dash-card-meta-item">
+                                                                                            <i className="fas fa-clipboard-question text-info me-1"></i>
+                                                                                            {course.totalQuizzes} Kuis
+                                                                                        </span>
+                                                                                    </>
+                                                                                )}
                                                                                 <span className="dash-card-meta-divider">•</span>
                                                                                 <span className="dash-card-meta-item">
                                                                                     <i className="fas fa-check-circle text-success me-1"></i>
-                                                                                    {course.completedLessons} Tuntas
+                                                                                    {course.completedLessons + course.completedQuizzes} Tuntas
                                                                                 </span>
                                                                             </div>
                                                                         </div>

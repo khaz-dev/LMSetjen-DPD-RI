@@ -59,8 +59,8 @@
     gap: 12px;
 }
 
-.filter-input,
-.filter-select {
+.feedback-admin-dashboard .filter-input,
+.feedback-admin-dashboard .filter-select {
     padding: 10px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -68,8 +68,8 @@
     font-family: inherit;
 }
 
-.filter-input:focus,
-.filter-select:focus {
+.feedback-admin-dashboard .filter-input:focus,
+.feedback-admin-dashboard .filter-select:focus {
     outline: none;
     border-color: #0f766e;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);

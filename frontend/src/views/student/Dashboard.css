@@ -404,6 +404,14 @@
     margin-top: 2px;
 }
 
+.dash-progress-meta-sub {
+    font-size: 0.62rem;
+    color: #ccfbf1;
+    font-weight: 600;
+    margin-top: 2px;
+    letter-spacing: 0.1px;
+}
+
 /* ==========================================================================
    3. HIGH-DENSITY KPI STAT CARDS (Single compact row)
    ========================================================================== */
@@ -631,6 +639,26 @@
     background: linear-gradient(90deg, #0d9488 0%, #10b981 100%);
     border-radius: 8px;
     transition: width 0.6s ease;
+}
+
+.strip-progress-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.63rem;
+    line-height: 1.2;
+    margin-top: 1px;
+}
+
+.strip-sub-info {
+    color: var(--dpd-gray-dark);
+    font-weight: 600;
+}
+
+.strip-sub-breakdown {
+    color: var(--dpd-gray-muted);
+    font-weight: 500;
 }
 
 .strip-actions {

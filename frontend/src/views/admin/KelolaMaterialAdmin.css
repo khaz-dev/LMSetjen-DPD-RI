@@ -93,7 +93,7 @@
    Statistics Cards
    ======================================== */
 
-.stat-card {
+.kelola-material-page-wrapper .stat-card {
     background: white;
     border-radius: 20px;
     padding: 0;
@@ -105,7 +105,7 @@
     height: 100%;
 }
 
-.stat-card::before {
+.kelola-material-page-wrapper .stat-card::before {
     content: '';
     position: absolute;
     top: 0;
@@ -115,7 +115,7 @@
     background: var(--theme-gradient, linear-gradient(90deg, #0d9488 0%, #0f766e 100%));
 }
 
-.stat-card:hover {
+.kelola-material-page-wrapper .stat-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
@@ -144,7 +144,7 @@
     gap: 20px;
 }
 
-.stat-icon {
+.kelola-material-page-wrapper .stat-icon {
     width: 65px;
     height: 65px;
     border-radius: 50%;
@@ -675,7 +675,7 @@
         text-align: center;
     }
 
-    .stat-icon {
+    .kelola-material-page-wrapper .stat-icon {
         width: 55px;
         height: 55px;
         font-size: 24px;
@@ -790,23 +790,23 @@
     }
 }
 
-.stat-card {
+.kelola-material-page-wrapper .stat-card {
     animation: slideIn 0.5s ease forwards;
 }
 
-.stat-card:nth-child(1) {
+.kelola-material-page-wrapper .stat-card:nth-child(1) {
     animation-delay: 0.05s;
 }
 
-.stat-card:nth-child(2) {
+.kelola-material-page-wrapper .stat-card:nth-child(2) {
     animation-delay: 0.1s;
 }
 
-.stat-card:nth-child(3) {
+.kelola-material-page-wrapper .stat-card:nth-child(3) {
     animation-delay: 0.15s;
 }
 
-.stat-card:nth-child(4) {
+.kelola-material-page-wrapper .stat-card:nth-child(4) {
     animation-delay: 0.2s;
 }
 

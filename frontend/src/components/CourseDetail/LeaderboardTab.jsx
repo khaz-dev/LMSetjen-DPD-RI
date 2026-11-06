@@ -421,7 +421,9 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
                                                 {student.quiz_stats.avg_score}%
                                             </div>
                                             <small className="text-muted" style={{ fontSize: "0.725rem" }}>
-                                                {student.quiz_stats.passed_quizzes}/{student.quiz_stats.total_quizzes} Lulus ({student.quiz_stats.points} XP)
+                                                {student.quiz_stats.total_quizzes > 0
+                                                    ? `${student.quiz_stats.passed_quizzes}/${student.quiz_stats.total_quizzes} Lulus (${student.quiz_stats.points} XP)`
+                                                    : `Progres (${student.quiz_stats.points} XP)`}
                                             </small>
                                         </td>
                                         <td className="text-center">
@@ -429,7 +431,9 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
                                                 {student.gamification_stats.avg_score}%
                                             </div>
                                             <small className="text-muted" style={{ fontSize: "0.725rem" }}>
-                                                {student.gamification_stats.completed_games}/{student.gamification_stats.total_games} Game ({student.gamification_stats.total_time_seconds}s)
+                                                {student.gamification_stats.total_games > 0
+                                                    ? `${student.gamification_stats.completed_games}/${student.gamification_stats.total_games} Game (${student.gamification_stats.points} XP)`
+                                                    : `Progres (${student.gamification_stats.points} XP)`}
                                             </small>
                                         </td>
                                         <td className="text-center">
