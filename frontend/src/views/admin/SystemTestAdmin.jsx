@@ -8,7 +8,7 @@ import useAxios from '../../utils/useAxios';
 import { API_BASE_URL } from '../../utils/constants';
 import './SystemTestAdmin.css';
 
-function SystemTestAdmin() {
+function SystemTestAdmin({ isEmbedded = false }) {
     const userData = UserData();
     const [activeTab, setActiveTab] = useState('toasts'); // 'toasts' | 'dialogs' | 'playground' | 'diagnostics'
     
@@ -306,13 +306,11 @@ function SystemTestAdmin() {
         }
     };
 
-    return (
-        <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-            <AdminHeader />
-            <div className="system-test-page" style={{ flex: "1 0 auto" }}>
-                <div className="container py-4">
-                    {/* Page Header */}
-                    <div className="system-test-header">
+    const contentNode = (
+        <div className="system-test-page" style={{ flex: "1 0 auto" }}>
+            <div className={isEmbedded ? "py-2" : "container py-4"}>
+                {/* Page Header */}
+                <div className="system-test-header">
                         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>
                                 <h1 className="h3 mb-1 text-dark fw-bold">
@@ -854,6 +852,16 @@ function SystemTestAdmin() {
                     )}
                 </div>
             </div>
+    );
+
+    if (isEmbedded) {
+        return contentNode;
+    }
+
+    return (
+        <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+            <AdminHeader />
+            {contentNode}
             <Footer />
         </div>
     );

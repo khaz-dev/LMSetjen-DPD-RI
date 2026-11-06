@@ -81,6 +81,7 @@ const UsersAdmin = lazy(() => import("./views/admin/UsersAdmin"));
 const SystemDocumentation = lazy(() => import("./views/admin/SystemDocumentation"));
 // ✨ PHASE 4: Merged content management page (replaces CourseReviewAdmin, TestimonialsAdmin, KelolaMaterialAdmin)
 const ContentManagementAdmin = lazy(() => import("./views/admin/ContentManagementAdmin"));
+const CertificateSettingsAdmin = lazy(() => import("./views/admin/CertificateSettingsAdmin"));
 // ✨ PHASE 4.37+: Dedicated admin course review detail page
 const AdminCourseReviewDetail = lazy(() => import("./views/admin/AdminCourseReviewDetail"));
 // ✨ PHASE 4.210: Unified reports management page
@@ -580,15 +581,14 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
+                            {/* Redirect to Unified Reports & Diagnostics Center */}
                             <Route
                                 path="/admin/documentation/"
-                                element={
-                                    <PrivateRoute>
-                                        <RoleRoute allowedRoles={["admin"]}>
-                                            <SystemDocumentation />
-                                        </RoleRoute>
-                                    </PrivateRoute>
-                                }
+                                element={<Navigate to="/admin/reports/?tab=docs" replace />}
+                            />
+                            <Route
+                                path="/admin/documentation"
+                                element={<Navigate to="/admin/reports/?tab=docs" replace />}
                             />
                             {/* ✨ PHASE 4: Unified content management page */}
                             <Route
@@ -600,6 +600,15 @@ function App() {
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }
+                            />
+                            {/* Redirect to Content Management Certificate Design Tab */}
+                            <Route
+                                path="/admin/certificate-settings/"
+                                element={<Navigate to="/admin/content-management/?tab=certificate" replace />}
+                            />
+                            <Route
+                                path="/admin/certificate-settings"
+                                element={<Navigate to="/admin/content-management/?tab=certificate" replace />}
                             />
                             {/* ✨ PHASE 4.37+: Dedicated admin course review detail page */}
                             <Route
@@ -634,20 +643,14 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
-                            {/* Admin System Testing & Diagnostics */}
+                            {/* Redirect to Unified Reports & Diagnostics Center */}
                             <Route
                                 path="/admin/system-test/"
-                                element={
-                                    <PrivateRoute>
-                                        <RoleRoute allowedRoles={["admin"]}>
-                                            <SystemTestAdmin />
-                                        </RoleRoute>
-                                    </PrivateRoute>
-                                }
+                                element={<Navigate to="/admin/reports/?tab=diagnostics" replace />}
                             />
                             <Route
                                 path="/admin/system-test"
-                                element={<Navigate to="/admin/system-test/" replace />}
+                                element={<Navigate to="/admin/reports/?tab=diagnostics" replace />}
                             />
                             {/* Backward compatibility redirects */}
                             <Route

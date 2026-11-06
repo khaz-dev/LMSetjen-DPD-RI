@@ -867,6 +867,9 @@ class CertificateSerializer(serializers.ModelSerializer):
     course_category = serializers.CharField(source='course.category.title', read_only=True, default='')
     course_image = serializers.SerializerMethodField(read_only=True)
     student_name = serializers.CharField(source='user.full_name', read_only=True)
+    student_nip = serializers.CharField(source='user.nip', read_only=True, default='')
+    student_position = serializers.SerializerMethodField(read_only=True)
+    student_organization_unit = serializers.SerializerMethodField(read_only=True)
     instructor_name = serializers.CharField(source='course.teacher.full_name', read_only=True)
     qr_code_url = serializers.SerializerMethodField(read_only=True)
     image_file_url = serializers.SerializerMethodField(read_only=True)  # ✨ PHASE 4.221: Image URL for display
@@ -877,10 +880,22 @@ class CertificateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'course', 'user', 'enrollment', 'certificate_id', 'formatted_certificate_id',
             'validation_token', 'is_valid', 'integrity_status', 'date', 'course_title', 'course_slug', 'course_level',
-            'course_category', 'course_image', 'student_name', 
+            'course_category', 'course_image', 'student_name', 'student_nip', 'student_position', 'student_organization_unit',
             'instructor_name', 'qr_code_url', 'image_file_url', 'pdf_file_url', 'created_at', 'updated_at'
         ]
         model = api_models.Certificate
+
+    def get_student_position(self, obj):
+        try:
+            return obj.user.profile.position or ''
+        except Exception:
+            return ''
+
+    def get_student_organization_unit(self, obj):
+        try:
+            return obj.user.profile.organization_unit or ''
+        except Exception:
+            return ''
 
     def get_course_image(self, obj):
         if obj.course and obj.course.image:
@@ -946,6 +961,44 @@ class CertificateSerializer(serializers.ModelSerializer):
                 existing = set(self.fields)
                 for field_name in existing - allowed:
                     self.fields.pop(field_name)
+
+class CertificateTemplateConfigSerializer(serializers.ModelSerializer):
+    """
+    Serializer konfigurasi template sertifikat admin Setjen DPD RI.
+    """
+    pptx_template_url = serializers.SerializerMethodField(read_only=True)
+    custom_background_url = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = api_models.CertificateTemplateConfig
+        fields = [
+            'id', 'template_name', 'is_active',
+            'pptx_template', 'pptx_template_url',
+            'custom_background', 'custom_background_url',
+            'primary_color', 'accent_color', 'title_font', 'body_font',
+            'agency_sup', 'agency_main', 'agency_sub',
+            'certificate_title', 'certificate_subtitle', 'statement_text',
+            'signatory_title', 'signatory_sub_title', 'signatory_name', 'signatory_nip',
+            'show_gold_seal', 'show_watermark', 'show_bpsdm_logo', 'show_qr_code',
+            'created_at', 'updated_at'
+        ]
+
+    def get_pptx_template_url(self, obj):
+        request = self.context.get('request')
+        if obj.pptx_template:
+            if request:
+                return request.build_absolute_uri(obj.pptx_template.url)
+            return obj.pptx_template.url
+        return None
+
+    def get_custom_background_url(self, obj):
+        request = self.context.get('request')
+        if obj.custom_background:
+            if request:
+                return request.build_absolute_uri(obj.custom_background.url)
+            return obj.custom_background.url
+        return None
+
 
 
 

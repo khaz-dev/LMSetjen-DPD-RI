@@ -8,16 +8,41 @@ import certificateBackgroundWebP from '../../assets/certificate-bg.webp';
 import certificateBackgroundPNG from '../../assets/certificate-bg.png';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import ModernCertificateDocument from './ModernCertificateDocument';
 import './CertificateTab.css';
 
-function CertificateTab({ course, enrollmentId, completionPercentage, onCertificateGenerated, isInline = false, onStartPosttest = null }) {
+function CertificateTab({
+    course,
+    enrollmentId,
+    completionPercentage,
+    onCertificateGenerated,
+    isInline = false,
+    onStartPosttest = null,
+    regenerateTrigger = 0
+}) {
     const [certificate, setCertificate] = useState(null);
     const [isEligible, setIsEligible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [quizResults, setQuizResults] = useState([]);
     const [eligibilityData, setEligibilityData] = useState(null);
+    const [templateConfig, setTemplateConfig] = useState(null);
     const certificateRef = useRef();
+
+    // Fetch active certificate template config
+    useEffect(() => {
+        const fetchTemplateConfig = async () => {
+            try {
+                const res = await apiInstance.get('/certificate/template-config/');
+                if (res.data) {
+                    setTemplateConfig(res.data);
+                }
+            } catch (e) {
+                console.error('Failed to load certificate template config:', e);
+            }
+        };
+        fetchTemplateConfig();
+    }, []);
 
     // Use WebP with PNG fallback for better performance
     const certificateBackground = certificateBackgroundWebP || certificateBackgroundPNG;
@@ -29,7 +54,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
             setIsEligible(response.data.is_eligible);
             setQuizResults(response.data.quiz_results || []);
             setEligibilityData(response.data);
-            
+
             if (response.data.certificate) {
                 setCertificate(response.data.certificate);
                 // ✨ PHASE 4.146: Notify parent that existing certificate was found
@@ -53,27 +78,27 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
 
             if (response.data.certificate) {
                 setCertificate(response.data.certificate);
-                
+
                 // ✨ PHASE 4.225: Generate and upload image (PNG) to server, then notify parent with complete data
                 setTimeout(() => {
                     if (certificateRef.current) {
                         generateAndSaveImage(response.data.certificate, onCertificateGenerated);
                     }
                 }, 500);
-                
+
                 Toast().fire({
                     icon: 'success',
                     title: 'Sertifikat Berhasil Dibuat!',
                     text: 'Sertifikat Anda telah berhasil dibuat dan disimpan.'
                 });
-                
+
                 // ✨ PHASE 50: Scroll to course progress card after successful creation
                 setTimeout(() => {
                     const progressCard = document.querySelector('.course-progress-card-loaded');
                     if (progressCard) {
-                        progressCard.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'start' 
+                        progressCard.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
                         });
                     }
                 }, 1000);  // Wait for image generation to complete before scrolling
@@ -89,26 +114,29 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
         }
     };
 
-    // ✨ PHASE 4.222: Generate certificate image (PNG) with filename format: {course_id}_{user_id}.png
+    // ✨ PHASE 4.222: Generate Ultra-HD certificate image (PNG) via offscreen staging
     // ✨ PHASE 4.225: Updated to notify parent component with complete certificate data after image is saved
     const generateAndSaveImage = async (certificateData, onCertificateGenerated) => {
         try {
             if (!certificateRef.current) return;
+            setGenerating(true);
 
-            // Get the certificate element
+            // Wait a brief tick for fonts/logos to fully render in staging container
+            await new Promise(resolve => setTimeout(resolve, 300));
+
             const certificateElement = certificateRef.current;
             const userId = UserData()?.user_id;
             const courseId = course?.course?.course_id;
-            
-            // ✨ PHASE 4.222: Convert HTML to canvas (as PNG for display)
+
+            // Render at 1x of 1414x1000 = 2121 x 1500 px Ultra-HD razor sharp output
             const canvas = await html2canvas(certificateElement, {
-                scale: 2,
+                scale: 1,
                 useCORS: true,
                 logging: false,
                 backgroundColor: '#ffffff'
             });
 
-            // ✨ PHASE 4.222: Convert canvas to PNG image blob
+            // Convert canvas to PNG image blob
             canvas.toBlob(async (blob) => {
                 try {
                     // Send PNG image to server for storage with filename: course_id_user_id.png
@@ -117,36 +145,56 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                     formData.append('user_id', userId);
                     formData.append('course_id', courseId);
 
-                    const response = await apiInstance.post('student/certificate-save-image/', formData, {
+                    await apiInstance.post('student/certificate-save-image/', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
                     });
 
-                    
-                    // ✨ PHASE 4.225: Refresh certificate data to show the image
+                    // Refresh certificate data to show the image
                     const certResponse = await apiInstance.get(
                         `student/certificate-eligibility/${userId}/${courseId}/`
                     );
                     if (certResponse.data.certificate) {
                         const updatedCertificate = certResponse.data.certificate;
                         setCertificate(updatedCertificate);
-                        
-                        // ✨ PHASE 4.225: NOW notify parent component with COMPLETE certificate data (includes image_file_url)
+
+                        // Notify parent component with COMPLETE certificate data (includes image_file_url)
                         if (onCertificateGenerated) {
                             onCertificateGenerated(updatedCertificate);
                         }
                     }
-                    
+
+                    Toast().fire({
+                        icon: 'success',
+                        title: 'Sertifikat HD Berhasil Diperbarui!',
+                        text: 'Tampilan sertifikat Anda kini telah diperbarui ke resolusi tinggi.'
+                    });
+
                 } catch (error) {
                     console.error('Error saving certificate image:', error);
+                    Toast().fire({
+                        icon: 'error',
+                        title: 'Gagal Menyimpan Gambar',
+                        text: 'Gagal memperbarui file sertifikat pada server.'
+                    });
+                } finally {
+                    setGenerating(false);
                 }
             }, 'image/png');
 
         } catch (error) {
             console.error('Error generating certificate image:', error);
+            setGenerating(false);
         }
     };
+
+    // Auto-listen to parent regeneration trigger
+    useEffect(() => {
+        if (regenerateTrigger > 0 && certificate) {
+            generateAndSaveImage(certificate, onCertificateGenerated);
+        }
+    }, [regenerateTrigger]);
 
     // ✨ PHASE 4.222: Download certificate image from server (PNG format)
     const downloadCertificateFromServer = async () => {
@@ -169,7 +217,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
             // ✨ PHASE 4.222: Download certificate image (course_id_user_id.png)
             const courseId = course?.course?.course_id;
             const userId = UserData()?.user_id;
-            
+
             // ✨ PHASE 51: Use apiInstance to fetch the file with correct API base URL
             const response = await apiInstance.get(
                 `student/certificate-download/${courseId}/${userId}/`,
@@ -220,12 +268,12 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
         // Filter regular quizzes from quizResults
         const regularQuizzes = quizResults.filter(q => q.quiz_type !== 'pre_post_test');
         const allQuizzesPassed = regularQuizzes.length === 0 || regularQuizzes.every(quiz => quiz.passed);
-        
+
         const hasPrePostTest = Boolean(eligibilityData?.has_pre_post_test);
         const postTestCompleted = Boolean(eligibilityData?.post_test_completed);
 
         const isFullyComplete = isEligible || (allLessonsCompleted && allQuizzesPassed && (!hasPrePostTest || postTestCompleted));
-        
+
         return {
             allLessonsCompleted,
             allQuizzesPassed,
@@ -247,7 +295,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                             Sertifikat Kursus
                         </h4>
                         {certificate && certificate.image_file_url && (
-                            <button 
+                            <button
                                 className="btn btn-sm btn-teal"
                                 onClick={downloadCertificateFromServer}
                             >
@@ -258,90 +306,41 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                     </div>
                 )}
 
-                {/* ✨ PHASE 4.224: Certificate display moved to main course view, only show fallback if pending */}
-                {/* ✨ PHASE 49: Added ref to scroll to certificate display area after creation */}
-                {certificate && !certificate.image_file_url ? (
-                    // ✨ PHASE 4.222: Fallback to manual certificate if image not yet generated
-                    <div className="certificate-display" style={{ border: '2px solid #f39c12', borderRadius: '8px' }}>
-                        <p className="text-center text-muted mb-3">
-                            {certificate.image_file_url === undefined 
-                                ? '❌ Gambar sertifikat tidak tersedia. Mohon tunggu atau segarkan halaman.'
-                                : 'Sertifikat Anda sedang diproses. Silakan unduh atau segarkan halaman.'
-                            }
-                        </p>
-                        <div 
-                            className="certificate-document" 
+                {/* ✨ Ultra-HD Certificate Staging Container (Always in DOM for html2canvas) */}
+                {certificate && (
+                    <div
+                        className="cert-render-staging-box"
+                        style={{
+                            position: 'fixed',
+                            left: '-9999px',
+                            top: 0,
+                            width: '1414px',
+                            height: '1000px',
+                            zIndex: -9999,
+                            overflow: 'hidden',
+                            pointerEvents: 'none',
+                            background: '#ffffff'
+                        }}
+                        aria-hidden="true"
+                    >
+                        <ModernCertificateDocument
                             ref={certificateRef}
-                        >
-                            <img 
-                                src={certificateBackground}
-                                alt="Certificate Background" 
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'contain',
-                                    zIndex: 0
-                                }}
-                            />
-                            <div className="certificate-content">
-                                {/* Certificate Number Section - Professional Format */}
-                                <div className="certificate-number-section">
-                                    <span className="certificate-number">
-                                        <strong>Nomor:</strong> {certificate.formatted_certificate_id}
-                                    </span>
-                                </div>
-                                
-                                {/* Certificate Statement */}
-                                <div className="certificate-statement">
-                                    <p className="statement-intro">Diberikan kepada:</p>
-                                </div>
-
-                                {/* Student Name - Highlighted Section */}
-                                <div className="student-section">
-                                    <h2 className="student-name">{UserData()?.full_name}</h2>
-                                </div>
-
-                                {/* Course Completion Statement */}
-                                <div className="completion-statement">
-                                    <p>telah berhasil menyelesaikan program pembelajaran</p>
-                                    <h3 className="course-title">{course?.course?.title}</h3>
-                                    <p className="statement-middle">
-                                        dengan sangat baik serta menunjukkan pemahaman penuh atas semua materi pembelajaran 
-                                        dan telah memenuhi semua penilaian yang dipersyaratkan setara dengan {course?.course?.total_jam_pelatihan || 0}JP di LMSetjen DPD RI
-                                    </p>
-                                </div>
-
-                                {/* Instructor Information Section */}
-                                <div className="instructor-section">
-                                    <p className="certification-by">Disertifikasi oleh:</p>
-                                    <p className="instructor-name">{course?.course?.teacher?.full_name}</p>
-                                </div>
-
-                                {/* Date Section */}
-                                <div className="date-section">
-                                    <p className="date-label">Tanggal Penyelesaian:</p>
-                                    <p className="date-value">{formatDate(certificate.date)}</p>
-                                </div>
-                                
-                                {/* QR Code for Certificate Validation */}
-                                {certificate.qr_code_url && (
-                                    <div className="certificate-qr-code">
-                                        <QRCode 
-                                            value={certificate.qr_code_url}
-                                            size={100}
-                                            level="H"
-                                            includeMargin={false}
-                                            renderAs="canvas"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                            certificate={certificate}
+                            course={course}
+                            userData={UserData()}
+                            templateConfig={templateConfig}
+                        />
                     </div>
-                ) : null}
+                )}
+
+                {/* Notice if certificate image is being generated */}
+                {certificate && !certificate.image_file_url && (
+                    <div className="card border-teal-subtle bg-teal-subtle p-3 rounded-3 text-center mb-3">
+                        <div className="spinner-border spinner-border-sm text-teal mb-2" role="status"></div>
+                        <h6 className="fw-bold mb-1 text-teal">Menyiapkan Berkas Sertifikat Digital...</h6>
+                        <p className="small text-muted mb-0">Sertifikat Anda sedang diproses dalam resolusi Ultra-HD. Silakan tunggu beberapa saat.</p>
+                    </div>
+                )}
 
                 {/* Eligibility Status - Dynamic 2 or 3 Column Grid */}
                 <div className="eligibility-section mb-2">
@@ -386,15 +385,15 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                                         <h6>Post-test Akhir</h6>
                                         <p>{postTestCompleted ? `Selesai (${Math.round(eligibilityData?.post_test_score || 0)}%)` : 'Wajib Dikerjakan'}</p>
                                         <small>
-                                            {postTestCompleted 
+                                            {postTestCompleted
                                                 ? `Gain: ${eligibilityData?.learning_gain >= 0 ? '+' : ''}${eligibilityData?.learning_gain || 0}%`
                                                 : allLessonsCompleted && allQuizzesPassed
                                                     ? 'Siap dikerjakan'
                                                     : 'Terkunci'}
                                         </small>
                                         {!postTestCompleted && allLessonsCompleted && allQuizzesPassed && onStartPosttest && (
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 className="btn btn-xs btn-amber mt-1 py-0 px-2 fw-bold w-100"
                                                 onClick={onStartPosttest}
                                             >
@@ -416,19 +415,19 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                                 <div className="generate-section">
                                     <div className="card border-warning-subtle bg-warning-subtle text-dark p-3 rounded-3 shadow-xs">
                                         <div className="d-flex align-items-start gap-3">
-                                            <div className="p-2.5 rounded-circle bg-warning text-dark flex-shrink-0 d-flex align-items-center justify-content-center" style={{ width: '44px', height: '44px', fontSize: '1.25rem' }}>
+                                            <div className="p-2 rounded-circle bg-warning text-dark flex-shrink-0 d-flex align-items-center justify-content-center" style={{ width: '44px', height: '44px', fontSize: '1.25rem' }}>
                                                 <i className="fas fa-shield-halved"></i>
                                             </div>
                                             <div className="flex-grow-1">
                                                 <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
                                                     <h6 className="fw-bold mb-0 text-warning-emphasis">
-                                                        <i className="fas fa-clock-rotate-left me-1.5"></i> Peninjauan Integritas Ujian Sedang Berlangsung
+                                                        <i className="fas fa-clock-rotate-left me-1"></i> Peninjauan Integritas Ujian Sedang Berlangsung
                                                     </h6>
-                                                    <span className="badge bg-warning text-dark border border-warning px-2.5 py-1">
+                                                    <span className="badge bg-warning text-dark border border-warning px-2 py-1">
                                                         <i className="fas fa-hourglass-half me-1"></i> Menunggu Verifikasi Instruktur
                                                     </span>
                                                 </div>
-                                                <p className="small mb-2 text-secondary" style={{ lineHeight: '1.5' }}>
+                                                <p className="small mb-2 text-secondary" style={{ lineHeight: '1' }}>
                                                     Hasil kuis dan modul Anda telah tuntas, namun sistem anti-cheat mencatat anomali pada durasi pengerjaan. Demi menjaga standar kompetensi dan keabsahan sertifikat ASN Setjen DPD RI, penerbitan sertifikat digital memerlukan pengesahan manual oleh Instruktur kursus.
                                                 </p>
                                                 {eligibilityData.integrity.reasons && eligibilityData.integrity.reasons.length > 0 && (
@@ -444,7 +443,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                                                         onClick={checkEligibility}
                                                         title="Periksa kembali status verifikasi"
                                                     >
-                                                        <i className="fas fa-sync-alt me-1.5"></i> Periksa Ulang Status
+                                                        <i className="fas fa-sync-alt me-1"></i> Periksa Ulang Status
                                                     </button>
                                                 </div>
                                             </div>
@@ -462,7 +461,7 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                                             <p className="congratulations-desc mb-2">
                                                 Semua materi dan penilaian telah berhasil diselesaikan secara berintegritas. Silakan terbitkan sertifikat resmi Anda sekarang.
                                             </p>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm generate-btn"
                                                 onClick={generateCertificate}
                                                 disabled={generating}
@@ -514,23 +513,34 @@ function CertificateTab({ course, enrollmentId, completionPercentage, onCertific
                                         <span className="cert-number-label">Nomor Sertifikat:</span>
                                         <span className="cert-number-val font-monospace">{certificate.formatted_certificate_id || certificate.certificate_id}</span>
                                     </div>
-                                    <div className="d-flex gap-2 justify-content-end">
-                                        <button 
-                                            className="btn btn-sm btn-teal"
+                                    <div className="d-flex gap-2 justify-content-end align-items-center flex-wrap">
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-secondary cert-action-btn d-inline-flex align-items-center justify-content-center"
+                                            onClick={() => generateAndSaveImage(certificate, onCertificateGenerated)}
+                                            disabled={generating}
+                                            title="Perbarui tampilan sertifikat ke versi Ultra-HD terbaru"
+                                        >
+                                            <i className={`fas fa-arrows-rotate me-1 ${generating ? 'fa-spin' : ''}`}></i>
+                                            <span>{generating ? 'Merender...' : 'Perbarui Desain'}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-teal cert-action-btn d-inline-flex align-items-center justify-content-center"
                                             onClick={downloadCertificateFromServer}
                                         >
                                             <i className="fas fa-download me-1"></i>
-                                            Unduh File
+                                            <span>Unduh File</span>
                                         </button>
                                         {certificate.qr_code_url && (
                                             <a
                                                 href={certificate.qr_code_url}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="btn btn-sm btn-outline-teal"
+                                                className="btn btn-sm btn-outline-teal cert-action-btn d-inline-flex align-items-center justify-content-center"
                                             >
                                                 <i className="fas fa-qrcode me-1"></i>
-                                                Cek QR
+                                                <span>Cek QR</span>
                                             </a>
                                         )}
                                     </div>

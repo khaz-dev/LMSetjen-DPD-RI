@@ -4,21 +4,23 @@ import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
 import BaseHeader from "../partials/BaseHeader";
 import ReviewAbuseReportsTab from "./AdminReportsTabs/ReviewAbuseReportsTab";
-import QAReportsTab from "./AdminReportsTabs/QAReportsTab";  // ✨ PHASE 7.16: Import Q&A Reports Tab
+import QAReportsTab from "./AdminReportsTabs/QAReportsTab";
+import SystemTestAdmin from "./SystemTestAdmin";
+import SystemDocumentation from "./SystemDocumentation";
 import "./ReportsAdmin.css";
 
 /**
- * Unified Reports Admin Page
- * ✨ PHASE 4.210: Integrated reporting dashboard
- * 
- * Combines multiple reporting functions:
- * - Review and manage review abuse reports from instructors
+ * Unified Reports, Diagnostics & Documentation Admin Center
+ * ✨ Merges System Reports, System Testing/Diagnostics, and Technical Documentation
  */
 function ReportsAdmin() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState(() => {
         const tab = searchParams.get("tab");
-        return tab === "abuse-reports" ? tab : "abuse-reports";
+        if (tab === "system-test" || tab === "diagnostics") return "diagnostics";
+        if (tab === "documentation" || tab === "docs") return "docs";
+        if (tab === "qa-reports") return "qa-reports";
+        return "abuse-reports";
     });
 
     // Update URL when tab changes
@@ -29,17 +31,31 @@ function ReportsAdmin() {
     const tabs = [
         {
             id: "abuse-reports",
-            label: "Laporan Penyalahgunaan Review",
+            label: "Laporan Review",
             icon: "fas fa-flag",
-            description: "Kelola laporan penyalahgunaan review yang dikirim oleh instruktur",
+            description: "Kelola laporan penyalahgunaan ulasan kursus dari instruktur",
             component: <ReviewAbuseReportsTab />
         },
         {
-            id: "qa-reports",  // ✨ PHASE 7.16: Q&A Reports tab
-            label: "Laporan Pertanyaan & Balasan",
+            id: "qa-reports",
+            label: "Laporan Diskusi Q&A",
             icon: "fas fa-comments",
-            description: "Kelola laporan pertanyaan dan balasan yang tidak pantas di forum diskusi",
+            description: "Kelola laporan pertanyaan dan balasan tidak pantas di forum tanya jawab",
             component: <QAReportsTab />
+        },
+        {
+            id: "diagnostics",
+            label: "Pengujian Sistem",
+            icon: "fas fa-vial",
+            description: "Pusat pengujian antarmuka, verifikasi dialog toast, dan diagnostik server",
+            component: <SystemTestAdmin isEmbedded={true} />
+        },
+        {
+            id: "docs",
+            label: "Dokumentasi Sistem",
+            icon: "fas fa-book",
+            description: "Dokumentasi teknis, arsitektur sistem, panduan API, dan skema basis data",
+            component: <SystemDocumentation isEmbedded={true} />
         }
     ];
 
@@ -55,11 +71,11 @@ function ReportsAdmin() {
                         <div className="reports-page-header mb-3">
                             <div className="reports-header-content">
                                 <h1 className="reports-page-title">
-                                    <i className="fas fa-file-alt me-3"></i>
-                                    Laporan Pengguna
+                                    <i className="fas fa-chart-line me-3"></i>
+                                    Pusat Laporan & Diagnostik Sistem
                                 </h1>
                                 <p className="reports-page-subtitle">
-                                    Kelola semua laporan dan masalah yang dilaporkan pengguna
+                                    Pusat audit terpadu: moderasi laporan pengguna, pengujian diagnostik antarmuka, dan dokumentasi arsitektur sistem
                                 </p>
                             </div>
                         </div>

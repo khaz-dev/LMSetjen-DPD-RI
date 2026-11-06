@@ -1,0 +1,710 @@
+/* ==========================================================================
+   ✨ ULTRA-PROFESSIONAL OFFICIAL CERTIFICATE (SETJEN DPD RI)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+.modern-certificate-container {
+    width: 1414px;
+    height: 1000px;
+    aspect-ratio: 297 / 210;
+    /* Rasio Standar ISO 216 A4 Landscape (1.4142857 : 1) */
+    position: relative;
+    box-sizing: border-box;
+    background: #ffffff;
+    color: #1e293b;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    margin: 0 auto;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Background Texture & Watermark */
+.modern-certificate-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.modern-certificate-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 520px;
+    height: 520px;
+    opacity: 0.038;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none;
+}
+
+/* Outer Border System */
+.modern-cert-outer-border {
+    position: absolute;
+    inset: 20px;
+    border: 5px solid #064e3b;
+    /* Deep Forest Emerald */
+    pointer-events: none;
+    z-index: 2;
+}
+
+.modern-cert-inner-border {
+    position: absolute;
+    inset: 28px;
+    border: 2px solid #b45309;
+    /* Burnished Amber Gold */
+    pointer-events: none;
+    z-index: 2;
+}
+
+.modern-cert-hairline-border {
+    position: absolute;
+    inset: 34px;
+    border: 1px solid rgba(180, 83, 9, 0.4);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Corner Ornaments */
+.cert-corner {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.cert-corner-tl {
+    top: 28px;
+    left: 28px;
+    border-top: 5px solid #d97706;
+    border-left: 5px solid #d97706;
+}
+
+.cert-corner-tr {
+    top: 28px;
+    right: 28px;
+    border-top: 5px solid #d97706;
+    border-right: 5px solid #d97706;
+}
+
+.cert-corner-bl {
+    bottom: 28px;
+    left: 28px;
+    border-bottom: 5px solid #d97706;
+    border-left: 5px solid #d97706;
+}
+
+.cert-corner-br {
+    bottom: 28px;
+    right: 28px;
+    border-bottom: 5px solid #d97706;
+    border-right: 5px solid #d97706;
+}
+
+.cert-corner-bracket {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: #064e3b;
+    border: 2px solid #d97706;
+    transform: rotate(45deg);
+}
+
+.cert-corner-tl .cert-corner-bracket {
+    top: 6px;
+    left: 6px;
+}
+
+.cert-corner-tr .cert-corner-bracket {
+    top: 6px;
+    right: 6px;
+}
+
+.cert-corner-bl .cert-corner-bracket {
+    bottom: 6px;
+    left: 6px;
+}
+
+.cert-corner-br .cert-corner-bracket {
+    bottom: 6px;
+    right: 6px;
+}
+
+/* Main Content Layer */
+.modern-cert-content {
+    position: relative;
+    z-index: 4;
+    height: 100%;
+    padding: 26px 52px 20px 52px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+/* Header / Kop Lembaga */
+.modern-cert-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 8px;
+}
+
+.cert-header-logo-left,
+.cert-header-logo-right {
+    width: 135px;
+    height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Badge Frame Putih BUNDAR (Circular) Mengelilingi Logo */
+.cert-logo-badge {
+    background: #ffffff;
+    border: 4px solid #ffffff;
+    border-radius: 50%;
+    /* Lingkaran bundar mengelilingi logo */
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08);
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 122px;
+    height: 122px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.cert-logo-badge img {
+    max-height: 96px;
+    max-width: 96px;
+    object-fit: contain;
+}
+
+.cert-header-text {
+    flex: 1;
+    text-align: center;
+    padding: 0 16px;
+}
+
+.cert-agency-sup {
+    font-family: 'Cinzel', 'Times New Roman', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: 4.5px;
+    text-transform: uppercase;
+    margin: 0 0 3px 0;
+}
+
+.cert-agency-main {
+    font-family: 'Cinzel', 'Times New Roman', serif;
+    font-size: 29px;
+    font-weight: 900;
+    color: #064e3b;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin: 0 0 3px 0;
+}
+
+.cert-agency-sub {
+    font-size: 15px;
+    font-weight: 700;
+    color: #475569;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+/* Ornate Gold Header Divider */
+.cert-header-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 6px 0 14px 0;
+}
+
+.cert-divider-line {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #b45309 30%, #d97706 70%, transparent);
+}
+
+.cert-divider-diamond {
+    color: #d97706;
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* Certificate Title Section */
+.modern-cert-title-area {
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.modern-cert-main-title {
+    font-family: 'Playfair Display', 'Cinzel', Georgia, serif;
+    font-size: 52px;
+    font-weight: 900;
+    letter-spacing: 9px;
+    color: #064e3b;
+    text-transform: uppercase;
+    margin: 0 0 3px 0;
+    text-shadow: 0 1px 3px rgba(6, 78, 59, 0.15);
+}
+
+.modern-cert-english-title {
+    font-size: 15.5px;
+    font-weight: 700;
+    letter-spacing: 7px;
+    color: #b45309;
+    text-transform: uppercase;
+    margin: 0 0 8px 0;
+}
+
+.modern-cert-number-capsule {
+    display: inline-block;
+    padding: 6px 32px;
+    background: #f8fafc;
+    border: 1.5px solid rgba(180, 83, 9, 0.45);
+    border-radius: 20px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15px;
+    font-weight: 800;
+    color: #1e293b;
+    letter-spacing: 1.2px;
+}
+
+/* Recipient Section */
+.modern-cert-recipient-area {
+    text-align: center;
+    margin: 6px 0;
+}
+
+.cert-awarded-to {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 17.5px;
+    font-style: italic;
+    color: #64748b;
+    margin: 0 0 4px 0;
+}
+
+.cert-student-name {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 52px;
+    font-weight: 800;
+    color: #042f2e;
+    letter-spacing: 0.5px;
+    margin: 0 0 6px 0;
+    line-height: 1.2;
+}
+
+.cert-name-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 520px;
+    margin: 0 auto 6px auto;
+}
+
+.cert-name-line {
+    flex: 1;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, #b45309 60%, transparent);
+}
+
+.cert-name-line:last-child {
+    background: linear-gradient(90deg, transparent, #b45309 40%, transparent);
+    transform: rotate(180deg);
+}
+
+.cert-name-star {
+    color: #d97706;
+    font-size: 16px;
+}
+
+/* Recipient Credentials (Dynamic NIP & Jabatan) */
+.cert-credentials-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin: 4px 0 2px 0;
+}
+
+.cert-nip-row {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cert-nip-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 22px;
+    background: #ffffff;
+    border: 1.5px solid #c59b27;
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.cert-nip-prefix {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #b45309;
+    letter-spacing: 1.5px;
+}
+
+.cert-nip-number {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15.5px;
+    font-weight: 800;
+    color: #064e3b;
+    letter-spacing: 1.5px;
+}
+
+.cert-position-row {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 900px;
+}
+
+.cert-position-text {
+    display: inline-block;
+    padding: 2px 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #334155;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.cert-position-text.cert-non-nip {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0d5c3a;
+    letter-spacing: 1.8px;
+    padding: 5px 24px;
+    border: 1.5px solid rgba(13, 92, 58, 0.3);
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cert-student-role {
+    display: none;
+}
+
+/* Course & Achievement Section */
+.modern-cert-achievement-area {
+    text-align: center;
+    max-width: 1080px;
+    margin: 4px auto 8px auto;
+}
+
+.cert-achievement-intro {
+    font-size: 17px;
+    color: #334155;
+    line-height: 1.65;
+    margin: 0 0 6px 0;
+}
+
+.cert-course-title-box {
+    margin: 4px 0 8px 0;
+}
+
+.cert-course-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.35;
+    margin: 0;
+    letter-spacing: 0.2px;
+}
+
+.cert-meta-badges {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.cert-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 18px;
+    background: #f0fdfa;
+    border: 1.5px solid #99f6e4;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f766e;
+    letter-spacing: 0.3px;
+}
+
+.cert-meta-chip.chip-gold {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #b45309;
+}
+
+/* Footer Grid: Verification, Gold Seal, Signature */
+.modern-cert-footer {
+    display: grid;
+    grid-template-columns: 375px 1fr 330px;
+    align-items: end;
+    gap: 20px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(180, 83, 9, 0.35);
+}
+
+/* Left: Digital Security QR dengan Border Putih Elegan */
+.cert-footer-verification {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cert-qr-frame {
+    width: 114px;
+    height: 114px;
+    background: #ffffff;
+    border: 4px solid #ffffff;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+/* Teks Keterangan di sebelah QR Code dengan BORDER TERPISAH PER ELEMEN */
+.cert-qr-info {
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    box-sizing: border-box;
+}
+
+.cert-qr-title {
+    display: inline-block;
+    background: #ffffff;
+    border: 2.5px solid #ffffff;
+    border-radius: 6px;
+    padding: 2px 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #064e3b;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.cert-qr-desc {
+    background: #ffffff;
+    border: 3px solid #ffffff;
+    border-radius: 8px;
+    padding: 5px 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 11px;
+    color: #334155;
+    line-height: 1.4;
+    font-weight: 600;
+    margin: 0;
+}
+
+.cert-qr-token {
+    display: inline-block;
+    background: #ffffff;
+    border: 2.5px solid #ffffff;
+    border-radius: 6px;
+    padding: 2px 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 0.5px;
+}
+
+/* Center: Majestic Vector Gold Seal */
+.cert-footer-seal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.gold-seal-rosette {
+    width: 110px;
+    height: 110px;
+    position: relative;
+    filter: drop-shadow(0 4px 10px rgba(180, 83, 9, 0.3));
+}
+
+.cert-seal-caption {
+    font-size: 13px;
+    font-weight: 800;
+    color: #b45309;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 4px 0 0 0;
+}
+
+.cert-seal-subcaption {
+    font-size: 11px;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Right: Endorsement & Signature */
+.cert-footer-signature {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cert-sig-date {
+    font-size: 15px;
+    font-weight: 600;
+    color: #475569;
+    margin: 0 0 2px 0;
+}
+
+.cert-sig-title {
+    font-size: 14px;
+    color: #334155;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+}
+
+.cert-sig-img-container {
+    height: 76px;
+    position: relative;
+    width: 270px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2px 0 1px 0;
+}
+
+/* Stempel Resmi Kedinasan di sebelah kiri berdempetan dengan tanda tangan */
+.cert-official-stamp {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-6deg);
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    z-index: 1;
+    opacity: 0.92;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    filter: saturate(1.1) contrast(1.05);
+}
+
+.cert-sig-image {
+    position: relative;
+    z-index: 2;
+    margin-left: 36px;
+    max-height: 105px;
+    max-width: 200px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    filter: contrast(1.2);
+}
+
+.cert-sig-line {
+    width: 270px;
+    height: 1.5px;
+    background: #334155;
+    margin: 4px 0;
+}
+
+.cert-instructor-name {
+    font-size: 17.5px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 2px 0;
+}
+
+.cert-instructor-title {
+    font-size: 12.5px;
+    color: #64748b;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* ==========================================================================
+   🖨️ STANDAR CETAK & PDF RESMI A4 LANDSCAPE (ISO 216: 297mm x 210mm)
+   ========================================================================== */
+@page {
+    size: A4 landscape;
+    margin: 0;
+}
+
+@media print {
+
+    html,
+    body {
+        width: 297mm !important;
+        height: 210mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+    }
+
+    .modern-certificate-container {
+        width: 297mm !important;
+        height: 210mm !important;
+        max-width: 297mm !important;
+        max-height: 210mm !important;
+        margin: 0 auto !important;
+        padding: 8mm !important;
+        border: none !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}

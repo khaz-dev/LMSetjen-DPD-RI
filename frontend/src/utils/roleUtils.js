@@ -57,6 +57,14 @@ export const switchRole = async (role, options = {}) => {
     const normalizedTargetRole = role.toLowerCase().trim() === 'teacher' ? 'instructor' : role.toLowerCase().trim();
     console.log(`[RoleSystem] Switching to role: ${normalizedTargetRole}`);
     
+    // Set global and session switching flags to prevent old routes from auto-reverting roles during transit
+    if (typeof window !== 'undefined') {
+      window.__roleSwitchingTarget = normalizedTargetRole;
+      try {
+        sessionStorage.setItem('role_switching_target', normalizedTargetRole);
+      } catch (e) {}
+    }
+    
     // Explicitly guarantee Authorization header from cookies or options
     const token = options.accessToken || Cookie.get('access_token');
     const config = {};
@@ -127,6 +135,11 @@ export const switchRole = async (role, options = {}) => {
     
   } catch (error) {
     console.error('[RoleSystem] Error switching role:', error);
+
+    if (typeof window !== 'undefined') {
+      delete window.__roleSwitchingTarget;
+      try { sessionStorage.removeItem('role_switching_target'); } catch (e) {}
+    }
 
     if (error.response?.status === 400) {
       return {

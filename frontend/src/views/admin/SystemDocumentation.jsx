@@ -9,7 +9,7 @@ import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
 import "./SystemDocumentation.css";
 
-function SystemDocumentation() {
+function SystemDocumentation({ isEmbedded = false }) {
     const [language, setLanguage] = useState("en"); // 'en' or 'id'
     const contentRef = useRef(null);
 
@@ -860,14 +860,11 @@ function SystemDocumentation() {
         }
     };
 
-    return (
-        <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-            <AdminHeader />
-            
-            <section className="pt-4 pb-5 modern-dashboard" style={{ flex: 1 }}>
-                <div className="container">
-                    {/* Header with Controls */}
-                    <div className="documentation-header no-print">
+    const contentNode = (
+        <section className={isEmbedded ? "py-2 modern-dashboard" : "pt-4 pb-5 modern-dashboard"} style={{ flex: 1 }}>
+            <div className={isEmbedded ? "" : "container"}>
+                {/* Header with Controls */}
+                <div className="documentation-header no-print">
                         <div className="header-content">
                             <div className="header-text">
                                 <h1 className="page-title">
@@ -1342,7 +1339,16 @@ function SystemDocumentation() {
                     </div>
                 </div>
             </section>
+    );
 
+    if (isEmbedded) {
+        return contentNode;
+    }
+
+    return (
+        <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+            <AdminHeader />
+            {contentNode}
             <Footer />
         </div>
     );

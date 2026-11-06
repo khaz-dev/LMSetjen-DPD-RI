@@ -1,0 +1,341 @@
+/* ==========================================================================
+   Certificate Settings Admin Page - Setjen DPD RI
+   ========================================================================== */
+
+.cert-admin-page {
+    background-color: #f8fafc;
+    min-height: 100vh;
+    padding-bottom: 4rem;
+}
+
+.cert-admin-header {
+    background: linear-gradient(135deg, #064e3b 0%, #0d5c3a 50%, #042f2e 100%);
+    color: #ffffff;
+    padding: 2.5rem 0 2rem;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(6, 78, 59, 0.2);
+}
+
+.cert-admin-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.85rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.cert-admin-subtitle {
+    font-size: 0.95rem;
+    color: #e2e8f0;
+    max-width: 780px;
+}
+
+.cert-badge-active {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    background: rgba(254, 240, 138, 0.15);
+    border: 1px solid #facc15;
+    color: #fef08a;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cert-admin-container {
+    margin-top: -1.5rem;
+}
+
+/* Nav Tabs */
+.cert-nav-tabs {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 0.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.cert-nav-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cert-nav-btn:hover {
+    color: #064e3b;
+    background: #f1f5f9;
+}
+
+.cert-nav-btn.active {
+    background: #0d5c3a;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(13, 92, 58, 0.25);
+}
+
+/* Card Styling */
+.cert-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.cert-card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 0.75rem;
+}
+
+.cert-card-title i {
+    color: #0d5c3a;
+}
+
+/* Form Controls */
+.cert-form-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.35rem;
+}
+
+.cert-form-hint {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+.cert-input {
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cert-input:focus {
+    border-color: #0d5c3a;
+    box-shadow: 0 0 0 3px rgba(13, 92, 58, 0.15);
+    outline: none;
+}
+
+/* Color Picker Row */
+.color-swatch-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.color-swatch-input {
+    width: 48px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    padding: 2px;
+    cursor: pointer;
+}
+
+/* Variable Dictionary Badge Grid */
+.var-dict-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.var-tag-card {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.var-tag-card:hover {
+    background: #f1f5f9;
+    border-color: #0d5c3a;
+}
+
+.var-tag-code {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #0d5c3a;
+    background: rgba(13, 92, 58, 0.08);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+}
+
+.var-tag-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    display: block;
+    margin-top: 2px;
+}
+
+.btn-copy-tag {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: color 0.15s;
+}
+
+.btn-copy-tag:hover {
+    color: #0d5c3a;
+    background: #e2e8f0;
+}
+
+/* Upload Box & Drag-and-Drop Area */
+.cert-dropzone {
+    border: 2px dashed #94a3b8;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: none;
+}
+
+.cert-dropzone:hover {
+    border-color: #0d5c3a;
+    background: #f0fdf4;
+    box-shadow: 0 4px 12px rgba(13, 92, 58, 0.08);
+}
+
+.cert-dropzone.is-dragging {
+    border-color: #0d5c3a !important;
+    border-style: solid !important;
+    border-width: 2.5px !important;
+    background: #ecfdf5 !important;
+    box-shadow: 0 0 0 5px rgba(13, 92, 58, 0.18), 0 12px 24px -4px rgba(13, 92, 58, 0.12) !important;
+    transform: scale(1.012);
+}
+
+.cert-dropzone * {
+    pointer-events: none;
+}
+
+.cert-dropzone-icon {
+    font-size: 2.5rem;
+    color: #0d5c3a;
+    margin-bottom: 0.75rem;
+    transition: transform 0.2s ease;
+}
+
+.cert-dropzone:hover .cert-dropzone-icon {
+    transform: translateY(-2px);
+}
+
+/* Live Preview Easel (Light Mode Studio) */
+.cert-preview-easel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    color: #1e293b;
+    position: sticky;
+    top: 20px;
+}
+
+.cert-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.cert-preview-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cert-preview-title i {
+    color: #0d5c3a;
+}
+
+.cert-preview-stage {
+    background-color: #f8fafc;
+    background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+    background-size: 20px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    min-height: 480px;
+    box-sizing: border-box;
+}
+
+/* Scaled Viewport Container: Mengeliminasi over-scroll ke kanan dan memungkinkan full scroll ke kiri/kanan saat di-zoom */
+.cert-preview-viewport {
+    margin: auto;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    border-radius: 6px;
+    background: #ffffff;
+    box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.15), 0 5px 15px -3px rgba(15, 23, 42, 0.08);
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cert-preview-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Action Sticky Footer */
+.cert-sticky-actions {
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+}
+

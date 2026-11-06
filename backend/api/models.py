@@ -1505,6 +1505,67 @@ class Certificate(models.Model):
             models.Index(fields=['certificate_id']),
             models.Index(fields=['user', 'course']),
         ]
+
+class CertificateTemplateConfig(models.Model):
+    """
+    Model konfigurasi template sertifikat dinamis untuk Admin LMSetjen DPD RI.
+    Mendukung master PPTX, background kustom, palet warna, tipografi, dan teks kop/pengesahan.
+    """
+    template_name = models.CharField(max_length=150, default="Template Resmi Setjen DPD RI")
+    is_active = models.BooleanField(default=True)
+    pptx_template = models.FileField(upload_to='certificates/templates/pptx/', null=True, blank=True)
+    custom_background = models.FileField(upload_to='certificates/templates/backgrounds/', null=True, blank=True)
+    
+    # Styling Palettes & Fonts
+    primary_color = models.CharField(max_length=25, default="#0d5c3a")
+    accent_color = models.CharField(max_length=25, default="#c59b27")
+    title_font = models.CharField(max_length=100, default="'Cinzel', serif")
+    body_font = models.CharField(max_length=100, default="'Montserrat', sans-serif")
+    
+    # Lembaga & Kop
+    agency_sup = models.CharField(max_length=255, default="SEKRETARIAT JENDERAL")
+    agency_main = models.CharField(max_length=255, default="DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA")
+    agency_sub = models.CharField(max_length=255, default="PUSAT PENGEMBANGAN KOMPETENSI APARATUR (PUSPEK)")
+    
+    # Judul Sertifikat & Pernyataan
+    certificate_title = models.CharField(max_length=150, default="SERTIFIKAT KELULUSAN")
+    certificate_subtitle = models.CharField(max_length=255, default="Certificate of Completion")
+    statement_text = models.TextField(
+        default="Diberikan dengan bangga sebagai pengakuan atas dedikasi, integritas, dan kelulusan menyeluruh dalam program pembelajaran:"
+    )
+    
+    # Pengesahan Penandatangan
+    signatory_title = models.CharField(max_length=255, default="Kepala Pusat Pengembangan Kompetensi Aparatur")
+    signatory_sub_title = models.CharField(max_length=255, default="Sekretariat Jenderal DPD RI")
+    signatory_name = models.CharField(max_length=255, default="Dr. Ir. H. M. Fahrizal, M.M.")
+    signatory_nip = models.CharField(max_length=100, default="19780512 200312 1 002")
+    
+    # Elemen Visual Toggles
+    show_gold_seal = models.BooleanField(default=True)
+    show_watermark = models.BooleanField(default=True)
+    show_bpsdm_logo = models.BooleanField(default=True)
+    show_qr_code = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Certificate Template Config"
+        verbose_name_plural = "Certificate Template Configs"
+
+    def __str__(self):
+        return f"{self.template_name} ({'Aktif' if self.is_active else 'Non-aktif'})"
+
+    @classmethod
+    def get_active_config(cls):
+        config = cls.objects.filter(is_active=True).first()
+        if not config:
+            config = cls.objects.create(
+                template_name="Template Resmi Setjen DPD RI",
+                is_active=True
+            )
+        return config
+
     
 class CompletedLesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)

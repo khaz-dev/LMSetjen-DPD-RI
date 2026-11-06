@@ -8,6 +8,7 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
   const [uploadProgress, setUploadProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState("");
   const [validationError, setValidationError] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
   // State untuk Pemutar Interaktif Inline
@@ -138,8 +139,7 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
     return { isValid: true, ext };
   };
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files?.[0];
+  const processModuleFile = async (file) => {
     if (!file) return;
 
     const validation = validateFile(file);
@@ -232,6 +232,43 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
       setUploadProgress(0);
       setStatusMessage("");
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await processModuleFile(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging) setIsDragging(true);
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (loading) return;
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      await processModuleFile(files[0]);
     }
   };
 
@@ -463,7 +500,26 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
         )}
         </>
       ) : (
-        <div className="upload-dropzone p-4 text-center border border-2 border-dashed rounded-3 bg-white d-flex flex-column align-items-center justify-content-center">
+        <div 
+          className={`upload-dropzone p-4 text-center border border-2 border-dashed rounded-3 bg-white d-flex flex-column align-items-center justify-content-center ${isDragging ? 'border-teal bg-teal-subtle' : ''}`}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          style={{
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            borderColor: isDragging ? "#0f766e" : "#cbd5e1",
+            backgroundColor: isDragging ? "#f0fdf4" : "#ffffff",
+            transform: isDragging ? "scale(1.01)" : "none"
+          }}
+          onClick={(e) => {
+            // Jangan trigger jika klik terjadi di dalam button
+            if (e.target.tagName !== "BUTTON" && !e.target.closest("button")) {
+              fileInputRef.current?.click();
+            }
+          }}
+        >
           <input
             ref={fileInputRef}
             type="file"
@@ -475,13 +531,15 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
 
           <div className="mb-3">
             <i
-              className="fas fa-cloud-upload-alt fa-3x"
-              style={{ color: loading ? "#0f766e" : "#94a3b8" }}
+              className={`fas ${isDragging ? 'fa-file-arrow-up fa-bounce' : 'fa-cloud-upload-alt'} fa-3x`}
+              style={{ color: isDragging || loading ? "#0f766e" : "#94a3b8" }}
             ></i>
           </div>
 
           <h6 className="fw-semibold mb-1 text-center">
-            {loading ? statusMessage : "Pilih atau Tarik File Paket (.zip / .h5p)"}
+            {isDragging 
+              ? "Lepaskan file paket (.zip / .h5p) di sini..." 
+              : (loading ? statusMessage : "Pilih atau Tarik File Paket (.zip / .h5p) ke Sini")}
           </h6>
           <p className="text-muted small mb-3 text-center">
             Ekstraksi otomatis dilakukan di server untuk paket standar SCORM 1.2 (imsmanifest.xml) atau H5P.

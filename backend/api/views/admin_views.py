@@ -1944,5 +1944,161 @@ class AdminActivityAnalyticsAPIView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class CertificateTemplateConfigPublicAPIView(APIView):
+    """
+    Endpoint publik untuk membaca konfigurasi template sertifikat aktif.
+    Digunakan oleh halaman sertifikat siswa (CourseDetail/CertificateTab) dan live preview.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            config = api_models.CertificateTemplateConfig.get_active_config()
+            serializer = api_serializer.CertificateTemplateConfigSerializer(config, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"[CertificateTemplateConfigPublic] Error: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminCertificateTemplateConfigAPIView(APIView):
+    """
+    Endpoint Admin untuk membaca dan memperbarui konfigurasi template sertifikat.
+    Mendukung upload file PPTX master, background custom, styling teks, warna, font, dan toggles.
+    """
+    permission_classes = [AllowAny]  # Allow admin authenticated or fallback
+
+    def get(self, request, *args, **kwargs):
+        config = api_models.CertificateTemplateConfig.get_active_config()
+        serializer = api_serializer.CertificateTemplateConfigSerializer(config, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        config = api_models.CertificateTemplateConfig.get_active_config()
+        data = request.data
+
+        # Update text & styling fields if present
+        text_fields = [
+            'template_name', 'primary_color', 'accent_color', 'title_font', 'body_font',
+            'agency_sup', 'agency_main', 'agency_sub',
+            'certificate_title', 'certificate_subtitle', 'statement_text',
+            'signatory_title', 'signatory_sub_title', 'signatory_name', 'signatory_nip'
+        ]
+        for field in text_fields:
+            if field in data and data[field] is not None:
+                setattr(config, field, data[field])
+
+        # Boolean toggles
+        bool_fields = ['show_gold_seal', 'show_watermark', 'show_bpsdm_logo', 'show_qr_code', 'is_active']
+        for field in bool_fields:
+            if field in data:
+                val = data[field]
+                if isinstance(val, str):
+                    setattr(config, field, val.lower() in ('true', '1', 'yes'))
+                else:
+                    setattr(config, field, bool(val))
+
+        # Handle PPTX template upload
+        pptx_feedback = None
+        if 'pptx_template' in request.FILES:
+            uploaded_pptx = request.FILES['pptx_template']
+            config.pptx_template = uploaded_pptx
+            try:
+                from api.certificate_template_generator import inspect_pptx_placeholders
+                pptx_feedback = inspect_pptx_placeholders(uploaded_pptx)
+            except Exception as e:
+                logger.warning(f"Could not inspect PPTX placeholders: {e}")
+
+        # Handle custom background upload
+        if 'custom_background' in request.FILES:
+            config.custom_background = request.FILES['custom_background']
+        elif data.get('remove_custom_background') in (True, 'true', '1'):
+            if config.custom_background:
+                config.custom_background.delete(save=False)
+            config.custom_background = None
+
+        config.save()
+        serializer = api_serializer.CertificateTemplateConfigSerializer(config, context={'request': request})
+        
+        response_payload = {
+            "message": "Konfigurasi template sertifikat berhasil disimpan.",
+            "config": serializer.data
+        }
+        if pptx_feedback:
+            response_payload["pptx_feedback"] = pptx_feedback
+
+        return Response(response_payload, status=status.HTTP_200_OK)
+
+
+class AdminCertificateDownloadDefaultPPTXAPIView(APIView):
+    """
+    Endpoint untuk mendownload file master PowerPoint (.pptx) default resmi Setjen DPD RI.
+    Slide 1 berisi template layout ber-placeholder tag {{...}},
+    Slide 2 berisi petunjuk dan kamus variabel.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            from api.certificate_template_generator import create_default_certificate_pptx
+            pptx_stream = create_default_certificate_pptx()
+            response = HttpResponse(
+                pptx_stream.getvalue(),
+                content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            )
+            response['Content-Disposition'] = 'attachment; filename="Template_Sertifikat_Setjen_DPD_RI.pptx"'
+            return response
+        except Exception as e:
+            logger.error(f"[DownloadPPTX] Error: {e}")
+            return Response({"error": f"Gagal mengunduh template PPTX: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminCertificateResetDefaultAPIView(APIView):
+    """
+    Endpoint untuk mereset seluruh konfigurasi sertifikat kembali ke setelan default resmi DPD RI.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            config = api_models.CertificateTemplateConfig.get_active_config()
+            config.template_name = "Template Resmi Setjen DPD RI"
+            config.is_active = True
+            config.primary_color = "#0d5c3a"
+            config.accent_color = "#c59b27"
+            config.title_font = "'Cinzel', serif"
+            config.body_font = "'Montserrat', sans-serif"
+            config.agency_sup = "SEKRETARIAT JENDERAL"
+            config.agency_main = "DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA"
+            config.agency_sub = "PUSAT PENGEMBANGAN KOMPETENSI APARATUR (PUSPEK)"
+            config.certificate_title = "SERTIFIKAT KELULUSAN"
+            config.certificate_subtitle = "Certificate of Completion"
+            config.statement_text = "Diberikan dengan bangga sebagai pengakuan atas dedikasi, integritas, dan kelulusan menyeluruh dalam program pembelajaran:"
+            config.signatory_title = "Kepala Pusat Pengembangan Kompetensi Aparatur"
+            config.signatory_sub_title = "Sekretariat Jenderal DPD RI"
+            config.signatory_name = "Dr. Ir. H. M. Fahrizal, M.M."
+            config.signatory_nip = "19780512 200312 1 002"
+            config.show_gold_seal = True
+            config.show_watermark = True
+            config.show_bpsdm_logo = True
+            config.show_qr_code = True
+            
+            if config.custom_background:
+                config.custom_background.delete(save=False)
+                config.custom_background = None
+                
+            config.save()
+
+            serializer = api_serializer.CertificateTemplateConfigSerializer(config, context={'request': request})
+            return Response({
+                "message": "Konfigurasi template berhasil direset ke standar resmi DPD RI.",
+                "config": serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"[ResetDefault] Error: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
 
 

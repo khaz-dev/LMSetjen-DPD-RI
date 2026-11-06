@@ -1140,6 +1140,79 @@
     border-radius: 4px !important;
 }
 
+/* ✨ Button styling in certificate cards with perfect vertical centering */
+.certificate-side-card .btn-outline-teal,
+.certificate-issued-card .btn-outline-teal,
+.cert-side-pane .btn-outline-teal,
+.certificate-container .btn-outline-teal {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    padding: 0.38rem 0.68rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    gap: 0.35rem !important;
+}
+
+.certificate-side-card .btn-outline-teal i,
+.certificate-issued-card .btn-outline-teal i,
+.cert-side-pane .btn-outline-teal i,
+.certificate-container .btn-outline-teal i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    font-size: 0.82rem !important;
+}
+
+.certificate-side-card .btn-outline-teal span,
+.certificate-issued-card .btn-outline-teal span,
+.cert-side-pane .btn-outline-teal span,
+.certificate-container .btn-outline-teal span {
+    display: inline-block !important;
+    line-height: 1 !important;
+    transform: translateY(0.5px);
+}
+
+.certificate-side-card .btn-teal,
+.certificate-issued-card .btn-teal,
+.cert-side-pane .btn-teal,
+.certificate-container .btn-teal {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    padding: 0.38rem 0.68rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    gap: 0.35rem !important;
+}
+
+.certificate-side-card .btn-teal i,
+.certificate-issued-card .btn-teal i,
+.cert-side-pane .btn-teal i,
+.certificate-container .btn-teal i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    font-size: 0.82rem !important;
+}
+
+.certificate-side-card .btn-teal span,
+.certificate-issued-card .btn-teal span,
+.cert-side-pane .btn-teal span,
+.certificate-container .btn-teal span {
+    display: inline-block !important;
+    line-height: 1 !important;
+    transform: translateY(0.5px);
+}
+
 /* Congratulations Card */
 .congratulations-card {
     width: 100% !important;

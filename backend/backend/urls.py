@@ -66,7 +66,9 @@ urlpatterns = [
     # In development without Docker, this allows React Router to handle the route
     path('certificate/validate/<str:validation_token>/', api_views.ReactSPACatchAllView.as_view(), name='certificate-validate-spa'),
 
-    path("api/v1/", include("api.urls"))
+    path("api/v1/", include("api.urls")),
+    # Fallback to handle accidental double slashes (e.g., api/v1//admin/...) gracefully
+    re_path(r"^api/v1/+", include("api.urls")),
 ]
 
 # Enhanced media serving with video streaming support

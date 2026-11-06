@@ -26,7 +26,7 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
     const [hasCheckedRole, setHasCheckedRole] = useState(false);
     const [shouldRender, setShouldRender] = useState(false);
     const isSwitchingRef = useRef(false);
-    
+
     // Normalize role string (e.g. 'teacher' -> 'instructor')
     const normalizeRole = (role) => {
         if (!role) return '';
@@ -64,9 +64,31 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
         }
 
         const userData = UserData();
-        
+
         // Normalize allowed roles
         const normalizedAllowedRoles = allowedRoles.map(role => normalizeRole(role));
+
+        // CHECK -1: Active role switch in progress across the application
+        const activeSwitchTarget = normalizeRole(
+            (typeof window !== 'undefined' ? window.__roleSwitchingTarget : null) ||
+            (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('role_switching_target') : null)
+        );
+
+        if (activeSwitchTarget) {
+            // If the route DOES NOT allow the target role currently being switched to,
+            // this component represents an old page being left behind!
+            // NEVER trigger auto-revert or access-denied error from this old page!
+            if (!normalizedAllowedRoles.includes(activeSwitchTarget)) {
+                console.log(`[RoleRoute] Bypassing ${location.pathname} because role switch to '${activeSwitchTarget}' is in progress`);
+                return;
+            } else {
+                // Arrived at destination route matching activeSwitchTarget
+                if (typeof window !== 'undefined') {
+                    delete window.__roleSwitchingTarget;
+                    try { sessionStorage.removeItem('role_switching_target'); } catch (e) { }
+                }
+            }
+        }
 
         // CHECK 0: Role passed directly via navigation state (e.g. from RoleIndicator switch)
         const navigatedRole = normalizeRole(location.state?.roleSwitchedTo);
@@ -78,16 +100,21 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
             setHasCheckedRole(true);
             return;
         }
-        
+
         // Check active role from both context and fresh token from cookie
         const contextRole = normalizeRole(currentRole);
         const tokenRole = normalizeRole(userData?.current_role || userData?.role);
-        
+
         // CHECK 1: Does current active role (from either context or token) match allowed roles?
         const isContextRoleAllowed = contextRole && normalizedAllowedRoles.includes(contextRole);
         const isTokenRoleAllowed = tokenRole && normalizedAllowedRoles.includes(tokenRole);
-        
+
         if (isContextRoleAllowed || isTokenRoleAllowed) {
+            // Clear any lingering switching target flag
+            if (typeof window !== 'undefined') {
+                delete window.__roleSwitchingTarget;
+                try { sessionStorage.removeItem('role_switching_target'); } catch (e) { }
+            }
             // Keep context in sync with valid token role if needed
             if (isTokenRoleAllowed && contextRole !== tokenRole && setCurrentRole) {
                 setCurrentRole(tokenRole);
@@ -106,7 +133,7 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
         const normalizedAvailableRoles = (availableRoles || []).map(r => normalizeRole(r));
         const hasStudent = !!(userData?.is_student || normalizedAvailableRoles.includes('student'));
         const hasInstructor = !!(userData?.is_instructor || normalizedAvailableRoles.includes('instructor'));
-        const hasAdmin = !!(userData?.is_admin || normalizedAvailableRoles.includes('admin'));
+        const hasAdmin = !!(userData?.is_admin || userData?.is_super_admin || userData?.is_superuser || userData?.is_staff || normalizedAvailableRoles.includes('admin'));
 
         let targetRole = null;
         if (normalizedAllowedRoles.includes('student') && hasStudent) {
@@ -184,7 +211,7 @@ const RoleRoute = ({ children, allowedRoles = [] }) => {
 
     // Don't redirect during logout
     const isLoggingOut = sessionStorage.getItem('logging_out') === 'true';
-    
+
     if (isLoggingOut) {
         return (
             <div style={{

@@ -63,12 +63,13 @@ function AdminHeader() {
         { to: "/admin/users/", icon: "fas fa-users", text: "Kelola Pengguna", requiresSuperAdmin: false },
         // ✨ PHASE 4: Unified content management page (replaces Review Kursus, Kurasi Testimoni, Kelola Materi)
         { to: "/admin/content-management/", icon: "fas fa-cogs", text: "Manajemen Konten", requiresSuperAdmin: false },
+
         // ✨ PHASE 4.210: Unified reports page (includes abuse reports and other system reports)
-        { to: "/admin/reports/", icon: "fas fa-file-alt", text: "Laporan Sistem", requiresSuperAdmin: false },
-        { to: "/admin/documentation/", icon: "fas fa-book", text: "Dokumentasi Sistem", requiresSuperAdmin: false },
+        { to: "/admin/reports/", icon: "fas fa-chart-line", text: "Laporan & Diagnostik", requiresSuperAdmin: false },
+
         // ✨ PHASE 11.1: User Feedback Management
         { to: "/admin/feedback/", icon: "fas fa-comments", text: "Manajemen Masukan", requiresSuperAdmin: false },
-        { to: "/admin/system-test/", icon: "fas fa-vial", text: "Pengujian Sistem", requiresSuperAdmin: false },
+
         { to: "/admin/system/", icon: "fas fa-cogs", text: "Pengaturan Sistem", requiresSuperAdmin: true },
         { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar", requiresSuperAdmin: false }
     ];

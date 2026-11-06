@@ -143,6 +143,12 @@ function CourseDetail() {
 
     const [certificateCheckLoading, setCertificateCheckLoading] = useState(false);
 
+    const [certImageVersion, setCertImageVersion] = useState(Date.now());
+
+    const [certRegenerateTrigger, setCertRegenerateTrigger] = useState(0);
+
+    const [isCertFullscreen, setIsCertFullscreen] = useState(false);
+
 
 
     // ✨ PHASE 4.224: Track active tab for certificate display
@@ -479,17 +485,17 @@ function CourseDetail() {
 
     const [currentVariantContext, setCurrentVariantContext] = useState(null);
 
-    const [discussionFilters, setDiscussionFilters] = useState({ 
+    const [discussionFilters, setDiscussionFilters] = useState({
 
-        search: '', 
+        search: '',
 
-        bagian: null, 
+        bagian: null,
 
-        pelajaran: null, 
+        pelajaran: null,
 
-        tab: 'all', 
+        tab: 'all',
 
-        sort: 'newest' 
+        sort: 'newest'
 
     });
 
@@ -517,9 +523,9 @@ function CourseDetail() {
 
         const unsolved = Math.max(0, all.length - solved);
 
-        const instructor = all.filter(q => 
+        const instructor = all.filter(q =>
 
-            q.has_instructor_reply || 
+            q.has_instructor_reply ||
 
             (teacherUserId && q.messages?.slice(1).some(m => m.user_id === teacherUserId || m.profile?.user_id === teacherUserId))
 
@@ -723,9 +729,9 @@ function CourseDetail() {
 
         } else if (activeTab === 'instructor') {
 
-            filtered = filtered.filter(q => 
+            filtered = filtered.filter(q =>
 
-                q.has_instructor_reply || 
+                q.has_instructor_reply ||
 
                 (teacherUserId && q.messages?.slice(1).some(m => m.user_id === teacherUserId || m.profile?.user_id === teacherUserId))
 
@@ -1475,7 +1481,7 @@ function CourseDetail() {
 
                 try {
 
-                    // ✨ PHASE 17.5: COMPREHENSIVE ERROR LOGGING - Debug progress save failures
+                    // ✨ PHASE 17: COMPREHENSIVE ERROR LOGGING - Debug progress save failures
 
                     const debugEnabled = window.DEV_DEBUG ? window.DEV_DEBUG : false;
 
@@ -1509,7 +1515,7 @@ function CourseDetail() {
 
 
 
-                    // ✨ PHASE 17.5: Log courseId resolution for debugging
+                    // ✨ PHASE 17: Log courseId resolution for debugging
 
                     if (!courseId) {
 
@@ -1553,7 +1559,7 @@ function CourseDetail() {
 
 
 
-                    // ✨ PHASE 17.5: CRITICAL - Log if courseId missing (this causes silent skip!)
+                    // ✨ PHASE 17: CRITICAL - Log if courseId missing (this causes silent skip!)
 
                     if (!courseId) {
 
@@ -1585,7 +1591,7 @@ function CourseDetail() {
 
 
 
-                    // ✨ PHASE 17.5: Verify user data
+                    // ✨ PHASE 17: Verify user data
 
                     const userId = UserData()?.user_id;
 
@@ -1643,7 +1649,7 @@ function CourseDetail() {
 
 
 
-                    // ✨ PHASE 17.5: COMPREHENSIVE SUCCESS LOGGING
+                    // ✨ PHASE 17: COMPREHENSIVE SUCCESS LOGGING
 
                     console.log('[CourseDetail] ✅ API RESPONSE SUCCESS:', {
 
@@ -1689,7 +1695,7 @@ function CourseDetail() {
 
                 } catch (error) {
 
-                    // ✨ PHASE 17.5: COMPREHENSIVE ERROR LOGGING - log ALL errors, not silently
+                    // ✨ PHASE 17: COMPREHENSIVE ERROR LOGGING - log ALL errors, not silently
 
                     console.error('[CourseDetail] ❌ API REQUEST FAILED:', {
 
@@ -2444,6 +2450,61 @@ function CourseDetail() {
         }
 
     }, [course?.course?.course_id]);
+
+    const handleDownloadCertFromDisplay = async () => {
+        if (!existingCertificate || !course?.course?.course_id) return;
+        try {
+            Toast().fire({
+                icon: 'info',
+                title: 'Mengunduh Sertifikat...',
+                text: 'Menyiapkan berkas sertifikat resolusi tinggi...'
+            });
+            const courseId = course?.course?.course_id;
+            const userId = UserData()?.user_id;
+            const response = await apiInstance.get(
+                `student/certificate-download/${courseId}/${userId}/`,
+                { responseType: 'blob' }
+            );
+            const blob = new Blob([response.data], { type: 'image/png' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Sertifikat_${courseId}_${userId}.png`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            Toast().fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Sertifikat resolusi tinggi berhasil diunduh.'
+            });
+        } catch (err) {
+            console.error('Download error:', err);
+            Toast().fire({
+                icon: 'error',
+                title: 'Gagal Mengunduh',
+                text: 'Gagal mengunduh file sertifikat.'
+            });
+        }
+    };
+
+    const handleCopyCertId = (id) => {
+        if (!id) return;
+        navigator.clipboard.writeText(id).then(() => {
+            Toast().fire({
+                icon: 'success',
+                title: 'Nomor Sertifikat Tersalin!',
+                text: id,
+                timer: 1600
+            });
+        });
+    };
+
+    const formatDate = (date) => {
+        if (!date) return '-';
+        return moment(date).format('DD MMMM YYYY');
+    };
 
 
 
@@ -4090,8 +4151,8 @@ function CourseDetail() {
 
             const finalAttemptType = selectedQuiz.quiz_type === 'pre_post_test' ? (isPreTest ? 'pre_test' : 'post_test') : 'quiz';
 
-            const violationsCount = validForced !== null 
-                ? validForced 
+            const violationsCount = validForced !== null
+                ? validForced
                 : (typeof quizViolationsRef.current === 'number' ? quizViolationsRef.current : 0);
 
             const submissionData = {
@@ -7809,7 +7870,7 @@ function CourseDetail() {
 
                         transform: scale(1.05);
 
-                        box-shadow: 0 5px 15px rgba(23, 162, 184, 0.5);
+                        box-shadow: 0 5px 15px rgba(23, 162, 184, 0);
 
                     }
 
@@ -8139,7 +8200,7 @@ function CourseDetail() {
 
 
 
-                                                        {/* ✨ Unified 2-Column Responsive Layout: Left Main Column & Right Sidebar Column */}
+                            {/* ✨ Unified 2-Column Responsive Layout: Left Main Column & Right Sidebar Column */}
 
                             <div className={`course-unified-layout-row ${activeTab === 'certificate' || activeTab === 'review' ? 'course-certificate-review-row' : ''} ${activeTab === 'quiz' ? 'course-quiz-layout-row' : 'course-player-curriculum-row'} ${isQuizActive && selectedQuiz && !showQuizResult ? 'quiz-active-taking-mode' : ''}`}>
 
@@ -8150,609 +8211,787 @@ function CourseDetail() {
                                     {/* 1. Main Display Area: Certificate Display / Quiz Player / Video Player */}
 
                                     {(activeTab === 'certificate' || activeTab === 'review') && (
-<div className="certificate-display-column">
+                                        <div className="certificate-display-column">
 
-                                        {existingCertificate && existingCertificate.image_file_url ? (
+                                            {existingCertificate && existingCertificate.image_file_url ? (
 
-                                            <div className="certificate-display-card">
+                                                <>
 
-                                                <div className="certificate-display-header">
+                                                    <div className="certificate-display-card">
 
-                                                    <div className="d-flex align-items-center gap-2">
+                                                        <div className="certificate-display-header">
 
-                                                        <i className="fas fa-award text-amber"></i>
+                                                            <div className="d-flex align-items-center gap-2">
 
-                                                        <span className="cert-preview-title">Pratinjau Sertifikat Kelulusan</span>
+                                                                <div className="cert-header-icon-badge">
+
+                                                                    <i className="fas fa-award"></i>
+
+                                                                </div>
+
+                                                                <div>
+
+                                                                    <span className="cert-preview-title">Sertifikat Kelulusan Resmi</span>
+
+                                                                    <span className="cert-preview-subtitle">Sekretariat Jenderal Dewan Perwakilan Daerah RI</span>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                            <div className="d-flex align-items-center gap-2 flex-wrap">
+
+                                                                <span className="badge-cert-verified">
+
+                                                                    <i className="fas fa-check-circle me-1"></i>Resmi & Terverifikasi
+
+                                                                </span>
+
+                                                                <button
+
+                                                                    type="button"
+
+                                                                    className="btn btn-xs btn-outline-teal d-inline-flex align-items-center gap-1"
+
+                                                                    onClick={() => setCertRegenerateTrigger(prev => prev + 1)}
+
+                                                                    title="Render ulang sertifikat dengan standar desain dan resolusi Ultra-HD terbaru"
+
+                                                                >
+
+                                                                    <i className="fas fa-arrows-rotate"></i>
+
+                                                                    <span>Perbarui Desain HD</span>
+
+                                                                </button>
+
+                                                                <button
+
+                                                                    type="button"
+
+                                                                    className="btn btn-xs btn-teal d-inline-flex align-items-center gap-1"
+
+                                                                    onClick={handleDownloadCertFromDisplay}
+
+                                                                    title="Unduh berkas sertifikat gambar resolusi tinggi"
+
+                                                                >
+
+                                                                    <i className="fas fa-download"></i>
+
+                                                                    <span>Unduh HD</span>
+
+                                                                </button>
+
+                                                                <button
+
+                                                                    type="button"
+
+                                                                    className="btn btn-xs btn-outline-secondary d-inline-flex align-items-center justify-content-center"
+
+                                                                    onClick={() => setIsCertFullscreen(true)}
+
+                                                                    title="Buka sertifikat dalam tampilan layar penuh"
+
+                                                                    style={{ width: '28px', height: '28px', padding: 0 }}
+
+                                                                >
+
+                                                                    <i className="fas fa-expand"></i>
+
+                                                                </button>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div className="certificate-image-wrapper">
+
+                                                            <div className="cert-gallery-easel" onClick={() => setIsCertFullscreen(true)}>
+
+                                                                <img
+
+                                                                    src={existingCertificate.image_file_url.includes('?') ? existingCertificate.image_file_url : `${existingCertificate.image_file_url}?v=${certImageVersion}`}
+
+                                                                    alt="Sertifikat Kursus Resmi DPD RI"
+
+                                                                    className="certificate-image"
+
+                                                                    onError={(e) => {
+
+                                                                        console.error('❌ Certificate image failed to load:', e);
+
+                                                                    }}
+
+                                                                />
+
+                                                                <div className="cert-hover-zoom-hint">
+
+                                                                    <i className="fas fa-magnifying-glass-plus me-1"></i> Klik untuk memperbesar
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div className="certificate-display-footer">
+
+                                                            <div className="cert-footer-meta-item">
+
+                                                                <span className="cert-meta-label">No. Sertifikat:</span>
+
+                                                                <button
+
+                                                                    type="button"
+
+                                                                    className="cert-copy-id-btn"
+
+                                                                    onClick={() => handleCopyCertId(existingCertificate.formatted_certificate_id || existingCertificate.certificate_id)}
+
+                                                                    title="Klik untuk menyalin nomor sertifikat"
+
+                                                                >
+
+                                                                    <span className="font-monospace">{existingCertificate.formatted_certificate_id || existingCertificate.certificate_id}</span>
+
+                                                                    <i className="fas fa-copy ms-1 text-muted"></i>
+
+                                                                </button>
+
+                                                            </div>
+
+                                                            <div className="cert-footer-meta-item">
+
+                                                                <span className="cert-meta-label">Beban Belajar:</span>
+
+                                                                <span className="cert-meta-val">{course?.course?.total_jam_pelatihan || 2} Jam Pelatihan (JP)</span>
+
+                                                            </div>
+
+                                                            <div className="cert-footer-meta-item">
+
+                                                                <span className="cert-meta-label">Diterbitkan:</span>
+
+                                                                <span className="cert-meta-val">{formatDate(existingCertificate?.date)}</span>
+
+                                                            </div>
+
+                                                            <div className="cert-footer-meta-item">
+
+                                                                <span className="cert-meta-label">Status:</span>
+
+                                                                <span className="text-success fw-bold">
+
+                                                                    <i className="fas fa-shield-halved me-1"></i>Sah & Terdaftar
+
+                                                                </span>
+
+                                                            </div>
+
+                                                        </div>
 
                                                     </div>
 
-                                                    <span className="badge-cert-verified">
+                                                    {/* Fullscreen Certificate Lightbox Modal */}
 
-                                                        <i className="fas fa-check-circle me-1"></i>Resmi & Terverifikasi
+                                                    {isCertFullscreen && (
 
-                                                    </span>
+                                                        <div
 
-                                                </div>
+                                                            className="cert-lightbox-backdrop"
 
-                                                <div className="certificate-image-wrapper">
+                                                            onClick={() => setIsCertFullscreen(false)}
 
-                                                    <img
+                                                        >
 
-                                                        src={existingCertificate.image_file_url}
+                                                            <div
 
-                                                        alt="Sertifikat Kursus"
+                                                                className="cert-lightbox-container"
 
-                                                        className="certificate-image"
+                                                                onClick={(e) => e.stopPropagation()}
 
-                                                        onError={(e) => {
+                                                            >
 
-                                                            console.error('❌ Certificate image failed to load:', e);
+                                                                <div className="cert-lightbox-header">
 
-                                                            e.target.style.display = 'none';
+                                                                    <div className="d-flex align-items-center gap-2">
 
-                                                        }}
+                                                                        <i className="fas fa-award text-amber fs-5"></i>
 
-                                                    />
+                                                                        <span className="text-white fw-bold">Sertifikat Kelulusan Resmi Setjen DPD RI</span>
 
-                                                </div>
+                                                                    </div>
 
-                                                <div className="certificate-display-footer">
+                                                                    <div className="d-flex align-items-center gap-2">
 
-                                                    <small className="text-muted">
+                                                                        <button
 
-                                                        <i className="fas fa-shield-alt me-1 text-teal-accent"></i>
+                                                                            type="button"
 
-                                                        Diterbitkan secara resmi oleh Sekretariat Jenderal DPD RI
+                                                                            className="btn btn-sm btn-teal d-inline-flex align-items-center gap-1"
 
-                                                    </small>
+                                                                            onClick={handleDownloadCertFromDisplay}
 
-                                                </div>
+                                                                        >
 
-                                            </div>
+                                                                            <i className="fas fa-download"></i>
 
-                                        ) : (
+                                                                            <span>Unduh HD</span>
 
-                                            <div className="certificate-standby-card">
+                                                                        </button>
 
-                                                <div className="cert-standby-content">
+                                                                        <button
 
-                                                    <div className="cert-standby-icon">
+                                                                            type="button"
 
-                                                        <i className="fas fa-award"></i>
+                                                                            className="btn btn-sm btn-outline-light d-inline-flex align-items-center justify-content-center"
+
+                                                                            onClick={() => setIsCertFullscreen(false)}
+
+                                                                            style={{ width: '32px', height: '32px', padding: 0 }}
+
+                                                                        >
+
+                                                                            <i className="fas fa-times"></i>
+
+                                                                        </button>
+
+                                                                    </div>
+
+                                                                </div>
+
+                                                                <div className="cert-lightbox-body">
+
+                                                                    <img
+
+                                                                        src={existingCertificate.image_file_url.includes('?') ? existingCertificate.image_file_url : `${existingCertificate.image_file_url}?v=${certImageVersion}`}
+
+                                                                        alt="Sertifikat Kursus Resmi"
+
+                                                                        className="cert-lightbox-img"
+
+                                                                    />
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    )}
+
+                                                </>
+
+                                            ) : (
+
+                                                <div className="certificate-standby-card">
+
+                                                    <div className="cert-standby-content">
+
+                                                        <div className="cert-standby-icon">
+
+                                                            <i className="fas fa-award"></i>
+
+                                                        </div>
+
+                                                        <h5 className="cert-standby-title">Pratinjau Sertifikat Kursus</h5>
+
+                                                        <p className="cert-standby-subtitle">
+
+                                                            {completionPercentage === 100
+
+                                                                ? "Selamat! Semua materi telah selesai 100%. Silakan klik tombol 'Buat Sertifikat' pada panel di sebelah kanan untuk menerbitkan sertifikat resmi Anda."
+
+                                                                : "Selesaikan seluruh materi kurikulum kursus dan penuhi syarat kelulusan kuis untuk menerbitkan sertifikat resmi Anda."}
+
+                                                        </p>
+
+                                                        <div className="cert-standby-progress-chip">
+
+                                                            <i className="fas fa-tasks me-1"></i>
+
+                                                            <span>Progres Kurikulum: {completionPercentage || 0}%</span>
+
+                                                        </div>
 
                                                     </div>
 
-                                                    <h5 className="cert-standby-title">Pratinjau Sertifikat Kursus</h5>
-
-                                                    <p className="cert-standby-subtitle">
-
-                                                        {completionPercentage === 100
-
-                                                            ? "Selamat! Semua materi telah selesai 100%. Silakan klik tombol 'Buat Sertifikat' pada panel di sebelah kanan untuk menerbitkan sertifikat resmi Anda."
-
-                                                            : "Selesaikan seluruh materi kurikulum kursus dan penuhi syarat kelulusan kuis untuk menerbitkan sertifikat resmi Anda."}
-
-                                                    </p>
-
-                                                    <div className="cert-standby-progress-chip">
-
-                                                        <i className="fas fa-tasks me-1"></i>
-
-                                                        <span>Progres Kurikulum: {completionPercentage || 0}%</span>
-
-                                                    </div>
-
                                                 </div>
 
-                                            </div>
+                                            )}
 
-                                        )}
-
-                                    </div>
+                                        </div>
                                     )}
 
                                     {activeTab === 'quiz' && (
-<div
-    className={`quiz-player-column ${isQuizActive && selectedQuiz && !showQuizResult ? 'has-active-quiz' : ''}`}
-    onMouseEnter={() => {
-        if (isQuizActive) {
-            setIsMouseInQuizArea(true);
-            setShowLeftQuizNotification(false);
-            quizViolationsRef.current = 0;
-            setQuizViolations(0);
-            isSubmittingQuizRef.current = false;
-        }
-    }}
-    onMouseMove={() => {
-        if (isQuizActive && (!isMouseInQuizArea || showLeftQuizNotification)) {
-            setIsMouseInQuizArea(true);
-            setShowLeftQuizNotification(false);
-            quizViolationsRef.current = 0;
-            setQuizViolations(0);
-            isSubmittingQuizRef.current = false;
-        }
-    }}
->
+                                        <div
+                                            className={`quiz-player-column ${isQuizActive && selectedQuiz && !showQuizResult ? 'has-active-quiz' : ''}`}
+                                            onMouseEnter={() => {
+                                                if (isQuizActive) {
+                                                    setIsMouseInQuizArea(true);
+                                                    setShowLeftQuizNotification(false);
+                                                    quizViolationsRef.current = 0;
+                                                    setQuizViolations(0);
+                                                    isSubmittingQuizRef.current = false;
+                                                }
+                                            }}
+                                            onMouseMove={() => {
+                                                if (isQuizActive && (!isMouseInQuizArea || showLeftQuizNotification)) {
+                                                    setIsMouseInQuizArea(true);
+                                                    setShowLeftQuizNotification(false);
+                                                    quizViolationsRef.current = 0;
+                                                    setQuizViolations(0);
+                                                    isSubmittingQuizRef.current = false;
+                                                }
+                                            }}
+                                        >
 
-                                        {/* Left Quiz Area Notification - Only render when pointer leaves quiz */}
+                                            {/* Left Quiz Area Notification - Only render when pointer leaves quiz */}
 
-                                        {isQuizActive && !isMouseInQuizArea && showLeftQuizNotification && (
+                                            {isQuizActive && !isMouseInQuizArea && showLeftQuizNotification && (
 
-                                            <div className="left-quiz-notification mb-2">
+                                                <div className="left-quiz-notification mb-2">
 
-                                                <i className="fas fa-exclamation-circle notification-icon me-2"></i>
+                                                    <i className="fas fa-exclamation-circle notification-icon me-2"></i>
 
-                                                <span><strong>Peringatan Integritas:</strong> Harap tetap fokus pada area kuis. Selesaikan dengan integritas diri.</span>
+                                                    <span><strong>Peringatan Integritas:</strong> Harap tetap fokus pada area kuis. Selesaikan dengan integritas diri.</span>
 
-                                            </div>
+                                                </div>
 
-                                        )}
+                                            )}
 
 
 
-                                        {selectedQuiz ? (
+                                            {selectedQuiz ? (
 
-                                            <div
-                                                ref={inlineQuizContainerRef}
-                                                className={`inline-quiz-fullscreen ${isQuizActive ? 'quiz-active' : ''} ${!isMouseInQuizArea && isQuizActive ? 'quiz-mouse-left' : ''}`}
-                                                onMouseEnter={() => {
-                                                    if (isQuizActive) {
-                                                        setIsMouseInQuizArea(true);
-                                                        setShowLeftQuizNotification(false);
-                                                    }
-                                                }}
-                                                onMouseMove={() => {
-                                                    if (isQuizActive && (!isMouseInQuizArea || showLeftQuizNotification)) {
-                                                        setIsMouseInQuizArea(true);
-                                                        setShowLeftQuizNotification(false);
-                                                    }
-                                                }}
-                                                onMouseLeave={() => {
-                                                    if (isQuizActive) {
-                                                        setIsMouseInQuizArea(false);
-                                                        setShowLeftQuizNotification(true);
-                                                    }
-                                                }}
-                                                onTouchStart={() => {
-                                                    if (isQuizActive) {
-                                                        setIsMouseInQuizArea(true);
-                                                        setShowLeftQuizNotification(false);
-                                                    }
-                                                }}
-                                            >
-                                                {/* Screen cover when pointer leaves quiz during active questions */}
-                                                {isQuizActive && !isMouseInQuizArea && !showQuizResult && (
-                                                    <div className="quiz-integrity-unreadable-cover" aria-live="assertive">
-                                                        <div className="quiz-integrity-modal-box">
-                                                            <div className="integrity-icon-pulse-wrapper mb-3">
-                                                                <div className="integrity-pulse-ring"></div>
-                                                                <div className="integrity-shield-circle">
-                                                                    <i className="fas fa-user-shield"></i>
+                                                <div
+                                                    ref={inlineQuizContainerRef}
+                                                    className={`inline-quiz-fullscreen ${isQuizActive ? 'quiz-active' : ''} ${!isMouseInQuizArea && isQuizActive ? 'quiz-mouse-left' : ''}`}
+                                                    onMouseEnter={() => {
+                                                        if (isQuizActive) {
+                                                            setIsMouseInQuizArea(true);
+                                                            setShowLeftQuizNotification(false);
+                                                        }
+                                                    }}
+                                                    onMouseMove={() => {
+                                                        if (isQuizActive && (!isMouseInQuizArea || showLeftQuizNotification)) {
+                                                            setIsMouseInQuizArea(true);
+                                                            setShowLeftQuizNotification(false);
+                                                        }
+                                                    }}
+                                                    onMouseLeave={() => {
+                                                        if (isQuizActive) {
+                                                            setIsMouseInQuizArea(false);
+                                                            setShowLeftQuizNotification(true);
+                                                        }
+                                                    }}
+                                                    onTouchStart={() => {
+                                                        if (isQuizActive) {
+                                                            setIsMouseInQuizArea(true);
+                                                            setShowLeftQuizNotification(false);
+                                                        }
+                                                    }}
+                                                >
+                                                    {/* Screen cover when pointer leaves quiz during active questions */}
+                                                    {isQuizActive && !isMouseInQuizArea && !showQuizResult && (
+                                                        <div className="quiz-integrity-unreadable-cover" aria-live="assertive">
+                                                            <div className="quiz-integrity-modal-box">
+                                                                <div className="integrity-icon-pulse-wrapper mb-3">
+                                                                    <div className="integrity-pulse-ring"></div>
+                                                                    <div className="integrity-shield-circle">
+                                                                        <i className="fas fa-user-shield"></i>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                            <h4 className="integrity-headline mb-2">Area Pengerjaan Tidak Aktif</h4>
-                                                            <p className="integrity-subtext mb-3">
-                                                                Kursor pointer Anda berada di luar area pengerjaan. Untuk menjaga kredibilitas dan integritas evaluasi, soal dan pilihan jawaban disamarkan serta tidak dapat dibaca.
-                                                            </p>
-                                                            <div className="integrity-status-pill">
-                                                                <i className="fas fa-mouse-pointer me-2"></i>
-                                                                Arahkan kembali kursor ke dalam area ini untuk melanjutkan
+                                                                <h4 className="integrity-headline mb-2">Area Pengerjaan Tidak Aktif</h4>
+                                                                <p className="integrity-subtext mb-3">
+                                                                    Kursor pointer Anda berada di luar area pengerjaan. Untuk menjaga kredibilitas dan integritas evaluasi, soal dan pilihan jawaban disamarkan serta tidak dapat dibaca.
+                                                                </p>
+                                                                <div className="integrity-status-pill">
+                                                                    <i className="fas fa-mouse-pointer me-2"></i>
+                                                                    Arahkan kembali kursor ke dalam area ini untuk melanjutkan
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )}
 
-                                                {/* Quiz Start Screen */}
+                                                    {/* Quiz Start Screen */}
 
-                                                {!isQuizActive && !showQuizResult && selectedQuiz && (() => {
+                                                    {!isQuizActive && !showQuizResult && selectedQuiz && (() => {
 
-                                                    const isPreTest = selectedQuiz.quiz_type === 'pre_post_test' && (!selectedQuiz.has_pre_test || selectedQuiz.current_mode === 'pre_test');
+                                                        const isPreTest = selectedQuiz.quiz_type === 'pre_post_test' && (!selectedQuiz.has_pre_test || selectedQuiz.current_mode === 'pre_test');
 
-                                                    const isPostTest = selectedQuiz.quiz_type === 'pre_post_test' && (selectedQuiz.has_pre_test || selectedQuiz.current_mode === 'post_test');
+                                                        const isPostTest = selectedQuiz.quiz_type === 'pre_post_test' && (selectedQuiz.has_pre_test || selectedQuiz.current_mode === 'post_test');
 
-                                                    
 
-                                                    return (
 
-                                                    <div className="quiz-start-screen-inline">
+                                                        return (
 
-                                                        <div className="quiz-intro-header">
+                                                            <div className="quiz-start-screen-inline">
 
-                                                            <div className="quiz-intro-header-content">
+                                                                <div className="quiz-intro-header">
 
-                                                                <div className={`quiz-intro-icon-box ${isPreTest ? 'pretest' : isPostTest ? 'posttest' : ''}`}>
+                                                                    <div className="quiz-intro-header-content">
 
-                                                                    <i className={`fas ${isPreTest ? 'fa-clipboard-check' : isPostTest ? 'fa-award' : 'fa-brain'}`}></i>
+                                                                        <div className={`quiz-intro-icon-box ${isPreTest ? 'pretest' : isPostTest ? 'posttest' : ''}`}>
+
+                                                                            <i className={`fas ${isPreTest ? 'fa-clipboard-check' : isPostTest ? 'fa-award' : 'fa-brain'}`}></i>
+
+                                                                        </div>
+
+                                                                        <div className="quiz-intro-title-wrapper">
+
+                                                                            <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
+
+                                                                                <h4 className="quiz-intro-title mb-0">{selectedQuiz.title}</h4>
+
+                                                                                {isPreTest ? (
+
+                                                                                    <span className="badge-quiz-mode pretest"><i className="fas fa-clipboard-check me-1"></i>Pre-test Diagnostik</span>
+
+                                                                                ) : isPostTest ? (
+
+                                                                                    <span className="badge-quiz-mode posttest"><i className="fas fa-award me-1"></i>Post-test Evaluasi Akhir</span>
+
+                                                                                ) : (
+
+                                                                                    <span className="badge-quiz-mode regular"><i className="fas fa-question-circle me-1"></i>Kuis Pembelajaran</span>
+
+                                                                                )}
+
+                                                                            </div>
+
+                                                                            <small className="quiz-intro-description">
+
+                                                                                {isPreTest
+
+                                                                                    ? "Pre-test diagnostik ini menguji pemahaman awal Anda sebelum memulai materi kursus. Tidak ada syarat nilai kelulusan minimal."
+
+                                                                                    : isPostTest
+
+                                                                                        ? "Evaluasi akhir untuk mengukur peningkatan kompetensi Anda setelah menyelesaikan seluruh materi kurikulum dan kuis kursus."
+
+                                                                                        : (selectedQuiz.description || "Uji pemahaman Anda tentang materi kursus")}
+
+                                                                            </small>
+
+                                                                        </div>
+
+                                                                    </div>
 
                                                                 </div>
 
-                                                                <div className="quiz-intro-title-wrapper">
+                                                                <div className="quiz-intro">
 
-                                                                    <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                                                    <div className="quiz-info-cards">
 
-                                                                        <h4 className="quiz-intro-title mb-0">{selectedQuiz.title}</h4>
+                                                                        <div className="quiz-info-card">
 
-                                                                        {isPreTest ? (
+                                                                            <i className="fas fa-question-circle"></i>
 
-                                                                            <span className="badge-quiz-mode pretest"><i className="fas fa-clipboard-check me-1"></i>Pre-test Diagnostik</span>
+                                                                            <span className="info-number">{selectedQuiz.total_questions}</span>
 
-                                                                        ) : isPostTest ? (
+                                                                            <span className="info-label">Pertanyaan</span>
 
-                                                                            <span className="badge-quiz-mode posttest"><i className="fas fa-award me-1"></i>Post-test Evaluasi Akhir</span>
+                                                                        </div>
+
+                                                                        <div className="quiz-info-card">
+
+                                                                            <i className="fas fa-clock"></i>
+
+                                                                            <span className="info-number">{selectedQuiz.total_questions}</span>
+
+                                                                            <span className="info-label">Menit</span>
+
+                                                                        </div>
+
+                                                                        <div className="quiz-info-card">
+
+                                                                            <i className={`fas ${isPreTest ? 'fa-check text-success' : 'fa-trophy text-amber'}`}></i>
+
+                                                                            <span className="info-number">{isPreTest ? "Bebas" : "80%"}</span>
+
+                                                                            <span className="info-label">{isPreTest ? "Tanpa Batas Nilai" : "Skor Lulus"}</span>
+
+                                                                        </div>
+
+                                                                        {selectedQuiz.quiz_type === 'pre_post_test' ? (
+                                                                            <div className="quiz-info-card">
+                                                                                <i className="fas fa-shield-alt text-teal"></i>
+                                                                                <span className="info-number">1x</span>
+                                                                                <span className="info-label">Dikerjakan Sekali</span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="quiz-info-card">
+                                                                                <i className="fas fa-redo"></i>
+                                                                                <span className={`info-number ${selectedQuiz.today_attempts >= 3 ? "text-danger" : "text-warning"}`}>
+                                                                                    {selectedQuiz.today_attempts || 0}/3
+                                                                                </span>
+                                                                                <span className="info-label">Percobaan Hari Ini</span>
+                                                                            </div>
+                                                                        )}
+
+                                                                    </div>
+
+
+
+                                                                    {selectedQuiz.quiz_type !== 'pre_post_test' && selectedQuiz.today_attempts > 0 && (
+
+                                                                        <div className={`quiz-attempt-warning ${selectedQuiz.can_attempt ? "warning" : "danger"}`}>
+
+                                                                            <i className={`fas ${selectedQuiz.can_attempt ? "fa-exclamation-triangle" : "fa-ban"} me-2`}></i>
+
+                                                                            {selectedQuiz.can_attempt
+
+                                                                                ? `Anda telah menggunakan ${selectedQuiz.today_attempts} dari 3 percobaan harian. ${3 - selectedQuiz.today_attempts} percobaan tersisa.`
+
+                                                                                : "Anda telah mencapai batas harian 3 percobaan. Silakan coba lagi besok."
+
+                                                                            }
+
+                                                                        </div>
+
+                                                                    )}
+
+
+
+                                                                    <div className="quiz-rules">
+
+                                                                        <h6>Aturan {isPreTest ? "Pre-test" : isPostTest ? "Post-test" : "Kuis"}:</h6>
+
+                                                                        <ul>
+
+                                                                            <li>Anda memiliki 1 menit per pertanyaan</li>
+
+                                                                            {isPreTest ? (
+
+                                                                                <>
+
+                                                                                    <li><strong>Dikerjakan sekali saja.</strong> Skor dan hasil baru akan terhitung dan dikunci setelah Anda mengklik tombol <strong>Kirim Kuis</strong>.</li>
+
+                                                                                    <li>Jika Anda belum mengklik Kirim Kuis, Anda masih dapat mengulang atau melanjutkan pengerjaan Pre-test.</li>
+
+                                                                                    <li>Tidak ada batas nilai kelulusan minimal (murni diagnostik). Setelah Anda mengklik Kirim Kuis, seluruh materi kurikulum kursus akan langsung terbuka.</li>
+
+                                                                                </>
+
+                                                                            ) : isPostTest ? (
+
+                                                                                <>
+
+                                                                                    <li><strong>Dikerjakan sekali saja.</strong> Skor dan hasil baru akan terhitung dan dikunci setelah Anda mengklik tombol <strong>Kirim Kuis</strong>.</li>
+
+                                                                                    <li>Jika Anda belum mengklik Kirim Kuis, Anda masih dapat mengulang atau melanjutkan pengerjaan Post-test.</li>
+
+                                                                                    <li>Penyelesaian Post-test merupakan syarat wajib untuk menerbitkan sertifikat resmi.</li>
+
+                                                                                </>
+
+                                                                            ) : (
+
+                                                                                <>
+
+                                                                                    <li>Anda perlu 80% untuk lulus kuis ini</li>
+
+                                                                                    <li>Anda dapat mencoba kuis ini maksimal 3 kali per hari</li>
+
+                                                                                </>
+
+                                                                            )}
+
+                                                                            <li>Setelah dimulai, Anda tidak dapat menjeda tes</li>
+
+                                                                        </ul>
+
+                                                                    </div>
+
+
+
+                                                                    <div className="quiz-start-actions">
+
+                                                                        <button className="btn btn-secondary btn-sm" onClick={handleQuizClose}>
+
+                                                                            <i className="fas fa-arrow-left me-1"></i>
+
+                                                                            Tutup
+
+                                                                        </button>
+
+                                                                        {selectedQuiz.quiz_type === 'pre_post_test' ? (
+                                                                            (isPreTest && selectedQuiz.has_pre_test) ? (
+                                                                                <button className="btn btn-secondary btn-sm" disabled>
+                                                                                    <i className="fas fa-lock me-1"></i>
+                                                                                    Pre-test Sudah Selesai ({Math.round(selectedQuiz.pre_test_score || 0)}%)
+                                                                                </button>
+                                                                            ) : (isPostTest && selectedQuiz.has_post_test) ? (
+                                                                                <button className="btn btn-secondary btn-sm" disabled>
+                                                                                    <i className="fas fa-lock me-1"></i>
+                                                                                    Post-test Sudah Selesai ({Math.round(selectedQuiz.post_test_score || 0)}%)
+                                                                                </button>
+                                                                            ) : (isPostTest && !canTakePostTest) ? (
+                                                                                <button className="btn btn-secondary btn-sm" disabled>
+                                                                                    <i className="fas fa-lock me-1"></i>
+                                                                                    Post-test Terkunci
+                                                                                </button>
+                                                                            ) : (
+                                                                                <button className="btn btn-teal btn-sm" onClick={startQuiz}>
+                                                                                    <i className="fas fa-play me-1"></i>
+                                                                                    {isPreTest ? "Mulai Pre-test Sekarang" : "Mulai Post-test Sekarang"}
+                                                                                </button>
+                                                                            )
+                                                                        ) : selectedQuiz.can_attempt ? (
+
+                                                                            <button className="btn btn-teal btn-sm" onClick={startQuiz}>
+
+                                                                                <i className="fas fa-play me-1"></i>
+
+                                                                                Mulai Kuis
+
+                                                                            </button>
 
                                                                         ) : (
 
-                                                                            <span className="badge-quiz-mode regular"><i className="fas fa-question-circle me-1"></i>Kuis Pembelajaran</span>
+                                                                            <button className="btn btn-secondary btn-sm" disabled>
+
+                                                                                <i className="fas fa-ban me-1"></i>
+
+                                                                                Batas Harian Tercapai
+
+                                                                            </button>
 
                                                                         )}
 
                                                                     </div>
 
-                                                                    <small className="quiz-intro-description">
-
-                                                                        {isPreTest 
-
-                                                                            ? "Pre-test diagnostik ini menguji pemahaman awal Anda sebelum memulai materi kursus. Tidak ada syarat nilai kelulusan minimal."
-
-                                                                            : isPostTest 
-
-                                                                                ? "Evaluasi akhir untuk mengukur peningkatan kompetensi Anda setelah menyelesaikan seluruh materi kurikulum dan kuis kursus."
-
-                                                                                : (selectedQuiz.description || "Uji pemahaman Anda tentang materi kursus")}
-
-                                                                    </small>
-
                                                                 </div>
 
                                                             </div>
 
-                                                        </div>
+                                                        );
 
-                                                        <div className="quiz-intro">
+                                                    })()}
 
-                                                            <div className="quiz-info-cards">
 
-                                                                <div className="quiz-info-card">
 
-                                                                    <i className="fas fa-question-circle"></i>
+                                                    {/* Active Quiz Screen */}
 
-                                                                    <span className="info-number">{selectedQuiz.total_questions}</span>
+                                                    {isQuizActive && selectedQuiz && (
 
-                                                                    <span className="info-label">Pertanyaan</span>
+                                                        <div className="quiz-active-screen-inline">
 
-                                                                </div>
+                                                            <div className="quiz-question-progress-bar">
 
-                                                                <div className="quiz-info-card">
+                                                                <div
 
-                                                                    <i className="fas fa-clock"></i>
+                                                                    className="quiz-question-progress-fill"
 
-                                                                    <span className="info-number">{selectedQuiz.total_questions}</span>
+                                                                    style={{ width: `${((currentQuestionIndex + 1) / (selectedQuiz.questions?.length || 1)) * 100}%` }}
 
-                                                                    <span className="info-label">Menit</span>
+                                                                ></div>
 
-                                                                </div>
+                                                            </div>
 
-                                                                <div className="quiz-info-card">
+                                                            <div className="quiz-question-header">
 
-                                                                    <i className={`fas ${isPreTest ? 'fa-check text-success' : 'fa-trophy text-amber'}`}></i>
+                                                                <div className="quiz-progress-info">
 
-                                                                    <span className="info-number">{isPreTest ? "Bebas" : "80%"}</span>
+                                                                    <div className="question-counter">
 
-                                                                    <span className="info-label">{isPreTest ? "Tanpa Batas Nilai" : "Skor Lulus"}</span>
+                                                                        Pertanyaan {currentQuestionIndex + 1} dari {selectedQuiz.questions?.length || 0}
 
-                                                                </div>
-
-                                                                {selectedQuiz.quiz_type === 'pre_post_test' ? (
-                                                                    <div className="quiz-info-card">
-                                                                        <i className="fas fa-shield-alt text-teal"></i>
-                                                                        <span className="info-number">1x</span>
-                                                                        <span className="info-label">Dikerjakan Sekali</span>
                                                                     </div>
-                                                                ) : (
-                                                                    <div className="quiz-info-card">
-                                                                        <i className="fas fa-redo"></i>
-                                                                        <span className={`info-number ${selectedQuiz.today_attempts >= 3 ? "text-danger" : "text-warning"}`}>
-                                                                            {selectedQuiz.today_attempts || 0}/3
-                                                                        </span>
-                                                                        <span className="info-label">Percobaan Hari Ini</span>
+
+                                                                    <div className="quiz-timer">
+
+                                                                        <i className="fas fa-clock me-2"></i>
+
+                                                                        {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, "0")}
+
                                                                     </div>
-                                                                )}
+
+                                                                </div>
 
                                                             </div>
 
 
 
-                                                            {selectedQuiz.quiz_type !== 'pre_post_test' && selectedQuiz.today_attempts > 0 && (
+                                                            {selectedQuiz.questions && selectedQuiz.questions[currentQuestionIndex] && (
 
-                                                                <div className={`quiz-attempt-warning ${selectedQuiz.can_attempt ? "warning" : "danger"}`}>
+                                                                <div className="quiz-question-section">
 
-                                                                    <i className={`fas ${selectedQuiz.can_attempt ? "fa-exclamation-triangle" : "fa-ban"} me-2`}></i>
+                                                                    <div className="question-text">
 
-                                                                    {selectedQuiz.can_attempt
+                                                                        {selectedQuiz.questions[currentQuestionIndex].question_text}
 
-                                                                        ? `Anda telah menggunakan ${selectedQuiz.today_attempts} dari 3 percobaan harian. ${3 - selectedQuiz.today_attempts} percobaan tersisa.`
+                                                                    </div>
 
-                                                                        : "Anda telah mencapai batas harian 3 percobaan. Silakan coba lagi besok."
 
-                                                                    }
 
-                                                                </div>
+                                                                    <div className="quiz-choices">
 
-                                                            )}
+                                                                        {selectedQuiz.questions[currentQuestionIndex].choices?.map((choice) => (
 
+                                                                            <div key={choice.choice_id} className="quiz-choice">
 
+                                                                                <label className="quiz-choice-label">
 
-                                                            <div className="quiz-rules">
+                                                                                    <input
 
-                                                                <h6>Aturan {isPreTest ? "Pre-test" : isPostTest ? "Post-test" : "Kuis"}:</h6>
+                                                                                        type="radio"
 
-                                                                <ul>
+                                                                                        name={`question_${selectedQuiz.questions[currentQuestionIndex].question_id}`}
 
-                                                                    <li>Anda memiliki 1 menit per pertanyaan</li>
+                                                                                        value={choice.choice_id}
 
-                                                                    {isPreTest ? (
+                                                                                        checked={quizAnswers[selectedQuiz.questions[currentQuestionIndex].question_id] == choice.choice_id}
 
-                                                                        <>
+                                                                                        onChange={(e) => {
 
-                                                                            <li><strong>Dikerjakan sekali saja.</strong> Skor dan hasil baru akan terhitung dan dikunci setelah Anda mengklik tombol <strong>Kirim Kuis</strong>.</li>
+                                                                                            const newAnswers = {
 
-                                                                            <li>Jika Anda belum mengklik Kirim Kuis, Anda masih dapat mengulang atau melanjutkan pengerjaan Pre-test.</li>
+                                                                                                ...quizAnswers,
 
-                                                                            <li>Tidak ada batas nilai kelulusan minimal (murni diagnostik). Setelah Anda mengklik Kirim Kuis, seluruh materi kurikulum kursus akan langsung terbuka.</li>
+                                                                                                [selectedQuiz.questions[currentQuestionIndex].question_id]: choice.choice_id
 
-                                                                        </>
+                                                                                            };
 
-                                                                    ) : isPostTest ? (
+                                                                                            setQuizAnswers(newAnswers);
 
-                                                                        <>
+                                                                                            currentQuizStateRef.current.answers = newAnswers;
 
-                                                                            <li><strong>Dikerjakan sekali saja.</strong> Skor dan hasil baru akan terhitung dan dikunci setelah Anda mengklik tombol <strong>Kirim Kuis</strong>.</li>
+                                                                                            if (isQuizActive && selectedQuiz) {
 
-                                                                            <li>Jika Anda belum mengklik Kirim Kuis, Anda masih dapat mengulang atau melanjutkan pengerjaan Post-test.</li>
+                                                                                                saveQuizProgress(selectedQuiz, newAnswers, currentQuestionIndex, timeRemaining, quizStartTime);
 
-                                                                            <li>Penyelesaian Post-test merupakan syarat wajib untuk menerbitkan sertifikat resmi.</li>
+                                                                                            }
 
-                                                                        </>
+                                                                                        }}
 
-                                                                    ) : (
+                                                                                    />
 
-                                                                        <>
+                                                                                    <span className="quiz-choice-text">{choice.choice_text}</span>
 
-                                                                            <li>Anda perlu 80% untuk lulus kuis ini</li>
+                                                                                    <span className="quiz-choice-indicator"></span>
 
-                                                                            <li>Anda dapat mencoba kuis ini maksimal 3 kali per hari</li>
+                                                                                </label>
 
-                                                                        </>
+                                                                            </div>
 
-                                                                    )}
+                                                                        ))}
 
-                                                                    <li>Setelah dimulai, Anda tidak dapat menjeda tes</li>
+                                                                    </div>
 
-                                                                </ul>
 
-                                                            </div>
 
-
-
-                                                            <div className="quiz-start-actions">
-
-                                                                <button className="btn btn-secondary btn-sm" onClick={handleQuizClose}>
-
-                                                                    <i className="fas fa-arrow-left me-1"></i>
-
-                                                                    Tutup
-
-                                                                </button>
-
-                                                                {selectedQuiz.quiz_type === 'pre_post_test' ? (
-                                                                    (isPreTest && selectedQuiz.has_pre_test) ? (
-                                                                        <button className="btn btn-secondary btn-sm" disabled>
-                                                                            <i className="fas fa-lock me-1"></i>
-                                                                            Pre-test Sudah Selesai ({Math.round(selectedQuiz.pre_test_score || 0)}%)
-                                                                        </button>
-                                                                    ) : (isPostTest && selectedQuiz.has_post_test) ? (
-                                                                        <button className="btn btn-secondary btn-sm" disabled>
-                                                                            <i className="fas fa-lock me-1"></i>
-                                                                            Post-test Sudah Selesai ({Math.round(selectedQuiz.post_test_score || 0)}%)
-                                                                        </button>
-                                                                    ) : (isPostTest && !canTakePostTest) ? (
-                                                                        <button className="btn btn-secondary btn-sm" disabled>
-                                                                            <i className="fas fa-lock me-1"></i>
-                                                                            Post-test Terkunci
-                                                                        </button>
-                                                                    ) : (
-                                                                        <button className="btn btn-teal btn-sm" onClick={startQuiz}>
-                                                                            <i className="fas fa-play me-1"></i>
-                                                                            {isPreTest ? "Mulai Pre-test Sekarang" : "Mulai Post-test Sekarang"}
-                                                                        </button>
-                                                                    )
-                                                                ) : selectedQuiz.can_attempt ? (
-
-                                                                    <button className="btn btn-teal btn-sm" onClick={startQuiz}>
-
-                                                                        <i className="fas fa-play me-1"></i>
-
-                                                                        Mulai Kuis
-
-                                                                    </button>
-
-                                                                ) : (
-
-                                                                    <button className="btn btn-secondary btn-sm" disabled>
-
-                                                                        <i className="fas fa-ban me-1"></i>
-
-                                                                        Batas Harian Tercapai
-
-                                                                    </button>
-
-                                                                )}
-
-                                                            </div>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                    );
-
-                                                })()}
-
-
-
-                                                {/* Active Quiz Screen */}
-
-                                                {isQuizActive && selectedQuiz && (
-
-                                                    <div className="quiz-active-screen-inline">
-
-                                                        <div className="quiz-question-progress-bar">
-
-                                                            <div
-
-                                                                className="quiz-question-progress-fill"
-
-                                                                style={{ width: `${((currentQuestionIndex + 1) / (selectedQuiz.questions?.length || 1)) * 100}%` }}
-
-                                                            ></div>
-
-                                                        </div>
-
-                                                        <div className="quiz-question-header">
-
-                                                            <div className="quiz-progress-info">
-
-                                                                <div className="question-counter">
-
-                                                                    Pertanyaan {currentQuestionIndex + 1} dari {selectedQuiz.questions?.length || 0}
-
-                                                                </div>
-
-                                                                <div className="quiz-timer">
-
-                                                                    <i className="fas fa-clock me-2"></i>
-
-                                                                    {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, "0")}
-
-                                                                </div>
-
-                                                            </div>
-
-                                                        </div>
-
-
-
-                                                        {selectedQuiz.questions && selectedQuiz.questions[currentQuestionIndex] && (
-
-                                                            <div className="quiz-question-section">
-
-                                                                <div className="question-text">
-
-                                                                    {selectedQuiz.questions[currentQuestionIndex].question_text}
-
-                                                                </div>
-
-
-
-                                                                <div className="quiz-choices">
-
-                                                                    {selectedQuiz.questions[currentQuestionIndex].choices?.map((choice) => (
-
-                                                                        <div key={choice.choice_id} className="quiz-choice">
-
-                                                                            <label className="quiz-choice-label">
-
-                                                                                <input
-
-                                                                                    type="radio"
-
-                                                                                    name={`question_${selectedQuiz.questions[currentQuestionIndex].question_id}`}
-
-                                                                                    value={choice.choice_id}
-
-                                                                                    checked={quizAnswers[selectedQuiz.questions[currentQuestionIndex].question_id] == choice.choice_id}
-
-                                                                                    onChange={(e) => {
-
-                                                                                        const newAnswers = {
-
-                                                                                            ...quizAnswers,
-
-                                                                                            [selectedQuiz.questions[currentQuestionIndex].question_id]: choice.choice_id
-
-                                                                                        };
-
-                                                                                        setQuizAnswers(newAnswers);
-
-                                                                                        currentQuizStateRef.current.answers = newAnswers;
-
-                                                                                        if (isQuizActive && selectedQuiz) {
-
-                                                                                            saveQuizProgress(selectedQuiz, newAnswers, currentQuestionIndex, timeRemaining, quizStartTime);
-
-                                                                                        }
-
-                                                                                    }}
-
-                                                                                />
-
-                                                                                <span className="quiz-choice-text">{choice.choice_text}</span>
-
-                                                                                <span className="quiz-choice-indicator"></span>
-
-                                                                            </label>
-
-                                                                        </div>
-
-                                                                    ))}
-
-                                                                </div>
-
-
-
-                                                                <div className="quiz-navigation">
-
-                                                                    <button
-
-                                                                        className="btn btn-sm btn-outline-primary"
-
-                                                                        onClick={() => {
-
-                                                                            const newIndex = Math.max(0, currentQuestionIndex - 1);
-
-                                                                            setCurrentQuestionIndex(newIndex);
-
-                                                                            currentQuizStateRef.current.questionIndex = newIndex;
-
-                                                                            if (isQuizActive && selectedQuiz) {
-
-                                                                                saveQuizProgress(selectedQuiz, quizAnswers, newIndex, timeRemaining, quizStartTime);
-
-                                                                            }
-
-                                                                        }}
-
-                                                                        disabled={currentQuestionIndex === 0}
-
-                                                                    >
-
-                                                                        <i className="fas fa-arrow-left me-1"></i>
-
-                                                                        Sebelumnya
-
-                                                                    </button>
-
-
-
-                                                                    {currentQuestionIndex < (selectedQuiz.questions?.length || 0) - 1 ? (
+                                                                    <div className="quiz-navigation">
 
                                                                         <button
 
-                                                                            className="btn btn-sm btn-primary"
+                                                                            className="btn btn-sm btn-outline-primary"
 
                                                                             onClick={() => {
 
-                                                                                const newIndex = currentQuestionIndex + 1;
+                                                                                const newIndex = Math.max(0, currentQuestionIndex - 1);
 
                                                                                 setCurrentQuestionIndex(newIndex);
 
@@ -8766,366 +9005,19 @@ function CourseDetail() {
 
                                                                             }}
 
-                                                                        >
-
-                                                                            Berikutnya
-
-                                                                            <i className="fas fa-arrow-right ms-1"></i>
-
-                                                                        </button>
-
-                                                                    ) : (
-
-                                                                        <button
-
-                                                                            className="btn btn-sm btn-success"
-
-                                                                            onClick={() => submitQuiz()}
-
-                                                                        >
-
-                                                                            <i className="fas fa-check me-1"></i>
-
-                                                                            Kirim Kuis
-
-                                                                        </button>
-
-                                                                    )}
-
-                                                                </div>
-
-                                                            </div>
-
-                                                        )}
-
-                                                    </div>
-
-                                                )}
-
-
-
-                                                {/* Quiz Result Screen */}
-
-                                                {showQuizResult && quizResult && (() => {
-
-                                                    const isPreTest = selectedQuiz?.quiz_type === 'pre_post_test' && (!selectedQuiz?.has_pre_test || selectedQuiz?.current_mode === 'pre_test' || quizResult?.is_pre_test);
-
-                                                    const isPostTest = selectedQuiz?.quiz_type === 'pre_post_test' && (selectedQuiz?.has_pre_test || selectedQuiz?.current_mode === 'post_test' || quizResult?.is_post_test);
-
-
-
-                                                    return (
-
-                                                    <div className="quiz-result-screen-inline">
-
-                                                        <div className="quiz-result-header-top">
-
-                                                            <div className="quiz-result-header-content d-flex align-items-center gap-2">
-
-                                                                <div className={`quiz-result-icon-box ${isPreTest || quizResult.passed ? "success" : "failure"}`}>
-
-                                                                    <i className={`fas ${isPreTest ? "fa-clipboard-check" : quizResult.passed ? "fa-trophy" : "fa-times-circle"}`}></i>
-
-                                                                </div>
-
-                                                                <div className="quiz-result-title-wrapper">
-
-                                                                    <h4 className="quiz-result-title">{selectedQuiz?.title}</h4>
-
-                                                                    <small className="quiz-result-description">
-
-                                                                        {isPreTest 
-
-                                                                            ? "Pre-test selesai! Pemahaman awal Anda telah tercatat dan kurikulum kursus kini telah terbuka."
-
-                                                                            : isPostTest
-
-                                                                                ? "Post-test selesai! Evaluasi akhir Anda telah tercatat dan syarat sertifikat telah terpenuhi."
-
-                                                                                : (quizResult.passed ? "Selamat! Anda telah berhasil lulus kuis ini!" : "Teruslah berlatih untuk hasil yang lebih baik")}
-
-                                                                    </small>
-
-                                                                </div>
-
-                                                            </div>
-
-                                                        </div>
-
-
-
-                                                        <div className="quiz-result">
-
-                                                            <div className="quiz-result-status">
-
-                                                                <h5 className={`quiz-result-status-title ${isPreTest || quizResult.passed ? "text-success" : "text-danger"}`}>
-
-                                                                    {isPreTest ? "✅ Pre-test Berhasil Diselesaikan!" : isPostTest ? "🎉 Post-test Berhasil Diselesaikan!" : quizResult.passed ? "🎉 Selamat! Kuis Lulus" : "❌ Kuis Belum Lulus"}
-
-                                                                </h5>
-
-                                                                <p className="quiz-result-status-message">
-
-                                                                    {isPreTest
-
-                                                                        ? "Hasil diagnostik pemahaman awal Anda berhasil disimpan. Anda kini dapat mulai mempelajari materi pada kurikulum."
-
-                                                                        : isPostTest
-
-                                                                            ? "Rangkaian evaluasi akhir Anda telah tuntas. Anda kini dapat menerbitkan sertifikat resmi kursus ini."
-
-                                                                            : quizResult.passed
-
-                                                                                ? "Anda telah berhasil lulus kuis ini dengan baik!"
-
-                                                                                : "Anda membutuhkan 80% atau lebih untuk lulus kuis ini. Silakan review materi dan coba lagi!"}
-
-                                                                </p>
-
-                                                            </div>
-
-
-
-                                                            <div className="quiz-result-stats-cards">
-
-                                                                <div className="result-stat-card">
-
-                                                                    <i className="fas fa-percent"></i>
-
-                                                                    <span className="stat-label">Skor</span>
-
-                                                                    <span className={`stat-number ${isPreTest || quizResult.passed ? "text-success" : "text-danger"}`}>
-
-                                                                        {Math.round(quizResult.score)}%
-
-                                                                    </span>
-
-                                                                </div>
-
-                                                                <div className="result-stat-card">
-
-                                                                    <i className="fas fa-check-circle"></i>
-
-                                                                    <span className="stat-label">Benar</span>
-
-                                                                    <span className="stat-number">
-
-                                                                        {quizResult.correct_answers}/{quizResult.total_questions}
-
-                                                                    </span>
-
-                                                                </div>
-
-                                                                <div className="result-stat-card">
-
-                                                                    <i className="fas fa-hourglass-end"></i>
-
-                                                                    <span className="stat-label">Waktu</span>
-
-                                                                    <span className="stat-number">
-
-                                                                        {(() => {
-
-                                                                            const timeTaken = quizResult.time_taken || 0;
-
-                                                                            const minutes = Math.floor(timeTaken / 60);
-
-                                                                            const seconds = timeTaken % 60;
-
-                                                                            return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-
-                                                                        })()}
-
-                                                                    </span>
-
-                                                                </div>
-
-                                                                <div className="result-stat-card">
-
-                                                                    <i className="fas fa-redo"></i>
-
-                                                                    <span className="stat-label">Sisa</span>
-
-                                                                    <span className={`stat-number ${quizResult.attempts_left === 0 ? "text-danger" : "text-warning"}`}>
-
-                                                                        {quizResult.attempts_left || 0}
-
-                                                                    </span>
-
-                                                                </div>
-
-                                                            </div>
-
-
-
-                                                            {/* Transparansi Evaluasi Pre-Test vs Post-Test (Learning Gain) */}
-                                                            {quizResult.learning_comparison && (
-                                                                <div className="quiz-learning-gain-card p-3 my-2.5 rounded-3 border bg-white shadow-xs">
-                                                                    <div className="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                                                                        <span className="fw-bold text-slate-800 small text-uppercase">
-                                                                            <i className="fas fa-chart-line text-teal me-1.5"></i> Evaluasi Efektivitas Pembelajaran
-                                                                        </span>
-                                                                        <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2.5 py-1 fw-semibold">
-                                                                            {quizResult.learning_comparison.normalized_gain > 0 
-                                                                                ? `Kompetensi Meningkat (+${quizResult.learning_comparison.normalized_gain}% Normalized Gain)` 
-                                                                                : 'Hasil Evaluasi Tercatat'}
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="row g-2 align-items-center text-center">
-                                                                        <div className="col-4">
-                                                                            <div className="p-2 rounded bg-light border">
-                                                                                <small className="text-muted d-block" style={{ fontSize: '11px' }}>Pre-Test</small>
-                                                                                <strong className="fs-6 text-slate-700">{quizResult.learning_comparison.pre_score}%</strong>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="col-4">
-                                                                            <div className="p-2 rounded bg-teal-subtle border border-teal-subtle">
-                                                                                <small className="text-teal d-block fw-semibold" style={{ fontSize: '11px' }}>Lonjakan Nilai</small>
-                                                                                <strong className="fs-6 text-teal">
-                                                                                    {quizResult.learning_comparison.improvement >= 0 ? '+' : ''}{quizResult.learning_comparison.improvement} Poin
-                                                                                </strong>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="col-4">
-                                                                            <div className="p-2 rounded bg-light border">
-                                                                                <small className="text-muted d-block" style={{ fontSize: '11px' }}>Post-Test</small>
-                                                                                <strong className="fs-6 text-slate-700">{quizResult.learning_comparison.post_score}%</strong>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-
-                                                            {/* Lencana Transparansi Integritas Anti-Cheat */}
-                                                            {quizResult.integrity && (
-                                                                quizResult.integrity.is_valid ? (
-                                                                    <div className="quiz-integrity-transparency-card valid p-2.5 my-2 rounded-3 border border-success-subtle bg-success-subtle text-dark">
-                                                                        <div className="d-flex align-items-center gap-2">
-                                                                            <div className="p-1.5 rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '28px', height: '28px' }}>
-                                                                                <i className="fas fa-shield-halved" style={{ fontSize: '13px' }}></i>
-                                                                            </div>
-                                                                            <div className="flex-grow-1 min-w-0">
-                                                                                <div className="d-flex align-items-center justify-content-between flex-wrap gap-1">
-                                                                                    <span className="fw-bold text-success small">Ujian Terverifikasi Bebas Kecurangan (Valid)</span>
-                                                                                    <span className="badge bg-success text-white" style={{ fontSize: '10px' }}>Integritas Sah</span>
-                                                                                </div>
-                                                                                <small className="text-muted d-block" style={{ fontSize: '11px', lineHeight: '1.4' }}>
-                                                                                    Dikerjakan secara tertib dengan durasi waktu wajar dan tanpa anomali perpindahan layar ({quizResult.integrity.tab_switch_violations || 0} pelanggaran tab).
-                                                                                </small>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="quiz-integrity-transparency-card pending p-2.5 my-2 rounded-3 border border-warning-subtle bg-warning-subtle text-dark">
-                                                                        <div className="d-flex align-items-start gap-2">
-                                                                            <div className="p-1.5 rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '28px', height: '28px' }}>
-                                                                                <i className="fas fa-triangle-exclamation" style={{ fontSize: '13px' }}></i>
-                                                                            </div>
-                                                                            <div className="flex-grow-1 min-w-0">
-                                                                                <div className="d-flex align-items-center justify-content-between flex-wrap gap-1">
-                                                                                    <span className="fw-bold text-warning-emphasis small">Menunggu Peninjauan Instruktur</span>
-                                                                                    <span className="badge bg-warning text-dark border border-warning" style={{ fontSize: '10px' }}>Pace Cepat</span>
-                                                                                </div>
-                                                                                <small className="text-secondary d-block mt-0.5" style={{ fontSize: '11px', lineHeight: '1.4' }}>
-                                                                                    Durasi pengerjaan Anda terdeteksi sangat singkat. Nilai berhasil disimpan, namun penerbitan sertifikat digital ditahan sementara menunggu pengesahan pengajar.
-                                                                                </small>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                )
-                                                            )}
-
-                                                            <div className="quiz-result-summary">
-
-                                                                <i className={`fas ${isPreTest || quizResult.passed ? "fa-lightbulb text-amber" : "fa-info-circle text-teal-accent"} me-2`}></i>
-
-                                                                <p className="summary-text">
-
-                                                                    {isPreTest
-
-                                                                        ? "Akses materi pembelajaran telah dibuka. Silakan lanjutkan ke Kurikulum Kursus untuk mulai belajar."
-
-                                                                        : isPostTest
-
-                                                                            ? "Evaluasi pembelajaran lengkap! Silakan buka Tab Sertifikat untuk memeriksa status penerbitan sertifikat resmi."
-
-                                                                            : quizResult.passed
-
-                                                                                ? "Nilai sempurna! Lanjutkan dengan kuis berikutnya atau review materi."
-
-                                                                                : `Anda mendapat ${Math.round(quizResult.score)}%. Coba lagi untuk mencapai skor lulus minimal 80%.`}
-
-                                                                </p>
-
-                                                            </div>
-
-
-
-                                                            <div className="quiz-result-actions">
-
-                                                                {isPreTest ? (
-
-                                                                    <button
-
-                                                                        className="btn btn-sm btn-teal"
-
-                                                                        onClick={() => {
-
-                                                                            handleQuizClose();
-
-                                                                            setActiveTab('lectures');
-
-                                                                        }}
-
-                                                                    >
-
-                                                                        <i className="fas fa-play me-1"></i>
-
-                                                                        Mulai Pelajari Materi Kursus
-
-                                                                    </button>
-
-                                                                ) : isPostTest ? (
-
-                                                                    <button
-
-                                                                        className="btn btn-sm btn-teal"
-
-                                                                        onClick={() => {
-
-                                                                            handleQuizClose();
-
-                                                                            setActiveTab('certificate');
-
-                                                                        }}
-
-                                                                    >
-
-                                                                        <i className="fas fa-award me-1"></i>
-
-                                                                        Lihat & Terbitkan Sertifikat
-
-                                                                    </button>
-
-                                                                ) : (
-
-                                                                    <>
-
-                                                                        <button
-
-                                                                            className="btn btn-sm btn-secondary"
-
-                                                                            onClick={handleQuizClose}
+                                                                            disabled={currentQuestionIndex === 0}
 
                                                                         >
 
                                                                             <i className="fas fa-arrow-left me-1"></i>
 
-                                                                            Tutup
+                                                                            Sebelumnya
 
                                                                         </button>
 
-                                                                        {quizResult.attempts_left !== undefined && quizResult.attempts_left > 0 && !quizResult.passed && (
+
+
+                                                                        {currentQuestionIndex < (selectedQuiz.questions?.length || 0) - 1 ? (
 
                                                                             <button
 
@@ -9133,137 +9025,518 @@ function CourseDetail() {
 
                                                                                 onClick={() => {
 
-                                                                                    handleQuizShow(selectedQuiz);
+                                                                                    const newIndex = currentQuestionIndex + 1;
+
+                                                                                    setCurrentQuestionIndex(newIndex);
+
+                                                                                    currentQuizStateRef.current.questionIndex = newIndex;
+
+                                                                                    if (isQuizActive && selectedQuiz) {
+
+                                                                                        saveQuizProgress(selectedQuiz, quizAnswers, newIndex, timeRemaining, quizStartTime);
+
+                                                                                    }
 
                                                                                 }}
 
                                                                             >
 
-                                                                                <i className="fas fa-redo me-1"></i>
+                                                                                Berikutnya
 
-                                                                                Coba Lagi
+                                                                                <i className="fas fa-arrow-right ms-1"></i>
+
+                                                                            </button>
+
+                                                                        ) : (
+
+                                                                            <button
+
+                                                                                className="btn btn-sm btn-success"
+
+                                                                                onClick={() => submitQuiz()}
+
+                                                                            >
+
+                                                                                <i className="fas fa-check me-1"></i>
+
+                                                                                Kirim Kuis
 
                                                                             </button>
 
                                                                         )}
 
-                                                                    </>
+                                                                    </div>
 
-                                                                )}
+                                                                </div>
 
-                                                            </div>
+                                                            )}
 
                                                         </div>
 
-                                                    </div>
+                                                    )}
 
-                                                    );
 
-                                                })()}
 
-                                            </div>
+                                                    {/* Quiz Result Screen */}
 
-                                        ) : (
+                                                    {showQuizResult && quizResult && (() => {
 
-                                            <div className="quiz-player-standby">
+                                                        const isPreTest = selectedQuiz?.quiz_type === 'pre_post_test' && (!selectedQuiz?.has_pre_test || selectedQuiz?.current_mode === 'pre_test' || quizResult?.is_pre_test);
 
-                                                <div className="quiz-standby-content">
+                                                        const isPostTest = selectedQuiz?.quiz_type === 'pre_post_test' && (selectedQuiz?.has_pre_test || selectedQuiz?.current_mode === 'post_test' || quizResult?.is_post_test);
 
-                                                    <div className="quiz-standby-icon">
 
-                                                        <i className="fas fa-brain"></i>
 
-                                                    </div>
+                                                        return (
 
-                                                    <h5 className="quiz-standby-title">Evaluasi & Kuis Kursus</h5>
+                                                            <div className="quiz-result-screen-inline">
 
-                                                    <p className="quiz-standby-subtitle">
+                                                                <div className="quiz-result-header-top">
 
-                                                        Pilih kuis dari daftar di sebelah kanan untuk menguji pemahaman materi kursus Anda.
+                                                                    <div className="quiz-result-header-content d-flex align-items-center gap-2">
 
-                                                        Setiap kuis memerlukan skor kelulusan minimal 80% untuk memenuhi syarat penerbitan sertifikat resmi.
+                                                                        <div className={`quiz-result-icon-box ${isPreTest || quizResult.passed ? "success" : "failure"}`}>
 
-                                                    </p>
+                                                                            <i className={`fas ${isPreTest ? "fa-clipboard-check" : quizResult.passed ? "fa-trophy" : "fa-times-circle"}`}></i>
 
-                                                    <div className="quiz-standby-stats-strip">
+                                                                        </div>
 
-                                                        <span className="quiz-standby-chip">
+                                                                        <div className="quiz-result-title-wrapper">
 
-                                                            <i className="fas fa-check-circle text-teal-accent me-1"></i>
+                                                                            <h4 className="quiz-result-title">{selectedQuiz?.title}</h4>
 
-                                                            {completionStats.passedQuizzes} dari {quizzes?.length || 0} Kuis Lulus
+                                                                            <small className="quiz-result-description">
 
-                                                        </span>
+                                                                                {isPreTest
 
-                                                        <span className="quiz-standby-chip">
+                                                                                    ? "Pre-test selesai! Pemahaman awal Anda telah tercatat dan kurikulum kursus kini telah terbuka."
 
-                                                            <i className="fas fa-redo text-amber me-1"></i>
+                                                                                    : isPostTest
 
-                                                            Maks. 3x Percobaan / Hari
+                                                                                        ? "Post-test selesai! Evaluasi akhir Anda telah tercatat dan syarat sertifikat telah terpenuhi."
 
-                                                        </span>
+                                                                                        : (quizResult.passed ? "Selamat! Anda telah berhasil lulus kuis ini!" : "Teruslah berlatih untuk hasil yang lebih baik")}
 
-                                                        <span className="quiz-standby-chip">
+                                                                            </small>
 
-                                                            <i className="fas fa-trophy text-amber me-1"></i>
+                                                                        </div>
 
-                                                            Passing Grade: 80%
+                                                                    </div>
 
-                                                        </span>
+                                                                </div>
 
-                                                    </div>
 
-                                                    <div className="d-flex align-items-center justify-content-center gap-2 mt-2 flex-wrap">
 
-                                                        {quizzes && quizzes.length > 0 && (
+                                                                <div className="quiz-result">
+
+                                                                    <div className="quiz-result-status">
+
+                                                                        <h5 className={`quiz-result-status-title ${isPreTest || quizResult.passed ? "text-success" : "text-danger"}`}>
+
+                                                                            {isPreTest ? "✅ Pre-test Berhasil Diselesaikan!" : isPostTest ? "🎉 Post-test Berhasil Diselesaikan!" : quizResult.passed ? "🎉 Selamat! Kuis Lulus" : "❌ Kuis Belum Lulus"}
+
+                                                                        </h5>
+
+                                                                        <p className="quiz-result-status-message">
+
+                                                                            {isPreTest
+
+                                                                                ? "Hasil diagnostik pemahaman awal Anda berhasil disimpan. Anda kini dapat mulai mempelajari materi pada kurikulum."
+
+                                                                                : isPostTest
+
+                                                                                    ? "Rangkaian evaluasi akhir Anda telah tuntas. Anda kini dapat menerbitkan sertifikat resmi kursus ini."
+
+                                                                                    : quizResult.passed
+
+                                                                                        ? "Anda telah berhasil lulus kuis ini dengan baik!"
+
+                                                                                        : "Anda membutuhkan 80% atau lebih untuk lulus kuis ini. Silakan review materi dan coba lagi!"}
+
+                                                                        </p>
+
+                                                                    </div>
+
+
+
+                                                                    <div className="quiz-result-stats-cards">
+
+                                                                        <div className="result-stat-card">
+
+                                                                            <i className="fas fa-percent"></i>
+
+                                                                            <span className="stat-label">Skor</span>
+
+                                                                            <span className={`stat-number ${isPreTest || quizResult.passed ? "text-success" : "text-danger"}`}>
+
+                                                                                {Math.round(quizResult.score)}%
+
+                                                                            </span>
+
+                                                                        </div>
+
+                                                                        <div className="result-stat-card">
+
+                                                                            <i className="fas fa-check-circle"></i>
+
+                                                                            <span className="stat-label">Benar</span>
+
+                                                                            <span className="stat-number">
+
+                                                                                {quizResult.correct_answers}/{quizResult.total_questions}
+
+                                                                            </span>
+
+                                                                        </div>
+
+                                                                        <div className="result-stat-card">
+
+                                                                            <i className="fas fa-hourglass-end"></i>
+
+                                                                            <span className="stat-label">Waktu</span>
+
+                                                                            <span className="stat-number">
+
+                                                                                {(() => {
+
+                                                                                    const timeTaken = quizResult.time_taken || 0;
+
+                                                                                    const minutes = Math.floor(timeTaken / 60);
+
+                                                                                    const seconds = timeTaken % 60;
+
+                                                                                    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+                                                                                })()}
+
+                                                                            </span>
+
+                                                                        </div>
+
+                                                                        <div className="result-stat-card">
+
+                                                                            <i className="fas fa-redo"></i>
+
+                                                                            <span className="stat-label">Sisa</span>
+
+                                                                            <span className={`stat-number ${quizResult.attempts_left === 0 ? "text-danger" : "text-warning"}`}>
+
+                                                                                {quizResult.attempts_left || 0}
+
+                                                                            </span>
+
+                                                                        </div>
+
+                                                                    </div>
+
+
+
+                                                                    {/* Transparansi Evaluasi Pre-Test vs Post-Test (Learning Gain) */}
+                                                                    {quizResult.learning_comparison && (
+                                                                        <div className="quiz-learning-gain-card p-3 my-2 rounded-3 border bg-white shadow-xs">
+                                                                            <div className="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                                                                                <span className="fw-bold text-slate-800 small text-uppercase">
+                                                                                    <i className="fas fa-chart-line text-teal me-1"></i> Evaluasi Efektivitas Pembelajaran
+                                                                                </span>
+                                                                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-1 fw-semibold">
+                                                                                    {quizResult.learning_comparison.normalized_gain > 0
+                                                                                        ? `Kompetensi Meningkat (+${quizResult.learning_comparison.normalized_gain}% Normalized Gain)`
+                                                                                        : 'Hasil Evaluasi Tercatat'}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="row g-2 align-items-center text-center">
+                                                                                <div className="col-4">
+                                                                                    <div className="p-2 rounded bg-light border">
+                                                                                        <small className="text-muted d-block" style={{ fontSize: '11px' }}>Pre-Test</small>
+                                                                                        <strong className="fs-6 text-slate-700">{quizResult.learning_comparison.pre_score}%</strong>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="col-4">
+                                                                                    <div className="p-2 rounded bg-teal-subtle border border-teal-subtle">
+                                                                                        <small className="text-teal d-block fw-semibold" style={{ fontSize: '11px' }}>Lonjakan Nilai</small>
+                                                                                        <strong className="fs-6 text-teal">
+                                                                                            {quizResult.learning_comparison.improvement >= 0 ? '+' : ''}{quizResult.learning_comparison.improvement} Poin
+                                                                                        </strong>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="col-4">
+                                                                                    <div className="p-2 rounded bg-light border">
+                                                                                        <small className="text-muted d-block" style={{ fontSize: '11px' }}>Post-Test</small>
+                                                                                        <strong className="fs-6 text-slate-700">{quizResult.learning_comparison.post_score}%</strong>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Lencana Transparansi Integritas Anti-Cheat */}
+                                                                    {quizResult.integrity && (
+                                                                        quizResult.integrity.is_valid ? (
+                                                                            <div className="quiz-integrity-transparency-card valid p-2 my-2 rounded-3 border border-success-subtle bg-success-subtle text-dark">
+                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                    <div className="p-1 rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '28px', height: '28px' }}>
+                                                                                        <i className="fas fa-shield-halved" style={{ fontSize: '13px' }}></i>
+                                                                                    </div>
+                                                                                    <div className="flex-grow-1 min-w-0">
+                                                                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                                                                            <span className="fw-bold text-success small">Ujian Terverifikasi Bebas Kecurangan (Valid)</span>
+                                                                                            <span className="badge bg-success text-white" style={{ fontSize: '10px' }}>Integritas Sah</span>
+                                                                                        </div>
+                                                                                        <small className="text-muted d-block" style={{ fontSize: '11px', lineHeight: '1.4' }}>
+                                                                                            Dikerjakan secara tertib dengan durasi waktu wajar dan tanpa anomali perpindahan layar ({quizResult.integrity.tab_switch_violations || 0} pelanggaran tab).
+                                                                                        </small>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="quiz-integrity-transparency-card pending p-2 my-2 rounded-3 border border-warning-subtle bg-warning-subtle text-dark">
+                                                                                <div className="d-flex align-items-start gap-2">
+                                                                                    <div className="p-1 rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '28px', height: '28px' }}>
+                                                                                        <i className="fas fa-triangle-exclamation" style={{ fontSize: '13px' }}></i>
+                                                                                    </div>
+                                                                                    <div className="flex-grow-1 min-w-0">
+                                                                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                                                                            <span className="fw-bold text-warning-emphasis small">Menunggu Peninjauan Instruktur</span>
+                                                                                            <span className="badge bg-warning text-dark border border-warning" style={{ fontSize: '10px' }}>Pace Cepat</span>
+                                                                                        </div>
+                                                                                        <small className="text-secondary d-block mt-0" style={{ fontSize: '11px', lineHeight: '1.4' }}>
+                                                                                            Durasi pengerjaan Anda terdeteksi sangat singkat. Nilai berhasil disimpan, namun penerbitan sertifikat digital ditahan sementara menunggu pengesahan pengajar.
+                                                                                        </small>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )
+                                                                    )}
+
+                                                                    <div className="quiz-result-summary">
+
+                                                                        <i className={`fas ${isPreTest || quizResult.passed ? "fa-lightbulb text-amber" : "fa-info-circle text-teal-accent"} me-2`}></i>
+
+                                                                        <p className="summary-text">
+
+                                                                            {isPreTest
+
+                                                                                ? "Akses materi pembelajaran telah dibuka. Silakan lanjutkan ke Kurikulum Kursus untuk mulai belajar."
+
+                                                                                : isPostTest
+
+                                                                                    ? "Evaluasi pembelajaran lengkap! Silakan buka Tab Sertifikat untuk memeriksa status penerbitan sertifikat resmi."
+
+                                                                                    : quizResult.passed
+
+                                                                                        ? "Nilai sempurna! Lanjutkan dengan kuis berikutnya atau review materi."
+
+                                                                                        : `Anda mendapat ${Math.round(quizResult.score)}%. Coba lagi untuk mencapai skor lulus minimal 80%.`}
+
+                                                                        </p>
+
+                                                                    </div>
+
+
+
+                                                                    <div className="quiz-result-actions">
+
+                                                                        {isPreTest ? (
+
+                                                                            <button
+
+                                                                                className="btn btn-sm btn-teal"
+
+                                                                                onClick={() => {
+
+                                                                                    handleQuizClose();
+
+                                                                                    setActiveTab('lectures');
+
+                                                                                }}
+
+                                                                            >
+
+                                                                                <i className="fas fa-play me-1"></i>
+
+                                                                                Mulai Pelajari Materi Kursus
+
+                                                                            </button>
+
+                                                                        ) : isPostTest ? (
+
+                                                                            <button
+
+                                                                                className="btn btn-sm btn-teal"
+
+                                                                                onClick={() => {
+
+                                                                                    handleQuizClose();
+
+                                                                                    setActiveTab('certificate');
+
+                                                                                }}
+
+                                                                            >
+
+                                                                                <i className="fas fa-award me-1"></i>
+
+                                                                                Lihat & Terbitkan Sertifikat
+
+                                                                            </button>
+
+                                                                        ) : (
+
+                                                                            <>
+
+                                                                                <button
+
+                                                                                    className="btn btn-sm btn-secondary"
+
+                                                                                    onClick={handleQuizClose}
+
+                                                                                >
+
+                                                                                    <i className="fas fa-arrow-left me-1"></i>
+
+                                                                                    Tutup
+
+                                                                                </button>
+
+                                                                                {quizResult.attempts_left !== undefined && quizResult.attempts_left > 0 && !quizResult.passed && (
+
+                                                                                    <button
+
+                                                                                        className="btn btn-sm btn-primary"
+
+                                                                                        onClick={() => {
+
+                                                                                            handleQuizShow(selectedQuiz);
+
+                                                                                        }}
+
+                                                                                    >
+
+                                                                                        <i className="fas fa-redo me-1"></i>
+
+                                                                                        Coba Lagi
+
+                                                                                    </button>
+
+                                                                                )}
+
+                                                                            </>
+
+                                                                        )}
+
+                                                                    </div>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        );
+
+                                                    })()}
+
+                                                </div>
+
+                                            ) : (
+
+                                                <div className="quiz-player-standby">
+
+                                                    <div className="quiz-standby-content">
+
+                                                        <div className="quiz-standby-icon">
+
+                                                            <i className="fas fa-brain"></i>
+
+                                                        </div>
+
+                                                        <h5 className="quiz-standby-title">Evaluasi & Kuis Kursus</h5>
+
+                                                        <p className="quiz-standby-subtitle">
+
+                                                            Pilih kuis dari daftar di sebelah kanan untuk menguji pemahaman materi kursus Anda.
+
+                                                            Setiap kuis memerlukan skor kelulusan minimal 80% untuk memenuhi syarat penerbitan sertifikat resmi.
+
+                                                        </p>
+
+                                                        <div className="quiz-standby-stats-strip">
+
+                                                            <span className="quiz-standby-chip">
+
+                                                                <i className="fas fa-check-circle text-teal-accent me-1"></i>
+
+                                                                {completionStats.passedQuizzes} dari {quizzes?.length || 0} Kuis Lulus
+
+                                                            </span>
+
+                                                            <span className="quiz-standby-chip">
+
+                                                                <i className="fas fa-redo text-amber me-1"></i>
+
+                                                                Maks. 3x Percobaan / Hari
+
+                                                            </span>
+
+                                                            <span className="quiz-standby-chip">
+
+                                                                <i className="fas fa-trophy text-amber me-1"></i>
+
+                                                                Passing Grade: 80%
+
+                                                            </span>
+
+                                                        </div>
+
+                                                        <div className="d-flex align-items-center justify-content-center gap-2 mt-2 flex-wrap">
+
+                                                            {quizzes && quizzes.length > 0 && (
+
+                                                                <button
+
+                                                                    type="button"
+
+                                                                    className="btn btn-sm btn-teal"
+
+                                                                    onClick={() => {
+
+                                                                        const nextQuiz = quizzes.find(q => !q.is_passed) || quizzes[0];
+
+                                                                        if (nextQuiz) handleQuizShow(nextQuiz);
+
+                                                                    }}
+
+                                                                >
+
+                                                                    <i className="fas fa-play me-1"></i>
+
+                                                                    {quizzes.some(q => !q.is_passed) ? "Mulai Kuis Berikutnya" : "Buka Kuis"}
+
+                                                                </button>
+
+                                                            )}
 
                                                             <button
 
                                                                 type="button"
 
-                                                                className="btn btn-sm btn-teal"
+                                                                className="btn btn-sm btn-outline-secondary"
 
-                                                                onClick={() => {
-
-                                                                    const nextQuiz = quizzes.find(q => !q.is_passed) || quizzes[0];
-
-                                                                    if (nextQuiz) handleQuizShow(nextQuiz);
-
-                                                                }}
+                                                                onClick={handleReturnToLessons}
 
                                                             >
 
-                                                                <i className="fas fa-play me-1"></i>
-
-                                                                {quizzes.some(q => !q.is_passed) ? "Mulai Kuis Berikutnya" : "Buka Kuis"}
+                                                                <i className="fas fa-arrow-left me-1"></i>Kembali ke Materi Pelajaran
 
                                                             </button>
 
-                                                        )}
-
-                                                        <button
-
-                                                            type="button"
-
-                                                            className="btn btn-sm btn-outline-secondary"
-
-                                                            onClick={handleReturnToLessons}
-
-                                                        >
-
-                                                            <i className="fas fa-arrow-left me-1"></i>Kembali ke Materi Pelajaran
-
-                                                        </button>
+                                                        </div>
 
                                                     </div>
 
                                                 </div>
 
-                                            </div>
+                                            )}
 
-                                        )}
-
-                                    </div>
+                                        </div>
                                     )}
 
                                     {activeTab === 'gamification' && (
@@ -9282,445 +9555,445 @@ function CourseDetail() {
                                     )}
 
                                     {activeTab !== 'certificate' && activeTab !== 'review' && activeTab !== 'quiz' && activeTab !== 'gamification' && (
-<div
+                                        <div
 
-                                        ref={videoPlayerContainerRef}
+                                            ref={videoPlayerContainerRef}
 
-                                        className="course-player-column"
+                                            className="course-player-column"
 
-                                    >
+                                        >
 
-                                        {pretestRequired && !hasCompletedPretest ? (
+                                            {pretestRequired && !hasCompletedPretest ? (
 
-                                            <div className="course-player-standby pretest-required-standby">
+                                                <div className="course-player-standby pretest-required-standby">
 
-                                                <div className="standby-content">
+                                                    <div className="standby-content">
 
-                                                    <div className="standby-icon-circle pretest-circle">
+                                                        <div className="standby-icon-circle pretest-circle">
 
-                                                        <i className="fas fa-clipboard-check"></i>
-
-                                                    </div>
-
-                                                    <h5 className="standby-title">Pre-test Diagnostik Wajib</h5>
-
-                                                    <p className="standby-subtitle">
-
-                                                        Akses kurikulum dan materi pembelajaran akan terbuka setelah Anda menyelesaikan Pre-test ini. 
-
-                                                        Pre-test bertujuan menguji pemahaman awal sebelum memulai dan <strong>tidak memiliki syarat nilai kelulusan minimal</strong>.
-
-                                                    </p>
-
-                                                    <button
-
-                                                        type="button"
-
-                                                        className="btn btn-sm btn-teal mt-2 fw-bold px-3 py-2"
-
-                                                        onClick={handleStartPretest}
-
-                                                    >
-
-                                                        <i className="fas fa-play me-1"></i>
-
-                                                        Mulai Kerjakan Pre-test Sekarang
-
-                                                    </button>
-
-                                                </div>
-
-                                            </div>
-
-                                        ) : (
-
-                                            <>
-
-                                                <div style={{ display: variantItem ? 'block' : 'none', width: '100%', height: '100%' }}>
-
-                                                    {variantItem?.file_type === 'scorm' || variantItem?.file_type === 'h5p' || variantItem?.learning_module_info ? (
-
-                                                        <ScormPlayer
-
-                                                            variantItem={variantItem}
-
-                                                            courseId={course?.course?.id}
-
-                                                            course={course}
-
-                                                            onClose={handleVideoPlayerClose}
-
-                                                            handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
-
-                                                        />
-
-                                                    ) : (
-
-                                                        <VideoPlayer
-
-                                                            ref={videoPlayerRef}
-
-                                                            variantItem={variantItem}
-
-                                                            courseId={course?.course?.id}
-
-                                                            course={course}
-
-                                                            onClose={handleVideoPlayerClose}
-
-                                                            handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
-
-                                                            autoplay={autoplayVideo}
-
-                                                            onPlayingChange={setIsVideoPlaying}
-
-                                                            onProgress={handleVideoProgress}
-
-                                                            seekPosition={seekPosition}
-
-                                                        />
-
-                                                    )}
-
-                                                </div>
-
-                                                {!variantItem && (
-
-                                                    <div className="course-player-standby">
-
-                                                        <div className="standby-content">
-
-                                                            <div className="standby-icon-circle">
-
-                                                                <i className="fas fa-play"></i>
-
-                                                            </div>
-
-                                                            <h5 className="standby-title">Pilih Materi Pembelajaran</h5>
-
-                                                            <p className="standby-subtitle">
-
-                                                                Silakan pilih salah satu materi pada Kurikulum Kursus di sebelah kanan untuk memulai pemutaran.
-
-                                                            </p>
+                                                            <i className="fas fa-clipboard-check"></i>
 
                                                         </div>
 
-                                                    </div>
+                                                        <h5 className="standby-title">Pre-test Diagnostik Wajib</h5>
 
-                                                )}
+                                                        <p className="standby-subtitle">
 
-                                            </>
+                                                            Akses kurikulum dan materi pembelajaran akan terbuka setelah Anda menyelesaikan Pre-test ini.
 
-                                        )}
+                                                            Pre-test bertujuan menguji pemahaman awal sebelum memulai dan <strong>tidak memiliki syarat nilai kelulusan minimal</strong>.
 
-                                    </div>
-                                    )}
+                                                        </p>
 
-                                    {/* 2. Modern Tabs: Sejajar dan Tepat Berada di Bawah certificate-display-column & course-player-column */}
-<div className="modern-tabs">
+                                                        <button
 
-                                {/* Tab Navigation */}
+                                                            type="button"
 
-                                <ul className="nav nav-tabs nav-tabs-modern" id="courseTab" role="tablist">
+                                                            className="btn btn-sm btn-teal mt-2 fw-bold px-3 py-2"
 
-                                    <li className="nav-item" role="presentation">
+                                                            onClick={handleStartPretest}
 
-                                        <button className="nav-link active" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">
+                                                        >
 
-                                            <i className="fas fa-sticky-note me-1"></i>
+                                                            <i className="fas fa-play me-1"></i>
 
-                                            <span>Catatan</span>
+                                                            Mulai Kerjakan Pre-test Sekarang
 
-                                            {course?.note?.length > 0 && (
-
-                                                <span className="tab-pill-counter">{course.note.length}</span>
-
-                                            )}
-
-                                        </button>
-
-                                    </li>
-
-                                    <li className="nav-item" role="presentation">
-
-                                        <button className="nav-link" id="discussions-tab" data-bs-toggle="tab" data-bs-target="#discussions" type="button" role="tab">
-
-                                            <i className="fas fa-comments me-1"></i>
-
-                                            <span>Diskusi</span>
-
-                                            {questions?.length > 0 && (
-
-                                                <span className="tab-pill-counter">{questions.length}</span>
-
-                                            )}
-
-                                        </button>
-
-                                    </li>
-
-                                    <li className="nav-item" role="presentation">
-                                        <button className="nav-link" id="gamification-tab" data-bs-toggle="tab" data-bs-target="#gamification" type="button" role="tab">
-                                            <i className="fas fa-gamepad me-1"></i>
-                                            <span>Gamifikasi</span>
-                                            {pretestRequired && !hasCompletedPretest ? (
-                                                <i className="fas fa-lock text-warning ms-1" title="Terkunci - Selesaikan Pre-test terlebih dahulu" style={{ fontSize: '0.75rem' }}></i>
-                                            ) : (
-                                                (course?.course?.games?.length > 0 || course?.games?.length > 0) && (
-                                                    <span className="tab-pill-counter">{course?.course?.games?.length || course?.games?.length}</span>
-                                                )
-                                            )}
-                                        </button>
-                                    </li>
-
-                                    <li className="nav-item" role="presentation">
-
-                                        <button className="nav-link" id="certificate-tab" data-bs-toggle="tab" data-bs-target="#certificate" type="button" role="tab">
-
-                                            <i className="fas fa-certificate me-1"></i>
-
-                                            <span>Sertifikat</span>
-
-                                            {existingCertificate ? (
-
-                                                <span className="tab-pill-counter counter-success"><i className="fas fa-check"></i></span>
-
-                                            ) : completionPercentage === 100 ? (
-
-                                                <span className="tab-pill-counter counter-ready"><i className="fas fa-award"></i></span>
-
-                                            ) : null}
-
-                                        </button>
-
-                                    </li>
-
-                                    <li className="nav-item" role="presentation">
-
-                                        <button className="nav-link" id="leaderboard-tab" data-bs-toggle="tab" data-bs-target="#leaderboard" type="button" role="tab">
-
-                                            <i className="fas fa-trophy me-1 text-amber"></i>
-
-                                            <span>Peringkat</span>
-
-                                            <span className="tab-pill-counter counter-leaderboard" title="Papan Peringkat Peserta">
-
-                                                <i className="fas fa-star" style={{ fontSize: "0.65rem" }}></i>
-
-                                            </span>
-
-                                        </button>
-
-                                    </li>
-
-
-
-                                </ul>
-
-
-
-                                {/* Tab Content */}
-
-                                <div className="tab-content tab-content-modern" id="courseTabContent">
-
-                                    {/* Notes Tab (Modularized in NotesTab.jsx) */}
-
-
-
-                                    <NotesTab
-
-
-
-                                        course={course}
-
-
-
-                                        handleNoteShow={handleNoteShow}
-
-
-
-                                        noteFilters={noteFilters}
-
-
-
-                                        setNoteFilters={setNoteFilters}
-
-
-
-                                        filteredNotes={filteredNotes}
-
-
-
-                                        openNotes={openNotes}
-
-
-
-                                        setOpenNotes={setOpenNotes}
-
-
-
-                                        getColorVariations={getColorVariations}
-
-
-
-                                        handleDeleteNote={handleDeleteNote}
-
-
-
-                                    />
-
-{/* Discussions Tab (Modularized in DiscussionTab.jsx) */}
-
-                                    <DiscussionTab
-
-                                        course={course}
-
-                                        openedQuestionId={openedQuestionId}
-
-                                        selectedConversation={selectedConversation}
-
-                                        handleConversationClose={handleConversationClose}
-
-                                        handleConversationShow={handleConversationShow}
-
-                                        handleQuestionShow={handleQuestionShow}
-
-                                        qaStats={qaStats}
-
-                                        discussionFilters={discussionFilters}
-
-                                        setDiscussionFilters={setDiscussionFilters}
-
-                                        filteredQuestions={filteredQuestions}
-
-                                        handleToggleSolution={handleToggleSolution}
-
-                                        handleTogglePin={handleTogglePin}
-
-                                        handleLikeQuestion={handleLikeQuestion}
-
-                                        handleLikeMessage={handleLikeMessage}
-
-                                        userLikedQuestions={userLikedQuestions}
-
-                                        userLikedMessages={userLikedMessages}
-
-                                        isQAItemReported={isQAItemReported}
-
-                                        getQAReportStatus={getQAReportStatus}
-
-                                        handleOpenQAReportModal={handleOpenQAReportModal}
-
-                                        createMessage={createMessage}
-
-                                        setCreateMessage={setCreateMessage}
-
-                                        handleMessageChange={handleMessageChange}
-
-                                        sendNewMessage={sendNewMessage}
-
-                                        isSubmittingReply={isSubmittingReply}
-
-                                        activeVariantItem={variantItem}
-
-                                        replyTextareaRef={replyTextareaRef}
-
-                                        replyPreviewMode={replyPreviewMode}
-
-                                        setReplyPreviewMode={setReplyPreviewMode}
-
-                                        getCurrentVideoTime={getCurrentVideoTime}
-
-                                        handleJumpToVideoTimestamp={handleJumpToVideoTimestamp}
-
-                                        isCourseInstructorOrStaff={isCourseInstructorOrStaff}
-
-                                    />
-
-
-
-
-
-
-                                    {/* Gamification Tab */}
-                                    <GamificationTab
-                                        course={course}
-                                        pretestRequired={pretestRequired}
-                                        hasCompletedPretest={hasCompletedPretest}
-                                        onStartPretest={handleStartPretest}
-                                        onGameCompleted={handleGameCompleted}
-                                        selectedGame={selectedGame}
-                                        onSelectGame={handleSelectGame}
-                                        refreshKey={gamificationRefreshKey}
-                                    />
-
-                                    {/* Certificate Tab */}
-
-                                    <div className="tab-pane fade" id="certificate" role="tabpanel">
-
-                                        <div className="cert-active-notice-card">
-
-                                            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-
-                                                <div className="d-flex align-items-center gap-3">
-
-                                                    <div className="notice-icon-box">
-
-                                                        <i className="fas fa-award"></i>
-
-                                                    </div>
-
-                                                    <div>
-
-                                                        <h6 className="mb-0">Panel Sertifikat Aktif di Atas</h6>
-
-                                                        <small className="text-muted">Pratinjau sertifikat resmi dan informasi kelulusan ditampilkan pada panel 2-kolom di atas.</small>
+                                                        </button>
 
                                                     </div>
 
                                                 </div>
 
-                                                <button
+                                            ) : (
 
-                                                    type="button"
+                                                <>
 
-                                                    className="btn btn-sm btn-outline-teal"
+                                                    <div style={{ display: variantItem ? 'block' : 'none', width: '100%', height: '100%' }}>
 
-                                                    onClick={() => {
+                                                        {variantItem?.file_type === 'scorm' || variantItem?.file_type === 'h5p' || variantItem?.learning_module_info ? (
 
-                                                        document.querySelector('.course-certificate-review-row')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                            <ScormPlayer
 
-                                                    }}
+                                                                variantItem={variantItem}
 
-                                                >
+                                                                courseId={course?.course?.id}
 
-                                                    <i className="fas fa-arrow-up me-1"></i>Ke Pratinjau Sertifikat
+                                                                course={course}
+
+                                                                onClose={handleVideoPlayerClose}
+
+                                                                handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
+
+                                                            />
+
+                                                        ) : (
+
+                                                            <VideoPlayer
+
+                                                                ref={videoPlayerRef}
+
+                                                                variantItem={variantItem}
+
+                                                                courseId={course?.course?.id}
+
+                                                                course={course}
+
+                                                                onClose={handleVideoPlayerClose}
+
+                                                                handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
+
+                                                                autoplay={autoplayVideo}
+
+                                                                onPlayingChange={setIsVideoPlaying}
+
+                                                                onProgress={handleVideoProgress}
+
+                                                                seekPosition={seekPosition}
+
+                                                            />
+
+                                                        )}
+
+                                                    </div>
+
+                                                    {!variantItem && (
+
+                                                        <div className="course-player-standby">
+
+                                                            <div className="standby-content">
+
+                                                                <div className="standby-icon-circle">
+
+                                                                    <i className="fas fa-play"></i>
+
+                                                                </div>
+
+                                                                <h5 className="standby-title">Pilih Materi Pembelajaran</h5>
+
+                                                                <p className="standby-subtitle">
+
+                                                                    Silakan pilih salah satu materi pada Kurikulum Kursus di sebelah kanan untuk memulai pemutaran.
+
+                                                                </p>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    )}
+
+                                                </>
+
+                                            )}
+
+                                        </div>
+                                    )}
+
+                                    {/* 2. Modern Tabs: Sejajar dan Tepat Berada di Bawah certificate-display-column & course-player-column */}
+                                    <div className="modern-tabs">
+
+                                        {/* Tab Navigation */}
+
+                                        <ul className="nav nav-tabs nav-tabs-modern" id="courseTab" role="tablist">
+
+                                            <li className="nav-item" role="presentation">
+
+                                                <button className="nav-link active" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">
+
+                                                    <i className="fas fa-sticky-note me-1"></i>
+
+                                                    <span>Catatan</span>
+
+                                                    {course?.note?.length > 0 && (
+
+                                                        <span className="tab-pill-counter">{course.note.length}</span>
+
+                                                    )}
 
                                                 </button>
 
+                                            </li>
+
+                                            <li className="nav-item" role="presentation">
+
+                                                <button className="nav-link" id="discussions-tab" data-bs-toggle="tab" data-bs-target="#discussions" type="button" role="tab">
+
+                                                    <i className="fas fa-comments me-1"></i>
+
+                                                    <span>Diskusi</span>
+
+                                                    {questions?.length > 0 && (
+
+                                                        <span className="tab-pill-counter">{questions.length}</span>
+
+                                                    )}
+
+                                                </button>
+
+                                            </li>
+
+                                            <li className="nav-item" role="presentation">
+                                                <button className="nav-link" id="gamification-tab" data-bs-toggle="tab" data-bs-target="#gamification" type="button" role="tab">
+                                                    <i className="fas fa-gamepad me-1"></i>
+                                                    <span>Gamifikasi</span>
+                                                    {pretestRequired && !hasCompletedPretest ? (
+                                                        <i className="fas fa-lock text-warning ms-1" title="Terkunci - Selesaikan Pre-test terlebih dahulu" style={{ fontSize: '0.75rem' }}></i>
+                                                    ) : (
+                                                        (course?.course?.games?.length > 0 || course?.games?.length > 0) && (
+                                                            <span className="tab-pill-counter">{course?.course?.games?.length || course?.games?.length}</span>
+                                                        )
+                                                    )}
+                                                </button>
+                                            </li>
+
+                                            <li className="nav-item" role="presentation">
+
+                                                <button className="nav-link" id="certificate-tab" data-bs-toggle="tab" data-bs-target="#certificate" type="button" role="tab">
+
+                                                    <i className="fas fa-certificate me-1"></i>
+
+                                                    <span>Sertifikat</span>
+
+                                                    {existingCertificate ? (
+
+                                                        <span className="tab-pill-counter counter-success"><i className="fas fa-check"></i></span>
+
+                                                    ) : completionPercentage === 100 ? (
+
+                                                        <span className="tab-pill-counter counter-ready"><i className="fas fa-award"></i></span>
+
+                                                    ) : null}
+
+                                                </button>
+
+                                            </li>
+
+                                            <li className="nav-item" role="presentation">
+
+                                                <button className="nav-link" id="leaderboard-tab" data-bs-toggle="tab" data-bs-target="#leaderboard" type="button" role="tab">
+
+                                                    <i className="fas fa-trophy me-1 text-amber"></i>
+
+                                                    <span>Peringkat</span>
+
+                                                    <span className="tab-pill-counter counter-leaderboard" title="Papan Peringkat Peserta">
+
+                                                        <i className="fas fa-star" style={{ fontSize: "0.65rem" }}></i>
+
+                                                    </span>
+
+                                                </button>
+
+                                            </li>
+
+
+
+                                        </ul>
+
+
+
+                                        {/* Tab Content */}
+
+                                        <div className="tab-content tab-content-modern" id="courseTabContent">
+
+                                            {/* Notes Tab (Modularized in NotesTab.jsx) */}
+
+
+
+                                            <NotesTab
+
+
+
+                                                course={course}
+
+
+
+                                                handleNoteShow={handleNoteShow}
+
+
+
+                                                noteFilters={noteFilters}
+
+
+
+                                                setNoteFilters={setNoteFilters}
+
+
+
+                                                filteredNotes={filteredNotes}
+
+
+
+                                                openNotes={openNotes}
+
+
+
+                                                setOpenNotes={setOpenNotes}
+
+
+
+                                                getColorVariations={getColorVariations}
+
+
+
+                                                handleDeleteNote={handleDeleteNote}
+
+
+
+                                            />
+
+                                            {/* Discussions Tab (Modularized in DiscussionTab.jsx) */}
+
+                                            <DiscussionTab
+
+                                                course={course}
+
+                                                openedQuestionId={openedQuestionId}
+
+                                                selectedConversation={selectedConversation}
+
+                                                handleConversationClose={handleConversationClose}
+
+                                                handleConversationShow={handleConversationShow}
+
+                                                handleQuestionShow={handleQuestionShow}
+
+                                                qaStats={qaStats}
+
+                                                discussionFilters={discussionFilters}
+
+                                                setDiscussionFilters={setDiscussionFilters}
+
+                                                filteredQuestions={filteredQuestions}
+
+                                                handleToggleSolution={handleToggleSolution}
+
+                                                handleTogglePin={handleTogglePin}
+
+                                                handleLikeQuestion={handleLikeQuestion}
+
+                                                handleLikeMessage={handleLikeMessage}
+
+                                                userLikedQuestions={userLikedQuestions}
+
+                                                userLikedMessages={userLikedMessages}
+
+                                                isQAItemReported={isQAItemReported}
+
+                                                getQAReportStatus={getQAReportStatus}
+
+                                                handleOpenQAReportModal={handleOpenQAReportModal}
+
+                                                createMessage={createMessage}
+
+                                                setCreateMessage={setCreateMessage}
+
+                                                handleMessageChange={handleMessageChange}
+
+                                                sendNewMessage={sendNewMessage}
+
+                                                isSubmittingReply={isSubmittingReply}
+
+                                                activeVariantItem={variantItem}
+
+                                                replyTextareaRef={replyTextareaRef}
+
+                                                replyPreviewMode={replyPreviewMode}
+
+                                                setReplyPreviewMode={setReplyPreviewMode}
+
+                                                getCurrentVideoTime={getCurrentVideoTime}
+
+                                                handleJumpToVideoTimestamp={handleJumpToVideoTimestamp}
+
+                                                isCourseInstructorOrStaff={isCourseInstructorOrStaff}
+
+                                            />
+
+
+
+
+
+
+                                            {/* Gamification Tab */}
+                                            <GamificationTab
+                                                course={course}
+                                                pretestRequired={pretestRequired}
+                                                hasCompletedPretest={hasCompletedPretest}
+                                                onStartPretest={handleStartPretest}
+                                                onGameCompleted={handleGameCompleted}
+                                                selectedGame={selectedGame}
+                                                onSelectGame={handleSelectGame}
+                                                refreshKey={gamificationRefreshKey}
+                                            />
+
+                                            {/* Certificate Tab */}
+
+                                            <div className="tab-pane fade" id="certificate" role="tabpanel">
+
+                                                <div className="cert-active-notice-card">
+
+                                                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+                                                        <div className="d-flex align-items-center gap-3">
+
+                                                            <div className="notice-icon-box">
+
+                                                                <i className="fas fa-award"></i>
+
+                                                            </div>
+
+                                                            <div>
+
+                                                                <h6 className="mb-0">Panel Sertifikat Aktif di Atas</h6>
+
+                                                                <small className="text-muted">Pratinjau sertifikat resmi dan informasi kelulusan ditampilkan pada panel 2-kolom di atas.</small>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                        <button
+
+                                                            type="button"
+
+                                                            className="btn btn-sm btn-outline-teal"
+
+                                                            onClick={() => {
+
+                                                                document.querySelector('.course-certificate-review-row')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                                                            }}
+
+                                                        >
+
+                                                            <i className="fas fa-arrow-up me-1"></i>Ke Pratinjau Sertifikat
+
+                                                        </button>
+
+                                                    </div>
+
+                                                </div>
+
                                             </div>
+
+                                            {/* Leaderboard Tab */}
+                                            <div className="tab-pane fade" id="leaderboard" role="tabpanel">
+                                                <LeaderboardTab
+                                                    courseId={course?.course?.course_id || course?.course_id || param.enrollment_id}
+                                                    enrollmentId={param.enrollment_id}
+                                                    activeTab={activeTab}
+                                                />
+                                            </div>
+
+
+
+
 
                                         </div>
 
                                     </div>
-
-                                    {/* Leaderboard Tab */}
-                                    <div className="tab-pane fade" id="leaderboard" role="tabpanel">
-                                        <LeaderboardTab
-                                            courseId={course?.course?.course_id || course?.course_id || param.enrollment_id}
-                                            enrollmentId={param.enrollment_id}
-                                            activeTab={activeTab}
-                                        />
-                                    </div>
-
-
-
-
-
-                                </div>
-
-                            </div>
 
                                 </div>
 
@@ -9729,162 +10002,167 @@ function CourseDetail() {
                                 <div className="course-sidebar-right-column">
 
                                     {(activeTab === 'certificate' || activeTab === 'review') && (
-<div className="certificate-sidebar-column">
+                                        <div className="certificate-sidebar-column">
 
-                                        <div className="certificate-side-card">
+                                            <div className="certificate-side-card">
 
-                                            {/* Header Pills for Switching between Sertifikat & Ulasan */}
+                                                {/* Header Pills for Switching between Sertifikat & Ulasan */}
 
-                                            <div className="cert-side-nav-pills">
+                                                <div className="cert-side-nav-pills">
 
-                                                <button
+                                                    <button
 
-                                                    type="button"
+                                                        type="button"
 
-                                                    className={`cert-pill-btn ${activeTab === 'certificate' ? 'active' : ''}`}
+                                                        className={`cert-pill-btn ${activeTab === 'certificate' ? 'active' : ''}`}
 
-                                                    onClick={() => handleSwitchCertSideTab('certificate')}
+                                                        onClick={() => handleSwitchCertSideTab('certificate')}
 
-                                                >
+                                                    >
 
-                                                    <i className="fas fa-certificate me-1"></i>
+                                                        <i className="fas fa-certificate me-1"></i>
 
-                                                    <span>Sertifikat</span>
+                                                        <span>Sertifikat</span>
 
-                                                    {existingCertificate ? (
+                                                        {existingCertificate ? (
 
-                                                        <span className="cert-pill-badge badge-success"><i className="fas fa-check"></i></span>
+                                                            <span className="cert-pill-badge badge-success"><i className="fas fa-check"></i></span>
 
-                                                    ) : completionPercentage === 100 ? (
+                                                        ) : completionPercentage === 100 ? (
 
-                                                        <span className="cert-pill-badge badge-ready"><i className="fas fa-award"></i></span>
+                                                            <span className="cert-pill-badge badge-ready"><i className="fas fa-award"></i></span>
 
-                                                    ) : null}
+                                                        ) : null}
 
-                                                </button>
+                                                    </button>
 
-                                                <button
+                                                    <button
 
-                                                    type="button"
+                                                        type="button"
 
-                                                    className={`cert-pill-btn ${activeTab === 'review' ? 'active' : ''}`}
+                                                        className={`cert-pill-btn ${activeTab === 'review' ? 'active' : ''}`}
 
-                                                    onClick={() => handleSwitchCertSideTab('review')}
+                                                        onClick={() => handleSwitchCertSideTab('review')}
 
-                                                >
+                                                    >
 
-                                                    <i className="fas fa-star me-1"></i>
+                                                        <i className="fas fa-star me-1"></i>
 
-                                                    <span>Ulasan Kursus</span>
+                                                        <span>Ulasan Kursus</span>
 
-                                                    {(studentReview?.id || studentReview?.rating) && (
+                                                        {(studentReview?.id || studentReview?.rating) && (
 
-                                                        <span className="cert-pill-badge badge-info"><i className="fas fa-check"></i></span>
+                                                            <span className="cert-pill-badge badge-info"><i className="fas fa-check"></i></span>
+
+                                                        )}
+
+                                                    </button>
+
+                                                </div>
+
+
+
+                                                {/* Content Area */}
+
+                                                <div className="cert-side-body">
+
+                                                    {activeTab === 'certificate' ? (
+
+                                                        <div className="cert-side-pane">
+
+                                                            <CertificateTab
+
+                                                                course={course}
+
+                                                                enrollmentId={param.enrollment_id}
+
+                                                                completionPercentage={completionPercentage}
+
+                                                                onCertificateGenerated={(cert) => {
+                                                                    setExistingCertificate(cert);
+                                                                    setCertImageVersion(Date.now());
+                                                                }}
+
+                                                                isInline={true}
+
+                                                                onStartPosttest={handleStartPosttest}
+
+                                                                regenerateTrigger={certRegenerateTrigger}
+
+                                                            />
+
+                                                        </div>
+
+                                                    ) : (
+
+                                                        <div className="cert-side-pane">
+
+                                                            {renderReviewContent()}
+
+                                                        </div>
 
                                                     )}
 
-                                                </button>
-
-                                            </div>
-
-
-
-                                            {/* Content Area */}
-
-                                            <div className="cert-side-body">
-
-                                                {activeTab === 'certificate' ? (
-
-                                                    <div className="cert-side-pane">
-
-                                                        <CertificateTab
-
-                                                            course={course}
-
-                                                            enrollmentId={param.enrollment_id}
-
-                                                            completionPercentage={completionPercentage}
-
-                                                            onCertificateGenerated={(cert) => setExistingCertificate(cert)}
-
-                                                            isInline={true}
-
-                                                            onStartPosttest={handleStartPosttest}
-
-                                                        />
-
-                                                    </div>
-
-                                                ) : (
-
-                                                    <div className="cert-side-pane">
-
-                                                        {renderReviewContent()}
-
-                                                    </div>
-
-                                                )}
+                                                </div>
 
                                             </div>
 
                                         </div>
-
-                                    </div>
                                     )}
 
                                     {activeTab !== 'certificate' && activeTab !== 'review' && (
-<div className="course-curriculum-column">
+                                        <div className="course-curriculum-column">
 
-                                        <div className="curriculum-side-card">
+                                            <div className="curriculum-side-card">
 
-                                            <LecturesTab
+                                                <LecturesTab
 
-                                                course={course}
+                                                    course={course}
 
-                                                enrollmentId={param.enrollment_id}
+                                                    enrollmentId={param.enrollment_id}
 
-                                                fetchCourseDetail={fetchCourseDetail}
+                                                    fetchCourseDetail={fetchCourseDetail}
 
-                                                completionPercentage={completionPercentage}
+                                                    completionPercentage={completionPercentage}
 
-                                                variantItem={variantItem}
+                                                    variantItem={variantItem}
 
-                                                setVariantItem={handlePlayLessonWithAutoplay}
-                                                onShowPlayer={ensurePlayerVisible}  // ✨ PHASE 4.103: Use autoplay handler
+                                                    setVariantItem={handlePlayLessonWithAutoplay}
+                                                    onShowPlayer={ensurePlayerVisible}  // ✨ PHASE 4.103: Use autoplay handler
 
-                                                isVideoPlaying={isVideoPlaying}  // ✨ PHASE 4.105: Pass video playing state
+                                                    isVideoPlaying={isVideoPlaying}  // ✨ PHASE 4.105: Pass video playing state
 
-                                                toggleVideoPlayPause={toggleVideoPlayPause}  // ✨ PHASE 4.105: Pass toggle function
+                                                    toggleVideoPlayPause={toggleVideoPlayPause}  // ✨ PHASE 4.105: Pass toggle function
 
-                                                onProgressUpdate={handleProgressUpdateCallback}  // ✨ PHASE 4.132: Use memoized callback
+                                                    onProgressUpdate={handleProgressUpdateCallback}  // ✨ PHASE 4.132: Use memoized callback
 
-                                                onLessonCompletion={handleLessonCompletionRegistration}  // ✨ PHASE 4.143+: Use memoized callback
+                                                    onLessonCompletion={handleLessonCompletionRegistration}  // ✨ PHASE 4.143+: Use memoized callback
 
-                                                hasCompletedPretest={hasCompletedPretest}
+                                                    hasCompletedPretest={hasCompletedPretest}
 
-                                                pretestRequired={pretestRequired}
+                                                    pretestRequired={pretestRequired}
 
-                                                onStartPretest={handleStartPretest}
+                                                    onStartPretest={handleStartPretest}
 
-                                                prePostQuiz={prePostQuiz}
+                                                    prePostQuiz={prePostQuiz}
 
-                                                canTakePostTest={canTakePostTest}
+                                                    canTakePostTest={canTakePostTest}
 
-                                                postTestLockReason={postTestLockReason}
+                                                    postTestLockReason={postTestLockReason}
 
-                                                hasCompletedPosttest={hasCompletedPosttest}
+                                                    hasCompletedPosttest={hasCompletedPosttest}
 
-                                                quizzes={quizzes}
+                                                    quizzes={quizzes}
 
-                                                selectedQuiz={selectedQuiz}
+                                                    selectedQuiz={selectedQuiz}
 
-                                                onSelectQuiz={handleQuizShow}
+                                                    onSelectQuiz={handleQuizShow}
 
-                                            />
+                                                />
+
+                                            </div>
 
                                         </div>
-
-                                    </div>
                                     )}
 
                                 </div>
@@ -9901,7 +10179,7 @@ function CourseDetail() {
 
 
 
-            
+
 
             {/* Add Note Modal (Modularized in NoteModal.jsx) */}
 

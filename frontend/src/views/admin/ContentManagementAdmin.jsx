@@ -7,6 +7,7 @@ import CourseReviewTab from "./ContentManagementTabs/CourseReviewTab";
 import TestimonialTab from "./ContentManagementTabs/TestimonialTab";
 import MaterialsTab from "./ContentManagementTabs/MaterialsTab";
 import InstructorRequestsTab from "./ContentManagementTabs/InstructorRequestsTab";
+import CertificateDesignTab from "./ContentManagementTabs/CertificateDesignTab";
 import "./ContentManagementAdmin.css";
 
 /**
@@ -24,7 +25,7 @@ function ContentManagementAdmin() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState(() => {
         const tab = searchParams.get("tab");
-        return tab === "testimonials" || tab === "materials" || tab === "requests" ? tab : "courses";
+        return tab === "testimonials" || tab === "materials" || tab === "requests" || tab === "certificate" ? tab : "courses";
     });
 
     // Update URL when tab changes
@@ -60,6 +61,13 @@ function ContentManagementAdmin() {
             icon: "fas fa-user-tie",
             description: "Tinjau dan setujui permintaan pengguna untuk menjadi instruktur",
             component: <InstructorRequestsTab />
+        },
+        {
+            id: "certificate",
+            label: "Desain Sertifikat",
+            icon: "fas fa-award",
+            description: "Studio template PPTX, background kustom, tipografi, dan variabel penerbitan sertifikat",
+            component: <CertificateDesignTab />
         }
     ];
 
@@ -79,7 +87,7 @@ function ContentManagementAdmin() {
                                     Manajemen Konten
                                 </h1>
                                 <p className="cm-page-subtitle">
-                                    Kelola seluruh konten platform: kursus, testimoni, kategori materi, dan permintaan instruktur
+                                    Kelola seluruh konten platform: kursus, testimoni, kategori materi, permintaan instruktur, dan template sertifikat kelulusan
                                 </p>
                             </div>
                         </div>
