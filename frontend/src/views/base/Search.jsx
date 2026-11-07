@@ -27,6 +27,10 @@ function Search() {
     const [selectedLevel, setSelectedLevel] = useState("all");
     const [sortBy, setSortBy] = useState("relevance");
     
+    // ✨ Recommendations state
+    const [recommendedCourses, setRecommendedCourses] = useState([]);
+    const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+    
     // Instructor Request System state
     const [showInstructorModal, setShowInstructorModal] = useState(false);
     const [existingInstructorRequest, setExistingInstructorRequest] = useState(null);
@@ -232,6 +236,99 @@ function Search() {
                 icon: "error",
                 title: errorMessage,
             });
+        }
+    };
+
+    // ✨ Fetch recommended courses for the user from LMSetjen DPD RI system
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadRecommendations = async () => {
+            if (!allCourses || allCourses.length === 0) return;
+            setIsLoadingRecommendations(true);
+
+            try {
+                const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+                let recsData = [];
+
+                if (token && userId) {
+                    try {
+                        const response = await apiInstance.get('analytics/recommendations/?limit=6');
+                        recsData = response.data?.results || response.data || [];
+                    } catch (err) {
+                        recsData = [];
+                    }
+                }
+
+                // If personalized recommendations exist from backend
+                if (recsData.length > 0) {
+                    const mapped = recsData.map(rec => {
+                        const matchedCourse = allCourses.find(c => c.id === rec.course || c.id === rec.course_detail?.id);
+                        if (matchedCourse) {
+                            return {
+                                ...matchedCourse,
+                                recommendationId: rec.id,
+                                recommendationScore: rec.score,
+                                recommendationReason: rec.reason,
+                                recommendationBadge: `${Math.round(rec.score || 95)}% Cocok`
+                            };
+                        }
+                        return null;
+                    }).filter(Boolean);
+
+                    if (mapped.length > 0 && isMounted) {
+                        setRecommendedCourses(mapped.slice(0, 4));
+                        setIsLoadingRecommendations(false);
+                        return;
+                    }
+                }
+
+                // Fallback: Smart curated recommendation from catalog
+                const candidates = [...allCourses];
+                candidates.sort((a, b) => {
+                    const scoreA = (Number(a.average_rating || 0) * 20) + ((a.students?.length || 0) * 3) + ((a.reviews?.length || 0) * 2);
+                    const scoreB = (Number(b.average_rating || 0) * 20) + ((b.students?.length || 0) * 3) + ((b.reviews?.length || 0) * 2);
+                    return scoreB - scoreA;
+                });
+
+                const badges = [
+                    "⭐ Rating Tertinggi",
+                    "🔥 Terpopuler di DPD RI",
+                    "🏛️ Kurasi BPSDM Setjen",
+                    "🎯 Rekomendasi Sistem"
+                ];
+
+                const topPicks = candidates.slice(0, 4).map((c, idx) => ({
+                    ...c,
+                    recommendationBadge: badges[idx % badges.length]
+                }));
+
+                if (isMounted) {
+                    setRecommendedCourses(topPicks);
+                }
+            } catch (error) {
+                console.error("Failed to load recommendations:", error);
+            } finally {
+                if (isMounted) {
+                    setIsLoadingRecommendations(false);
+                }
+            }
+        };
+
+        loadRecommendations();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [allCourses, userId]);
+
+    const handleRecommendedCourseClick = async (course) => {
+        if (course.recommendationId) {
+            try {
+                await apiInstance.post(`analytics/recommendations/${course.recommendationId}/click/`);
+            } catch (e) {
+                // silent catch
+            }
         }
     };
 
@@ -844,6 +941,158 @@ function Search() {
                                     </div>
                                 )}
                             </>
+                        )}
+
+                        {/* ✨ Section: Rekomendasi Kursus Sistem LMSetjen DPD RI (Di atas search-cta-banner) */}
+                        {recommendedCourses.length > 0 && (
+                            <section className="search-recommended-section" aria-label="Rekomendasi Kursus LMSetjen DPD RI">
+                                <div className="recommended-header-wrapper">
+                                    <div className="recommended-header-left">
+                                        <div className="recommended-pill-tag">
+                                            <i className="fas fa-sparkles"></i>
+                                            <span>Rekomendasi Terpilih</span>
+                                        </div>
+                                        <h2 className="recommended-heading">
+                                            Rekomendasi Kursus Untuk Anda
+                                        </h2>
+                                        <p className="recommended-subheading">
+                                            Kursus kompetensi yang dikurasi khusus oleh sistem LMSetjen DPD RI untuk mengoptimalkan keahlian dan kinerja pegawai di lingkungan Sekretariat Jenderal DPD RI.
+                                        </p>
+                                    </div>
+                                    <div className="recommended-header-right">
+                                        <span className="recommended-count-badge">
+                                            <i className="fas fa-award me-1 text-teal"></i>
+                                            {recommendedCourses.length} Kursus Pilihan
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="row g-3">
+                                    {recommendedCourses.map((c, index) => {
+                                        const jpDuration = calculateTotalJP(c);
+                                        const ratingValue = Number(c.average_rating || 0);
+
+                                        return (
+                                            <div key={`rec-${c.id || index}`} className="col-12 col-sm-6 col-lg-4 col-xl-3">
+                                                <div className="compact-course-card recommended-course-card">
+                                                    {/* Card Media Header */}
+                                                    <div className="card-media-wrapper">
+                                                        <img
+                                                            src={getImageUrl(c.image)}
+                                                            alt={c.title}
+                                                            className="card-media-image"
+                                                            loading="lazy"
+                                                            decoding="async"
+                                                            onError={(e) => {
+                                                                e.target.src = "/images/placeholders/default-course.svg";
+                                                            }}
+                                                        />
+                                                        {!c.image && (
+                                                            <div className="card-media-fallback">
+                                                                <i className="fas fa-book-reader"></i>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Top Left: Recommendation Badge */}
+                                                        <span className="card-badge-recommend-reason">
+                                                            <i className="fas fa-star"></i>
+                                                            {c.recommendationBadge || "Rekomendasi"}
+                                                        </span>
+
+                                                        {/* Level Badge (Shifted under recommendation badge) */}
+                                                        <span className="card-badge-level-shifted">
+                                                            {c.level || "Umum"}
+                                                        </span>
+
+                                                        {/* Top Right: Wishlist Button */}
+                                                        {!isTeacher && (
+                                                            <button 
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    addToWishlist(c.id);
+                                                                }} 
+                                                                className="card-wishlist-action"
+                                                                title={isCourseInWishlist(c.id) ? "Hapus dari daftar keinginan" : "Tambah ke daftar keinginan"}
+                                                                disabled={!userId}
+                                                                aria-label="Wishlist kursus"
+                                                            >
+                                                                <i className={`${isCourseInWishlist(c.id) ? 'fas fa-heart text-danger' : 'far fa-heart'}`} />
+                                                            </button>
+                                                        )}
+
+                                                        {/* Bottom Left: Category Pill */}
+                                                        {c.category?.title && (
+                                                            <span className="card-badge-category">
+                                                                {c.category.title}
+                                                            </span>
+                                                        )}
+
+                                                        {/* Bottom Right: JP Badge */}
+                                                        <span className="card-badge-jp">
+                                                            <i className="fas fa-clock me-1"></i>
+                                                            {jpDuration} JP
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Card Body */}
+                                                    <div className="card-info-body">
+                                                        {/* Title */}
+                                                        <h3 className="compact-card-title">
+                                                            <Link 
+                                                                to={`/course-detail/${c.slug}/`}
+                                                                onClick={() => handleRecommendedCourseClick(c)}
+                                                            >
+                                                                {c.title}
+                                                            </Link>
+                                                        </h3>
+
+                                                        {/* Instructor Info */}
+                                                        <div className="card-instructor-meta">
+                                                            <i className="fas fa-user-circle me-1 text-teal"></i>
+                                                            <span className="instructor-name">
+                                                                {c.teacher?.full_name || 'Instruktur DPD RI'}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Stats Row (Rating & Students) */}
+                                                        <div className="card-stats-row">
+                                                            <div className="card-rating-stat">
+                                                                <i className="fas fa-star text-warning me-1"></i>
+                                                                <strong>{ratingValue > 0 ? ratingValue.toFixed(1) : 'Baru'}</strong>
+                                                                {ratingValue > 0 && (
+                                                                    <span className="rating-count">({c.reviews?.length || 0})</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="card-students-stat">
+                                                                <i className="fas fa-users me-1 text-secondary"></i>
+                                                                <span>{c.students?.length || 0} Siswa</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Curated System Badge */}
+                                                        <div className="recommended-system-tag">
+                                                            <i className="fas fa-shield-alt text-teal"></i>
+                                                            <span>Rekomendasi LMSetjen DPD RI</span>
+                                                        </div>
+
+                                                        {/* View Details Action Button */}
+                                                        <Link 
+                                                            to={`/course-detail/${c.slug}/`} 
+                                                            className="btn-card-detail btn-rec-detail"
+                                                            onClick={() => handleRecommendedCourseClick(c)}
+                                                        >
+                                                            <span>Pelajari Kursus</span>
+                                                            <i className="fas fa-arrow-right"></i>
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </section>
                         )}
 
                         {/* Compact Call to Action Section */}

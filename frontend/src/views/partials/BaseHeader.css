@@ -831,6 +831,33 @@
     position: relative;
 }
 
+.search-history-item:last-child {
+    border-bottom: none;
+}
+
+.btn-remove-history-item {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.15s ease;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.search-history-item:hover .btn-remove-history-item {
+    opacity: 1;
+}
+
+.btn-remove-history-item:hover {
+    color: #ef4444;
+    background: #fee2e2;
+}
+
 .search-history-item::before {
     content: '';
     position: absolute;
@@ -916,8 +943,67 @@
 }
 
 /* ==========================================================================
-   TRENDING SEARCHES MODAL — Compact, Fire Theme with Pill Tags
+   SUGGESTIONS & TRENDING SEARCHES MODAL — Compact, Unified Dual-Section Theme
    ========================================================================== */
+.search-suggestions-modal {
+    max-height: 480px;
+    overflow: hidden;
+}
+
+.search-suggestions-section {
+    position: relative;
+}
+
+.search-suggestions-section.has-divider {
+    border-top: 1px solid #f1f5f9;
+}
+
+.search-history-content {
+    max-height: 180px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.search-history-content::-webkit-scrollbar {
+    width: 5px;
+}
+
+.search-history-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.search-history-content::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+
+.search-history-content::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+}
+
+.search-trending-header {
+    background: #fafcff;
+}
+
+.btn-clear-history-inline {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-clear-history-inline:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
 .search-trending-modal {
     /* Inherits base modal styles */
 }

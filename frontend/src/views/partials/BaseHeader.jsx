@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, memo } from "react";
+import React, { useContext, useState, useEffect, memo, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { WishlistContext, RolesContext, ProfileContext } from '../plugin/Context';
 import { useAuthStore } from "../../store/auth";
@@ -36,14 +36,13 @@ function BaseHeader() {
     const [searchTimeout, setSearchTimeout] = useState(null);
     const [selectedResultIndex, setSelectedResultIndex] = useState(-1);  // ✨ Track keyboard navigation
     const [searchHistory, setSearchHistory] = useState([]);  // ✨ PHASE 3: Search history
-    const [showSearchHistory, setShowSearchHistory] = useState(false);  // ✨ PHASE 3: Show history dropdown
+    const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);  // ✨ Show unified history & trending suggestions
     const [trendingSearches, setTrendingSearches] = useState(() => {
         if (cachedTrendingSearches && Date.now() - lastTrendingFetchTime < TRENDING_CACHE_TTL) {
             return cachedTrendingSearches;
         }
         return [];
     });  // ✨ PHASE 3: Trending searches (cached)
-    const [showTrendingSearches, setShowTrendingSearches] = useState(false);  // ✨ PHASE 3: Show trending dropdown
     const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
     
     const navigate = useNavigate();
@@ -78,6 +77,28 @@ function BaseHeader() {
     
     // ✨ PHASE 4.177: Fetch guards to prevent duplicate API calls
     const hasFetchedTrendingRef = React.useRef(false);
+    const searchContainerRef = useRef(null);
+
+    // ✨ Close search modal & suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+                setShowSearchModal(false);
+                setShowSearchSuggestions(false);
+                setSelectedResultIndex(-1);
+            }
+        };
+
+        if (showSearchModal || showSearchSuggestions) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('touchstart', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
+    }, [showSearchModal, showSearchSuggestions]);
     
     // Animation effect
     useEffect(() => {
@@ -165,7 +186,7 @@ function BaseHeader() {
             // ALWAYS hide modal and clear results if query is too short
             setSearchResults([]);
             setShowSearchModal(false);
-            setShowSearchHistory(false);  // Hide history
+            setShowSearchSuggestions(false);  // Hide suggestions
             setSelectedResultIndex(-1);  // Reset keyboard navigation
             setIsSearching(false);  // Ensure loading state is cleared
             return;
@@ -183,7 +204,7 @@ function BaseHeader() {
                 // ✨ FIX: ALWAYS show modal even with 0 results so user gets clear feedback
                 // The modal component handles empty state display internally
                 setShowSearchModal(true);  // Show modal regardless of result count
-                setShowSearchHistory(false);  // Hide history when we have results
+                setShowSearchSuggestions(false);  // Hide suggestions when we have results
             } catch (error) {
                 setSearchResults([]);
                 // ✨ FIX: Show modal on error too so user knows search was attempted
@@ -223,7 +244,7 @@ function BaseHeader() {
             addToSearchHistory(trimmedQuery);  // ✨ PHASE 3: Add to history
         }
         setShowSearchModal(false);
-        setShowSearchHistory(false);  // ✨ PHASE 3: Hide history
+        setShowSearchSuggestions(false);  // ✨ Hide suggestions
         if (trimmedQuery) {
             navigate(`/search/?search=${encodeURIComponent(trimmedQuery)}`);
         } else {
@@ -234,7 +255,7 @@ function BaseHeader() {
     const handleCourseSelect = (courseSlug) => {
         addToSearchHistory(searchQuery);  // ✨ PHASE 3: Add to history
         setShowSearchModal(false);
-        setShowSearchHistory(false);  // ✨ PHASE 3: Hide history
+        setShowSearchSuggestions(false);  // ✨ Hide suggestions
         setSearchQuery("");
         navigate(`/course-detail/${courseSlug}/`);
     };
@@ -242,38 +263,55 @@ function BaseHeader() {
     // ✨ PHASE 3: Handle search history item click
     const handleHistoryItemClick = (item) => {
         setSearchQuery(item);
-        setShowSearchHistory(false);
+        setShowSearchSuggestions(false);
+        setSelectedResultIndex(-1);
         // The debounce in useEffect will trigger the search automatically
     };
 
+    // ✨ Remove single search history item
+    const removeSearchHistoryItem = (itemToRemove, e) => {
+        if (e) e.stopPropagation();
+        const updated = searchHistory.filter(item => item !== itemToRemove);
+        setSearchHistory(updated);
+        try {
+            localStorage.setItem('searchHistory', JSON.stringify(updated));
+        } catch (err) {
+            console.error('Failed to update search history:', err);
+        }
+        if (updated.length === 0 && trendingSearches.length === 0) {
+            setShowSearchSuggestions(false);
+        }
+        setSelectedResultIndex(-1);
+    };
+
     // ✨ PHASE 3: Clear search history
-    const clearSearchHistory = () => {
+    const clearSearchHistory = (e) => {
+        if (e) e.stopPropagation();
         setSearchHistory([]);
         localStorage.removeItem('searchHistory');
-        setShowSearchHistory(false);
+        if (trendingSearches.length === 0) {
+            setShowSearchSuggestions(false);
+        }
+        setSelectedResultIndex(-1);
     };
 
     // ✨ PHASE 3: Handle trending item click
     const handleTrendingItemClick = (query) => {
         setSearchQuery(query);
-        setShowTrendingSearches(false);
+        setShowSearchSuggestions(false);
         addToSearchHistory(query);  // Add to history when clicked
+        setSelectedResultIndex(-1);
         // The debounce in useEffect will trigger the search automatically
     };
 
-    // ✨ PHASE 3: Handle input focus - show modal if there are results or show history/trending
+    // ✨ PHASE 3: Handle input focus - show suggestions if query is short
     const handleSearchInputFocus = () => {
-        // Show history if available and query is short
-        if (searchQuery.trim().length < 2 && searchHistory.length > 0) {
-            setShowSearchHistory(true);
-            setShowTrendingSearches(false);
-            return;
-        }
-        // Show trending if no history and query is short
-        if (searchQuery.trim().length < 2 && searchHistory.length === 0 && trendingSearches.length > 0) {
-            setShowTrendingSearches(true);
-            setShowSearchHistory(false);
-            return;
+        // Show unified suggestions (history + trending) if query is short
+        if (searchQuery.trim().length < 2) {
+            if (searchHistory.length > 0 || trendingSearches.length > 0) {
+                setShowSearchSuggestions(true);
+                return;
+            }
         }
         // Show results modal if query is valid and we have results
         if (searchQuery.trim().length >= 2 && searchResults.length > 0) {
@@ -285,30 +323,33 @@ function BaseHeader() {
         // ✨ IMPROVEMENT: Enhanced keyboard navigation
         if (e.key === 'Enter') {
             if (selectedResultIndex >= 0) {
-                // If history is shown, click the history item
-                if (showSearchHistory && searchHistory[selectedResultIndex]) {
-                    handleHistoryItemClick(searchHistory[selectedResultIndex]);
-                }
-                // If trending is shown, click the trending item
-                else if (showTrendingSearches && trendingSearches[selectedResultIndex]) {
-                    handleTrendingItemClick(trendingSearches[selectedResultIndex]);
+                // If suggestions modal is shown (history + trending)
+                if (showSearchSuggestions) {
+                    if (selectedResultIndex < searchHistory.length) {
+                        handleHistoryItemClick(searchHistory[selectedResultIndex]);
+                        return;
+                    } else {
+                        const trendingIdx = selectedResultIndex - searchHistory.length;
+                        if (trendingSearches[trendingIdx]) {
+                            handleTrendingItemClick(trendingSearches[trendingIdx]);
+                            return;
+                        }
+                    }
                 }
                 // If results are shown, navigate to the course
                 else if (searchResults[selectedResultIndex]) {
                     handleCourseSelect(searchResults[selectedResultIndex].slug);
+                    return;
                 }
-            } else {
-                // Otherwise, do full search
-                handleSearchSubmit();
             }
+            // Otherwise, do full search
+            handleSearchSubmit();
         } else if (e.key === 'ArrowDown') {
-            // Navigate down through results/history/trending
+            // Navigate down through suggestions/results
             e.preventDefault();
             let maxIndex = -1;
-            if (showSearchHistory) {
-                maxIndex = searchHistory.length - 1;
-            } else if (showTrendingSearches) {
-                maxIndex = trendingSearches.length - 1;
+            if (showSearchSuggestions) {
+                maxIndex = searchHistory.length + trendingSearches.length - 1;
             } else {
                 maxIndex = searchResults.length - 1;
             }
@@ -316,14 +357,13 @@ function BaseHeader() {
                 prev < maxIndex ? prev + 1 : prev
             );
         } else if (e.key === 'ArrowUp') {
-            // Navigate up through results/history/trending
+            // Navigate up through suggestions/results
             e.preventDefault();
             setSelectedResultIndex(prev => prev > 0 ? prev - 1 : -1);
         } else if (e.key === 'Escape') {
             // Close modals
             setShowSearchModal(false);
-            setShowSearchHistory(false);  // ✨ PHASE 3: Close history
-            setShowTrendingSearches(false);  // ✨ PHASE 3: Close trending
+            setShowSearchSuggestions(false);
             setSelectedResultIndex(-1);
         }
     };
@@ -653,14 +693,7 @@ function BaseHeader() {
 
                             {/* Search */}
                             {!isSearchPage && (
-                                <div className="search-container-wrapper" onClick={(e) => {
-                                    // Close modal only when clicking outside search area, not on it
-                                    if (e.target.closest('.search-container')) return;
-                                    if (e.target.closest('.search-modal')) return;
-                                    setShowSearchModal(false);
-                                    setShowSearchHistory(false);  // ✨ PHASE 3: Close history
-                                    setShowTrendingSearches(false);  // ✨ PHASE 3: Close trending
-                                }}>
+                                <div className="search-container-wrapper" ref={searchContainerRef}>
                                     <div className="search-container">
                                         <i className="fas fa-search search-input-icon" aria-hidden="true"></i>
                                         <input
@@ -669,10 +702,16 @@ function BaseHeader() {
                                             placeholder="Cari Pembelajaran..."
                                             value={searchQuery}
                                             onChange={(e) => {
-                                                setSearchQuery(e.target.value);
-                                                // Close history/trending when user types
-                                                setShowSearchHistory(false);
-                                                setShowTrendingSearches(false);
+                                                const val = e.target.value;
+                                                setSearchQuery(val);
+                                                if (val.trim().length < 2) {
+                                                    setShowSearchModal(false);
+                                                    if (searchHistory.length > 0 || trendingSearches.length > 0) {
+                                                        setShowSearchSuggestions(true);
+                                                    }
+                                                } else {
+                                                    setShowSearchSuggestions(false);
+                                                }
                                             }}
                                             onKeyDown={handleKeyPress}
                                             onFocus={handleSearchInputFocus}
@@ -776,82 +815,95 @@ function BaseHeader() {
                                     </div>
                                 )}
 
-                                {/* ✨ PHASE 3: Search History Modal */}
-                                {showSearchHistory && searchHistory.length > 0 && (
-                                    <div className="search-modal search-history-modal" role="listbox">
-                                        <div className="search-modal-header">
-                                            <span className="search-modal-title">
-                                                <i className="fas fa-history me-2"></i>
-                                                Riwayat Pencarian
-                                            </span>
-                                            <button 
-                                                className="search-modal-close"
-                                                onClick={() => setShowSearchHistory(false)}
-                                                aria-label="Close search history"
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
-                                        <div className="search-modal-content">
-                                            {searchHistory.map((item, index) => (
-                                                <div 
-                                                    key={`history-${index}`}
-                                                    className={`search-history-item ${index === selectedResultIndex ? 'selected' : ''}`}
-                                                    onClick={() => handleHistoryItemClick(item)}
-                                                    onMouseEnter={() => setSelectedResultIndex(index)}
-                                                    role="option"
-                                                    aria-selected={index === selectedResultIndex}
-                                                    title={item}
-                                                >
-                                                    <i className="fas fa-clock me-2"></i>
-                                                    <span>{item}</span>
+                                {/* ✨ Unified Suggestions Modal: Search History & Trending Searches */}
+                                {showSearchSuggestions && (searchHistory.length > 0 || trendingSearches.length > 0) && (
+                                    <div className="search-modal search-suggestions-modal" role="listbox">
+                                        {/* Section 1: Riwayat Pencarian (jika ada) */}
+                                        {searchHistory.length > 0 && (
+                                            <div className="search-suggestions-section search-history-section">
+                                                <div className="search-modal-header">
+                                                    <span className="search-modal-title">
+                                                        <i className="fas fa-history me-2"></i>
+                                                        Riwayat Pencarian
+                                                    </span>
+                                                    <button 
+                                                        type="button"
+                                                        className="btn-clear-history-inline"
+                                                        onClick={clearSearchHistory}
+                                                        title="Hapus semua riwayat pencarian"
+                                                    >
+                                                        <i className="fas fa-trash-alt me-1"></i>
+                                                        Hapus
+                                                    </button>
                                                 </div>
-                                            ))}
-                                        </div>
-                                        <div className="search-modal-footer">
-                                            <button 
-                                                className="btn-clear-history"
-                                                onClick={clearSearchHistory}
-                                            >
-                                                <i className="fas fa-trash me-2"></i>
-                                                Hapus Riwayat
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
+                                                <div className="search-modal-content search-history-content">
+                                                    {searchHistory.map((item, index) => (
+                                                        <div 
+                                                            key={`history-${index}`}
+                                                            className={`search-history-item ${index === selectedResultIndex ? 'selected' : ''}`}
+                                                            onClick={() => handleHistoryItemClick(item)}
+                                                            onMouseEnter={() => setSelectedResultIndex(index)}
+                                                            role="option"
+                                                            aria-selected={index === selectedResultIndex}
+                                                            title={item}
+                                                        >
+                                                            <i className="fas fa-clock me-2"></i>
+                                                            <span>{item}</span>
+                                                            <button
+                                                                type="button"
+                                                                className="btn-remove-history-item"
+                                                                onClick={(e) => removeSearchHistoryItem(item, e)}
+                                                                title="Hapus dari riwayat"
+                                                                aria-label={`Hapus ${item} dari riwayat`}
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
 
-                                {/* ✨ PHASE 3: Trending Searches Modal */}
-                                {showTrendingSearches && trendingSearches.length > 0 && (
-                                    <div className="search-modal search-trending-modal" role="listbox">
-                                        <div className="search-modal-header">
-                                            <span className="search-modal-title">
-                                                <i className="fas fa-fire"></i>
-                                                Trending
-                                            </span>
-                                            <button 
-                                                className="search-modal-close"
-                                                onClick={() => setShowTrendingSearches(false)}
-                                                aria-label="Close trending searches"
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
-                                        <div className="search-trending-content-pills">
-                                            {trendingSearches.map((item, index) => (
-                                                <div 
-                                                    key={`trending-${index}`}
-                                                    className={`search-trending-item ${index === selectedResultIndex ? 'selected' : ''}`}
-                                                    onClick={() => handleTrendingItemClick(item)}
-                                                    onMouseEnter={() => setSelectedResultIndex(index)}
-                                                    role="option"
-                                                    aria-selected={index === selectedResultIndex}
-                                                    title={item}
-                                                >
-                                                    <i className="fas fa-fire"></i>
-                                                    <span>{item}</span>
+                                        {/* Section 2: Trending Searches (jika ada) */}
+                                        {trendingSearches.length > 0 && (
+                                            <div className={`search-suggestions-section search-trending-section ${searchHistory.length > 0 ? 'has-divider' : ''}`}>
+                                                <div className="search-modal-header search-trending-header">
+                                                    <span className="search-modal-title">
+                                                        <i className="fas fa-fire me-2"></i>
+                                                        Pencarian Populer
+                                                    </span>
+                                                    {!searchHistory.length && (
+                                                        <button 
+                                                            type="button"
+                                                            className="search-modal-close"
+                                                            onClick={() => setShowSearchSuggestions(false)}
+                                                            aria-label="Tutup saran pencarian"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    )}
                                                 </div>
-                                            ))}
-                                        </div>
+                                                <div className="search-trending-content-pills">
+                                                    {trendingSearches.map((item, index) => {
+                                                        const itemIdx = searchHistory.length + index;
+                                                        return (
+                                                            <div 
+                                                                key={`trending-${index}`}
+                                                                className={`search-trending-item ${itemIdx === selectedResultIndex ? 'selected' : ''}`}
+                                                                onClick={() => handleTrendingItemClick(item)}
+                                                                onMouseEnter={() => setSelectedResultIndex(itemIdx)}
+                                                                role="option"
+                                                                aria-selected={itemIdx === selectedResultIndex}
+                                                                title={item}
+                                                            >
+                                                                <i className="fas fa-fire"></i>
+                                                                <span>{item}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
