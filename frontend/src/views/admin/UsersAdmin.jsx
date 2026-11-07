@@ -59,7 +59,10 @@ function UsersAdmin() {
         students: 0,
         teachers: 0,
         admins: 0,
-        inactive_users: 0
+        inactive_users: 0,
+        new_30d: 0,
+        active_7d: 0,
+        active_rate: 0
     });
 
     // ✨ PHASE X: Memoized statistics calculation using backend stats (ISSUE FIX #1-4)
@@ -69,7 +72,11 @@ function UsersAdmin() {
         active_users: backendStats.active_users,
         students: backendStats.students,
         teachers: backendStats.teachers,
-        admins: backendStats.admins
+        admins: backendStats.admins,
+        inactive_users: backendStats.inactive_users,
+        new_30d: backendStats.new_30d,
+        active_7d: backendStats.active_7d,
+        active_rate: backendStats.active_rate
     }), [backendStats]);
     
     // AbortController for cancelling sync
@@ -128,7 +135,10 @@ function UsersAdmin() {
                     students: response.data.students || 0,
                     teachers: response.data.teachers || 0,
                     admins: response.data.admins || 0,
-                    inactive_users: response.data.inactive_users || 0
+                    inactive_users: response.data.inactive_users || 0,
+                    new_30d: response.data.new_30d || 0,
+                    active_7d: response.data.active_7d || 0,
+                    active_rate: response.data.active_rate || 0
                 });
             }
         } catch (error) {
@@ -826,537 +836,583 @@ function UsersAdmin() {
 
     if (loading) {
         return (
-            <div className="users-admin modern-dashboard">
+            <div className="admin-page-wrapper">
                 <AdminHeader />
-                <div className="users-admin-container">
-                    <div className="loading-state-modern">
-                        <FaSpinner className="fa-spin" />
-                        <p>Loading user management system...</p>
+                <main className="admin-dashboard-container d-flex align-items-center justify-content-center" style={{ minHeight: "60vh" }}>
+                    <div className="text-center p-4">
+                        <div className="spinner-border text-primary mb-3" style={{ width: "2.5rem", height: "2.5rem" }} role="status">
+                            <span className="visually-hidden">Memuat...</span>
+                        </div>
+                        <h6 className="fw-bold text-dark mb-1">Memuat Data Pengguna...</h6>
+                        <p className="text-muted small mb-0">Mengambil data akun real-time dan metrik sistem</p>
                     </div>
-                </div>
+                </main>
+                <Footer />
             </div>
         );
     }
 
     return (
-        <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <div className="admin-page-wrapper">
             <AdminHeader />
             
-            <section className="pt-4 pb-5 modern-dashboard" style={{ flex: 1 }}>
-                <div className='container'>
-                    {/* Modern Header Section */}
-                    <div className="dashboard-header-modern">
-                        <div className="header-content">
-                            <div className="header-text">
-                                <h1 className="dashboard-title">
-                                    <MdPeople className="title-icon" />
-                                    Manajemen Pengguna
-                                </h1>
-                                <p className="dashboard-subtitle">
-                                    Dashboard kontrol dan pemantauan pengguna yang komprehensif
+            <main className="admin-dashboard-container">
+                <div className="container-fluid px-3 px-xl-4">
+                    {/* Executive Header Bar */}
+                    <div className="admin-exec-header mb-3">
+                        <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div>
+                                <span className="admin-gov-badge">
+                                    <i className="fas fa-landmark me-1"></i> SETJEN DPD RI &bull; ADMIN PANEL
+                                </span>
+                                <div className="d-flex align-items-center gap-2 flex-wrap">
+                                    <h1 className="admin-exec-title mb-0">
+                                        <MdPeople className="text-primary fs-3" />
+                                        Manajemen Pengguna
+                                    </h1>
+                                    <span className="admin-live-pulse">
+                                        <span className="pulse-dot"></span>
+                                        Live Data: {stats.total_users} Akun
+                                    </span>
+                                </div>
+                                <p className="admin-exec-subtitle mb-0">
+                                    Kelola akun, hak akses multi-peran, aktivitas sistem, dan sinkronisasi data pengguna secara real-time
                                 </p>
                             </div>
-                            <div className="dashboard-actions">
-                                <div className="sync-button-group">
-                                    <button 
-                                        className="btn-modern-primary btn-sync" 
-                                        onClick={() => {
-                                            syncData();
-                                        }}
-                                        disabled={syncing}
-                                    >
-                                        {syncing ? (
-                                            <>
-                                                <FaSpinner className="spinner fa-spin" />
-                                                Sinkronisasi...
-                                            </>
+
+                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                {/* Real Database Sync Info Badge */}
+                                <div className="sync-info-compact" title="Waktu sinkronisasi terakhir dari database">
+                                    <span className="sync-info-label">Sinkronisasi:</span>
+                                    <span className="sync-info-value">
+                                        {lastSuccessfulSyncTime ? (
+                                            dayjs(lastSuccessfulSyncTime).format("DD MMM YYYY, HH:mm:ss")
                                         ) : (
-                                            <>
-                                                <MdSync />
-                                                Sinkronisasi Data
-                                            </>
+                                            "Belum Pernah"
                                         )}
-                                    </button>
-                                    {lastSuccessfulSyncTime ? (
-                                        <div className="last-sync-info">
-                                            <small className="last-sync-label">Sinkronisasi Terakhir:</small>
-                                            <div className="last-sync-time">
-                                                {new Date(lastSuccessfulSyncTime).toLocaleString("id-ID", {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    year: "numeric",
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                    second: "2-digit"
-                                                })}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="last-sync-info">
-                                            <small className="last-sync-label">Sinkronisasi Terakhir:</small>
-                                            <div className="last-sync-time">
-                                                Belum Pernah
-                                            </div>
-                                        </div>
-                                    )}
+                                    </span>
                                 </div>
-                                <button className="btn-modern-primary" onClick={openCreateModal}>
+
+                                <button 
+                                    className="admin-btn-sync" 
+                                    onClick={syncData}
+                                    disabled={syncing}
+                                    title="Sinkronisasi data pengguna dari API eksternal"
+                                >
+                                    {syncing ? (
+                                        <>
+                                            <FaSpinner className="fa-spin" />
+                                            <span>Sinkronisasi...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <MdSync />
+                                            <span>Sinkronisasi Data</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                <button className="admin-btn-add-user" onClick={openCreateModal}>
                                     <MdPersonAdd />
-                                    Tambah Pengguna Baru
+                                    <span>Tambah Pengguna</span>
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Enhanced Statistics Cards */}
-                    <div className="row">
-                        <div className="col-lg-3 col-md-6 mb-3">
-                            <div className="stat-card-enhanced total-users">
-                                <FaUsers className="stat-icon-enhanced" />
-                                <div className="stat-content">
-                                    <div className="stat-number-enhanced">{stats.total_users}</div>
-                                    <div className="stat-label-enhanced">Total Pengguna</div>
-                                    <div className="stat-change positive">
-                                        <MdTrendingUp /> +12.5%
-                                    </div>
+                    {/* Compact KPI Metric Cards - 100% Real Live Values */}
+                    <div className="row g-2 mb-3">
+                        {/* 1. Total Pengguna */}
+                        <div className="col-xl-2 col-md-4 col-sm-6">
+                            <div className="kpi-compact-card kpi-blue">
+                                <div className="kpi-icon-wrap">
+                                    <FaUsers />
+                                </div>
+                                <div className="kpi-info-wrap">
+                                    <span className="kpi-label">Total Pengguna</span>
+                                    <div className="kpi-number">{stats.total_users}</div>
+                                    <span className="kpi-meta info">
+                                        {backendStats.new_30d > 0 ? `+${backendStats.new_30d} baru (30 hr)` : 'Terdaftar di LMS'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                        <div className="col-lg-3 col-md-6 mb-3">
-                            <div className="stat-card-enhanced active-users">
-                                <FaUserCheck className="stat-icon-enhanced" />
-                                <div className="stat-content">
-                                    <div className="stat-number-enhanced">{stats.active_users}</div>
-                                    <div className="stat-label-enhanced">Pengguna Aktif</div>
-                                    <div className="stat-change positive">
-                                        <MdTrendingUp /> +8.2%
-                                    </div>
+
+                        {/* 2. Pengguna Aktif */}
+                        <div className="col-xl-2 col-md-4 col-sm-6">
+                            <div className="kpi-compact-card kpi-emerald">
+                                <div className="kpi-icon-wrap">
+                                    <FaUserCheck />
+                                </div>
+                                <div className="kpi-info-wrap">
+                                    <span className="kpi-label">Pengguna Aktif</span>
+                                    <div className="kpi-number">{stats.active_users}</div>
+                                    <span className="kpi-meta positive">
+                                        {stats.total_users > 0 ? `${((stats.active_users / stats.total_users) * 100).toFixed(1)}% rasio aktif` : '0%'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                        <div className="col-lg-2 col-md-4 mb-3">
-                            <div className="mini-stat-card-modern students">
-                                <FaUserGraduate className="mini-stat-icon" />
-                                <div className="mini-stat-content">
-                                    <div className="mini-stat-number">{stats.students}</div>
-                                    <div className="mini-stat-label">Siswa</div>
+
+                        {/* 3. Siswa */}
+                        <div className="col-xl-2 col-md-4 col-sm-6">
+                            <div className="kpi-compact-card kpi-amber">
+                                <div className="kpi-icon-wrap">
+                                    <FaUserGraduate />
+                                </div>
+                                <div className="kpi-info-wrap">
+                                    <span className="kpi-label">Siswa</span>
+                                    <div className="kpi-number">{stats.students}</div>
+                                    <span className="kpi-meta warning">
+                                        {stats.total_users > 0 ? `${((stats.students / stats.total_users) * 100).toFixed(1)}% dari total` : '0%'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                        <div className="col-lg-2 col-md-4 mb-3">
-                            <div className="mini-stat-card-modern teachers">
-                                <FaUserTie className="mini-stat-icon" />
-                                <div className="mini-stat-content">
-                                    <div className="mini-stat-number">{stats.teachers}</div>
-                                    <div className="mini-stat-label">Instruktur</div>
+
+                        {/* 4. Instruktur */}
+                        <div className="col-xl-2 col-md-4 col-sm-6">
+                            <div className="kpi-compact-card kpi-teal">
+                                <div className="kpi-icon-wrap">
+                                    <FaUserTie />
+                                </div>
+                                <div className="kpi-info-wrap">
+                                    <span className="kpi-label">Instruktur</span>
+                                    <div className="kpi-number">{stats.teachers}</div>
+                                    <span className="kpi-meta info">
+                                        {stats.total_users > 0 ? `${((stats.teachers / stats.total_users) * 100).toFixed(1)}% dari total` : '0%'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                        <div className="col-lg-2 col-md-4 mb-3">
-                            <div className="mini-stat-card-modern admins">
-                                <FaUserCog className="mini-stat-icon" />
-                                <div className="mini-stat-content">
-                                    <div className="mini-stat-number">{stats.admins}</div>
-                                    <div className="mini-stat-label">Admin</div>
+
+                        {/* 5. Admin */}
+                        <div className="col-xl-2 col-md-4 col-sm-6">
+                            <div className="kpi-compact-card kpi-indigo">
+                                <div className="kpi-icon-wrap">
+                                    <FaUserCog />
+                                </div>
+                                <div className="kpi-info-wrap">
+                                    <span className="kpi-label">Administrator</span>
+                                    <div className="kpi-number">{stats.admins}</div>
+                                    <span className="kpi-meta neutral">
+                                        {stats.total_users > 0 ? `${((stats.admins / stats.total_users) * 100).toFixed(1)}% dari total` : '0%'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 6. Tidak Aktif */}
+                        <div className="col-xl-2 col-md-4 col-sm-6">
+                            <div className="kpi-compact-card kpi-rose">
+                                <div className="kpi-icon-wrap">
+                                    <FaUserTimes />
+                                </div>
+                                <div className="kpi-info-wrap">
+                                    <span className="kpi-label">Tidak Aktif</span>
+                                    <div className="kpi-number">{backendStats.inactive_users}</div>
+                                    <span className="kpi-meta neutral">
+                                        {stats.total_users > 0 ? `${((backendStats.inactive_users / stats.total_users) * 100).toFixed(1)}% nonaktif` : '0 akun'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Modern Filters and Search */}
-                    <div className="control-panel-modern">
-                        <div className="panel-header-modern">
-                            <h3 className="panel-title-modern">
-                                <MdDashboard />
-                                Kontrol Manajemen Pengguna
-                            </h3>
-                        </div>
-                        <div className="panel-content-modern">
-                            <div className="filters-row-modern">
-                                <div className="search-group-modern">
-                                    <FaSearch className="search-icon-modern" />
+                    {/* Unified User Management Table Card */}
+                    <div className="users-main-card mb-4">
+                        {/* Compact Toolbar */}
+                        <div className="users-toolbar-compact">
+                            <div className="toolbar-left-group">
+                                <div className="search-box-compact">
+                                    <FaSearch className="search-icon-compact" />
                                     <input
                                         type="text"
-                                        className="search-input-modern"
-                                        placeholder="Cari pengguna berdasarkan nama, email, atau nama pengguna..."
+                                        className="search-input-compact"
+                                        placeholder="Cari nama, email, username..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
-                                    {/* ✨ PHASE X: Clear search button (ISSUE FIX #3) */}
                                     {searchTerm && (
                                         <button
-                                            className="search-clear-btn-modern"
+                                            className="search-clear-btn-compact"
                                             onClick={() => setSearchTerm("")}
                                             title="Hapus pencarian"
-                                            aria-label="Clear search"
                                         >
                                             <FaTimes />
                                         </button>
                                     )}
                                 </div>
-                                
-                                <div className="filter-group-modern">
+
+                                <div className="filter-count-badge">
+                                    <span className="badge-count-num">{filteredUsers.length}</span>
+                                    <span className="badge-count-text">
+                                        {filteredUsers.length === users.length ? "Pengguna" : `dari ${users.length} pengguna`}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="toolbar-right-group">
+                                <div className="filter-select-wrap">
                                     <select 
-                                        className="filter-select-modern"
+                                        className="filter-select-compact" 
                                         value={roleFilter} 
                                         onChange={(e) => setRoleFilter(e.target.value)}
                                     >
                                         <option value="all">Semua Peran</option>
-                                        <option value="student">Siswa</option>
-                                        <option value="teacher">Instruktur</option>
-                                        <option value="admin">Admin</option>
+                                        <option value="student">🎓 Siswa</option>
+                                        <option value="teacher">👨‍🏫 Instruktur</option>
+                                        <option value="admin">⚙️ Admin</option>
                                     </select>
                                 </div>
-                                
-                                <div className="filter-group-modern">
+
+                                <div className="filter-select-wrap">
                                     <select 
-                                        className="filter-select-modern"
+                                        className="filter-select-compact" 
                                         value={statusFilter} 
                                         onChange={(e) => setStatusFilter(e.target.value)}
                                     >
                                         <option value="all">Semua Status</option>
-                                        <option value="active">Pengguna Aktif</option>
-                                        <option value="inactive">Pengguna Tidak Aktif</option>
+                                        <option value="active">● Aktif</option>
+                                        <option value="inactive">○ Tidak Aktif</option>
                                     </select>
                                 </div>
-                                
-                                {/* ✨ PHASE X: Items per page selector (ISSUE FIX #2) */}
-                                <div className="filter-group-modern">
+
+                                <div className="filter-select-wrap">
                                     <select 
-                                        className="filter-select-modern"
-                                        value={itemsPerPage}
+                                        className="filter-select-compact per-page-select" 
+                                        value={itemsPerPage} 
                                         onChange={(e) => {
                                             setItemsPerPage(Number(e.target.value));
-                                            setCurrentPage(1); // Reset to first page when changing items per page
+                                            setCurrentPage(1);
                                         }}
-                                        title="Pilih jumlah pengguna per halaman"
+                                        title="Jumlah per halaman"
                                     >
-                                        <option value={10}>10 Per Halaman</option>
-                                        <option value={25}>25 Per Halaman</option>
-                                        <option value={50}>50 Per Halaman</option>
-                                        <option value={100}>100 Per Halaman</option>
+                                        <option value={10}>10 / hal</option>
+                                        <option value={25}>25 / hal</option>
+                                        <option value={50}>50 / hal</option>
+                                        <option value={100}>100 / hal</option>
                                     </select>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Modern Bulk Actions */}
-                    {showBulkActions && (
-                        <div className="bulk-actions-modern">
-                            <div className="bulk-info-modern">
-                                <FaUsers className="bulk-icon" />
-                                <span className="bulk-text">{selectedUsers.length} pengguna dipilih</span>
-                            </div>
-                            <div className="bulk-actions-buttons">
-                                <button 
-                                    className="bulk-btn"
-                                    onClick={() => handleBulkAction("activate")}
-                                >
-                                    <FaUserCheck /> Aktifkan
-                                </button>
-                                <button 
-                                    className="bulk-btn"
-                                    onClick={() => handleBulkAction("deactivate")}
-                                >
-                                    <FaUserTimes /> Nonaktifkan
-                                </button>
-                                <button 
-                                    className="bulk-btn"
-                                    onClick={() => handleBulkAction("delete")}
-                                >
-                                    <FaTrash /> Hapus
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Modern Users Table */}
-                    <div className="users-table-container table-responsive-wrapper">
-                        <div className="table-scroll-indicator">
-                            <FaArrowRight /> Gulir untuk lebih banyak
-                        </div>
-                        <table className="users-table-modern" role="table" aria-label="Users management table">
-                            <thead>
-                                <tr>
-                                    {/* ✨ PHASE X: Select column moved to leftmost (ISSUE FIX #2) */}
-                                    <th className="select-column" scope="col">
-                                        <div className="checkbox-modern">
-                                            {selectedUsers.length === filteredUsers.length ? 
-                                                <MdCheckBox 
-                                                    className="checkbox-icon selected" 
-                                                    onClick={handleSelectAll}
-                                                    title="Batalkan pilihan semua pengguna"
-                                                    role="checkbox"
-                                                    aria-checked="true"
-                                                /> : 
-                                                <MdCheckBoxOutlineBlank 
-                                                    className="checkbox-icon" 
-                                                    onClick={handleSelectAll}
-                                                    title="Pilih semua pengguna"
-                                                    role="checkbox"
-                                                    aria-checked="false"
-                                                />
-                                            }
-                                        </div>
-                                    </th>
-                                    {/* ✨ PHASE X: Add No column (ISSUE FIX #5) */}
-                                    <th className="no-column" scope="col">#</th>
-                                    <th className="user-column" scope="col">Informasi Pengguna</th>
-                                    <th className="role-column" scope="col">Peran</th>
-                                    <th className="status-column" scope="col">Status</th>
-                                    <th className="login-column" scope="col">Aktivitas Terakhir</th>
-                                    <th className="date-column" scope="col">Pendaftaran</th>
-                                    <th className="activity-column" scope="col">Aktivitas Sistem</th>
-                                    <th className="actions-column" scope="col">Manajemen</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedUsers.map((user, index) => (
-                                    <tr key={user.id} className={`user-row-modern ${selectedUsers.includes(user.id) ? "selected-row" : ""}`}>
-                                        {/* ✨ PHASE X: Select column moved to leftmost (ISSUE FIX #2) */}
-                                        <td className="select-cell">
-                                            <div className="checkbox-modern">
-                                                {selectedUsers.includes(user.id) ? 
-                                                    <MdCheckBox 
-                                                        className="checkbox-icon selected" 
-                                                        onClick={() => handleSelectUser(user.id)}
-                                                        title={`Deselect ${user.full_name}`}
-                                                        role="checkbox"
-                                                        aria-checked="true"
-                                                        tabIndex="0"
-                                                        onKeyDown={(e) => e.key === "Enter" && handleSelectUser(user.id)}
-                                                    /> : 
-                                                    <MdCheckBoxOutlineBlank 
-                                                        className="checkbox-icon" 
-                                                        onClick={() => handleSelectUser(user.id)}
-                                                        title={`Select ${user.full_name}`}
-                                                        role="checkbox"
-                                                        aria-checked="false"
-                                                        tabIndex="0"
-                                                        onKeyDown={(e) => e.key === "Enter" && handleSelectUser(user.id)}
-                                                    />
-                                                }
-                                            </div>
-                                        </td>
-                                        {/* ✨ PHASE X: Row number for each user (ISSUE FIX #5) */}
-                                        <td className="no-cell">
-                                            <span className="row-number">{((currentPage - 1) * itemsPerPage) + index + 1}</span>
-                                        </td>
-                                        <td className="user-info-cell">
-                                            <div className="user-info-modern">
-                                                <div className="user-avatar-modern">
-                                                    {user.full_name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div className="user-details-modern">
-                                                    <div className="user-name-modern">{user.full_name}</div>
-                                                    <div className="user-email-modern">{user.email}</div>
-                                                    <div className="user-username-modern">@{user.username}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="role-cell">
-                                            <div className="multi-role-container">
-                                                {user.is_student && (
-                                                    <div className="role-badge-modern student">
-                                                        <div className="role-icon">
-                                                            <FaUserGraduate />
-                                                        </div>
-                                                        <div className="role-text">
-                                                            <span className="role-name">Siswa</span>
-                                                            <span className="role-desc">Pembelajaran</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {user.is_instructor && (
-                                                    <div className="role-badge-modern teacher">
-                                                        <div className="role-icon">
-                                                            <FaUserTie />
-                                                        </div>
-                                                        <div className="role-text">
-                                                            <span className="role-name">Instruktur</span>
-                                                            <span className="role-desc">Konten</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {user.is_admin && (
-                                                    <div className="role-badge-modern admin">
-                                                        <div className="role-icon">
-                                                            <FaUserCog />
-                                                        </div>
-                                                        <div className="role-text">
-                                                            <span className="role-name">Admin</span>
-                                                            <span className="role-desc">Kontrol</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="status-cell">
-                                            <div className={`status-badge-modern ${user.is_active ? "active" : "inactive"}`}>
-                                                <div className="status-indicator"></div>
-                                                <span className="status-text">{user.is_active ? "Aktif" : "Tidak Aktif"}</span>
-                                            </div>
-                                        </td>
-                                        <td className="login-cell">
-                                            <div className="login-info-modern">
-                                                <FaBell className="date-cell" />
-                                                <span className="date-info-modern">{user.last_login ? dayjs(user.last_login).format("DD MMM, YYYY") : "Tidak Ada Data"}</span>
-                                            </div>
-                                        </td>
-                                        <td className="date-cell">
-                                            <div className="date-info-modern">
-                                                {new Date(user.date_joined).toLocaleDateString("en-US", {
-                                                    year: "numeric",
-                                                    month: "short",
-                                                    day: "numeric"
-                                                })}
-                                            </div>
-                                        </td>
-                                        <td className="activity-cell">
-                                            <div className="activity-metrics-modern">
-                                                {user.is_student && (
-                                                    <>
-                                                        <div className="metric-item">
-                                                            <FaChartLine className="metric-icon" />
-                                                            <span>{user.enrollment_count || 0} Pendaftaran</span>
-                                                        </div>
-                                                    </>
-                                                )}
-                                                {user.is_instructor && (
-                                                    <>
-                                                        <div className="metric-item">
-                                                            <FaChartLine className="metric-icon" />
-                                                            <span>{user.course_count || 0} Kursus</span>
-                                                        </div>
-                                                    </>
-                                                )}
-                                                {user.is_admin && (
-                                                    <div className="metric-item admin">
-                                                        <FaCog className="metric-icon" />
-                                                        <span>Administrator</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="actions-cell">
-                                            <div className="action-buttons-modern">
-                                                <button 
-                                                    className="action-btn-modern view-btn"
-                                                    onClick={() => openViewModal(user)}
-                                                    title="Lihat Profil Lengkap"
-                                                >
-                                                    <FaEye />
-                                                </button>
-                                                <button 
-                                                    className="action-btn-modern edit-btn"
-                                                    onClick={() => openEditModal(user)}
-                                                    title="Edit Pengaturan Pengguna"
-                                                >
-                                                    <FaEdit />
-                                                </button>
-                                                <button 
-                                                    className="action-btn-modern delete-btn"
-                                                    onClick={() => handleDeleteUser(user.id)}
-                                                    title="Hapus Pengguna"
-                                                >
-                                                    <FaTrash />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            {filteredUsers.length === 0 && (
-                                <tr>
-                                    <td colSpan="8" className="empty-state-cell">
-                                        <div className="empty-state-modern">
-                                            <FaUsers className="empty-icon" />
-                                            <h5>Tidak Ada Pengguna Ditemukan</h5>
-                                            <p>Tidak ada pengguna yang cocok dengan kriteria pencarian dan filter Anda saat ini. Coba sesuaikan filter atau istilah pencarian Anda.</p>
-                                            <button className="btn-modern-primary" onClick={openCreateModal}>
-                                                <MdPersonAdd /> Tambah Pengguna Pertama
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
-                            </tbody>
-                        </table>
-                        
-                        {/* ✨ PHASE 67: Removed page loading overlay - all data loaded at once */}
-                    </div>
-
-                    {/* Pagination Controls - Compact Professional */}
-                    {filteredUsers.length > itemsPerPage && (
-                        <div className="pagination-controls-compact">
-                            <button 
-                                className="pagination-btn-compact"
-                                onClick={() => handlePageChange(1)}
-                                disabled={currentPage === 1}
-                                title="Halaman pertama"
-                            >
-                                ⟨⟨
-                            </button>
-                            <button 
-                                className="pagination-btn-compact"
-                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                                disabled={currentPage === 1}
-                                title="Halaman sebelumnya"
-                            >
-                                ⟨
-                            </button>
-                            
-                            <div className="pagination-display">
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                    let pageNum;
-                                    if (totalPages <= 5) {
-                                        // Show all pages if 5 or fewer total
-                                        pageNum = i + 1;
-                                    } else if (currentPage <= 3) {
-                                        // Show 1-5 when near start
-                                        pageNum = i + 1;
-                                    } else if (currentPage >= totalPages - 2) {
-                                        // Show last 5 when near end
-                                        pageNum = totalPages - 4 + i;
-                                    } else {
-                                        // Show current page centered: -2, -1, current, +1, +2
-                                        pageNum = currentPage - 2 + i;
-                                    }
-                                    return pageNum;
-                                }).map(page => (
-                                    <button
-                                        key={page}
-                                        className={`pagination-page ${currentPage === page ? "active" : ""}`}
-                                        onClick={() => handlePageChange(page)}
+                                {(searchTerm || roleFilter !== "all" || statusFilter !== "all") && (
+                                    <button 
+                                        className="btn-filter-reset" 
+                                        onClick={() => {
+                                            setSearchTerm("");
+                                            setRoleFilter("all");
+                                            setStatusFilter("all");
+                                        }}
+                                        title="Reset semua filter"
                                     >
-                                        {page}
+                                        <FaTimes /> Reset
                                     </button>
-                                ))}
+                                )}
                             </div>
-                            
-                            <span className="pagination-counter">
-                                {/* ✨ PHASE 67: Simple page display - no async loading */}
-                                {currentPage} / {totalPages}
-                            </span>
-                            
-                            <button 
-                                className="pagination-btn-compact"
-                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                                disabled={currentPage === totalPages}
-                                title="Halaman berikutnya"
-                            >
-                                ⟩
-                            </button>
-                            <button 
-                                className="pagination-btn-compact"
-                                onClick={() => handlePageChange(totalPages)}
-                                disabled={currentPage === totalPages}
-                                title="Halaman terakhir"
-                            >
-                                ⟩⟩
-                            </button>
                         </div>
-                    )}
+
+                        {/* Bulk Actions Banner */}
+                        {showBulkActions && (
+                            <div className="bulk-actions-compact">
+                                <div className="bulk-count-wrap">
+                                    <FaUsers />
+                                    <span><strong>{selectedUsers.length}</strong> pengguna dipilih</span>
+                                </div>
+                                <div className="bulk-buttons-wrap">
+                                    <button 
+                                        className="bulk-btn-compact activate"
+                                        onClick={() => handleBulkAction("activate")}
+                                    >
+                                        <FaUserCheck /> Aktifkan
+                                    </button>
+                                    <button 
+                                        className="bulk-btn-compact deactivate"
+                                        onClick={() => handleBulkAction("deactivate")}
+                                    >
+                                        <FaUserTimes /> Nonaktifkan
+                                    </button>
+                                    <button 
+                                        className="bulk-btn-compact delete"
+                                        onClick={() => handleBulkAction("delete")}
+                                    >
+                                        <FaTrash /> Hapus
+                                    </button>
+                                    <button 
+                                        className="bulk-btn-compact cancel"
+                                        onClick={() => setSelectedUsers([])}
+                                    >
+                                        <FaTimes /> Batal
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Table */}
+                        <div className="users-table-scroll-container">
+                            <table className="users-table-compact">
+                                <thead>
+                                    <tr>
+                                        <th className="col-select">
+                                            <div className="compact-checkbox">
+                                                {selectedUsers.length > 0 && selectedUsers.length === paginatedUsers.length ? (
+                                                    <MdCheckBox 
+                                                        className="checkbox-active" 
+                                                        onClick={handleSelectAll}
+                                                        title="Batalkan pilihan semua"
+                                                    />
+                                                ) : (
+                                                    <MdCheckBoxOutlineBlank 
+                                                        className="checkbox-blank" 
+                                                        onClick={handleSelectAll}
+                                                        title="Pilih semua di halaman ini"
+                                                    />
+                                                )}
+                                            </div>
+                                        </th>
+                                        <th className="col-no">#</th>
+                                        <th className="col-user">Informasi Pengguna</th>
+                                        <th className="col-roles">Peran</th>
+                                        <th className="col-status">Status</th>
+                                        <th className="col-login">Aktivitas Terakhir</th>
+                                        <th className="col-date">Pendaftaran</th>
+                                        <th className="col-activity">Aktivitas Sistem</th>
+                                        <th className="col-actions text-end">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedUsers.map((user, index) => (
+                                        <tr 
+                                            key={user.id} 
+                                            className={`user-row-compact ${selectedUsers.includes(user.id) ? "row-selected" : ""}`}
+                                        >
+                                            <td className="col-select">
+                                                <div className="compact-checkbox">
+                                                    {selectedUsers.includes(user.id) ? (
+                                                        <MdCheckBox 
+                                                            className="checkbox-active" 
+                                                            onClick={() => handleSelectUser(user.id)}
+                                                        />
+                                                    ) : (
+                                                        <MdCheckBoxOutlineBlank 
+                                                            className="checkbox-blank" 
+                                                            onClick={() => handleSelectUser(user.id)}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="col-no">
+                                                <span className="row-num-badge">
+                                                    {((currentPage - 1) * itemsPerPage) + index + 1}
+                                                </span>
+                                            </td>
+                                            <td className="col-user">
+                                                <div className="user-profile-compact">
+                                                    <div className="avatar-compact">
+                                                        {(user.full_name || user.username || "U").charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="user-texts">
+                                                        <div className="user-name-line" title={user.full_name}>
+                                                            {user.full_name || "-"}
+                                                        </div>
+                                                        <div className="user-sub-line">
+                                                            <span className="user-email-text" title={user.email}>{user.email}</span>
+                                                            <span className="user-uname-text">@{user.username}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="col-roles">
+                                                <div className="roles-pills-wrap">
+                                                    {user.is_student && (
+                                                        <span className="role-pill-compact student" title="Siswa Pembelajaran">
+                                                            <FaUserGraduate className="role-pill-icon" /> Siswa
+                                                        </span>
+                                                    )}
+                                                    {user.is_instructor && (
+                                                        <span className="role-pill-compact teacher" title="Instruktur Kursus">
+                                                            <FaUserTie className="role-pill-icon" /> Instruktur
+                                                        </span>
+                                                    )}
+                                                    {user.is_admin && (
+                                                        <span className="role-pill-compact admin" title="Administrator Sistem">
+                                                            <FaUserCog className="role-pill-icon" /> Admin
+                                                        </span>
+                                                    )}
+                                                    {!(user.is_student || user.is_instructor || user.is_admin) && (
+                                                        <span className="role-pill-compact none">
+                                                            Tanpa Peran
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="col-status">
+                                                <span className={`status-pill-compact ${user.is_active ? "active" : "inactive"}`}>
+                                                    <span className="status-dot"></span>
+                                                    {user.is_active ? "Aktif" : "Nonaktif"}
+                                                </span>
+                                            </td>
+                                            <td className="col-login">
+                                                <div className="login-date-text">
+                                                    {user.last_login ? (
+                                                        dayjs(user.last_login).format("DD MMM YYYY, HH:mm")
+                                                    ) : (
+                                                        <span className="text-muted-custom">Belum pernah</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="col-date">
+                                                <div className="joined-date-text">
+                                                    {user.date_joined ? (
+                                                        dayjs(user.date_joined).format("DD MMM YYYY")
+                                                    ) : (
+                                                        <span className="text-muted-custom">-</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="col-activity">
+                                                <div className="metrics-compact-wrap">
+                                                    {user.is_student && (
+                                                        <span className="metric-chip-compact enrollments" title="Pendaftaran Kursus">
+                                                            <FaChartLine /> {user.enrollment_count || 0} Daftar
+                                                        </span>
+                                                    )}
+                                                    {user.is_instructor && (
+                                                        <span className="metric-chip-compact courses" title="Kursus Diajar">
+                                                            <FaChartLine /> {user.course_count || 0} Kursus
+                                                        </span>
+                                                    )}
+                                                    {user.is_admin && !user.is_student && !user.is_instructor && (
+                                                        <span className="metric-chip-compact admin">
+                                                            <FaCog /> Administrator
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="col-actions text-end">
+                                                <div className="action-buttons-compact">
+                                                    <button 
+                                                        className="action-btn-compact view" 
+                                                        onClick={() => openViewModal(user)}
+                                                        title="Lihat Detail Pengguna"
+                                                    >
+                                                        <FaEye />
+                                                    </button>
+                                                    <button 
+                                                        className="action-btn-compact edit" 
+                                                        onClick={() => openEditModal(user)}
+                                                        title="Edit Pengguna"
+                                                    >
+                                                        <FaEdit />
+                                                    </button>
+                                                    <button 
+                                                        className="action-btn-compact delete" 
+                                                        onClick={() => handleDeleteUser(user.id)}
+                                                        title="Hapus Pengguna"
+                                                    >
+                                                        <FaTrash />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+
+                                    {filteredUsers.length === 0 && (
+                                        <tr>
+                                            <td colSpan="9" className="empty-state-compact">
+                                                <div className="empty-state-wrap">
+                                                    <FaUsers className="empty-state-icon" />
+                                                    <h6>Tidak Ada Pengguna Ditemukan</h6>
+                                                    <p>Tidak ada akun yang sesuai dengan pencarian atau filter yang diterapkan.</p>
+                                                    <button 
+                                                        className="btn-empty-reset"
+                                                        onClick={() => {
+                                                            setSearchTerm("");
+                                                            setRoleFilter("all");
+                                                            setStatusFilter("all");
+                                                        }}
+                                                    >
+                                                        Reset Filter
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Compact Pagination Footer */}
+                        <div className="users-pagination-bar">
+                            <div className="pagination-info-text">
+                                Menampilkan <strong>{filteredUsers.length > 0 ? startIndex + 1 : 0}</strong> - <strong>{Math.min(endIndex, filteredUsers.length)}</strong> dari <strong>{filteredUsers.length}</strong> pengguna
+                                {filteredUsers.length !== users.length && (
+                                    <span className="text-muted-custom ms-1">(terfilter dari total {users.length})</span>
+                                )}
+                            </div>
+
+                            {totalPages > 1 && (
+                                <div className="pagination-compact-nav">
+                                    <button 
+                                        className="btn-page-compact"
+                                        onClick={() => handlePageChange(1)}
+                                        disabled={currentPage === 1}
+                                        title="Halaman Pertama"
+                                    >
+                                        &laquo;
+                                    </button>
+                                    <button 
+                                        className="btn-page-compact"
+                                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                        disabled={currentPage === 1}
+                                        title="Halaman Sebelumnya"
+                                    >
+                                        &lsaquo;
+                                    </button>
+
+                                    <div className="pagination-page-pills">
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNum;
+                                            if (totalPages <= 5) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                pageNum = totalPages - 4 + i;
+                                            } else {
+                                                pageNum = currentPage - 2 + i;
+                                            }
+                                            return pageNum;
+                                        }).map(page => (
+                                            <button
+                                                key={page}
+                                                className={`page-pill ${currentPage === page ? "active" : ""}`}
+                                                onClick={() => handlePageChange(page)}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <button 
+                                        className="btn-page-compact"
+                                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                        disabled={currentPage === totalPages}
+                                        title="Halaman Berikutnya"
+                                    >
+                                        &rsaquo;
+                                    </button>
+                                    <button 
+                                        className="btn-page-compact"
+                                        onClick={() => handlePageChange(totalPages)}
+                                        disabled={currentPage === totalPages}
+                                        title="Halaman Terakhir"
+                                    >
+                                        &raquo;
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Modern User Modal */}
                     {showModal && (
@@ -1712,7 +1768,7 @@ function UsersAdmin() {
                         </div>
                     )}
                 </div>
-            </section>
+            </main>
 
             {/* Sync Progress Modal */}
             {(() => {

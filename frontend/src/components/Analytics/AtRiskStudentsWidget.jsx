@@ -9,6 +9,7 @@ export default function AtRiskStudentsWidget() {
   const [loading, setLoading] = useState(false);
   const [riskFilter, setRiskFilter] = useState('');
   const [sortBy, setSortBy] = useState('risk_score');
+  const [sendingId, setSendingId] = useState(null);
 
   useEffect(() => {
     fetchRiskData();
@@ -53,6 +54,34 @@ export default function AtRiskStudentsWidget() {
       });
     }
     setLoading(false);
+  };
+
+  const handleSendIntervention = async (risk) => {
+    if (!risk?.id) return;
+    setSendingId(risk.id);
+    try {
+      const response = await apiInstance.post(`analytics/at-risk-students/${risk.id}/send-intervention/`);
+      if (response.data?.success) {
+        setRisks(prev => prev.map(r => r.id === risk.id ? {
+          ...r,
+          intervention_sent: true,
+          intervention_date: new Date().toISOString()
+        } : r));
+        Toast().fire({
+          icon: 'success',
+          title: response.data.message || 'Pesan intervensi berhasil dikirim ke notifikasi peserta!',
+          timer: 3000
+        });
+      }
+    } catch (error) {
+      console.error('Failed to send intervention:', error);
+      Toast().fire({
+        icon: 'error',
+        title: error?.response?.data?.error || 'Gagal mengirim pesan intervensi'
+      });
+    } finally {
+      setSendingId(null);
+    }
   };
 
   // Filter and sort risks
@@ -199,7 +228,7 @@ export default function AtRiskStudentsWidget() {
               {filteredRisks.map((risk) => (
                 <tr key={risk.id} className={`risk-${risk.risk_level.toLowerCase()}`}>
                   <td className="student-name">
-                    <strong>{risk.student_name || `Student ${risk.enrollment?.user || 'N/A'}`}</strong>
+                    <strong>{risk.student_name || risk.enrollment_detail?.user || `Peserta #${risk.enrollment || 'N/A'}`}</strong>
                   </td>
                   <td>
                     <span className={`badge bg-${getRiskColor(risk.risk_level)}`}>
@@ -216,24 +245,33 @@ export default function AtRiskStudentsWidget() {
                       <span className="score-text">{risk.risk_score.toFixed(1)}</span>
                     </div>
                   </td>
-                  <td>{risk.course_title || 'N/A'}</td>
+                  <td className="course-title-cell">
+                    <span className="text-truncate d-inline-block" style={{ maxWidth: '220px' }} title={risk.course_title || risk.enrollment_detail?.course || 'N/A'}>
+                      {risk.course_title || risk.enrollment_detail?.course || 'N/A'}
+                    </span>
+                  </td>
                   <td>
                     <div className="indicators-summary">
                       {risk.indicators && typeof risk.indicators === 'object' && (
                         <>
-                          {risk.indicators.completion_rate !== undefined && (
-                            <span className="indicator-tag" title="Completion Rate">
-                              <i className="fas fa-check"></i> {risk.indicators.completion_rate}%
+                          {(risk.indicators.inactive_days !== undefined || risk.indicators.days_inactive !== undefined) && (
+                            <span className="indicator-tag" title="Hari Tidak Aktif">
+                              <i className="fas fa-clock"></i> {risk.indicators.inactive_days ?? risk.indicators.days_inactive} hr
                             </span>
                           )}
-                          {risk.indicators.quiz_pass_rate !== undefined && (
-                            <span className="indicator-tag" title="Quiz Pass Rate">
-                              <i className="fas fa-list-check"></i> {risk.indicators.quiz_pass_rate}%
+                          {(risk.indicators.quiz_failures !== undefined || risk.indicators.quiz_pass_rate !== undefined) && (
+                            <span className="indicator-tag" title="Performa Kuis">
+                              <i className="fas fa-list-check"></i> {risk.indicators.quiz_failures ?? `${risk.indicators.quiz_pass_rate}%`}
                             </span>
                           )}
-                          {risk.indicators.days_inactive !== undefined && (
-                            <span className="indicator-tag" title="Days Inactive">
-                              <i className="fas fa-clock"></i> {risk.indicators.days_inactive}d
+                          {(risk.indicators.low_completion !== undefined || risk.indicators.completion_rate !== undefined) && (
+                            <span className="indicator-tag" title="Progres Penyelesaian">
+                              <i className="fas fa-check"></i> {risk.indicators.low_completion ?? `${risk.indicators.completion_rate}%`}
+                            </span>
+                          )}
+                          {risk.indicators.low_video_progress !== undefined && (
+                            <span className="indicator-tag" title="Progres Video">
+                              <i className="fas fa-play-circle"></i> {risk.indicators.low_video_progress}
                             </span>
                           )}
                         </>
@@ -244,8 +282,28 @@ export default function AtRiskStudentsWidget() {
                     {risk.last_assessed ? new Date(risk.last_assessed).toLocaleDateString() : 'N/A'}
                   </td>
                   <td>
-                    <button className="btn btn-sm btn-primary">
-                      <i className="fas fa-envelope"></i> Pesan
+                    <button 
+                      className={`btn btn-sm ${risk.intervention_sent ? 'btn-outline-success' : 'btn-primary'}`}
+                      onClick={() => handleSendIntervention(risk)}
+                      disabled={sendingId === risk.id}
+                      title={risk.intervention_sent ? `Intervensi telah dikirim pada ${new Date(risk.intervention_date || Date.now()).toLocaleDateString('id-ID')}. Klik untuk kirim ulang.` : 'Kirim pesan pendampingan belajar ke notifikasi peserta'}
+                    >
+                      {sendingId === risk.id ? (
+                        <>
+                          <i className="fas fa-spinner fa-spin me-1"></i>
+                          <span>Kirim...</span>
+                        </>
+                      ) : risk.intervention_sent ? (
+                        <>
+                          <i className="fas fa-check-circle me-1 text-success"></i>
+                          <span>Terkirim</span>
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-envelope me-1"></i>
+                          <span>Pesan</span>
+                        </>
+                      )}
                     </button>
                   </td>
                 </tr>

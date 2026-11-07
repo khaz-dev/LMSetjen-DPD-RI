@@ -653,16 +653,14 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
-                            {/* ✨ PHASE 11.1: User Feedback Management */}
+                            {/* ✨ User Feedback Management (Consolidated into Unified Reports Center) */}
                             <Route
                                 path="/admin/feedback/"
-                                element={
-                                    <PrivateRoute>
-                                        <RoleRoute allowedRoles={["admin"]}>
-                                            <AdminFeedback />
-                                        </RoleRoute>
-                                    </PrivateRoute>
-                                }
+                                element={<Navigate to="/admin/reports/?tab=feedback" replace />}
+                            />
+                            <Route
+                                path="/admin/feedback"
+                                element={<Navigate to="/admin/reports/?tab=feedback" replace />}
                             />
                             {/* Redirect to Unified Reports & Diagnostics Center */}
                             <Route

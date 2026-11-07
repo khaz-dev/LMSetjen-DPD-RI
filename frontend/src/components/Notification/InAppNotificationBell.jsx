@@ -373,18 +373,18 @@ function InAppNotificationBell() {
                                                 <span className="in-app-noti-time">{formatTime(noti.date)}</span>
                                             </div>
 
-                                            <div className="in-app-noti-heading">
+                                            <div className="in-app-noti-heading" title={noti.title || noti.type}>
                                                 {noti.title || noti.type}
                                             </div>
 
                                             {noti.message && (
-                                                <div className="in-app-noti-msg">
+                                                <div className="in-app-noti-msg" title={noti.message}>
                                                     {noti.message}
                                                 </div>
                                             )}
 
                                             {noti.course_data?.title && (
-                                                <div className="in-app-noti-course-pill">
+                                                <div className="in-app-noti-course-pill" title={noti.course_data.title}>
                                                     <i className="fas fa-book-open me-1"></i>
                                                     <span>{noti.course_data.title}</span>
                                                 </div>

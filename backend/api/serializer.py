@@ -2413,27 +2413,49 @@ class ContentGapSerializer(serializers.ModelSerializer):
 class StudentRiskAssessmentSerializer(serializers.ModelSerializer):
     """Serializer for at-risk student detection"""
     enrollment_detail = serializers.SerializerMethodField()
+    student_name = serializers.SerializerMethodField()
+    course_title = serializers.SerializerMethodField()
     
     class Meta:
         model = api_models.StudentRiskAssessment
         fields = [
-            'id', 'enrollment', 'enrollment_detail', 'risk_score', 'risk_level',
+            'id', 'enrollment', 'enrollment_detail', 'student_name', 'course_title',
+            'risk_score', 'risk_level',
             'indicators', 'intervention_sent', 'intervention_date',
             'last_assessed', 'created_at'
         ]
         read_only_fields = ['last_assessed', 'created_at']
     
     def get_enrollment_detail(self, obj):
+        user_name = "Peserta"
+        course_name = "Kursus"
+        enrollment_id = None
+        if obj.enrollment:
+            enrollment_id = obj.enrollment.id
+            if obj.enrollment.user:
+                user_name = getattr(obj.enrollment.user, 'full_name', '') or obj.enrollment.user.username
+            if obj.enrollment.course:
+                course_name = obj.enrollment.course.title
         return {
-            'user': obj.enrollment.user.full_name,
-            'course': obj.enrollment.course.title,
-            'id': obj.enrollment.id
+            'user': user_name,
+            'course': course_name,
+            'id': enrollment_id
         }
+
+    def get_student_name(self, obj):
+        if obj.enrollment and obj.enrollment.user:
+            return getattr(obj.enrollment.user, 'full_name', '') or obj.enrollment.user.username
+        return "Peserta"
+
+    def get_course_title(self, obj):
+        if obj.enrollment and obj.enrollment.course:
+            return obj.enrollment.course.title
+        return "Kursus"
 
 
 class CourseRecommendationSerializer(serializers.ModelSerializer):
     """Serializer for course recommendations"""
-    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    user_name = serializers.SerializerMethodField()
     course_detail = serializers.SerializerMethodField()
     conversion_rate = serializers.SerializerMethodField()
     
@@ -2445,8 +2467,15 @@ class CourseRecommendationSerializer(serializers.ModelSerializer):
             'enroll_date', 'conversion_rate', 'created_at'
         ]
         read_only_fields = ['created_at', 'click_date', 'enroll_date']
+
+    def get_user_name(self, obj):
+        if obj.user:
+            return getattr(obj.user, 'full_name', '') or obj.user.username
+        return "Pengguna"
     
     def get_course_detail(self, obj):
+        if not obj.course:
+            return {'id': None, 'title': 'Kursus', 'image': None}
         return {
             'id': obj.course.id,
             'title': obj.course.title,

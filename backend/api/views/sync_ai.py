@@ -1286,6 +1286,73 @@ class StudentRiskSummaryView(APIView):
 
 
 
+class StudentRiskInterventionView(APIView):
+    """
+    Send template intervention message to an at-risk student.
+    Creates a real Notification for the student and marks intervention_sent on the assessment.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        from django.utils import timezone
+        from django.shortcuts import get_object_or_404
+
+        try:
+            risk = get_object_or_404(api_models.StudentRiskAssessment, pk=pk)
+            enrollment = risk.enrollment
+            student = enrollment.user
+            course = enrollment.course
+
+            student_name = getattr(student, 'full_name', '') or student.username
+            course_title = course.title if course else 'Kursus Terdaftar'
+
+            custom_title = request.data.get('title')
+            custom_message = request.data.get('message')
+
+            title = custom_title or f"Pendampingan Belajar: {course_title}"
+            message = custom_message or (
+                f"Yth. {student_name},\n\n"
+                f"Tim Pengelola Pembelajaran Setjen DPD RI memperhatikan keaktifan belajar Anda pada materi kursus \"{course_title}\". "
+                f"Kami ingin memastikan proses peningkatan kompetensi Anda dapat berjalan lancar tanpa kendala.\n\n"
+                f"Apabila Anda menemui kendala teknis atau materi pembelajaran, silakan menghubungi admin/pengampu materi atau melanjutkan modul yang tersedia. "
+                f"Tetap semangat dalam menyelesaikan pembelajaran!\n\n"
+                f"Salam hormat,\n"
+                f"Biro Kepegawaian & Pengelola LMS Setjen DPD RI"
+            )
+
+            notification = api_models.Notification.objects.create(
+                user=student,
+                teacher=None,
+                course=course,
+                type="Pesan Pendampingan Belajar",
+                title=title,
+                message=message,
+                seen=False,
+                date=timezone.now()
+            )
+
+            risk.intervention_sent = True
+            risk.intervention_date = timezone.now()
+            risk.save(update_fields=['intervention_sent', 'intervention_date'])
+
+            serializer = api_serializer.StudentRiskAssessmentSerializer(risk)
+
+            return Response({
+                'success': True,
+                'message': f'Pesan intervensi berhasil dikirim ke notifikasi {student_name}.',
+                'risk': serializer.data,
+                'notification_id': notification.id
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 # ==================== TIER 1: COURSE RECOMMENDATIONS ====================
 
 class CourseRecommendationView(generics.ListCreateAPIView):
@@ -1298,11 +1365,13 @@ class CourseRecommendationView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        # Filter recommendations for current user
         user = self.request.user
+        # Admins, super admins, and staff can monitor all platform recommendations
+        if getattr(user, 'role', None) in ['admin', 'super_admin'] or user.is_staff or user.is_superuser:
+            return api_models.CourseRecommendation.objects.all().select_related('user', 'course').order_by('-score')
         return api_models.CourseRecommendation.objects.filter(
             user=user
-        ).order_by('-score')
+        ).select_related('course').order_by('-score')
 
 
 
@@ -1376,7 +1445,7 @@ class RecommendationStatsView(APIView):
     
     def get(self, request):
         """Get CTR and conversion metrics"""
-        from django.db.models import Count
+        from django.db.models import Count, Q
         
         total_recs = api_models.CourseRecommendation.objects.count()
         clicked = api_models.CourseRecommendation.objects.filter(
@@ -1389,14 +1458,28 @@ class RecommendationStatsView(APIView):
         ctr = (clicked / total_recs * 100) if total_recs > 0 else 0
         conversion = (enrolled / clicked * 100) if clicked > 0 else 0
         
-        # By reason
-        by_reason = api_models.CourseRecommendation.objects.values(
+        # By reason dictionary format with CTR and conversion per reason
+        by_reason_qs = api_models.CourseRecommendation.objects.values(
             'reason'
         ).annotate(
             count=Count('id'),
             clicks=Count('id', filter=Q(clicked=True)),
             enrolls=Count('id', filter=Q(enrolled=True))
         )
+
+        by_reason_dict = {}
+        for item in by_reason_qs:
+            r_key = item['reason'] or 'other'
+            c = item['count']
+            cl = item['clicks']
+            en = item['enrolls']
+            by_reason_dict[r_key] = {
+                'count': c,
+                'clicks': cl,
+                'enrollments': en,
+                'ctr': round((cl / c * 100) if c > 0 else 0, 2),
+                'conversion': round((en / cl * 100) if cl > 0 else 0, 2),
+            }
         
         return Response({
             'success': True,
@@ -1405,7 +1488,7 @@ class RecommendationStatsView(APIView):
             'total_enrollments': enrolled,
             'ctr_percent': round(ctr, 2),
             'conversion_percent': round(conversion, 2),
-            'by_reason': list(by_reason)
+            'by_reason': by_reason_dict
         })
 
 

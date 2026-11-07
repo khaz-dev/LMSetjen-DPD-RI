@@ -1,26 +1,65 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth';
 import UserData from '../plugin/UserData';
-import { useComingSoon } from '../../components/ComingSoonModal';
 import RoleIndicator from '../../components/RoleIndicator';
 import { ProfileContext } from '../plugin/Context';
+import apiInstance from '../../utils/axios';
 import './AdminHeader.css';
 
 function AdminHeader() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [notiOpen, setNotiOpen] = useState(false);
     const [hoverTimeout, setHoverTimeout] = useState(null);
-    const handleComingSoon = useComingSoon('Notifications');
-    
+    const [loadingStats, setLoadingStats] = useState(false);
+
+    const [headerStats, setHeaderStats] = useState({
+        status: 'online',
+        active_users: 1,
+        online_users: 1,
+        total_users: 0,
+        pending_courses: 0,
+        pending_reports: 0,
+        pending_testimonials: 0,
+        pending_feedback: 0,
+        total_alerts: 0,
+        notifications: [],
+        server_time: ''
+    });
+
+    const notiRef = useRef(null);
+    const profileRef = useRef(null);
+
     const navigate = useNavigate();
     const location = useLocation();
     const [isLoggedIn, user] = useAuthStore((state) => [state.isLoggedIn, state.user]);
-    // ✨ PHASE X: Use ProfileContext to get real-time avatar updates
     const [profile] = useContext(ProfileContext) || [null];
     const userData = UserData();
-    const isAdmin = userData?.role === 'admin';
-    const isSuperAdmin = userData?.is_super_admin || false;
-    
+    const isAdmin = userData?.role === 'admin' || user?.role === 'admin' || user?.is_admin;
+    const isSuperAdmin = userData?.is_super_admin || user?.is_super_admin || false;
+
+    // Fetch live real data for admin header
+    const fetchHeaderStats = useCallback(async () => {
+        if (!isLoggedIn() || !isAdmin) return;
+        setLoadingStats(true);
+        try {
+            const res = await apiInstance.get('admin/header-stats/');
+            if (res.data) {
+                setHeaderStats(res.data);
+            }
+        } catch (err) {
+            console.debug('Admin header stats fetch:', err);
+        } finally {
+            setLoadingStats(false);
+        }
+    }, [isLoggedIn, isAdmin]);
+
+    useEffect(() => {
+        fetchHeaderStats();
+        const interval = setInterval(fetchHeaderStats, 45000);
+        return () => clearInterval(interval);
+    }, [fetchHeaderStats]);
+
     // Cleanup hover timeout
     useEffect(() => {
         return () => {
@@ -30,7 +69,23 @@ function AdminHeader() {
         };
     }, [hoverTimeout]);
 
-    // Dropdown handlers
+    // Close dropdowns on outside click
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (notiRef.current && !notiRef.current.contains(event.target)) {
+                setNotiOpen(false);
+            }
+            if (profileRef.current && !profileRef.current.contains(event.target)) {
+                setDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    // Dropdown hover handlers for profile
     const handleMouseEnter = () => {
         if (hoverTimeout) {
             clearTimeout(hoverTimeout);
@@ -52,34 +107,37 @@ function AdminHeader() {
         });
     };
 
-    // Utility functions
+    // Utility: Active route check
     const isActive = (path) => {
-        return location.pathname.includes(path);
+        if (path === '/admin/dashboard/' && (location.pathname === '/admin/' || location.pathname === '/admin/dashboard/')) {
+            return true;
+        }
+        return location.pathname.includes(path) && path !== '/admin/dashboard/';
+    };
+
+    // Notification click handler
+    const handleNotificationClick = async (item) => {
+        setNotiOpen(false);
+        if (item.link) {
+            navigate(item.link);
+        }
     };
 
     // Admin menu items
     const adminMenuItems = [
         { to: "/admin/dashboard/", icon: "bi bi-grid-fill", text: "Dashboard", requiresSuperAdmin: false },
         { to: "/admin/users/", icon: "fas fa-users", text: "Kelola Pengguna", requiresSuperAdmin: false },
-        // ✨ PHASE 4: Unified content management page (replaces Review Kursus, Kurasi Testimoni, Kelola Materi)
         { to: "/admin/content-management/", icon: "fas fa-cogs", text: "Manajemen Konten", requiresSuperAdmin: false },
-
-        // ✨ PHASE 4.210: Unified reports page (includes abuse reports and other system reports)
         { to: "/admin/reports/", icon: "fas fa-chart-line", text: "Laporan & Diagnostik", requiresSuperAdmin: false },
-
-        // ✨ PHASE 11.1: User Feedback Management
         { to: "/admin/feedback/", icon: "fas fa-comments", text: "Manajemen Masukan", requiresSuperAdmin: false },
-
         { to: "/admin/system/", icon: "fas fa-cogs", text: "Pengaturan Sistem", requiresSuperAdmin: true },
         { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar", requiresSuperAdmin: false }
     ];
 
-    // Filter menu items based on admin privileges
     const filteredMenuItems = adminMenuItems.filter(item => 
         !item.requiresSuperAdmin || isSuperAdmin
     );
 
-    // Render dropdown items
     const renderDropdownItems = (items) => (
         items.map((item, index) => {
             if (item.to === "/logout/") {
@@ -87,10 +145,13 @@ function AdminHeader() {
                     <li key={index}>
                         <button
                             className="dropdown-item logout-item"
-                            onClick={handleLogout}
+                            onClick={() => {
+                                setDropdownOpen(false);
+                                handleLogout();
+                            }}
                         >
                             <i className={item.icon}></i>
-                            {item.text}
+                            <span>{item.text}</span>
                         </button>
                     </li>
                 );
@@ -104,7 +165,7 @@ function AdminHeader() {
                         onClick={() => setDropdownOpen(false)}
                     >
                         <i className={item.icon}></i>
-                        {item.text}
+                        <span>{item.text}</span>
                     </Link>
                 </li>
             );
@@ -113,7 +174,7 @@ function AdminHeader() {
 
     return (
         <nav className="admin-header navbar navbar-expand-xxl">
-            <div className="container">
+            <div className="container-fluid px-3 px-xl-4 footer-container">
                 {/* Brand */}
                 <Link className="navbar-brand admin-brand" to="/admin/dashboard/">
                     <div className="brand-content">
@@ -125,7 +186,7 @@ function AdminHeader() {
                     </div>
                 </Link>
 
-                {/* Navbar Toggler for mobile - only shows on smaller screens */}
+                {/* Navbar Toggler for mobile - only shows on small screens below 1200px */}
                 <button
                     className="navbar-toggler"
                     type="button"
@@ -140,37 +201,97 @@ function AdminHeader() {
 
                 {/* Responsive Admin Navigation */}
                 <div className="collapse navbar-collapse" id="adminNavbar">
-                    <div className="navbar-nav ms-auto">
-                        {/* Quick Stats */}
+                    <div className="navbar-nav ms-auto align-items-center">
+                        {/* Live Online Users Stat */}
                         <div className="nav-item admin-quick-stats">
-                            <span className="quick-stat-item">
-                                <i className="fas fa-users text-primary"></i>
-                                <span className="stat-label">Pengguna Online</span>
+                            <span className="quick-stat-item" title="Pengguna Aktif & Online Real-Time">
+                                <span className="stat-pulse-dot"></span>
+                                <i className="fas fa-users text-primary me-1"></i>
+                                <span className="stat-label">
+                                    Pengguna Online: <strong>{headerStats.online_users || 1}</strong>
+                                </span>
                             </span>
                         </div>
 
-                        {/* Notifications */}
-                        <div className="nav-item dropdown admin-notifications">
+                        {/* Live Notifications Dropdown */}
+                        <div className="nav-item dropdown admin-notifications" ref={notiRef}>
                             <button 
                                 className="nav-link notification-btn"
                                 type="button"
-                                data-bs-toggle="dropdown"
+                                onClick={() => {
+                                    setNotiOpen(!notiOpen);
+                                    setDropdownOpen(false);
+                                }}
+                                title="Pusat Notifikasi & Tindakan Tertunda"
+                                aria-expanded={notiOpen}
                             >
                                 <i className="fas fa-bell"></i>
-                                <span className="notification-badge">3</span>
+                                {headerStats.total_alerts > 0 && (
+                                    <span className="notification-badge pulse-badge">
+                                        {headerStats.total_alerts > 99 ? '99+' : headerStats.total_alerts}
+                                    </span>
+                                )}
                             </button>
-                            <ul className="dropdown-menu notification-dropdown">
-                                <li><h6 className="dropdown-header">Notifikasi</h6></li>
-                                <li><hr className="dropdown-divider" /></li>
-                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>Pengguna baru terdaftar</a></li>
-                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>Kursus memerlukan persetujuan</a></li>
-                                <li><a className="dropdown-item" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>Backup sistem selesai</a></li>
-                                <li><hr className="dropdown-divider" /></li>
-                                <li><a className="dropdown-item text-center" href="#" onClick={handleComingSoon} style={{ cursor: "pointer" }}>Lihat semua notifikasi</a></li>
-                            </ul>
+                            {notiOpen && (
+                                <ul className="dropdown-menu notification-dropdown show shadow-lg">
+                                    <li className="dropdown-header d-flex justify-content-between align-items-center">
+                                        <div className="d-flex align-items-center">
+                                            <i className="fas fa-bell me-2 text-warning"></i>
+                                            <span>Notifikasi & Tindakan</span>
+                                        </div>
+                                        {headerStats.total_alerts > 0 ? (
+                                            <span className="badge bg-warning text-dark font-weight-bold">
+                                                {headerStats.total_alerts} Perlu Ditindak
+                                            </span>
+                                        ) : (
+                                            <span className="badge bg-success">Terpantau</span>
+                                        )}
+                                    </li>
+                                    <li><hr className="dropdown-divider m-0" /></li>
+                                    
+                                    <div className="notification-list-body" style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                                        {headerStats.notifications && headerStats.notifications.length > 0 ? (
+                                            headerStats.notifications.map((item, idx) => (
+                                                <li key={item.id || idx}>
+                                                    <div 
+                                                        className="dropdown-item noti-item-row"
+                                                        onClick={() => handleNotificationClick(item)}
+                                                        style={{ cursor: 'pointer', whiteSpace: 'normal', padding: '10px 14px', borderBottom: '1px solid #f1f5f9' }}
+                                                    >
+                                                        <div className="d-flex align-items-start gap-2">
+                                                            <i className={`fas ${item.icon || 'fa-bell'} mt-1 ${item.badge_type === 'warning' ? 'text-warning' : item.badge_type === 'danger' ? 'text-danger' : 'text-primary'}`}></i>
+                                                            <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                                                                <div className="fw-bold small">{item.title}</div>
+                                                                <div className="text-muted" style={{ fontSize: '0.78rem' }}>{item.message}</div>
+                                                                {item.time && <div className="text-muted" style={{ fontSize: '0.7rem' }}>{item.time}</div>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="p-3 text-center text-muted small">
+                                                <i className="fas fa-check-circle text-success mb-1 d-block" style={{ fontSize: '20px' }}></i>
+                                                Semua operasional sistem berjalan normal.
+                                            </li>
+                                        )}
+                                    </div>
+                                    
+                                    <li><hr className="dropdown-divider m-0" /></li>
+                                    <li>
+                                        <Link 
+                                            to="/admin/reports/" 
+                                            className="dropdown-item text-center small text-primary fw-semibold py-2"
+                                            onClick={() => setNotiOpen(false)}
+                                        >
+                                            Buka Laporan & Diagnostik <i className="fas fa-arrow-right ms-1"></i>
+                                        </Link>
+                                    </li>
+                                </ul>
+                            )}
                         </div>
 
-                        {/* ✨ PHASE 4.15: Role Status Indicator - Separated from Profile */}
+                        {/* Role Status Indicator */}
                         {isLoggedIn() && isAdmin && (
                             <span className="nav-item profile-role-status-separator">
                                 <RoleIndicator compact={true} isAdmin={true} />
@@ -181,14 +302,17 @@ function AdminHeader() {
                         {isLoggedIn() && isAdmin && (
                             <div 
                                 className="nav-item dropdown admin-profile-display"
+                                ref={profileRef}
                                 onMouseEnter={handleMouseEnter}
                                 onMouseLeave={handleMouseLeave}
                             >
-                                {/* Profile Display + Dropdown Toggle */}
                                 <button
                                     className="nav-link dropdown-toggle profile-dropdown-btn"
                                     type="button"
-                                    data-bs-toggle="dropdown"
+                                    onClick={() => {
+                                        setDropdownOpen(!dropdownOpen);
+                                        setNotiOpen(false);
+                                    }}
                                     aria-expanded={dropdownOpen}
                                 >
                                     <div className="admin-avatar">
@@ -205,13 +329,32 @@ function AdminHeader() {
                                     </div>
                                 </button>
                                 
-                                {/* Dropdown Menu for Admin Panel */}
                                 <ul className={`dropdown-menu admin-profile-dropdown ${dropdownOpen ? 'show' : ''}`}>
-                                    <li><h6 className="dropdown-header">
-                                        <i className="fas fa-shield-alt me-2"></i>
-                                        Panel Admin
-                                    </h6></li>
+                                    <li className="dropdown-header">
+                                        <div className="d-flex align-items-center">
+                                            <i className="fas fa-shield-alt me-2 text-warning"></i>
+                                            <div>
+                                                <div className="fw-bold">{userData?.full_name || 'Administrator'}</div>
+                                                <small className="text-muted">{userData?.email || 'admin@dpd.go.id'}</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li><hr className="dropdown-divider m-0" /></li>
                                     {renderDropdownItems(filteredMenuItems)}
+                                    <li><hr className="dropdown-divider m-0" /></li>
+                                    <li>
+                                        <Link 
+                                            to="/" 
+                                            className="dropdown-item" 
+                                            onClick={() => setDropdownOpen(false)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <i className="fas fa-globe text-primary"></i>
+                                            <span>Portal Publik LMS</span>
+                                            <i className="fas fa-external-link-alt ms-auto small text-muted"></i>
+                                        </Link>
+                                    </li>
                                 </ul>
                             </div>
                         )}

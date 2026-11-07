@@ -206,37 +206,70 @@ class AdminQAReportDetailAPIView(generics.RetrieveUpdateAPIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class AdminCourseListAPIView(generics.ListAPIView):
     """
-    [*] PHASE 4.36: List all courses awaiting admin review
-    
-    Only accessible to superadmins
-    Shows courses with platform_status = "Review"
+    [*] PHASE 4.36+: List courses for admin review and content management
+    Supports filtering by status ('Review', 'Published', 'Draft', 'Rejected', 'Disabled', 'all'),
+    searching by keyword, category filtering, sorting, and returns live summary stats.
     """
     serializer_class = api_serializer.CourseSerializer
     permission_classes = [IsAdminUser]  # [*] FIX: Use proper admin permission class
     pagination_class = None  # Disable pagination for admin review list
     
     def get_queryset(self):
-        user = self.request.user
-        print(f"[AdminCourseList] User authenticated: {user.is_authenticated}, Is admin: {user.is_admin if hasattr(user, 'is_admin') else 'N/A'}")
-        
-        # Return courses awaiting review or show all depending on params
         status_filter = self.request.query_params.get('status', 'Review')
-        print(f"[AdminCourseList] Filtering by status: {status_filter}")
+        search_query = self.request.query_params.get('search', '').strip()
+        category_id = self.request.query_params.get('category', '').strip()
+        ordering = self.request.query_params.get('ordering', 'recent').strip()
         
-        if status_filter:
-            # [*] PHASE 4.60B: Filter out published versions, show only parent/draft courses
-            queryset = api_models.Course.objects.filter(
-                platform_status=status_filter, 
-                is_published_version=False  # Admin manages parent courses, not published copies
-            ).order_by('-review_submitted_date')
-        else:
-            # [*] PHASE 4.60B: Filter out published versions in unfiltered view too
-            queryset = api_models.Course.objects.filter(
-                is_published_version=False  # Admin manages parent courses, not published copies
-            ).order_by('-review_submitted_date')
+        # Only manage parent courses (not published copies)
+        queryset = api_models.Course.objects.filter(is_published_version=False)
         
-        print(f"[AdminCourseList] Found {queryset.count()} courses with status '{status_filter}'")
+        if status_filter and status_filter.lower() not in ['all', 'semua']:
+            queryset = queryset.filter(platform_status=status_filter)
+        
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(teacher__full_name__icontains=search_query) |
+                Q(teacher__user__full_name__icontains=search_query) |
+                Q(category__title__icontains=search_query)
+            )
+            
+        if category_id and category_id.lower() not in ['all', 'semua']:
+            if category_id.isdigit():
+                queryset = queryset.filter(category_id=int(category_id))
+            else:
+                queryset = queryset.filter(category__slug=category_id)
+        
+        # Ordering
+        if ordering == 'title_asc':
+            queryset = queryset.order_by('title')
+        elif ordering == 'title_desc':
+            queryset = queryset.order_by('-title')
+        elif ordering == 'oldest':
+            queryset = queryset.order_by('date')
+        else:  # recent
+            queryset = queryset.order_by(F('review_submitted_date').desc(nulls_last=True), '-date')
+            
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        
+        base_qs = api_models.Course.objects.filter(is_published_version=False)
+        stats = {
+            'all': base_qs.count(),
+            'review': base_qs.filter(platform_status='Review').count(),
+            'published': base_qs.filter(platform_status='Published').count(),
+            'draft': base_qs.filter(platform_status='Draft').count(),
+            'rejected': base_qs.filter(platform_status='Rejected').count(),
+            'disabled': base_qs.filter(platform_status='Disabled').count(),
+        }
+        
+        return Response({
+            'results': serializer.data,
+            'stats': stats,
+        })
 
 
 
@@ -266,36 +299,41 @@ class AdminSummaryAPIView(generics.RetrieveAPIView):
             last_30_days = now - timedelta(days=30)
             
             # User statistics
-            total_students = User.objects.filter(role='student').count()
-            total_teachers = User.objects.filter(role='teacher').count()
-            total_admins = User.objects.filter(role='admin').count()
+            total_students = User.objects.filter(models.Q(is_student=True) | models.Q(role='student')).distinct().count()
+            total_teachers = User.objects.filter(models.Q(is_instructor=True) | models.Q(role='teacher')).distinct().count()
+            total_admins = User.objects.filter(models.Q(is_admin=True) | models.Q(role='admin')).distinct().count()
             
             # Course statistics
             # [*] PHASE 4.77 FIX: Only count published versions to avoid double counting
-            # (published course + draft editing version both counted before)
             total_courses = api_models.Course.objects.filter(is_published_version=True).count()
             active_courses = api_models.Course.objects.filter(
                 platform_status='Published',
-                is_published_version=True  # [*] PHASE 4.77: Only published copies
+                is_published_version=True
+            ).count()
+            draft_courses = api_models.Course.objects.filter(
+                platform_status='Draft',
+                is_published_version=True
             ).count()
             
             # Enrollment statistics
             total_enrollments = api_models.EnrolledCourse.objects.count()
             recent_enrollments = api_models.EnrolledCourse.objects.filter(date__gte=last_30_days).count()
             
-            # Certificate statistics (handle if Certificate model doesn't exist)
+            # Certificate statistics (safely handle Certificate query)
             try:
-                total_certificates = api_models.Certificate.objects.count()
-                recent_certificates = api_models.Certificate.objects.filter(date__gte=last_30_days).count()
-            except:
+                total_certificates = api_models.Certificate.objects.filter(is_valid=True).count()
+                recent_certificates = api_models.Certificate.objects.filter(is_valid=True, date__gte=last_30_days).count()
+            except Exception:
                 total_certificates = 0
                 recent_certificates = 0
             
-            # Review statistics
+            # Review statistics & average rating
             total_reviews = api_models.Review.objects.count()
             recent_reviews = api_models.Review.objects.filter(date__gte=last_30_days).count()
+            avg_rating_aggregate = api_models.Review.objects.aggregate(models.Avg('rating'))['rating__avg']
+            avg_rating = round(avg_rating_aggregate, 1) if avg_rating_aggregate else 0.0
             
-            # Quiz statistics (handle if Quiz models don't exist)
+            # Quiz statistics
             # [*] PHASE 4.77 FIX: Only count quizzes from published courses
             try:
                 published_course_ids = api_models.Course.objects.filter(
@@ -305,7 +343,7 @@ class AdminSummaryAPIView(generics.RetrieveAPIView):
                     course_id__in=published_course_ids
                 ).count()
                 total_quiz_attempts = api_models.QuizAttempt.objects.count()
-            except:
+            except Exception:
                 total_quizzes = 0
                 total_quiz_attempts = 0
             
@@ -316,15 +354,16 @@ class AdminSummaryAPIView(generics.RetrieveAPIView):
             total_revenue = 0
             
             # Top performing courses
-            # [*] PHASE 4.77 FIX: Only count published versions to avoid duplicates
             top_courses = api_models.Course.objects.filter(
                 is_published_version=True
             ).annotate(
                 enrollment_count=models.Count('enrolledcourse')
             ).order_by('-enrollment_count')[:5]
             
-            # Most active teachers
-            # [*] PHASE 4.77 FIX: Only count published courses per teacher
+            # Most active teachers & real active teachers count
+            active_teachers_count = api_models.Teacher.objects.filter(
+                course__is_published_version=True
+            ).distinct().count()
             active_teachers = api_models.Teacher.objects.annotate(
                 course_count=models.Count(
                     'course',
@@ -341,15 +380,16 @@ class AdminSummaryAPIView(generics.RetrieveAPIView):
                 'user', 'course'
             ).order_by('-date')[:10]
             
-            # System health metrics
+            # System health metrics: Real completion rate based on valid certificates per enrollment
             completion_rate = 0
             try:
                 if total_enrollments > 0:
-                    completed_courses = api_models.EnrolledCourse.objects.filter(
-                        completed=True
-                    ).count()
-                    completion_rate = (completed_courses / total_enrollments) * 100
-            except:
+                    completed_enrollments = api_models.Certificate.objects.filter(
+                        is_valid=True,
+                        enrollment__isnull=False
+                    ).values('enrollment_id').distinct().count()
+                    completion_rate = (completed_enrollments / total_enrollments) * 100
+            except Exception:
                 completion_rate = 0
             
             data = {
@@ -358,15 +398,18 @@ class AdminSummaryAPIView(generics.RetrieveAPIView):
                 'total_admins': total_admins,
                 'total_courses': total_courses,
                 'active_courses': active_courses,
+                'draft_courses': draft_courses,
                 'total_enrollments': total_enrollments,
                 'recent_enrollments': recent_enrollments,
                 'total_certificates': total_certificates,
                 'recent_certificates': recent_certificates,
                 'total_reviews': total_reviews,
                 'recent_reviews': recent_reviews,
+                'avg_rating': avg_rating,
                 'total_quizzes': total_quizzes,
                 'total_quiz_attempts': total_quiz_attempts,
                 'recent_registrations': recent_registrations,
+                'active_teachers_count': active_teachers_count,
                 'total_revenue': float(total_revenue) if total_revenue else 0,
                 'completion_rate': round(completion_rate, 2),
                 'top_courses': [
@@ -585,6 +628,8 @@ class AdminUserStatsAPIView(generics.GenericAPIView):
     - teachers: Count of users with instructor role
     - admins: Count of users with admin role
     - inactive_users: Count of inactive users
+    - new_30d: Count of users joined in the last 30 days
+    - active_7d: Count of users logged in in the last 7 days
     """
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -595,9 +640,13 @@ class AdminUserStatsAPIView(generics.GenericAPIView):
             return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
         
         try:
-            # ✨ SPRINT 1 OPTIMIZATION: Use single aggregation query instead of 6 separate .count() calls
-            # This reduces 6 queries to 1 query, improving response time by 10x
             from django.db.models import Q, Count
+            from django.utils import timezone
+            from datetime import timedelta
+            
+            now = timezone.now()
+            thirty_days_ago = now - timedelta(days=30)
+            seven_days_ago = now - timedelta(days=7)
             
             stats = User.objects.aggregate(
                 total_users=Count('id'),
@@ -605,8 +654,14 @@ class AdminUserStatsAPIView(generics.GenericAPIView):
                 inactive_users=Count('id', filter=Q(is_active=False)),
                 students=Count('id', filter=Q(is_student=True)),
                 teachers=Count('id', filter=Q(is_instructor=True)),
-                admins=Count('id', filter=Q(is_admin=True))
+                admins=Count('id', filter=Q(is_admin=True)),
+                new_30d=Count('id', filter=Q(date_joined__gte=thirty_days_ago)),
+                active_7d=Count('id', filter=Q(last_login__gte=seven_days_ago))
             )
+            
+            total = stats.get('total_users') or 0
+            active = stats.get('active_users') or 0
+            stats['active_rate'] = round((active / total * 100), 1) if total > 0 else 0
             
             return Response(stats, status=status.HTTP_200_OK)
         except Exception as e:
@@ -681,8 +736,10 @@ class AdminEnrollmentAnalyticsAPIView(generics.RetrieveAPIView):
                 enrollment_count=models.Count('course__enrolledcourse')
             ).order_by('-enrollment_count')
             
-            # Top performing courses
-            top_courses = api_models.Course.objects.annotate(
+            # Top performing courses (only published versions)
+            top_courses = api_models.Course.objects.filter(
+                is_published_version=True
+            ).annotate(
                 enrollment_count=models.Count('enrolledcourse'),
                 avg_rating=models.Avg('review__rating')
             ).order_by('-enrollment_count')[:10]
@@ -735,29 +792,52 @@ class AdminSystemHealthAPIView(generics.RetrieveAPIView):
             import os
             import sys
             import django
+            import platform
             from django.conf import settings
+            from django.db import connection
             
             # Database statistics
             db_stats = {
                 'total_users': User.objects.count(),
-                'total_courses': api_models.Course.objects.count(),
+                'total_students': User.objects.filter(models.Q(is_student=True) | models.Q(role='student')).distinct().count(),
+                'total_teachers': User.objects.filter(models.Q(is_instructor=True) | models.Q(role='teacher')).distinct().count(),
+                'total_courses': api_models.Course.objects.filter(is_published_version=True).count(),
+                'total_lessons': api_models.VariantItem.objects.filter(item_type='lesson').count(),
                 'total_enrollments': api_models.EnrolledCourse.objects.count(),
                 'total_reviews': api_models.Review.objects.count(),
             }
             
-            # Add certificate count safely
+            # Add certificate and quiz counts safely
             try:
-                db_stats['total_certificates'] = api_models.Certificate.objects.count()
-            except:
+                db_stats['total_certificates'] = api_models.Certificate.objects.filter(is_valid=True).count()
+            except Exception:
                 db_stats['total_certificates'] = 0
+
+            try:
+                db_stats['total_quizzes'] = api_models.Quiz.objects.count()
+            except Exception:
+                db_stats['total_quizzes'] = 0
+
+            # Safe database size query
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT pg_size_pretty(pg_database_size(current_database()));")
+                    row = cursor.fetchone()
+                    if row:
+                        db_stats['database_size'] = row[0]
+            except Exception:
+                pass
             
             # Server information
             server_info = {
+                'operating_system': f"{platform.system()} {platform.release()}",
                 'app_version': APP_VERSION,
-                'django_version': f"{django.VERSION[0]}.{django.VERSION[1]}.{django.VERSION[2]}",
-                'python_version': f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+                'django_version': django.get_version(),
+                'python_version': platform.python_version(),
+                'database_engine': settings.DATABASES['default']['ENGINE'].split('.')[-1].upper(),
                 'debug_mode': settings.DEBUG,
-                'database_engine': settings.DATABASES['default']['ENGINE'].split('.')[-1],
+                'timezone': str(getattr(settings, 'TIME_ZONE', 'Asia/Jakarta')),
+                'server_time': timezone.now().strftime("%d %b %Y, %H:%M:%S WIB"),
             }
             
             # Recent error logs (you can implement based on your logging system)
@@ -2101,6 +2181,207 @@ class AdminCertificateResetDefaultAPIView(APIView):
         except Exception as e:
             logger.error(f"[ResetDefault] Error: {e}")
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminHeaderStatsAPIView(generics.GenericAPIView):
+    """
+    Lightweight, fast real-time summary for AdminHeader:
+    - Active & online users count
+    - Pending items requiring admin action (courses under review, abuse reports, pending feedback, pending testimonials)
+    - Live notifications list with direct actionable links
+    - System operational status
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        is_admin_user = (
+            getattr(request.user, 'is_admin', False) or
+            getattr(request.user, 'current_role', None) == 'admin' or
+            getattr(request.user, 'role', None) == 'admin' or
+            (hasattr(request.user, 'has_admin_role') and request.user.has_admin_role()) or
+            request.user.is_superuser or
+            request.user.is_staff
+        )
+        if not is_admin_user:
+            return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            from datetime import timedelta
+            now = timezone.now()
+            fifteen_mins_ago = now - timedelta(minutes=15)
+
+            # 1. User stats (live & real)
+            total_users = User.objects.count()
+            active_users = User.objects.filter(is_active=True).count()
+            recent_active = User.objects.filter(last_login__gte=fifteen_mins_ago).count()
+            online_users = max(1, recent_active)
+
+            # 2. Pending items requiring action
+            pending_courses = api_models.Course.objects.filter(
+                is_published_version=False,
+                platform_status='Review'
+            ).count()
+
+            pending_reports = api_models.ReviewAbuse.objects.filter(
+                status='pending'
+            ).count()
+
+            pending_testimonials = api_models.Review.objects.filter(
+                active=False
+            ).count()
+
+            pending_feedback = 0
+            try:
+                pending_feedback = api_models.Feedback.objects.filter(
+                    status__in=['open', 'under_review']
+                ).count()
+            except Exception:
+                pending_feedback = 0
+
+            # 3. Actionable notifications list (individual pending items)
+            notifications_list = []
+
+            # 3a. Courses awaiting review
+            review_courses = api_models.Course.objects.filter(
+                is_published_version=False,
+                platform_status='Review'
+            ).select_related('teacher').order_by('-review_submitted_date', '-date')
+            pending_courses = review_courses.count()
+
+            for course in review_courses[:10]:
+                teacher_name = course.teacher.full_name if (course.teacher and course.teacher.full_name) else 'Instruktur'
+                notifications_list.append({
+                    'id': f'course_{course.id}',
+                    'category': 'course',
+                    'icon': 'fas fa-book-reader',
+                    'color': '#f59e0b',
+                    'title': f'Review Kursus: {course.title[:38]}',
+                    'message': f'Diajukan oleh {teacher_name}. Menunggu verifikasi.',
+                    'link': f'/admin/content-management/?tab=courses&course_id={course.id}',
+                    'badge': 'Review Kursus',
+                    'badge_type': 'warning',
+                    'time': course.review_submitted_date.strftime('%d %b') if course.review_submitted_date else 'Baru'
+                })
+
+            # 3b. Abuse reports pending review
+            abuse_reports = api_models.ReviewAbuse.objects.filter(
+                status='pending'
+            ).select_related('review', 'reported_by').order_by('-reported_at')
+            pending_reports = abuse_reports.count()
+
+            for report in abuse_reports[:10]:
+                reporter_name = report.reported_by.full_name if (report.reported_by and report.reported_by.full_name) else (report.reported_by.username if report.reported_by else 'Pengguna')
+                reason_dict = dict(getattr(api_models, 'ABUSE_REASON_CHOICES', []))
+                reason_display = reason_dict.get(report.reason, report.reason or 'Pelanggaran')
+                notifications_list.append({
+                    'id': f'abuse_{report.id}',
+                    'category': 'abuse',
+                    'icon': 'fas fa-exclamation-triangle',
+                    'color': '#ef4444',
+                    'title': f'Laporan: {reason_display[:30]}',
+                    'message': f'Dilaporkan oleh {reporter_name}. Perlu investigasi admin.',
+                    'link': f'/admin/reports/?tab=abuse&report_id={report.id}',
+                    'badge': 'Laporan Ulasan',
+                    'badge_type': 'danger',
+                    'time': report.reported_at.strftime('%d %b') if report.reported_at else 'Baru'
+                })
+
+            # 3c. Testimonials pending approval
+            pending_testimonials_qs = api_models.Review.objects.filter(
+                active=False
+            ).select_related('user', 'course').order_by('-date')
+            pending_testimonials = pending_testimonials_qs.count()
+
+            for test in pending_testimonials_qs[:10]:
+                student_name = test.user.full_name if (test.user and test.user.full_name) else (test.user.username if test.user else 'Pengguna')
+                course_title = test.course.title if test.course else 'Platform'
+                notifications_list.append({
+                    'id': f'test_{test.id}',
+                    'category': 'testimonial',
+                    'icon': 'fas fa-quote-right',
+                    'color': '#3b82f6',
+                    'title': f'Testimoni: {student_name[:25]}',
+                    'message': f'Ulasan {test.rating}★ untuk "{course_title[:30]}". Menunggu kurasi.',
+                    'link': f'/admin/content-management/?tab=testimonials',
+                    'badge': f'{test.rating}★ Kurasi',
+                    'badge_type': 'info',
+                    'time': test.date.strftime('%d %b') if test.date else 'Baru'
+                })
+
+            # 3d. User feedback (bugs / feature requests)
+            pending_feedback = 0
+            try:
+                feedback_qs = api_models.Feedback.objects.filter(
+                    status__in=['open', 'under_review']
+                ).select_related('user').order_by('-created_at')
+                pending_feedback = feedback_qs.count()
+
+                for fb in feedback_qs[:15]:
+                    user_name = fb.user.full_name if (fb.user and fb.user.full_name) else (fb.user.username if fb.user else 'Pengguna')
+                    is_bug = fb.feedback_type == 'bug'
+                    type_label = 'Laporan Bug' if is_bug else 'Permintaan Fitur'
+                    notifications_list.append({
+                        'id': f'feedback_{fb.id}',
+                        'category': 'feedback',
+                        'icon': 'fas fa-bug' if is_bug else 'fas fa-lightbulb',
+                        'color': '#ef4444' if is_bug else '#8b5cf6',
+                        'title': f'{type_label}: {fb.title[:38]}',
+                        'message': f'Dari {user_name}. Status: {fb.get_status_display() if hasattr(fb, "get_status_display") else fb.status}.',
+                        'link': f'/admin/reports/?tab=feedback&id={fb.id}',
+                        'badge': 'Bug' if is_bug else 'Fitur',
+                        'badge_type': 'danger' if is_bug else 'purple',
+                        'time': fb.created_at.strftime('%d %b') if fb.created_at else 'Baru'
+                    })
+            except Exception:
+                pending_feedback = 0
+
+            # 3e. Check personal user unread notifications in DB
+            user_notifs = api_models.Notification.objects.filter(
+                user=request.user,
+                seen=False
+            ).order_by('-date')[:10]
+
+            for notif in user_notifs:
+                notifications_list.append({
+                    'id': f'db_{notif.id}',
+                    'category': 'personal',
+                    'icon': 'fas fa-bell',
+                    'color': '#10b981',
+                    'title': notif.title or notif.type or 'Notifikasi Akun',
+                    'message': notif.message or 'Pemberitahuan sistem baru untuk Anda.',
+                    'link': '#',
+                    'badge': 'Notifikasi',
+                    'badge_type': 'success',
+                    'time': notif.date.strftime('%H:%M WIB') if notif.date else 'Baru saja'
+                })
+
+            total_alerts = (
+                pending_courses +
+                pending_reports +
+                pending_testimonials +
+                pending_feedback +
+                user_notifs.count()
+            )
+
+            response_data = {
+                'status': 'online',
+                'active_users': active_users,
+                'online_users': online_users,
+                'total_users': total_users,
+                'pending_courses': pending_courses,
+                'pending_reports': pending_reports,
+                'pending_testimonials': pending_testimonials,
+                'pending_feedback': pending_feedback,
+                'total_alerts': total_alerts,
+                'notifications': notifications_list,
+                'server_time': now.strftime('%d %b %Y, %H:%M WIB')
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 

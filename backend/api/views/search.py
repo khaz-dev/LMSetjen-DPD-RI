@@ -1128,6 +1128,17 @@ class SearchQualityMetricsView(generics.GenericAPIView):
     def get(self, request):
         """Get search quality metrics overview"""
         try:
+            # Ensure published courses have search analytics entries so live stats reflect real catalog
+            for course in api_models.Course.objects.filter(is_published_version=True):
+                api_models.CourseSearchAnalytics.objects.get_or_create(
+                    course=course,
+                    defaults={
+                        'search_impressions': 0,
+                        'search_clicks': 0,
+                        'click_through_rate': 0.0,
+                    }
+                )
+
             # Get overall quality report
             quality_report = api_models.CourseSearchAnalytics.objects.get_quality_report()
             
@@ -1176,6 +1187,15 @@ class CourseSearchQualityListView(generics.ListAPIView):
     permission_classes = [IsAdminUser]
     
     def get_queryset(self):
+        for course in api_models.Course.objects.filter(is_published_version=True):
+            api_models.CourseSearchAnalytics.objects.get_or_create(
+                course=course,
+                defaults={
+                    'search_impressions': 0,
+                    'search_clicks': 0,
+                    'click_through_rate': 0.0,
+                }
+            )
         queryset = self.queryset
         
         # Filter by performance indicator

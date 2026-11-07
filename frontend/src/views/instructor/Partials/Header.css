@@ -163,7 +163,7 @@
     vertical-align: middle;
 }
 
-.instructor-name {
+.instructor-header-card .instructor-name {
     font-size: 1.35rem;
     font-weight: 700;
     color: #ffffff;
@@ -738,7 +738,7 @@
         margin-top: 0.5rem;
     }
     
-    .instructor-name {
+    .instructor-header-card .instructor-name {
         font-size: 1.25rem;
     }
 }
@@ -756,7 +756,7 @@
         font-size: 1.1rem;
     }
 
-    .instructor-name {
+    .instructor-header-card .instructor-name {
         font-size: 1.15rem;
     }
     

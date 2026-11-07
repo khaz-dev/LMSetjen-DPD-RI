@@ -997,3 +997,40 @@
         font-size: 0.85rem;
     }
 }
+
+
+/* Stat pulse dot and notification list styles */
+.stat-pulse-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #10b981;
+    border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: statPulseDot 2s infinite;
+}
+
+@keyframes statPulseDot {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+.notification-dropdown {
+    width: 320px !important;
+    max-width: calc(100vw - 32px) !important;
+}
+
+.noti-item-row:hover {
+    background-color: #f8fafc !important;
+}

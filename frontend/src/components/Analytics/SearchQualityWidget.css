@@ -1,255 +1,273 @@
-/* ✨ PHASE 4.10: Search Quality Widget Styles */
+/* ✨ PHASE 4.10: Search Quality Widget Styles - DPD RI Compact & Modern */
 
 .sq-widget {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 43, 73, 0.05);
+  margin-bottom: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
 }
 
 .sq-widget .card-header {
-  padding: 1.25rem;
-  border-bottom: 1px solid #dee2e6;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff !important;
 }
 
 .sq-widget .card-header h5 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #002B49;
+  margin-bottom: 2px;
 }
 
 .sq-widget .card-header small {
   display: block;
-  font-size: 0.85rem;
-  color: #7f8c8d;
+  font-size: 0.78rem;
+  color: #64748b;
 }
 
 /* Tabs */
 .sq-widget .nav-tabs {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 10px;
 }
 
 .sq-widget .nav-tabs .nav-link {
-  color: #6c757d;
-  font-weight: 500;
+  color: #64748b;
+  font-weight: 600;
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 6px 14px;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .sq-widget .nav-tabs .nav-link:hover {
-  color: #0f766e;
-  background-color: #e9ecef;
+  color: #002B49;
+  background-color: #f1f5f9;
 }
 
 .sq-widget .nav-tabs .nav-link.active {
-  color: #0f766e;
+  color: #002B49;
   background-color: white;
-  border-bottom: 3px solid #0f766e;
-  font-weight: 600;
+  border-bottom: 2px solid #f59e0b;
+  font-weight: 700;
 }
 
 /* Overview Section */
 .sq-overview {
-  padding: 1.5rem 0;
+  padding: 0.75rem 0;
 }
 
 .metric-card {
-  background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
-  padding: 1.5rem;
+  background: #ffffff;
+  padding: 10px 14px;
   border-radius: 8px;
   text-align: center;
-  border-left: 4px solid #0f766e;
-  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #002B49;
+  transition: all 0.2s ease;
 }
 
 .metric-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
-  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 43, 73, 0.08);
+  transform: translateY(-1px);
 }
 
 .metric-card.highlight {
-  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+  background: linear-gradient(135deg, #090e1a 0%, #002B49 100%);
   color: white;
-  border-left: 4px solid #115e59;
+  border-left: 3px solid #f59e0b;
 }
 
 .metric-card .metric-label,
 .sq-widget .metric-label,
 .search-quality-widget .metric-label {
-  font-size: 0.85rem;
-  color: #6c757d;
+  font-size: 0.72rem;
+  color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   font-weight: 600;
-  margin-bottom: 0.75rem;
+  margin-bottom: 2px;
 }
 
 .metric-card.highlight .metric-label {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .metric-card .metric-value,
 .sq-widget .metric-value,
 .search-quality-widget .metric-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #0f766e;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #002B49;
+  line-height: 1.1;
 }
 
 .metric-card.highlight .metric-value {
-  color: white;
+  color: #ffffff;
 }
 
 /* Status Cards */
 .status-card {
-  padding: 1.5rem;
+  padding: 10px 14px;
   border-radius: 8px;
   text-align: center;
   color: white;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 150px;
+  min-height: 80px;
 }
 
 .status-card.success {
-  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }
 
 .status-card.warning {
-  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-  color: #333;
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: #ffffff;
 }
 
 .status-card.danger {
-  background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
 }
 
 .status-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  margin-bottom: 2px;
   font-weight: bold;
 }
 
 .status-label {
-  font-size: 0.9rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 2px;
 }
 
 .status-value {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.1;
 }
 
 .status-card small {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   opacity: 0.9;
-  margin-top: 0.5rem;
+  margin-top: 2px;
 }
 
 /* Recommendations */
 .recommendations-section {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #dee2e6;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
 }
 
 .recommendations-section h6 {
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #002B49;
 }
 
 .recommendations-section .alert {
   border-radius: 6px;
-  border-left: 4px solid currentColor;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  border-left: 3px solid currentColor;
+  margin-bottom: 8px;
 }
 
 /* Courses Tab */
 .sq-courses .filter-section {
-  background-color: #f8f9fa;
-  padding: 1.5rem;
+  background-color: #f8fafc;
+  padding: 10px 14px;
   border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .sq-courses .form-label {
   font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  color: #334155;
+  margin-bottom: 2px;
+  font-size: 0.78rem;
 }
 
 .sq-courses .form-select {
   border-radius: 6px;
-  border: 1px solid #dee2e6;
-  padding: 0.65rem 0.75rem;
-  font-size: 0.9rem;
+  border: 1px solid #cbd5e1;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  height: 32px;
+  background-color: #ffffff;
 }
 
 .sq-courses .form-select:focus {
-  border-color: #0f766e;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  border-color: #002B49;
+  box-shadow: 0 0 0 2px rgba(0, 43, 73, 0.1);
 }
 
 .sq-courses .table {
-  margin-top: 1.5rem;
+  margin-top: 10px;
+  font-size: 0.8rem;
 }
 
 .sq-courses .table thead {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
+  background-color: #002B49;
 }
 
 .sq-courses .table thead th {
-  font-weight: 600;
-  color: #2c3e50;
-  padding: 1rem 0.75rem;
-  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 7px 10px;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  border: none;
 }
 
 .sq-courses .table tbody td {
   vertical-align: middle;
-  padding: 1rem 0.75rem;
-  border-color: #e9ecef;
+  padding: 7px 10px;
+  border-color: #f1f5f9;
 }
 
 .sq-course-row:hover {
-  background-color: #f8f9fa;
+  background-color: #f8fafc;
 }
 
 .sq-courses .badge {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
+  padding: 2px 6px;
+  font-size: 0.72rem;
   font-weight: 600;
+  border-radius: 4px;
 }
 
 /* Distribution Tab */
 .sq-distribution h6 {
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 1.5rem;
+  font-weight: 700;
+  color: #002B49;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
 }
 
 .distribution-card {
-  background: #f8f9fa;
-  padding: 1.5rem;
+  background: #f8fafc;
+  padding: 10px 14px;
   border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border: 1px solid #e2e8f0;
 }
 
 .distribution-bar {
-  height: 30px;
+  height: 20px;
   background-color: white;
   border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 1rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid #e2e8f0;
 }
 
 .distribution-fill {

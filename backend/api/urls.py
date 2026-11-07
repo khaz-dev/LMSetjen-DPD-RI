@@ -195,6 +195,7 @@ urlpatterns = [
     # path("storage/info/", enhanced_upload_views.FileInfoAPIView.as_view()),
     
     # Admin API URLs
+    path("admin/header-stats/", api_views.AdminHeaderStatsAPIView.as_view()),
     path("admin/dashboard-summary/", api_views.AdminSummaryAPIView.as_view()),
     path("admin/user-management/", api_views.AdminUserManagementAPIView.as_view()),
     path("admin/user-management/all/", api_views.AdminUserManagementAllAPIView.as_view()),  # ✨ PHASE 67: Load all users at once
@@ -233,6 +234,7 @@ urlpatterns = [
     # ✨ TIER 1: At-Risk Student Detection
     path("analytics/at-risk-students/", api_views.StudentRiskAssessmentView.as_view()),
     path("analytics/at-risk-students/<int:pk>/", api_views.StudentRiskAssessmentDetailView.as_view()),
+    path("analytics/at-risk-students/<int:pk>/send-intervention/", api_views.StudentRiskInterventionView.as_view()),
     path("analytics/at-risk-students/trigger-assessment/", api_views.StudentRiskAssessmentTriggerView.as_view()),
     path("analytics/at-risk-summary/", api_views.StudentRiskSummaryView.as_view()),
 

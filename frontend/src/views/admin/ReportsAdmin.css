@@ -1,145 +1,251 @@
-/* ========================================
-   REPORTS ADMIN STYLES
-   PHASE 4.210
-   ======================================== */
+/* ==========================================================================
+   REPORTS ADMIN - COMPACT & EYE-CATCHING DESIGN SYSTEM
+   Platform: LMSetjen DPD RI
+   ✨ 100% Zero-Waste Layout • Responsive • High Density • Modern Palette
+   ========================================================================== */
 
+/* Variables */
+:root {
+    --admin-teal: #0d9488;
+    --admin-teal-hover: #0f766e;
+    --admin-teal-light: #f0fdfa;
+    --admin-teal-border: #ccfbf1;
+    --admin-bg-subtle: #f8fafc;
+    --admin-border-subtle: #e2e8f0;
+    --admin-text-main: #0f172a;
+    --admin-text-muted: #64748b;
+}
+
+/* ========================================
+   BASE LAYOUT
+   ======================================== */
 .admin-dashboard {
     min-height: 100vh;
     background: transparent;
 }
 
-/* ========================================
-   MAIN CONTAINER
-   ======================================== */
 .reports-container {
     width: 100%;
+    margin: 0 auto;
 }
 
 /* ========================================
-   PAGE HEADER
+   EXECUTIVE PAGE HEADER (COMPACT)
    ======================================== */
 .reports-page-header {
-    background: white;
-    padding: 2rem;
+    background: #ffffff;
+    border: 1px solid var(--admin-border-subtle);
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
-.reports-header-content {
+.reports-page-header .header-left {
     display: flex;
     flex-direction: column;
 }
 
-.reports-page-title {
-    font-size: 2.5rem;
+.header-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.74rem;
     font-weight: 700;
-    color: #1a1a1a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #475569;
+}
+
+.reports-page-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--admin-text-main);
     margin: 0;
+    display: flex;
+    align-items: center;
+    letter-spacing: -0.3px;
 }
 
 .reports-page-subtitle {
-    font-size: 1rem;
-    color: #6c757d;
-    margin: 0.5rem 0 0 0;
+    font-size: 0.84rem;
+    color: var(--admin-text-muted);
+    margin: 0.25rem 0 0 0;
+    line-height: 1.4;
+}
+
+.reports-page-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.live-status-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--admin-teal-light);
+    border: 1px solid var(--admin-teal-border);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+}
+
+.live-dot.pulse {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: pulseAnimation 2s infinite;
+}
+
+@keyframes pulseAnimation {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+.status-texts {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.status-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #0f766e;
+}
+
+.status-time {
+    font-size: 0.68rem;
+    color: #64748b;
+}
+
+.header-refresh-btn {
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 8px;
 }
 
 /* ========================================
-   TABS CONTAINER
+   UNIFIED TABS CONTAINER
    ======================================== */
 .reports-tabs-container {
-    background: white;
+    background: #ffffff;
+    border: 1px solid var(--admin-border-subtle);
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     overflow: hidden;
 }
 
-/* ========================================
-   TABS HEADER
-   ======================================== */
 .reports-tabs-header {
     display: flex;
-    gap: 0;
-    border-bottom: 3px solid #e9ecef;
-    background: white;
-    padding: 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    gap: 0.35rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.4rem 0.6rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.reports-tabs-header::-webkit-scrollbar {
+    display: none;
 }
 
 .reports-tab-button {
-    flex: 1;
-    padding: 1rem 1.5rem;
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 0.55rem 0.95rem;
+    color: #475569;
+    font-size: 0.85rem;
+    font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    color: #6c757d;
-    font-size: 0.95rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border-bottom: 4px solid transparent;
-    margin-bottom: -3px;
-    position: relative;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    gap: 0.5rem;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .reports-tab-button:hover:not(.active) {
-    background-color: #f8f9fa;
-    color: #495057;
-    border-bottom-color: #dee2e6;
+    background: #f1f5f9;
+    color: #0f172a;
 }
 
 .reports-tab-button.active {
-    color: #0d9488;
-    border-bottom-color: #0d9488;
-    background-color: #f8f9ff;
+    background: #ffffff;
+    color: var(--admin-teal);
     font-weight: 700;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .reports-tab-icon {
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-}
-
-.reports-tab-label {
-    white-space: nowrap;
-    display: block;
-}
-
-/* ========================================
-   TAB DESCRIPTION
-   ======================================== */
-.reports-tab-description {
-    padding: 1.5rem 2rem;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.reports-description-box {
-    color: #495057;
     font-size: 0.95rem;
-    margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
 }
 
-.reports-description-box i {
-    color: #0d9488;
-    font-size: 1.1rem;
+/* Tab Badges */
+.tab-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.12rem 0.45rem;
+    border-radius: 12px;
+    line-height: 1.2;
 }
 
-/* ========================================
-   TAB CONTENT
-   ======================================== */
+.tab-badge-pending {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+    animation: tabAlertPulse 2s infinite;
+}
+
+.tab-badge-neutral {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+@keyframes tabAlertPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Tab Context Bar (Subtle & Compact) */
+.reports-tab-context-bar {
+    padding: 0.45rem 1rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
 .reports-tabs-content {
-    padding: 2rem;
+    padding: 1.25rem;
 }
 
 .reports-tab-pane {
@@ -148,13 +254,13 @@
 
 .reports-tab-pane.active {
     display: block;
-    animation: fadeIn 0.3s ease;
+    animation: fadeInTab 0.25s ease-out;
 }
 
-@keyframes fadeIn {
+@keyframes fadeInTab {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(4px);
     }
     to {
         opacity: 1;
@@ -163,887 +269,571 @@
 }
 
 /* ========================================
-   FILTER SECTION (from ReviewAbuseAdmin)
+   LIVE KPI SUMMARY METRIC CARDS
    ======================================== */
-.review-abuse-tab .filter-section {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 12px;
-    border-left: 4px solid #0d9488;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-}
-
-.review-abuse-tab .filter-section .row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-}
-
-.review-abuse-tab .filter-section .col-md-6 {
-    flex: 1 !important;
-}
-
-.review-abuse-tab .filter-section .col-md-6:last-child {
-    flex: 0 !important;
-    width: auto !important;
-}
-
-.review-abuse-tab .form-label {
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 0.5rem;
-    font-size: 0.95rem;
-}
-
-.review-abuse-tab .filter-select {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    background-color: white;
-    transition: all 0.3s ease;
-}
-
-.review-abuse-tab .filter-select:focus {
-    border-color: #0d9488;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.review-abuse-tab .stat-badge {
-    display: flex !important;
-    align-items: center !important;
-    gap: 1rem !important;
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
-    color: white !important;
-    padding: 1rem 1.5rem !important;
-    border-radius: 8px !important;
-    height: auto !important;
-    width: fit-content !important;
-    justify-content: center !important;
-}
-
-.review-abuse-tab .stat-value {
-    font-size: 2rem !important;
-    font-weight: 700 !important;
-    color: white !important;
-}
-
-.review-abuse-tab .stat-label {
-    font-size: 0.85rem !important;
-    opacity: 0.9 !important;
-    color: white !important;
-    text-transform: none !important;
-    letter-spacing: normal !important;
-    margin-top: 0 !important;
-    margin-left: 0 !important;
-    text-align: left !important;
-}
-
-/* ========================================
-   REPORTS LIST
-   ======================================== */
-.review-abuse-tab .reports-list {
+.kpi-metrics-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    max-width: 375px;
-}
-
-/* ========================================
-   REPORT CARD
-   ======================================== */
-.review-abuse-tab .report-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-left: 4px solid #dc3545;
-    transition: all 0.3s ease;
-}
-
-.review-abuse-tab .report-card:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
-}
-
-.review-abuse-tab .report-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    gap: 1rem;
-}
-
-.review-abuse-tab .report-info {
-    flex: 1;
-}
-
-.review-abuse-tab .report-meta {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.review-abuse-tab .report-id {
-    font-weight: 600;
-    color: #1a1a1a;
-    font-size: 0.9rem;
-}
-
-.review-abuse-tab .report-date {
-    display: block;
-    width: 100%;
-    color: #6c757d;
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
-}
-
-.review-abuse-tab .report-instructor {
-    width: 100%;
-    margin-bottom: 0.75rem;
-    color: #333;
-    font-size: 0.95rem;
-}
-
-.review-abuse-tab .report-reason {
-    width: 100%;
-    color: #dc3545;
-    font-size: 0.95rem;
-    margin-bottom: 1rem;
-}
-
-.review-abuse-tab .report-status {
-    flex-shrink: 0;
-    align-self: flex-start;
-    padding-top: 0.25rem;
-}
-
-/* ========================================
-   STATUS BADGES
-   ======================================== */
-.review-abuse-tab .badge {
-    padding: 0.5rem 0.85rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.review-abuse-tab .badge-warning {
-    background: rgba(255, 193, 7, 0.15);
-    color: #ff9800;
-    border-left: 3px solid #ff9800;
-}
-
-.review-abuse-tab .badge-info {
-    background: rgba(13, 110, 253, 0.15);
-    color: #0f766e;
-    border-left: 3px solid #0f766e;
-}
-
-.review-abuse-tab .badge-danger {
-    background: rgba(220, 53, 69, 0.15);
-    color: #dc3545;
-    border-left: 3px solid #dc3545;
-}
-
-.review-abuse-tab .badge-success {
-    background: rgba(25, 135, 84, 0.15);
-    color: #198754;
-    border-left: 3px solid #198754;
-}
-
-.review-abuse-tab .badge-light {
-    background: #f8f9fa;
-    color: #666;
-    border-left: none;
-}
-
-/* ========================================
-   REPORT DESCRIPTION
-   ======================================== */
-.review-abuse-tab .report-description {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-}
-
-.review-abuse-tab .report-description p {
-    margin: 0;
-    color: #333;
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-/* ========================================
-   REPORT FOOTER
-   ======================================== */
-.review-abuse-tab .report-footer {
-    display: flex;
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.75rem;
+    width: 100%;
 }
 
-.review-abuse-tab .btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-    flex: 1;
+.kpi-card {
+    background: #ffffff;
+    border: 1px solid var(--admin-border-subtle);
+    border-radius: 10px;
+    padding: 0.75rem 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.review-abuse-tab .btn-primary {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    border: none;
-    color: white;
-}
-
-.review-abuse-tab .btn-primary:hover {
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+.kpi-card:hover {
+    border-color: var(--admin-teal);
     transform: translateY(-2px);
-    color: white;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.08);
 }
 
-/* ========================================
-   EMPTY STATE
-   ======================================== */
-.review-abuse-tab .empty-state {
-    background: white;
-    border-radius: 12px;
-    padding: 3rem 2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+.kpi-card.active {
+    border-color: var(--admin-teal);
+    background: #f0fdfa;
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.25);
 }
 
-.review-abuse-tab .empty-state i {
-    opacity: 0.5;
-}
-
-.review-abuse-tab .empty-state p {
-    font-size: 1.1rem;
-}
-
-/* ========================================
-   DETAIL MODAL
-   ======================================== */
-.review-abuse-tab .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+.kpi-icon-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1050;
-    padding: 1rem;
+    font-size: 1.15rem;
+    flex-shrink: 0;
 }
 
-.review-abuse-tab .modal-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 600px;
-    width: 100%;
-    max-height: 90vh;
+.kpi-content {
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
-.review-abuse-tab .detail-modal {
-    animation: slideUp 0.3s ease;
+.kpi-value {
+    font-size: 1.45rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--admin-text-main);
+    letter-spacing: -0.5px;
 }
 
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.kpi-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #334155;
+    margin-top: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.review-abuse-tab .modal-header {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    color: white;
-    padding: 1rem 1.5rem;
-    border-bottom: none;
-    border-radius: 12px 12px 0 0;
+.kpi-subtext {
+    font-size: 0.7rem;
+    color: var(--admin-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.review-abuse-tab .modal-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-    color: white;
-}
-
-.review-abuse-tab .modal-title i {
-    color: white;
-}
-
-.review-abuse-tab .btn-close {
-    filter: brightness(0) invert(1);
-    opacity: 0.7;
-}
-
-.review-abuse-tab .btn-close:hover {
-    opacity: 1;
-}
-
-.review-abuse-tab .modal-body {
-    padding: 2rem;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.review-abuse-tab .detail-section {
-    margin-bottom: 2rem;
-}
-
-.review-abuse-tab .detail-section:last-child {
-    margin-bottom: 0;
-}
-
-.review-abuse-tab .section-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid #0d9488;
-    padding-bottom: 0.5rem;
+.kpi-pulse-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #f59e0b;
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+    animation: pulseAnimation 2s infinite;
 }
 
 /* ========================================
-   INFO GRID
+   COMPACT CONTROL TOOLBAR
    ======================================== */
-.review-abuse-tab .info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.review-abuse-tab .info-item {
-    background: #f8f9fa !important;
-    padding: 1rem !important;
-    border-radius: 8px !important;
-    border-left: 3px solid #0d9488 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.5rem !important;
-}
-
-.review-abuse-tab .info-item label {
-    font-size: 0.8rem !important;
-    color: #6c757d !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.3px !important;
-    display: block !important;
-    margin-bottom: 0.5rem !important;
-}
-
-.review-abuse-tab .info-item p {
-    margin: 0 !important;
-    color: #1a1a1a !important;
-    font-size: 0.95rem !important;
-    text-align: right !important;
-}
-
-/* ========================================
-   REVIEW CONTENT BOX
-   ======================================== */
-.review-abuse-tab .review-content-box {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border-left: 4px solid #dc3545;
-}
-
-.review-abuse-tab .review-item {
-    background: white;
-    padding: 1rem;
-    border-radius: 6px;
-}
-
-.review-abuse-tab .review-text {
-    margin: 0;
-    color: #333;
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-.review-abuse-tab .review-meta {
+.reports-toolbar {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.filter-chips-group {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 0.3rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.filter-chip:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+
+.filter-chip.active {
+    background: var(--admin-teal);
+    color: #ffffff;
+    border-color: var(--admin-teal);
+    box-shadow: 0 2px 5px rgba(13, 148, 136, 0.25);
+}
+
+.filter-chip.active i {
+    color: #ffffff !important;
+}
+
+.toolbar-right-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+    position: relative;
+    width: 250px;
+}
+
+.search-input {
+    padding-left: 2rem;
+    padding-right: 1.8rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    border-color: #cbd5e1;
+    height: 32px;
+}
+
+.search-input:focus {
+    border-color: var(--admin-teal);
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.65rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.search-clear-btn:hover {
+    color: #ef4444;
+}
+
+.sort-select {
+    height: 32px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    border-color: #cbd5e1;
+    min-width: 140px;
+}
+
+.view-mode-group .btn {
+    height: 32px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.refresh-btn {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.65rem;
+}
+
+/* ========================================
+   REPORTS RESPONSIVE GRID (ZERO BLANK SPACE)
+   ======================================== */
+.reports-responsive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 0.9rem;
+    width: 100%;
+}
+
+.compact-report-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.compact-report-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* Status-based Left Border Accent */
+.compact-report-card.status-border-pending {
+    border-left: 4px solid #f59e0b;
+}
+
+.compact-report-card.status-border-action_taken {
+    border-left: 4px solid #10b981;
+}
+
+.compact-report-card.status-border-reviewed {
+    border-left: 4px solid #0284c7;
+}
+
+.compact-report-card.status-border-dismissed {
+    border-left: 4px solid #94a3b8;
+}
+
+/* Card Topbar */
+.report-card-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.report-id-chip {
+    font-size: 0.74rem;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #1e293b;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.report-date-badge {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+/* Status Pill */
+.status-pill {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.badge-status-warning {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.badge-status-success {
+    background: #d1fae5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.badge-status-info {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.badge-status-danger {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+/* Course Context Snippet */
+.report-course-context {
+    background: #f0fdfa;
+    border: 1px solid var(--admin-teal-border);
+    padding: 0.45rem 0.65rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.course-title-text {
+    font-size: 0.79rem;
+    font-weight: 700;
+    color: #0f766e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+/* Reported Review Snippet */
+.reported-review-snippet {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 8px;
+    padding: 0.7rem;
+}
+
+.reviewer-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.reviewer-profile-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.reviewer-mini-avatar,
+.reviewer-mini-initial {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.reviewer-mini-initial {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reviewer-name-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.reviewer-name {
+    font-size: 0.79rem;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.reviewer-role-badge {
+    font-size: 0.68rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.reviewer-rating-stars {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.rating-number {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #b45309;
+}
+
+.review-text-quote {
+    font-size: 0.8rem;
+    color: #334155;
+    margin: 0;
+    line-height: 1.35;
+    font-style: italic;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Complaint Box */
+.complaint-details-box {
+    background: #fff1f2;
+    border: 1px solid #ffe4e6;
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+}
+
+.complaint-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+    font-size: 0.72rem;
 }
 
-.review-abuse-tab .badge-rating {
-    order: 2;
+.complaint-reason-tag {
+    font-weight: 700;
+    color: #be123c;
 }
 
-.review-abuse-tab .badge-author {
-    order: 1;
+.complaint-reporter {
+    color: #881337;
 }
 
-/* ========================================
-   DESCRIPTION BOX
-   ======================================== */
-.review-abuse-tab .description-box {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 8px;
-    border-left: 3px solid #0d9488;
+.complaint-desc-text {
+    font-size: 0.76rem;
+    color: #9f1239;
+    margin: 0.25rem 0 0 0;
+    line-height: 1.3;
 }
 
-.review-abuse-tab .description-box p {
-    margin: 0;
-    color: #333;
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-/* ========================================
-   FORM CONTROLS
-   ======================================== */
-.review-abuse-tab .form-control,
-.review-abuse-tab .form-select {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-}
-
-.review-abuse-tab .form-control:focus,
-.review-abuse-tab .form-select:focus {
-    border-color: #0d9488;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.review-abuse-tab .form-control:disabled,
-.review-abuse-tab .form-select:disabled {
-    background-color: #e9ecef;
-    color: #6c757d;
-}
-
-.review-abuse-tab small {
-    display: block;
-    margin-top: 0.5rem;
-}
-
-.review-abuse-tab .form-group {
-    margin-bottom: 1rem;
-}
-
-/* ========================================
-   MODAL FOOTER
-   ======================================== */
-.review-abuse-tab .modal-footer {
-    padding: 1.5rem;
-    border-top: 1px solid #dee2e6;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-}
-
-.review-abuse-tab .btn-secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: white;
-    padding: 0.6rem 1.5rem;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.review-abuse-tab .btn-secondary:hover:not(:disabled) {
-    background-color: #5a6268;
-    border-color: #545b62;
-}
-
-.review-abuse-tab .btn-secondary:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-}
-
-.review-abuse-tab .btn-primary {
-    padding: 0.6rem 1.5rem;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.review-abuse-tab .btn-primary:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-}
-
-.review-abuse-tab .spinner-border-sm {
-    width: 1rem;
-    height: 1rem;
-    border-width: 0.2em;
-}
-
-/* ========================================
-   RESPONSIVE DESIGN
-   ======================================== */
-@media (max-width: 768px) {
-    .reports-page-title {
-        font-size: 1.75rem;
-    }
-
-    .reports-tab-button {
-        font-size: 0.8rem;
-        padding: 1rem 0.75rem;
-    }
-
-    .reports-tab-label {
-        display: none;
-    }
-
-    .reports-tabs-header {
-        gap: 0.5rem;
-    }
-
-    .review-abuse-tab .report-header {
-        flex-direction: column;
-    }
-
-    .review-abuse-tab .report-status {
-        align-self: flex-start;
-    }
-
-    .review-abuse-tab .info-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .review-abuse-tab .report-meta {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .review-abuse-tab .modal-overlay {
-        padding: 0.5rem;
-    }
-
-    .review-abuse-tab .modal-body {
-        padding: 1rem;
-    }
-
-    .review-abuse-tab .modal-footer {
-        flex-direction: column-reverse;
-    }
-
-    .review-abuse-tab .btn {
-        width: 100%;
-    }
-}
-
-/* ========================================
-   Q&A REPORTS TAB STYLES (PHASE 7.16)
-   ======================================== */
-/* ✨ PHASE 7.16: Q&A Reports Tab - Mirror ReviewAbuseTab styling */
-
-.qa-reports-tab .filter-section {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 12px;
-    border-left: 4px solid #0d9488;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-}
-
-.qa-reports-tab .filter-section .row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-}
-
-.qa-reports-tab .filter-section .col-md-4 {
-    flex: 1 !important;
-}
-
-.qa-reports-tab .filter-section .col-md-4:last-child {
-    flex: 0 !important;
-    width: auto !important;
-}
-
-.qa-reports-tab .form-label {
+.reporter-closed-pill {
+    font-size: 0.7rem;
+    color: #15803d;
     font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 0.5rem;
-    font-size: 0.95rem;
 }
 
-.qa-reports-tab .filter-select {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    background-color: white;
-    transition: all 0.3s ease;
-}
-
-.qa-reports-tab .filter-select:focus {
-    border-color: #0d9488;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.qa-reports-tab .stat-badge {
-    display: flex !important;
-    align-items: center !important;
-    gap: 1rem !important;
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
-    color: white !important;
-    padding: 1rem 1.5rem !important;
-    border-radius: 8px !important;
-    height: auto !important;
-    width: fit-content !important;
-    justify-content: center !important;
-}
-
-.qa-reports-tab .stat-value {
-    font-size: 2rem !important;
-    font-weight: 700 !important;
-    color: white !important;
-}
-
-.qa-reports-tab .stat-label {
-    font-size: 0.85rem !important;
-    opacity: 0.9 !important;
-    color: white !important;
-    text-transform: none !important;
-    letter-spacing: normal !important;
-    margin-top: 0 !important;
-    margin-left: 0 !important;
-    text-align: left !important;
-}
-
-/* ========================================
-   Q&A REPORTS LIST
-   ======================================== */
-.qa-reports-tab .reports-list {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-}
-
-/* ========================================
-   Q&A REPORT CARD
-   ======================================== */
-.qa-reports-tab .report-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-left: 4px solid #dc3545;
-    transition: all 0.3s ease;
-}
-
-.qa-reports-tab .report-card:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
-}
-
-.qa-reports-tab .report-header {
+/* Admin Resolution Snippet */
+.admin-resolution-snippet {
+    background: #ecfdf5;
+    border: 1px solid #d1fae5;
+    border-radius: 6px;
+    padding: 0.45rem 0.65rem;
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1rem;
-    gap: 1rem;
+    font-size: 0.75rem;
+    color: #065f46;
 }
 
-.qa-reports-tab .report-info {
-    flex: 1;
-}
-
-.qa-reports-tab .report-meta {
+/* Card Actions */
+.report-card-actions {
     display: flex;
-    gap: 1.5rem;
-    margin-bottom: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.qa-reports-tab .report-id {
-    font-weight: 600;
-    color: #1a1a1a;
-    font-size: 0.9rem;
-}
-
-.qa-reports-tab .report-date {
-    display: block;
-    width: 100%;
-    color: #6c757d;
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
-}
-
-.qa-reports-tab .report-instructor {
-    width: 100%;
-    margin-bottom: 0.75rem;
-    color: #333;
-    font-size: 0.95rem;
-}
-
-.qa-reports-tab .report-content-title {
-    width: 100%;
-    margin-bottom: 0.75rem;
-    color: #333;
-    font-size: 0.95rem;
-}
-
-.qa-reports-tab .report-reason {
-    width: 100%;
-    color: #dc3545;
-    font-size: 0.95rem;
-    margin-bottom: 1rem;
-}
-
-.qa-reports-tab .report-status {
-    flex-shrink: 0;
-    align-self: flex-start;
-    padding-top: 0.25rem;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: auto;
+    padding-top: 0.45rem;
+    border-top: 1px solid #f1f5f9;
 }
 
 /* ========================================
-   Q&A STATUS BADGES
+   TABLE VIEW (HIGH DENSITY)
    ======================================== */
-.qa-reports-tab .badge {
-    padding: 0.5rem 0.85rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    border-radius: 6px;
+.reports-table-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.reports-data-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.reports-data-table td {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.82rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.reviewer-table-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #0d9488;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ========================================
+   EMPTY & LOADING STATES
+   ======================================== */
+.compact-empty-state,
+.compact-loading-state {
+    background: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 3rem 1.5rem;
+}
+
+.empty-icon-circle {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #f1f5f9;
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.qa-reports-tab .badge-warning {
-    background: rgba(255, 193, 7, 0.15);
-    color: #ff9800;
-    border-left: 3px solid #ff9800;
-}
-
-.qa-reports-tab .badge-info {
-    background: rgba(13, 110, 253, 0.15);
-    color: #0f766e;
-    border-left: 3px solid #0f766e;
-}
-
-.qa-reports-tab .badge-danger {
-    background: rgba(220, 53, 69, 0.15);
-    color: #dc3545;
-    border-left: 3px solid #dc3545;
-}
-
-.qa-reports-tab .badge-success {
-    background: rgba(25, 135, 84, 0.15);
-    color: #198754;
-    border-left: 3px solid #198754;
-}
-
-.qa-reports-tab .badge-light {
-    background: #f8f9fa;
-    color: #666;
-    border-left: none;
+    justify-content: center;
+    font-size: 1.4rem;
 }
 
 /* ========================================
-   Q&A REPORT DESCRIPTION
+   MODERN DETAIL MODAL
    ======================================== */
-.qa-reports-tab .report-description {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-}
-
-.qa-reports-tab .report-description p {
-    margin: 0;
-    color: #333;
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-/* ========================================
-   Q&A REPORT FOOTER
-   ======================================== */
-.qa-reports-tab .report-footer {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.qa-reports-tab .btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-    flex: 1;
-}
-
-.qa-reports-tab .btn-primary {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    border: none;
-    color: white;
-}
-
-.qa-reports-tab .btn-primary:hover {
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    transform: translateY(-2px);
-    color: white;
-}
-
-/* ========================================
-   Q&A EMPTY STATE
-   ======================================== */
-.qa-reports-tab .empty-state {
-    background: white;
-    border-radius: 12px;
-    padding: 3rem 2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.qa-reports-tab .empty-state i {
-    opacity: 0.5;
-}
-
-.qa-reports-tab .empty-state p {
-    font-size: 1.1rem;
-}
-
-/* ========================================
-   Q&A DETAIL MODAL
-   ======================================== */
-.qa-reports-tab .modal-overlay {
+.modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1051,282 +841,260 @@
     padding: 1rem;
 }
 
-.qa-reports-tab .modal-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 600px;
+.modern-detail-modal {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    max-width: 780px;
     width: 100%;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
+    animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
 }
 
-.qa-reports-tab .detail-modal {
-    animation: slideUp 0.3s ease;
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
-.qa-reports-tab .modal-header {
+.modern-detail-modal .modal-header {
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    color: white;
-    padding: 1rem 1.5rem;
+    color: #ffffff;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: none;
-    border-radius: 12px 12px 0 0;
 }
 
-.qa-reports-tab .modal-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-    color: white;
-}
-
-.qa-reports-tab .modal-title i {
-    color: white;
-}
-
-.qa-reports-tab .btn-close {
-    filter: brightness(0) invert(1);
-    opacity: 0.7;
-}
-
-.qa-reports-tab .btn-close:hover {
-    opacity: 1;
-}
-
-.qa-reports-tab .modal-body {
-    padding: 2rem;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.qa-reports-tab .detail-section {
-    margin-bottom: 1.5rem;
-}
-
-.qa-reports-tab .detail-section:last-child {
-    margin-bottom: 0;
-}
-
-.qa-reports-tab .section-title {
+.modal-header-icon-box {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid #0d9488;
-    padding-bottom: 0.5rem;
 }
 
-/* ========================================
-   Q&A INFO GRID
-   ======================================== */
-.qa-reports-tab .info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.qa-reports-tab .info-item {
-    background: #f8f9fa !important;
-    padding: 1rem !important;
-    border-radius: 8px !important;
-    border-left: 3px solid #0d9488 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.5rem !important;
-}
-
-.qa-reports-tab .info-item label {
-    font-size: 0.8rem !important;
-    color: #6c757d !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.3px !important;
-    display: block !important;
-    margin-bottom: 0.5rem !important;
-}
-
-.qa-reports-tab .info-item p {
-    margin: 0 !important;
-    color: #1a1a1a !important;
-    font-size: 0.95rem !important;
-}
-
-/* ========================================
-   Q&A CONTENT BOX (for questions and messages)
-   ======================================== */
-.qa-reports-tab .content-box {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border-left: 4px solid #dc3545;
-}
-
-.qa-reports-tab .content-item {
-    background: white;
-    padding: 0rem;
+.btn-close-custom {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
     border-radius: 6px;
+    color: #ffffff;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.qa-reports-tab .content-title {
-    margin: 0;
-    color: #1a1a1a;
-    font-size: 0.95rem;
-    font-weight: 600;
-    line-height: 1.6;
+.btn-close-custom:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
-.qa-reports-tab .content-text {
-    margin: 0 0 1rem 0;
-    color: #333;
-    font-size: 0.95rem;
-    line-height: 1.6;
+.modern-detail-modal .modal-body {
+    padding: 1.25rem;
+    overflow-y: auto;
 }
 
-.qa-reports-tab .content-author {
-    margin: 0;
-    color: #6c757d;
-    font-size: 0.85rem;
-    font-style: italic;
+.detail-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
 }
 
-/* ========================================
-   Q&A DESCRIPTION BOX
-   ======================================== */
-.qa-reports-tab .description-box {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 8px;
-    border-left: 3px solid #0d9488;
+.detail-card-header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
-.qa-reports-tab .description-box p {
-    margin: 0;
-    color: #333;
-    font-size: 0.95rem;
-    line-height: 1.6;
+.detail-card-body {
+    padding: 0.85rem;
 }
 
-/* ========================================
-   Q&A FORM CONTROLS
-   ======================================== */
-.qa-reports-tab .form-control,
-.qa-reports-tab .form-select {
-    background-color: white;
-    color: #1a1a1a;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
+.reviewer-modal-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
 }
 
-.qa-reports-tab .form-control:focus,
-.qa-reports-tab .form-select:focus {
-    border-color: #0d9488;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+.review-quote-modal {
+    background: #f8fafc;
+    border-left: 3px solid var(--admin-teal);
 }
 
-.qa-reports-tab .form-control:disabled,
-.qa-reports-tab .form-select:disabled {
-    background-color: #e9ecef;
-    color: #6c757d;
+.moderation-form-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
 }
 
-.qa-reports-tab small {
-    display: block;
-    margin-top: 0.5rem;
+.btn-xs {
+    font-size: 0.72rem;
+    line-height: 1.2;
 }
 
-.qa-reports-tab .form-group {
-    margin-bottom: 1rem;
-}
-
-/* ========================================
-   Q&A MODAL FOOTER
-   ======================================== */
-.qa-reports-tab .modal-footer {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid #dee2e6;
+.modern-detail-modal .modal-footer {
+    padding: 0.75rem 1.25rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
-}
-
-.qa-reports-tab .btn-secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: white;
-    padding: 0.6rem 1.5rem;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.qa-reports-tab .btn-secondary:hover:not(:disabled) {
-    background-color: #5a6268;
-    border-color: #545b62;
-}
-
-.qa-reports-tab .btn-secondary:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-}
-
-.qa-reports-tab .btn-primary {
-    padding: 0.6rem 1.5rem;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.qa-reports-tab .btn-primary:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-}
-
-.qa-reports-tab .spinner-border-sm {
-    width: 1rem;
-    height: 1rem;
-    border-width: 0.2em;
+    gap: 0.5rem;
 }
 
 /* ========================================
-   Q&A RESPONSIVE DESIGN
+   UTILITY BUTTONS & COLOR HELPERS
    ======================================== */
-@media (max-width: 768px) {
-    .qa-reports-tab .report-header {
+.text-teal {
+    color: var(--admin-teal) !important;
+}
+
+.btn-teal {
+    background: var(--admin-teal);
+    color: #ffffff;
+    border: 1px solid var(--admin-teal);
+    font-weight: 600;
+}
+
+.btn-teal:hover {
+    background: var(--admin-teal-hover);
+    border-color: var(--admin-teal-hover);
+    color: #ffffff;
+}
+
+.btn-outline-teal {
+    color: var(--admin-teal);
+    border: 1px solid var(--admin-teal);
+    background: transparent;
+    font-weight: 600;
+}
+
+.btn-outline-teal:hover {
+    background: var(--admin-teal);
+    color: #ffffff;
+}
+
+.bg-teal-subtle {
+    background: rgba(13, 148, 136, 0.12) !important;
+}
+
+.bg-warning-subtle {
+    background: rgba(245, 158, 11, 0.12) !important;
+}
+
+.bg-success-subtle {
+    background: rgba(16, 185, 129, 0.12) !important;
+}
+
+.bg-slate-subtle {
+    background: rgba(100, 116, 139, 0.12) !important;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN (MEDIA QUERIES)
+   ======================================== */
+@media (max-width: 992px) {
+    .kpi-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .reports-page-header {
         flex-direction: column;
+        align-items: flex-start;
     }
-
-    .qa-reports-tab .report-status {
-        align-self: flex-start;
+    
+    .reports-page-header .header-right {
+        width: 100%;
+        justify-content: space-between;
     }
+}
 
-    .qa-reports-tab .info-grid {
+@media (max-width: 768px) {
+    .reports-responsive-grid {
         grid-template-columns: 1fr;
     }
 
-    .qa-reports-tab .report-meta {
+    .kpi-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .reports-toolbar {
         flex-direction: column;
-        gap: 0.75rem;
+        align-items: stretch;
     }
 
-    .qa-reports-tab .modal-overlay {
-        padding: 0.5rem;
+    .toolbar-right-controls {
+        flex-direction: column;
+        align-items: stretch;
     }
 
-    .qa-reports-tab .modal-body {
-        padding: 1rem;
-    }
-
-    .qa-reports-tab .modal-footer {
-        flex-direction: column-reverse;
-    }
-
-    .qa-reports-tab .btn {
+    .search-input-wrapper {
         width: 100%;
     }
+
+    .sort-select {
+        width: 100%;
+    }
+
+    .modern-detail-modal {
+        max-height: 95vh;
+    }
 }
+
+/* Scoped Feedback Tab Integration */
+.reports-tab-pane .feedback-admin-dashboard {
+    background: transparent !important;
+    min-height: auto !important;
+    padding: 0 !important;
+}
+
+.reports-tab-pane .feedback-admin-dashboard .dashboard-stats-grid {
+    margin-bottom: 1.25rem !important;
+    gap: 0.75rem !important;
+}
+
+.reports-tab-pane .feedback-admin-dashboard .stat-card {
+    padding: 0.85rem 1rem !important;
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.reports-tab-pane .feedback-admin-dashboard .stat-number {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.reports-tab-pane .feedback-admin-dashboard .stat-label {
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
