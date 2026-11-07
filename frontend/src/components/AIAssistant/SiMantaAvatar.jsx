@@ -30,6 +30,157 @@ const DEFAULT_SUGGESTIONS = [
 ];
 
 /**
+ * Render teks pesan AI dengan format Markdown yang rapi:
+ * - Paragraf terstruktur dengan jarak nyaman
+ * - **Teks Tebal** diubah menjadi <strong> yang jelas dan kontras
+ * - Bullet list (* atau - atau •) diubah menjadi elemen kartu poin
+ * - Numbered list (1., 2.) diubah menjadi badge nomor terstruktur
+ * - `kode` diubah menjadi badge inline code
+ */
+const renderFormattedMessageText = (text) => {
+    if (!text) return null;
+
+    // Helper render format inline (**bold**, `code`, *italic*)
+    const renderInlineFormatting = (str) => {
+        if (!str) return null;
+        const parts = str.split(/(\*\*.*?\*\*|`.*?`|\*[^*]+?\*)/g);
+        return parts.map((part, index) => {
+            if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+                return (
+                    <strong key={index} className="simanta-text-bold">
+                        {part.slice(2, -2)}
+                    </strong>
+                );
+            }
+            if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
+                return (
+                    <code key={index} className="simanta-text-code">
+                        {part.slice(1, -1)}
+                    </code>
+                );
+            }
+            if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+                return (
+                    <em key={index} className="simanta-text-italic">
+                        {part.slice(1, -1)}
+                    </em>
+                );
+            }
+            return part;
+        });
+    };
+
+    const lines = text.split('\n');
+    const blocks = [];
+    let currentParagraph = [];
+    let currentList = null;
+
+    const flushParagraph = () => {
+        if (currentParagraph.length > 0) {
+            blocks.push({
+                type: 'p',
+                text: currentParagraph.join(' ')
+            });
+            currentParagraph = [];
+        }
+    };
+
+    const flushList = () => {
+        if (currentList && currentList.items.length > 0) {
+            blocks.push(currentList);
+            currentList = null;
+        }
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+
+        if (!line) {
+            flushParagraph();
+            flushList();
+            continue;
+        }
+
+        // Horizontal divider (--- atau ***)
+        if (/^(\-{3,}|\*{3,})$/.test(line)) {
+            flushParagraph();
+            flushList();
+            blocks.push({ type: 'hr' });
+            continue;
+        }
+
+        // Bullet point: *, -, •
+        const bulletMatch = line.match(/^[\*\-\•]\s+(.*)$/);
+        if (bulletMatch) {
+            flushParagraph();
+            if (!currentList || currentList.type !== 'bullet') {
+                flushList();
+                currentList = { type: 'bullet', items: [] };
+            }
+            currentList.items.push(bulletMatch[1]);
+            continue;
+        }
+
+        // Numbered list: 1., 2., 1), etc.
+        const numberMatch = line.match(/^(\d+)[\.\)]\s+(.*)$/);
+        if (numberMatch) {
+            flushParagraph();
+            if (!currentList || currentList.type !== 'numbered') {
+                flushList();
+                currentList = { type: 'numbered', items: [] };
+            }
+            currentList.items.push({ num: numberMatch[1], content: numberMatch[2] });
+            continue;
+        }
+
+        // Regular paragraph line
+        flushList();
+        currentParagraph.push(line);
+    }
+
+    flushParagraph();
+    flushList();
+
+    return blocks.map((block, idx) => {
+        if (block.type === 'hr') {
+            return <hr key={idx} className="simanta-msg-divider" />;
+        }
+        if (block.type === 'p') {
+            return (
+                <p key={idx} className="simanta-msg-paragraph">
+                    {renderInlineFormatting(block.text)}
+                </p>
+            );
+        }
+        if (block.type === 'bullet') {
+            return (
+                <ul key={idx} className="simanta-msg-list simanta-msg-bullet-list">
+                    {block.items.map((item, itemIdx) => (
+                        <li key={itemIdx} className="simanta-msg-list-item">
+                            <span className="simanta-bullet-dot" aria-hidden="true">•</span>
+                            <span className="simanta-list-text">{renderInlineFormatting(item)}</span>
+                        </li>
+                    ))}
+                </ul>
+            );
+        }
+        if (block.type === 'numbered') {
+            return (
+                <ol key={idx} className="simanta-msg-list simanta-msg-numbered-list">
+                    {block.items.map((item, itemIdx) => (
+                        <li key={itemIdx} className="simanta-msg-list-item">
+                            <span className="simanta-number-badge">{item.num}</span>
+                            <span className="simanta-list-text">{renderInlineFormatting(item.content)}</span>
+                        </li>
+                    ))}
+                </ol>
+            );
+        }
+        return null;
+    });
+};
+
+/**
  * MantaAvatar - Asisten AI Avatar Bergerak LMS Setjen DPD RI
  * 
  * Karakteristik:
@@ -382,7 +533,7 @@ const SiMantaAvatar = () => {
                                 className={`simanta-msg ${msg.sender === 'user' ? 'simanta-msg-user' : 'simanta-msg-bot'}`}
                             >
                                 <div className="simanta-msg-content">
-                                    {msg.text}
+                                    {renderFormattedMessageText(msg.text)}
 
                                     {/* Rekomendasi Kursus dari Database LMS */}
                                     {msg.courses && msg.courses.length > 0 && (
