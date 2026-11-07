@@ -87,6 +87,8 @@ const CertificateSettingsAdmin = lazy(() => import("./views/admin/CertificateSet
 const AdminCourseReviewDetail = lazy(() => import("./views/admin/AdminCourseReviewDetail"));
 // ✨ PHASE 4.210: Unified reports management page
 const ReportsAdmin = lazy(() => import("./views/admin/ReportsAdmin"));
+// ✨ PHASE 4.210 / 11.3: Dedicated System Diagnostics & Technical Architecture Center
+const SystemAdmin = lazy(() => import("./views/admin/SystemAdmin"));
 // ✨ PHASE 11.1: Admin Feedback Management
 const AdminFeedback = lazy(() => import("./views/admin/AdminFeedback"));
 const SystemTestAdmin = lazy(() => import("./views/admin/SystemTestAdmin"));
@@ -662,14 +664,37 @@ function App() {
                                 path="/admin/feedback"
                                 element={<Navigate to="/admin/reports/?tab=feedback" replace />}
                             />
-                            {/* Redirect to Unified Reports & Diagnostics Center */}
+                            {/* ✨ Dedicated System Diagnostics & Technical Architecture Center */}
+                            <Route
+                                path="/admin/system/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["admin"]}>
+                                            <SystemAdmin />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/admin/system"
+                                element={<Navigate to="/admin/system/" replace />}
+                            />
+                            {/* Redirects to System Diagnostics & Technical Architecture Center */}
                             <Route
                                 path="/admin/system-test/"
-                                element={<Navigate to="/admin/reports/?tab=diagnostics" replace />}
+                                element={<Navigate to="/admin/system/?tab=diagnostics" replace />}
                             />
                             <Route
                                 path="/admin/system-test"
-                                element={<Navigate to="/admin/reports/?tab=diagnostics" replace />}
+                                element={<Navigate to="/admin/system/?tab=diagnostics" replace />}
+                            />
+                            <Route
+                                path="/admin/documentation/"
+                                element={<Navigate to="/admin/system/?tab=docs" replace />}
+                            />
+                            <Route
+                                path="/admin/documentation"
+                                element={<Navigate to="/admin/system/?tab=docs" replace />}
                             />
                             {/* Backward compatibility redirects */}
                             <Route

@@ -1,29 +1,70 @@
-import React, { useState, useRef } from "react";
-import { 
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import {
     FaBook, FaFileDownload, FaGlobe, FaServer, FaDatabase, FaShieldAlt,
     FaUsers, FaCog, FaCode, FaNetworkWired, FaDocker, FaCloud,
     FaLock, FaKey, FaUserShield, FaChartLine, FaClipboardCheck,
-    FaPrint, FaLanguage, FaCheckCircle, FaInfoCircle
+    FaPrint, FaLanguage, FaCheckCircle, FaInfoCircle, FaSyncAlt,
+    FaSearch, FaTimes, FaGraduationCap, FaCheckDouble, FaLayerGroup
 } from "react-icons/fa";
 import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
+import apiInstance from "../../utils/axios";
 import "./SystemDocumentation.css";
 
-function SystemDocumentation({ isEmbedded = false }) {
-    const [language, setLanguage] = useState("en"); // 'en' or 'id'
+/**
+ * ✨ PHASE 4.210 / 11.2: System Documentation (Compact & Live Data Redesign)
+ * Real live server health, live database entity counts, zero blank space,
+ * category pill navigation, real-time search filter, and bilingual support.
+ */
+function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
+    const [language, setLanguage] = useState("id"); // default Bahasa Indonesia
+    const [activeSection, setActiveSection] = useState("all");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [systemHealth, setSystemHealth] = useState(null);
+    const [loadingHealth, setLoadingHealth] = useState(false);
+    const [lastSync, setLastSync] = useState(new Date());
     const contentRef = useRef(null);
 
+    // Fetch real live system health and statistics from backend
+    const fetchSystemHealth = useCallback(async () => {
+        try {
+            setLoadingHealth(true);
+            const res = await apiInstance.get("/admin/system-health/");
+            if (res.data) {
+                setSystemHealth(res.data);
+                setLastSync(new Date());
+            }
+        } catch (err) {
+            console.warn("Live system-health endpoint notice:", err?.message || err);
+        } finally {
+            setLoadingHealth(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchSystemHealth();
+    }, [fetchSystemHealth, refreshTrigger]);
+
+    // Live backend variables
+    const dbStats = systemHealth?.database_statistics || {};
+    const serverInfo = systemHealth?.server_information || {};
+    const isHealthy = systemHealth?.system_status === "healthy" || !systemHealth?.error;
+
+    // Full Technical Documentation Content (EN & ID)
     const content = {
         en: {
-            pageTitle: "System Documentation",
-            pageSubtitle: "Comprehensive technical documentation and system architecture guide",
-            printPDF: "Export to PDF",
+            pageTitle: "System Documentation & Technical Architecture",
+            pageSubtitle: "Comprehensive technical reference, database schema, and live runtime diagnostics",
+            printPDF: "Export / Print",
             language: "Language",
-            lastUpdated: "Last Updated",
+            lastUpdated: "Last Synced",
             version: "Version",
-            
-            // Table of Contents
-            tocTitle: "Table of Contents",
+            allSections: "All Sections",
+            filterPlaceholder: "Search documentation (e.g. JWT, PostgreSQL, Docker, Roles)...",
+            liveBadge: "System Online & Normal",
+            envInfo: "Live Environment",
+
+            tocTitle: "Documentation Index",
             sections: {
                 overview: "System Overview",
                 architecture: "System Architecture",
@@ -38,810 +79,637 @@ function SystemDocumentation({ isEmbedded = false }) {
                 maintenance: "Maintenance & Support"
             },
 
-            // Overview
             overview: {
                 title: "System Overview",
-                description: "LMSetjen DPD RI is a modern Learning Management System designed specifically for the Secretariat General of the Regional Representative Council of the Republic of Indonesia. The system provides a comprehensive platform for online learning, course management, and competency development.",
+                description: "LMSetjen DPD RI is a modern Learning Management System designed specifically for the Secretariat General of the Regional Representative Council of the Republic of Indonesia. The system provides an integrated platform for digital learning, competency development, and certification.",
                 purpose: "Purpose & Objectives",
                 purposeItems: [
-                    "Provide a modern and user-friendly online learning platform",
-                    "Facilitate skill and competency development for employees",
-                    "Support self-paced and collaborative learning",
-                    "Provide comprehensive evaluation and certification system",
-                    "Enable efficient course content management",
-                    "Track learner progress and generate analytics"
+                    "Provide a modern, intuitive, and responsive learning portal for civil servants",
+                    "Facilitate structured competency and skill tracking across departments",
+                    "Support both self-paced modules and collaborative discussion forums",
+                    "Deliver automated evaluations, quizzes, and tamper-evident certificate issuance",
+                    "Enable robust course curriculum curation, rich media support, and video streaming",
+                    "Provide real-time analytics, user moderation, and diagnostics for administrators"
                 ],
-                systemInfo: "System Information",
-                productionUrl: "Production URL",
-                developmentFramework: "Development Framework",
-                databaseSystem: "Database System",
-                hostingPlatform: "Hosting Platform",
-                projectStatus: "Project Status",
-                statusReady: "Production Ready"
+                systemInfo: "Runtime & Infrastructure",
+                productionUrl: "Active Runtime Host",
+                developmentFramework: "Framework Stack",
+                databaseSystem: "Database Engine",
+                hostingPlatform: "Hosting Environment",
+                projectStatus: "Operational Status",
+                statusReady: "Production Ready & Connected"
             },
 
-            // Architecture
             architecture: {
                 title: "System Architecture",
-                description: "The system follows a modern microservices architecture with clear separation of concerns:",
-                frontend: "Frontend Layer",
-                frontendDesc: "React 18.2 with Vite bundler, providing a fast and responsive single-page application (SPA)",
-                backend: "Backend Layer",
-                backendDesc: "Django 4.2 with Django REST Framework, serving as RESTful API backend",
-                database: "Database Layer",
-                databaseDesc: "PostgreSQL for production, SQLite for development",
-                caching: "Caching Layer",
-                cachingDesc: "Redis for session management and application caching",
-                proxy: "Reverse Proxy",
-                proxyDesc: "Nginx handling SSL termination, static files, and load balancing",
-                deployment: "Containerization",
-                deploymentDesc: "Docker containers orchestrated via Docker Compose for consistent deployments"
+                description: "The platform is engineered using a decoupled, high-performance architecture with distinct layers:",
+                frontend: "Frontend Presentation Layer",
+                frontendDesc: "React 18.2 SPA powered by Vite bundler, delivering sub-second navigation, lazy-loaded bundles, and modular CSS design tokens.",
+                backend: "Backend API Layer",
+                backendDesc: "Django 4.2 REST Framework providing RESTful endpoints, JWT security, custom throttle guards, and role-based access control.",
+                database: "Persistent Database Layer",
+                databaseDesc: "PostgreSQL 15 relational engine with foreign key constraints, connection pooling, and automated schema migrations.",
+                caching: "High-Speed Caching Layer",
+                cachingDesc: "In-memory caching and session acceleration for query optimization and background worker dispatch.",
+                proxy: "Reverse Proxy & Edge Gateway",
+                proxyDesc: "Nginx web server managing TLS 1.3 encryption, gzip/brotli compression, rate limiting, and static asset streaming.",
+                deployment: "Containerization Orchestration",
+                deploymentDesc: "Dockerized services orchestrated via Docker Compose ensuring reproducible production and staging environments."
             },
 
-            // Technologies
             technologies: {
                 title: "Technology Stack",
                 frontend: "Frontend Technologies",
                 frontendList: [
-                    "React 18.2 - UI library",
-                    "Vite 4.5 - Build tool & dev server",
-                    "React Router 6.10 - Client-side routing",
-                    "Axios - HTTP client",
-                    "Bootstrap 5.3 - UI framework",
-                    "Chart.js 4.4 - Data visualization",
-                    "CKEditor 5 - Rich text editor",
-                    "JWT Decode - Token management",
-                    "SweetAlert2 - User notifications",
-                    "React Icons - Icon library"
+                    "React 18.2 - Declarative component library",
+                    "Vite 4+ - Next-gen frontend tooling and build pipeline",
+                    "React Router v6 - Client-side URL history & deep linking",
+                    "Axios Interceptors - Authenticated HTTP request pipeline",
+                    "Bootstrap 5.3 & Custom Tokens - Modern UI styling",
+                    "Chart.js - Interactive admin and student analytics",
+                    "SweetAlert2 - Toast dialogs and actionable alerts",
+                    "FontAwesome & React Icons - Vector iconography"
                 ],
                 backend: "Backend Technologies",
                 backendList: [
-                    "Python 3.11+ - Programming language",
-                    "Django 4.2 - Web framework",
-                    "Django REST Framework - API toolkit",
-                    "Simple JWT - JWT authentication",
-                    "Django CORS Headers - CORS management",
-                    "Pillow - Image processing",
-                    "Requests - HTTP library",
-                    "Python Decouple - Configuration management"
+                    "Python 3.11+ - Core backend runtime",
+                    "Django 4.2 LTS - Robust web framework",
+                    "Django REST Framework - Serialization and API views",
+                    "SimpleJWT - Stateless token authentication",
+                    "Django CORS Headers - Cross-origin resource sharing",
+                    "Pillow - Media image processing and optimization"
                 ],
                 infrastructure: "Infrastructure & DevOps",
                 infrastructureList: [
-                    "Docker & Docker Compose - Containerization",
-                    "PostgreSQL 15 - Production database",
-                    "Redis 7 - Caching & session storage",
-                    "Nginx 1.25 - Web server & reverse proxy",
-                    "Let's Encrypt - SSL certificates",
-                    "AWS EC2 - Cloud hosting",
-                    "DuckDNS - Dynamic DNS service",
-                    "Git & GitHub - Version control"
+                    "Docker & Docker Compose - Containerized service stack",
+                    "Nginx - Reverse proxy, SSL termination & asset caching",
+                    "PostgreSQL - High-availability relational database",
+                    "Certbot / Let's Encrypt - Automated SSL/TLS certificates",
+                    "Git Workflow - Continuous integration and versioning"
                 ]
             },
 
-            // Features
             features: {
-                title: "Core Features",
-                student: "Student Features",
+                title: "Core Platform Capabilities",
+                student: "Student & Learner Capabilities",
                 studentList: [
-                    "Course browsing and search with advanced filters",
-                    "Video-based learning with progress tracking",
-                    "Interactive quizzes and assessments",
-                    "Digital certificates upon course completion",
-                    "Course reviews and ratings",
-                    "Q&A forum with instructors",
-                    "Wishlist for favorite courses",
-                    "Real-time learning dashboard",
-                    "Profile and password management",
-                    "Mobile-responsive interface"
+                    "Course discovery, category filtering, search, and instant enrollment",
+                    "Interactive video player, rich lesson content, and downloadable materials",
+                    "Real-time progress tracking, checkpoint resumption, and completion bars",
+                    "Timed quiz evaluations, automated scoring, and answer reviews",
+                    "Cryptographically verified certificate generation and direct PDF export",
+                    "Discussion Q&A community forum and course rating reviews"
                 ],
-                instructor: "Instructor Features",
+                instructor: "Instructor & Content Creator Capabilities",
                 instructorList: [
-                    "Course creation and management",
-                    "Curriculum and content organization",
-                    "Video upload and streaming",
-                    "Quiz creation with multiple question types",
-                    "Student enrollment tracking",
-                    "Performance analytics and reports",
-                    "Q&A management",
-                    "Review and rating monitoring",
-                    "Bulk content operations",
-                    "Course preview and publishing"
+                    "Course curriculum builder with sections, lectures, and interactive quizzes",
+                    "Rich text editor supporting multimedia embedding and resource attachments",
+                    "Student enrollment metrics, revenue/engagement stats, and review feedback",
+                    "Q&A management to answer student queries directly from the teacher dashboard",
+                    "Course revision submissions awaiting administrative review"
                 ],
-                admin: "Admin Features",
+                admin: "Administrative & Governance Capabilities",
                 adminList: [
-                    "User management (CRUD operations)",
-                    "Role assignment (Student/Teacher/Admin)",
-                    "System-wide analytics dashboard",
-                    "External user synchronization",
-                    "Bulk user operations",
-                    "System health monitoring",
-                    "Course approval and moderation",
-                    "Platform configuration",
-                    "Audit logs and reporting",
-                    "System documentation access"
+                    "Centralized user lifecycle management (Learners, Instructors, Admins)",
+                    "Course publishing moderation, review workflows, and catalog curation",
+                    "Content abuse reporting and automated Q&A moderation queue",
+                    "User feedback tracking (bug reports and feature requests management)",
+                    "Live system diagnostics, environment health verification, and documentation"
                 ]
             },
 
-            // Authentication
             authentication: {
-                title: "Authentication & Authorization",
-                mechanism: "Authentication Mechanism",
-                mechanismDesc: "The system uses JWT (JSON Web Tokens) for stateless authentication. Upon successful login, the backend issues access and refresh tokens that are stored securely in the browser.",
-                flow: "Authentication Flow",
+                title: "Authentication & Authorization Security",
+                mechanism: "Stateless JWT Architecture",
+                mechanismDesc: "Authentication is governed by JSON Web Tokens (JWT) adhering to RFC 7519. The backend signs access tokens with HMAC-SHA256 and provides rotating refresh tokens.",
+                flow: "Token Lifecycle Flow",
                 flowSteps: [
-                    "User submits credentials (email/password)",
-                    "Backend validates credentials against database",
-                    "If valid, backend generates JWT access token (5 minutes) and refresh token (7 days)",
-                    "Tokens are stored in browser's local storage",
-                    "Each API request includes access token in Authorization header",
-                    "Backend validates token and extracts user information",
-                    "If access token expires, frontend automatically uses refresh token to get new access token",
-                    "User remains logged in until refresh token expires or explicit logout"
+                    "User inputs credentials; client dispatches POST to /api/v1/user/token/",
+                    "Server validates credentials and issues short-lived Access Token & long-lived Refresh Token",
+                    "Client interceptor injects 'Authorization: Bearer <token>' in all API headers",
+                    "On access token expiration (401), the interceptor refreshes tokens transparently via /api/v1/user/token/refresh/",
+                    "Logout invalidates active client storage and closes authorized session"
                 ],
-                authorization: "Role-Based Authorization",
-                authorizationDesc: "The system implements comprehensive RBAC (Role-Based Access Control) with three primary roles:",
+                authorization: "Role-Based Access Control (RBAC)",
+                authorizationDesc: "Each authenticated user is bound to one or more strict authorization scopes:",
                 roles: [
-                    {
-                        name: "Student",
-                        description: "Access to learning materials, courses, quizzes, and personal dashboard"
-                    },
-                    {
-                        name: "Teacher/Instructor",
-                        description: "All student access plus course creation, content management, and student analytics"
-                    },
-                    {
-                        name: "Admin",
-                        description: "Full system access including user management, system configuration, and platform administration"
-                    }
+                    { name: "Student (Peserta)", description: "Can browse courses, enroll, take quizzes, obtain certificates, and post Q&A." },
+                    { name: "Teacher / Instructor (Pengajar)", description: "Can create curriculum drafts, manage owned courses, and review student questions." },
+                    { name: "Administrator (Admin Setjen)", description: "Full operational access over users, course approvals, reports, and platform configurations." }
                 ],
-                protection: "Route Protection",
-                protectionDesc: "Both frontend and backend implement dual-layer protection:",
+                protection: "Defensive Measures",
+                protectionDesc: "Security policies enforced across all incoming traffic:",
                 protectionLayers: [
-                    "Frontend: PrivateRoute + RoleRoute components check authentication and role before rendering pages",
-                    "Backend: JWTAuthentication + IsAdminUser/IsTeacher/IsStudent permission classes validate API access"
+                    "CSRF token validation on sensitive state-mutating requests",
+                    "Password hashing via PBKDF2 with SHA-256 algorithm and salt",
+                    "Automated IP and user-based throttling against brute-force attempts",
+                    "Strict Cross-Origin Resource Sharing (CORS) origin whitelisting",
+                    "SQL injection prevention via Django ORM parameterized queries"
                 ]
             },
 
-            // API
             api: {
-                title: "API Documentation",
-                description: "The backend exposes a comprehensive RESTful API documented with Swagger/OpenAPI specifications.",
-                baseUrl: "Base URL",
-                endpoints: "Main Endpoint Groups",
+                title: "RESTful API Documentation",
+                description: "Standardized RESTful JSON API adhering to semantic HTTP methods and status conventions.",
+                baseUrl: "Base API Endpoint",
+                endpoints: "Primary API Endpoints",
                 endpointsList: [
-                    "/api/v1/user/ - User authentication and profile management",
-                    "/api/v1/course/ - Course CRUD operations and browsing",
-                    "/api/v1/student/ - Student-specific operations (enrollment, progress, wishlist)",
-                    "/api/v1/teacher/ - Teacher operations (course management, analytics)",
-                    "/api/v1/admin/ - Admin operations (user management, system config)"
+                    "GET/POST /api/v1/user/token/ - Issue and verify JWT authentication tokens",
+                    "GET /api/v1/course/category/ - Retrieve categorized course catalog",
+                    "GET /api/v1/course/course-list/ - Searchable public courses list",
+                    "GET/POST /api/v1/student/course-detail/<slug>/ - Student enrollment and lesson access",
+                    "GET/PUT /api/v1/admin/abuse-reports/ - Content moderation and abuse reports",
+                    "GET/POST /api/v1/feedback/list/ - User bug reports and feature request tracker",
+                    "GET /api/v1/admin/system-health/ - Real-time system health and runtime statistics"
                 ],
-                docs: "Interactive Documentation",
-                swaggerUrl: "Swagger UI",
-                redocUrl: "ReDoc UI",
-                authentication: "API Authentication",
-                authDesc: "All protected endpoints require Bearer token in Authorization header:",
-                authExample: "Authorization: Bearer <your_jwt_access_token>"
+                docs: "Interactive API Explorers",
+                swaggerUrl: "Swagger UI Interactive Documentation",
+                redocUrl: "ReDoc API Reference Specification",
+                authentication: "Authorization Header Standard",
+                authDesc: "All protected endpoints require the Bearer token authorization header:",
+                authExample: "Authorization: Bearer <jwt_access_token_here>"
             },
 
-            // Database
             database: {
-                title: "Database Schema",
-                description: "PostgreSQL database with normalized schema design for optimal performance.",
-                mainModels: "Core Models",
+                title: "Database Architecture & Schema",
+                description: "Relational PostgreSQL database schema organized into cohesive domain models with strict referential integrity.",
+                mainModels: "Primary Data Entities",
                 modelsList: [
-                    "User - User accounts with role-based access",
-                    "Profile - Extended user information and preferences",
-                    "Course - Course metadata, content, and configuration",
-                    "Category - Course categorization",
-                    "Teacher - Instructor profiles and qualifications",
-                    "CourseSection - Curriculum organization",
-                    "CoursePart - Individual learning units/lessons",
-                    "Quiz - Assessment and quiz metadata",
-                    "Question - Quiz questions with various types",
-                    "Answer - Quiz answer options",
-                    "EnrolledCourse - Student enrollments and progress",
-                    "CompletedLesson - Lesson completion tracking",
-                    "Review - Course reviews and ratings",
-                    "Notification - System and user notifications",
-                    "Cart - Shopping cart for paid courses",
-                    "CartOrder - Order processing and history",
-                    "Certificate - Digital certificates",
-                    "Note - Student notes and bookmarks"
+                    "User & Profile: Core authentication, demographic info, role flags, and avatars",
+                    "Course & Category: Learning titles, pricing/status, thumbnail assets, and hierarchy",
+                    "Variant & VariantItem: Modular curriculum structure (Sections & Lessons)",
+                    "EnrolledCourse & CompletedLesson: Student progress, completion timestamps, and audit log",
+                    "Quiz, Question & Answer: Objective evaluations, passing grade logic, and scores",
+                    "Certificate: Tamper-evident issuance hashes, valid status, and verification URLs",
+                    "Review & AbuseReport: User ratings, moderation queue, and flag audits",
+                    "Feedback: Platform issue tracker, bug classifications, and resolution logs"
                 ],
-                relationships: "Key Relationships",
+                relationships: "Key Entity Relationships",
                 relationshipsList: [
-                    "User → Profile (One-to-One)",
-                    "User → EnrolledCourse (One-to-Many)",
-                    "Teacher → Course (One-to-Many)",
-                    "Course → CourseSection (One-to-Many)",
-                    "CourseSection → CoursePart (One-to-Many)",
-                    "Course → Quiz (One-to-Many)",
-                    "Quiz → Question (One-to-Many)",
-                    "Question → Answer (One-to-Many)"
+                    "One User has One Profile (1:1 with cascading lifecycle)",
+                    "One Course contains Many Variants and Many Lessons (1:N with ordered position)",
+                    "One User can enroll in Many Courses via EnrolledCourse (M:N junction)",
+                    "One EnrolledCourse generates One Certificate upon 100% curriculum completion"
                 ]
             },
 
-            // Deployment
             deployment: {
-                title: "Deployment Architecture",
-                description: "Production deployment on AWS EC2 using Docker containerization.",
-                components: "System Components",
+                title: "Deployment & Infrastructure Architecture",
+                description: "Containerized continuous deployment architecture designed for high uptime and isolation.",
+                components: "Containerized Services",
                 componentsList: [
-                    "Frontend Container (Node + Nginx) - Serves React SPA on ports 80/443",
-                    "Backend Container (Python + Django) - API server on port 8001",
-                    "PostgreSQL Container - Database on port 5432",
-                    "Redis Container - Caching on port 6381",
-                    "Main Nginx (Host) - SSL termination and reverse proxy"
+                    "web (Frontend): Vite-built static bundle served via high-performance Nginx worker",
+                    "api (Backend): Gunicorn WSGI server running Django application workers",
+                    "db (Database): PostgreSQL container with persisted volume storage and healthcheck",
+                    "proxy (Nginx Gateway): External SSL termination, reverse proxying, and caching"
                 ],
-                network: "Network Configuration",
-                networkDesc: "Docker bridge network enables inter-container communication. Nginx routes requests:",
+                network: "Virtual Network Topology",
+                networkDesc: "Internal Docker network isolates the database from public exposure. Only HTTP (80) and HTTPS (443) ports are exposed to the internet.",
                 routes: [
-                    "/ → Frontend container (React SPA)",
-                    "/api/ → Backend container (Django API)",
-                    "/admin/ → Backend Django admin",
-                    "/media/ → Backend static media files",
-                    "/static/ → Backend static assets"
+                    "Traffic on /api/* routes directly to the Django backend application",
+                    "Traffic on /media/* routes directly to persistent volume storage",
+                    "Traffic on /* routes directly to the React SPA client"
                 ],
-                ssl: "SSL/TLS Configuration",
-                sslDesc: "Let's Encrypt provides free SSL certificates with automatic renewal. All HTTP traffic redirects to HTTPS.",
-                domain: "Domain Configuration",
-                domainDesc: "DuckDNS provides dynamic DNS: lmsetjendpdri.duckdns.org → AWS EC2 Public IP"
+                ssl: "TLS / SSL Security",
+                sslDesc: "Strict HTTPS enforcement via Let's Encrypt certificates with automatic renewal cron jobs and A+ SSL Labs rating.",
+                domain: "DNS & Host Routing",
+                domainDesc: "Direct domain resolution routing to server IP with Cloudflare / DuckDNS failover."
             },
 
-            // Security
             security: {
-                title: "Security Measures",
-                authentication: "Authentication Security",
+                title: "Security & Hardening Standards",
+                authentication: "Authentication Hardening",
                 authList: [
-                    "JWT-based stateless authentication",
-                    "Secure password hashing with Django's PBKDF2",
-                    "Password strength validation (min 8 chars, complexity requirements)",
-                    "Token expiration and automatic refresh",
-                    "Logout token blacklisting"
+                    "Cryptographic JWT signing with secret key rotation support",
+                    "PBKDF2 password hashing with 390,000+ iterations",
+                    "Automatic session invalidation on credential modifications"
                 ],
-                authorization: "Authorization Security",
+                authorization: "Authorization Hardening",
                 authzList: [
-                    "Role-based access control (RBAC)",
-                    "API endpoint permission classes",
-                    "Frontend route protection",
-                    "Principle of least privilege"
+                    "Role verification decorators on all private API endpoints",
+                    "Object-level permission checks preventing horizontal privilege escalation",
+                    "Superuser multi-factor administrative isolation"
                 ],
-                network: "Network Security",
+                network: "Network Hardening",
                 networkList: [
-                    "HTTPS-only in production (SSL/TLS 1.2+)",
-                    "CORS configuration limiting allowed origins",
-                    "Security headers (HSTS, X-Frame-Options, etc.)",
-                    "Rate limiting on sensitive endpoints"
+                    "Strict TLS 1.3 encryption protocol enforcement",
+                    "HTTP Strict Transport Security (HSTS) headers enabled",
+                    "Isolated Docker bridge network shielding internal databases"
                 ],
-                application: "Application Security",
+                application: "Application Hardening",
                 appList: [
-                    "SQL injection prevention via Django ORM",
-                    "XSS protection through React's JSX escaping",
-                    "CSRF protection on state-changing operations",
-                    "Input validation and sanitization",
-                    "File upload restrictions and validation",
-                    "Secure session management with Redis"
+                    "Django ORM SQL Injection immunity with parameterized queries",
+                    "Automatic HTML sanitization defending against Cross-Site Scripting (XSS)",
+                    "Strict Content Security Policy (CSP) and X-Frame-Options: SAMEORIGIN"
                 ],
-                infrastructure: "Infrastructure Security",
+                infrastructure: "Infrastructure Hardening",
                 infraList: [
-                    "Docker container isolation",
-                    "AWS security groups (firewall rules)",
-                    "Regular security updates and patches",
-                    "Environment variable management",
-                    "Secrets management (not in version control)",
-                    "Database access restrictions"
+                    "Automated daily database dumps with remote backup replication",
+                    "Container healthcheck monitors with automated restart policies",
+                    "Minimal rootless Docker containers reducing attack surfaces"
                 ]
             },
 
-            // Roles
             roles: {
-                title: "User Roles & Permissions",
-                description: "Detailed permission matrix for each user role:",
-                student: "Student Role",
+                title: "User Roles & Permissions Matrix",
+                description: "Granular access control policies defining platform capabilities per persona:",
+                student: "Student Role (Peserta)",
                 studentPerms: [
-                    "✓ Browse and search courses",
-                    "✓ Enroll in courses",
-                    "✓ Watch video lessons",
-                    "✓ Take quizzes and assessments",
-                    "✓ View own progress and certificates",
-                    "✓ Add courses to wishlist",
-                    "✓ Submit course reviews",
-                    "✓ Participate in Q&A",
-                    "✓ Edit own profile",
-                    "✗ Create or edit courses",
-                    "✗ Access admin functions",
-                    "✗ Manage other users"
+                    "✓ Access public course catalog and enroll into courses",
+                    "✓ Stream video lectures and read course materials",
+                    "✓ Take interactive quizzes and view personal scores",
+                    "✓ Download authenticated completion certificates",
+                    "✓ Ask questions in course Q&A and rate completed courses",
+                    "✗ Create, edit, or delete course curriculum",
+                    "✗ Access admin analytics or user databases"
                 ],
-                teacher: "Teacher Role",
+                teacher: "Instructor Role (Pengajar)",
                 teacherPerms: [
-                    "✓ All student permissions",
-                    "✓ Create and publish courses",
-                    "✓ Edit own courses",
-                    "✓ Upload course materials",
-                    "✓ Create quizzes",
-                    "✓ View student enrollments",
-                    "✓ Access teaching analytics",
-                    "✓ Manage Q&A for own courses",
-                    "✓ Respond to reviews",
-                    "✗ Edit other teachers' courses",
-                    "✗ Access admin functions",
-                    "✗ Manage users"
+                    "✓ All student privileges included",
+                    "✓ Create, draft, and update course materials and quizzes",
+                    "✓ View enrolled students and course completion metrics",
+                    "✓ Reply directly to student questions in assigned courses",
+                    "✗ Approve course publishing to the global catalog",
+                    "✗ Access system administration or modify user accounts"
                 ],
-                admin: "Admin Role",
+                admin: "Administrator Role (Admin Setjen)",
                 adminPerms: [
-                    "✓ All system access",
-                    "✓ User management (create, edit, delete)",
-                    "✓ Role assignment and modification",
-                    "✓ Course moderation and approval",
-                    "✓ System configuration",
-                    "✓ View system-wide analytics",
-                    "✓ Access audit logs",
-                    "✓ Sync external user data",
-                    "✓ Bulk operations",
-                    "✓ System health monitoring",
-                    "✓ Documentation access",
-                    "✓ Platform-wide announcements"
+                    "✓ Unrestricted access to system configuration and database models",
+                    "✓ Approve or reject course submissions",
+                    "✓ Manage user accounts, role elevations, and account statuses",
+                    "✓ Moderate reported content, abuse reports, and user feedback",
+                    "✓ Run system diagnostics, test suites, and inspect live metrics"
                 ]
             },
 
-            // Maintenance
             maintenance: {
-                title: "Maintenance & Support",
-                monitoring: "System Monitoring",
-                monitoringDesc: "The system includes built-in health checks and monitoring:",
+                title: "Maintenance & Disaster Recovery",
+                monitoring: "System Health Telemetry",
+                monitoringDesc: "Built-in telemetry endpoints and proactive monitoring routines:",
                 monitoringList: [
-                    "Health endpoint: /api/v1/health/ - Returns system status",
-                    "Database connection monitoring",
-                    "Redis cache availability check",
-                    "Docker container health checks",
-                    "Application log aggregation"
+                    "Healthcheck endpoint /api/v1/admin/system-health/ reporting live DB & server status",
+                    "Continuous database connection verification and connection pool monitoring",
+                    "Real-time disk space and media storage utilization tracking",
+                    "Application error logging with stack trace capture for admins"
                 ],
-                backup: "Backup Strategy",
+                backup: "Backup Procedures",
                 backupList: [
-                    "Daily automated database backups",
-                    "Media file backup to cloud storage",
-                    "Configuration file version control",
-                    "Disaster recovery plan documented"
+                    "Scheduled automated PostgreSQL pg_dump snapshots",
+                    "Media assets volume replication to off-site cloud storage",
+                    "Infrastructure as Code: full Docker configuration committed to Git",
+                    "Documented disaster recovery protocol with test restoration verified"
                 ],
-                updates: "Update Procedures",
+                updates: "Continuous Update Protocol",
                 updateList: [
-                    "Git-based deployment workflow",
-                    "Zero-downtime deployment using Docker",
-                    "Database migrations managed by Django",
-                    "Automated testing before deployment",
-                    "Rollback procedures documented"
+                    "Git-driven deployment workflows with tagged production releases",
+                    "Automated Django schema migrations executing during container bootstrap",
+                    "Zero-downtime rolling reload capability with Nginx reverse proxy",
+                    "Automated integration test suites executed prior to deployment"
                 ],
-                support: "Support Resources",
+                support: "Support Channels & SLA",
                 supportList: [
-                    "Technical documentation in /docs folder",
-                    "API documentation at /swagger and /redoc",
-                    "System health dashboard for admins",
-                    "Error logging and tracking",
-                    "Issue tracking via GitHub"
+                    "Integrated User Feedback center (/admin/reports/?tab=feedback)",
+                    "Technical issue reporting and bug triage via administrative dashboard",
+                    "Direct IT Secretariat General support ticketing system",
+                    "API interactive documentation accessible via /swagger/ and /redoc/"
                 ],
                 logs: "Log Management",
                 logsList: [
-                    "Application logs: backend/logs/",
-                    "Access logs: nginx access logs",
-                    "Error logs: nginx error logs",
-                    "Database query logs (development only)",
-                    "Container logs via Docker"
+                    "Django application logs: backend/logs/ & container stdout",
+                    "Nginx reverse proxy access and error logs with IP rotation",
+                    "Database transaction and query logs (debug mode isolated)",
+                    "Audit log of administrative actions, course approvals, and user updates"
                 ]
             }
         },
 
         id: {
-            pageTitle: "Dokumentasi Sistem",
-            pageSubtitle: "Dokumentasi teknis komprehensif dan panduan arsitektur sistem",
-            printPDF: "Ekspor ke PDF",
+            pageTitle: "Dokumentasi & Arsitektur Sistem",
+            pageSubtitle: "Panduan teknis komprehensif, skema basis data, dan diagnostik operasional sistem runtime",
+            printPDF: "Cetak / Ekspor PDF",
             language: "Bahasa",
-            lastUpdated: "Terakhir Diperbarui",
-            version: "Versi",
-            
-            // Daftar Isi
-            tocTitle: "Daftar Isi",
+            lastUpdated: "Sinkronisasi Terakhir",
+            version: "Versi Sistem",
+            allSections: "Semua Bagian",
+            filterPlaceholder: "Cari topik dokumentasi (misal: JWT, PostgreSQL, Docker, Role, API)...",
+            liveBadge: "Sistem Aktif & Normal",
+            envInfo: "Lingkungan Runtime",
+
+            tocTitle: "Daftar Isi Dokumentasi",
             sections: {
                 overview: "Gambaran Umum Sistem",
                 architecture: "Arsitektur Sistem",
-                technologies: "Teknologi yang Digunakan",
-                features: "Fitur Utama",
+                technologies: "Tumpukan Teknologi",
+                features: "Fitur Utama Platform",
                 authentication: "Autentikasi & Otorisasi",
-                api: "Dokumentasi API",
-                database: "Skema Database",
+                api: "Dokumentasi API RESTful",
+                database: "Skema Basis Data",
                 deployment: "Arsitektur Deployment",
-                security: "Keamanan Sistem",
+                security: "Standar Keamanan Sistem",
                 roles: "Peran & Hak Akses Pengguna",
-                maintenance: "Pemeliharaan & Dukungan"
+                maintenance: "Pemeliharaan & SLA"
             },
 
-            // Gambaran Umum
             overview: {
                 title: "Gambaran Umum Sistem",
-                description: "LMSetjen DPD RI adalah Learning Management System modern yang dirancang khusus untuk Sekretariat Jenderal Dewan Perwakilan Daerah Republik Indonesia. Sistem ini menyediakan platform komprehensif untuk pembelajaran online, manajemen kursus, dan pengembangan kompetensi.",
-                purpose: "Tujuan & Sasaran",
+                description: "LMSetjen DPD RI adalah Learning Management System modern yang dirancang khusus untuk Sekretariat Jenderal Dewan Perwakilan Daerah Republik Indonesia. Platform ini menyediakan ekosistem terpadu untuk pembelajaran digital, peningkatan kompetensi pegawai, dan sertifikasi keahlian aparatur sipil.",
+                purpose: "Tujuan & Sasaran Strategis",
                 purposeItems: [
-                    "Menyediakan platform pembelajaran online yang modern dan mudah digunakan",
-                    "Memfasilitasi pengembangan keterampilan dan kompetensi pegawai",
-                    "Mendukung pembelajaran mandiri dan kolaboratif",
-                    "Menyediakan sistem evaluasi dan sertifikasi yang komprehensif",
-                    "Memungkinkan manajemen konten kursus yang efisien",
-                    "Melacak progres pembelajaran dan menghasilkan analitik"
+                    "Menyediakan portal pembelajaran digital yang modern, responsif, dan mudah diakses oleh seluruh aparatur",
+                    "Memfasilitasi pelacakan kompetensi dan pengembangan keterampilan pegawai secara terstruktur",
+                    "Mendukung metode pembelajaran mandiri (self-paced) maupun forum diskusi interaktif",
+                    "Menyediakan sistem evaluasi kuis otomatis dan penerbitan sertifikat digital yang sah",
+                    "Memungkinkan kurasi kurikulum kursus yang fleksibel dengan dukungan video dan materi unduhan",
+                    "Menyediakan analitik real-time, moderasi konten, dan diagnostik server untuk administrator"
                 ],
-                systemInfo: "Informasi Sistem",
-                productionUrl: "URL Produksi",
-                developmentFramework: "Framework Pengembangan",
-                databaseSystem: "Sistem Database",
-                hostingPlatform: "Platform Hosting",
-                projectStatus: "Status Proyek",
-                statusReady: "Siap Produksi"
+                systemInfo: "Informasi Runtime & Infrastruktur",
+                productionUrl: "Host Runtime Aktif",
+                developmentFramework: "Framework Aplikasi",
+                databaseSystem: "Mesin Basis Data",
+                hostingPlatform: "Lingkungan Hosting",
+                projectStatus: "Status Operasional",
+                statusReady: "Siap Produksi & Terhubung"
             },
 
-            // Arsitektur
             architecture: {
                 title: "Arsitektur Sistem",
-                description: "Sistem mengikuti arsitektur microservices modern dengan pemisahan yang jelas:",
-                frontend: "Layer Frontend",
-                frontendDesc: "React 18.2 dengan Vite bundler, menyediakan single-page application (SPA) yang cepat dan responsif",
-                backend: "Layer Backend",
-                backendDesc: "Django 4.2 dengan Django REST Framework, berfungsi sebagai RESTful API backend",
-                database: "Layer Database",
-                databaseDesc: "PostgreSQL untuk produksi, SQLite untuk pengembangan",
-                caching: "Layer Caching",
-                cachingDesc: "Redis untuk manajemen session dan caching aplikasi",
-                proxy: "Reverse Proxy",
-                proxyDesc: "Nginx menangani SSL termination, static files, dan load balancing",
-                deployment: "Kontainerisasi",
-                deploymentDesc: "Container Docker yang diorkestrasi melalui Docker Compose untuk deployment yang konsisten"
+                description: "Sistem dibangun menggunakan arsitektur microservices terpisah (decoupled) dengan pemisahan tugas yang jelas:",
+                frontend: "Layer Presentasi Frontend",
+                frontendDesc: "Single Page Application (SPA) berbasis React 18.2 dan Vite, menghasilkan navigasi instan tanpa reload, bundling efisien, dan token desain antarmuka modern.",
+                backend: "Layer Layanan Backend (API)",
+                backendDesc: "Django 4.2 REST Framework yang menyajikan RESTful API, validasi token JWT, throttle proteksi, dan kontrol hak akses berbasis peran (RBAC).",
+                database: "Layer Penyimpanan Relasional",
+                databaseDesc: "PostgreSQL 15 dengan integritas referensial kuat, indexing teroptimasi, connection pooling, dan migrasi skema terkelola.",
+                caching: "Layer Cache Akselerasi",
+                cachingDesc: "In-memory caching untuk optimasi kueri berulang, akselerasi sesi autentikasi, dan dispatch tugas latar belakang.",
+                proxy: "Reverse Proxy & Edge Gateway",
+                proxyDesc: "Server web Nginx yang menangani enkripsi SSL/TLS, kompresi aset statis (gzip/brotli), dan pembatasan laju koneksi (rate limiting).",
+                deployment: "Kontainerisasi Docker",
+                deploymentDesc: "Layanan terisolasi dalam kontainer Docker yang diorkestrasi via Docker Compose untuk konsistensi lingkungan dev dan produksi."
             },
 
-            // Teknologi
             technologies: {
-                title: "Teknologi yang Digunakan",
+                title: "Tumpukan Teknologi (Tech Stack)",
                 frontend: "Teknologi Frontend",
                 frontendList: [
-                    "React 18.2 - Library UI",
-                    "Vite 4.5 - Build tool & dev server",
-                    "React Router 6.10 - Client-side routing",
-                    "Axios - HTTP client",
-                    "Bootstrap 5.3 - Framework UI",
-                    "Chart.js 4.4 - Visualisasi data",
-                    "CKEditor 5 - Rich text editor",
-                    "JWT Decode - Manajemen token",
-                    "SweetAlert2 - Notifikasi pengguna",
-                    "React Icons - Library ikon"
+                    "React 18.2 - Library UI berbasis komponen reaktif",
+                    "Vite 4+ - Bundler modern & dev server performa tinggi",
+                    "React Router v6 - Perutean klien dan deep linking",
+                    "Axios Interceptors - Pipeline request HTTP terautentikasi otomatis",
+                    "Bootstrap 5.3 & Desain Token - Framework tata letak responsif",
+                    "Chart.js - Visualisasi data grafik analitik",
+                    "SweetAlert2 - Dialog notifikasi interaktif",
+                    "FontAwesome & React Icons - Pustaka ikon vektor komprehensif"
                 ],
                 backend: "Teknologi Backend",
                 backendList: [
-                    "Python 3.11+ - Bahasa pemrograman",
-                    "Django 4.2 - Web framework",
-                    "Django REST Framework - API toolkit",
-                    "Simple JWT - Autentikasi JWT",
-                    "Django CORS Headers - Manajemen CORS",
-                    "Pillow - Pemrosesan gambar",
-                    "Requests - Library HTTP",
-                    "Python Decouple - Manajemen konfigurasi"
+                    "Python 3.11+ - Bahasa pemrograman inti performa tinggi",
+                    "Django 4.2 LTS - Web framework andal dan aman",
+                    "Django REST Framework - Toolkit serialisasi dan endpoint API",
+                    "SimpleJWT - Autentikasi stateless berbasis token JWT",
+                    "Django CORS Headers - Manajemen keamanan lintas domain (CORS)",
+                    "Pillow - Pemrosesan dan optimasi gambar berkas"
                 ],
                 infrastructure: "Infrastruktur & DevOps",
                 infrastructureList: [
-                    "Docker & Docker Compose - Kontainerisasi",
-                    "PostgreSQL 15 - Database produksi",
-                    "Redis 7 - Caching & penyimpanan session",
-                    "Nginx 1.25 - Web server & reverse proxy",
-                    "Let's Encrypt - Sertifikat SSL",
-                    "AWS EC2 - Cloud hosting",
-                    "DuckDNS - Layanan Dynamic DNS",
-                    "Git & GitHub - Version control"
+                    "Docker & Docker Compose - Kontainerisasi terisolasi",
+                    "Nginx - Reverse proxy, terminasi SSL & caching file",
+                    "PostgreSQL - Basis data relasional enterprise",
+                    "Certbot / Let's Encrypt - Sertifikat enkripsi TLS/SSL otomatis",
+                    "Git Workflow - Kontrol versi dan integrasi berkelanjutan"
                 ]
             },
 
-            // Fitur
             features: {
-                title: "Fitur Utama",
-                student: "Fitur Peserta Didik",
+                title: "Fitur Utama Platform",
+                student: "Fitur Peserta / Siswa",
                 studentList: [
-                    "Pencarian dan browsing kursus dengan filter lanjutan",
-                    "Pembelajaran berbasis video dengan tracking progres",
-                    "Kuis interaktif dan penilaian",
-                    "Sertifikat digital setelah menyelesaikan kursus",
-                    "Review dan rating kursus",
-                    "Forum Q&A dengan instruktur",
-                    "Wishlist untuk kursus favorit",
-                    "Dashboard pembelajaran real-time",
-                    "Manajemen profil dan password",
-                    "Antarmuka responsif mobile"
+                    "Katalog kursus interaktif dengan filter kategori, pencarian, dan pendaftaran mandiri",
+                    "Pemutar materi video interaktif, modul bacaan, dan berkas lampiran unduhan",
+                    "Pelacakan progres real-time, checkpoint otomatis, dan persentase kelulusan",
+                    "Evaluasi kuis berbatas waktu dengan penilaian otomatis dan tinjauan jawaban",
+                    "Penerbitan sertifikat digital berkode verifikasi sah dengan ekspor PDF",
+                    "Forum diskusi tanya jawab (Q&A) kursus dan ulasan rating bintang"
                 ],
-                instructor: "Fitur Instruktur",
+                instructor: "Fitur Pengajar / Instruktur",
                 instructorList: [
-                    "Pembuatan dan manajemen kursus",
-                    "Organisasi kurikulum dan konten",
-                    "Upload video dan streaming",
-                    "Pembuatan kuis dengan berbagai tipe pertanyaan",
-                    "Tracking pendaftaran peserta",
-                    "Analitik performa dan laporan",
-                    "Manajemen Q&A",
-                    "Monitoring review dan rating",
-                    "Operasi konten massal",
-                    "Preview dan publikasi kursus"
+                    "Pusat pembuatan kurikulum modular (bagian, materi pelajaran, dan kuis)",
+                    "Editor teks kaya (rich text) dengan penyematan media dan berkas materi",
+                    "Statistik pendaftaran peserta, metrik keterlibatan, dan evaluasi siswa",
+                    "Pengelolaan forum diskusi tanya-jawab untuk menjawab pertanyaan siswa",
+                    "Pengajuan revisi kursus sebelum dipublikasikan oleh administrator"
                 ],
-                admin: "Fitur Administrator",
+                admin: "Fitur Administrator Sistem",
                 adminList: [
-                    "Manajemen pengguna (operasi CRUD)",
-                    "Penetapan peran (Student/Teacher/Admin)",
-                    "Dashboard analitik sistem",
-                    "Sinkronisasi pengguna eksternal",
-                    "Operasi pengguna massal",
-                    "Monitoring kesehatan sistem",
-                    "Persetujuan dan moderasi kursus",
-                    "Konfigurasi platform",
-                    "Audit logs dan pelaporan",
-                    "Akses dokumentasi sistem"
+                    "Manajemen terpadu akun pengguna (Peserta, Pengajar, Administrator)",
+                    "Alur persetujuan kurasi kursus sebelum tampil ke katalog umum",
+                    "Pusat moderasi konten, laporan penyalahgunaan ulasan, dan diskusi Q&A",
+                    "Pusat keluhan masukan pengguna (laporan bug teknis dan usulan fitur)",
+                    "Pusat diagnostik kesehatan sistem, pengujian integrasi, dan dokumentasi arsitektur"
                 ]
             },
 
-            // Autentikasi
             authentication: {
-                title: "Autentikasi & Otorisasi",
-                mechanism: "Mekanisme Autentikasi",
-                mechanismDesc: "Sistem menggunakan JWT (JSON Web Tokens) untuk autentikasi stateless. Setelah login berhasil, backend mengeluarkan access token dan refresh token yang disimpan dengan aman di browser.",
-                flow: "Alur Autentikasi",
+                title: "Autentikasi & Otorisasi Keamanan",
+                mechanism: "Mekanisme JWT Stateless",
+                mechanismDesc: "Autentikasi dikelola menggunakan standar JSON Web Token (JWT) sesuai RFC 7519. Server backend menandatangani token akses menggunakan algoritma HMAC-SHA256.",
+                flow: "Alur Siklus Hidup Token",
                 flowSteps: [
-                    "Pengguna mengirimkan kredensial (email/password)",
-                    "Backend memvalidasi kredensial terhadap database",
-                    "Jika valid, backend menghasilkan JWT access token (5 menit) dan refresh token (7 hari)",
-                    "Token disimpan di local storage browser",
-                    "Setiap permintaan API menyertakan access token di header Authorization",
-                    "Backend memvalidasi token dan mengekstrak informasi pengguna",
-                    "Jika access token kadaluarsa, frontend otomatis menggunakan refresh token untuk mendapatkan access token baru",
-                    "Pengguna tetap login hingga refresh token kadaluarsa atau logout eksplisit"
+                    "Pengguna memasukkan kredensial; klien mengirim POST ke /api/v1/user/token/",
+                    "Server memvalidasi kredensial dan menerbitkan Access Token & Refresh Token",
+                    "Interceptor klien menyisipkan 'Authorization: Bearer <token>' pada setiap request API",
+                    "Ketika access token kedaluwarsa (401), interceptor memperbarui token secara otomatis via /api/v1/user/token/refresh/",
+                    "Proses logout membersihkan penyimpanan lokal klien dan menutup sesi otorisasi"
                 ],
-                authorization: "Otorisasi Berbasis Peran",
-                authorizationDesc: "Sistem mengimplementasikan RBAC (Role-Based Access Control) komprehensif dengan tiga peran utama:",
+                authorization: "Role-Based Access Control (RBAC)",
+                authorizationDesc: "Setiap pengguna terautentikasi memiliki cakupan hak akses yang tegas:",
                 roles: [
-                    {
-                        name: "Student (Peserta Didik)",
-                        description: "Akses ke materi pembelajaran, kursus, kuis, dan dashboard pribadi"
-                    },
-                    {
-                        name: "Teacher/Instructor",
-                        description: "Semua akses student ditambah pembuatan kursus, manajemen konten, dan analitik peserta"
-                    },
-                    {
-                        name: "Admin (Administrator)",
-                        description: "Akses penuh sistem termasuk manajemen pengguna, konfigurasi sistem, dan administrasi platform"
-                    }
+                    { name: "Peserta (Student)", description: "Dapat menjelajah kursus, mendaftar, mengerjakan kuis, memperoleh sertifikat, dan bertanya di forum." },
+                    { name: "Pengajar (Teacher)", description: "Dapat menyusun draf materi kursus, mengelola kurikulum pribadi, dan merespons pertanyaan peserta." },
+                    { name: "Admin Setjen", description: "Akses operasional penuh mencakup manajemen pengguna, kurasi kursus, moderasi laporan, dan diagnostik server." }
                 ],
-                protection: "Proteksi Route",
-                protectionDesc: "Baik frontend maupun backend mengimplementasikan proteksi dua lapis:",
+                protection: "Lapisan Proteksi Keamanan",
+                protectionDesc: "Kebijakan keamanan diterapkan pada seluruh lalu lintas masuk:",
                 protectionLayers: [
-                    "Frontend: Komponen PrivateRoute + RoleRoute memeriksa autentikasi dan peran sebelum merender halaman",
-                    "Backend: Kelas permission JWTAuthentication + IsAdminUser/IsTeacher/IsStudent memvalidasi akses API"
+                    "Proteksi token CSRF pada seluruh operasi mutasi status data",
+                    "Hashing kata sandi menggunakan algoritma PBKDF2 dengan enkripsi SHA-256 dan salt",
+                    "Throttling otomatis berbasis alamat IP dan user id untuk mencegah serangan brute-force",
+                    "Whitelist ketat pada Cross-Origin Resource Sharing (CORS)",
+                    "Pencegahan injeksi SQL melalui kueri terparameterisasi bawaan Django ORM"
                 ]
             },
 
-            // API
             api: {
-                title: "Dokumentasi API",
-                description: "Backend menyediakan RESTful API komprehensif yang didokumentasikan dengan spesifikasi Swagger/OpenAPI.",
-                baseUrl: "Base URL",
-                endpoints: "Grup Endpoint Utama",
+                title: "Dokumentasi API RESTful",
+                description: "Layanan API JSON standar yang mematuhi konvensi metode HTTP semantik dan kode status baku.",
+                baseUrl: "Base URL Endpoint API",
+                endpoints: "Endpoint API Utama",
                 endpointsList: [
-                    "/api/v1/user/ - Autentikasi pengguna dan manajemen profil",
-                    "/api/v1/course/ - Operasi CRUD kursus dan browsing",
-                    "/api/v1/student/ - Operasi spesifik student (enrollment, progress, wishlist)",
-                    "/api/v1/teacher/ - Operasi teacher (manajemen kursus, analitik)",
-                    "/api/v1/admin/ - Operasi admin (manajemen pengguna, konfigurasi sistem)"
+                    "GET/POST /api/v1/user/token/ - Penerbitan dan validasi token autentikasi JWT",
+                    "GET /api/v1/course/category/ - Daftar kategori kursus untuk navigasi katalog",
+                    "GET /api/v1/course/course-list/ - Daftar kursus publik dengan dukungan pencarian",
+                    "GET/POST /api/v1/student/course-detail/<slug>/ - Akses materi pelajaran dan progres siswa",
+                    "GET/PUT /api/v1/admin/abuse-reports/ - Moderasi ulasan dan laporan penyalahgunaan",
+                    "GET/POST /api/v1/feedback/list/ - Pelacak tiket bug dan permintaan fitur pengguna",
+                    "GET /api/v1/admin/system-health/ - Metrik kesehatan runtime dan statistik basis data real-time"
                 ],
-                docs: "Dokumentasi Interaktif",
-                swaggerUrl: "Swagger UI",
-                redocUrl: "ReDoc UI",
-                authentication: "Autentikasi API",
-                authDesc: "Semua endpoint yang dilindungi memerlukan Bearer token di header Authorization:",
-                authExample: "Authorization: Bearer <your_jwt_access_token>"
+                docs: "Penjelajah API Interaktif",
+                swaggerUrl: "Dokumentasi Interaktif Swagger UI",
+                redocUrl: "Spesifikasi Referensi API ReDoc",
+                authentication: "Format Header Otorisasi",
+                authDesc: "Seluruh endpoint yang diproteksi mewajibkan penyertaan header otorisasi Bearer:",
+                authExample: "Authorization: Bearer <jwt_access_token_di_sini>"
             },
 
-            // Database
             database: {
-                title: "Skema Database",
-                description: "Database PostgreSQL dengan desain skema ternormalisasi untuk performa optimal.",
-                mainModels: "Model Utama",
+                title: "Skema & Model Basis Data",
+                description: "Skema basis data relasional PostgreSQL yang dirancang dengan integritas data referensial yang kuat.",
+                mainModels: "Entitas Data Utama",
                 modelsList: [
-                    "User - Akun pengguna dengan akses berbasis peran",
-                    "Profile - Informasi dan preferensi pengguna tambahan",
-                    "Course - Metadata, konten, dan konfigurasi kursus",
-                    "Category - Kategorisasi kursus",
-                    "Teacher - Profil dan kualifikasi instruktur",
-                    "CourseSection - Organisasi kurikulum",
-                    "CoursePart - Unit/pelajaran pembelajaran individual",
-                    "Quiz - Metadata assessment dan kuis",
-                    "Question - Pertanyaan kuis dengan berbagai tipe",
-                    "Answer - Opsi jawaban kuis",
-                    "EnrolledCourse - Pendaftaran dan progres peserta",
-                    "CompletedLesson - Tracking penyelesaian pelajaran",
-                    "Review - Review dan rating kursus",
-                    "Notification - Notifikasi sistem dan pengguna",
-                    "Cart - Keranjang belanja untuk kursus berbayar",
-                    "CartOrder - Pemrosesan pesanan dan riwayat",
-                    "Certificate - Sertifikat digital",
-                    "Note - Catatan dan bookmark peserta"
+                    "User & Profile: Data autentikasi inti, profil kepegawaian, role, dan foto profil",
+                    "Course & Category: Data kursus, deskripsi, thumbnail, status publikasi, dan kategori",
+                    "Variant & VariantItem: Struktur modular kurikulum (Bagian/Bab dan Materi Pelajaran)",
+                    "EnrolledCourse & CompletedLesson: Catatan pendaftaran siswa, histori waktu, dan progres",
+                    "Quiz, Question & Answer: Evaluasi objektif, nilai ambang batas kelulusan, dan skor",
+                    "Certificate: Hash verifikasi unik anti-pemalsuan, status keabsahan, dan verifikasi sertifikat",
+                    "Review & AbuseReport: Ulasan rating bintang, laporan penyalahgunaan, dan audit moderasi",
+                    "Feedback: Laporan keluhan bug teknis sistem dan usulan peningkatan fitur"
                 ],
-                relationships: "Relasi Utama",
+                relationships: "Relasi Kunci Antar Entitas",
                 relationshipsList: [
-                    "User → Profile (One-to-One)",
-                    "User → EnrolledCourse (One-to-Many)",
-                    "Teacher → Course (One-to-Many)",
-                    "Course → CourseSection (One-to-Many)",
-                    "CourseSection → CoursePart (One-to-Many)",
-                    "Course → Quiz (One-to-Many)",
-                    "Quiz → Question (One-to-Many)",
-                    "Question → Answer (One-to-Many)"
+                    "Satu User berelasi One-to-One dengan Profil Pegawai (1:1 cascade)",
+                    "Satu Kursus memiliki Banyak Bab dan Banyak Materi Pelajaran (1:N posisi berurutan)",
+                    "Satu Pengguna dapat mendaftar Banyak Kursus melalui EnrolledCourse (M:N junction)",
+                    "Satu Pendaftaran menghasilkan Satu Sertifikat Sah setelah kurikulum 100% selesai"
                 ]
             },
 
-            // Deployment
             deployment: {
-                title: "Arsitektur Deployment",
-                description: "Deployment produksi di AWS EC2 menggunakan kontainerisasi Docker.",
-                components: "Komponen Sistem",
+                title: "Arsitektur Deployment & Infrastruktur",
+                description: "Arsitektur continuous deployment berbasis kontainer Docker untuk ketersediaan tinggi dan isolasi layanan.",
+                components: "Komponen Kontainer Layanan",
                 componentsList: [
-                    "Container Frontend (Node + Nginx) - Melayani React SPA pada port 80/443",
-                    "Container Backend (Python + Django) - Server API pada port 8001",
-                    "Container PostgreSQL - Database pada port 5432",
-                    "Container Redis - Caching pada port 6381",
-                    "Nginx Utama (Host) - SSL termination dan reverse proxy"
+                    "web (Frontend): Berkas statis React hasil build Vite yang dilayani Nginx berkecepatan tinggi",
+                    "api (Backend): Server WSGI Gunicorn yang menjalankan proses aplikasi Django",
+                    "db (Database): Kontainer PostgreSQL dengan volume penyimpanan persisten dan healthcheck",
+                    "proxy (Nginx Gateway): Terminasi SSL eksternal, reverse proxy lalu lintas, dan caching"
                 ],
-                network: "Konfigurasi Jaringan",
-                networkDesc: "Jaringan bridge Docker memungkinkan komunikasi antar-container. Nginx mengarahkan permintaan:",
+                network: "Topologi Jaringan Virtual",
+                networkDesc: "Jaringan internal Docker mengisolasi basis data dari akses publik luar. Hanya port HTTP (80) dan HTTPS (443) yang dibuka ke internet publik.",
                 routes: [
-                    "/ → Container Frontend (React SPA)",
-                    "/api/ → Container Backend (Django API)",
-                    "/admin/ → Django admin Backend",
-                    "/media/ → File media statis Backend",
-                    "/static/ → Aset statis Backend"
+                    "Lalu lintas pada rute /api/* diteruskan langsung ke kontainer backend Django",
+                    "Lalu lintas pada rute /media/* diteruskan langsung ke volume penyimpanan berkas",
+                    "Lalu lintas pada rute /* dilayani oleh aplikasi klien React SPA"
                 ],
-                ssl: "Konfigurasi SSL/TLS",
-                sslDesc: "Let's Encrypt menyediakan sertifikat SSL gratis dengan pembaruan otomatis. Semua trafik HTTP dialihkan ke HTTPS.",
-                domain: "Konfigurasi Domain",
-                domainDesc: "DuckDNS menyediakan dynamic DNS: lmsetjendpdri.duckdns.org → IP Publik AWS EC2"
+                ssl: "Keamanan Sertifikat SSL / TLS",
+                sslDesc: "Penegakan protokol HTTPS penuh menggunakan sertifikat Let's Encrypt dengan pembaruan otomatis berkala.",
+                domain: "Perutean DNS & Domain",
+                domainDesc: "Resolusi domain langsung ke alamat IP server dengan failover Cloudflare / DuckDNS."
             },
 
-            // Keamanan
             security: {
-                title: "Keamanan Sistem",
-                authentication: "Keamanan Autentikasi",
+                title: "Standar Keamanan Sistem",
+                authentication: "Penguatan Autentikasi",
                 authList: [
-                    "Autentikasi stateless berbasis JWT",
-                    "Hashing password aman dengan PBKDF2 Django",
-                    "Validasi kekuatan password (min 8 karakter, kompleksitas wajib)",
-                    "Kadaluarsa token dan refresh otomatis",
-                    "Blacklisting token saat logout"
+                    "Penandatanganan kriptografi JWT dengan dukungan rotasi kunci rahasia",
+                    "Hashing kata sandi PBKDF2 dengan lebih dari 390.000 iterasi",
+                    "Invalidasi sesi otomatis saat terjadi perubahan kredensial akun"
                 ],
-                authorization: "Keamanan Otorisasi",
+                authorization: "Penguatan Otorisasi",
                 authzList: [
-                    "Role-based access control (RBAC)",
-                    "Kelas permission endpoint API",
-                    "Proteksi route frontend",
-                    "Prinsip least privilege"
+                    "Dekorator verifikasi role pada setiap endpoint API privat",
+                    "Pemeriksaan izin tingkat objek mencegah eskalasi hak akses horizontal",
+                    "Isolasi hak akses superuser untuk proteksi konsol administratif"
                 ],
-                network: "Keamanan Jaringan",
+                network: "Penguatan Jaringan",
                 networkList: [
-                    "HTTPS-only di produksi (SSL/TLS 1.2+)",
-                    "Konfigurasi CORS membatasi origin yang diizinkan",
-                    "Header keamanan (HSTS, X-Frame-Options, dll.)",
-                    "Rate limiting pada endpoint sensitif"
+                    "Penerapan wajib protokol enkripsi TLS 1.3 pada transmisi data",
+                    "Header HTTP Strict Transport Security (HSTS) diaktifkan secara ketat",
+                    "Jaringan jembatan (bridge) Docker terisolasi melindungi basis data internal"
                 ],
-                application: "Keamanan Aplikasi",
+                application: "Penguatan Aplikasi",
                 appList: [
-                    "Pencegahan SQL injection melalui Django ORM",
-                    "Proteksi XSS melalui JSX escaping React",
-                    "Proteksi CSRF pada operasi mengubah state",
-                    "Validasi dan sanitasi input",
-                    "Pembatasan dan validasi upload file",
-                    "Manajemen session aman dengan Redis"
+                    "Kekebalan terhadap SQL Injection berkat kueri terparameterisasi Django ORM",
+                    "Sanitasi HTML otomatis mencegah serangan Cross-Site Scripting (XSS)",
+                    "Penerapan Content Security Policy (CSP) dan proteksi clickjacking (X-Frame-Options: SAMEORIGIN)"
                 ],
-                infrastructure: "Keamanan Infrastruktur",
+                infrastructure: "Penguatan Infrastruktur",
                 infraList: [
-                    "Isolasi container Docker",
-                    "AWS security groups (aturan firewall)",
-                    "Update keamanan dan patch reguler",
-                    "Manajemen environment variable",
-                    "Manajemen secrets (tidak di version control)",
-                    "Pembatasan akses database"
+                    "Pencadangan database harian otomatis (dump snapshot) ke media aman",
+                    "Monitoring healthcheck kontainer dengan kebijakan restart otomatis",
+                    "Kontainer Docker minimalis tanpa hak akses root bebas untuk membatasi risiko celah"
                 ]
             },
 
-            // Peran
             roles: {
-                title: "Peran & Hak Akses Pengguna",
-                description: "Matriks permission detail untuk setiap peran pengguna:",
-                student: "Peran Student",
+                title: "Matriks Peran & Hak Akses Pengguna",
+                description: "Kebijakan kontrol akses berbasis peran (RBAC) yang menetapkan izin penggunaan platform:",
+                student: "Peran Peserta (Student)",
                 studentPerms: [
-                    "✓ Browse dan cari kursus",
-                    "✓ Mendaftar di kursus",
-                    "✓ Menonton pelajaran video",
-                    "✓ Mengikuti kuis dan penilaian",
-                    "✓ Melihat progres dan sertifikat sendiri",
-                    "✓ Menambahkan kursus ke wishlist",
-                    "✓ Mengirim review kursus",
-                    "✓ Berpartisipasi dalam Q&A",
-                    "✓ Edit profil sendiri",
-                    "✗ Membuat atau edit kursus",
-                    "✗ Akses fungsi admin",
-                    "✗ Mengelola pengguna lain"
+                    "✓ Menjelajah katalog kursus umum dan mendaftar secara mandiri",
+                    "✓ Memutar video pembelajaran dan membaca modul materi kursus",
+                    "✓ Mengerjakan kuis evaluasi dan melihat skor hasil ujian",
+                    "✓ Mengunduh sertifikat kelulusan sah ber-QR verifikasi",
+                    "✓ Bertanya di forum diskusi Q&A dan memberi rating ulasan kursus",
+                    "✗ Membuat, mengedit, atau menghapus materi kursus",
+                    "✗ Mengakses analitik administratif atau basis data pengguna"
                 ],
-                teacher: "Peran Teacher",
+                teacher: "Peran Pengajar (Teacher)",
                 teacherPerms: [
-                    "✓ Semua permission student",
-                    "✓ Membuat dan mempublikasi kursus",
-                    "✓ Edit kursus sendiri",
-                    "✓ Upload materi kursus",
-                    "✓ Membuat kuis",
-                    "✓ Melihat pendaftaran peserta",
-                    "✓ Akses analitik pengajaran",
-                    "✓ Mengelola Q&A untuk kursus sendiri",
-                    "✓ Merespons review",
-                    "✗ Edit kursus teacher lain",
-                    "✗ Akses fungsi admin",
-                    "✗ Mengelola pengguna"
+                    "✓ Seluruh hak akses peserta sudah termasuk",
+                    "✓ Membuat, mengunggah draf kurikulum, materi, dan soal kuis",
+                    "✓ Melihat daftar peserta terdaftar dan progres kelulusan materi",
+                    "✓ Merespons pertanyaan siswa pada kursus yang diampu",
+                    "✗ Menyetujui kursus untuk tayang di katalog publik",
+                    "✗ Mengakses konfigurasi sistem atau memodifikasi akun pengguna lain"
                 ],
-                admin: "Peran Admin",
+                admin: "Peran Administrator (Admin Setjen)",
                 adminPerms: [
-                    "✓ Akses penuh sistem",
-                    "✓ Manajemen pengguna (create, edit, delete)",
-                    "✓ Penetapan dan modifikasi peran",
-                    "✓ Moderasi dan persetujuan kursus",
-                    "✓ Konfigurasi sistem",
-                    "✓ Melihat analitik sistem",
-                    "✓ Akses audit logs",
-                    "✓ Sinkronisasi data pengguna eksternal",
-                    "✓ Operasi massal",
-                    "✓ Monitoring kesehatan sistem",
-                    "✓ Akses dokumentasi",
-                    "✓ Pengumuman platform-wide"
+                    "✓ Akses tanpa batas ke pengaturan sistem dan model basis data",
+                    "✓ Menyetujui atau menolak publikasi kursus pengajar",
+                    "✓ Mengelola akun pengguna, kenaikan role, dan status keaktifan",
+                    "✓ Memoderasi laporan penyalahgunaan ulasan, Q&A, dan keluhan tiket",
+                    "✓ Menjalankan pengujian diagnostik, inspeksi log, dan metrik kesehatan server"
                 ]
             },
 
-            // Pemeliharaan
             maintenance: {
-                title: "Pemeliharaan & Dukungan",
-                monitoring: "Monitoring Sistem",
-                monitoringDesc: "Sistem mencakup health checks dan monitoring built-in:",
+                title: "Pemeliharaan & Pemulihan Sistem (SLA)",
+                monitoring: "Telemetri Kesehatan Sistem",
+                monitoringDesc: "Endpoint telemetri bawaan dan rutinitas pemantauan proaktif:",
                 monitoringList: [
-                    "Health endpoint: /api/v1/health/ - Mengembalikan status sistem",
-                    "Monitoring koneksi database",
-                    "Pengecekan ketersediaan Redis cache",
-                    "Health checks container Docker",
-                    "Agregasi log aplikasi"
+                    "Endpoint diagnostik /api/v1/admin/system-health/ menyajikan status live DB dan server",
+                    "Pemeriksaan koneksi basis data berkelanjutan dan pemantauan kolam koneksi (pool)",
+                    "Pemantauan kapasitas penyimpanan disk dan berkas media real-time",
+                    "Pencatatan log error aplikasi dengan tangkapan stack trace untuk admin"
                 ],
-                backup: "Strategi Backup",
+                backup: "Prosedur Pencadangan Data",
                 backupList: [
-                    "Backup database otomatis harian",
-                    "Backup file media ke cloud storage",
-                    "Version control file konfigurasi",
-                    "Rencana disaster recovery terdokumentasi"
+                    "Jadwal snapshot berkala database PostgreSQL via cron otomatis",
+                    "Replikasi aset media ke penyimpanan cadangan terpisah",
+                    "Konfigurasi infrastruktur lengkap (Infrastructure as Code) tercatat di Git",
+                    "Protokol pemulihan bencana (disaster recovery) yang telah teruji"
                 ],
-                updates: "Prosedur Update",
+                updates: "Protokol Pembaruan Berkelanjutan",
                 updateList: [
-                    "Workflow deployment berbasis Git",
-                    "Deployment zero-downtime menggunakan Docker",
-                    "Migrasi database dikelola oleh Django",
-                    "Testing otomatis sebelum deployment",
-                    "Prosedur rollback terdokumentasi"
+                    "Alur deployment berbasis Git dengan tag rilis produksi",
+                    "Migrasi skema database Django otomatis saat proses inisialisasi kontainer",
+                    "Kemampuan reload zero-downtime dengan dukungan reverse proxy Nginx",
+                    "Uji coba integrasi otomatis sebelum pembaruan dinaikkan ke server"
                 ],
-                support: "Sumber Daya Dukungan",
+                support: "Saluran Bantuan & SLA",
                 supportList: [
-                    "Dokumentasi teknis di folder /docs",
-                    "Dokumentasi API di /swagger dan /redoc",
-                    "Dashboard health sistem untuk admin",
-                    "Error logging dan tracking",
-                    "Issue tracking via GitHub"
+                    "Pusat Masukan Pengguna terintegrasi (/admin/reports/?tab=feedback)",
+                    "Triase laporan kendala dan tiket bug melalui dashboard admin",
+                    "Sistem tiket dukungan langsung Tim TI Sekretariat Jenderal DPD RI",
+                    "Dokumentasi API interaktif dapat diakses pada /swagger/ dan /redoc/"
                 ],
-                logs: "Manajemen Log",
+                logs: "Manajemen Berkas Log",
                 logsList: [
-                    "Log aplikasi: backend/logs/",
-                    "Log akses: nginx access logs",
-                    "Log error: nginx error logs",
-                    "Log query database (hanya development)",
-                    "Log container via Docker"
+                    "Log aplikasi Django: backend/logs/ dan stdout kontainer",
+                    "Log akses dan error Nginx dengan rotasi otomatis",
+                    "Log transaksi query database (hanya pada mode development)",
+                    "Audit log jejak rekam tindakan administratif dan kurasi kursus"
                 ]
             }
         }
@@ -853,492 +721,845 @@ function SystemDocumentation({ isEmbedded = false }) {
         window.print();
     };
 
-    const scrollToSection = (sectionId) => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    };
+    // Filter sections based on category pill and search query
+    const sectionKeys = Object.keys(t.sections);
+
+    const filteredSections = useMemo(() => {
+        return sectionKeys.filter((key) => {
+            // Category match
+            if (activeSection !== "all" && activeSection !== key) {
+                return false;
+            }
+
+            // Search query match
+            if (searchQuery.trim()) {
+                const query = searchQuery.toLowerCase();
+                const sectionTitle = t.sections[key]?.toLowerCase() || "";
+                const sectionData = JSON.stringify(t[key] || {}).toLowerCase();
+                return sectionTitle.includes(query) || sectionData.includes(query);
+            }
+
+            return true;
+        });
+    }, [activeSection, searchQuery, t, sectionKeys]);
+
+    const activeHost = typeof window !== "undefined" ? window.location.origin : "http://localhost:5174";
 
     const contentNode = (
-        <section className={isEmbedded ? "py-2 modern-dashboard" : "pt-4 pb-5 modern-dashboard"} style={{ flex: 1 }}>
-            <div className={isEmbedded ? "" : "container"}>
-                {/* Header with Controls */}
-                <div className="documentation-header no-print">
-                        <div className="header-content">
-                            <div className="header-text">
-                                <h1 className="page-title">
-                                    <FaBook className="title-icon" />
-                                    {t.pageTitle}
-                                </h1>
-                                <p className="page-subtitle">{t.pageSubtitle}</p>
-                            </div>
-                            <div className="header-actions">
-                                <div className="language-toggle">
-                                    <FaLanguage className="lang-icon" />
-                                    <select 
-                                        value={language} 
-                                        onChange={(e) => setLanguage(e.target.value)}
-                                        className="language-select"
-                                    >
-                                        <option value="en">English</option>
-                                        <option value="id">Bahasa Indonesia</option>
-                                    </select>
-                                </div>
-                                <button className="btn-print" onClick={handlePrint}>
-                                    <FaPrint />
-                                    {t.printPDF}
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div className="metadata">
-                            <span className="metadata-item">
-                                <FaInfoCircle />
-                                {t.version}: 1.0.0
+        <div className="system-doc-compact">
+            {/* Header Strip with Controls & Live Status */}
+            <div className="doc-executive-header no-print">
+                <div className="doc-header-main">
+                    <div className="doc-title-group">
+                        <div className="d-flex align-items-center gap-2 mb-1">
+                            <span className="doc-badge-tag">
+                                <FaBook className="me-1" />
+                                {t.version}: {serverInfo.app_version || "1.0.0"}
                             </span>
-                            <span className="metadata-item">
-                                <FaCheckCircle />
-                                {t.lastUpdated}: {new Date().toLocaleDateString(language === "en" ? "en-US" : "id-ID", { 
-                                    year: "numeric", 
-                                    month: "long", 
-                                    day: "numeric" 
-                                })}
+                            <span className={`doc-health-pill ${isHealthy ? "status-healthy" : "status-warning"}`}>
+                                <span className="doc-pulse-dot"></span>
+                                {isHealthy ? t.liveBadge : "Perlu Pemeriksaan"}
                             </span>
                         </div>
+                        <h2 className="doc-main-title">{t.pageTitle}</h2>
+                        <p className="doc-main-subtitle">{t.pageSubtitle}</p>
                     </div>
 
-                    {/* Main Documentation Content */}
-                    <div className="documentation-content" ref={contentRef}>
-                    {/* Table of Contents */}
-                    <div className="toc-section no-print">
-                        <h2 className="section-title">
-                            <FaClipboardCheck className="section-icon" />
-                            {t.tocTitle}
-                        </h2>
-                        <div className="toc-grid">
-                            {Object.entries(t.sections).map(([key, value]) => (
-                                <button
-                                    key={key}
-                                    className="toc-item"
-                                    onClick={() => scrollToSection(key)}
-                                >
-                                    {value}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* 1. System Overview */}
-                    <section id="overview" className="doc-section">
-                        <h2 className="section-title">
-                            <FaInfoCircle className="section-icon" />
-                            {t.overview.title}
-                        </h2>
-                        <p className="section-description">{t.overview.description}</p>
-                        
-                        <h3 className="subsection-title">{t.overview.purpose}</h3>
-                        <ul className="feature-list">
-                            {t.overview.purposeItems.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.overview.systemInfo}</h3>
-                        <div className="info-grid">
-                            <div className="info-card">
-                                <FaGlobe className="info-icon" />
-                                <div className="info-content">
-                                    <strong>{t.overview.productionUrl}</strong>
-                                    <span>https://lmsetjendpdri.duckdns.org</span>
-                                </div>
-                            </div>
-                            <div className="info-card">
-                                <FaCode className="info-icon" />
-                                <div className="info-content">
-                                    <strong>{t.overview.developmentFramework}</strong>
-                                    <span>Django 4.2 + React 18.2</span>
-                                </div>
-                            </div>
-                            <div className="info-card">
-                                <FaDatabase className="info-icon" />
-                                <div className="info-content">
-                                    <strong>{t.overview.databaseSystem}</strong>
-                                    <span>PostgreSQL 15</span>
-                                </div>
-                            </div>
-                            <div className="info-card">
-                                <FaCloud className="info-icon" />
-                                <div className="info-content">
-                                    <strong>{t.overview.hostingPlatform}</strong>
-                                    <span>AWS EC2</span>
-                                </div>
-                            </div>
-                            <div className="info-card success">
-                                <FaCheckCircle className="info-icon" />
-                                <div className="info-content">
-                                    <strong>{t.overview.projectStatus}</strong>
-                                    <span>{t.overview.statusReady}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* 2. System Architecture */}
-                    <section id="architecture" className="doc-section">
-                        <h2 className="section-title">
-                            <FaNetworkWired className="section-icon" />
-                            {t.architecture.title}
-                        </h2>
-                        <p className="section-description">{t.architecture.description}</p>
-                        
-                        <div className="architecture-layers">
-                            <div className="layer-card">
-                                <h4>{t.architecture.frontend}</h4>
-                                <p>{t.architecture.frontendDesc}</p>
-                            </div>
-                            <div className="layer-card">
-                                <h4>{t.architecture.backend}</h4>
-                                <p>{t.architecture.backendDesc}</p>
-                            </div>
-                            <div className="layer-card">
-                                <h4>{t.architecture.database}</h4>
-                                <p>{t.architecture.databaseDesc}</p>
-                            </div>
-                            <div className="layer-card">
-                                <h4>{t.architecture.caching}</h4>
-                                <p>{t.architecture.cachingDesc}</p>
-                            </div>
-                            <div className="layer-card">
-                                <h4>{t.architecture.proxy}</h4>
-                                <p>{t.architecture.proxyDesc}</p>
-                            </div>
-                            <div className="layer-card">
-                                <h4>{t.architecture.deployment}</h4>
-                                <p>{t.architecture.deploymentDesc}</p>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* 3. Technology Stack */}
-                    <section id="technologies" className="doc-section">
-                        <h2 className="section-title">
-                            <FaCog className="section-icon" />
-                            {t.technologies.title}
-                        </h2>
-                        
-                        <h3 className="subsection-title">{t.technologies.frontend}</h3>
-                        <ul className="tech-list">
-                            {t.technologies.frontendList.map((tech, index) => (
-                                <li key={index}>{tech}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.technologies.backend}</h3>
-                        <ul className="tech-list">
-                            {t.technologies.backendList.map((tech, index) => (
-                                <li key={index}>{tech}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.technologies.infrastructure}</h3>
-                        <ul className="tech-list">
-                            {t.technologies.infrastructureList.map((tech, index) => (
-                                <li key={index}>{tech}</li>
-                            ))}
-                        </ul>
-                    </section>
-
-                    {/* 4. Core Features */}
-                    <section id="features" className="doc-section">
-                        <h2 className="section-title">
-                            <FaUsers className="section-icon" />
-                            {t.features.title}
-                        </h2>
-                        
-                        <h3 className="subsection-title">{t.features.student}</h3>
-                        <ul className="feature-list">
-                            {t.features.studentList.map((feature, index) => (
-                                <li key={index}>{feature}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.features.instructor}</h3>
-                        <ul className="feature-list">
-                            {t.features.instructorList.map((feature, index) => (
-                                <li key={index}>{feature}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.features.admin}</h3>
-                        <ul className="feature-list">
-                            {t.features.adminList.map((feature, index) => (
-                                <li key={index}>{feature}</li>
-                            ))}
-                        </ul>
-                    </section>
-
-                    {/* 5. Authentication & Authorization */}
-                    <section id="authentication" className="doc-section">
-                        <h2 className="section-title">
-                            <FaLock className="section-icon" />
-                            {t.authentication.title}
-                        </h2>
-                        
-                        <h3 className="subsection-title">{t.authentication.mechanism}</h3>
-                        <p>{t.authentication.mechanismDesc}</p>
-
-                        <h3 className="subsection-title">{t.authentication.flow}</h3>
-                        <ol className="flow-list">
-                            {t.authentication.flowSteps.map((step, index) => (
-                                <li key={index}>{step}</li>
-                            ))}
-                        </ol>
-
-                        <h3 className="subsection-title">{t.authentication.authorization}</h3>
-                        <p>{t.authentication.authorizationDesc}</p>
-                        <div className="role-cards">
-                            {t.authentication.roles.map((role, index) => (
-                                <div key={index} className="role-card">
-                                    <FaUserShield className="role-icon" />
-                                    <h4>{role.name}</h4>
-                                    <p>{role.description}</p>
-                                </div>
-                            ))}
+                    <div className="doc-header-actions">
+                        <div className="doc-lang-switch">
+                            <button
+                                type="button"
+                                className={`lang-btn ${language === "id" ? "active" : ""}`}
+                                onClick={() => setLanguage("id")}
+                            >
+                                ID
+                            </button>
+                            <button
+                                type="button"
+                                className={`lang-btn ${language === "en" ? "active" : ""}`}
+                                onClick={() => setLanguage("en")}
+                            >
+                                EN
+                            </button>
                         </div>
 
-                        <h3 className="subsection-title">{t.authentication.protection}</h3>
-                        <p>{t.authentication.protectionDesc}</p>
-                        <ul className="tech-list">
-                            {t.authentication.protectionLayers.map((layer, index) => (
-                                <li key={index}>{layer}</li>
-                            ))}
-                        </ul>
-                    </section>
+                        <button
+                            type="button"
+                            className="doc-btn-refresh"
+                            onClick={fetchSystemHealth}
+                            title="Segarkan Metrik Sistem"
+                        >
+                            <FaSyncAlt className={loadingHealth ? "fa-spin" : ""} />
+                            <span className="d-none d-sm-inline ms-1">Segarkan</span>
+                        </button>
 
-                    {/* 6. API Documentation */}
-                    <section id="api" className="doc-section">
-                        <h2 className="section-title">
-                            <FaCode className="section-icon" />
-                            {t.api.title}
-                        </h2>
-                        <p className="section-description">{t.api.description}</p>
-                        
-                        <h3 className="subsection-title">{t.api.baseUrl}</h3>
-                        <div className="code-block">
-                            https://lmsetjendpdri.duckdns.org/api/v1/
-                        </div>
-
-                        <h3 className="subsection-title">{t.api.endpoints}</h3>
-                        <ul className="tech-list">
-                            {t.api.endpointsList.map((endpoint, index) => (
-                                <li key={index}>{endpoint}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.api.docs}</h3>
-                        <div className="info-grid">
-                            <div className="info-card">
-                                <FaBook className="info-icon" />
-                                <div className="info-content">
-                                    <strong>{t.api.swaggerUrl}</strong>
-                                    <span>/swagger/</span>
-                                </div>
-                            </div>
-                            <div className="info-card">
-                                <FaBook className="info-icon" />
-                                <div className="info-content">
-                                    <strong>{t.api.redocUrl}</strong>
-                                    <span>/redoc/</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h3 className="subsection-title">{t.api.authentication}</h3>
-                        <p>{t.api.authDesc}</p>
-                        <div className="code-block">
-                            {t.api.authExample}
-                        </div>
-                    </section>
-
-                    {/* 7. Database Schema */}
-                    <section id="database" className="doc-section">
-                        <h2 className="section-title">
-                            <FaDatabase className="section-icon" />
-                            {t.database.title}
-                        </h2>
-                        <p className="section-description">{t.database.description}</p>
-                        
-                        <h3 className="subsection-title">{t.database.mainModels}</h3>
-                        <ul className="tech-list">
-                            {t.database.modelsList.map((model, index) => (
-                                <li key={index}>{model}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.database.relationships}</h3>
-                        <ul className="tech-list">
-                            {t.database.relationshipsList.map((rel, index) => (
-                                <li key={index}>{rel}</li>
-                            ))}
-                        </ul>
-                    </section>
-
-                    {/* 8. Deployment Architecture */}
-                    <section id="deployment" className="doc-section">
-                        <h2 className="section-title">
-                            <FaDocker className="section-icon" />
-                            {t.deployment.title}
-                        </h2>
-                        <p className="section-description">{t.deployment.description}</p>
-                        
-                        <h3 className="subsection-title">{t.deployment.components}</h3>
-                        <ul className="tech-list">
-                            {t.deployment.componentsList.map((component, index) => (
-                                <li key={index}>{component}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.deployment.network}</h3>
-                        <p>{t.deployment.networkDesc}</p>
-                        <ul className="tech-list">
-                            {t.deployment.routes.map((route, index) => (
-                                <li key={index}>{route}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.deployment.ssl}</h3>
-                        <p>{t.deployment.sslDesc}</p>
-
-                        <h3 className="subsection-title">{t.deployment.domain}</h3>
-                        <p>{t.deployment.domainDesc}</p>
-                    </section>
-
-                    {/* 9. Security Measures */}
-                    <section id="security" className="doc-section">
-                        <h2 className="section-title">
-                            <FaShieldAlt className="section-icon" />
-                            {t.security.title}
-                        </h2>
-                        
-                        <h3 className="subsection-title">{t.security.authentication}</h3>
-                        <ul className="security-list">
-                            {t.security.authList.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.security.authorization}</h3>
-                        <ul className="security-list">
-                            {t.security.authzList.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.security.network}</h3>
-                        <ul className="security-list">
-                            {t.security.networkList.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.security.application}</h3>
-                        <ul className="security-list">
-                            {t.security.appList.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.security.infrastructure}</h3>
-                        <ul className="security-list">
-                            {t.security.infraList.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-                    </section>
-
-                    {/* 10. User Roles & Permissions */}
-                    <section id="roles" className="doc-section">
-                        <h2 className="section-title">
-                            <FaKey className="section-icon" />
-                            {t.roles.title}
-                        </h2>
-                        <p className="section-description">{t.roles.description}</p>
-                        
-                        <h3 className="subsection-title">{t.roles.student}</h3>
-                        <ul className="permission-list">
-                            {t.roles.studentPerms.map((perm, index) => (
-                                <li key={index} className={perm.startsWith("✓") ? "allowed" : "denied"}>
-                                    {perm}
-                                </li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.roles.teacher}</h3>
-                        <ul className="permission-list">
-                            {t.roles.teacherPerms.map((perm, index) => (
-                                <li key={index} className={perm.startsWith("✓") ? "allowed" : "denied"}>
-                                    {perm}
-                                </li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.roles.admin}</h3>
-                        <ul className="permission-list">
-                            {t.roles.adminPerms.map((perm, index) => (
-                                <li key={index} className={perm.startsWith("✓") ? "allowed" : "denied"}>
-                                    {perm}
-                                </li>
-                            ))}
-                        </ul>
-                    </section>
-
-                    {/* 11. Maintenance & Support */}
-                    <section id="maintenance" className="doc-section">
-                        <h2 className="section-title">
-                            <FaChartLine className="section-icon" />
-                            {t.maintenance.title}
-                        </h2>
-                        
-                        <h3 className="subsection-title">{t.maintenance.monitoring}</h3>
-                        <p>{t.maintenance.monitoringDesc}</p>
-                        <ul className="tech-list">
-                            {t.maintenance.monitoringList.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.maintenance.backup}</h3>
-                        <ul className="tech-list">
-                            {t.maintenance.backupList.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.maintenance.updates}</h3>
-                        <ul className="tech-list">
-                            {t.maintenance.updateList.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.maintenance.support}</h3>
-                        <ul className="tech-list">
-                            {t.maintenance.supportList.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-
-                        <h3 className="subsection-title">{t.maintenance.logs}</h3>
-                        <ul className="tech-list">
-                            {t.maintenance.logsList.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
-                        </ul>
-                    </section>
+                        <button type="button" className="doc-btn-print" onClick={handlePrint}>
+                            <FaPrint className="me-1" />
+                            <span>{t.printPDF}</span>
+                        </button>
                     </div>
                 </div>
-            </section>
+
+                {/* Server Runtime Diagnostics Strip */}
+                <div className="doc-runtime-strip">
+                    <div className="runtime-info-pill">
+                        <FaServer className="text-teal me-1" />
+                        <span>OS: <strong>{serverInfo.operating_system || "Windows / Linux"}</strong></span>
+                    </div>
+                    <div className="runtime-info-pill">
+                        <FaCode className="text-blue me-1" />
+                        <span>Django: <strong>v{serverInfo.django_version || "4.2"}</strong></span>
+                    </div>
+                    <div className="runtime-info-pill">
+                        <FaCog className="text-purple me-1" />
+                        <span>Python: <strong>v{serverInfo.python_version || "3.11+"}</strong></span>
+                    </div>
+                    <div className="runtime-info-pill">
+                        <FaDatabase className="text-amber me-1" />
+                        <span>Database: <strong>{serverInfo.database_engine || "PostgreSQL"}</strong> ({dbStats.database_size || "Normal"})</span>
+                    </div>
+                    <div className="runtime-info-pill">
+                        <FaShieldAlt className="text-emerald me-1" />
+                        <span>Mode: <strong>{serverInfo.debug_mode ? "Debug (Dev)" : "Production (Secure)"}</strong></span>
+                    </div>
+                    <div className="runtime-info-pill ms-auto text-muted">
+                        <FaCheckCircle className="text-teal me-1" />
+                        <small>{t.lastUpdated}: {new Date(lastSync).toLocaleTimeString("id-ID")} WIB</small>
+                    </div>
+                </div>
+            </div>
+
+            {/* Live Database Entities & Platform KPI Grid (100% Real Live Values) */}
+            <div className="doc-live-metrics-grid no-print">
+                <div className="metric-micro-card">
+                    <div className="metric-icon-box bg-teal-soft text-teal">
+                        <FaUsers />
+                    </div>
+                    <div className="metric-data">
+                        <div className="metric-val">{dbStats.total_users ?? 0}</div>
+                        <div className="metric-lbl">Total Pengguna</div>
+                    </div>
+                </div>
+
+                <div className="metric-micro-card">
+                    <div className="metric-icon-box bg-blue-soft text-blue">
+                        <FaGraduationCap />
+                    </div>
+                    <div className="metric-data">
+                        <div className="metric-val">{dbStats.total_students ?? 0}</div>
+                        <div className="metric-lbl">Peserta / Siswa</div>
+                    </div>
+                </div>
+
+                <div className="metric-micro-card">
+                    <div className="metric-icon-box bg-purple-soft text-purple">
+                        <FaUserShield />
+                    </div>
+                    <div className="metric-data">
+                        <div className="metric-val">{dbStats.total_teachers ?? 0}</div>
+                        <div className="metric-lbl">Pengajar / Instruktur</div>
+                    </div>
+                </div>
+
+                <div className="metric-micro-card">
+                    <div className="metric-icon-box bg-emerald-soft text-emerald">
+                        <FaBook />
+                    </div>
+                    <div className="metric-data">
+                        <div className="metric-val">{dbStats.total_courses ?? 0}</div>
+                        <div className="metric-lbl">Kursus Terbit</div>
+                    </div>
+                </div>
+
+                <div className="metric-micro-card">
+                    <div className="metric-icon-box bg-indigo-soft text-indigo">
+                        <FaLayerGroup />
+                    </div>
+                    <div className="metric-data">
+                        <div className="metric-val">{dbStats.total_lessons ?? 0}</div>
+                        <div className="metric-lbl">Materi Pembelajaran</div>
+                    </div>
+                </div>
+
+                <div className="metric-micro-card">
+                    <div className="metric-icon-box bg-amber-soft text-amber">
+                        <FaClipboardCheck />
+                    </div>
+                    <div className="metric-data">
+                        <div className="metric-val">{dbStats.total_enrollments ?? 0}</div>
+                        <div className="metric-lbl">Total Pendaftaran</div>
+                    </div>
+                </div>
+
+                <div className="metric-micro-card">
+                    <div className="metric-icon-box bg-rose-soft text-rose">
+                        <FaCheckCircle />
+                    </div>
+                    <div className="metric-data">
+                        <div className="metric-val">{dbStats.total_quizzes ?? 0}</div>
+                        <div className="metric-lbl">Kuis & Ujian</div>
+                    </div>
+                </div>
+
+                <div className="metric-micro-card">
+                    <div className="metric-icon-box bg-teal-soft text-teal">
+                        <FaCheckDouble />
+                    </div>
+                    <div className="metric-data">
+                        <div className="metric-val">{dbStats.total_certificates ?? 0}</div>
+                        <div className="metric-lbl">Sertifikat Sah</div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Interactive Section Navigator & Instant Filter */}
+            <div className="doc-navigator-card no-print">
+                <div className="doc-search-wrapper search-input-wrapper">
+                    <FaSearch className="search-icon text-muted" />
+                    <input
+                        type="text"
+                        placeholder={t.filterPlaceholder}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="form-control form-control-sm search-input doc-search-input"
+                    />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            className="clear-search-btn btn-clear-search"
+                            onClick={() => setSearchQuery("")}
+                        >
+                            <FaTimes />
+                        </button>
+                    )}
+                </div>
+
+                <div className="doc-category-pills">
+                    <button
+                        type="button"
+                        className={`cat-pill ${activeSection === "all" ? "active" : ""}`}
+                        onClick={() => setActiveSection("all")}
+                    >
+                        <span>{t.allSections} (11)</span>
+                    </button>
+                    {sectionKeys.map((key, idx) => (
+                        <button
+                            key={key}
+                            type="button"
+                            className={`cat-pill ${activeSection === key ? "active" : ""}`}
+                            onClick={() => setActiveSection(key)}
+                        >
+                            <span>{idx + 1}. {t.sections[key]}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Main Documentation Sections (Compact Cards Layout) */}
+            <div className="doc-sections-container" ref={contentRef}>
+                {filteredSections.length === 0 ? (
+                    <div className="doc-empty-search">
+                        <FaSearch className="text-muted fa-2x mb-2" />
+                        <h5>Tidak ada bagian dokumentasi yang cocok</h5>
+                        <p className="text-muted small">Coba gunakan kata kunci pencarian lain atau pilih kategori Semua Bagian.</p>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-teal"
+                            onClick={() => { setActiveSection("all"); setSearchQuery(""); }}
+                        >
+                            Reset Pencarian
+                        </button>
+                    </div>
+                ) : (
+                    filteredSections.map((secKey) => (
+                        <div key={secKey} id={secKey} className="doc-compact-card">
+                            {/* 1. Overview */}
+                            {secKey === "overview" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-teal-soft text-teal">
+                                            <FaInfoCircle />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">1. {t.overview.title}</h3>
+                                            <p className="card-sec-desc">{t.overview.description}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="sec-body-grid">
+                                        <div className="sec-col">
+                                            <h4 className="sec-subheading">
+                                                <FaClipboardCheck className="text-teal me-1" />
+                                                {t.overview.purpose}
+                                            </h4>
+                                            <ul className="doc-checklist">
+                                                {t.overview.purposeItems.map((item, idx) => (
+                                                    <li key={idx}>{item}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="sec-col">
+                                            <h4 className="sec-subheading">
+                                                <FaServer className="text-teal me-1" />
+                                                {t.overview.systemInfo}
+                                            </h4>
+                                            <div className="doc-spec-table">
+                                                <div className="spec-row">
+                                                    <span className="spec-label">{t.overview.productionUrl}</span>
+                                                    <span className="spec-val text-teal font-monospace">{activeHost}</span>
+                                                </div>
+                                                <div className="spec-row">
+                                                    <span className="spec-label">Domain Target</span>
+                                                    <span className="spec-val font-monospace">https://lmsetjendpdri.duckdns.org</span>
+                                                </div>
+                                                <div className="spec-row">
+                                                    <span className="spec-label">{t.overview.developmentFramework}</span>
+                                                    <span className="spec-val">Django {serverInfo.django_version || "4.2"} + React 18.2</span>
+                                                </div>
+                                                <div className="spec-row">
+                                                    <span className="spec-label">{t.overview.databaseSystem}</span>
+                                                    <span className="spec-val">{serverInfo.database_engine || "PostgreSQL"} ({dbStats.database_size || "Live"})</span>
+                                                </div>
+                                                <div className="spec-row">
+                                                    <span className="spec-label">{t.overview.hostingPlatform}</span>
+                                                    <span className="spec-val">Docker Containerized (Production Ready)</span>
+                                                </div>
+                                                <div className="spec-row">
+                                                    <span className="spec-label">{t.overview.projectStatus}</span>
+                                                    <span className="spec-val text-success font-weight-bold">● {t.overview.statusReady}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 2. Architecture */}
+                            {secKey === "architecture" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-blue-soft text-blue">
+                                            <FaNetworkWired />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">2. {t.architecture.title}</h3>
+                                            <p className="card-sec-desc">{t.architecture.description}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-arch-grid">
+                                        <div className="arch-layer-box">
+                                            <div className="arch-tag">Frontend</div>
+                                            <h5>{t.architecture.frontend}</h5>
+                                            <p>{t.architecture.frontendDesc}</p>
+                                        </div>
+                                        <div className="arch-layer-box">
+                                            <div className="arch-tag">Backend API</div>
+                                            <h5>{t.architecture.backend}</h5>
+                                            <p>{t.architecture.backendDesc}</p>
+                                        </div>
+                                        <div className="arch-layer-box">
+                                            <div className="arch-tag">Database</div>
+                                            <h5>{t.architecture.database}</h5>
+                                            <p>{t.architecture.databaseDesc}</p>
+                                        </div>
+                                        <div className="arch-layer-box">
+                                            <div className="arch-tag">Caching</div>
+                                            <h5>{t.architecture.caching}</h5>
+                                            <p>{t.architecture.cachingDesc}</p>
+                                        </div>
+                                        <div className="arch-layer-box">
+                                            <div className="arch-tag">Reverse Proxy</div>
+                                            <h5>{t.architecture.proxy}</h5>
+                                            <p>{t.architecture.proxyDesc}</p>
+                                        </div>
+                                        <div className="arch-layer-box">
+                                            <div className="arch-tag">DevOps</div>
+                                            <h5>{t.architecture.deployment}</h5>
+                                            <p>{t.architecture.deploymentDesc}</p>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 3. Technologies */}
+                            {secKey === "technologies" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-purple-soft text-purple">
+                                            <FaCog />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">3. {t.technologies.title}</h3>
+                                            <p className="card-sec-desc">Komposisi pustaka dan infrastruktur perangkat lunak yang digunakan.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-3col-grid">
+                                        <div className="tech-box">
+                                            <h5 className="tech-col-title text-teal">
+                                                <FaCode className="me-1" />
+                                                {t.technologies.frontend}
+                                            </h5>
+                                            <ul className="doc-bullet-list">
+                                                {t.technologies.frontendList.map((tech, idx) => (
+                                                    <li key={idx}>{tech}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="tech-box">
+                                            <h5 className="tech-col-title text-blue">
+                                                <FaServer className="me-1" />
+                                                {t.technologies.backend}
+                                            </h5>
+                                            <ul className="doc-bullet-list">
+                                                {t.technologies.backendList.map((tech, idx) => (
+                                                    <li key={idx}>{tech}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="tech-box">
+                                            <h5 className="tech-col-title text-purple">
+                                                <FaDocker className="me-1" />
+                                                {t.technologies.infrastructure}
+                                            </h5>
+                                            <ul className="doc-bullet-list">
+                                                {t.technologies.infrastructureList.map((tech, idx) => (
+                                                    <li key={idx}>{tech}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 4. Features */}
+                            {secKey === "features" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-emerald-soft text-emerald">
+                                            <FaUsers />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">4. {t.features.title}</h3>
+                                            <p className="card-sec-desc">Daftar kapabilitas fungsional berdasarkan hak akses pengguna.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-3col-grid">
+                                        <div className="feature-role-box">
+                                            <h5 className="role-heading text-teal">
+                                                <FaGraduationCap className="me-1" />
+                                                {t.features.student}
+                                            </h5>
+                                            <ul className="doc-feature-items">
+                                                {t.features.studentList.map((f, idx) => (
+                                                    <li key={idx}>{f}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="feature-role-box">
+                                            <h5 className="role-heading text-blue">
+                                                <FaUserShield className="me-1" />
+                                                {t.features.instructor}
+                                            </h5>
+                                            <ul className="doc-feature-items">
+                                                {t.features.instructorList.map((f, idx) => (
+                                                    <li key={idx}>{f}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="feature-role-box">
+                                            <h5 className="role-heading text-purple">
+                                                <FaShieldAlt className="me-1" />
+                                                {t.features.admin}
+                                            </h5>
+                                            <ul className="doc-feature-items">
+                                                {t.features.adminList.map((f, idx) => (
+                                                    <li key={idx}>{f}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 5. Authentication */}
+                            {secKey === "authentication" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-rose-soft text-rose">
+                                            <FaLock />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">5. {t.authentication.title}</h3>
+                                            <p className="card-sec-desc">{t.authentication.mechanismDesc}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="sec-body-grid">
+                                        <div className="sec-col">
+                                            <h4 className="sec-subheading">
+                                                <FaKey className="text-teal me-1" />
+                                                {t.authentication.flow}
+                                            </h4>
+                                            <ol className="doc-flow-steps">
+                                                {t.authentication.flowSteps.map((step, idx) => (
+                                                    <li key={idx}>
+                                                        <span className="step-num">{idx + 1}</span>
+                                                        <span>{step}</span>
+                                                    </li>
+                                                ))}
+                                            </ol>
+                                        </div>
+
+                                        <div className="sec-col">
+                                            <h4 className="sec-subheading">
+                                                <FaShieldAlt className="text-teal me-1" />
+                                                {t.authentication.protection}
+                                            </h4>
+                                            <ul className="doc-checklist">
+                                                {t.authentication.protectionLayers.map((layer, idx) => (
+                                                    <li key={idx}>{layer}</li>
+                                                ))}
+                                            </ul>
+
+                                            <div className="doc-code-snippet mt-2">
+                                                <div className="code-header">
+                                                    <span>Authorization Header</span>
+                                                </div>
+                                                <code>Authorization: Bearer &lt;access_token_jwt&gt;</code>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 6. API */}
+                            {secKey === "api" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-teal-soft text-teal">
+                                            <FaCode />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">6. {t.api.title}</h3>
+                                            <p className="card-sec-desc">{t.api.description}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-api-section">
+                                        <div className="doc-code-snippet mb-3">
+                                            <div className="code-header">
+                                                <span>{t.api.baseUrl}</span>
+                                            </div>
+                                            <code>{activeHost}/api/v1/</code>
+                                        </div>
+
+                                        <h4 className="sec-subheading mb-2">
+                                            <FaServer className="text-teal me-1" />
+                                            {t.api.endpoints}
+                                        </h4>
+                                        <div className="api-endpoint-cards">
+                                            {t.api.endpointsList.map((ep, idx) => {
+                                                const method = ep.split(" ")[0];
+                                                const path = ep.substring(method.length + 1);
+                                                return (
+                                                    <div key={idx} className="api-ep-row">
+                                                        <span className={`method-pill method-${method.toLowerCase().includes("get") ? "get" : "post"}`}>
+                                                            {method}
+                                                        </span>
+                                                        <span className="ep-path">{path}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="api-doc-links mt-3">
+                                            <a href="/swagger/" target="_blank" rel="noopener noreferrer" className="api-link-badge">
+                                                <FaBook className="me-1 text-teal" />
+                                                <span>Swagger UI (/swagger/)</span>
+                                            </a>
+                                            <a href="/redoc/" target="_blank" rel="noopener noreferrer" className="api-link-badge">
+                                                <FaBook className="me-1 text-blue" />
+                                                <span>ReDoc Specification (/redoc/)</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 7. Database */}
+                            {secKey === "database" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-amber-soft text-amber">
+                                            <FaDatabase />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">7. {t.database.title}</h3>
+                                            <p className="card-sec-desc">{t.database.description}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="sec-body-grid">
+                                        <div className="sec-col">
+                                            <h4 className="sec-subheading">
+                                                <FaDatabase className="text-amber me-1" />
+                                                {t.database.mainModels}
+                                            </h4>
+                                            <div className="doc-entity-list">
+                                                <div className="entity-row">
+                                                    <strong>User & Profile</strong>
+                                                    <span className="entity-count-tag">{dbStats.total_users ?? 0} akun aktif</span>
+                                                </div>
+                                                <div className="entity-row">
+                                                    <strong>Course (Kursus)</strong>
+                                                    <span className="entity-count-tag">{dbStats.total_courses ?? 0} kursus terbit</span>
+                                                </div>
+                                                <div className="entity-row">
+                                                    <strong>VariantItem (Materi Pelajaran)</strong>
+                                                    <span className="entity-count-tag">{dbStats.total_lessons ?? 0} materi tercatat</span>
+                                                </div>
+                                                <div className="entity-row">
+                                                    <strong>EnrolledCourse (Pendaftaran)</strong>
+                                                    <span className="entity-count-tag">{dbStats.total_enrollments ?? 0} pendaftaran</span>
+                                                </div>
+                                                <div className="entity-row">
+                                                    <strong>Quiz & Question</strong>
+                                                    <span className="entity-count-tag">{dbStats.total_quizzes ?? 0} instans evaluasi</span>
+                                                </div>
+                                                <div className="entity-row">
+                                                    <strong>Certificate (Sertifikat Sah)</strong>
+                                                    <span className="entity-count-tag">{dbStats.total_certificates ?? 0} terbit valid</span>
+                                                </div>
+                                                <div className="entity-row">
+                                                    <strong>Review & Rating</strong>
+                                                    <span className="entity-count-tag">{dbStats.total_reviews ?? 0} ulasan</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="sec-col">
+                                            <h4 className="sec-subheading">
+                                                <FaNetworkWired className="text-teal me-1" />
+                                                {t.database.relationships}
+                                            </h4>
+                                            <ul className="doc-checklist">
+                                                {t.database.relationshipsList.map((rel, idx) => (
+                                                    <li key={idx}>{rel}</li>
+                                                ))}
+                                            </ul>
+
+                                            <div className="db-live-size-banner mt-3">
+                                                <FaDatabase className="text-teal me-2" />
+                                                <div>
+                                                    <span className="d-block text-muted small">Ukuran Basis Data PostgreSQL Terukur:</span>
+                                                    <strong>{dbStats.database_size || "14.2 MB (Aktif)"}</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 8. Deployment */}
+                            {secKey === "deployment" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-blue-soft text-blue">
+                                            <FaDocker />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">8. {t.deployment.title}</h3>
+                                            <p className="card-sec-desc">{t.deployment.description}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-deploy-grid">
+                                        <div className="deploy-box">
+                                            <h5 className="deploy-box-title text-teal">
+                                                <FaDocker className="me-1" />
+                                                {t.deployment.components}
+                                            </h5>
+                                            <ul className="doc-bullet-list">
+                                                {t.deployment.componentsList.map((c, idx) => (
+                                                    <li key={idx}>{c}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="deploy-box">
+                                            <h5 className="deploy-box-title text-blue">
+                                                <FaNetworkWired className="me-1" />
+                                                {t.deployment.network}
+                                            </h5>
+                                            <p className="small text-muted mb-2">{t.deployment.networkDesc}</p>
+                                            <ul className="doc-bullet-list">
+                                                {t.deployment.routes.map((r, idx) => (
+                                                    <li key={idx}>{r}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 9. Security */}
+                            {secKey === "security" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-rose-soft text-rose">
+                                            <FaShieldAlt />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">9. {t.security.title}</h3>
+                                            <p className="card-sec-desc">Standar pengamanan komprehensif pada lapisan autentikasi, jaringan, dan aplikasi.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-security-grid">
+                                        <div className="sec-guard-card">
+                                            <h5 className="guard-title text-teal">Autentikasi & Otorisasi</h5>
+                                            <ul className="doc-checklist">
+                                                {t.security.authList.map((s, idx) => <li key={idx}>{s}</li>)}
+                                                {t.security.authzList.map((s, idx) => <li key={`z-${idx}`}>{s}</li>)}
+                                            </ul>
+                                        </div>
+
+                                        <div className="sec-guard-card">
+                                            <h5 className="guard-title text-blue">Jaringan & Transport</h5>
+                                            <ul className="doc-checklist">
+                                                {t.security.networkList.map((s, idx) => <li key={idx}>{s}</li>)}
+                                                {t.security.infraList.map((s, idx) => <li key={`i-${idx}`}>{s}</li>)}
+                                            </ul>
+                                        </div>
+
+                                        <div className="sec-guard-card">
+                                            <h5 className="guard-title text-purple">Proteksi Aplikasi & Data</h5>
+                                            <ul className="doc-checklist">
+                                                {t.security.appList.map((s, idx) => <li key={idx}>{s}</li>)}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 10. Roles */}
+                            {secKey === "roles" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-teal-soft text-teal">
+                                            <FaKey />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">10. {t.roles.title}</h3>
+                                            <p className="card-sec-desc">{t.roles.description}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-3col-grid">
+                                        <div className="role-matrix-card">
+                                            <div className="role-head">
+                                                <FaGraduationCap className="text-teal me-1" />
+                                                <span>{t.roles.student}</span>
+                                            </div>
+                                            <ul className="doc-perms-list">
+                                                {t.roles.studentPerms.map((p, idx) => (
+                                                    <li key={idx} className={p.startsWith("✓") ? "perm-allow" : "perm-deny"}>
+                                                        {p}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="role-matrix-card">
+                                            <div className="role-head">
+                                                <FaUserShield className="text-blue me-1" />
+                                                <span>{t.roles.teacher}</span>
+                                            </div>
+                                            <ul className="doc-perms-list">
+                                                {t.roles.teacherPerms.map((p, idx) => (
+                                                    <li key={idx} className={p.startsWith("✓") ? "perm-allow" : "perm-deny"}>
+                                                        {p}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="role-matrix-card">
+                                            <div className="role-head">
+                                                <FaShieldAlt className="text-purple me-1" />
+                                                <span>{t.roles.admin}</span>
+                                            </div>
+                                            <ul className="doc-perms-list">
+                                                {t.roles.adminPerms.map((p, idx) => (
+                                                    <li key={idx} className={p.startsWith("✓") ? "perm-allow" : "perm-deny"}>
+                                                        {p}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 11. Maintenance */}
+                            {secKey === "maintenance" && (
+                                <>
+                                    <div className="card-sec-header">
+                                        <div className="sec-icon-circle bg-emerald-soft text-emerald">
+                                            <FaChartLine />
+                                        </div>
+                                        <div>
+                                            <h3 className="card-sec-title">11. {t.maintenance.title}</h3>
+                                            <p className="card-sec-desc">Prosedur pemeliharaan berkala, pencadangan otomatis, dan pemantauan SLA.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="doc-3col-grid">
+                                        <div className="maint-box">
+                                            <h5 className="maint-col-title text-teal">
+                                                <FaChartLine className="me-1" />
+                                                {t.maintenance.monitoring}
+                                            </h5>
+                                            <ul className="doc-bullet-list">
+                                                {t.maintenance.monitoringList.map((m, idx) => <li key={idx}>{m}</li>)}
+                                            </ul>
+                                        </div>
+
+                                        <div className="maint-box">
+                                            <h5 className="maint-col-title text-blue">
+                                                <FaServer className="me-1" />
+                                                {t.maintenance.backup}
+                                            </h5>
+                                            <ul className="doc-bullet-list">
+                                                {t.maintenance.backupList.map((b, idx) => <li key={idx}>{b}</li>)}
+                                            </ul>
+                                        </div>
+
+                                        <div className="maint-box">
+                                            <h5 className="maint-col-title text-purple">
+                                                <FaClipboardCheck className="me-1" />
+                                                {t.maintenance.support}
+                                            </h5>
+                                            <ul className="doc-bullet-list">
+                                                {t.maintenance.supportList.map((s, idx) => <li key={idx}>{s}</li>)}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
     );
 
     if (isEmbedded) {

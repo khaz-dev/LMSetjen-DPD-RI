@@ -206,7 +206,7 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
         const config = statusConfig[status] || statusConfig.pending;
         return (
             <span className={`status-pill ${config.class}`}>
-                <i className={`fas ${config.icon} me-1.5`}></i>
+                <i className={`fas ${config.icon} me-1`}></i>
                 {config.label}
             </span>
         );
@@ -274,7 +274,7 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                     title="Selesai atau ditolak"
                 >
                     <div className="kpi-icon-box bg-slate-subtle text-secondary">
-                        <i className="fas fa-shield-slash"></i>
+                        <i className="fas fa-ban"></i>
                     </div>
                     <div className="kpi-content">
                         <span className="kpi-value">{counts.dismissed + counts.reviewed}</span>
@@ -456,7 +456,7 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                             <div className="report-card-topbar">
                                 <div className="d-flex align-items-center gap-2">
                                     <span className="report-id-chip">
-                                        <i className="fas fa-hashtag text-muted me-0.5"></i>
+                                        <i className="fas fa-hashtag text-muted me-0"></i>
                                         {report.id}
                                     </span>
                                     <span className="report-date-badge text-muted">
@@ -509,7 +509,7 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                     className="btn btn-teal btn-sm flex-grow-1"
                                     onClick={() => handleViewDetail(report)}
                                 >
-                                    <i className="fas fa-eye me-1.5"></i> Lihat Detail & Moderasi
+                                    <i className="fas fa-eye me-1"></i> Lihat Detail & Moderasi
                                 </button>
                                 {report.status === "pending" && (
                                     <button
@@ -568,7 +568,7 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                     </td>
                                     <td>
                                         <div className="small fw-semibold text-dark">{report.reported_by_name}</div>
-                                        <span className="badge bg-light text-danger border border-danger-subtle small mt-0.5">
+                                        <span className="badge bg-light text-danger border border-danger-subtle small mt-0">
                                             {getReasonLabel(report.reason)}
                                         </span>
                                     </td>
@@ -580,7 +580,7 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                     </td>
                                     <td className="text-end">
                                         <button
-                                            className="btn btn-sm btn-teal py-1 px-2.5"
+                                            className="btn btn-sm btn-teal py-1 px-2"
                                             onClick={() => handleViewDetail(report)}
                                         >
                                             <i className="fas fa-sliders me-1"></i> Reviu
@@ -626,11 +626,11 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                 <div className="col-lg-6">
                                     <div className="detail-card h-100">
                                         <div className="detail-card-header text-teal">
-                                            <i className="fas fa-file-alt me-1.5"></i>
+                                            <i className="fas fa-file-alt me-1"></i>
                                             Konten yang Dilaporkan
                                         </div>
                                         <div className="detail-card-body">
-                                            <div className="p-2.5 bg-light rounded-3 mb-2">
+                                            <div className="p-2 bg-light rounded-3 mb-2">
                                                 <span className="small text-muted d-block mb-1">
                                                     Penulis: <strong>{selectedReport.question_user || selectedReport.message_user || "-"}</strong>
                                                 </span>
@@ -647,7 +647,7 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                 <div className="col-lg-6">
                                     <div className="detail-card h-100">
                                         <div className="detail-card-header text-danger">
-                                            <i className="fas fa-flag me-1.5"></i>
+                                            <i className="fas fa-flag me-1"></i>
                                             Informasi Pelapor
                                         </div>
                                         <div className="detail-card-body">
@@ -659,7 +659,7 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                                     Alasan: <span className="badge bg-danger-subtle text-danger">{getReasonLabel(selectedReport.reason)}</span>
                                                 </div>
                                             </div>
-                                            <div className="p-2.5 bg-danger-subtle rounded-3 small text-dark border border-danger-subtle">
+                                            <div className="p-2 bg-danger-subtle rounded-3 small text-dark border border-danger-subtle">
                                                 <span className="fw-semibold text-danger">Keluhan: </span>
                                                 {selectedReport.description || "Tidak ada rincian tambahan"}
                                             </div>
@@ -670,11 +670,11 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
 
                             {/* Moderation Form */}
                             <div className="moderation-form-card p-3 rounded-3">
-                                <h6 className="fw-bold text-dark mb-2.5 d-flex align-items-center gap-1.5">
+                                <h6 className="fw-bold text-dark mb-2 d-flex align-items-center gap-1">
                                     <i className="fas fa-gavel text-teal"></i>
                                     Keputusan Moderasi Admin
                                 </h6>
-                                <div className="row g-2 mb-2.5">
+                                <div className="row g-2 mb-2">
                                     <div className="col-md-5">
                                         <label className="form-label small fw-semibold">Status Tindakan</label>
                                         <select
@@ -694,14 +694,14 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                         <div className="d-flex flex-wrap gap-1">
                                             <button
                                                 type="button"
-                                                className="btn btn-xs btn-outline-secondary py-0.5 px-2"
+                                                className="btn btn-xs btn-outline-secondary py-0 px-2"
                                                 onClick={() => applyQuickNote("Konten diskusi telah ditinjau dan dinyatakan tidak melanggar pedoman komunitas.")}
                                             >
                                                 Tidak Melanggar
                                             </button>
                                             <button
                                                 type="button"
-                                                className="btn btn-xs btn-outline-secondary py-0.5 px-2"
+                                                className="btn btn-xs btn-outline-secondary py-0 px-2"
                                                 onClick={() => applyQuickNote("Konten melanggar tata tertib dan telah dimoderasi/dihapus.")}
                                             >
                                                 Dimoderasi
@@ -741,12 +741,12 @@ function QAReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                             >
                                 {updating ? (
                                     <>
-                                        <span className="spinner-border spinner-border-sm me-1.5" role="status"></span>
+                                        <span className="spinner-border spinner-border-sm me-1" role="status"></span>
                                         Menyimpan...
                                     </>
                                 ) : (
                                     <>
-                                        <i className="fas fa-save me-1.5"></i> Simpan Perubahan
+                                        <i className="fas fa-save me-1"></i> Simpan Perubahan
                                     </>
                                 )}
                             </button>

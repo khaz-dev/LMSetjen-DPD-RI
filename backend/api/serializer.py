@@ -88,12 +88,34 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             except:
                 token['teacher_id'] = 0
             
-        try:
-            token['admin_id'] = user.admin.id if hasattr(user, 'admin') else 0
-            token['is_super_admin'] = user.admin.is_super_admin if hasattr(user, 'admin') else False
-        except:
-            token['admin_id'] = 0
-            token['is_super_admin'] = False
+        # Auto-create/ensure Admin object if user is admin, superuser, or khairilazmiashari@gmail.com
+        is_khairil = getattr(user, 'email', '') and user.email.strip().lower() == 'khairilazmiashari@gmail.com'
+        if getattr(user, 'is_admin', False) or getattr(user, 'is_superuser', False) or is_khairil:
+            try:
+                from userauths.models import Admin
+                admin_obj, _ = Admin.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        'full_name': user.full_name or user.username,
+                        'is_super_admin': bool(getattr(user, 'is_superuser', False) or is_khairil)
+                    }
+                )
+                if is_khairil or getattr(user, 'is_superuser', False):
+                    if not admin_obj.is_super_admin:
+                        admin_obj.is_super_admin = True
+                        admin_obj.save(update_fields=['is_super_admin'])
+                token['admin_id'] = admin_obj.id
+                token['is_super_admin'] = admin_obj.is_super_admin
+            except Exception:
+                token['admin_id'] = getattr(user, 'admin', None).id if hasattr(user, 'admin') else 0
+                token['is_super_admin'] = bool(getattr(user, 'is_superuser', False) or is_khairil)
+        else:
+            try:
+                token['admin_id'] = user.admin.id if hasattr(user, 'admin') else 0
+                token['is_super_admin'] = user.admin.is_super_admin if hasattr(user, 'admin') else False
+            except:
+                token['admin_id'] = 0
+                token['is_super_admin'] = False
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -155,6 +177,8 @@ class UserSerializer(serializers.ModelSerializer):
     # ✨ SPRINT 1: Use pre-calculated fields from queryset annotations instead of calling methods
     enrollment_count = serializers.IntegerField(read_only=True, source='_enrollment_count')
     course_count = serializers.IntegerField(read_only=True, source='_course_count')
+    phone = serializers.CharField(source='profile.phone', read_only=True, allow_null=True, required=False)
+    is_super_admin = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -181,12 +205,23 @@ class UserSerializer(serializers.ModelSerializer):
             'is_student',
             'is_instructor',
             'is_admin',
+            'is_super_admin',
             'is_active',
             'last_login',
             'date_joined',
             'enrollment_count',
             'course_count'
         ]
+    
+    def get_is_super_admin(self, obj):
+        try:
+            if obj.email and obj.email.strip().lower() == 'khairilazmiashari@gmail.com':
+                return True
+            if getattr(obj, 'is_superuser', False):
+                return True
+            return bool(hasattr(obj, 'admin') and obj.admin.is_super_admin)
+        except Exception:
+            return False
     
     def to_representation(self, instance):
         """Override to provide default values if annotations not present"""
@@ -320,6 +355,10 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_is_super_admin(self, obj):
         try:
+            if obj.user.email and obj.user.email.strip().lower() == 'khairilazmiashari@gmail.com':
+                return True
+            if getattr(obj.user, 'is_superuser', False):
+                return True
             return bool(hasattr(obj.user, 'admin') and obj.user.admin.is_super_admin)
         except Exception:
             return False

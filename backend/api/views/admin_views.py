@@ -2530,6 +2530,12 @@ class AdminHeaderStatsAPIView(generics.GenericAPIView):
                 user_notifs.count()
             )
 
+            is_super = bool(
+                getattr(request.user, 'is_superuser', False) or
+                (hasattr(request.user, 'admin') and request.user.admin.is_super_admin) or
+                (request.user.email and request.user.email.strip().lower() == 'khairilazmiashari@gmail.com')
+            )
+
             response_data = {
                 'status': 'online',
                 'active_users': active_users,
@@ -2541,7 +2547,8 @@ class AdminHeaderStatsAPIView(generics.GenericAPIView):
                 'pending_feedback': pending_feedback,
                 'total_alerts': total_alerts,
                 'notifications': notifications_list,
-                'server_time': now.strftime('%d %b %Y, %H:%M WIB')
+                'server_time': now.strftime('%d %b %Y, %H:%M WIB'),
+                'is_super_admin': is_super
             }
 
             return Response(response_data, status=status.HTTP_200_OK)

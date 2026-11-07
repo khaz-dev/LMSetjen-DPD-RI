@@ -36,14 +36,14 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
         try {
             setLoading(true);
             const response = await apiInstance.get("/admin/abuse-reports/");
-            
+
             let data = [];
             if (Array.isArray(response.data)) {
                 data = response.data;
             } else if (response.data?.results) {
                 data = response.data.results;
             }
-            
+
             setAllReports(data);
         } catch (error) {
             console.error("Error fetching abuse reports:", error);
@@ -223,7 +223,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
         const config = statusConfig[status] || statusConfig.pending;
         return (
             <span className={`status-pill ${config.class}`}>
-                <i className={`fas ${config.icon} me-1.5`}></i>
+                <i className={`fas ${config.icon} me-1`}></i>
                 {config.label}
             </span>
         );
@@ -306,7 +306,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                     title="Klik untuk filter laporan ditolak"
                 >
                     <div className="kpi-icon-box bg-slate-subtle text-secondary">
-                        <i className="fas fa-shield-slash"></i>
+                        <i className="fas fa-ban"></i>
                     </div>
                     <div className="kpi-content">
                         <span className="kpi-value">{counts.dismissed + counts.reviewed}</span>
@@ -477,7 +477,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                             <div className="report-card-topbar">
                                 <div className="d-flex align-items-center gap-2">
                                     <span className="report-id-chip">
-                                        <i className="fas fa-hashtag text-muted me-0.5"></i>
+                                        <i className="fas fa-hashtag text-muted me-0"></i>
                                         {report.id}
                                     </span>
                                     <span className="report-date-badge text-muted" title={report.reported_at}>
@@ -492,7 +492,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
 
                             {/* Course Context */}
                             <div className="report-course-context">
-                                <i className="fas fa-graduation-cap text-teal me-1.5 flex-shrink-0 mt-0.5"></i>
+                                <i className="fas fa-graduation-cap text-teal me-1 flex-shrink-0 mt-0"></i>
                                 <span className="course-title-text" title={report.review?.course?.title}>
                                     {report.review?.course?.title || "Kursus Tidak Diketahui"}
                                 </span>
@@ -573,7 +573,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                             {/* Admin Resolution Summary if reviewed */}
                             {report.review_notes && (
                                 <div className="admin-resolution-snippet">
-                                    <i className="fas fa-comment-dots text-teal me-1.5 flex-shrink-0 mt-0.5"></i>
+                                    <i className="fas fa-comment-dots text-teal me-1 flex-shrink-0 mt-0"></i>
                                     <div className="small">
                                         <span className="fw-bold text-dark">Catatan Admin:</span> {report.review_notes}
                                     </div>
@@ -586,7 +586,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                     className="btn btn-teal btn-sm flex-grow-1"
                                     onClick={() => handleViewDetail(report)}
                                 >
-                                    <i className="fas fa-eye me-1.5"></i>
+                                    <i className="fas fa-eye me-1"></i>
                                     Lihat Detail & Moderasi
                                 </button>
                                 {report.status === "pending" && (
@@ -662,7 +662,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                     </td>
                                     <td>
                                         <div className="small fw-semibold text-dark">{report.reported_by_name}</div>
-                                        <span className="badge bg-light text-danger border border-danger-subtle small mt-0.5">
+                                        <span className="badge bg-light text-danger border border-danger-subtle small mt-0">
                                             {getReasonLabel(report.reason)}
                                         </span>
                                     </td>
@@ -676,7 +676,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                     </td>
                                     <td className="text-end">
                                         <button
-                                            className="btn btn-sm btn-teal py-1 px-2.5"
+                                            className="btn btn-sm btn-teal py-1 px-2"
                                             onClick={() => handleViewDetail(report)}
                                             title="Buka detail moderasi"
                                         >
@@ -728,7 +728,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                 <div className="col-lg-6">
                                     <div className="detail-card h-100">
                                         <div className="detail-card-header text-teal">
-                                            <i className="fas fa-comment-dots me-1.5"></i>
+                                            <i className="fas fa-comment-dots me-1"></i>
                                             Konten Ulasan yang Dilaporkan
                                         </div>
                                         <div className="detail-card-body">
@@ -764,7 +764,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                             </div>
 
                                             {/* Review text box */}
-                                            <div className="review-quote-modal p-2.5 rounded-3 mb-2">
+                                            <div className="review-quote-modal p-2 rounded-3 mb-2">
                                                 <div className="text-muted small mb-1">Teks Ulasan:</div>
                                                 <div className="fw-normal text-dark fst-italic">
                                                     &ldquo;{selectedReport.review?.review || "Tidak ada teks"}&rdquo;
@@ -788,7 +788,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                 <div className="col-lg-6">
                                     <div className="detail-card h-100">
                                         <div className="detail-card-header text-danger">
-                                            <i className="fas fa-flag me-1.5"></i>
+                                            <i className="fas fa-flag me-1"></i>
                                             Keluhan Pelapor
                                         </div>
                                         <div className="detail-card-body">
@@ -813,7 +813,7 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                                 </div>
                                             </div>
 
-                                            <div className="p-2.5 bg-danger-subtle rounded-3 mb-2 border border-danger-subtle">
+                                            <div className="p-2 bg-danger-subtle rounded-3 mb-2 border border-danger-subtle">
                                                 <div className="small fw-semibold text-danger mb-1">
                                                     <i className="fas fa-quote-left me-1"></i> Penjelasan Masalah dari Pelapor:
                                                 </div>
@@ -823,8 +823,8 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                             </div>
 
                                             {selectedReport.closed_by_reporter && (
-                                                <div className="alert alert-success py-2 px-2.5 mb-0 small rounded-3">
-                                                    <i className="fas fa-check-circle me-1.5"></i>
+                                                <div className="alert alert-success py-2 px-2 mb-0 small rounded-3">
+                                                    <i className="fas fa-check-circle me-1"></i>
                                                     <strong>Selesai oleh Pelapor:</strong> Instruktur telah menandai masalah ini terselesaikan pada {moment(selectedReport.closed_by_reporter_at).format("DD MMM YYYY HH:mm")}.
                                                 </div>
                                             )}
@@ -835,12 +835,12 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
 
                             {/* Moderation Form */}
                             <div className="moderation-form-card p-3 rounded-3">
-                                <h6 className="fw-bold text-dark mb-2.5 d-flex align-items-center gap-1.5">
+                                <h6 className="fw-bold text-dark mb-2 d-flex align-items-center gap-1">
                                     <i className="fas fa-gavel text-teal"></i>
                                     Keputusan Moderasi Admin
                                 </h6>
 
-                                <div className="row g-2 mb-2.5">
+                                <div className="row g-2 mb-2">
                                     <div className="col-md-5">
                                         <label className="form-label small fw-semibold">Status Tindakan</label>
                                         <select
@@ -860,21 +860,21 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                         <div className="d-flex flex-wrap gap-1">
                                             <button
                                                 type="button"
-                                                className="btn btn-xs btn-outline-secondary py-0.5 px-2"
+                                                className="btn btn-xs btn-outline-secondary py-0 px-2"
                                                 onClick={() => applyQuickNote("Ulasan telah ditinjau dan dinyatakan tidak melanggar ketentuan platform.")}
                                             >
                                                 Tidak Melanggar
                                             </button>
                                             <button
                                                 type="button"
-                                                className="btn btn-xs btn-outline-secondary py-0.5 px-2"
+                                                className="btn btn-xs btn-outline-secondary py-0 px-2"
                                                 onClick={() => applyQuickNote("Ulasan terbukti melanggar norma dan telah dinonaktifkan/ditindaklanjuti.")}
                                             >
                                                 Melanggar / Ditindak
                                             </button>
                                             <button
                                                 type="button"
-                                                className="btn btn-xs btn-outline-secondary py-0.5 px-2"
+                                                className="btn btn-xs btn-outline-secondary py-0 px-2"
                                                 onClick={() => applyQuickNote("Masalah ulasan telah diselesaikan secara musyawarah dengan instruktur.")}
                                             >
                                                 Musyawarah
@@ -925,12 +925,12 @@ function ReviewAbuseReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                             >
                                 {updating ? (
                                     <>
-                                        <span className="spinner-border spinner-border-sm me-1.5" role="status"></span>
+                                        <span className="spinner-border spinner-border-sm me-1" role="status"></span>
                                         Menyimpan...
                                     </>
                                 ) : (
                                     <>
-                                        <i className="fas fa-save me-1.5"></i>
+                                        <i className="fas fa-save me-1"></i>
                                         Simpan Perubahan
                                     </>
                                 )}

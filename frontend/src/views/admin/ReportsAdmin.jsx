@@ -1,37 +1,61 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
 import ReviewAbuseReportsTab from "./AdminReportsTabs/ReviewAbuseReportsTab";
 import QAReportsTab from "./AdminReportsTabs/QAReportsTab";
 import FeedbackAdminDashboard from "../../components/Feedback/FeedbackAdminDashboard";
-import SystemTestAdmin from "./SystemTestAdmin";
-import SystemDocumentation from "./SystemDocumentation";
 import apiInstance from "../../utils/axios";
 import dayjs, { moment } from "../../utils/dayjs";
 import "./ReportsAdmin.css";
 
 /**
- * Unified Reports, Feedback & Diagnostics Admin Center
- * ✨ Merges Abuse Reports, Q&A Moderation, User Feedback, Diagnostics & System Docs
- * ✨ Redesigned for ultra-compact, zero-waste layout with 100% real live data
+ * ✨ PHASE 4.210 / 11.3: Content Moderation & User Feedback Center
+ * Dedicated to Community & Content Moderation:
+ * 1. Course Review Abuse Reports
+ * 2. Q&A Forum Abuse Reports
+ * 3. User Feedback & Bug Ticket Tracker
+ * (System Diagnostics and Technical Docs are now separated into /admin/system/)
  */
 function ReportsAdmin() {
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
+
     const [activeTab, setActiveTab] = useState(() => {
         const tab = searchParams.get("tab");
-        if (tab === "system-test" || tab === "diagnostics") return "diagnostics";
-        if (tab === "documentation" || tab === "docs") return "docs";
         if (tab === "qa-reports") return "qa-reports";
         if (tab === "feedback" || tab === "user-feedback") return "feedback";
         return "abuse-reports";
     });
 
+    // Check if query is meant for System Diagnostics Center or sync tab
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        if (tab === "system-test" || tab === "diagnostics") {
+            navigate("/admin/system/?tab=diagnostics", { replace: true });
+            return;
+        }
+        if (tab === "documentation" || tab === "docs") {
+            navigate("/admin/system/?tab=docs", { replace: true });
+            return;
+        }
+
+        if (tab === "feedback" || tab === "user-feedback") {
+            if (activeTab !== "feedback") setActiveTab("feedback");
+        } else if (tab === "qa-reports") {
+            if (activeTab !== "qa-reports") setActiveTab("qa-reports");
+        } else if (tab === "abuse-reports") {
+            if (activeTab !== "abuse-reports") setActiveTab("abuse-reports");
+        } else if (!tab) {
+            setSearchParams({ tab: activeTab }, { replace: true });
+        }
+    }, [searchParams, navigate, activeTab, setSearchParams]);
+
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [lastSyncTime, setLastSyncTime] = useState(new Date());
 
-    // Live counts across modules
+    // Live counts across moderation modules
     const [stats, setStats] = useState({
         abuseTotal: 0,
         abusePending: 0,
@@ -53,68 +77,72 @@ function ReportsAdmin() {
                 apiInstance.get("/feedback/stats/")
             ]);
 
-            let abuseData = [];
-            if (abuseRes.status === "fulfilled") {
-                const d = abuseRes.value.data;
-                abuseData = Array.isArray(d) ? d : (d?.results || []);
+            let abuseTotal = 0;
+            let abusePending = 0;
+            if (abuseRes.status === "fulfilled" && abuseRes.value?.data) {
+                const list = abuseRes.value.data.results || abuseRes.value.data;
+                if (Array.isArray(list)) {
+                    abuseTotal = list.length;
+                    abusePending = list.filter(r => r.status === "pending").length;
+                }
             }
 
-            let qaQuestions = [];
-            if (qaQRes.status === "fulfilled") {
-                const d = qaQRes.value.data;
-                qaQuestions = Array.isArray(d) ? d : (d?.results || []);
-            }
+            let qaTotal = 0;
+            let qaPending = 0;
+            const qaQuestions = (qaQRes.status === "fulfilled" && Array.isArray(qaQRes.value?.data)) ? qaQRes.value.data : [];
+            const qaMessages = (qaMRes.status === "fulfilled" && Array.isArray(qaMRes.value?.data)) ? qaMRes.value.data : [];
+            const combinedQA = [...qaQuestions, ...qaMessages];
+            qaTotal = combinedQA.length;
+            qaPending = combinedQA.filter(r => r.status === "pending").length;
 
-            let qaMessages = [];
-            if (qaMRes.status === "fulfilled") {
-                const d = qaMRes.value.data;
-                qaMessages = Array.isArray(d) ? d : (d?.results || []);
+            let feedbackTotal = 0;
+            let feedbackOpen = 0;
+            if (fbStatsRes.status === "fulfilled" && fbStatsRes.value?.data) {
+                feedbackTotal = fbStatsRes.value.data.total_feedback || 0;
+                feedbackOpen = fbStatsRes.value.data.open_count || 0;
             }
-
-            let fbStats = { total: 0, open: 0 };
-            if (fbStatsRes.status === "fulfilled") {
-                fbStats = fbStatsRes.value.data || { total: 0, open: 0 };
-            }
-
-            const allQA = [...qaQuestions, ...qaMessages];
 
             setStats({
-                abuseTotal: abuseData.length,
-                abusePending: abuseData.filter(r => r.status === "pending").length,
-                qaTotal: allQA.length,
-                qaPending: allQA.filter(r => r.status === "pending").length,
-                feedbackTotal: fbStats.total || 0,
-                feedbackOpen: fbStats.open || 0,
+                abuseTotal,
+                abusePending,
+                qaTotal,
+                qaPending,
+                feedbackTotal,
+                feedbackOpen,
                 loading: false
             });
             setLastSyncTime(new Date());
         } catch (error) {
-            console.error("Error loading summary stats for reports:", error);
+            console.error("Error fetching summary stats:", error);
+            setStats(prev => ({ ...prev, loading: false }));
         } finally {
             setIsRefreshing(false);
         }
     }, []);
 
-    // Initial mount only
+    // Initial mount and explicit manual refresh
     useEffect(() => {
+        fetchSummaryStats();
+    }, [fetchSummaryStats, refreshTrigger]);
+
+    // Tab selection handler ensuring state and query params stay synchronized
+    const handleTabSelect = (tabId) => {
+        setActiveTab(tabId);
+        setSearchParams({ tab: tabId }, { replace: true });
+    };
+
+    // Manual refresh action
+    const handleManualRefresh = () => {
+        setRefreshTrigger(prev => prev + 1);
+        setLastSyncTime(new Date());
+    };
+
+    // Callback when any child tab mutates status
+    const handleMutationSuccess = useCallback(() => {
         fetchSummaryStats();
     }, [fetchSummaryStats]);
 
-    // Update URL query param when tab changes
-    useEffect(() => {
-        setSearchParams({ tab: activeTab });
-    }, [activeTab, setSearchParams]);
-
-    const handleManualRefresh = () => {
-        setRefreshTrigger(prev => prev + 1);
-        fetchSummaryStats();
-    };
-
-    const handleMutationSuccess = () => {
-        // Refetch summary badges when child updates a report
-        fetchSummaryStats();
-    };
-
+    // Moderation Tabs definition
     const tabs = [
         {
             id: "abuse-reports",
@@ -160,25 +188,17 @@ function ReportsAdmin() {
                 </span>
             ),
             description: "Kelola laporan kendala sistem, bug, masukan, dan permintaan fitur dari seluruh pengguna platform",
-            component: <FeedbackAdminDashboard />
-        },
-        {
-            id: "diagnostics",
-            label: "Pengujian Sistem",
-            icon: "fas fa-vial",
-            badge: <span className="tab-badge tab-badge-neutral">Diagnostik</span>,
-            description: "Pusat pengujian antarmuka, verifikasi dialog toast, dan diagnostik server",
-            component: <SystemTestAdmin isEmbedded={true} />
-        },
-        {
-            id: "docs",
-            label: "Dokumentasi Sistem",
-            icon: "fas fa-book",
-            badge: <span className="tab-badge tab-badge-neutral">Arsitektur</span>,
-            description: "Dokumentasi teknis, arsitektur sistem, panduan API, dan skema basis data",
-            component: <SystemDocumentation isEmbedded={true} />
+            component: (
+                <FeedbackAdminDashboard
+                    refreshTrigger={refreshTrigger}
+                    onMutationSuccess={handleMutationSuccess}
+                />
+            )
         }
     ];
+
+    const totalPendingCount = stats.abusePending + stats.qaPending + stats.feedbackOpen;
+    const currentTabObj = tabs.find(t => t.id === activeTab) || tabs[0];
 
     return (
         <div className="admin-page-wrapper">
@@ -191,23 +211,25 @@ function ReportsAdmin() {
                         <div className="reports-page-header mb-3">
                             <div className="header-left">
                                 <div className="header-meta-pill mb-1">
-                                    <i className="fas fa-shield-alt text-teal me-1.5"></i>
-                                    <span>LMS Setjen DPD RI &bull; Moderasi, Masukan & Diagnostik Terpadu</span>
+                                    <i className="fas fa-shield-alt text-teal me-1"></i>
+                                    <span>LMS Setjen DPD RI &bull; Pusat Moderasi Konten & Masukan Pengguna</span>
                                 </div>
                                 <h1 className="reports-page-title">
-                                    <i className="fas fa-chart-line text-teal me-2"></i>
-                                    Pusat Laporan & Diagnostik Sistem
+                                    <i className="fas fa-shield-alt text-teal me-2"></i>
+                                    Pusat Moderasi & Aduan Pengguna
                                 </h1>
                                 <p className="reports-page-subtitle">
-                                    Audit terpadu moderasi konten, keluhan masukan pengguna, pengujian diagnostik, dan arsitektur sistem
+                                    Audit moderasi ulasan kursus, diskusi forum Q&A, dan penanganan tiket keluhan serta masukan pengguna
                                 </p>
                             </div>
 
                             <div className="header-right">
                                 <div className="live-status-pill">
-                                    <span className="live-dot pulse"></span>
+                                    <span className={`live-dot ${totalPendingCount > 0 ? "pulse" : "bg-success"}`}></span>
                                     <div className="status-texts">
-                                        <span className="status-label">API Backend: Terhubung</span>
+                                        <span className="status-label">
+                                            {totalPendingCount > 0 ? `${totalPendingCount} Perlu Ditindaklanjuti` : "Semua Antrean Bersih"}
+                                        </span>
                                         <span className="status-time">
                                             Diperbarui: {moment(lastSyncTime).format("HH:mm:ss WIB")}
                                         </span>
@@ -219,24 +241,25 @@ function ReportsAdmin() {
                                     className="btn btn-sm btn-outline-teal header-refresh-btn"
                                     onClick={handleManualRefresh}
                                     disabled={isRefreshing}
-                                    title="Segarkan data laporan dari database"
+                                    title="Segarkan data moderasi"
                                 >
-                                    <i className={`fas fa-sync-alt me-1.5 ${isRefreshing ? "fa-spin" : ""}`}></i>
-                                    Segarkan
+                                    <i className={`fas fa-sync-alt me-1 ${isRefreshing ? "fa-spin" : ""}`}></i>
+                                    <span>{isRefreshing ? "Menyinkronkan..." : "Segarkan"}</span>
                                 </button>
                             </div>
                         </div>
 
-                        {/* Unified Tabs & Content Box */}
-                        <div className="reports-tabs-container">
-                            {/* Sleek Segmented Tab Navigation */}
-                            <div className="reports-tabs-header">
+                        {/* Modern Compact Tab Bar */}
+                        <div className="reports-tabs-wrapper">
+                            <div className="reports-tabs-navigation" role="tablist">
                                 {tabs.map((tab) => (
                                     <button
                                         key={tab.id}
                                         type="button"
+                                        role="tab"
+                                        aria-selected={activeTab === tab.id}
                                         className={`reports-tab-button ${activeTab === tab.id ? "active" : ""}`}
-                                        onClick={() => setActiveTab(tab.id)}
+                                        onClick={() => handleTabSelect(tab.id)}
                                     >
                                         <span className="reports-tab-icon">
                                             <i className={tab.icon}></i>
@@ -249,9 +272,9 @@ function ReportsAdmin() {
 
                             {/* Active Tab Sub-Bar / Context */}
                             <div className="reports-tab-context-bar">
-                                <i className={`${tabs.find(t => t.id === activeTab)?.icon} text-teal me-2`}></i>
+                                <i className={`${currentTabObj.icon} text-teal me-2`}></i>
                                 <span className="context-desc">
-                                    {tabs.find(t => t.id === activeTab)?.description}
+                                    {currentTabObj.description}
                                 </span>
                             </div>
 

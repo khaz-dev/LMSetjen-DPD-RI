@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef,  useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import dayjs, { moment } from "../../utils/dayjs";
 
@@ -44,13 +44,13 @@ function QA() {
     // STATE MANAGEMENT
     // ============================
     const isCollapsed = useInstructorSidebarCollapse();
-    
+
     // Course-related states
     const [teacherCourses, setTeacherCourses] = useState([]);
     const [filteredCourses, setFilteredCourses] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [courseSearchQuery, setCourseSearchQuery] = useState("");
-    
+
     // Q&A related states
     const [questions, setQuestions] = useState([]);
     const [questionSearchQuery, setQuestionSearchQuery] = useState("");
@@ -59,7 +59,7 @@ function QA() {
     // ✨ PHASE 7.9-7.10: Filter questions by search, bagian (section), and pelajaran (lesson)
     const [discussionFilters, setDiscussionFilters] = useState({ search: '', bagian: null, pelajaran: null });
     const [filteredQuestions, setFilteredQuestions] = useState([]);
-    
+
     // Loading states
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -72,32 +72,32 @@ function QA() {
     const [replyPreviewMode, setReplyPreviewMode] = useState(false);
     const replyTextareaRef = useRef(null);
     const replyFileInputRef = useRef(null);
-    
+
     // ✨ PHASE 7.18: Report tracking - for showing report status on buttons
     const [qaReports, setQaReports] = useState({
         question_reports: [],
         message_reports: []
     });
-    
+
     // Report modal states
     const [showReportModal, setShowReportModal] = useState(false);
     const [reportingQuestion, setReportingQuestion] = useState(null);
     const [reportReason, setReportReason] = useState('');
     const [reportDescription, setReportDescription] = useState('');
     const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-    
+
     // ✨ PHASE 7.16+: Track the current report being viewed in modal (for showing feedback)
     const [currentReportData, setCurrentReportData] = useState(null);
-    
+
     // ✨ PHASE 7.16+: Track if we're editing an existing report
     const [editingReportId, setEditingReportId] = useState(null);
-    
+
     // ✨ PHASE 7.16+: Track which reports have been closed by user (Set of report IDs)
     const [closedReports, setClosedReports] = useState(new Set());
-    
+
     // ✨ PHASE 7.24: Polling for live updates
     const [forumPollingIntervalRef, setForumPollingIntervalRef] = useState(null);
-    
+
     // Refs
     const lastElementRef = useRef(null);
     const pollingIntervalRef = useRef(null);
@@ -107,17 +107,17 @@ function QA() {
     // ============================
     // API FUNCTIONS
     // ============================
-    
+
     // ✨ PHASE 11 12+: Wrap fetch for usePageCache
     const fetchCoursesData = useCallback(async () => {
         const teacherId = UserData()?.teacher_id;
-        
+
         if (!teacherId) {
             throw new Error("Teacher ID not found. Please make sure you are logged in as a teacher.");
         }
-        
+
         const response = await useAxios.get(`teacher/course-lists/${teacherId}/`);
-        
+
         // Handle both array and paginated response formats
         const courseData = Array.isArray(response.data) ? response.data : (response.data?.results || []);
         return courseData;
@@ -142,7 +142,7 @@ function QA() {
     useEffect(() => {
         setLoading(coursesLoading);
     }, [coursesLoading]);
-    
+
     // Fetch questions for selected course
     const fetchCourseQuestions = async (course) => {
         setLoading(true);
@@ -150,30 +150,30 @@ function QA() {
             console.log("[Fetch Questions] Starting - course:", course);
             console.log("[Fetch Questions] course.course_id:", course?.course_id, "| course.id:", course?.id);
             console.log("[Fetch Questions] course.published_version?.course_id:", course?.published_version?.course_id);
-            
+
             const teacherId = UserData()?.teacher_id;
             const userId = UserData()?.user_id;  // ✨ PHASE 7.25: Get current user_id for like status
-            
+
             // ✨ PHASE 7.25: Pass user_id as query parameter so serializer can determine like status
             const response = await useAxios.get(`teacher/question-answer-list/${teacherId}/`, {
                 params: { user_id: userId }
             });
-            
+
             // Extract all questions
             const allQA = response.data?.results || response.data || [];
             console.log("[Fetch Questions] Total questions from API:", allQA.length);
             console.log("[Fetch Questions] First few questions:", allQA.slice(0, 3).map(q => ({ qa_id: q.qa_id, course: q.course, title: q.title })));
-            
+
             // ✨ PHASE 7.12: CRITICAL FIX - Use published course_id for filtering
             // Questions are stored with PUBLISHED course_id, not draft's course_id
             // After handleCourseSelect, course.course_id should be the published one
             // But as a safety measure, try both draft and published course_ids
             const publishedCourseId = course?.published_version?.course_id || course?.course_id;
             const draftCourseId = course?.course_id;
-            
+
             console.log("[Fetch Questions] publishedCourseId:", publishedCourseId, "(type:", typeof publishedCourseId, ")");
             console.log("[Fetch Questions] draftCourseId:", draftCourseId, "(type:", typeof draftCourseId, ")");
-            
+
             // Filter questions by comparing course_ids
             // ✨ PHASE N.X FIX: Backend returns q.course as integer ID only (not an object with course_id property)
             // So we compare q.course directly instead of q.course?.course_id
@@ -185,10 +185,10 @@ function QA() {
                 }
                 return courseIdMatch;
             });
-            
+
             console.log("[Fetch Questions] After filtering: ", courseQuestions.length, "questions matched");
             console.log("[Fetch Questions] Matched questions:", courseQuestions.map(q => ({ qa_id: q.qa_id, course: q.course })));
-            
+
             console.log("[Fetch Questions] Calling setQuestions with", courseQuestions.length, "questions");
             setQuestions(courseQuestions);
             setQuestionSearchQuery(""); // Reset search when fetching new questions
@@ -207,24 +207,24 @@ function QA() {
     // ============================
     // SEARCH & FILTER FUNCTIONS
     // ============================
-    
+
     // Handle course search
     const handleCourseSearch = (event) => {
         let query = event.target.value;
         setCourseSearchQuery(query);
         query = query.toLowerCase();
-        
+
         if (query === "") {
             setFilteredCourses(teacherCourses);
         } else {
             const filtered = teacherCourses.filter((course) => {
-                const categoryText = typeof course?.category === "object" 
+                const categoryText = typeof course?.category === "object"
                     ? course.category?.title || course.category?.name || ""
                     : course?.category || "";
-                
+
                 return course?.title?.toLowerCase().includes(query) ||
-                        course?.instructor?.full_name?.toLowerCase().includes(query) ||
-                        categoryText.toLowerCase().includes(query);
+                    course?.instructor?.full_name?.toLowerCase().includes(query) ||
+                    categoryText.toLowerCase().includes(query);
             });
             setFilteredCourses(filtered);
         }
@@ -241,13 +241,13 @@ function QA() {
         const query = event.target.value.toLowerCase();
         setQuestionSearchQuery(event.target.value); // Update controlled input state
         if (!selectedCourse) return;
-        
+
         if (query === "") {
             fetchCourseQuestions(selectedCourse);
         } else {
             const questionsArray = Array.isArray(questions) ? questions : [];
-            const filtered = questionsArray.filter(q => 
-                q.title?.toLowerCase().includes(query) || 
+            const filtered = questionsArray.filter(q =>
+                q.title?.toLowerCase().includes(query) ||
                 q.profile?.full_name?.toLowerCase().includes(query)
             );
             setQuestions(filtered);
@@ -257,7 +257,7 @@ function QA() {
     // ============================
     // CONVERSATION HANDLERS
     // ============================
-    
+
     const handleBackToQuestions = () => {
         stopForumPolling(); // ✨ PHASE 7.24: Stop polling when going back
         setSelectedConversation(null);
@@ -293,16 +293,16 @@ function QA() {
         try {
             console.log("[Course Select Handler] Called with course:", course);
             console.log("[Course Select Handler] course.course_id:", course?.course_id, "| course.id:", course?.id);
-            
+
             // Fetch full course details including published version data and correct qa_count
             const response = await useAxios.get(`teacher/course-detail/${course.course_id}/`);
             const enrichedCourse = response.data;
-            
+
             console.log("[Course Select Handler] Enriched course received from API");
             console.log("[Course Select Handler] enrichedCourse.course_id:", enrichedCourse?.course_id);
             console.log("[Course Select Handler] enrichedCourse.published_version?.course_id:", enrichedCourse?.published_version?.course_id);
             console.log("[Course Select Handler] enrichedCourse.qa_count:", enrichedCourse?.qa_count);
-            
+
             // ✨ PHASE 7.12: CRITICAL - Use published version's course_id for filtering
             // Draft and published versions have DIFFERENT course_ids:
             // - Draft course_id: "271157" (original)
@@ -322,7 +322,7 @@ function QA() {
                 console.log(`[Course Select] No published version found, using draft course`);
                 console.log(`[Course Select] Curriculum loaded with ${enrichedCourse.curriculum?.length || 0} bagian`);
             }
-            
+
             setSelectedCourse(enrichedCourse);
             fetchCourseQuestions(enrichedCourse);
         } catch (error) {
@@ -360,7 +360,7 @@ function QA() {
     useEffect(() => {
         console.log("[Filter Effect] Running - questions:", questions?.length, "discussionFilters:", discussionFilters);
         let filtered = questions;
-        
+
         // Filter by search term (title or message)
         if (discussionFilters.search?.trim()) {
             const searchLower = discussionFilters.search.toLowerCase();
@@ -370,7 +370,7 @@ function QA() {
                 return titleMatch || messageMatch;
             });
         }
-        
+
         // Filter by bagian (section)
         // ✨ PHASE 7.15: Convert both sides to string to handle variant_id as string or number from backend
         if (discussionFilters.bagian) {
@@ -387,18 +387,18 @@ function QA() {
             });
             console.log(`[Filter Debug] Bagian filter: ${beforeFilterCount} → ${filtered.length} questions`);
         }
-        
+
         // Filter by pelajaran (lesson)
         // ✨ PHASE 7.15: Convert both sides to string to handle variant_item_id as string or number from backend
         if (discussionFilters.pelajaran) {
             console.log(`[Filter Debug] Filtering by pelajaran: "${discussionFilters.pelajaran}" (type: ${typeof discussionFilters.pelajaran})`);
             const beforeFilterCount = filtered.length;
-            filtered = filtered.filter(q => 
+            filtered = filtered.filter(q =>
                 String(q.variant_item?.variant_item_id) === String(discussionFilters.pelajaran)
             );
             console.log(`[Filter Debug] Pelajaran filter: ${beforeFilterCount} → ${filtered.length} questions`);
         }
-        
+
         console.log("[Filter Effect] Final result - calling setFilteredQuestions with", filtered.length, "questions");
         setFilteredQuestions(filtered);
     }, [questions, discussionFilters]);
@@ -547,7 +547,7 @@ function QA() {
 
     const sendNewMessage = async (e) => {
         e.preventDefault();
-        
+
         const messageText = getCurrentMessage().trim();
         if (!messageText && !replyAttachment) {
             Toast().fire({
@@ -572,9 +572,9 @@ function QA() {
             selectedConversation?.courseId,
             selectedCourse?.id
         ];
-        
+
         const validCourseId = possibleCourseIds.find(id => id !== null && id !== undefined && id !== "");
-        
+
         if (!conversationId || !validCourseId || !userId) {
             Toast().fire({
                 icon: "error",
@@ -582,7 +582,7 @@ function QA() {
             });
             return;
         }
-        
+
         const formdata = new FormData();
         formdata.append("course_id", validCourseId);
         formdata.append("user_id", userId);
@@ -597,10 +597,10 @@ function QA() {
         try {
             setMessageLoading(true);
             const response = await useAxios.post("student/question-answer-message-create/", formdata);
-            
+
             if (response.data.question) {
                 setSelectedConversation(response.data.question);
-                setQuestions(prev => prev.map(q => 
+                setQuestions(prev => prev.map(q =>
                     (q.qa_id || q.id) === conversationId ? response.data.question : q
                 ));
             }
@@ -638,29 +638,29 @@ function QA() {
         try {
             const userData = UserData();
             const courseId = courseToFetch?.id || courseToFetch?.course_id;
-            
+
             if (!userData?.id && !userData?.user_id) {
                 return;
             }
-            
+
             if (!courseId) {
                 return;
             }
-            
+
             const userId = userData?.id || userData?.user_id;
             const res = await useAxios.get(`student/qa-reports/${courseId}/?user_id=${userId}`);
-            
+
             const normalizedReports = {
                 question_reports: res.data?.question_reports || [],
                 message_reports: res.data?.message_reports || []
             };
-            
+
             setQaReports(normalizedReports);
         } catch (error) {
             // Q&A reports fetch error - silently handle
         }
     };
-    
+
     // ✨ PHASE 7.18: Get report status for a specific question
     const getQAReportStatus = (qaId, type = 'question') => {
         if (type === 'question') {
@@ -676,30 +676,30 @@ function QA() {
         if (pollingIntervalRef.current) {
             clearInterval(pollingIntervalRef.current);
         }
-        
+
         console.log(`[Forum Polling] Starting polling for QA ID: ${qaId}`);
-        
+
         // Poll every 3 seconds to fetch updated conversation data
         pollingIntervalRef.current = setInterval(async () => {
             try {
                 // Fetch the latest questions which includes the current conversation
                 const teacherId = UserData()?.teacher_id;
                 if (!teacherId || !selectedCourse) return;
-                
+
                 const response = await useAxios.get(`teacher/question-answer-list/${teacherId}/`);
                 const questionsArray = Array.isArray(response.data?.results) ? response.data.results : (Array.isArray(response.data) ? response.data : []);
-                
+
                 // Find the current conversation in the latest data
                 const updatedConversation = questionsArray.find(q => q.qa_id === qaId);
-                
+
                 if (updatedConversation) {
                     // Update selected conversation with latest data
                     setSelectedConversation(updatedConversation);
-                    
+
                     // Update questions list
                     setQuestions(questionsArray);
                     setFilteredQuestions(questionsArray);
-                    
+
                     console.log(`[Forum Polling] Updated QA ${qaId}: likes_count=${updatedConversation.likes_count}, messages=${updatedConversation.messages?.length}`);
                 }
             } catch (error) {
@@ -723,35 +723,35 @@ function QA() {
         if (reportPollingIntervalRef.current) {
             clearInterval(reportPollingIntervalRef.current);
         }
-        
+
         console.log("[Report Polling] Starting polling for report status updates");
-        
+
         // Poll every 3 seconds to fetch updated report status
         reportPollingIntervalRef.current = setInterval(async () => {
             try {
                 if (!selectedCourse || !reportingQuestion) return;
-                
+
                 const userId = UserData()?.id || UserData()?.user_id;
                 const courseId = selectedCourse?.id || selectedCourse?.course_id;
-                
+
                 // Fetch latest reports for the course
                 const res = await useAxios.get(`student/qa-reports/${courseId}/?user_id=${userId}`);
-                
+
                 const normalizedReports = {
                     question_reports: res.data?.question_reports || [],
                     message_reports: res.data?.message_reports || []
                 };
-                
+
                 // Update the reports state
                 setQaReports(normalizedReports);
-                
+
                 // Find the current report being viewed
                 const isMessage = reportingQuestion?.message && !reportingQuestion?.title;
                 const reportList = isMessage ? normalizedReports.message_reports : normalizedReports.question_reports;
                 const fieldName = isMessage ? 'message__qa_id' : 'question__qa_id';
-                
+
                 const updatedReport = reportList?.find(r => r[fieldName] === reportingQuestion?.qa_id);
-                
+
                 if (updatedReport) {
                     // Update the current report data being displayed in modal
                     setCurrentReportData(updatedReport);
@@ -782,39 +782,39 @@ function QA() {
         if (questionsPollingIntervalRef.current) {
             clearInterval(questionsPollingIntervalRef.current);
         }
-        
+
         console.log("[Questions Polling] Starting polling for questions list updates");
-        
+
         // Poll every 3 seconds to fetch updated questions with latest like counts and user_liked status
         questionsPollingIntervalRef.current = setInterval(async () => {
             try {
                 const teacherId = UserData()?.teacher_id;
                 const userId = UserData()?.user_id;
-                
+
                 if (!teacherId || !courseToPolled) return;
-                
+
                 // Fetch fresh questions from API
                 const response = await useAxios.get(`teacher/question-answer-list/${teacherId}/`, {
                     params: { user_id: userId }
                 });
-                
+
                 const allQA = response.data?.results || response.data || [];
-                
+
                 // Filter for current course (using same logic as fetchCourseQuestions)
                 const publishedCourseId = courseToPolled?.published_version?.course_id || courseToPolled?.course_id;
                 const draftCourseId = courseToPolled?.course_id;
-                
+
                 // ✨ PHASE N.X FIX: Backend returns q.course as integer ID only (not an object with course_id property)
                 // Convert to string for safe comparison (handles both string and number IDs from backend)
-                const courseQuestions = allQA.filter(q => 
-                    String(q.course) === String(publishedCourseId) || 
+                const courseQuestions = allQA.filter(q =>
+                    String(q.course) === String(publishedCourseId) ||
                     String(q.course) === String(draftCourseId)
                 );
-                
+
                 // Update questions list with fresh data
                 setQuestions(courseQuestions);
                 setFilteredQuestions(courseQuestions);
-                
+
                 // If viewing a conversation, also update it with fresh data
                 if (selectedConversation?.qa_id) {
                     const updatedConversation = courseQuestions.find(q => q.qa_id === selectedConversation.qa_id);
@@ -823,7 +823,7 @@ function QA() {
                         console.log(`[Questions Polling] Updated conversation: likes_count=${updatedConversation.likes_count}, user_liked=${updatedConversation.user_liked}`);
                     }
                 }
-                
+
                 console.log(`[Questions Polling] Fetched ${courseQuestions.length} questions with live like counts`);
             } catch (error) {
                 console.log("[Questions Polling] Error fetching questions:", error.message);
@@ -847,22 +847,22 @@ function QA() {
                 user_id: UserData()?.user_id,
                 course_id: selectedCourse?.course_id || selectedCourse?.id,
             });
-            
+
             // Update questions list
             if (response.data) {
-                setQuestions(prev => prev.map(q => 
+                setQuestions(prev => prev.map(q =>
                     (q.qa_id || q.id) === (question.qa_id || question.id)
                         ? { ...q, likes_count: response.data.likes_count || 0, user_liked: response.data.liked }
                         : q
                 ));
-                
+
                 // Update filtered questions as well
-                setFilteredQuestions(prev => prev.map(q => 
+                setFilteredQuestions(prev => prev.map(q =>
                     (q.qa_id || q.id) === (question.qa_id || question.id)
                         ? { ...q, likes_count: response.data.likes_count || 0, user_liked: response.data.liked }
                         : q
                 ));
-                
+
                 // Update selected conversation if viewing
                 if (selectedConversation?.qa_id === question.qa_id) {
                     setSelectedConversation(prev => ({
@@ -871,7 +871,7 @@ function QA() {
                         user_liked: response.data.liked
                     }));
                 }
-                
+
                 // Show success notification
                 Toast().fire({
                     icon: "success",
@@ -895,7 +895,7 @@ function QA() {
                 course_id: selectedCourse?.course_id || selectedCourse?.id,
                 message_id: message.id,
             });
-            
+
             // Update selected conversation messages if viewing
             if (response.data && selectedConversation?.qa_id === qaId) {
                 setSelectedConversation(prev => ({
@@ -907,7 +907,7 @@ function QA() {
                     )
                 }));
             }
-            
+
             // Show success notification
             Toast().fire({
                 icon: "success",
@@ -927,23 +927,23 @@ function QA() {
     const handleOpenReportModal = (item) => {
         // Handle both questions and messages
         const isMessage = item?.message && !item?.title;  // Messages have message field, questions have title
-        
+
         setReportingQuestion(item);
         setShowReportModal(true);
-        
+
         console.log("[handleOpenReportModal] Opening modal for:", { qaId: item?.qa_id, isMessage, qaReports });
-        
+
         // Check if user already has a report for this item
         const reportList = isMessage ? qaReports?.message_reports : qaReports?.question_reports;
         const fieldName = isMessage ? 'message__qa_id' : 'question__qa_id';
-        
+
         const existingReport = reportList?.find(r => {
             console.log(`[handleOpenReportModal] Comparing ${r[fieldName]} === ${item?.qa_id}: ${r[fieldName] === item?.qa_id}`);
             return r[fieldName] === item?.qa_id;
         });
-        
+
         console.log("[handleOpenReportModal] Found existing report:", existingReport);
-        
+
         if (existingReport) {
             // Show existing report feedback
             setCurrentReportData(existingReport);
@@ -958,19 +958,19 @@ function QA() {
             console.log("[handleOpenReportModal] No existing report, showing form");
         }
     };
-    
+
     // ✨ PHASE 7.17: Handle closing report modal
     // ✨ PHASE 7.16+: If report is reviewed (not pending), mark case as closed for this session
     const handleCloseReportModal = () => {
         console.log("[handleCloseReportModal] Closing modal");
-        
+
         // If report is reviewed (not pending), mark case as closed for this session
         if (currentReportData && currentReportData.status !== 'pending') {
             console.log("[handleCloseReportModal] Report is reviewed, marking case as closed");
             setClosedReports(prev => new Set([...prev, currentReportData.id]));
             console.log("[handleCloseReportModal] Case marked closed - user cannot edit or interact with it");
         }
-        
+
         setShowReportModal(false);
         setReportingQuestion(null);
         setReportReason('');
@@ -979,7 +979,7 @@ function QA() {
         setEditingReportId(null);  // ✨ PHASE 7.16+: Clear editing state
         console.log("[handleCloseReportModal] Modal state cleared");
     };
-    
+
     // ✨ PHASE 7.16+: Handle editing existing report
     const handleEditQAReport = () => {
         console.log("[handleEditQAReport] Entering edit mode for report", currentReportData);
@@ -991,7 +991,7 @@ function QA() {
             console.log("[handleEditQAReport] Form loaded with previous data, ready for re-submission");
         }
     };
-    
+
     // ✨ PHASE 7.18: Handle submitting report with Toast notification
     // ✨ PHASE 7.16+: Handle both new reports (POST) and edited reports (PUT)
     // ✨ PHASE 7.25: Determine if reporting a message or question and use correct endpoint
@@ -1003,7 +1003,7 @@ function QA() {
             });
             return;
         }
-        
+
         setIsSubmittingReport(true);
         try {
             const userData = UserData();
@@ -1015,15 +1015,15 @@ function QA() {
             // Messages have a 'message' field and no 'title' field
             // Questions have a 'title' field and possibly a 'message' field
             const isMessage = reportingQuestion?.message && !reportingQuestion?.title;
-            
+
             // ✨ PHASE 7.25: Use the correct endpoint based on item type
             // For messages: use the qa_id of the message
             // For questions: use the qa_id of the question
             const urlId = editingReportId || reportingQuestion.qa_id;
-            const endpoint = isMessage 
+            const endpoint = isMessage
                 ? `student/question-answer-message-report/${urlId}/`
                 : `student/question-answer-report/${urlId}/`;
-            
+
             console.log(`[handleSubmitReport] Reporting ${isMessage ? 'message' : 'question'} with qa_id=${urlId}, endpoint=${endpoint}`);
 
             // ✨ PHASE 7.16+: Handle both new reports (POST) and edited reports (PUT)
@@ -1056,20 +1056,20 @@ function QA() {
             // ✨ PHASE 7.25: Close modal and fetch fresh reports in background
             console.log("[handleSubmitReport] Closing modal after success");
             setShowReportModal(false);
-            
+
             // ✨ PHASE 7.25: Fetch and refresh reports silently in background
             if (selectedCourse) {
                 console.log("[handleSubmitReport] Fetching fresh reports in background");
                 fetchQAReports(selectedCourse);
             }
-            
+
             // ✨ PHASE 7.25: Reset form fields for next use
             console.log("[handleSubmitReport] Resetting form fields");
             setReportReason('');
             setReportDescription('');
             setEditingReportId(null);
             setReportingQuestion(null);
-            
+
         } catch (error) {
             console.error("Error submitting report:", error);
             if (error.response?.data?.error) {
@@ -1104,7 +1104,7 @@ function QA() {
             console.log("[useEffect] Stopping polling - no conversation selected");
             stopForumPolling();
         }
-        
+
         // Cleanup on unmount or when selectedConversation changes
         return () => {
             if (selectedConversation?.qa_id) {
@@ -1131,7 +1131,7 @@ function QA() {
             console.log("[useEffect] Stopping polling - report modal closed or no report selected");
             stopReportPolling();
         }
-        
+
         // Cleanup on unmount or when dependencies change
         return () => {
             if (showReportModal && currentReportData) {
@@ -1149,7 +1149,7 @@ function QA() {
             console.log("[useEffect] Stopping polling - no course selected");
             stopQuestionsPolling();
         }
-        
+
         // Cleanup on unmount or when dependencies change
         return () => {
             if (selectedCourse?.id || selectedCourse?.course_id) {
@@ -1246,19 +1246,19 @@ function QA() {
                                             </h4>
                                             <small className="text-muted">Pilih kursus untuk melihat diskusi dan menjawab pertanyaan siswa</small>
                                         </div>
-                                        <span className="badge bg-white text-muted border px-2.5 py-1.5 rounded-pill small">
+                                        <span className="badge bg-white text-muted border px-2 py-1 rounded-pill small">
                                             Total: {filteredCourses.length} Kursus
                                         </span>
                                     </div>
-                                    
+
                                     <div className="p-3">
                                         {/* Search Bar */}
                                         <div className="search-card mb-3">
                                             <div className="position-relative">
-                                                <input 
-                                                    className="form-control form-control-modern" 
-                                                    type="search" 
-                                                    placeholder="Cari kursus berdasarkan judul atau kategori..." 
+                                                <input
+                                                    className="form-control form-control-modern"
+                                                    type="search"
+                                                    placeholder="Cari kursus berdasarkan judul atau kategori..."
                                                     value={courseSearchQuery}
                                                     onChange={handleCourseSearch}
                                                 />
@@ -1269,7 +1269,7 @@ function QA() {
                                                     <small className="text-muted">
                                                         Ditemukan {filteredCourses.length} kursus untuk "{courseSearchQuery}"
                                                     </small>
-                                                    <button 
+                                                    <button
                                                         className="btn btn-sm btn-link text-decoration-none p-0 text-muted"
                                                         onClick={clearCourseSearch}
                                                     >
@@ -1285,13 +1285,13 @@ function QA() {
                                                 <i className="fas fa-search empty-icon"></i>
                                                 <h4 className="qa-empty-title">Tidak Ada Kursus Ditemukan</h4>
                                                 <p className="qa-empty-desc mb-3">
-                                                    {courseSearchQuery 
+                                                    {courseSearchQuery
                                                         ? `Tidak ada kursus yang sesuai "${courseSearchQuery}"`
                                                         : "Anda belum memiliki kursus yang ditugaskan."
                                                     }
                                                 </p>
                                                 {courseSearchQuery && (
-                                                    <button 
+                                                    <button
                                                         className="btn btn-sm btn-outline-secondary"
                                                         onClick={clearCourseSearch}
                                                     >
@@ -1300,21 +1300,21 @@ function QA() {
                                                 )}
                                             </div>
                                         ) : (
-                                            <div className="row g-2.5">
+                                            <div className="row g-2">
                                                 {filteredCourses.map((course, index) => (
                                                     <div key={course?.id || `course-${index}`} className="col-lg-6 col-12">
-                                                        <div 
+                                                        <div
                                                             className="student-qa-course-card"
                                                             onClick={() => handleCourseSelect(course)}
                                                         >
                                                             {/* Course Image Header */}
                                                             <div className="course-image-container">
                                                                 {course?.image ? (
-                                                                    <img 
-                                                                        src={course.image.startsWith("http") 
-                                                                            ? course.image 
+                                                                    <img
+                                                                        src={course.image.startsWith("http")
+                                                                            ? course.image
                                                                             : getMediaUrl(course.image)
-                                                                        } 
+                                                                        }
                                                                         alt={course?.title || "Course"}
                                                                         className="course-image"
                                                                         onError={(e) => {
@@ -1323,7 +1323,7 @@ function QA() {
                                                                         }}
                                                                     />
                                                                 ) : null}
-                                                                <div 
+                                                                <div
                                                                     className="course-placeholder course-image-placeholder"
                                                                     style={{ display: course?.image ? "none" : "flex" }}
                                                                 >
@@ -1347,7 +1347,7 @@ function QA() {
                                                                         {course?.title || "Untitled Course"}
                                                                     </h5>
                                                                 </div>
-                                                                
+
                                                                 {/* Course Meta Information */}
                                                                 <div className="student-qa-course-meta">
                                                                     <span className="qa-stats-badge">
@@ -1372,7 +1372,7 @@ function QA() {
                                 <div className="qa-search-section mb-3">
                                     {/* Back Button and Course Title */}
                                     <div className="qa-course-header">
-                                        <button 
+                                        <button
                                             className="qa-back-circle-btn"
                                             onClick={() => setSelectedCourse(null)}
                                             title="Kembali ke pilihan kursus"
@@ -1419,7 +1419,7 @@ function QA() {
                                                 </button>
                                             )}
                                         </div>
-                                        
+
                                         {/* Bagian Filter Dropdown */}
                                         <div className="qa-filter-select-box">
                                             <select
@@ -1438,7 +1438,7 @@ function QA() {
                                                 ))}
                                             </select>
                                         </div>
-                                        
+
                                         {/* Pelajaran Filter Dropdown */}
                                         <div className="qa-filter-select-box">
                                             <select
@@ -1455,7 +1455,7 @@ function QA() {
                                                 ))}
                                             </select>
                                         </div>
-                                        
+
                                         {/* Clear Filters Button */}
                                         {(discussionFilters.search || discussionFilters.bagian || discussionFilters.pelajaran) && (
                                             <button
@@ -1488,7 +1488,7 @@ function QA() {
                                                 </div>
                                                 <h5 className="qa-empty-title">Kesalahan Memuat Pertanyaan</h5>
                                                 <p className="qa-empty-desc mb-2">{error}</p>
-                                                <button 
+                                                <button
                                                     className="btn btn-sm btn-outline-teal mt-1"
                                                     onClick={() => fetchCourseQuestions(selectedCourse?.id)}
                                                 >
@@ -1497,12 +1497,12 @@ function QA() {
                                                 </button>
                                             </div>
                                         ) : filteredQuestions?.length > 0 ? (
-                                            <div className="row g-2.5">
+                                            <div className="row g-2">
                                                 {filteredQuestions.map((q, index) => (
                                                     <div key={q.id || q.qa_id || `question-${index}`} className="col-12">
-                                                        <div 
-                                                            className="modern-question-card qa-card-hover" 
-                                                            style={{ cursor: 'pointer' }} 
+                                                        <div
+                                                            className="modern-question-card qa-card-hover"
+                                                            style={{ cursor: 'pointer' }}
                                                             onClick={() => setSelectedConversation(q)}
                                                         >
                                                             {/* Top Section */}
@@ -1510,8 +1510,8 @@ function QA() {
                                                                 <div className="qa-card-user-group">
                                                                     {q.profile?.image ? (
                                                                         <img
-                                                                            src={q.profile?.image?.startsWith("http") 
-                                                                                ? q.profile.image 
+                                                                            src={q.profile?.image?.startsWith("http")
+                                                                                ? q.profile.image
                                                                                 : q.profile?.image?.startsWith("/images/")
                                                                                     ? q.profile.image
                                                                                     : getMediaUrl(q.profile?.image)}
@@ -1523,18 +1523,18 @@ function QA() {
                                                                             }}
                                                                         />
                                                                     ) : null}
-                                                                    <div 
+                                                                    <div
                                                                         className="qa-avatar-placeholder-compact"
                                                                         style={{ display: q.profile?.image ? "none" : "flex" }}
                                                                     >
                                                                         <i className="fas fa-user"></i>
                                                                     </div>
-                                                                    
+
                                                                     <div className="qa-card-user-text">
                                                                         <span className="qa-user-name">
                                                                             {q.profile?.full_name || 'Pengguna Anonim'}
                                                                         </span>
-                                                                        <div className="d-flex align-items-center gap-1.5 flex-wrap">
+                                                                        <div className="d-flex align-items-center gap-1 flex-wrap">
                                                                             <span className="qa-time-meta">
                                                                                 <i className="fas fa-clock me-1"></i>
                                                                                 {moment(q.date).fromNow()}
@@ -1552,7 +1552,7 @@ function QA() {
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                
+
                                                                 {/* Badges on right */}
                                                                 {(q.variant || q.variant_item) && (
                                                                     <div className="qa-card-badges-wrap">
@@ -1571,7 +1571,7 @@ function QA() {
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            
+
                                                             {/* Title, Preview, and Right Side Badges */}
                                                             <div className="qa-card-content-row d-flex justify-content-between align-items-start gap-2">
                                                                 <div className="qa-card-text-block flex-grow-1" style={{ minWidth: 0 }}>
@@ -1603,18 +1603,18 @@ function QA() {
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            
+
                                                             {/* Bottom Meta */}
                                                             <div className="question-meta">
                                                                 <span className="replies-badge">
                                                                     <i className="fas fa-comments"></i>
                                                                     <span>{q.replies_count || 0} Balasan</span>
                                                                 </span>
-                                                                
-                                                                <div className="d-flex align-items-center gap-1.5">
-                                                                    <button 
-                                                                        className={`forum-like-btn ${q?.user_liked ? 'liked' : ''}`} 
-                                                                        title={q?.user_liked ? "Batal menyukai" : "Sukai pertanyaan ini"} 
+
+                                                                <div className="d-flex align-items-center gap-1">
+                                                                    <button
+                                                                        className={`forum-like-btn ${q?.user_liked ? 'liked' : ''}`}
+                                                                        title={q?.user_liked ? "Batal menyukai" : "Sukai pertanyaan ini"}
                                                                         onClick={(e) => { e.stopPropagation(); handleLikeQuestion(q); }}
                                                                         style={{
                                                                             color: q?.user_liked ? '#eab308' : 'inherit',
@@ -1626,8 +1626,8 @@ function QA() {
                                                                     {(() => {
                                                                         const reportStatus = getQAReportStatus(q.qa_id, 'question');
                                                                         return (
-                                                                            <button 
-                                                                                className="forum-report-btn" 
+                                                                            <button
+                                                                                className="forum-report-btn"
                                                                                 title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
                                                                                 onClick={(e) => { e.stopPropagation(); handleOpenReportModal(q); }}
                                                                                 style={reportStatus ? { color: '#dc2626', opacity: 0.85 } : {}}
@@ -1726,8 +1726,8 @@ function QA() {
                                                 <div className="forum-user-avatar-wrapper">
                                                     {selectedConversation?.profile?.image ? (
                                                         <img
-                                                            src={selectedConversation.profile.image.startsWith("http") 
-                                                                ? selectedConversation.profile.image 
+                                                            src={selectedConversation.profile.image.startsWith("http")
+                                                                ? selectedConversation.profile.image
                                                                 : selectedConversation.profile.image.startsWith("/images/")
                                                                     ? selectedConversation.profile.image
                                                                     : getMediaUrl(selectedConversation.profile.image)}
@@ -1739,7 +1739,7 @@ function QA() {
                                                             }}
                                                         />
                                                     ) : null}
-                                                    <div 
+                                                    <div
                                                         className="forum-user-avatar-placeholder"
                                                         style={{ display: selectedConversation?.profile?.image ? "none" : "flex" }}
                                                     >
@@ -1754,11 +1754,11 @@ function QA() {
                                                             (selectedConversation?.user_id === selectedCourse.teacher.user_id) ||
                                                             (selectedConversation?.profile?.user_id === selectedCourse.teacher.user_id)
                                                         ) && (
-                                                            <span className="forum-user-badge-instructor" title="Instruktur Kursus">
-                                                                <i className="fas fa-chalkboard-user"></i>
-                                                                Instruktur
-                                                            </span>
-                                                        )}
+                                                                <span className="forum-user-badge-instructor" title="Instruktur Kursus">
+                                                                    <i className="fas fa-chalkboard-user"></i>
+                                                                    Instruktur
+                                                                </span>
+                                                            )}
                                                     </div>
                                                     <div className="forum-user-timestamp">
                                                         <i className="fas fa-clock me-1"></i>
@@ -1780,8 +1780,8 @@ function QA() {
                                         </div>
                                         {/* Post Footer */}
                                         <div className="forum-post-footer">
-                                            <button 
-                                                className={`forum-like-btn ${selectedConversation?.user_liked ? 'liked' : ''}`} 
+                                            <button
+                                                className={`forum-like-btn ${selectedConversation?.user_liked ? 'liked' : ''}`}
                                                 title={selectedConversation?.user_liked ? "Batal menyukai" : "Sukai pertanyaan ini"}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -1797,8 +1797,8 @@ function QA() {
                                             {(() => {
                                                 const reportStatus = getQAReportStatus(selectedConversation?.qa_id, 'question');
                                                 return (
-                                                    <button 
-                                                        className="forum-report-btn" 
+                                                    <button
+                                                        className="forum-report-btn"
                                                         title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan pertanyaan ini"}
                                                         onClick={() => handleOpenReportModal(selectedConversation)}
                                                         style={reportStatus ? { color: '#dc2626', opacity: 0.85 } : {}}
@@ -1837,8 +1837,8 @@ function QA() {
                                                                     <div className="forum-user-avatar-wrapper">
                                                                         {msg.profile?.image ? (
                                                                             <img
-                                                                                src={msg.profile.image.startsWith("http") 
-                                                                                    ? msg.profile.image 
+                                                                                src={msg.profile.image.startsWith("http")
+                                                                                    ? msg.profile.image
                                                                                     : msg.profile.image.startsWith("/images/")
                                                                                         ? msg.profile.image
                                                                                         : getMediaUrl(msg.profile.image)}
@@ -1850,7 +1850,7 @@ function QA() {
                                                                                 }}
                                                                             />
                                                                         ) : null}
-                                                                        <div 
+                                                                        <div
                                                                             className="forum-user-avatar-placeholder"
                                                                             style={{ display: msg.profile?.image ? "none" : "flex" }}
                                                                         >
@@ -1895,9 +1895,9 @@ function QA() {
                                                                     <i className="fas fa-check-circle me-1 text-teal"></i>
                                                                     <span>{msg.is_solution ? "Solusi Terpilih" : "Tandai Solusi"}</span>
                                                                 </button>
-                                                                <div className="d-flex align-items-center gap-1.5 ms-auto">
-                                                                    <button 
-                                                                        className={`forum-like-btn ${msg?.user_liked ? 'liked' : ''}`} 
+                                                                <div className="d-flex align-items-center gap-1 ms-auto">
+                                                                    <button
+                                                                        className={`forum-like-btn ${msg?.user_liked ? 'liked' : ''}`}
                                                                         title={msg?.user_liked ? "Batal menyukai" : "Sukai jawaban ini"}
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
@@ -1913,8 +1913,8 @@ function QA() {
                                                                     {(() => {
                                                                         const reportStatus = getQAReportStatus(msg.qa_id, 'message');
                                                                         return (
-                                                                            <button 
-                                                                                className="forum-report-btn" 
+                                                                            <button
+                                                                                className="forum-report-btn"
                                                                                 title={reportStatus ? `Laporan: ${reportStatus.status}` : "Laporkan jawaban ini"}
                                                                                 onClick={() => handleOpenReportModal(msg)}
                                                                                 style={reportStatus ? { color: '#dc2626', opacity: 0.85 } : {}}
@@ -1950,7 +1950,7 @@ function QA() {
                                     {/* Reply Input Form */}
                                     <div className="forum-reply-form-section">
                                         <h6 className="forum-reply-title">
-                                            <i className="fas fa-reply me-1.5" style={{ color: "#0f766e" }}></i>
+                                            <i className="fas fa-reply me-1" style={{ color: "#0f766e" }}></i>
                                             Tambahkan Balasan Sebagai Instruktur
                                         </h6>
                                         <form className="message-form-qa" onSubmit={sendNewMessage}>
@@ -1989,11 +1989,11 @@ function QA() {
                                                     />
                                                 </div>
                                             ) : (
-                                                <textarea 
+                                                <textarea
                                                     ref={replyTextareaRef}
-                                                    name="message" 
-                                                    className="message-textarea-qa" 
-                                                    rows="4" 
+                                                    name="message"
+                                                    className="message-textarea-qa"
+                                                    rows="4"
                                                     onChange={handleMessageChange}
                                                     onPaste={handleReplyPasteImage}
                                                     value={getCurrentMessage()}
@@ -2016,19 +2016,19 @@ function QA() {
                                                     <i className="fas fa-shield-alt me-1" style={{ color: "#0f766e" }}></i>
                                                     Tergabung sebagai instruktur kursus &bull; Format Markdown & Lampiran didukung
                                                 </small>
-                                                <button 
-                                                    className="qa-send-btn" 
+                                                <button
+                                                    className="qa-send-btn"
                                                     type="submit"
                                                     disabled={messageLoading || (!getCurrentMessage().trim() && !replyAttachment) || isCompressingReplyAttachment}
                                                 >
                                                     {messageLoading ? (
                                                         <>
-                                                            <span className="spinner-border spinner-border-sm me-1.5"></span>
+                                                            <span className="spinner-border spinner-border-sm me-1"></span>
                                                             <span>Mengirim...</span>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <i className="fas fa-paper-plane me-1.5"></i>
+                                                            <i className="fas fa-paper-plane me-1"></i>
                                                             <span>Kirim Balasan</span>
                                                         </>
                                                     )}
@@ -2055,7 +2055,7 @@ function QA() {
 
             {/* ✨ PHASE 7.17: Report Modal Dialog */}
             {showReportModal && (
-                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0)' }}>
                     <div className="modal-dialog modal-dialog-centered">
                         <div className="modal-content abuse-report-modal">
                             <div className="modal-header abuse-modal-header">
@@ -2072,9 +2072,9 @@ function QA() {
                                         </>
                                     )}
                                 </h5>
-                                <button 
-                                    type="button" 
-                                    className="btn-close" 
+                                <button
+                                    type="button"
+                                    className="btn-close"
                                     onClick={handleCloseReportModal}
                                     disabled={isSubmittingReport}
                                 ></button>
@@ -2114,72 +2114,72 @@ function QA() {
                                             </div>
 
                                             <div className="d-flex gap-3 flex-wrap align-items-start">
-                                            {/* Report Details */}
-                                            <div className="card bg-light mb-3" style={{ flex: '1 1 calc(50% - 0.75rem)', minWidth: '280px' }}>
-                                                <div className="card-body">
-                                                    {/* Horizontal Layout for Reason */}
-                                                    <div className="d-flex justify-content-between align-items-start mb-3">
-                                                        <label className="form-label fw-semibold text-muted mb-0">Alasan yang Dilaporkan:</label>
-                                                        <p className="mb-0 text-end">
-                                                            {currentReportData.reason === 'spam' && '🚫 Spam'}
-                                                            {currentReportData.reason === 'inappropriate' && '⚠️ Konten Tidak Pantas'}
-                                                            {currentReportData.reason === 'offensive' && '😠 Konten Menyinggung'}
-                                                            {currentReportData.reason === 'misinformation' && '❌ Informasi Salah'}
-                                                            {currentReportData.reason === 'other' && '❓ Lainnya'}
-                                                        </p>
-                                                    </div>
-                                                    
-                                                    {/* Horizontal Layout for Description */}
-                                                    {currentReportData.description && (
+                                                {/* Report Details */}
+                                                <div className="card bg-light mb-3" style={{ flex: '1 1 calc(50% - 0.75rem)', minWidth: '280px' }}>
+                                                    <div className="card-body">
+                                                        {/* Horizontal Layout for Reason */}
                                                         <div className="d-flex justify-content-between align-items-start mb-3">
-                                                            <label className="form-label fw-semibold text-muted mb-0">Deskripsi Laporan:</label>
-                                                            <p className="mb-0 text-break text-end ps-2">{currentReportData.description}</p>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Horizontal Layout for Timestamp */}
-                                                    <div className="d-flex justify-content-between align-items-start">
-                                                        <label className="form-label fw-semibold text-muted mb-0">Tanggal Lapor:</label>
-                                                        <p className="mb-0 text-end">{currentReportData.reported_at ? new Date(currentReportData.reported_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Admin Feedback Section */}
-                                            {currentReportData.reviewed_at && (
-                                                <div className="card border-success mb-0" style={{ flex: '1 1 calc(50% - 0.75rem)', minWidth: '280px' }}>
-                                                    <div className="card-body border-success">
-                                                        <h6 className="card-title text-success mb-3">
-                                                            <i className="fas fa-shield-alt me-2"></i>
-                                                            Umpan Balik Admin
-                                                        </h6>
-                                                        
-                                                        {/* Horizontal Layout for Review Timestamp */}
-                                                        <div className="d-flex justify-content-between align-items-start mb-3">
-                                                            <label className="form-label fw-semibold text-muted mb-0">Ditinjau Pada:</label>
-                                                            <p className="mb-0 text-end">{new Date(currentReportData.reviewed_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                                                            <label className="form-label fw-semibold text-muted mb-0">Alasan yang Dilaporkan:</label>
+                                                            <p className="mb-0 text-end">
+                                                                {currentReportData.reason === 'spam' && '🚫 Spam'}
+                                                                {currentReportData.reason === 'inappropriate' && '⚠️ Konten Tidak Pantas'}
+                                                                {currentReportData.reason === 'offensive' && '😠 Konten Menyinggung'}
+                                                                {currentReportData.reason === 'misinformation' && '❌ Informasi Salah'}
+                                                                {currentReportData.reason === 'other' && '❓ Lainnya'}
+                                                            </p>
                                                         </div>
 
-                                                        {/* Horizontal Layout for Reviewer */}
-                                                        {currentReportData.reviewed_by__first_name || currentReportData.reviewed_by__username ? (
+                                                        {/* Horizontal Layout for Description */}
+                                                        {currentReportData.description && (
                                                             <div className="d-flex justify-content-between align-items-start mb-3">
-                                                                <label className="form-label fw-semibold text-muted mb-0">Ditinjau Oleh:</label>
-                                                                <p className="mb-0 text-end">{currentReportData.reviewed_by__first_name || currentReportData.reviewed_by__username || 'Admin'}</p>
-                                                            </div>
-                                                        ) : null}
-
-                                                        {/* Admin Notes Section */}
-                                                        {currentReportData.review_notes && (
-                                                            <div className="mb-0">
-                                                                <label className="form-label fw-semibold text-muted mb-2">Catatan Admin:</label>
-                                                                <div className="alert alert-info mb-0">
-                                                                    <p className="mb-0 text-break">{currentReportData.review_notes}</p>
-                                                                </div>
+                                                                <label className="form-label fw-semibold text-muted mb-0">Deskripsi Laporan:</label>
+                                                                <p className="mb-0 text-break text-end ps-2">{currentReportData.description}</p>
                                                             </div>
                                                         )}
+
+                                                        {/* Horizontal Layout for Timestamp */}
+                                                        <div className="d-flex justify-content-between align-items-start">
+                                                            <label className="form-label fw-semibold text-muted mb-0">Tanggal Lapor:</label>
+                                                            <p className="mb-0 text-end">{currentReportData.reported_at ? new Date(currentReportData.reported_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            )}
+
+                                                {/* Admin Feedback Section */}
+                                                {currentReportData.reviewed_at && (
+                                                    <div className="card border-success mb-0" style={{ flex: '1 1 calc(50% - 0.75rem)', minWidth: '280px' }}>
+                                                        <div className="card-body border-success">
+                                                            <h6 className="card-title text-success mb-3">
+                                                                <i className="fas fa-shield-alt me-2"></i>
+                                                                Umpan Balik Admin
+                                                            </h6>
+
+                                                            {/* Horizontal Layout for Review Timestamp */}
+                                                            <div className="d-flex justify-content-between align-items-start mb-3">
+                                                                <label className="form-label fw-semibold text-muted mb-0">Ditinjau Pada:</label>
+                                                                <p className="mb-0 text-end">{new Date(currentReportData.reviewed_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                                                            </div>
+
+                                                            {/* Horizontal Layout for Reviewer */}
+                                                            {currentReportData.reviewed_by__first_name || currentReportData.reviewed_by__username ? (
+                                                                <div className="d-flex justify-content-between align-items-start mb-3">
+                                                                    <label className="form-label fw-semibold text-muted mb-0">Ditinjau Oleh:</label>
+                                                                    <p className="mb-0 text-end">{currentReportData.reviewed_by__first_name || currentReportData.reviewed_by__username || 'Admin'}</p>
+                                                                </div>
+                                                            ) : null}
+
+                                                            {/* Admin Notes Section */}
+                                                            {currentReportData.review_notes && (
+                                                                <div className="mb-0">
+                                                                    <label className="form-label fw-semibold text-muted mb-2">Catatan Admin:</label>
+                                                                    <div className="alert alert-info mb-0">
+                                                                        <p className="mb-0 text-break">{currentReportData.review_notes}</p>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Pending Status Message */}
@@ -2205,10 +2205,10 @@ function QA() {
                                                 Bantu kami menjaga kualitas komunitas dengan melaporkan konten yang tidak sesuai.
                                             </p>
                                         )}
-                                        
+
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">Alasan Laporan <span className="text-danger">*</span></label>
-                                            <select 
+                                            <select
                                                 className="form-select form-select-modern"
                                                 value={reportReason}
                                                 onChange={(e) => setReportReason(e.target.value)}
@@ -2225,7 +2225,7 @@ function QA() {
 
                                         <div className="mb-3">
                                             <label className="form-label fw-semibold">Penjelasan Tambahan (Opsional)</label>
-                                            <textarea 
+                                            <textarea
                                                 className="form-control"
                                                 rows="3"
                                                 placeholder="Berikan rincian untuk membantu Admin memahami masalah ini..."
@@ -2238,7 +2238,7 @@ function QA() {
 
                                         <div className="alert alert-info">
                                             <i className="fas fa-info-circle me-2"></i>
-                                            {editingReportId 
+                                            {editingReportId
                                                 ? 'Perubahan laporan Anda akan ditinjau ulang oleh Admin.'
                                                 : 'Tim Admin kami akan meninjau laporan ini dan mengambil tindakan yang sesuai.'
                                             }
@@ -2249,8 +2249,8 @@ function QA() {
                             <div className="modal-footer abuse-modal-footer">
                                 {/* ✨ PHASE 7.16+: Close/Cancel button - only when NOT editing and report is not pending and NOT closed */}
                                 {!editingReportId && (!currentReportData || (currentReportData?.status !== 'pending' && !closedReports.has(currentReportData?.id))) && (
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         className="btn btn-outline-secondary"
                                         onClick={handleCloseReportModal}
                                         disabled={isSubmittingReport}
@@ -2258,11 +2258,11 @@ function QA() {
                                         {currentReportData ? 'Selesai' : 'Batal'}
                                     </button>
                                 )}
-                                
+
                                 {/* ✨ PHASE 7.16+: Edit Laporan button - only when viewing existing report (NOT editing) and status is NOT pending and NOT closed */}
                                 {currentReportData && !editingReportId && currentReportData?.status !== 'pending' && !closedReports.has(currentReportData?.id) && (
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         className="btn btn-warning"
                                         onClick={handleEditQAReport}
                                         disabled={isSubmittingReport}
@@ -2271,11 +2271,11 @@ function QA() {
                                         Edit Laporan
                                     </button>
                                 )}
-                                
+
                                 {/* ✨ PHASE 7.16+: Submit button - for new reports OR when editing existing reports */}
                                 {(!currentReportData || editingReportId) && (
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         className="btn btn-danger"
                                         onClick={handleSubmitReport}
                                         disabled={isSubmittingReport || !reportReason.trim()}
@@ -2293,7 +2293,7 @@ function QA() {
                                         )}
                                     </button>
                                 )}
-                                
+
                                 {/* ✨ PHASE 7.16+: Pending message - show info when report is waiting for admin review */}
                                 {currentReportData && !editingReportId && currentReportData?.status === 'pending' && (
                                     <div className="flex-grow-1">
@@ -2303,7 +2303,7 @@ function QA() {
                                         </p>
                                     </div>
                                 )}
-                                
+
                                 {/* ✨ PHASE 7.16+: Case closed message - show when user has closed the case */}
                                 {currentReportData && !editingReportId && currentReportData?.status !== 'pending' && closedReports.has(currentReportData?.id) && (
                                     <div className="flex-grow-1">

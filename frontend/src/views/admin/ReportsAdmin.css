@@ -146,24 +146,29 @@
 /* ========================================
    UNIFIED TABS CONTAINER
    ======================================== */
+.reports-tabs-wrapper,
 .reports-tabs-container {
     background: #ffffff;
-    border: 1px solid var(--admin-border-subtle);
+    border: 1px solid var(--admin-border-subtle, #e2e8f0);
     border-radius: 12px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     overflow: hidden;
 }
 
+.reports-tabs-navigation,
 .reports-tabs-header {
     display: flex;
     gap: 0.35rem;
     background: #f8fafc;
     border-bottom: 1px solid #e2e8f0;
-    padding: 0.4rem 0.6rem;
+    padding: 0.35rem 0.5rem 0 0.5rem;
     overflow-x: auto;
     scrollbar-width: none;
+    align-items: center;
+    width: 100%;
 }
 
+.reports-tabs-navigation::-webkit-scrollbar,
 .reports-tabs-header::-webkit-scrollbar {
     display: none;
 }
@@ -171,17 +176,22 @@
 .reports-tab-button {
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 8px;
-    padding: 0.55rem 0.95rem;
-    color: #475569;
-    font-size: 0.85rem;
+    border-bottom: none;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 0.65rem 1rem;
+    font-size: 0.82rem;
     font-weight: 600;
+    color: #64748b;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     white-space: nowrap;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    bottom: -1px;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
 }
 
 .reports-tab-button:hover:not(.active) {
@@ -190,11 +200,11 @@
 }
 
 .reports-tab-button.active {
-    background: #ffffff;
-    color: var(--admin-teal);
+    background: #ffffff !important;
+    color: var(--admin-teal, #0f766e) !important;
+    border-color: #e2e8f0 #e2e8f0 #ffffff #e2e8f0 !important;
     font-weight: 700;
-    border-color: #cbd5e1;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    box-shadow: none !important;
 }
 
 .reports-tab-icon {
@@ -421,36 +431,51 @@
 
 .search-input-wrapper {
     position: relative;
-    width: 250px;
+    width: 260px;
+    display: flex;
+    align-items: center;
 }
 
-.search-input {
-    padding-left: 2rem;
-    padding-right: 1.8rem;
-    font-size: 0.8rem;
-    border-radius: 6px;
-    border-color: #cbd5e1;
-    height: 32px;
-}
-
-.search-input:focus {
-    border-color: var(--admin-teal);
-    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
-}
-
-.search-icon {
+.search-input-wrapper .search-icon {
     position: absolute;
-    left: 0.65rem;
+    left: 0.8rem;
     top: 50%;
     transform: translateY(-50%);
     color: #94a3b8;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     pointer-events: none;
+    z-index: 5;
+    line-height: 1;
 }
 
-.search-clear-btn {
+.search-input-wrapper .search-input,
+.search-input-wrapper input.form-control,
+.search-input-wrapper input.form-control-sm,
+input.search-input {
+    padding-left: 2.45rem !important;
+    padding-right: 2rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+    border: 1px solid #cbd5e1 !important;
+    background-color: #f8fafc !important;
+    height: 32px !important;
+    width: 100% !important;
+    transition: all 0.2s ease !important;
+}
+
+.search-input-wrapper .search-input:focus,
+.search-input-wrapper input.form-control:focus,
+input.search-input:focus {
+    background-color: #ffffff !important;
+    border-color: var(--admin-teal) !important;
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15) !important;
+    outline: none !important;
+}
+
+.search-input-wrapper .search-clear-btn,
+.search-input-wrapper .btn-clear-search {
     position: absolute;
-    right: 0.5rem;
+    right: 0.55rem;
     top: 50%;
     transform: translateY(-50%);
     background: transparent;
@@ -458,10 +483,13 @@
     color: #94a3b8;
     font-size: 0.75rem;
     cursor: pointer;
-    padding: 0;
+    padding: 0.2rem;
+    z-index: 5;
+    line-height: 1;
 }
 
-.search-clear-btn:hover {
+.search-input-wrapper .search-clear-btn:hover,
+.search-input-wrapper .btn-clear-search:hover {
     color: #ef4444;
 }
 
@@ -1013,7 +1041,21 @@
 }
 
 .bg-slate-subtle {
-    background: rgba(100, 116, 139, 0.12) !important;
+    background: #f1f5f9 !important;
+}
+
+.kpi-icon-box.bg-slate-subtle {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0;
+}
+
+.kpi-icon-box.bg-slate-subtle i {
+    color: #475569 !important;
+    font-size: 1.15rem !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* ========================================
@@ -1096,5 +1138,24 @@
     font-size: 0.75rem !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
+}
+
+/* Universal Search Input Guard for all Reports tabs */
+.reports-tabs-content .search-input-wrapper input.search-input,
+.reports-tabs-content .search-input-wrapper input.form-control,
+.reports-tabs-content .fdb-search-box input,
+.reports-tabs-content .doc-search-wrapper input,
+.reports-tabs-content input.search-input {
+    padding-left: 2.55rem !important;
+    padding-right: 2.1rem !important;
+}
+
+.reports-tabs-content .search-input-wrapper .search-icon,
+.reports-tabs-content .fdb-search-box .search-icon,
+.reports-tabs-content .doc-search-wrapper .search-icon {
+    left: 0.85rem !important;
+    font-size: 0.85rem !important;
+    pointer-events: none !important;
+    z-index: 5 !important;
 }
 
