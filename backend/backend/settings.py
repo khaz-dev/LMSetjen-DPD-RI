@@ -803,3 +803,6 @@ EXTERNAL_API_PAGE_PARAM = env('EXTERNAL_API_PAGE_PARAM', default='page')
 EXTERNAL_API_PAGINATION_MAX_PAGES = env.int('EXTERNAL_API_PAGINATION_MAX_PAGES', default=200)
 EXTERNAL_API_VERIFY_SSL = env.bool('EXTERNAL_API_VERIFY_SSL', default=True)
 EXTERNAL_API_CA_BUNDLE = env('EXTERNAL_API_CA_BUNDLE', default='')
+
+# Manta AI Virtual Assistant (Google Gemini LLM Integration)
+GEMINI_API_KEY = env('GEMINI_API_KEY', default=None)

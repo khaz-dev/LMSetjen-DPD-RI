@@ -320,5 +320,9 @@ urlpatterns = [
     path("api/v1/modules/<int:module_id>/tracking/", scorm_views.SCORMTrackingAPIView.as_view(), name="scorm_tracking_api_v1"),
     path("api/v1/modules/<int:module_id>/detail/", scorm_views.ModuleDetailAPIView.as_view(), name="scorm_module_detail_v1"),
     path("modules/<int:module_id>/player/", scorm_views.scorm_player_view, name="scorm_player"),
+
+    # ✨ AI Virtual Assistant (Si Manta) Endpoints
+    path("ai/chat/", api_views.AIAssistantChatAPIView.as_view(), name="ai-assistant-chat"),
+    path("ai/suggestions/", api_views.AIAssistantSuggestionsAPIView.as_view(), name="ai-assistant-suggestions"),
 ]
 

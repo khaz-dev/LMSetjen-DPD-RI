@@ -14,6 +14,8 @@ import ThemeProvider from "./components/ThemeProvider";
 
 // ✨ PHASE 11.1: Import Feedback Floating Button
 import FeedbackFloatingButton from "./components/Feedback/FeedbackFloatingButton";
+// ✨ AI Assistant Avatar (Si Manta) - Pojok Kiri Bawah
+import SiMantaAvatar from "./components/AIAssistant/SiMantaAvatar";
 
 // Import mobile-optimized Toast styles
 import "./views/plugin/toast-mobile.css";
@@ -715,11 +717,13 @@ function App() {
                         </Routes>
                         </Suspense>
                     </MainWrapper>
-                </ThemeProvider>
-                    </BrowserRouter>
                     {/* ✨ PHASE 11.1: Feedback floating button visible across all pages */}
                     <FeedbackFloatingButton />
-                    </RolesContext.Provider>
+                    {/* ✨ Asisten AI LMS Setjen DPD RI - Avatar Manta di pojok kiri bawah */}
+                    <SiMantaAvatar />
+                </ThemeProvider>
+            </BrowserRouter>
+            </RolesContext.Provider>
             </ProfileContext.Provider>
         </WishlistContext.Provider>
         </PageCacheProvider>
