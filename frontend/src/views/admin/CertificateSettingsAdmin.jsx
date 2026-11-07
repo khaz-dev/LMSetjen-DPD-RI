@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
-import BaseHeader from "../partials/BaseHeader";
 import apiInstance from "../../utils/axios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
@@ -431,8 +430,7 @@ function CertificateSettingsAdmin() {
     };
 
     return (
-        <div className="cert-admin-page">
-            <BaseHeader />
+        <div className="admin-page-wrapper">
             <AdminHeader />
 
             {/* Hero Title Section */}

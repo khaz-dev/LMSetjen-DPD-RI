@@ -1,5 +1,29 @@
 /* Option Selector Component Styles */
 
+.form-field-container {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.form-label.modern-label,
+.modern-label {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.45rem;
+    letter-spacing: -0.01em;
+}
+
+.form-label-icon {
+    color: #0f766e;
+    font-size: 0.88rem;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
 .option-selector-container {
     position: relative;
     width: 100%;

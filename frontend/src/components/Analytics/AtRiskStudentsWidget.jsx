@@ -227,8 +227,8 @@ export default function AtRiskStudentsWidget() {
             <tbody>
               {filteredRisks.map((risk) => (
                 <tr key={risk.id} className={`risk-${risk.risk_level.toLowerCase()}`}>
-                  <td className="student-name">
-                    <strong>{risk.student_name || risk.enrollment_detail?.user || `Peserta #${risk.enrollment || 'N/A'}`}</strong>
+                  <td className="at-risk-student-cell student-name">
+                    <strong className="at-risk-student-name">{risk.student_name || risk.enrollment_detail?.user || `Peserta #${risk.enrollment || 'N/A'}`}</strong>
                   </td>
                   <td>
                     <span className={`badge bg-${getRiskColor(risk.risk_level)}`}>

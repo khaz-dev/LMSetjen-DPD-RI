@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { 
     FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaUserGraduate, FaUserTie, 
-    FaUsers, FaChartLine, FaUserCheck, FaUserTimes, FaFilter,
-    FaCog, FaUserCog, FaChevronDown, FaBell, FaSpinner, FaArrowRight, FaTimes, FaCheck
+    FaUsers, FaChartLine, FaUserCheck, FaUserTimes, FaFilter, FaLandmark, FaIdBadge, FaGlobe,
+    FaCog, FaUserCog, FaChevronDown, FaBell, FaSpinner, FaArrowRight, FaTimes, FaCheck,
+    FaPhone, FaBriefcase, FaBuilding, FaMapMarkerAlt, FaCalendarAlt, FaHistory, FaAward, FaBook, FaKey, FaShieldAlt, FaCheckCircle, FaUser, FaEnvelope
 } from "react-icons/fa";
 import { 
     MdFilterList, MdCheckBox, MdCheckBoxOutlineBlank,
@@ -13,6 +14,13 @@ import Footer from "../partials/Footer";
 import useAxios from "../../utils/useAxios";
 import Toast, { DeleteConfirmation } from "../plugin/Toast";
 import dayjs from "../../utils/dayjs";
+import {
+    ASN_POSITIONS,
+    ASN_INSTITUTIONS_GROUPS,
+    PROFESSIONS_LIST,
+    COUNTRIES_LIST,
+    INDONESIA_PROVINCES_AND_CITIES,
+} from "../../data/onboardingData";
 import "./UsersAdmin.css";
 import "../../styles/PasswordInput.css";
 
@@ -42,6 +50,7 @@ function UsersAdmin() {
     });
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState("all");
+    const [userTypeFilter, setUserTypeFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
     // ✨ PHASE X: Make itemsPerPage configurable (ISSUE FIX #2)
@@ -104,13 +113,24 @@ function UsersAdmin() {
     const [formData, setFormData] = useState({
         full_name: "",
         email: "",
+        phone: "",
         role: "student",
-        is_student: false,
+        is_student: true,
         is_instructor: false,
         is_admin: false,
+        is_active: true,
+        user_type: "UMUM",
+        nip: "",
+        jenis_jabatan: "",
+        instansi_asal: "",
+        pekerjaan: "",
+        negara: "Indonesia",
+        provinsi: "",
+        kota_kabupaten: "",
         password: "",
         password2: ""
     });
+    const [showEditPassword, setShowEditPassword] = useState(false);
     
     const [passwordValidation, setPasswordValidation] = useState({
         length: false,
@@ -120,6 +140,14 @@ function UsersAdmin() {
         special: false,
         notCommon: true
     });
+
+    // Cascading cities for modal form
+    const availableModalCities = useMemo(() => {
+        if (!formData.provinsi || !INDONESIA_PROVINCES_AND_CITIES[formData.provinsi]) {
+            return [];
+        }
+        return INDONESIA_PROVINCES_AND_CITIES[formData.provinsi];
+    }, [formData.provinsi]);
 
     const api = useAxios;
 
@@ -190,6 +218,14 @@ function UsersAdmin() {
             );
         }
 
+        // User Type filter (INTERNAL, ASN, UMUM)
+        if (userTypeFilter !== "all") {
+            filtered = filtered.filter(user => {
+                const ut = (user.user_type || (user.is_internal ? "INTERNAL" : "UMUM")).toUpperCase();
+                return ut === userTypeFilter.toUpperCase();
+            });
+        }
+
         // Role filter
         if (roleFilter !== "all") {
             filtered = filtered.filter(user => user.role === roleFilter);
@@ -203,7 +239,7 @@ function UsersAdmin() {
         }
 
         return filtered;
-    }, [searchTerm, roleFilter, statusFilter, users]);
+    }, [searchTerm, roleFilter, userTypeFilter, statusFilter, users]);
 
     // Apply filters and reset pagination
     // ✨ PHASE 4.22: Only reset page when FILTERS change, not when data is added (pages loaded)
@@ -213,6 +249,7 @@ function UsersAdmin() {
         const filtersChanged = 
             prevFilterState.current.searchTerm !== searchTerm ||
             prevFilterState.current.roleFilter !== roleFilter ||
+            prevFilterState.current.userTypeFilter !== userTypeFilter ||
             prevFilterState.current.statusFilter !== statusFilter;
         
         // Update filtered users
@@ -222,9 +259,9 @@ function UsersAdmin() {
         if (filtersChanged) {
             setCurrentPage(1);
             // Update the stored filter state
-            prevFilterState.current = { searchTerm, roleFilter, statusFilter };
+            prevFilterState.current = { searchTerm, roleFilter, userTypeFilter, statusFilter };
         }
-    }, [filteredUsersData, searchTerm, roleFilter, statusFilter]);
+    }, [filteredUsersData, searchTerm, roleFilter, userTypeFilter, statusFilter]);
 
     // Keep applyFilters for backward compatibility (no-op now)
     const applyFilters = useCallback(() => {
@@ -278,15 +315,25 @@ function UsersAdmin() {
         }
         
         try {
-            // Prepare submission data with boolean role fields
+            // Prepare submission data with boolean role fields and participant fields
             const submitData = {
                 full_name: formData.full_name,
                 email: formData.email,
+                phone: formData.phone || "",
                 is_student: formData.is_student,
                 is_instructor: formData.is_instructor,
                 is_admin: formData.is_admin,
-                ...(formData.password && { password: formData.password }),
-                ...(modalType === "create" && { role: formData.role })
+                is_active: formData.is_active,
+                user_type: formData.user_type,
+                nip: formData.nip || "",
+                jenis_jabatan: formData.jenis_jabatan || "",
+                instansi_asal: formData.instansi_asal || "",
+                pekerjaan: formData.pekerjaan || "",
+                negara: formData.negara || "Indonesia",
+                provinsi: formData.provinsi || "",
+                kota_kabupaten: formData.kota_kabupaten || "",
+                ...(formData.password && { password: formData.password, password2: formData.password2 || formData.password }),
+                ...(modalType === "create" && { role: formData.role || (formData.is_admin ? "admin" : formData.is_instructor ? "teacher" : "student") })
             };
 
             if (modalType === "create") {
@@ -721,13 +768,24 @@ function UsersAdmin() {
         setShowModal(true);
         setModalType("edit");
         setSelectedUser(user);
+        setShowEditPassword(false);
         setFormData({
-            full_name: user.full_name,
-            email: user.email,
-            role: user.role,
+            full_name: user.full_name || "",
+            email: user.email || "",
+            phone: user.phone || "",
+            role: user.role || "student",
             is_student: user.is_student || false,
             is_instructor: user.is_instructor || false,
             is_admin: user.is_admin || false,
+            is_active: user.is_active !== undefined ? user.is_active : true,
+            user_type: user.user_type || (user.is_internal ? "INTERNAL" : "UMUM"),
+            nip: user.nip || "",
+            jenis_jabatan: user.jenis_jabatan || "",
+            instansi_asal: user.instansi_asal || "",
+            pekerjaan: user.pekerjaan || "",
+            negara: user.negara || "Indonesia",
+            provinsi: user.provinsi || "",
+            kota_kabupaten: user.kota_kabupaten || "",
             password: "",
             password2: ""
         });
@@ -752,10 +810,24 @@ function UsersAdmin() {
         setFormData({
             full_name: "",
             email: "",
+            phone: "",
             role: "student",
+            is_student: true,
+            is_instructor: false,
+            is_admin: false,
+            is_active: true,
+            user_type: "UMUM",
+            nip: "",
+            jenis_jabatan: "",
+            instansi_asal: "",
+            pekerjaan: "",
+            negara: "Indonesia",
+            provinsi: "",
+            kota_kabupaten: "",
             password: "",
             password2: ""
         });
+        setShowEditPassword(false);
         setSelectedUser(null);
     }, []);
 
@@ -824,7 +896,7 @@ function UsersAdmin() {
     useEffect(() => {
         // Apply filters only when filters change, not when users change
         applyFilters();
-    }, [searchTerm, roleFilter, statusFilter, applyFilters]);
+    }, [searchTerm, roleFilter, userTypeFilter, statusFilter, applyFilters]);
 
     // ✨ PHASE 67: Removed complex sync effect - no longer needed with all-data loading
     // The old sync effect (PHASE 4.17) coordinated pagination and loading state
@@ -857,7 +929,7 @@ function UsersAdmin() {
             <AdminHeader />
             
             <main className="admin-dashboard-container">
-                <div className="container-fluid px-3 px-xl-4">
+                <div className="container-fluid px-3 px-xl-4 footer-container">
                     {/* Executive Header Bar */}
                     <div className="admin-exec-header mb-3">
                         <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -1056,6 +1128,20 @@ function UsersAdmin() {
                                 <div className="filter-select-wrap">
                                     <select 
                                         className="filter-select-compact" 
+                                        value={userTypeFilter} 
+                                        onChange={(e) => setUserTypeFilter(e.target.value)}
+                                        title="Filter Tipe Peserta"
+                                    >
+                                        <option value="all">Semua Tipe Peserta</option>
+                                        <option value="INTERNAL">🏛️ Internal DPD RI</option>
+                                        <option value="ASN">🏢 ASN</option>
+                                        <option value="UMUM">👥 Umum</option>
+                                    </select>
+                                </div>
+
+                                <div className="filter-select-wrap">
+                                    <select 
+                                        className="filter-select-compact" 
                                         value={roleFilter} 
                                         onChange={(e) => setRoleFilter(e.target.value)}
                                     >
@@ -1095,12 +1181,13 @@ function UsersAdmin() {
                                     </select>
                                 </div>
 
-                                {(searchTerm || roleFilter !== "all" || statusFilter !== "all") && (
+                                {(searchTerm || roleFilter !== "all" || userTypeFilter !== "all" || statusFilter !== "all") && (
                                     <button 
                                         className="btn-filter-reset" 
                                         onClick={() => {
                                             setSearchTerm("");
                                             setRoleFilter("all");
+                                            setUserTypeFilter("all");
                                             setStatusFilter("all");
                                         }}
                                         title="Reset semua filter"
@@ -1448,220 +1535,524 @@ function UsersAdmin() {
                                 
                                 <div className="modal-body-modern">
                                     {modalType === "view" ? (
-                                        <div className="user-details-view">
-                                            {/* Basic Information Section */}
-                                            <div className="detail-section">
-                                                <h3>👤 Informasi Dasar</h3>
-                                                <div className="detail-grid">
-                                                    <div className="detail-item">
-                                                        <label>Nama Lengkap</label>
-                                                        <span>{selectedUser?.user_info?.full_name}</span>
-                                                    </div>
-                                                    <div className="detail-item">
-                                                        <label>Alamat Email</label>
-                                                        <span>{selectedUser?.user_info?.email}</span>
-                                                    </div>
-                                                    <div className="detail-item">
-                                                        <label>Nama Pengguna</label>
-                                                        <span>{selectedUser?.user_info?.username}</span>
-                                                    </div>
-                                                    <div className="detail-item">
-                                                        <label>Peran Pengguna</label>
-                                                        <div className="modal-role-container">
-                                                            {selectedUser?.user_info?.is_student && (
-                                                                <span className="role-badge student">🎓 Siswa</span>
-                                                            )}
-                                                            {selectedUser?.user_info?.is_instructor && (
-                                                                <span className="role-badge teacher">👨‍🏫 Instruktur</span>
-                                                            )}
-                                                            {selectedUser?.user_info?.is_admin && (
-                                                                <span className="role-badge admin">⚙️ Administrator</span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="detail-item">
-                                                        <label>Status Akun</label>
-                                                        <span className={`status-badge ${selectedUser?.user_info?.is_active ? "active" : "inactive"}`}>
-                                                            {selectedUser?.user_info?.is_active ? "✓ Aktif" : "✕ Tidak Aktif"}
+                                        <div className="user-details-view-compact">
+                                            {/* User Identity Hero Card */}
+                                            <div className="view-hero-card">
+                                                <div className="view-hero-avatar">
+                                                    {selectedUser?.user_info?.full_name ? selectedUser.user_info.full_name.charAt(0).toUpperCase() : "U"}
+                                                    <span className={`hero-status-dot ${selectedUser?.user_info?.is_active ? "active" : "inactive"}`} title={selectedUser?.user_info?.is_active ? "Akun Aktif" : "Akun Nonaktif"}></span>
+                                                </div>
+                                                <div className="view-hero-info">
+                                                    <div className="view-hero-name-row">
+                                                        <h3 className="view-hero-name">{selectedUser?.user_info?.full_name || "Nama Tidak Disediakan"}</h3>
+                                                        <span className={`status-badge-compact ${selectedUser?.user_info?.is_active ? "active" : "inactive"}`}>
+                                                            {selectedUser?.user_info?.is_active ? "✓ Aktif" : "✕ Nonaktif"}
                                                         </span>
+                                                        {(selectedUser?.user_info?.user_type === 'INTERNAL' || selectedUser?.user_info?.is_internal) ? (
+                                                            <span className="user-type-badge internal">
+                                                                <FaLandmark className="ut-icon" /> Internal Setjen DPD RI
+                                                            </span>
+                                                        ) : selectedUser?.user_info?.user_type === 'ASN' ? (
+                                                            <span className="user-type-badge asn">
+                                                                <FaIdBadge className="ut-icon" /> ASN Luar
+                                                            </span>
+                                                        ) : (
+                                                            <span className="user-type-badge umum">
+                                                                <FaGlobe className="ut-icon" /> Masyarakat Umum
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <div className="detail-item">
-                                                        <label>Anggota Sejak</label>
-                                                        <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleDateString("en-US", {year: "numeric", month: "short", day: "numeric"}) : "N/A"}</span>
+                                                    <div className="view-hero-meta-row">
+                                                        <span className="meta-pill"><FaEnvelope className="me-1" /> {selectedUser?.user_info?.email || "-"}</span>
+                                                        <span className="meta-pill"><FaUser className="me-1" /> @{selectedUser?.user_info?.username || "-"}</span>
+                                                        {selectedUser?.user_info?.phone && (
+                                                            <span className="meta-pill"><FaPhone className="me-1" /> {selectedUser?.user_info?.phone}</span>
+                                                        )}
+                                                        <span className="meta-pill"><FaCalendarAlt className="me-1" /> Bergabung {selectedUser?.user_info?.date_joined ? dayjs(selectedUser.user_info.date_joined).format("DD MMM YYYY") : "-"}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Activity Information Section */}
-                                            <div className="detail-section">
-                                                <h3>📊 Aktivitas Akun</h3>
-                                                <div className="detail-grid">
-                                                    <div className="detail-item">
-                                                        <label>Login Terakhir</label>
-                                                        <span>{selectedUser?.user_info?.last_login ? new Date(selectedUser.user_info.last_login).toLocaleString("id-ID", {year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"}) : "Belum Pernah Login"}</span>
+                                            {/* 2-Column Main Info Sections */}
+                                            <div className="view-sections-grid">
+                                                {/* Section 1: Data Kepesertaan & Wilayah */}
+                                                <div className="view-compact-card">
+                                                    <div className="view-card-header">
+                                                        <FaIdBadge className="card-header-icon" />
+                                                        <span>Data Kepesertaan & Instansi</span>
                                                     </div>
-                                                    <div className="detail-item">
-                                                        <label>Akun Dibuat</label>
-                                                        <span>{selectedUser?.user_info?.date_joined ? new Date(selectedUser.user_info.date_joined).toLocaleString("en-US", {year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"}) : "N/A"}</span>
+                                                    <div className="view-compact-table">
+                                                        <div className="view-table-row">
+                                                            <span className="v-label">Kategori Peserta</span>
+                                                            <span className="v-value font-medium">
+                                                                {selectedUser?.user_info?.user_type === 'INTERNAL' || selectedUser?.user_info?.is_internal ? "Internal Setjen DPD RI" : selectedUser?.user_info?.user_type === 'ASN' ? "Aparatur Sipil Negara (ASN)" : "Masyarakat Umum"}
+                                                            </span>
+                                                        </div>
+                                                        {(selectedUser?.user_info?.nip || selectedUser?.user_info?.user_type === 'INTERNAL' || selectedUser?.user_info?.user_type === 'ASN') && (
+                                                            <div className="view-table-row">
+                                                                <span className="v-label">NIP</span>
+                                                                <span className="v-value font-mono">
+                                                                    {selectedUser?.user_info?.nip || <em className="text-muted">Belum disinkronkan</em>}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {(selectedUser?.user_info?.jenis_jabatan || selectedUser?.user_info?.user_type !== 'UMUM') && (
+                                                            <div className="view-table-row">
+                                                                <span className="v-label">Jabatan Saat Ini</span>
+                                                                <span className="v-value">
+                                                                    {selectedUser?.user_info?.jenis_jabatan || <em className="text-muted">Tidak ada data</em>}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {(selectedUser?.user_info?.instansi_asal || selectedUser?.user_info?.is_internal) && (
+                                                            <div className="view-table-row">
+                                                                <span className="v-label">Asal Instansi</span>
+                                                                <span className="v-value">
+                                                                    {selectedUser?.user_info?.is_internal ? "Sekretariat Jenderal DPD RI" : (selectedUser?.user_info?.instansi_asal || <em className="text-muted">Tidak ada data</em>)}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {selectedUser?.user_info?.golongan && (
+                                                            <div className="view-table-row">
+                                                                <span className="v-label">Golongan / Ruang</span>
+                                                                <span className="v-value">{selectedUser?.user_info?.golongan}</span>
+                                                            </div>
+                                                        )}
+                                                        {selectedUser?.user_info?.pekerjaan && (
+                                                            <div className="view-table-row">
+                                                                <span className="v-label">Profesi / Pekerjaan</span>
+                                                                <span className="v-value">{selectedUser?.user_info?.pekerjaan}</span>
+                                                            </div>
+                                                        )}
+                                                        <div className="view-table-row">
+                                                            <span className="v-label">Domisili / Wilayah</span>
+                                                            <span className="v-value">
+                                                                {[selectedUser?.user_info?.kota_kabupaten, selectedUser?.user_info?.provinsi, selectedUser?.user_info?.negara].filter(Boolean).join(', ') || <em className="text-muted">Indonesia</em>}
+                                                            </span>
+                                                        </div>
+                                                        <div className="view-table-row">
+                                                            <span className="v-label">Status Onboarding</span>
+                                                            <span className="v-value">
+                                                                {selectedUser?.user_info?.onboarding_completed ? (
+                                                                    <span className="text-success"><FaCheckCircle className="me-1" /> Lengkap Terverifikasi</span>
+                                                                ) : (
+                                                                    <span className="text-warning"><FaTimes className="me-1" /> Belum Lengkap</span>
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Section 2: Hak Akses & Aktivitas Akun */}
+                                                <div className="view-compact-card">
+                                                    <div className="view-card-header">
+                                                        <FaShieldAlt className="card-header-icon" />
+                                                        <span>Hak Akses & Riwayat Sistem</span>
+                                                    </div>
+                                                    <div className="view-compact-table">
+                                                        <div className="view-table-row">
+                                                            <span className="v-label">Peran Terdaftar</span>
+                                                            <div className="v-value role-chips-wrap">
+                                                                {selectedUser?.user_info?.is_student && <span className="role-chip student">🎓 Siswa</span>}
+                                                                {selectedUser?.user_info?.is_instructor && <span className="role-chip teacher">👨‍🏫 Instruktur</span>}
+                                                                {selectedUser?.user_info?.is_admin && <span className="role-chip admin">⚙️ Admin</span>}
+                                                            </div>
+                                                        </div>
+                                                        <div className="view-table-row">
+                                                            <span className="v-label">Peran Aktif</span>
+                                                            <span className="v-value text-capitalize font-semibold text-primary">
+                                                                {selectedUser?.user_info?.role || "student"}
+                                                            </span>
+                                                        </div>
+                                                        <div className="view-table-row">
+                                                            <span className="v-label">Metode Otentikasi</span>
+                                                            <span className="v-value">
+                                                                {selectedUser?.user_info?.is_internal ? "SSO Nusa DPD RI (Internal)" : "Google OAuth / Email Mandiri"}
+                                                            </span>
+                                                        </div>
+                                                        <div className="view-table-row">
+                                                            <span className="v-label">Login Terakhir</span>
+                                                            <span className="v-value font-medium">
+                                                                {selectedUser?.user_info?.last_login ? dayjs(selectedUser.user_info.last_login).format("DD MMM YYYY, HH:mm [WIB]") : <em className="text-muted">Belum pernah login</em>}
+                                                            </span>
+                                                        </div>
+                                                        <div className="view-table-row">
+                                                            <span className="v-label">ID Pengguna (PK)</span>
+                                                            <span className="v-value font-mono">#{selectedUser?.user_info?.id}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Statistics Section - For Students */}
-                                            {selectedUser?.user_info?.is_student && selectedUser?.enrollment_stats && (
-                                                <div className="detail-section">
-                                                    <h3>📚 Statistik Pembelajaran</h3>
-                                                    <div className="stats-grid-modal">
-                                                        <div className="stat-item">
-                                                            <label>Total Pendaftaran</label>
-                                                            <span>{selectedUser?.enrollment_stats?.total_enrollments || 0}</span>
-                                                        </div>
-                                                        <div className="stat-item">
-                                                            <label>Kursus Selesai</label>
-                                                            <span>{selectedUser?.enrollment_stats?.completed_courses || 0}</span>
-                                                        </div>
-                                                        <div className="stat-item">
-                                                            <label>Kursus Sedang Berlangsung</label>
-                                                            <span>{selectedUser?.enrollment_stats?.in_progress_courses || 0}</span>
-                                                        </div>
-                                                        <div className="stat-item">
-                                                            <label>Sertifikat Diterima</label>
-                                                            <span>{selectedUser?.enrollment_stats?.certificates_earned || 0}</span>
-                                                        </div>
+                                            {/* Real Live Statistics Section */}
+                                            {(selectedUser?.user_info?.is_student || selectedUser?.user_info?.is_instructor) && (
+                                                <div className="view-stats-container">
+                                                    <div className="view-stats-title">
+                                                        <FaChartLine className="me-2 text-primary" /> Statistik Pembelajaran & Pengajaran Nyata
+                                                    </div>
+                                                    <div className="view-stats-grid">
+                                                        {selectedUser?.user_info?.is_student && (
+                                                            <>
+                                                                <div className="stat-tile">
+                                                                    <span className="stat-number">{selectedUser?.enrollment_stats?.total_enrollments || 0}</span>
+                                                                    <span className="stat-text">Pendaftaran Kursus</span>
+                                                                </div>
+                                                                <div className="stat-tile">
+                                                                    <span className="stat-number text-success">{selectedUser?.enrollment_stats?.completed_courses || 0}</span>
+                                                                    <span className="stat-text">Kursus Selesai</span>
+                                                                </div>
+                                                                <div className="stat-tile">
+                                                                    <span className="stat-number text-info">{selectedUser?.enrollment_stats?.in_progress_courses || 0}</span>
+                                                                    <span className="stat-text">Sedang Berjalan</span>
+                                                                </div>
+                                                                <div className="stat-tile">
+                                                                    <span className="stat-number text-warning">{selectedUser?.enrollment_stats?.certificates_earned || 0}</span>
+                                                                    <span className="stat-text">Sertifikat Diperoleh</span>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                        {selectedUser?.user_info?.is_instructor && selectedUser?.teaching_stats && (
+                                                            <>
+                                                                <div className="stat-tile">
+                                                                    <span className="stat-number">{selectedUser?.teaching_stats?.total_courses || 0}</span>
+                                                                    <span className="stat-text">Total Kursus Dibuat</span>
+                                                                </div>
+                                                                <div className="stat-tile">
+                                                                    <span className="stat-number text-success">{selectedUser?.teaching_stats?.published_courses || 0}</span>
+                                                                    <span className="stat-text">Kursus Dipublikasikan</span>
+                                                                </div>
+                                                                <div className="stat-tile">
+                                                                    <span className="stat-number text-primary">{selectedUser?.teaching_stats?.total_students || 0}</span>
+                                                                    <span className="stat-text">Total Siswa Terdaftar</span>
+                                                                </div>
+                                                                <div className="stat-tile">
+                                                                    <span className="stat-number text-warning">{selectedUser?.teaching_stats?.total_reviews || 0}</span>
+                                                                    <span className="stat-text">Ulasan Diterima</span>
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}
 
-                                            {/* Statistics Section - For Instructors */}
-                                            {selectedUser?.user_info?.is_instructor && selectedUser?.teaching_stats && (
-                                                <div className="detail-section">
-                                                    <h3>🎓 Statistik Pengajaran</h3>
-                                                    <div className="stats-grid-modal">
-                                                        <div className="stat-item">
-                                                            <label>Total Kursus Dibuat</label>
-                                                            <span>{selectedUser?.teaching_stats?.total_courses || 0}</span>
-                                                        </div>
-                                                        <div className="stat-item">
-                                                            <label>Kursus Dipublikasikan</label>
-                                                            <span>{selectedUser?.teaching_stats?.published_courses || 0}</span>
-                                                        </div>
-                                                        <div className="stat-item">
-                                                            <label>Total Siswa</label>
-                                                            <span>{selectedUser?.teaching_stats?.total_students || 0}</span>
-                                                        </div>
-                                                        <div className="stat-item">
-                                                            <label>Ulasan Kursus</label>
-                                                            <span>{selectedUser?.teaching_stats?.total_reviews || 0}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
+                                            {/* Modal Actions */}
+                                            <div className="modal-view-footer">
+                                                <button type="button" className="btn-cancel-modern" onClick={() => setShowModal(false)}>
+                                                    Tutup
+                                                </button>
+                                                <button 
+                                                    type="button" 
+                                                    className="btn-submit-modern"
+                                                    onClick={() => {
+                                                        if (selectedUser?.user_info) {
+                                                            openEditModal(selectedUser.user_info);
+                                                        }
+                                                    }}
+                                                >
+                                                    <FaEdit className="me-1" /> Edit Pengguna Ini
+                                                </button>
+                                            </div>
                                         </div>
                                     ) : (
-                                        <form onSubmit={handleSubmit} className="form-modern">
-                                            <div className="form-row">
-                                                <div className="form-group-modern">
-                                                    <label htmlFor="full_name" className="form-label-modern">
-                                                        <FaUsers className="label-icon" />
-                                                        Nama Lengkap *
+                                        <form onSubmit={handleSubmit} className="form-modern-compact">
+                                            {/* Section 1: Informasi Dasar Akun */}
+                                            <div className="form-section-header-compact">
+                                                <FaUser className="section-icon" />
+                                                <span>1. Informasi Dasar Akun</span>
+                                            </div>
+                                            <div className="form-grid-2col">
+                                                <div className="form-group-compact">
+                                                    <label className="form-label-compact" htmlFor="f_name">
+                                                        Nama Lengkap <span className="req">*</span>
                                                     </label>
                                                     <input
+                                                        id="f_name"
                                                         type="text"
-                                                        id="full_name"
-                                                        className="form-input-modern"
+                                                        className="form-input-compact"
                                                         placeholder="Masukkan nama lengkap pengguna"
                                                         value={formData.full_name}
                                                         onChange={(e) => setFormData({...formData, full_name: e.target.value})}
                                                         required
                                                     />
                                                 </div>
-                                            </div>
-                                            
-                                            <div className="form-row">
-                                                <div className="form-group-modern">
-                                                    <label htmlFor="email" className="form-label-modern">
-                                                        <FaBell className="label-icon" />
-                                                        Alamat Email *
+
+                                                <div className="form-group-compact">
+                                                    <label className="form-label-compact" htmlFor="f_email">
+                                                        Alamat Email <span className="req">*</span>
                                                     </label>
                                                     <input
+                                                        id="f_email"
                                                         type="email"
-                                                        id="email"
-                                                        className="form-input-modern"
-                                                        placeholder="Masukkan alamat email"
+                                                        className="form-input-compact"
+                                                        placeholder="contoh: nama@dpd.go.id"
                                                         value={formData.email}
                                                         onChange={(e) => setFormData({...formData, email: e.target.value})}
                                                         required
                                                     />
                                                 </div>
-                                            </div>
-                                            
-                                            <div className="form-row">
-                                                <div className="form-group-modern">
-                                                    <label className="form-label-modern">
-                                                        <FaCog className="label-icon" />
-                                                        Peran Pengguna (Pilih Semua yang Berlaku) *
+
+                                                <div className="form-group-compact">
+                                                    <label className="form-label-compact" htmlFor="f_phone">
+                                                        No. Telepon / WhatsApp
                                                     </label>
-                                                    <div className="form-checkbox-group">
-                                                        <div className="form-checkbox-item">
-                                                            <input
-                                                                type="checkbox"
-                                                                id="is_student"
-                                                                className="form-checkbox-input"
-                                                                checked={formData.is_student}
-                                                                onChange={(e) => setFormData({...formData, is_student: e.target.checked})}
-                                                            />
-                                                            <label htmlFor="is_student" className="form-checkbox-label">
-                                                                <FaUserGraduate className="checkbox-icon" />
-                                                                Siswa - Akses Pembelajaran
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-checkbox-item">
-                                                            <input
-                                                                type="checkbox"
-                                                                id="is_instructor"
-                                                                className="form-checkbox-input"
-                                                                checked={formData.is_instructor}
-                                                                onChange={(e) => setFormData({...formData, is_instructor: e.target.checked})}
-                                                            />
-                                                            <label htmlFor="is_instructor" className="form-checkbox-label">
-                                                                <FaUserTie className="checkbox-icon" />
-                                                                Instruktur - Pembuat Konten
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-checkbox-item">
-                                                            <input
-                                                                type="checkbox"
-                                                                id="is_admin"
-                                                                className="form-checkbox-input"
-                                                                checked={formData.is_admin}
-                                                                onChange={(e) => setFormData({...formData, is_admin: e.target.checked})}
-                                                            />
-                                                            <label htmlFor="is_admin" className="form-checkbox-label">
-                                                                <FaUserCog className="checkbox-icon" />
-                                                                Administrator - Kontrol Penuh
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                    {!(formData.is_student || formData.is_instructor || formData.is_admin) && (
-                                                        <p className="form-helper-text error">⚠️ Pengguna harus memiliki setidaknya satu peran</p>
-                                                    )}
+                                                    <input
+                                                        id="f_phone"
+                                                        type="tel"
+                                                        className="form-input-compact"
+                                                        placeholder="Contoh: 081234567890"
+                                                        value={formData.phone}
+                                                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                                    />
+                                                </div>
+
+                                                <div className="form-group-compact">
+                                                    <label className="form-label-compact" htmlFor="f_active">
+                                                        Status Akun <span className="req">*</span>
+                                                    </label>
+                                                    <select
+                                                        id="f_active"
+                                                        className="form-select-compact"
+                                                        value={formData.is_active ? "true" : "false"}
+                                                        onChange={(e) => setFormData({...formData, is_active: e.target.value === "true"})}
+                                                    >
+                                                        <option value="true">✓ Aktif (Dapat Login & Akses Pembelajaran)</option>
+                                                        <option value="false">✕ Tidak Aktif (Ditangguhkan)</option>
+                                                    </select>
                                                 </div>
                                             </div>
-                                            
-                                            {modalType === "create" && (
-                                                <>
-                                                    <div className="form-row">
-                                                        <div className="form-group-modern">
-                                                            <label htmlFor="password" className="form-label-modern">
-                                                                <FaCog className="label-icon" />
-                                                                Kata Sandi *
+
+                                            {/* Section 2: Kategori Peserta & Data Kepegawaian / Profesi */}
+                                            <div className="form-section-header-compact">
+                                                <FaIdBadge className="section-icon" />
+                                                <span>2. Kategori Peserta & Data Wilayah</span>
+                                            </div>
+                                            <div className="form-grid-2col">
+                                                <div className="form-group-compact full-width">
+                                                    <label className="form-label-compact" htmlFor="f_user_type">
+                                                        Kategori Peserta <span className="req">*</span>
+                                                    </label>
+                                                    <select
+                                                        id="f_user_type"
+                                                        className="form-select-compact"
+                                                        value={formData.user_type}
+                                                        onChange={(e) => setFormData({...formData, user_type: e.target.value})}
+                                                    >
+                                                        <option value="INTERNAL">Internal Setjen DPD RI (Pegawai / Sinkronisasi SSO Nusa)</option>
+                                                        <option value="ASN">ASN Luar / Instansi Pemerintah Lain (Kementerian/Lembaga/Pemda)</option>
+                                                        <option value="UMUM">Masyarakat Umum (Publik / Profesional / Akademisi / Mahasiswa)</option>
+                                                    </select>
+                                                </div>
+
+                                                {/* Conditional Fields based on user_type */}
+                                                {(formData.user_type === "INTERNAL" || formData.user_type === "ASN") ? (
+                                                    <>
+                                                        <div className="form-group-compact">
+                                                            <label className="form-label-compact" htmlFor="f_nip">
+                                                                Nomor Induk Pegawai (NIP) {formData.user_type === "ASN" && <span className="req">*</span>}
                                                             </label>
-                                                            <div className="password-input-wrapper">
+                                                            <input
+                                                                id="f_nip"
+                                                                type="text"
+                                                                className="form-input-compact font-mono"
+                                                                placeholder="Contoh: 198501012010011001"
+                                                                value={formData.nip}
+                                                                onChange={(e) => setFormData({...formData, nip: e.target.value.replace(/\D/g, "").slice(0, 18)})}
+                                                                maxLength={18}
+                                                                required={formData.user_type === "ASN"}
+                                                            />
+                                                            <span className="field-hint-compact">{formData.nip.length}/18 Digit Resmi BKN</span>
+                                                        </div>
+
+                                                        <div className="form-group-compact">
+                                                            <label className="form-label-compact" htmlFor="f_jabatan">
+                                                                Jabatan Saat Ini
+                                                            </label>
+                                                            <select
+                                                                id="f_jabatan"
+                                                                className="form-select-compact"
+                                                                value={formData.jenis_jabatan}
+                                                                onChange={(e) => setFormData({...formData, jenis_jabatan: e.target.value})}
+                                                            >
+                                                                <option value="">-- Pilih Jabatan / Jenjang ASN --</option>
+                                                                {ASN_POSITIONS.map((pos) => (
+                                                                    <option key={pos} value={pos}>{pos}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+
+                                                        <div className="form-group-compact full-width">
+                                                            <label className="form-label-compact" htmlFor="f_instansi">
+                                                                Asal Instansi Pemerintah <span className="req">*</span>
+                                                            </label>
+                                                            {formData.user_type === "INTERNAL" ? (
+                                                                <input
+                                                                    id="f_instansi"
+                                                                    type="text"
+                                                                    className="form-input-compact bg-light"
+                                                                    value="Sekretariat Jenderal DPD RI"
+                                                                    readOnly
+                                                                />
+                                                            ) : (
+                                                                <select
+                                                                    id="f_instansi"
+                                                                    className="form-select-compact"
+                                                                    value={formData.instansi_asal}
+                                                                    onChange={(e) => setFormData({...formData, instansi_asal: e.target.value})}
+                                                                    required
+                                                                >
+                                                                    <option value="">-- Pilih Instansi / Kementerian / Lembaga / Pemda --</option>
+                                                                    {ASN_INSTITUTIONS_GROUPS.map((group) => (
+                                                                        <optgroup key={group.category} label={`── ${group.category} ──`}>
+                                                                            {group.items.map((item) => (
+                                                                                <option key={item} value={item}>{item}</option>
+                                                                            ))}
+                                                                        </optgroup>
+                                                                    ))}
+                                                                </select>
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="form-group-compact">
+                                                            <label className="form-label-compact" htmlFor="f_pekerjaan">
+                                                                Pekerjaan / Profesi <span className="req">*</span>
+                                                            </label>
+                                                            <select
+                                                                id="f_pekerjaan"
+                                                                className="form-select-compact"
+                                                                value={formData.pekerjaan}
+                                                                onChange={(e) => setFormData({...formData, pekerjaan: e.target.value})}
+                                                                required
+                                                            >
+                                                                <option value="">-- Pilih Bidang Pekerjaan --</option>
+                                                                {PROFESSIONS_LIST.map((prof) => (
+                                                                    <option key={prof} value={prof}>{prof}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+
+                                                        <div className="form-group-compact">
+                                                            <label className="form-label-compact" htmlFor="f_negara">
+                                                                Negara Domisili <span className="req">*</span>
+                                                            </label>
+                                                            <select
+                                                                id="f_negara"
+                                                                className="form-select-compact"
+                                                                value={formData.negara}
+                                                                onChange={(e) => setFormData({...formData, negara: e.target.value})}
+                                                            >
+                                                                {COUNTRIES_LIST.map((country) => (
+                                                                    <option key={country} value={country}>{country}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+
+                                                        <div className="form-group-compact">
+                                                            <label className="form-label-compact" htmlFor="f_provinsi">
+                                                                Provinsi Asal
+                                                            </label>
+                                                            <select
+                                                                id="f_provinsi"
+                                                                className="form-select-compact"
+                                                                value={formData.provinsi}
+                                                                onChange={(e) => setFormData({...formData, provinsi: e.target.value, kota_kabupaten: ""})}
+                                                            >
+                                                                <option value="">-- Pilih 38 Provinsi --</option>
+                                                                {Object.keys(INDONESIA_PROVINCES_AND_CITIES).map((prov) => (
+                                                                    <option key={prov} value={prov}>{prov}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+
+                                                        <div className="form-group-compact">
+                                                            <label className="form-label-compact" htmlFor="f_kota">
+                                                                Kota / Kabupaten
+                                                            </label>
+                                                            <select
+                                                                id="f_kota"
+                                                                className="form-select-compact"
+                                                                value={formData.kota_kabupaten}
+                                                                onChange={(e) => setFormData({...formData, kota_kabupaten: e.target.value})}
+                                                                disabled={!formData.provinsi}
+                                                            >
+                                                                <option value="">{formData.provinsi ? "-- Pilih Kota / Kabupaten --" : "-- Pilih Provinsi Dulu --"}</option>
+                                                                {availableModalCities.map((city) => (
+                                                                    <option key={city} value={city}>{city}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            {/* Section 3: Hak Akses & Peran Pengguna */}
+                                            <div className="form-section-header-compact">
+                                                <FaShieldAlt className="section-icon" />
+                                                <span>3. Hak Akses Peran Pengguna <span className="req">*</span></span>
+                                            </div>
+                                            <div className="roles-pill-selector">
+                                                <label className={`role-pill-card ${formData.is_student ? "selected" : ""}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.is_student}
+                                                        onChange={(e) => setFormData({...formData, is_student: e.target.checked})}
+                                                    />
+                                                    <div className="pill-card-body">
+                                                        <span className="pill-title">🎓 Siswa</span>
+                                                        <span className="pill-subtitle">Akses pembelajaran kursus</span>
+                                                    </div>
+                                                    {formData.is_student && <FaCheckCircle className="pill-check" />}
+                                                </label>
+
+                                                <label className={`role-pill-card ${formData.is_instructor ? "selected" : ""}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.is_instructor}
+                                                        onChange={(e) => setFormData({...formData, is_instructor: e.target.checked})}
+                                                    />
+                                                    <div className="pill-card-body">
+                                                        <span className="pill-title">👨‍🏫 Instruktur</span>
+                                                        <span className="pill-subtitle">Kelola & terbitkan materi</span>
+                                                    </div>
+                                                    {formData.is_instructor && <FaCheckCircle className="pill-check" />}
+                                                </label>
+
+                                                <label className={`role-pill-card ${formData.is_admin ? "selected" : ""}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.is_admin}
+                                                        onChange={(e) => setFormData({...formData, is_admin: e.target.checked})}
+                                                    />
+                                                    <div className="pill-card-body">
+                                                        <span className="pill-title">⚙️ Administrator</span>
+                                                        <span className="pill-subtitle">Kontrol manajemen sistem</span>
+                                                    </div>
+                                                    {formData.is_admin && <FaCheckCircle className="pill-check" />}
+                                                </label>
+                                            </div>
+                                            {!(formData.is_student || formData.is_instructor || formData.is_admin) && (
+                                                <p className="form-helper-text error mt-1">⚠️ Pengguna harus memiliki setidaknya satu peran aktif.</p>
+                                            )}
+
+                                            {/* Section 4: Keamanan / Kata Sandi */}
+                                            {modalType === "create" ? (
+                                                <>
+                                                    <div className="form-section-header-compact">
+                                                        <FaKey className="section-icon" />
+                                                        <span>4. Kata Sandi Baru <span className="req">*</span></span>
+                                                    </div>
+                                                    <div className="form-grid-2col">
+                                                        <div className="form-group-compact">
+                                                            <label className="form-label-compact" htmlFor="f_pass">
+                                                                Kata Sandi <span className="req">*</span>
+                                                            </label>
+                                                            <div className="password-input-wrapper-compact">
                                                                 <input
                                                                     type={showPasswords.password ? "text" : "password"}
-                                                                    id="password"
-                                                                    className="form-control password-input"
-                                                                    placeholder="Masukkan kata sandi yang aman"
+                                                                    id="f_pass"
+                                                                    className="form-input-compact"
+                                                                    placeholder="Kata sandi aman"
                                                                     value={formData.password}
                                                                     onChange={(e) => {
                                                                         setFormData({...formData, password: e.target.value});
@@ -1671,64 +2062,32 @@ function UsersAdmin() {
                                                                 />
                                                                 <button
                                                                     type="button"
-                                                                    className="password-visibility-toggle"
+                                                                    className="pass-eye-toggle-compact"
                                                                     onClick={() => togglePasswordVisibility("password")}
                                                                     aria-label="Toggle password visibility"
                                                                 >
                                                                     <i className={showPasswords.password ? "fas fa-eye-slash" : "fas fa-eye"}></i>
                                                                 </button>
                                                             </div>
-                                                            <div className="password-requirements">
-                                                                <p className="requirements-title">Kata sandi harus berisi:</p>
-                                                                <div className="requirement-list">
-                                                                    <div className={`requirement-item ${passwordValidation.length ? "valid" : ""}`}>
-                                                                        {passwordValidation.length ? <FaCheck /> : <FaTimes />}
-                                                                        <span>Setidaknya 8 karakter</span>
-                                                                    </div>
-                                                                    <div className={`requirement-item ${passwordValidation.uppercase ? "valid" : ""}`}>
-                                                                        {passwordValidation.uppercase ? <FaCheck /> : <FaTimes />}
-                                                                        <span>Satu huruf besar (A-Z)</span>
-                                                                    </div>
-                                                                    <div className={`requirement-item ${passwordValidation.lowercase ? "valid" : ""}`}>
-                                                                        {passwordValidation.lowercase ? <FaCheck /> : <FaTimes />}
-                                                                        <span>Satu huruf kecil (a-z)</span>
-                                                                    </div>
-                                                                    <div className={`requirement-item ${passwordValidation.number ? "valid" : ""}`}>
-                                                                        {passwordValidation.number ? <FaCheck /> : <FaTimes />}
-                                                                        <span>Satu angka (0-9)</span>
-                                                                    </div>
-                                                                    <div className={`requirement-item ${passwordValidation.special ? "valid" : ""}`}>
-                                                                        {passwordValidation.special ? <FaCheck /> : <FaTimes />}
-                                                                        <span>Satu karakter khusus (!@#$%...)</span>
-                                                                    </div>
-                                                                    <div className={`requirement-item ${passwordValidation.notCommon ? "valid" : ""}`}>
-                                                                        {passwordValidation.notCommon ? <FaCheck /> : <FaTimes />}
-                                                                        <span>Bukan kata sandi umum</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    
-                                                    <div className="form-row">
-                                                        <div className="form-group-modern">
-                                                            <label htmlFor="password2" className="form-label-modern">
-                                                                <FaCog className="label-icon" />
-                                                                Konfirmasi Kata Sandi *
+
+                                                        <div className="form-group-compact">
+                                                            <label className="form-label-compact" htmlFor="f_pass2">
+                                                                Konfirmasi Kata Sandi <span className="req">*</span>
                                                             </label>
-                                                            <div className="password-input-wrapper">
+                                                            <div className="password-input-wrapper-compact">
                                                                 <input
                                                                     type={showPasswords.password2 ? "text" : "password"}
-                                                                    id="password2"
-                                                                    className="form-control password-input"
-                                                                    placeholder="Konfirmasi kata sandi"
+                                                                    id="f_pass2"
+                                                                    className="form-input-compact"
+                                                                    placeholder="Ketik ulang kata sandi"
                                                                     value={formData.password2}
                                                                     onChange={(e) => setFormData({...formData, password2: e.target.value})}
                                                                     required
                                                                 />
                                                                 <button
                                                                     type="button"
-                                                                    className="password-visibility-toggle"
+                                                                    className="pass-eye-toggle-compact"
                                                                     onClick={() => togglePasswordVisibility("password2")}
                                                                     aria-label="Toggle confirm password visibility"
                                                                 >
@@ -1736,28 +2095,87 @@ function UsersAdmin() {
                                                                 </button>
                                                             </div>
                                                             {formData.password2 && formData.password !== formData.password2 && (
-                                                                <div className="password-match-error">
-                                                                    <FaTimes /> Kata sandi tidak cocok
-                                                                </div>
+                                                                <span className="password-match-badge error">✕ Tidak cocok</span>
                                                             )}
                                                             {formData.password2 && formData.password === formData.password2 && (
-                                                                <div className="password-match-success">
-                                                                    <FaCheck /> Kata sandi cocok
-                                                                </div>
+                                                                <span className="password-match-badge success">✓ Cocok</span>
                                                             )}
                                                         </div>
                                                     </div>
+
+                                                    {/* Compact Password Checklist */}
+                                                    <div className="password-checklist-inline">
+                                                        <span className={`chk-item ${passwordValidation.length ? "ok" : ""}`}>
+                                                            {passwordValidation.length ? "✓" : "○"} Min. 8 Karakter
+                                                        </span>
+                                                        <span className={`chk-item ${passwordValidation.uppercase ? "ok" : ""}`}>
+                                                            {passwordValidation.uppercase ? "✓" : "○"} Huruf Besar (A-Z)
+                                                        </span>
+                                                        <span className={`chk-item ${passwordValidation.lowercase ? "ok" : ""}`}>
+                                                            {passwordValidation.lowercase ? "✓" : "○"} Huruf Kecil (a-z)
+                                                        </span>
+                                                        <span className={`chk-item ${passwordValidation.number ? "ok" : ""}`}>
+                                                            {passwordValidation.number ? "✓" : "○"} Angka (0-9)
+                                                        </span>
+                                                        <span className={`chk-item ${passwordValidation.special ? "ok" : ""}`}>
+                                                            {passwordValidation.special ? "✓" : "○"} Karakter Khusus (!@#)
+                                                        </span>
+                                                    </div>
                                                 </>
+                                            ) : (
+                                                /* Edit Mode: Optional Password Change */
+                                                <div className="edit-password-toggle-section">
+                                                    <button
+                                                        type="button"
+                                                        className="btn-toggle-password-edit"
+                                                        onClick={() => setShowEditPassword(!showEditPassword)}
+                                                    >
+                                                        <FaKey className="me-1" />
+                                                        {showEditPassword ? "Batalkan Penggantian Kata Sandi" : "Atur Ulang Kata Sandi Pengguna (Opsional)"}
+                                                    </button>
+
+                                                    {showEditPassword && (
+                                                        <div className="form-grid-2col mt-2">
+                                                            <div className="form-group-compact">
+                                                                <label className="form-label-compact" htmlFor="f_edit_pass">
+                                                                    Kata Sandi Baru
+                                                                </label>
+                                                                <input
+                                                                    type="password"
+                                                                    id="f_edit_pass"
+                                                                    className="form-input-compact"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value={formData.password}
+                                                                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                                                />
+                                                            </div>
+                                                            <div className="form-group-compact">
+                                                                <label className="form-label-compact" htmlFor="f_edit_pass2">
+                                                                    Konfirmasi Kata Sandi Baru
+                                                                </label>
+                                                                <input
+                                                                    type="password"
+                                                                    id="f_edit_pass2"
+                                                                    className="form-input-compact"
+                                                                    placeholder="Ulangi kata sandi baru"
+                                                                    value={formData.password2}
+                                                                    onChange={(e) => setFormData({...formData, password2: e.target.value})}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
-                                            
-                                            <div className="form-actions-modern">
+
+                                            {/* Form Actions */}
+                                            <div className="form-actions-compact">
                                                 <button type="button" className="btn-cancel-modern" onClick={() => setShowModal(false)}>
                                                     Batal
                                                 </button>
                                                 <button type="submit" className="btn-submit-modern">
                                                     <div className="btn-content">
                                                         {modalType === "create" ? <MdPersonAdd /> : <FaEdit />}
-                                                        <span>{modalType === "create" ? "Buat Akun Pengguna" : "Perbarui"}</span>
+                                                        <span>{modalType === "create" ? "Buat Akun Pengguna" : "Simpan Perubahan"}</span>
                                                     </div>
                                                 </button>
                                             </div>

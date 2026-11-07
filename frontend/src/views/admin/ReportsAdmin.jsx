@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
-import BaseHeader from "../partials/BaseHeader";
 import ReviewAbuseReportsTab from "./AdminReportsTabs/ReviewAbuseReportsTab";
 import QAReportsTab from "./AdminReportsTabs/QAReportsTab";
 import FeedbackAdminDashboard from "../../components/Feedback/FeedbackAdminDashboard";
@@ -182,12 +181,11 @@ function ReportsAdmin() {
     ];
 
     return (
-        <>
-            <BaseHeader />
-            <section className="admin-dashboard pt-3 pb-5">
-                <div className="container">
-                    <AdminHeader />
+        <div className="admin-page-wrapper">
+            <AdminHeader />
 
+            <main className="admin-dashboard-container">
+                <div className="container-fluid px-3 px-xl-4 footer-container">
                     <div className="reports-container">
                         {/* Compact Executive Page Header */}
                         <div className="reports-page-header mb-3">
@@ -271,9 +269,9 @@ function ReportsAdmin() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </main>
             <Footer />
-        </>
+        </div>
     );
 }
 

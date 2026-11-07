@@ -12,7 +12,8 @@ export const COURSE_STATUS_OPTIONS = [
 ];
 
 export const COURSE_AUDIENCE_OPTIONS = [
-    { value: "pegawai", label: "🏢 Khusus Pegawai Setjen DPD RI (Internal)" },
+    { value: "internal", label: "🏛️ Khusus Internal Setjen DPD RI (Pegawai)" },
+    { value: "asn", label: "🏢 Khusus ASN (Internal & Instansi Lain)" },
     { value: "umum", label: "🌐 Terbuka untuk Umum (Publik)" }
 ];
 

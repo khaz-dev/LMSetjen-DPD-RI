@@ -262,7 +262,9 @@ class CourseCreateAPIView(APIView):
             image_url = request.data.get("image")  # Now expecting URL from file-upload API
             file_url = request.data.get("file")    # Now expecting URL from file-upload API
             level = request.data.get("level")
-            target_audience = request.data.get("target_audience", "pegawai")
+            target_audience = request.data.get("target_audience", "internal")
+            if target_audience == "pegawai":
+                target_audience = "internal"
             category = request.data.get("category")
 
             print(f"=== Course Creation Debug ===")
@@ -1730,6 +1732,25 @@ class CourseEnrollmentAPIView(generics.CreateAPIView):
                 "enrollment_id": existing_enrollment.enrollment_id
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # 🔒 Check target audience access rules:
+        # - "internal" (or legacy "pegawai"): Only INTERNAL users (or is_internal=True or admin/staff)
+        # - "asn": INTERNAL and ASN users (or is_internal=True or admin/staff)
+        # - "umum": Open to everyone (INTERNAL, ASN, UMUM)
+        audience = (course.target_audience or "umum").lower()
+        user_type = getattr(user, 'user_type', 'UMUM')
+        is_internal_user = getattr(user, 'is_internal', False) or user_type == 'INTERNAL' or user.is_staff or user.is_superuser
+
+        if audience in ['internal', 'pegawai']:
+            if not is_internal_user:
+                return Response({
+                    "error": "Akses Dibatasi: Kursus ini dikhususkan bagi Pegawai Internal Setjen DPD RI."
+                }, status=status.HTTP_403_FORBIDDEN)
+        elif audience == 'asn':
+            if not (is_internal_user or user_type == 'ASN'):
+                return Response({
+                    "error": "Akses Dibatasi: Kursus ini dikhususkan bagi Aparatur Sipil Negara (ASN)."
+                }, status=status.HTTP_403_FORBIDDEN)
+
         try:
             # Create enrollment directly without order/payment dependency
             enrollment = api_models.EnrolledCourse.objects.create(
@@ -1787,17 +1808,38 @@ class CheckEnrollmentStatusAPIView(generics.RetrieveAPIView):
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
+        audience = (course.target_audience or "umum").lower()
+        user_type = getattr(user, 'user_type', 'UMUM')
+        is_internal_user = getattr(user, 'is_internal', False) or user_type == 'INTERNAL' or user.is_staff or user.is_superuser
+        
+        can_access = True
+        restriction_message = ""
+        if audience in ['internal', 'pegawai'] and not is_internal_user:
+            can_access = False
+            restriction_message = "Kursus ini dikhususkan bagi Pegawai Internal Setjen DPD RI."
+        elif audience == 'asn' and not (is_internal_user or user_type == 'ASN'):
+            can_access = False
+            restriction_message = "Kursus ini dikhususkan bagi Aparatur Sipil Negara (ASN)."
+
         enrollment = api_models.EnrolledCourse.objects.filter(course=course, user=user).first()
         
         if enrollment:
             return Response({
                 "is_enrolled": True,
                 "enrollment_id": enrollment.enrollment_id,
-                "enrollment_date": enrollment.date
+                "enrollment_date": enrollment.date,
+                "can_access": can_access,
+                "restriction_message": restriction_message,
+                "target_audience": audience,
+                "user_type": user_type
             })
         else:
             return Response({
-                "is_enrolled": False
+                "is_enrolled": False,
+                "can_access": can_access,
+                "restriction_message": restriction_message,
+                "target_audience": audience,
+                "user_type": user_type
             })
 
 

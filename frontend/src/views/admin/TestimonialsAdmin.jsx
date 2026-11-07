@@ -3,6 +3,7 @@ import apiInstance from '../../utils/axios';
 import Toast from '../plugin/Toast';
 import { SkeletonPage } from '../../components/skeletons/SkeletonComponents';
 import AdminHeader from '../partials/AdminHeader';
+import Footer from '../partials/Footer';
 import './TestimonialsAdmin.css';
 
 /**
@@ -247,10 +248,12 @@ function TestimonialsAdmin() {
     );
 
     return (
-        <div className="testimonials-admin-page">
+        <div className="admin-page-wrapper">
             <AdminHeader />
             
-            <div className="testimonials-admin-container">
+            <main className="admin-dashboard-container">
+                <div className="container-fluid px-3 px-xl-4 footer-container">
+                    <div className="testimonials-admin-container">
                 {/* Page Header */}
                 <div className="testimonials-admin-header">
                     <div className="header-content">
@@ -416,6 +419,11 @@ function TestimonialsAdmin() {
                     </div>
                 </div>
             )}
+                    </div>
+                </div>
+            </main>
+
+            <Footer />
         </div>
     );
 }

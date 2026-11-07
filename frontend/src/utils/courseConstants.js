@@ -8,8 +8,9 @@ export const COURSE_LEVELS = [
 ];
 
 export const COURSE_AUDIENCE_OPTIONS = [
-  { value: "pegawai", label: "🏢 Khusus Pegawai Setjen DPD RI", description: "Pelatihan khusus pegawai Setjen DPD RI" },
-  { value: "umum", label: "🌐 Terbuka untuk Umum", description: "Dapat diakses oleh publik dan seluruh pegawai" },
+  { value: "internal", label: "🏛️ Khusus Internal Setjen DPD RI", description: "Pelatihan kedinasan khusus pegawai internal Setjen DPD RI" },
+  { value: "asn", label: "🏢 Khusus ASN (Aparatur Sipil Negara)", description: "Dapat diakses oleh seluruh ASN (Internal DPD RI & Instansi Lain)" },
+  { value: "umum", label: "🌐 Terbuka untuk Umum", description: "Dapat diakses oleh seluruh kalangan (Internal, ASN, dan Masyarakat Umum)" },
 ];
 
 export const DEFAULT_COURSE_DATA = {

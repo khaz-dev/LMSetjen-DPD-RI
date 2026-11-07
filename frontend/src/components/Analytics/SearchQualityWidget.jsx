@@ -182,26 +182,26 @@ export default function SearchQualityWidget() {
 
             <div className="row mb-4">
               <div className="col-md-4 mb-3">
-                <div className="status-card success">
-                  <div className="status-icon">✓</div>
-                  <div className="status-label">Performa Tinggi</div>
-                  <div className="status-value">{report.report.high_performers}</div>
+                <div className="sq-status-card status-card success">
+                  <div className="sq-status-icon status-icon">✓</div>
+                  <div className="sq-status-label status-label">Performa Tinggi</div>
+                  <div className="sq-status-value status-value">{report.report.high_performers}</div>
                   <small>CTR ≥ 5%</small>
                 </div>
               </div>
               <div className="col-md-4 mb-3">
-                <div className="status-card warning">
-                  <div className="status-icon">⚠</div>
-                  <div className="status-label">Performa Rendah</div>
-                  <div className="status-value">{report.report.low_performers}</div>
+                <div className="sq-status-card status-card warning">
+                  <div className="sq-status-icon status-icon">⚠</div>
+                  <div className="sq-status-label status-label">Performa Rendah</div>
+                  <div className="sq-status-value status-value">{report.report.low_performers}</div>
                   <small>CTR &lt; 1% (dengan penayangan)</small>
                 </div>
               </div>
               <div className="col-md-4 mb-3">
-                <div className="status-card danger">
-                  <div className="status-icon">✗</div>
-                  <div className="status-label">Kursus Tersembunyi</div>
-                  <div className="status-value">{report.report.no_impression_courses}</div>
+                <div className="sq-status-card status-card danger">
+                  <div className="sq-status-icon status-icon">✗</div>
+                  <div className="sq-status-label status-label">Kursus Tersembunyi</div>
+                  <div className="sq-status-value status-value">{report.report.no_impression_courses}</div>
                   <small>0 penayangan</small>
                 </div>
               </div>

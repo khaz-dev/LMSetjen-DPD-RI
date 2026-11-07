@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
-import BaseHeader from "../partials/BaseHeader";
 import apiInstance from "../../utils/axios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
@@ -131,12 +130,11 @@ function ReviewAbuseAdmin() {
     };
 
     return (
-        <>
-            <BaseHeader />
+        <div className="admin-page-wrapper">
             <AdminHeader />
             
-            <div className="review-abuse-admin-page pt-5 pb-5">
-                <div className="container">
+            <main className="admin-dashboard-container">
+                <div className="container-fluid px-3 px-xl-4 footer-container">
                     {/* Header Section */}
                     <div className="admin-header-section mb-4">
                         <div className="row align-items-center">
@@ -372,10 +370,10 @@ function ReviewAbuseAdmin() {
                         </div>
                     </div>
                 </div>
-            )}
+            </main>
 
             <Footer />
-        </>
+        </div>
     );
 }
 

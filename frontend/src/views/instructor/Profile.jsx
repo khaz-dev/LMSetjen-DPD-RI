@@ -8,6 +8,13 @@ import Header from "./Partials/Header";
 import ProfilePictureCropModal from "../../components/ProfilePictureCropModal/ProfilePictureCropModal";
 import CountrySelector from "../../components/CountrySelector/CountrySelector";
 import OptionSelector from "../../components/OptionSelector/OptionSelector";
+import { 
+    ASN_POSITIONS, 
+    ASN_INSTITUTIONS_GROUPS, 
+    PROFESSIONS_LIST, 
+    COUNTRIES_LIST, 
+    INDONESIA_PROVINCES_AND_CITIES 
+} from "../../data/onboardingData";
 
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
@@ -174,7 +181,14 @@ function Profile() {
     const [profileData, setProfileData] = useState({
         full_name: "",
         email: "",
+        phone: "",
+        user_type: "UMUM",
+        is_internal: false,
         nip: "",
+        instansi_asal: "",
+        pekerjaan: "",
+        provinsi: "",
+        kota_kabupaten: "",
         country: "",
         about: "",
         bio: "",
@@ -192,6 +206,12 @@ function Profile() {
         tiktok: "",
         image: ""
     });
+
+    // Cascading cities based on selected province
+    const availableCities = useMemo(() => {
+        if (!profileData.provinsi) return [];
+        return INDONESIA_PROVINCES_AND_CITIES[profileData.provinsi] || [];
+    }, [profileData.provinsi]);
 
     // Employee options
     const [employeeOptions, setEmployeeOptions] = useState({
@@ -261,7 +281,12 @@ function Profile() {
         if (profileData.full_name?.trim()) score += 15;
         if (profileData.about?.trim()) score += 15;
         if (profileData.country?.trim()) score += 10;
-        if (profileData.nip?.trim() || profileData.golongan?.trim() || profileData.organization_unit_name?.trim()) score += 20;
+        if (
+            (profileData.user_type === 'INTERNAL' && (profileData.nip?.trim() || profileData.organization_unit_name?.trim())) ||
+            (profileData.user_type === 'ASN' && (profileData.nip?.trim() || profileData.instansi_asal?.trim())) ||
+            (profileData.user_type === 'UMUM' && (profileData.pekerjaan?.trim() || profileData.provinsi?.trim())) ||
+            profileData.nip?.trim()
+        ) score += 20;
         if (profileData.bio?.trim()) score += 10;
         if (
             profileData.linkedin?.trim() ||
@@ -320,7 +345,14 @@ function Profile() {
                 ...pData,
                 email: pData.email || currentUser?.email || "",
                 full_name: pData.full_name || currentUser?.full_name || "",
-                nip: pData.nip || "",
+                phone: pData.phone || currentUser?.phone || "",
+                user_type: pData.user_type || currentUser?.user_type || "UMUM",
+                is_internal: Boolean(pData.is_internal || currentUser?.is_internal || (pData.user_type === 'INTERNAL')),
+                nip: pData.nip || currentUser?.nip || "",
+                instansi_asal: pData.instansi_asal || currentUser?.instansi_asal || "",
+                pekerjaan: pData.pekerjaan || currentUser?.pekerjaan || "",
+                provinsi: pData.provinsi || currentUser?.provinsi || "",
+                kota_kabupaten: pData.kota_kabupaten || currentUser?.kota_kabupaten || "",
                 golongan: pData.golongan || "",
                 kelas_jabatan: pData.kelas_jabatan || "",
                 jenis_jabatan: pData.jenis_jabatan || "",
@@ -334,7 +366,7 @@ function Profile() {
                 instagram: tData?.instagram || pData.instagram || "",
                 tiktok: tData?.tiktok || pData.tiktok || "",
                 about: pData.about || "",
-                country: pData.country || ""
+                country: pData.country || pData.negara || currentUser?.country || currentUser?.negara || "Indonesia"
             };
 
             setProfile(pData);
@@ -871,6 +903,19 @@ function Profile() {
                                             <span className="badge-verified" title="Akun Terverifikasi Setjen DPD RI">
                                                 <i className="fas fa-circle-check"></i> Terverifikasi
                                             </span>
+                                            {(profileData.user_type === 'INTERNAL' || profileData.is_internal) ? (
+                                                <span className="user-type-badge-pill internal">
+                                                    <i className="fas fa-landmark me-1"></i> Internal Setjen DPD RI
+                                                </span>
+                                            ) : profileData.user_type === 'ASN' ? (
+                                                <span className="user-type-badge-pill asn">
+                                                    <i className="fas fa-id-badge me-1"></i> ASN Luar
+                                                </span>
+                                            ) : (
+                                                <span className="user-type-badge-pill umum">
+                                                    <i className="fas fa-globe me-1"></i> Masyarakat Umum
+                                                </span>
+                                            )}
                                         </div>
 
                                         <div className="hero-meta-row">
@@ -878,10 +923,28 @@ function Profile() {
                                                 <i className="fas fa-envelope text-teal"></i>
                                                 {profileData.email || currentUser?.email || "email@dpd.go.id"}
                                             </span>
+                                            {profileData.phone && (
+                                                <span className="hero-meta-item" title="Nomor Telepon / WhatsApp">
+                                                    <i className="fas fa-phone text-teal"></i>
+                                                    {profileData.phone}
+                                                </span>
+                                            )}
                                             {profileData.nip && (
                                                 <span className="hero-meta-item" title="Nomor Induk Pegawai">
                                                     <i className="fas fa-id-card text-teal"></i>
                                                     NIP: {profileData.nip}
+                                                </span>
+                                            )}
+                                            {profileData.user_type === 'ASN' && profileData.instansi_asal && (
+                                                <span className="hero-meta-item" title="Instansi Asal">
+                                                    <i className="fas fa-building-columns text-teal"></i>
+                                                    {profileData.instansi_asal}
+                                                </span>
+                                            )}
+                                            {profileData.user_type === 'UMUM' && (profileData.pekerjaan || profileData.provinsi) && (
+                                                <span className="hero-meta-item" title="Profesi & Asal Wilayah">
+                                                    <i className="fas fa-briefcase text-teal"></i>
+                                                    {profileData.pekerjaan ? profileData.pekerjaan : ""}{profileData.pekerjaan && profileData.provinsi ? " • " : ""}{profileData.provinsi ? profileData.provinsi : ""}
                                                 </span>
                                             )}
                                             {profileData.organization_unit_name && (
@@ -1008,8 +1071,22 @@ function Profile() {
                                     className={`profile-tab-btn ${activeTab === "employee" ? "active" : ""}`}
                                     onClick={() => setActiveTab("employee")}
                                 >
-                                    <i className="fas fa-building-columns"></i>
-                                    <span>Kepegawaian DPD RI</span>
+                                    {(profileData.user_type === 'INTERNAL' || profileData.is_internal) ? (
+                                        <>
+                                            <i className="fas fa-landmark"></i>
+                                            <span>Kepegawaian DPD RI</span>
+                                        </>
+                                    ) : profileData.user_type === 'ASN' ? (
+                                        <>
+                                            <i className="fas fa-id-badge"></i>
+                                            <span>Kepegawaian & Instansi ASN</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fas fa-globe"></i>
+                                            <span>Data Kepesertaan & Domisili</span>
+                                        </>
+                                    )}
                                 </button>
 
                                 <button
@@ -1098,6 +1175,52 @@ function Profile() {
                                                 </div>
 
                                                 <div className="col-md-6 col-12">
+                                                    <label className="compact-label" htmlFor="phone">
+                                                        Nomor Telepon / WhatsApp
+                                                    </label>
+                                                    <div className="input-group-compact">
+                                                        <span className="input-group-icon"><i className="fas fa-phone"></i></span>
+                                                        <input
+                                                            type="tel"
+                                                            id="phone"
+                                                            name="phone"
+                                                            className="form-control compact-input"
+                                                            placeholder="Contoh: 081234567890"
+                                                            value={profileData.phone || ""}
+                                                            onChange={handleProfileChange}
+                                                            disabled={uiState.loading}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-md-6 col-12">
+                                                    <label className="compact-label">
+                                                        Kategori Pengguna LMS
+                                                    </label>
+                                                    <div className="input-group-compact input-readonly">
+                                                        <span className="input-group-icon">
+                                                            <i className={`fas ${(profileData.user_type === 'INTERNAL' || profileData.is_internal) ? "fa-landmark text-primary" : profileData.user_type === 'ASN' ? "fa-id-badge text-success" : "fa-globe text-info"}`}></i>
+                                                        </span>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control compact-input fw-semibold"
+                                                            value={
+                                                                (profileData.user_type === 'INTERNAL' || profileData.is_internal)
+                                                                    ? "Internal Setjen DPD RI (SSO Nusa)"
+                                                                    : profileData.user_type === 'ASN'
+                                                                    ? "Aparatur Sipil Negara (ASN Luar)"
+                                                                    : "Masyarakat Umum"
+                                                            }
+                                                            readOnly
+                                                            disabled
+                                                        />
+                                                        <span className="input-badge-verified">
+                                                            <i className="fas fa-check-circle"></i> Terdaftar
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-md-6 col-12">
                                                     <CountrySelector
                                                         value={profileData.country || ""}
                                                         onChange={handleProfileChange}
@@ -1156,152 +1279,415 @@ function Profile() {
                                     )}
 
                                     {/* ----------------------------------------------------
-                                        TAB 2: DATA KEPEGAWAIAN SETJEN DPD RI
+                                        TAB 2: DATA KEPEGAWAIAN / KEPESERTAAN SESUAI KATEGORI
                                         ---------------------------------------------------- */}
                                     {activeTab === "employee" && (
                                         <div className="tab-pane-content fade-in">
-                                            <div className="section-intro-bar">
-                                                <div>
-                                                    <h4 className="section-heading">
-                                                        <i className="fas fa-landmark me-2 text-teal"></i>
-                                                        Data Kepegawaian Setjen DPD RI
-                                                    </h4>
-                                                    <p className="section-subtext">
-                                                        Informasi kepegawaian resmi digunakan untuk validasi sertifikasi, JP pelatihan, dan identitas instruktur internal.
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div className="employee-sync-notice">
-                                                <i className="fas fa-circle-info notice-icon"></i>
-                                                <div className="notice-body">
-                                                    <strong>Sinkronisasi Data Kepegawaian</strong>
-                                                    <p>
-                                                        Data ini menghubungkan identitas Anda sebagai Instruktur sekaligus Peserta. Perubahan lokal disimpan di profil dan diselaraskan secara berkala dengan Sistem Kepegawaian Setjen DPD RI.
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div className="row g-3">
-                                                <div className="col-md-6 col-12">
-                                                    <label className="compact-label" htmlFor="nip">
-                                                        NIP (Nomor Induk Pegawai)
-                                                    </label>
-                                                    <div className="input-group-compact input-readonly">
-                                                        <span className="input-group-icon"><i className="fas fa-id-badge"></i></span>
-                                                        <input
-                                                            type="text"
-                                                            id="nip"
-                                                            name="nip"
-                                                            className="form-control compact-input"
-                                                            placeholder="NIP Pegawai DPD RI..."
-                                                            value={profileData.nip || ""}
-                                                            readOnly
-                                                            disabled
-                                                        />
-                                                        <span className="input-badge-verified" title="NIP resmi Setjen DPD RI">
-                                                            <i className="fas fa-shield"></i> Terdaftar
-                                                        </span>
+                                            {(profileData.user_type === 'INTERNAL' || profileData.is_internal) ? (
+                                                <>
+                                                    <div className="section-intro-bar">
+                                                        <div>
+                                                            <h4 className="section-heading">
+                                                                <i className="fas fa-landmark me-2 text-teal"></i>
+                                                                Data Kepegawaian Setjen DPD RI
+                                                            </h4>
+                                                            <p className="section-subtext">
+                                                                Informasi kepegawaian resmi digunakan untuk validasi sertifikasi, JP pelatihan, dan identitas instruktur internal.
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                </div>
 
-                                                <div className="col-md-6 col-12">
-                                                    <OptionSelector
-                                                        value={profileData.golongan || ""}
-                                                        onChange={handleProfileChange}
-                                                        onBlur={handleProfileChange}
-                                                        options={employeeOptions.golongan.map((g) => ({ id: g, name: g }))}
-                                                        name="golongan"
-                                                        id="golongan"
-                                                        label="Pangkat / Golongan Ruang"
-                                                        icon="fas fa-layer-group"
-                                                        placeholder="Pilih golongan ruang..."
-                                                        required={false}
-                                                        disabled={uiState.loading}
-                                                        displayKey="name"
-                                                        valueKey="id"
-                                                        isLoading={employeeOptionsLoading}
-                                                    />
-                                                </div>
+                                                    <div className="employee-sync-notice">
+                                                        <i className="fas fa-circle-info notice-icon"></i>
+                                                        <div className="notice-body">
+                                                            <strong>Sinkronisasi Data Kepegawaian</strong>
+                                                            <p>
+                                                                Data ini menghubungkan identitas Anda sebagai Instruktur sekaligus Peserta. Perubahan diselaraskan secara langsung dengan Sistem Kepegawaian Setjen DPD RI.
+                                                            </p>
+                                                        </div>
+                                                    </div>
 
-                                                <div className="col-md-6 col-12">
-                                                    <OptionSelector
-                                                        value={profileData.jenis_jabatan || ""}
-                                                        onChange={(event) => {
-                                                            const newValue = event.target.value || "";
-                                                            setProfileData((prev) => ({ ...prev, jenis_jabatan: newValue }));
-                                                            if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
-                                                            autoSaveTimeoutRef.current = setTimeout(() => {
-                                                                saveProfileData({ jenis_jabatan: newValue }, false);
-                                                            }, 1200);
-                                                        }}
-                                                        onBlur={handleProfileChange}
-                                                        options={employeeOptions.jenis_jabatan.map((j) => ({ id: j, name: j }))}
-                                                        name="jenis_jabatan"
-                                                        id="jenis_jabatan"
-                                                        label="Jenis Jabatan"
-                                                        icon="fas fa-tags"
-                                                        placeholder="Pilih jenis jabatan ASN..."
-                                                        required={false}
-                                                        disabled={uiState.loading}
-                                                        displayKey="name"
-                                                        valueKey="id"
-                                                        isLoading={employeeOptionsLoading}
-                                                    />
-                                                </div>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 col-12">
+                                                            <label className="compact-label" htmlFor="nip">
+                                                                NIP (Nomor Induk Pegawai)
+                                                            </label>
+                                                            <div className="input-group-compact input-readonly">
+                                                                <span className="input-group-icon"><i className="fas fa-id-badge"></i></span>
+                                                                <input
+                                                                    type="text"
+                                                                    id="nip"
+                                                                    name="nip"
+                                                                    className="form-control compact-input"
+                                                                    placeholder="NIP Pegawai DPD RI..."
+                                                                    value={profileData.nip || ""}
+                                                                    readOnly
+                                                                    disabled
+                                                                />
+                                                                <span className="input-badge-verified" title="NIP resmi Setjen DPD RI">
+                                                                    <i className="fas fa-shield"></i> Terdaftar
+                                                                </span>
+                                                            </div>
+                                                        </div>
 
-                                                <div className="col-md-6 col-12">
-                                                    <OptionSelector
-                                                        value={profileData.organization_unit_name || ""}
-                                                        onChange={(event) => {
-                                                            const newValue = event.target.value || "";
-                                                            setProfileData((prev) => ({ ...prev, organization_unit_name: newValue }));
-                                                            if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
-                                                            autoSaveTimeoutRef.current = setTimeout(() => {
-                                                                saveProfileData({ organization_unit_name: newValue }, false);
-                                                            }, 1200);
-                                                        }}
-                                                        onBlur={handleProfileChange}
-                                                        options={employeeOptions.organizations}
-                                                        name="organization_unit_name"
-                                                        id="organization_unit_name"
-                                                        label="Unit Organisasi / Biro / Bagian"
-                                                        icon="fas fa-sitemap"
-                                                        placeholder="Pilih unit kerja Setjen DPD RI..."
-                                                        required={false}
-                                                        disabled={uiState.loading}
-                                                        displayKey="name"
-                                                        valueKey="name"
-                                                        isLoading={employeeOptionsLoading}
-                                                    />
-                                                </div>
+                                                        <div className="col-md-6 col-12">
+                                                            <OptionSelector
+                                                                value={profileData.golongan || ""}
+                                                                onChange={handleProfileChange}
+                                                                onBlur={handleProfileChange}
+                                                                options={employeeOptions.golongan.map((g) => ({ id: g, name: g }))}
+                                                                name="golongan"
+                                                                id="golongan"
+                                                                label="Pangkat / Golongan Ruang"
+                                                                icon="fas fa-layer-group"
+                                                                placeholder="Pilih golongan ruang..."
+                                                                required={false}
+                                                                disabled={uiState.loading}
+                                                                displayKey="name"
+                                                                valueKey="id"
+                                                                isLoading={employeeOptionsLoading}
+                                                            />
+                                                        </div>
 
-                                                <div className="col-12">
-                                                    <OptionSelector
-                                                        value={profileData.position_name || ""}
-                                                        onChange={(event) => {
-                                                            const newValue = event.target.value || "";
-                                                            setProfileData((prev) => ({ ...prev, position_name: newValue }));
-                                                            if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
-                                                            autoSaveTimeoutRef.current = setTimeout(() => {
-                                                                saveProfileData({ position_name: newValue }, false);
-                                                            }, 1200);
-                                                        }}
-                                                        onBlur={handleProfileChange}
-                                                        options={employeeOptions.positions}
-                                                        name="position_name"
-                                                        id="position_name"
-                                                        label="Nama Jabatan / Posisi"
-                                                        icon="fas fa-briefcase"
-                                                        placeholder="Pilih atau cari jabatan Anda..."
-                                                        required={false}
-                                                        disabled={uiState.loading}
-                                                        displayKey="name"
-                                                        valueKey="name"
-                                                        isLoading={employeeOptionsLoading}
-                                                    />
-                                                </div>
-                                            </div>
+                                                        <div className="col-md-6 col-12">
+                                                            <OptionSelector
+                                                                value={profileData.jenis_jabatan || ""}
+                                                                onChange={(event) => {
+                                                                    const newValue = event.target.value || "";
+                                                                    setProfileData((prev) => ({ ...prev, jenis_jabatan: newValue }));
+                                                                    if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                                    autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                        saveProfileData({ jenis_jabatan: newValue }, false);
+                                                                    }, 1200);
+                                                                }}
+                                                                onBlur={handleProfileChange}
+                                                                options={employeeOptions.jenis_jabatan.map((j) => ({ id: j, name: j }))}
+                                                                name="jenis_jabatan"
+                                                                id="jenis_jabatan"
+                                                                label="Jenis Jabatan"
+                                                                icon="fas fa-tags"
+                                                                placeholder="Pilih jenis jabatan ASN..."
+                                                                required={false}
+                                                                disabled={uiState.loading}
+                                                                displayKey="name"
+                                                                valueKey="id"
+                                                                isLoading={employeeOptionsLoading}
+                                                            />
+                                                        </div>
+
+                                                        <div className="col-md-6 col-12">
+                                                            <OptionSelector
+                                                                value={profileData.organization_unit_name || ""}
+                                                                onChange={(event) => {
+                                                                    const newValue = event.target.value || "";
+                                                                    setProfileData((prev) => ({ ...prev, organization_unit_name: newValue }));
+                                                                    if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                                    autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                        saveProfileData({ organization_unit_name: newValue }, false);
+                                                                    }, 1200);
+                                                                }}
+                                                                onBlur={handleProfileChange}
+                                                                options={employeeOptions.organizations}
+                                                                name="organization_unit_name"
+                                                                id="organization_unit_name"
+                                                                label="Unit Organisasi / Biro / Bagian"
+                                                                icon="fas fa-sitemap"
+                                                                placeholder="Pilih unit kerja Setjen DPD RI..."
+                                                                required={false}
+                                                                disabled={uiState.loading}
+                                                                displayKey="name"
+                                                                valueKey="name"
+                                                                isLoading={employeeOptionsLoading}
+                                                            />
+                                                        </div>
+
+                                                        <div className="col-12">
+                                                            <OptionSelector
+                                                                value={profileData.position_name || ""}
+                                                                onChange={(event) => {
+                                                                    const newValue = event.target.value || "";
+                                                                    setProfileData((prev) => ({ ...prev, position_name: newValue }));
+                                                                    if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                                    autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                        saveProfileData({ position_name: newValue }, false);
+                                                                    }, 1200);
+                                                                }}
+                                                                onBlur={handleProfileChange}
+                                                                options={employeeOptions.positions}
+                                                                name="position_name"
+                                                                id="position_name"
+                                                                label="Nama Jabatan / Posisi"
+                                                                icon="fas fa-briefcase"
+                                                                placeholder="Pilih atau cari jabatan Anda..."
+                                                                required={false}
+                                                                disabled={uiState.loading}
+                                                                displayKey="name"
+                                                                valueKey="name"
+                                                                isLoading={employeeOptionsLoading}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            ) : profileData.user_type === 'ASN' ? (
+                                                <>
+                                                    <div className="section-intro-bar">
+                                                        <div>
+                                                            <h4 className="section-heading">
+                                                                <i className="fas fa-id-badge me-2 text-success"></i>
+                                                                Data Kepegawaian & Instansi Asal (ASN Luar)
+                                                            </h4>
+                                                            <p className="section-subtext">
+                                                                Informasi NIP, Jabatan, dan Instansi Asal Anda untuk validasi kepakaran pengajar dan pencatatan kediklatan resmi.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="employee-sync-notice" style={{ background: '#f0fdf4', borderColor: '#bbf7d0' }}>
+                                                        <i className="fas fa-shield-halved notice-icon" style={{ color: '#16a34a' }}></i>
+                                                        <div className="notice-body">
+                                                            <strong style={{ color: '#15803d' }}>Identitas Instruktur Aparatur Sipil Negara</strong>
+                                                            <p style={{ color: '#166534' }}>
+                                                                Pastikan NIP dan Asal Instansi Anda sesuai dengan data resmi BKN / SK penugasan kediklatan Anda.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 col-12">
+                                                            <label className="compact-label" htmlFor="asn_inst_nip">
+                                                                NIP (Nomor Induk Pegawai - 18 Digit) <span className="text-danger">*</span>
+                                                            </label>
+                                                            <div className="input-group-compact">
+                                                                <span className="input-group-icon"><i className="fas fa-id-card"></i></span>
+                                                                <input
+                                                                    type="text"
+                                                                    id="asn_inst_nip"
+                                                                    name="nip"
+                                                                    className="form-control compact-input"
+                                                                    placeholder="Contoh: 198501152010121002"
+                                                                    value={profileData.nip || ""}
+                                                                    maxLength={18}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value.replace(/\D/g, '').slice(0, 18);
+                                                                        setProfileData(prev => ({ ...prev, nip: val }));
+                                                                        if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                                        autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                            saveProfileData({ nip: val }, false);
+                                                                        }, 1200);
+                                                                    }}
+                                                                    disabled={uiState.loading}
+                                                                />
+                                                            </div>
+                                                            <small className="form-text text-muted" style={{ fontSize: '0.72rem' }}>
+                                                                {profileData.nip?.length || 0}/18 digit angka NIP resmi
+                                                            </small>
+                                                        </div>
+
+                                                        <div className="col-md-6 col-12">
+                                                            <label className="compact-label" htmlFor="asn_inst_jabatan">
+                                                                Jabatan Saat Ini <span className="text-danger">*</span>
+                                                            </label>
+                                                            <div className="input-group-compact">
+                                                                <span className="input-group-icon"><i className="fas fa-briefcase"></i></span>
+                                                                <select
+                                                                    id="asn_inst_jabatan"
+                                                                    name="jenis_jabatan"
+                                                                    className="form-select compact-input"
+                                                                    value={profileData.jenis_jabatan || ""}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setProfileData(prev => ({ ...prev, jenis_jabatan: val }));
+                                                                        if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                                        autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                            saveProfileData({ jenis_jabatan: val }, false);
+                                                                        }, 1200);
+                                                                    }}
+                                                                    disabled={uiState.loading}
+                                                                >
+                                                                    <option value="">-- Pilih Jenis Jabatan ASN --</option>
+                                                                    {ASN_POSITIONS.map((pos) => (
+                                                                        <option key={pos} value={pos}>{pos}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="col-12">
+                                                            <label className="compact-label" htmlFor="asn_inst_instansi">
+                                                                Asal Instansi / Kementerian / Lembaga / Daerah <span className="text-danger">*</span>
+                                                            </label>
+                                                            <div className="input-group-compact">
+                                                                <span className="input-group-icon"><i className="fas fa-building-columns"></i></span>
+                                                                <select
+                                                                    id="asn_inst_instansi"
+                                                                    name="instansi_asal"
+                                                                    className="form-select compact-input"
+                                                                    value={profileData.instansi_asal || ""}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setProfileData(prev => ({ ...prev, instansi_asal: val }));
+                                                                        if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                                        autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                            saveProfileData({ instansi_asal: val }, false);
+                                                                        }, 1200);
+                                                                    }}
+                                                                    disabled={uiState.loading}
+                                                                >
+                                                                    <option value="">-- Pilih Asal Instansi Anda --</option>
+                                                                    {Object.entries(ASN_INSTITUTIONS_GROUPS).map(([category, institutions]) => (
+                                                                        <optgroup key={category} label={category}>
+                                                                            {institutions.map((inst) => (
+                                                                                <option key={inst} value={inst}>{inst}</option>
+                                                                            ))}
+                                                                        </optgroup>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="section-intro-bar">
+                                                        <div>
+                                                            <h4 className="section-heading">
+                                                                <i className="fas fa-globe me-2 text-info"></i>
+                                                                Data Kepesertaan & Domisili (Masyarakat Umum)
+                                                            </h4>
+                                                            <p className="section-subtext">
+                                                                Informasi profesi dan asal wilayah domisili untuk identitas publik instruktur dan personalisasi materi pembelajaran.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="employee-sync-notice" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
+                                                        <i className="fas fa-user-check notice-icon" style={{ color: '#0284c7' }}></i>
+                                                        <div className="notice-body">
+                                                            <strong style={{ color: '#0369a1' }}>Profil Instruktur Umum</strong>
+                                                            <p style={{ color: '#334155' }}>
+                                                                Sebagai pengajar dari masyarakat umum, identitas profesi dan asal daerah ditampilkan pada kartu pengajar publik kursus Anda.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 col-12">
+                                                            <label className="compact-label" htmlFor="umum_inst_pekerjaan">
+                                                                Pekerjaan / Profesi Saat Ini <span className="text-danger">*</span>
+                                                            </label>
+                                                            <div className="input-group-compact">
+                                                                <span className="input-group-icon"><i className="fas fa-briefcase"></i></span>
+                                                                <select
+                                                                    id="umum_inst_pekerjaan"
+                                                                    name="pekerjaan"
+                                                                    className="form-select compact-input"
+                                                                    value={profileData.pekerjaan || ""}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setProfileData(prev => ({ ...prev, pekerjaan: val }));
+                                                                        if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                                        autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                            saveProfileData({ pekerjaan: val }, false);
+                                                                        }, 1200);
+                                                                    }}
+                                                                    disabled={uiState.loading}
+                                                                >
+                                                                    <option value="">-- Pilih Pekerjaan / Profesi --</option>
+                                                                    {PROFESSIONS_LIST.map((prof) => (
+                                                                        <option key={prof} value={prof}>{prof}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="col-md-6 col-12">
+                                                            <label className="compact-label" htmlFor="umum_inst_negara">
+                                                                Negara Domisili <span className="text-danger">*</span>
+                                                            </label>
+                                                            <div className="input-group-compact">
+                                                                <span className="input-group-icon"><i className="fas fa-flag"></i></span>
+                                                                <select
+                                                                    id="umum_inst_negara"
+                                                                    name="country"
+                                                                    className="form-select compact-input"
+                                                                    value={profileData.country || "Indonesia"}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setProfileData(prev => ({ ...prev, country: val }));
+                                                                        if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                                        autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                            saveProfileData({ country: val }, false);
+                                                                        }, 1200);
+                                                                    }}
+                                                                    disabled={uiState.loading}
+                                                                >
+                                                                    {COUNTRIES_LIST.map((c) => (
+                                                                        <option key={c} value={c}>{c}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="col-md-6 col-12">
+                                                            <label className="compact-label" htmlFor="umum_inst_provinsi">
+                                                                Provinsi Asal <span className="text-danger">*</span>
+                                                            </label>
+                                                            <div className="input-group-compact">
+                                                                <span className="input-group-icon"><i className="fas fa-map-location-dot"></i></span>
+                                                                <select
+                                                                    id="umum_inst_provinsi"
+                                                                    name="provinsi"
+                                                                    className="form-select compact-input"
+                                                                    value={profileData.provinsi || ""}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setProfileData(prev => ({ ...prev, provinsi: val, kota_kabupaten: "" }));
+                                                                        if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                                        autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                            saveProfileData({ provinsi: val, kota_kabupaten: "" }, false);
+                                                                        }, 1200);
+                                                                    }}
+                                                                    disabled={uiState.loading}
+                                                                >
+                                                                    <option value="">-- Pilih Provinsi --</option>
+                                                                    {Object.keys(INDONESIA_PROVINCES_AND_CITIES).map((prov) => (
+                                                                        <option key={prov} value={prov}>{prov}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="col-md-6 col-12">
+                                                            <label className="compact-label" htmlFor="umum_inst_kota">
+                                                                Kota / Kabupaten Asal
+                                                            </label>
+                                                            <div className="input-group-compact">
+                                                                <span className="input-group-icon"><i className="fas fa-city"></i></span>
+                                                                <select
+                                                                    id="umum_inst_kota"
+                                                                    name="kota_kabupaten"
+                                                                    className="form-select compact-input"
+                                                                    value={profileData.kota_kabupaten || ""}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setProfileData(prev => ({ ...prev, kota_kabupaten: val }));
+                                                                        if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+                                                                        autoSaveTimeoutRef.current = setTimeout(() => {
+                                                                            saveProfileData({ kota_kabupaten: val }, false);
+                                                                        }, 1200);
+                                                                    }}
+                                                                    disabled={uiState.loading || !profileData.provinsi}
+                                                                >
+                                                                    <option value="">{profileData.provinsi ? "-- Pilih Kota / Kabupaten --" : "-- Pilih Provinsi Dahulu --"}</option>
+                                                                    {availableCities.map((city) => (
+                                                                        <option key={city} value={city}>{city}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     )}
 

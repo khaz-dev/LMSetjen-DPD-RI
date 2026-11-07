@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import apiInstance from "../../utils/axios";
 import Toast from "../plugin/Toast";
 import Swal from "sweetalert2";
-import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import AdminHeader from "../partials/AdminHeader";
 import { getImageUrl, getLevelText } from "../../utils/courseUtils";
@@ -234,28 +233,27 @@ function AdminCourseReviewDetail() {
 
     if (loading) {
         return (
-            <>
-                <BaseHeader />
-                <section className="admin-dashboard pt-5 pb-5">
-                    <div className="container">
-                        <div className="text-center py-5">
-                            <div className="spinner-border text-primary" role="status">
-                                <span className="visually-hidden">Memuat...</span>
-                            </div>
-                            <p className="mt-3 text-muted">Memuat detail kursus...</p>
+            <div className="admin-page-wrapper">
+                <AdminHeader />
+                <main className="admin-dashboard-container d-flex align-items-center justify-content-center" style={{ minHeight: "60vh" }}>
+                    <div className="text-center py-5">
+                        <div className="spinner-border text-primary" role="status">
+                            <span className="visually-hidden">Memuat...</span>
                         </div>
+                        <p className="mt-3 text-muted">Memuat detail kursus...</p>
                     </div>
-                </section>
-            </>
+                </main>
+                <Footer />
+            </div>
         );
     }
 
     if (!course) {
         return (
-            <>
-                <BaseHeader />
-                <section className="admin-dashboard pt-5 pb-5">
-                    <div className="container">
+            <div className="admin-page-wrapper">
+                <AdminHeader />
+                <main className="admin-dashboard-container">
+                    <div className="container-fluid px-3 px-xl-4 footer-container py-5">
                         <div className="alert alert-danger text-center">
                             <i className="fas fa-exclamation-circle me-2"></i>
                             Kursus tidak ditemukan
@@ -270,18 +268,18 @@ function AdminCourseReviewDetail() {
                             </button>
                         </div>
                     </div>
-                </section>
-            </>
+                </main>
+                <Footer />
+            </div>
         );
     }
 
     return (
-        <>
-            <BaseHeader />
-            <section className="admin-dashboard pt-5 pb-5">
-                <div className="container">
-                    <AdminHeader />
-                    
+        <div className="admin-page-wrapper">
+            <AdminHeader />
+
+            <main className="admin-dashboard-container">
+                <div className="container-fluid px-3 px-xl-4 footer-container">
                     <div className="acrd-container">
                         {/* Header with Back Button and Title */}
                         <div className="acrd-header mb-4">
@@ -1040,9 +1038,9 @@ function AdminCourseReviewDetail() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </main>
             <Footer />
-        </>
+        </div>
     );
 }
 

@@ -9,6 +9,7 @@ import Toast from "../plugin/Toast";
 import UserData from "../plugin/UserData";
 import apiInstance from "../../utils/useAxios";
 import RoleSelectionModal from "../../components/RoleSelectionModal";
+import OnboardingModal from "../../components/OnboardingModal";
 import logoWebP from "../../assets/logo/logo-192.webp";
 import logoPNG from "../../assets/logo/logo-192.png";
 import logoNusaWebP from "../../assets/logo_nusa.webp";
@@ -19,6 +20,10 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Onboarding support for first-time Google users
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [onboardingData, setOnboardingData] = useState(null);
+
   // Multi-role support
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [availableRoles, setAvailableRoles] = useState([]);
@@ -26,6 +31,75 @@ function Login() {
 
   const navigate = useNavigate();
   const { isLoggedIn, setAuthToken } = useAuthStore();
+
+  /**
+   * Process authentication data from Google or SSO login
+   */
+  const processAuthResult = (authData) => {
+    // 1. Check if user needs onboarding (first-time Google users without internal sync)
+    if (
+      authData.onboarding_required ||
+      (authData.user && authData.user.onboarding_completed === false)
+    ) {
+      console.log("📝 First-time user detected. Triggering onboarding modal...");
+      setOnboardingData({
+        user: authData.user,
+        token: authData.access,
+      });
+      setShowOnboardingModal(true);
+      return;
+    }
+
+    // 2. Check if user has multiple roles
+    if (
+      authData.user?.available_roles &&
+      authData.user.available_roles.length > 1
+    ) {
+      console.log("👥 Multi-role user detected:", authData.user.available_roles);
+      setCurrentUser({
+        full_name: authData.user.full_name,
+        email: authData.user.email,
+        nip: authData.user.nip,
+      });
+      setAvailableRoles(authData.user.available_roles);
+      setShowRoleModal(true);
+      Toast().fire({
+        icon: "info",
+        title: "Pilih Peran Anda",
+        text: "Anda memiliki akses dengan beberapa peran.",
+      });
+    } else {
+      console.log("👤 Single-role user:", authData.user?.role);
+      Toast().fire({
+        icon: "success",
+        title: "Login Berhasil!",
+        text: `Selamat datang, ${authData.user?.full_name || "Pengguna"}!`,
+      });
+      redirectUserByRole(authData.user?.role || "student");
+    }
+  };
+
+  /**
+   * Handle completion of onboarding from modal
+   */
+  const handleOnboardingSuccess = (updatedData) => {
+    setShowOnboardingModal(false);
+    if (
+      updatedData.user &&
+      updatedData.user.available_roles &&
+      updatedData.user.available_roles.length > 1
+    ) {
+      setCurrentUser({
+        full_name: updatedData.user.full_name,
+        email: updatedData.user.email,
+        nip: updatedData.user.nip,
+      });
+      setAvailableRoles(updatedData.user.available_roles);
+      setShowRoleModal(true);
+    } else {
+      redirectUserByRole(updatedData.user?.role || "student");
+    }
+  };
 
   // Clear any stale logout flag when user visits login page
   useEffect(() => {
@@ -101,43 +175,7 @@ function Login() {
           // Explicitly clear logging_out flag and store tokens
           sessionStorage.removeItem("logging_out");
           setAuthUser(result.access, result.refresh);
-
-          // Check if user has multiple roles
-          if (
-            result.user.available_roles &&
-            result.user.available_roles.length > 1
-          ) {
-            console.log(
-              "👥 Multi-role user detected:",
-              result.user.available_roles,
-            );
-
-            // Store user data and roles for role selection modal
-            setCurrentUser({
-              full_name: result.user.full_name,
-              email: result.user.email,
-              nip: result.user.nip,
-            });
-            setAvailableRoles(result.user.available_roles);
-            setShowRoleModal(true);
-
-            Toast().fire({
-              icon: "info",
-              title: "Pilih Peran Anda",
-              text: "Anda memiliki akses dengan beberapa peran.",
-            });
-          } else {
-            // Single role user - redirect directly
-            console.log("👤 Single-role user:", result.user.role);
-
-            Toast().fire({
-              icon: "success",
-              title: "Login Berhasil!",
-              text: `Selamat datang, ${result.user.full_name}!`,
-            });
-
-            redirectUserByRole(result.user.role);
-          }
+          processAuthResult(result);
         } catch (err) {
           console.error("❌ Error handling login success:", err);
         }
@@ -376,43 +414,7 @@ function Login() {
 
         // Store tokens using setAuthUser
         setAuthUser(result.data.access, result.data.refresh);
-
-        // Check if user has multiple roles
-        if (
-          result.data.user.available_roles &&
-          result.data.user.available_roles.length > 1
-        ) {
-          console.log(
-            "👥 Multi-role user detected:",
-            result.data.user.available_roles,
-          );
-
-          // Store user data and roles for role selection modal
-          setCurrentUser({
-            full_name: result.data.user.full_name,
-            email: result.data.user.email,
-            nip: result.data.user.nip,
-          });
-          setAvailableRoles(result.data.user.available_roles);
-          setShowRoleModal(true);
-
-          Toast().fire({
-            icon: "info",
-            title: "Pilih Peran Anda",
-            text: "Anda memiliki akses dengan beberapa peran.",
-          });
-        } else {
-          // Single role user - redirect directly
-          console.log("👤 Single-role user:", result.data.user.role);
-
-          Toast().fire({
-            icon: "success",
-            title: "Login Berhasil!",
-            text: `Selamat datang, ${result.data.user.full_name}!`,
-          });
-
-          redirectUserByRole(result.data.user.role);
-        }
+        processAuthResult(result.data);
       } else {
         console.error("❌ Invalid backend response:", result.data);
         throw new Error("Invalid response from backend");
@@ -447,44 +449,7 @@ function Login() {
       if (result.data && result.data.access) {
         // Store tokens using setAuthUser
         setAuthUser(result.data.access, result.data.refresh);
-
-        // Check if user has multiple roles
-        if (
-          result.data.user.available_roles &&
-          result.data.user.available_roles.length > 1
-        ) {
-          console.log(
-            "👥 Multi-role user detected:",
-            result.data.user.available_roles,
-          );
-
-          // Store user data and roles for role selection modal
-          setCurrentUser({
-            full_name: result.data.user.full_name,
-            email: result.data.user.email,
-            nip: result.data.user.nip,
-          });
-          setAvailableRoles(result.data.user.available_roles);
-          setShowRoleModal(true);
-
-          Toast().fire({
-            icon: "info",
-            title: "Pilih Peran Anda",
-            text: "Anda memiliki akses dengan beberapa peran.",
-          });
-        } else {
-          // Single role user - redirect directly
-          console.log("👤 Single-role user:", result.data.user.role);
-
-          Toast().fire({
-            icon: "success",
-            title: "Login Berhasil!",
-            text: `Selamat datang, ${result.data.user.full_name}!`,
-          });
-
-          // Redirect based on user role
-          redirectUserByRole(result.data.user.role);
-        }
+        processAuthResult(result.data);
       }
     } catch (err) {
       console.error("❌ Google Callback Error:", err);
@@ -535,6 +500,14 @@ function Login() {
   return (
     <div className="login-page-wrapper">
       <BaseHeader />
+
+      {/* Onboarding Modal for First-time Google Users */}
+      <OnboardingModal
+        isOpen={showOnboardingModal}
+        user={onboardingData?.user}
+        token={onboardingData?.token}
+        onSuccess={handleOnboardingSuccess}
+      />
 
       {/* Role Selection Modal */}
       <RoleSelectionModal

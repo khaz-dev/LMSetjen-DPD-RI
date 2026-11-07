@@ -24,6 +24,7 @@ urlpatterns = [
     path("sso/verify/", api_views.SSOTokenVerifyAPIView.as_view(), name="sso-verify"),
     path("sso/login/<str:sso_token>/", api_views.SSOLoginRedirectAPIView.as_view(), name="sso-login"),
     path("auth/google/", api_views.GoogleOAuthAPIView.as_view(), name="google-oauth"),  # ✨ PHASE 4.16: Google OAuth
+    path("auth/complete-onboarding/", api_views.CompleteOnboardingAPIView.as_view(), name="complete-onboarding"),
 
     # Core Endpoints
     path("course/category/", api_views.CategoryListAPIView.as_view()),

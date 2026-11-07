@@ -493,12 +493,21 @@ class GoogleOAuthAPIView(APIView):
                 {
                     "access": str(refresh.access_token),
                     "refresh": str(refresh),
+                    "onboarding_required": not getattr(user, 'onboarding_completed', False),
                     "user": {
                         "id": user.id,
                         "email": user.email,
                         "full_name": user.full_name,
                         "role": user.role,
                         "is_active": user.is_active,
+                        "user_type": getattr(user, 'user_type', 'UMUM'),
+                        "onboarding_completed": getattr(user, 'onboarding_completed', False),
+                        "nip": user.nip,
+                        "instansi_asal": getattr(user, 'instansi_asal', ''),
+                        "provinsi": getattr(user, 'provinsi', ''),
+                        "kota_kabupaten": getattr(user, 'kota_kabupaten', ''),
+                        "pekerjaan": getattr(user, 'pekerjaan', ''),
+                        "negara": getattr(user, 'negara', 'Indonesia'),
                         # 🔥 CRITICAL FIX: Use boolean roles for role selector (supports instructor/teacher)
                         "available_roles": user.get_available_boolean_roles(),
                         "current_role": user.current_role,
@@ -574,19 +583,42 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
         profile = serializer.save()
         
         # 🔒 Anti-Mass-Assignment: Only allow non-sensitive user fields to be updated
-        # Fields like 'role', 'is_admin', 'is_super_admin', 'nip', 'email' are strictly protected
+        # Fields like 'role', 'is_admin', 'is_super_admin', 'email' are strictly protected
         user = profile.user
-        allowed_user_fields = ['full_name', 'golongan', 'kelas_jabatan', 'jenis_jabatan']
+        allowed_user_fields = [
+            'full_name', 'phone', 'golongan', 'kelas_jabatan', 'jenis_jabatan',
+            'instansi_asal', 'pekerjaan', 'provinsi', 'kota_kabupaten'
+        ]
         
+        # If user is ASN (and not internal), allow updating NIP as well
+        if user.user_type == 'ASN' and not user.is_internal:
+            allowed_user_fields.append('nip')
+        
+        profile_needs_save = False
         for field in allowed_user_fields:
             if field in self.request.data and self.request.data[field] is not None:
-                setattr(user, field, self.request.data[field])
+                val = self.request.data[field]
+                setattr(user, field, val)
+                if hasattr(profile, field):
+                    setattr(profile, field, val)
+                    profile_needs_save = True
+        
+        if 'country' in self.request.data and self.request.data['country'] is not None:
+            c_val = self.request.data['country']
+            user.negara = c_val
+            profile.country = c_val
+            profile_needs_save = True
+
+        if 'negara' in self.request.data and self.request.data['negara'] is not None:
+            n_val = self.request.data['negara']
+            user.negara = n_val
+            profile.country = n_val
+            profile_needs_save = True
         
         user.save()
         
         # Link organization unit and position if provided
         from userauths.models import OrganizationUnit, Position
-        profile_needs_save = False
         if 'organization_unit_name' in self.request.data:
             org_name = self.request.data['organization_unit_name']
             if org_name:
@@ -788,6 +820,181 @@ class SelectRoleAPIView(APIView):
                 'success': False,
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CompleteOnboardingAPIView(APIView):
+    """
+    Onboarding completion endpoint for first-time Google users.
+    Allows user to select:
+    - ASN (requires nip, jabatan, instansi_asal)
+    - UMUM (requires pekerjaan, negara, provinsi, kota_kabupaten)
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        user_type = str(request.data.get('user_type', '')).strip().upper()
+
+        if user_type not in ['ASN', 'UMUM']:
+            return Response(
+                {"error": "Pilihan tipe peserta tidak valid. Harus 'ASN' atau 'UMUM'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if user_type == 'ASN':
+            nip_raw = str(request.data.get('nip', '')).strip()
+            jabatan = str(request.data.get('jabatan', '')).strip()
+            instansi_asal = str(request.data.get('instansi_asal', '')).strip()
+
+            if not nip_raw or not instansi_asal or not jabatan:
+                return Response(
+                    {"error": "NIP, Jabatan, dan Asal Instansi wajib diisi untuk kategori ASN."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validasi NIP standar BKN Republik Indonesia
+            import datetime
+            clean_nip = nip_raw.replace(" ", "").replace("-", "")
+            if not clean_nip.isdigit() or len(clean_nip) != 18:
+                return Response(
+                    {"error": f"NIP harus terdiri dari tepat 18 digit angka (saat ini {len(clean_nip)} digit)."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 1. Validasi Tanggal Lahir (YYYYMMDD)
+            try:
+                birth_year = int(clean_nip[0:4])
+                birth_month = int(clean_nip[4:6])
+                birth_day = int(clean_nip[6:8])
+                datetime.date(birth_year, birth_month, birth_day)
+            except ValueError:
+                return Response(
+                    {"error": "Format tanggal lahir pada NIP (8 digit pertama) tidak valid."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            current_year = datetime.date.today().year
+            if birth_year < 1940 or birth_year > current_year - 17:
+                return Response(
+                    {"error": f"Tahun lahir pada NIP ({birth_year}) tidak realistis untuk pegawai aktif."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 2. Validasi Pengangkatan CPNS (YYYYMM)
+            try:
+                cpns_year = int(clean_nip[8:12])
+                cpns_month = int(clean_nip[12:14])
+                if cpns_month < 1 or cpns_month > 12:
+                    raise ValueError()
+            except ValueError:
+                return Response(
+                    {"error": "Bulan pengangkatan CPNS pada NIP tidak valid (harus 01-12)."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if cpns_year < birth_year + 17 or cpns_year > current_year:
+                return Response(
+                    {"error": f"Tahun pengangkatan CPNS ({cpns_year}) tidak valid (minimal 17 tahun setelah lahir)."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 3. Validasi Jenis Kelamin (1 = Pria, 2 = Wanita)
+            if clean_nip[14] not in ['1', '2']:
+                return Response(
+                    {"error": "Digit ke-15 NIP (jenis kelamin) harus angka 1 (Pria) atau 2 (Wanita)."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 4. Validasi Nomor Urut
+            if clean_nip[15:18] == '000':
+                return Response(
+                    {"error": "Tiga digit terakhir NIP (nomor urut) tidak boleh 000."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Cek keunikan NIP
+            if User.objects.filter(nip=clean_nip).exclude(id=user.id).exists():
+                return Response(
+                    {"error": f"NIP {clean_nip} telah terdaftar pada akun lain di sistem LMS Setjen DPD RI."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user.user_type = 'ASN'
+            user.nip = clean_nip
+            user.jenis_jabatan = jabatan
+            user.instansi_asal = instansi_asal
+            user.onboarding_completed = True
+            user.save()
+
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.user_type = 'ASN'
+            profile.instansi_asal = instansi_asal
+            profile.onboarding_completed = True
+            profile.save()
+
+        elif user_type == 'UMUM':
+            pekerjaan = str(request.data.get('pekerjaan', '')).strip()
+            negara = str(request.data.get('negara', 'Indonesia')).strip() or 'Indonesia'
+            provinsi = str(request.data.get('provinsi', '')).strip()
+            kota_kabupaten = str(request.data.get('kota_kabupaten', '')).strip()
+
+            if not pekerjaan:
+                return Response(
+                    {"error": "Pekerjaan / Profesi wajib dipilih untuk kategori Masyarakat Umum."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if negara == 'Indonesia' and (not provinsi or not kota_kabupaten):
+                return Response(
+                    {"error": "Provinsi Asal dan Kota/Kabupaten wajib dipilih untuk wilayah Indonesia."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user.user_type = 'UMUM'
+            user.pekerjaan = pekerjaan
+            user.negara = negara
+            user.provinsi = provinsi
+            user.kota_kabupaten = kota_kabupaten
+            user.onboarding_completed = True
+            user.save()
+
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.user_type = 'UMUM'
+            profile.pekerjaan = pekerjaan
+            profile.country = negara
+            profile.provinsi = provinsi
+            profile.kota_kabupaten = kota_kabupaten
+            profile.onboarding_completed = True
+            profile.save()
+
+        # Generate fresh JWT tokens with updated user information
+        refresh = RefreshToken.for_user(user)
+        api_serializer.MyTokenObtainPairSerializer._add_user_fields(refresh.access_token, user)
+        api_serializer.MyTokenObtainPairSerializer._add_user_fields(refresh, user)
+
+        return Response({
+            "message": "Profil berhasil dilengkapi! Selamat datang di LMS Setjen DPD RI.",
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "user_type": user.user_type,
+                "onboarding_completed": True,
+                "nip": user.nip,
+                "instansi_asal": user.instansi_asal,
+                "provinsi": user.provinsi,
+                "kota_kabupaten": user.kota_kabupaten,
+                "pekerjaan": user.pekerjaan,
+                "negara": user.negara,
+                "role": user.role,
+                "current_role": user.current_role,
+                "available_roles": user.get_available_boolean_roles(),
+            }
+        }, status=status.HTTP_200_OK)
+
 
 
 

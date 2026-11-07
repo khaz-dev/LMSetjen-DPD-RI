@@ -4,15 +4,6 @@
  */
 
 /* ========================================
-   Admin Dashboard Background Fix
-   ======================================== */
-
-.admin-dashboard {
-    background: transparent !important;
-    min-height: 100vh;
-}
-
-/* ========================================
    Root & Container Styles
    ======================================== */
 
@@ -1739,33 +1730,33 @@
 }
 
 /* Spinner */
-.spinner-border {
+.content-management-container .spinner-border {
     width: 2.5rem;
     height: 2.5rem;
     border-width: 0.25rem;
 }
 
-/* Badge utilities */
-.badge {
+/* Badge utilities - Scoped to content-management-container */
+.content-management-container .badge {
     font-size: 0.85rem;
     padding: 6px 10px;
     border-radius: 20px;
     font-weight: 600;
 }
 
-.badge.bg-info {
+.content-management-container .badge.bg-info {
     background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
 }
 
-.badge.bg-success {
+.content-management-container .badge.bg-success {
     background-color: #10b981 !important;
 }
 
-.badge.bg-danger {
+.content-management-container .badge.bg-danger {
     background-color: #f44336 !important;
 }
 
-.badge.bg-warning {
+.content-management-container .badge.bg-warning {
     background-color: #f59e0b !important;
 }
 

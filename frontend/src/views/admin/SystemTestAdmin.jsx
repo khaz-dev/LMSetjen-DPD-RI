@@ -859,9 +859,13 @@ function SystemTestAdmin({ isEmbedded = false }) {
     }
 
     return (
-        <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <div className="admin-page-wrapper">
             <AdminHeader />
-            {contentNode}
+            <main className="admin-dashboard-container">
+                <div className="container-fluid px-3 px-xl-4 footer-container">
+                    {contentNode}
+                </div>
+            </main>
             <Footer />
         </div>
     );

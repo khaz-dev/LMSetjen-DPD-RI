@@ -497,6 +497,18 @@ class AdminUserManagementAPIView(generics.ListAPIView):
             'email',
             'full_name',
             'role',
+            'is_internal',
+            'user_type',
+            'nip',
+            'jenis_jabatan',
+            'golongan',
+            'kelas_jabatan',
+            'instansi_asal',
+            'provinsi',
+            'kota_kabupaten',
+            'pekerjaan',
+            'negara',
+            'onboarding_completed',
             'is_student',
             'is_instructor',
             'is_admin',
@@ -509,6 +521,10 @@ class AdminUserManagementAPIView(generics.ListAPIView):
         role_filter = self.request.query_params.get('role', None)
         if role_filter:
             queryset = queryset.filter(role=role_filter)
+
+        user_type_filter = self.request.query_params.get('user_type', None)
+        if user_type_filter and user_type_filter.upper() != 'ALL':
+            queryset = queryset.filter(user_type=user_type_filter.upper())
         
         status_filter = self.request.query_params.get('status', None)
         if status_filter:
@@ -567,6 +583,18 @@ class AdminUserManagementAllAPIView(generics.ListAPIView):
             'email',
             'full_name',
             'role',
+            'is_internal',
+            'user_type',
+            'nip',
+            'jenis_jabatan',
+            'golongan',
+            'kelas_jabatan',
+            'instansi_asal',
+            'provinsi',
+            'kota_kabupaten',
+            'pekerjaan',
+            'negara',
+            'onboarding_completed',
             'is_student',
             'is_instructor',
             'is_admin',
@@ -579,6 +607,10 @@ class AdminUserManagementAllAPIView(generics.ListAPIView):
         role_filter = self.request.query_params.get('role', None)
         if role_filter:
             queryset = queryset.filter(role=role_filter)
+
+        user_type_filter = self.request.query_params.get('user_type', None)
+        if user_type_filter and user_type_filter.upper() != 'ALL':
+            queryset = queryset.filter(user_type=user_type_filter.upper())
         
         status_filter = self.request.query_params.get('status', None)
         if status_filter:
@@ -655,6 +687,9 @@ class AdminUserStatsAPIView(generics.GenericAPIView):
                 students=Count('id', filter=Q(is_student=True)),
                 teachers=Count('id', filter=Q(is_instructor=True)),
                 admins=Count('id', filter=Q(is_admin=True)),
+                internal_users=Count('id', filter=Q(user_type='INTERNAL')),
+                asn_users=Count('id', filter=Q(user_type='ASN')),
+                umum_users=Count('id', filter=Q(user_type='UMUM')),
                 new_30d=Count('id', filter=Q(date_joined__gte=thirty_days_ago)),
                 active_7d=Count('id', filter=Q(last_login__gte=seven_days_ago))
             )
@@ -950,38 +985,96 @@ class AdminUserCreateAPIView(generics.CreateAPIView):
             # Extract role before validation (serializer doesn't accept it)
             role = request.data.get('role', 'student')
             
-            # Create a copy of data without the role field for serializer validation
-            serializer_data = {k: v for k, v in request.data.items() if k != 'role'}
+            # Create a copy of data for RegisterSerializer
+            reg_fields = ['full_name', 'email', 'password', 'password2']
+            serializer_data = {k: request.data.get(k) for k in reg_fields if k in request.data}
             
             serializer = self.get_serializer(data=serializer_data)
             if serializer.is_valid():
                 user = serializer.save()
                 
-                # Set user boolean roles based on role parameter
-                if role == 'student':
-                    user.is_student = True
-                    user.is_instructor = False
-                    user.is_admin = False
-                elif role == 'teacher':
-                    user.is_student = False
-                    user.is_instructor = True
-                    user.is_admin = False
-                elif role == 'admin':
-                    user.is_student = False
-                    user.is_instructor = False
-                    user.is_admin = True
+                # Set boolean roles from request data or role parameter
+                if any(k in request.data for k in ['is_student', 'is_instructor', 'is_admin']):
+                    user.is_student = bool(request.data.get('is_student', False))
+                    user.is_instructor = bool(request.data.get('is_instructor', False))
+                    user.is_admin = bool(request.data.get('is_admin', False))
+                else:
+                    if role == 'student':
+                        user.is_student = True
+                        user.is_instructor = False
+                        user.is_admin = False
+                    elif role == 'teacher':
+                        user.is_student = False
+                        user.is_instructor = True
+                        user.is_admin = False
+                    elif role == 'admin':
+                        user.is_student = False
+                        user.is_instructor = False
+                        user.is_admin = True
                 
-                # Set current_role and roles for multi-role support
-                user.current_role = role
-                user.roles = role
-                user.role = role  # Keep for backward compatibility during migration
+                # Determine primary role
+                if user.is_admin:
+                    primary_role = 'admin'
+                elif user.is_instructor:
+                    primary_role = 'teacher'
+                else:
+                    primary_role = 'student'
+
+                user.current_role = primary_role
+                user.roles = primary_role
+                user.role = primary_role
+
+                # 3 Jenis Peserta: INTERNAL, ASN, UMUM
+                user_type = request.data.get('user_type', 'UMUM')
+                user.user_type = user_type
+                user.is_internal = (user_type == 'INTERNAL')
+                
+                if 'nip' in request.data:
+                    user.nip = request.data.get('nip') or None
+                if 'jenis_jabatan' in request.data:
+                    user.jenis_jabatan = request.data.get('jenis_jabatan') or None
+                if 'instansi_asal' in request.data:
+                    user.instansi_asal = request.data.get('instansi_asal') or None
+                if 'pekerjaan' in request.data:
+                    user.pekerjaan = request.data.get('pekerjaan') or None
+                if 'negara' in request.data:
+                    user.negara = request.data.get('negara') or 'Indonesia'
+                if 'provinsi' in request.data:
+                    user.provinsi = request.data.get('provinsi') or None
+                if 'kota_kabupaten' in request.data:
+                    user.kota_kabupaten = request.data.get('kota_kabupaten') or None
+                if 'phone' in request.data:
+                    user.phone = request.data.get('phone') or None
+
+                user.onboarding_completed = True
                 user.save()
+
+            # Sync with profile
+            if hasattr(user, 'profile'):
+                profile = user.profile
+                for pf in ['user_type', 'instansi_asal', 'provinsi', 'kota_kabupaten', 'pekerjaan', 'onboarding_completed']:
+                    if pf in request.data:
+                        setattr(profile, pf, request.data[pf])
+                if 'negara' in request.data:
+                    profile.country = request.data['negara']
+                profile.save()
                 
-                # Create teacher profile if role is teacher
-                if role == 'teacher':
-                    api_models.Teacher.objects.create(
+                # Sync Profile
+                profile, _ = Profile.objects.get_or_create(user=user)
+                profile.user_type = user.user_type
+                profile.instansi_asal = user.instansi_asal
+                profile.provinsi = user.provinsi
+                profile.kota_kabupaten = user.kota_kabupaten
+                profile.pekerjaan = user.pekerjaan
+                profile.country = user.negara or 'Indonesia'
+                profile.onboarding_completed = True
+                profile.save()
+
+                # Create teacher profile if role is teacher/instructor
+                if user.is_instructor:
+                    api_models.Teacher.objects.get_or_create(
                         user=user,
-                        full_name=user.full_name
+                        defaults={'full_name': user.full_name}
                     )
                 
                 return Response({
@@ -1031,10 +1124,24 @@ class AdminUserUpdateAPIView(generics.UpdateAPIView):
                 if not (hasattr(request.user, 'admin') and request.user.admin.is_super_admin):
                     return Response({'error': 'Cannot modify super admin account'}, status=status.HTTP_403_FORBIDDEN)
             
-            # Update user fields
-            for field in ['full_name', 'email', 'is_active']:
+            # Update user demographic and participant fields
+            updatable_fields = [
+                'full_name', 'email', 'phone', 'is_active',
+                'user_type', 'nip', 'jenis_jabatan', 'instansi_asal',
+                'pekerjaan', 'negara', 'provinsi', 'kota_kabupaten',
+                'onboarding_completed'
+            ]
+            for field in updatable_fields:
                 if field in request.data:
                     setattr(user, field, request.data[field])
+
+            # Update is_internal consistency based on user_type
+            if 'user_type' in request.data:
+                user.is_internal = (request.data['user_type'] == 'INTERNAL')
+
+            # Update password if provided
+            if 'password' in request.data and request.data['password']:
+                user.set_password(request.data['password'])
             
             # [*] PHASE 4.10 - Handle Multi Role boolean fields (NEW)
             old_is_instructor = user.is_instructor
@@ -1104,6 +1211,16 @@ class AdminUserUpdateAPIView(generics.UpdateAPIView):
                         pass
             
             user.save()
+
+            # Sync with profile
+            if hasattr(user, 'profile'):
+                profile = user.profile
+                for pf in ['user_type', 'instansi_asal', 'provinsi', 'kota_kabupaten', 'pekerjaan', 'onboarding_completed']:
+                    if pf in request.data:
+                        setattr(profile, pf, request.data[pf])
+                if 'negara' in request.data:
+                    profile.country = request.data['negara']
+                profile.save()
             
             return Response({
                 'message': 'User updated successfully',

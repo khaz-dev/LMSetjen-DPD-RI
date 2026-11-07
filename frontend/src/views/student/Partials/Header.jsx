@@ -200,6 +200,24 @@ function Header({ defaultCollapsed = false }) {
           <div className="student-header-details-items-row d-flex flex-wrap align-items-center justify-content-between gap-2">
             {/* Left side: Compact Informative Status Chips */}
             <div className="d-flex flex-wrap align-items-center gap-2 student-chips-group">
+              {/* Participant Type Chip */}
+              {(profile?.user_type === 'INTERNAL' || profile?.is_internal || userData?.user_type === 'INTERNAL' || userData?.is_internal) ? (
+                <div className="student-chip chip-internal" title="Kategori: Pegawai Internal Setjen DPD RI">
+                  <i className="fas fa-landmark text-teal-bright"></i>
+                  <span>Internal Setjen DPD RI</span>
+                </div>
+              ) : (profile?.user_type === 'ASN' || userData?.user_type === 'ASN') ? (
+                <div className="student-chip chip-asn" title="Kategori: Aparatur Sipil Negara (ASN)">
+                  <i className="fas fa-id-badge text-success-bright"></i>
+                  <span>ASN Luar</span>
+                </div>
+              ) : (
+                <div className="student-chip chip-umum" title="Kategori: Masyarakat Umum">
+                  <i className="fas fa-globe text-info-bright"></i>
+                  <span>Umum</span>
+                </div>
+              )}
+
               {/* Active Status Chip */}
               <div className="student-chip" title="Status Akun Peserta">
                 <i className="fas fa-circle-check text-success-bright"></i>

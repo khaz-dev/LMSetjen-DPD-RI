@@ -283,6 +283,7 @@
 .recommendations-table td {
   padding: 8px 12px;
   vertical-align: middle;
+  color: #1e293b;
 }
 
 /* Content Gap Styles */
@@ -406,8 +407,17 @@
   background: rgba(39, 174, 96, 0.02) !important;
 }
 
-.student-name {
-  font-weight: 500;
+.analytics-widget .student-name,
+.analytics-widget .at-risk-student-cell,
+.analytics-widget .at-risk-student-name,
+.at-risk-student-name,
+.at-risk-student-cell {
+  color: #0f172a !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+  line-height: 1.35 !important;
+  letter-spacing: normal !important;
 }
 
 /* Recommendation Styles */

@@ -173,15 +173,20 @@ const CourseHero = ({ course }) => {
                                     Setjen DPD RI
                                 </span>
 
-                                {course.target_audience === 'umum' ? (
+                                {course.target_audience === 'asn' ? (
+                                    <span className="hero-badge hero-badge-audience-public" title="Kursus khusus Aparatur Sipil Negara" style={{ background: 'rgba(5, 150, 105, 0.25)', borderColor: 'rgba(167, 243, 208, 0.4)', color: '#6ee7b7' }}>
+                                        <i className="fas fa-building-columns me-1"></i>
+                                        Khusus ASN
+                                    </span>
+                                ) : course.target_audience === 'umum' ? (
                                     <span className="hero-badge hero-badge-audience-public" title="Kursus terbuka untuk umum">
                                         <i className="fas fa-globe me-1"></i>
                                         Terbuka untuk Umum
                                     </span>
                                 ) : (
                                     <span className="hero-badge hero-badge-audience-internal" title="Pelatihan kedinasan internal Setjen DPD RI">
-                                        <i className="fas fa-id-card-clip me-1"></i>
-                                        Khusus Pegawai Setjen DPD RI
+                                        <i className="fas fa-shield-halved me-1"></i>
+                                        Khusus Internal DPD RI
                                     </span>
                                 )}
                             </div>

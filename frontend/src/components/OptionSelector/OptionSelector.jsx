@@ -150,8 +150,8 @@ const OptionSelector = ({
         return (
             <div className="form-field-container">
                 <label className="form-label modern-label" htmlFor={id}>
-                    <i className={`${icon} form-label-icon`}></i>
-                    {label} {required && <span className="required-asterisk">*</span>}
+                    <i className={`${icon} form-label-icon me-2`}></i>
+                    <span>{label}</span> {required && <span className="required-asterisk ms-1">*</span>}
                 </label>
                 <div className="option-selector-container loading" style={{ opacity: 0.6 }}>
                     <input
@@ -168,8 +168,8 @@ const OptionSelector = ({
     return (
         <div className="form-field-container">
             <label className="form-label modern-label" htmlFor={id}>
-                <i className={`${icon} form-label-icon`}></i>
-                {label} {required && <span className="required-asterisk">*</span>}
+                <i className={`${icon} form-label-icon me-2`}></i>
+                <span>{label}</span> {required && <span className="required-asterisk ms-1">*</span>}
             </label>
             
             <div

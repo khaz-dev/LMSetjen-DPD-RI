@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
-import BaseHeader from "../partials/BaseHeader";
 import CourseReviewTab from "./ContentManagementTabs/CourseReviewTab";
 import TestimonialTab from "./ContentManagementTabs/TestimonialTab";
 import MaterialsTab from "./ContentManagementTabs/MaterialsTab";
@@ -30,14 +29,13 @@ function ContentManagementAdmin() {
         requestsPending: 0,
         loading: true,
     });
-    const [refreshSignal, setRefreshSignal] = useState(0);
 
     // Update URL when tab changes
     useEffect(() => {
         setSearchParams({ tab: activeTab });
     }, [activeTab, setSearchParams]);
 
-    // Fetch real live metrics across content management modules
+    // Fetch real live metrics across content management modules once or on manual refresh
     const fetchLiveMetrics = useCallback(async () => {
         setLiveMetrics(prev => ({ ...prev, loading: true }));
         try {
@@ -97,10 +95,10 @@ function ContentManagementAdmin() {
 
     useEffect(() => {
         fetchLiveMetrics();
-    }, [fetchLiveMetrics, refreshSignal]);
+    }, [fetchLiveMetrics]);
 
     const handleTriggerRefresh = () => {
-        setRefreshSignal(prev => prev + 1);
+        fetchLiveMetrics();
     };
 
     const tabs = [
@@ -111,7 +109,7 @@ function ContentManagementAdmin() {
             badge: liveMetrics.coursesReview,
             badgeType: liveMetrics.coursesReview > 0 ? "has-pending" : "normal",
             description: "Tinjau, evaluasi, dan setujui kursus yang diajukan oleh instruktur",
-            component: <CourseReviewTab onCountsUpdated={handleTriggerRefresh} refreshSignal={refreshSignal} />
+            component: <CourseReviewTab onCountsUpdated={fetchLiveMetrics} />
         },
         {
             id: "testimonials",
@@ -154,12 +152,11 @@ function ContentManagementAdmin() {
     const currentTabInfo = tabs.find(t => t.id === activeTab) || tabs[0];
 
     return (
-        <>
-            <BaseHeader />
-            <section className="admin-dashboard pt-3 pb-4">
-                <div className="container">
-                    <AdminHeader />
-                    
+        <div className="admin-page-wrapper">
+            <AdminHeader />
+
+            <main className="admin-dashboard-container">
+                <div className="container-fluid px-3 px-xl-4 footer-container">
                     <div className="content-management-container">
                         {/* Compact Executive Page Header */}
                         <div className="cm-page-header mb-3">
@@ -279,9 +276,9 @@ function ContentManagementAdmin() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </main>
             <Footer />
-        </>
+        </div>
     );
 }
 

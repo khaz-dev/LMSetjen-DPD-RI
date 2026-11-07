@@ -10,6 +10,13 @@ USER_ROLE_CHOICES = (
     ('admin', 'Admin'),
 )
 
+# User type choices (3 Jenis Peserta: Internal Setjen DPD RI, ASN Luar, Masyarakat Umum)
+USER_TYPE_CHOICES = (
+    ('INTERNAL', 'Internal Setjen DPD RI'),
+    ('ASN', 'ASN Luar / Instansi Lain'),
+    ('UMUM', 'Masyarakat Umum'),
+)
+
 class OrganizationUnit(models.Model):
     """Organization unit from external system"""
     external_id = models.CharField(max_length=50, unique=True, help_text="External system unit ID")
@@ -74,6 +81,15 @@ class User(AbstractUser):
     last_sync_date = models.DateTimeField(null=True, blank=True, help_text="Last synchronization with external system")
     is_internal = models.BooleanField(default=False, help_text="Designates whether the user is an internal DPD RI employee.")
 
+    # 3 Jenis Peserta: Internal Setjen DPD RI, ASN Luar, dan Masyarakat Umum
+    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='UMUM', db_index=True, help_text="Tipe peserta: INTERNAL, ASN, UMUM")
+    instansi_asal = models.CharField(max_length=150, null=True, blank=True, help_text="Asal instansi bagi ASN")
+    provinsi = models.CharField(max_length=100, null=True, blank=True, help_text="Provinsi asal")
+    kota_kabupaten = models.CharField(max_length=100, null=True, blank=True, help_text="Kota/Kabupaten asal")
+    pekerjaan = models.CharField(max_length=100, null=True, blank=True, help_text="Pekerjaan/Profesi untuk Masyarakat Umum")
+    negara = models.CharField(max_length=100, default='Indonesia', null=True, blank=True, help_text="Negara asal")
+    onboarding_completed = models.BooleanField(default=False, help_text="Status penyelesaian onboarding profil pertama kali")
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
@@ -94,6 +110,7 @@ class User(AbstractUser):
             # ✨ SPRINT 1: Indexes for external sync operations
             models.Index(fields=['external_id']),
             models.Index(fields=['external_status']),
+            models.Index(fields=['user_type']),
             # ✨ SPRINT 1: Common filter combinations
             models.Index(fields=['is_active', 'is_student']),
             models.Index(fields=['is_active', 'is_instructor']),
@@ -265,6 +282,12 @@ class Profile(models.Model):
     position = models.ForeignKey(Position, on_delete=models.SET_NULL, null=True, blank=True, help_text="User's position/job")
     
     # Additional profile fields that might be useful
+    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='UMUM', null=True, blank=True)
+    instansi_asal = models.CharField(max_length=150, null=True, blank=True)
+    provinsi = models.CharField(max_length=100, null=True, blank=True)
+    kota_kabupaten = models.CharField(max_length=100, null=True, blank=True)
+    pekerjaan = models.CharField(max_length=100, null=True, blank=True)
+    onboarding_completed = models.BooleanField(default=False)
     bio = models.CharField(max_length=500, null=True, blank=True, help_text="Short bio")
     facebook = models.URLField(null=True, blank=True)
     twitter = models.URLField(null=True, blank=True)
@@ -333,13 +356,30 @@ class Admin(models.Model):
 
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        Profile.objects.create(
+            user=instance,
+            user_type=getattr(instance, 'user_type', 'UMUM'),
+            instansi_asal=getattr(instance, 'instansi_asal', None),
+            provinsi=getattr(instance, 'provinsi', None),
+            kota_kabupaten=getattr(instance, 'kota_kabupaten', None),
+            pekerjaan=getattr(instance, 'pekerjaan', None),
+            onboarding_completed=getattr(instance, 'onboarding_completed', False),
+        )
         # Create Admin instance if user role is admin
-        if instance.role == 'admin':
+        if getattr(instance, 'role', None) == 'admin':
             Admin.objects.create(user=instance)
 
 def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+    if hasattr(instance, 'profile'):
+        profile = instance.profile
+        changed = False
+        for field in ['user_type', 'instansi_asal', 'provinsi', 'kota_kabupaten', 'pekerjaan', 'onboarding_completed']:
+            val = getattr(instance, field, None)
+            if getattr(profile, field, None) != val:
+                setattr(profile, field, val)
+                changed = True
+        if changed:
+            profile.save()
 
 def create_admin_profile(sender, instance, **kwargs):
     """Create Admin instance when user role changes to admin"""

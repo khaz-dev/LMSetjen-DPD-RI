@@ -204,11 +204,11 @@ function KelolaMaterialAdmin() {
     }
 
     return (
-        <div className="kelola-material-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <div className="admin-page-wrapper">
             <AdminHeader />
 
-            <section className="pt-5 pb-5 modern-dashboard" style={{ flex: 1 }}>
-                <div className="container">
+            <main className="admin-dashboard-container">
+                <div className="container-fluid px-3 px-xl-4 footer-container">
                     {/* Modern Header */}
                     <div className="dashboard-header-modern mb-4">
                         <div className="header-content">
@@ -540,6 +540,9 @@ function KelolaMaterialAdmin() {
                     </div>
                 </div>
             )}
+                    </div>
+                </div>
+            </main>
 
             <Footer />
         </div>

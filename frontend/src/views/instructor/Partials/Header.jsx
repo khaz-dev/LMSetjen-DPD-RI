@@ -266,6 +266,24 @@ function Header() {
             {/* Left side: Interactive / Informative Status Chips */}
             <div className="d-flex flex-wrap align-items-center gap-2 instructor-chips-group">
               
+              {/* Participant Type Chip */}
+              {(profile?.user_type === 'INTERNAL' || profile?.is_internal || userData?.user_type === 'INTERNAL' || userData?.is_internal) ? (
+                <div className="instructor-chip chip-internal" title="Kategori: Pegawai Internal Setjen DPD RI">
+                  <i className="fas fa-landmark text-teal-bright"></i>
+                  <span>Internal Setjen DPD RI</span>
+                </div>
+              ) : (profile?.user_type === 'ASN' || userData?.user_type === 'ASN') ? (
+                <div className="instructor-chip chip-asn" title="Kategori: Aparatur Sipil Negara (ASN)">
+                  <i className="fas fa-id-badge text-success-bright"></i>
+                  <span>ASN Luar</span>
+                </div>
+              ) : (
+                <div className="instructor-chip chip-umum" title="Kategori: Masyarakat Umum">
+                  <i className="fas fa-globe text-info-bright"></i>
+                  <span>Umum</span>
+                </div>
+              )}
+
               {/* Active Status Chip */}
               <div className="instructor-chip" title="Status Akun Instruktur">
                 <i className={`fas ${isInstructorActive ? "fa-circle-check text-success-bright" : "fa-circle-exclamation text-warning-bright"}`}></i>

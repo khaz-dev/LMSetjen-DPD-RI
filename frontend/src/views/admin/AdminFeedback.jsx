@@ -10,17 +10,17 @@ import './AdminFeedback.css';
  */
 function AdminFeedback() {
     return (
-        <div className="admin-page-wrapper" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <div className="admin-page-wrapper">
             <AdminHeader />
-            <div className="admin-feedback-page" style={{ flex: 1 }}>
-                <div className="container">
-                    <div className="page-header">
-                        <h1>📋 Manajemen Masukan Pengguna</h1>
-                        <p>Lihat, kelola, dan respons laporan bug serta permintaan fitur dari pengguna</p>
+            <main className="admin-dashboard-container">
+                <div className="container-fluid px-3 px-xl-4 footer-container">
+                    <div className="page-header mb-3">
+                        <h1 className="h3 fw-bold">📋 Manajemen Masukan Pengguna</h1>
+                        <p className="text-muted">Lihat, kelola, dan respons laporan bug serta permintaan fitur dari pengguna</p>
                     </div>
                     <FeedbackAdminDashboard />
                 </div>
-            </div>
+            </main>
             <Footer />
         </div>
     );

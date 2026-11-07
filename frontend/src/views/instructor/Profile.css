@@ -224,6 +224,37 @@
     border: 1px solid rgba(15, 118, 110, 0.2);
 }
 
+/* Participant Category Badges in Profile Hero */
+.user-type-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.user-type-badge-pill.internal {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.user-type-badge-pill.asn {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.user-type-badge-pill.umum {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
 .hero-meta-row {
     display: flex;
     align-items: center;
@@ -591,25 +622,60 @@
     z-index: 1 !important;
 }
 
-/* Country Selector Icon & Gap Fix */
+/* Country Selector & Option Selector Icon & Gap Fix (Tab Kepegawaian, ASN, Umum) */
 .country-selector-wrapper .modern-label,
 .country-selector-wrapper .form-label,
-.country-selector-wrapper label {
+.country-selector-wrapper label,
+.form-field-container .modern-label,
+.form-field-container .form-label,
+.form-field-container label,
+.option-selector-container label,
+.compact-label {
     font-size: 0.82rem !important;
     font-weight: 600 !important;
     color: var(--dpd-gray-dark) !important;
     margin-bottom: 0.35rem !important;
-    display: flex !important;
+    display: inline-flex !important;
     align-items: center !important;
     gap: 0.45rem !important;
 }
 
 .country-selector-wrapper .form-label-icon,
-.country-selector-wrapper label i {
+.country-selector-wrapper label i,
+.form-field-container .form-label-icon,
+.form-field-container label i,
+.option-selector-container label i,
+.compact-label i {
     color: var(--dpd-teal) !important;
     font-size: 0.88rem !important;
-    margin-right: 0.45rem !important; /* Distance between globe icon and label */
+    margin-right: 0.5rem !important; /* Distance between icon and label */
     flex-shrink: 0 !important;
+    display: inline-block !important;
+}
+
+/* Option Selector Compact Input Polish */
+.option-selector-container .option-selector-input input {
+    height: 40px !important;
+    min-height: 40px !important;
+    border-radius: 8px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    font-size: 0.88rem !important;
+    padding: 8px 36px 8px 12px !important;
+    color: var(--dpd-slate) !important;
+    background: #ffffff !important;
+    transition: all 0.2s ease !important;
+}
+
+.option-selector-container .option-selector-input input:focus {
+    border-color: var(--dpd-teal) !important;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15) !important;
+    outline: none !important;
+}
+
+.option-selector-container .option-selector-arrow {
+    color: var(--dpd-teal) !important;
+    right: 14px !important;
+    font-size: 0.8rem !important;
 }
 
 .country-selector-wrapper .country-selector-selected {

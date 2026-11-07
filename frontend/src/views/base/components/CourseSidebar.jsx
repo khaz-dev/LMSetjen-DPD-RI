@@ -19,6 +19,7 @@ const CourseSidebar = ({
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const userData = UserData();
+    const [accessInfo, setAccessInfo] = useState({ canAccess: true, message: "" });
 
     // Use parent wishlist state if provided, otherwise use local state
     const isInWishlist = parentIsInWishlist !== undefined ? parentIsInWishlist : localIsInWishlist;
@@ -43,6 +44,12 @@ const CourseSidebar = ({
         try {
             const response = await useAxios.get(`course/check-enrollment/${course.id}/${userData.user_id}/`);
             setIsEnrolled(response.data.is_enrolled);
+            if (response.data.can_access !== undefined) {
+                setAccessInfo({
+                    canAccess: response.data.can_access,
+                    message: response.data.restriction_message || ""
+                });
+            }
         } catch (error) {
             console.error("Error checking enrollment:", error);
         }
@@ -78,6 +85,17 @@ const CourseSidebar = ({
             return;
         }
 
+        // Check audience accessibility
+        if (accessInfo.canAccess === false) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Akses Khusus Dibatasi',
+                text: accessInfo.message || 'Akun Anda tidak memenuhi klasifikasi peserta untuk kursus ini.',
+                confirmButtonColor: '#002B49'
+            });
+            return;
+        }
+
         setLoading(true);
         try {
             const formData = new FormData();
@@ -105,7 +123,7 @@ const CourseSidebar = ({
             Swal.fire({
                 icon: 'error',
                 title: 'Pendaftaran Gagal',
-                text: error.response?.data?.message || 'Gagal mendaftar di kursus. Silakan coba lagi.',
+                text: error.response?.data?.error || error.response?.data?.message || 'Gagal mendaftar di kursus. Silakan coba lagi.',
                 confirmButtonColor: '#dc3545'
             });
         } finally {
@@ -133,6 +151,17 @@ const CourseSidebar = ({
                 if (result.isConfirmed) {
                     navigate('/login');
                 }
+            });
+            return;
+        }
+
+        // Check audience accessibility
+        if (accessInfo.canAccess === false) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Akses Khusus Dibatasi',
+                text: accessInfo.message || 'Akun Anda tidak memenuhi klasifikasi peserta untuk kursus ini.',
+                confirmButtonColor: '#002B49'
             });
             return;
         }
@@ -290,10 +319,19 @@ const CourseSidebar = ({
                     {/* Course Access / Target Audience Info */}
                     <div className="p-3 rounded-3 bg-light border mb-3">
                         <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom border-light-subtle">
-                            <span className={`badge ${course?.target_audience === 'umum' ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-teal-subtle text-teal border border-teal-subtle'} rounded-pill px-2 py-1 fw-semibold`} style={{ fontSize: '0.74rem' }}>
-                                <i className={course?.target_audience === 'umum' ? "fas fa-globe me-1" : "fas fa-shield-halved me-1"}></i>
-                                {course?.target_audience === 'umum' ? 'Akses Publik' : 'Pelatihan Kedinasan'}
-                            </span>
+                            {course?.target_audience === 'asn' ? (
+                                <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-semibold" style={{ fontSize: '0.74rem' }}>
+                                    <i className="fas fa-building-columns me-1"></i>Khusus ASN
+                                </span>
+                            ) : course?.target_audience === 'umum' ? (
+                                <span className="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 fw-semibold" style={{ fontSize: '0.74rem' }}>
+                                    <i className="fas fa-globe me-1"></i>Akses Terbuka
+                                </span>
+                            ) : (
+                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle rounded-pill px-2 py-1 fw-semibold" style={{ fontSize: '0.74rem' }}>
+                                    <i className="fas fa-shield-halved me-1"></i>Internal DPD RI
+                                </span>
+                            )}
                             <span className="badge bg-emerald-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold" style={{ fontSize: '0.72rem' }}>
                                 <i className="fas fa-check-circle me-1"></i>100% Gratis
                             </span>
@@ -305,18 +343,53 @@ const CourseSidebar = ({
                                 style={{
                                     width: '40px',
                                     height: '40px',
-                                    background: course?.target_audience === 'umum' ? 'rgba(59, 130, 246, 0.12)' : 'rgba(13, 148, 136, 0.12)',
-                                    color: course?.target_audience === 'umum' ? '#2563eb' : '#0d9488'
+                                    background: course?.target_audience === 'asn'
+                                        ? 'rgba(5, 150, 105, 0.12)'
+                                        : course?.target_audience === 'umum'
+                                        ? 'rgba(59, 130, 246, 0.12)'
+                                        : 'rgba(13, 148, 136, 0.12)',
+                                    color: course?.target_audience === 'asn'
+                                        ? '#059669'
+                                        : course?.target_audience === 'umum'
+                                        ? '#2563eb'
+                                        : '#0d9488'
                                 }}
                             >
-                                <i className={course?.target_audience === 'umum' ? "fas fa-users" : "fas fa-id-card-clip"} style={{ fontSize: '1.05rem' }}></i>
+                                <i className={
+                                    course?.target_audience === 'asn'
+                                        ? "fas fa-building-columns"
+                                        : course?.target_audience === 'umum'
+                                        ? "fas fa-users"
+                                        : "fas fa-id-card-clip"
+                                } style={{ fontSize: '1.05rem' }}></i>
                             </div>
                             <div className="min-w-0 ps-1">
                                 <div className="fw-bold text-dark" style={{ fontSize: '0.88rem', lineHeight: 1.35 }}>
-                                    {course?.target_audience === 'umum' ? 'Terbuka untuk Umum' : 'Khusus Pegawai Setjen DPD RI'}
+                                    {course?.target_audience === 'asn'
+                                        ? 'Khusus ASN (Internal & Instansi Lain)'
+                                        : course?.target_audience === 'umum'
+                                        ? 'Terbuka untuk Umum'
+                                        : 'Khusus Internal Pegawai Setjen DPD RI'}
+                                </div>
+                                <div className="text-muted" style={{ fontSize: '0.74rem' }}>
+                                    {course?.target_audience === 'asn'
+                                        ? 'Dapat diikuti seluruh ASN ber-NIP aktif'
+                                        : course?.target_audience === 'umum'
+                                        ? 'Dapat diikuti oleh seluruh kalangan pengguna'
+                                        : 'Hanya bagi pegawai Setjen DPD RI'}
                                 </div>
                             </div>
                         </div>
+
+                        {/* Ineligibility Warning if not allowed */}
+                        {accessInfo.canAccess === false && !isEnrolled && (
+                            <div className="alert alert-warning py-2 px-2 rounded-2 mt-2 mb-0 d-flex align-items-start gap-2" style={{ fontSize: '0.75rem', lineHeight: 1.35 }}>
+                                <i className="fas fa-lock text-warning mt-1"></i>
+                                <div>
+                                    <strong>Akses Terbatas:</strong> {accessInfo.message || 'Kategori akun Anda tidak sesuai dengan target peserta kursus ini.'}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Primary Action Button */}

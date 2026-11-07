@@ -142,30 +142,34 @@ function AdminHeader() {
         items.map((item, index) => {
             if (item.to === "/logout/") {
                 return (
-                    <li key={index}>
+                    <li key={index} className="admin-profile-li">
                         <button
-                            className="dropdown-item logout-item"
+                            className="dropdown-item admin-profile-item admin-profile-logout"
                             onClick={() => {
                                 setDropdownOpen(false);
                                 handleLogout();
                             }}
                         >
-                            <i className={item.icon}></i>
-                            <span>{item.text}</span>
+                            <span className="admin-profile-icon">
+                                <i className={item.icon}></i>
+                            </span>
+                            <span className="admin-profile-text">{item.text}</span>
                         </button>
                     </li>
                 );
             }
             
             return (
-                <li key={index}>
+                <li key={index} className="admin-profile-li">
                     <Link
                         to={item.to}
-                        className={`dropdown-item ${isActive(item.to) ? 'active-item' : ''}`}
+                        className={`dropdown-item admin-profile-item ${isActive(item.to) ? 'active-item active' : ''}`}
                         onClick={() => setDropdownOpen(false)}
                     >
-                        <i className={item.icon}></i>
-                        <span>{item.text}</span>
+                        <span className="admin-profile-icon">
+                            <i className={item.icon}></i>
+                        </span>
+                        <span className="admin-profile-text">{item.text}</span>
                     </Link>
                 </li>
             );
@@ -330,29 +334,46 @@ function AdminHeader() {
                                 </button>
                                 
                                 <ul className={`dropdown-menu admin-profile-dropdown ${dropdownOpen ? 'show' : ''}`}>
-                                    <li className="dropdown-header">
-                                        <div className="d-flex align-items-center">
-                                            <i className="fas fa-shield-alt me-2 text-warning"></i>
-                                            <div>
-                                                <div className="fw-bold">{userData?.full_name || 'Administrator'}</div>
-                                                <small className="text-muted">{userData?.email || 'admin@dpd.go.id'}</small>
+                                    <li className="admin-profile-header">
+                                        <div className="admin-profile-header-user">
+                                            <div className="admin-profile-header-avatar">
+                                                {profile?.image ? (
+                                                    <img 
+                                                        src={profile.image} 
+                                                        alt="Admin" 
+                                                        className="admin-profile-header-avatar-img"
+                                                    />
+                                                ) : (
+                                                    <span>{(userData?.full_name || 'A').charAt(0).toUpperCase()}</span>
+                                                )}
+                                            </div>
+                                            <div className="admin-profile-header-info">
+                                                <div className="admin-profile-header-name" title={userData?.full_name || 'Administrator'}>
+                                                    {userData?.full_name || 'Administrator'}
+                                                </div>
+                                                <div className="admin-profile-header-role">
+                                                    <i className="fas fa-shield-alt me-1 text-warning"></i>
+                                                    <span>{isSuperAdmin ? 'Super Administrator' : 'Administrator'}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </li>
-                                    <li><hr className="dropdown-divider m-0" /></li>
+                                    <li><hr className="admin-profile-divider" /></li>
                                     {renderDropdownItems(filteredMenuItems)}
-                                    <li><hr className="dropdown-divider m-0" /></li>
-                                    <li>
+                                    <li><hr className="admin-profile-divider" /></li>
+                                    <li className="admin-profile-li">
                                         <Link 
                                             to="/" 
-                                            className="dropdown-item" 
+                                            className="dropdown-item admin-profile-item admin-profile-portal-link" 
                                             onClick={() => setDropdownOpen(false)}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            <i className="fas fa-globe text-primary"></i>
-                                            <span>Portal Publik LMS</span>
-                                            <i className="fas fa-external-link-alt ms-auto small text-muted"></i>
+                                            <span className="admin-profile-icon text-teal">
+                                                <i className="fas fa-globe"></i>
+                                            </span>
+                                            <span className="admin-profile-text">Portal Publik LMS</span>
+                                            <i className="fas fa-external-link-alt ms-auto" style={{ fontSize: '0.7rem', opacity: 0.6 }}></i>
                                         </Link>
                                     </li>
                                 </ul>

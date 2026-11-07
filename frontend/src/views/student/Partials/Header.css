@@ -13,10 +13,10 @@
     gap: 0;
 }
 
-.student-header-row > .col-xl-12,
-.student-header-row > .col-lg-12,
-.student-header-row > .col-md-12,
-.student-header-row > .col-12 {
+.student-header-row>.col-xl-12,
+.student-header-row>.col-lg-12,
+.student-header-row>.col-md-12,
+.student-header-row>.col-12 {
     margin-bottom: 0 !important;
     overflow: visible !important;
     padding-left: 0 !important;
@@ -37,7 +37,8 @@
     min-height: auto;
     user-select: none;
     z-index: 101;
-    margin-bottom: 1rem !important; /* Compact: drastically eliminates excessive vertical whitespace */
+    margin-bottom: 1rem !important;
+    /* Compact: drastically eliminates excessive vertical whitespace */
     display: flex !important;
     flex-direction: column !important;
     transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -155,7 +156,7 @@
     vertical-align: middle;
 }
 
-.student-name {
+.student-header-card .student-name {
     font-size: 1.35rem;
     font-weight: 700;
     color: #ffffff;
@@ -165,7 +166,7 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-.student-bio {
+.student-header-card .student-bio {
     font-size: 0.825rem;
     color: rgba(255, 255, 255, 0.88);
     margin: 0 !important;
@@ -182,7 +183,8 @@
    Action Buttons (Compact Pill Buttons)
    ========================================================================== */
 .student-actions-wrap {
-    padding-right: 36px; /* Offset for collapse toggle button */
+    padding-right: 36px;
+    /* Offset for collapse toggle button */
 }
 
 .student-header-card .btn-student-primary {
@@ -264,7 +266,7 @@
     overflow: visible !important;
 }
 
-.student-header-details-row > .col-12 {
+.student-header-details-row>.col-12 {
     padding-left: 0 !important;
     padding-right: 0 !important;
     overflow: visible !important;
@@ -748,6 +750,7 @@
         padding-top: 0;
         padding-bottom: 0;
     }
+
     100% {
         opacity: 1;
         transform: translateY(0);
@@ -765,6 +768,7 @@
         padding-top: 1.15rem;
         padding-bottom: 0.9rem;
     }
+
     100% {
         opacity: 0;
         transform: translateY(-8px);
@@ -789,27 +793,32 @@
     .student-header-content {
         padding: 1rem 1rem 0.75rem !important;
     }
+
     .student-header-avatar-wrap,
     .student-header-avatar-img,
     .student-header-avatar-placeholder {
         width: 48px;
         height: 48px;
     }
-    .student-name {
+
+    .student-header-card .student-name {
         font-size: 1.15rem;
     }
+
     .student-actions-wrap {
         padding-right: 0;
         margin-top: 0.75rem;
         width: 100%;
         justify-content: flex-start !important;
     }
+
     .student-header-card .btn-student-primary,
     .student-header-card .btn-student-outline {
         font-size: 0.775rem !important;
         padding: 0.35rem 0.8rem !important;
         min-height: 34px !important;
     }
+
     .student-header-details-row {
         margin-top: 0.6rem !important;
         padding-top: 0.5rem !important;
@@ -817,28 +826,34 @@
 }
 
 @media (max-width: 576px) {
+
     .student-header-avatar-wrap,
     .student-header-avatar-img,
     .student-header-avatar-placeholder {
         width: 42px;
         height: 42px;
     }
-    .student-name {
+
+    .student-header-card .student-name {
         font-size: 1.05rem;
     }
-    .student-bio {
+
+    .student-header-card .student-bio {
         font-size: 0.775rem;
     }
+
     .student-chip {
         font-size: 0.7rem;
         padding: 0.2rem 0.55rem;
     }
+
     .student-actions-wrap {
         display: flex;
         flex-direction: column;
         width: 100%;
         gap: 0.4rem;
     }
+
     .student-header-card .btn-student-primary,
     .student-header-card .btn-student-outline {
         width: 100% !important;

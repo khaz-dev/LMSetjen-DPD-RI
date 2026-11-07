@@ -279,6 +279,19 @@ function InstructorProfilePage() {
                                     <span className="instructor-role-badge">
                                         <i className="fas fa-chalkboard-user me-1"></i> Instruktur DPD RI
                                     </span>
+                                    {(teacher.user_type === 'INTERNAL' || teacher.is_internal) ? (
+                                        <span className="instructor-location-badge" style={{ background: '#e0f2fe', color: '#0369a1', borderColor: '#bae6fd' }}>
+                                            <i className="fas fa-landmark me-1"></i> Internal Setjen DPD RI
+                                        </span>
+                                    ) : teacher.user_type === 'ASN' ? (
+                                        <span className="instructor-location-badge" style={{ background: '#dcfce7', color: '#15803d', borderColor: '#bbf7d0' }}>
+                                            <i className="fas fa-id-badge me-1"></i> ASN {teacher.instansi_asal ? `• ${teacher.instansi_asal}` : ""}
+                                        </span>
+                                    ) : (
+                                        <span className="instructor-location-badge" style={{ background: '#f1f5f9', color: '#475569', borderColor: '#cbd5e1' }}>
+                                            <i className="fas fa-globe me-1"></i> Pengajar Umum {teacher.pekerjaan ? `• ${teacher.pekerjaan}` : ""}
+                                        </span>
+                                    )}
                                     {teacher.country && (
                                         <span className="instructor-location-badge">
                                             <i className="fas fa-map-marker-alt me-1"></i> {teacher.country}

@@ -26,7 +26,7 @@
     margin-bottom: 0.75rem;
 }
 
-.status-card {
+.eligibility-section .status-card {
     background: white;
     border-radius: 9px;
     padding: 0.65rem 0.85rem;
@@ -42,23 +42,23 @@
     box-sizing: border-box;
 }
 
-.status-content {
+.eligibility-section .status-content {
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
 }
 
-.status-card.completed {
+.eligibility-section .status-card.completed {
     border-color: #10b981;
     background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
 }
 
-.status-card.incomplete {
+.eligibility-section .status-card.incomplete {
     border-color: #f59e0b;
     background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
 }
 
-.status-icon {
+.eligibility-section .status-icon {
     flex-shrink: 0;
     width: 34px;
     height: 34px;
@@ -69,12 +69,12 @@
     font-size: 1rem;
 }
 
-.status-card.completed .status-icon {
+.eligibility-section .status-card.completed .status-icon {
     background: #10b981;
     color: white;
 }
 
-.status-card.incomplete .status-icon {
+.eligibility-section .status-card.incomplete .status-icon {
     background: #f59e0b;
     color: white;
 }
@@ -379,7 +379,9 @@
     font-style: italic;
 }
 
-.student-name {
+.certificate-content .student-name,
+.certificate-preview .student-name,
+.certificate-document .student-name {
     font-size: 2rem !important;
     color: #2c3e50;
     margin: 0.4rem 0 0.3rem 0 !important;
@@ -720,7 +722,9 @@
         font-size: 1rem !important;
     }
     
-    .student-name {
+    .certificate-content .student-name,
+    .certificate-preview .student-name,
+    .certificate-document .student-name {
         font-size: 2rem !important;
         margin: 1rem 0 0.08rem 0 !important;
     }
@@ -837,7 +841,9 @@
     width: 95%;
 }
 
-.student-name {
+.certificate-content .student-name,
+.certificate-preview .student-name,
+.certificate-document .student-name {
     font-size: 1.8rem;
     color: #1a5f3d;
     font-weight: 800;
@@ -988,7 +994,8 @@
     margin-bottom: 0.25rem !important;
 }
 
-.status-card {
+.eligibility-section .status-card,
+.certificate-tab .status-card {
     background: #ffffff !important;
     border-radius: 9px !important;
     padding: 0.55rem 0.75rem !important;
@@ -1004,17 +1011,20 @@
     box-sizing: border-box !important;
 }
 
-.status-card.completed {
+.eligibility-section .status-card.completed,
+.certificate-tab .status-card.completed {
     border-color: #10b981 !important;
     background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
 }
 
-.status-card.incomplete {
+.eligibility-section .status-card.incomplete,
+.certificate-tab .status-card.incomplete {
     border-color: #f59e0b !important;
     background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
 }
 
-.status-icon {
+.eligibility-section .status-icon,
+.certificate-tab .status-icon {
     flex-shrink: 0 !important;
     width: 28px !important;
     height: 28px !important;
@@ -1025,21 +1035,25 @@
     font-size: 0.85rem !important;
 }
 
-.status-icon i {
+.eligibility-section .status-icon i,
+.certificate-tab .status-icon i {
     color: #ffffff !important;
 }
 
-.status-card.completed .status-icon {
+.eligibility-section .status-card.completed .status-icon,
+.certificate-tab .status-card.completed .status-icon {
     background: #059669 !important;
     color: #ffffff !important;
 }
 
-.status-card.incomplete .status-icon {
+.eligibility-section .status-card.incomplete .status-icon,
+.certificate-tab .status-card.incomplete .status-icon {
     background: #d97706 !important;
     color: #ffffff !important;
 }
 
-.status-content {
+.eligibility-section .status-content,
+.certificate-tab .status-content {
     flex: 1 1 auto !important;
     min-width: 0 !important;
     overflow: hidden !important;

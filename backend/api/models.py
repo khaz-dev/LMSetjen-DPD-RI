@@ -33,8 +33,10 @@ LEVEL = (
 )
 
 TARGET_AUDIENCE = (
-    ("pegawai", "Khusus Pegawai Setjen DPD RI"),
+    ("internal", "Khusus Internal Setjen DPD RI"),
+    ("asn", "Khusus ASN"),
     ("umum", "Terbuka untuk Umum"),
+    ("pegawai", "Khusus Pegawai Setjen DPD RI"),  # Legacy compatibility
 )
 
 

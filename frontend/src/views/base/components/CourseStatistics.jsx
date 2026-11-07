@@ -298,7 +298,11 @@ const CourseStatistics = ({ course }) => {
                                 <div className="d-flex justify-content-between align-items-center py-1.5 px-2.5 rounded-2 bg-white border">
                                     <span className="text-muted" style={{ fontSize: '0.78rem' }}>Target Sasaran:</span>
                                     <strong className="text-dark" style={{ fontSize: '0.78rem' }}>
-                                        {course?.target_audience === 'umum' ? 'Akses Terbuka (Publik)' : 'Pegawai Setjen DPD RI'}
+                                        {course?.target_audience === 'asn'
+                                            ? 'Khusus ASN'
+                                            : course?.target_audience === 'umum'
+                                            ? 'Akses Terbuka (Umum)'
+                                            : 'Internal Setjen DPD RI'}
                                     </strong>
                                 </div>
                                 <div className="d-flex justify-content-between align-items-center py-1.5 px-2.5 rounded-2 bg-white border">

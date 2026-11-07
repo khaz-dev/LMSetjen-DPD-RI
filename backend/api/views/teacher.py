@@ -1049,12 +1049,29 @@ class TeacherProfileUpdateAPIView(APIView):
             )
             
             # Update teacher fields
-            teacher_fields = ['bio', 'facebook', 'twitter', 'linkedin', 'youtube', 'instagram', 'tiktok']
+            teacher_fields = ['bio', 'facebook', 'twitter', 'linkedin', 'youtube', 'instagram', 'tiktok', 'about']
             for field in teacher_fields:
                 if field in request.data:
                     setattr(teacher, field, request.data[field])
             
+            if 'country' in request.data and request.data['country'] is not None:
+                setattr(teacher, 'country', request.data['country'])
+            
             teacher.save()
+            
+            # Demographic and user fields update
+            user_updated = False
+            for u_field in ['full_name', 'phone', 'instansi_asal', 'pekerjaan', 'provinsi', 'kota_kabupaten']:
+                if u_field in request.data and request.data[u_field] is not None:
+                    setattr(user, u_field, request.data[u_field])
+                    user_updated = True
+            
+            if 'country' in request.data and request.data['country'] is not None:
+                user.negara = request.data['country']
+                user_updated = True
+                
+            if user_updated:
+                user.save()
             
             # ✨ Synchronize with userauths Profile to prevent data divergence
             try:
@@ -1065,6 +1082,11 @@ class TeacherProfileUpdateAPIView(APIView):
                     for field in teacher_fields:
                         if field in request.data:
                             setattr(user_profile, field, request.data[field])
+                    for field in ['instansi_asal', 'pekerjaan', 'provinsi', 'kota_kabupaten']:
+                        if field in request.data:
+                            setattr(user_profile, field, request.data[field])
+                    if 'country' in request.data:
+                        user_profile.country = request.data['country']
                     user_profile.save()
             except Exception as pe:
                 print(f"Error syncing Teacher update to Profile: {pe}")

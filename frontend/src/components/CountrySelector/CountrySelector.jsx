@@ -360,8 +360,8 @@ const CountrySelector = ({
         <div className={`country-selector-wrapper ${className}`} ref={dropdownRef}>
             {label && (
                 <label className="form-label modern-label" htmlFor={id}>
-                    <i className={`${icon} form-label-icon`}></i>
-                    {label} {required && <span className="required-asterisk">*</span>}
+                    <i className={`${icon} form-label-icon me-2`}></i>
+                    <span>{label}</span> {required && <span className="required-asterisk ms-1">*</span>}
                 </label>
             )}
             

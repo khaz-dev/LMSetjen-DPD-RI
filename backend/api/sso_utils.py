@@ -221,6 +221,8 @@ class SSOUserManager:
             is_instructor=False,
             is_admin=False,
             is_internal=True,
+            user_type='INTERNAL',
+            onboarding_completed=True,
             is_active=True,
             external_status='ACTIVE'
         )
@@ -260,6 +262,8 @@ class SSOUserManager:
         
         # Pastikan karena masuk lewat jalur SSO/sinkronisasi, status internalnya True
         user.is_internal = True
+        user.user_type = 'INTERNAL'
+        user.onboarding_completed = True
 
         if 'iat' in sso_data:
             user.external_created_at = datetime.fromtimestamp(sso_data['iat'])
@@ -448,6 +452,8 @@ class GoogleOAuthUserManager:
         # Cek apakah user ini sebenarnya sudah memiliki NIP (misal emailnya pernah didaftarkan/disinkronkan lewat data pegawai sebelumnya)
         existing_nip_check = User.objects.filter(email=email, nip__isnull=False).exists()
         is_employee_internal = bool(existing_nip_check)
+        user_type = 'INTERNAL' if is_employee_internal else 'UMUM'
+        onboarding_completed = is_employee_internal
         
         user = User.objects.create(
             username=username,
@@ -458,12 +464,16 @@ class GoogleOAuthUserManager:
             is_instructor=False,
             is_admin=False,
             is_internal=is_employee_internal,  # ✨ True jika sudah ada data NIP-nya, False jika murni publik mendaftar via Google
+            user_type=user_type,
+            onboarding_completed=onboarding_completed,
             is_active=True,
             external_status='ACTIVE'
         )
         
         profile, _ = Profile.objects.get_or_create(user=user)
         profile.full_name = name
+        profile.user_type = user_type
+        profile.onboarding_completed = onboarding_completed
         profile.save()
         
         return user
@@ -478,7 +488,12 @@ class GoogleOAuthUserManager:
             user.full_name = name
         
         # ✨ Validasi konsistensi: User internal adalah yang memiliki NIP (hasil sinkronisasi pegawai)
-        user.is_internal = bool(user.nip)
+        if getattr(user, 'nip', None) or getattr(user, 'is_internal', False) or getattr(user, 'user_type', None) == 'INTERNAL':
+            user.is_internal = True
+            user.user_type = 'INTERNAL'
+            user.onboarding_completed = True
+        elif not getattr(user, 'user_type', None):
+            user.user_type = 'UMUM'
 
         user.last_login = datetime.now()
         user.save()

@@ -11,6 +11,9 @@
     --dpd-accent-blue: #0284c7;
     --dpd-bg-subtle: #f8fafc;
     --dpd-card-border: #e2e8f0;
+    --admin-navbar-height: 64px;
+    --admin-header-gap: 0px !important;
+    /* Compact little gap between admin navbar and dashboard content */
 }
 
 .admin-page-wrapper {
@@ -22,7 +25,9 @@
 
 .admin-dashboard-container {
     flex: 1;
-    padding-top: calc(60px + 1.25rem) !important;
+    margin-top: 0 !important;
+    /* Exactly match UsersAdmin spacing below admin-header navbar */
+    padding-top: 2rem !important;
     padding-bottom: 2.5rem;
 }
 
@@ -33,7 +38,8 @@
     max-width: 1400px !important;
     margin-left: auto !important;
     margin-right: auto !important;
-    margin-top: 0.5rem !important;
+    margin-top: 0 !important;
+    /* Zero compounding margin for tight, predictable spacing */
     padding-top: 0 !important;
     padding-left: 1.25rem !important;
     padding-right: 1.25rem !important;
@@ -1251,6 +1257,90 @@
 .ai-subtab-panel .stat-value {
     color: var(--dpd-navy) !important;
     font-weight: 700 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Scoped Immunity for AI Subtab Elements against Global Style Leaks
+   -------------------------------------------------------------------------- */
+.ai-subtab-panel .student-name,
+.ai-subtab-panel td.student-name,
+.ai-subtab-panel .at-risk-student-name,
+.ai-subtab-panel .at-risk-student-cell {
+    color: #0f172a !important;
+    font-size: 0.825rem !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+    line-height: 1.35 !important;
+    letter-spacing: normal !important;
+}
+
+.ai-subtab-panel .status-card,
+.ai-subtab-panel .sq-status-card {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 10px 14px !important;
+    border-radius: 8px !important;
+    border: none !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+    min-height: 80px !important;
+    color: #ffffff !important;
+}
+
+.ai-subtab-panel .status-card.success,
+.ai-subtab-panel .sq-status-card.success {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    color: #ffffff !important;
+}
+
+.ai-subtab-panel .status-card.warning,
+.ai-subtab-panel .sq-status-card.warning {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+    color: #ffffff !important;
+}
+
+.ai-subtab-panel .status-card.danger,
+.ai-subtab-panel .sq-status-card.danger {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    color: #ffffff !important;
+}
+
+.ai-subtab-panel .status-card .status-icon,
+.ai-subtab-panel .status-card .sq-status-icon {
+    font-size: 1.25rem !important;
+    font-weight: bold !important;
+    color: #ffffff !important;
+    background: transparent !important;
+    width: auto !important;
+    height: auto !important;
+    margin-bottom: 2px !important;
+}
+
+.ai-subtab-panel .status-card .status-label,
+.ai-subtab-panel .status-card .sq-status-label {
+    font-size: 0.72rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.4px !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    margin-bottom: 2px !important;
+}
+
+.ai-subtab-panel .status-card .status-value,
+.ai-subtab-panel .status-card .sq-status-value {
+    font-size: 1.25rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    line-height: 1.1 !important;
+}
+
+.ai-subtab-panel .status-card small,
+.ai-subtab-panel .sq-status-card small {
+    font-size: 0.68rem !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    margin-top: 2px !important;
 }
 
 /* --------------------------------------------------------------------------

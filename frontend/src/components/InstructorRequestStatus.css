@@ -25,7 +25,7 @@
 }
 
 /* Status Card */
-.status-card {
+.instructor-status-container .status-card {
   background: white;
   border-radius: 12px;
   border: 1px solid #e0e0e0;
@@ -34,7 +34,7 @@
   transition: all 0.3s ease;
 }
 
-.status-card:hover {
+.instructor-status-container .status-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -227,7 +227,7 @@
 }
 
 /* No Request State */
-.status-card.no-request {
+.instructor-status-container .status-card.no-request {
   text-align: center;
   padding: 40px 25px;
 }

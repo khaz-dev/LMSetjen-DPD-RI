@@ -28,6 +28,15 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['current_role'] = user.current_role if hasattr(user, 'current_role') else user.role
         token['nip'] = user.nip  # Add NIP field for SSO identity
         
+        # 3 Jenis Peserta: INTERNAL, ASN, UMUM
+        token['user_type'] = getattr(user, 'user_type', 'UMUM')
+        token['instansi_asal'] = getattr(user, 'instansi_asal', '') or ''
+        token['provinsi'] = getattr(user, 'provinsi', '') or ''
+        token['kota_kabupaten'] = getattr(user, 'kota_kabupaten', '') or ''
+        token['pekerjaan'] = getattr(user, 'pekerjaan', '') or ''
+        token['negara'] = getattr(user, 'negara', 'Indonesia') or 'Indonesia'
+        token['onboarding_completed'] = getattr(user, 'onboarding_completed', False)
+        
         # ✨ PHASE 4.10: Add boolean role fields to JWT
         # These new fields allow frontend to properly detect which roles user has
         token['is_student'] = getattr(user, 'is_student', True)
@@ -155,8 +164,20 @@ class UserSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'full_name',
+            'phone',
             'role',
             'is_internal',
+            'user_type',
+            'nip',
+            'jenis_jabatan',
+            'golongan',
+            'kelas_jabatan',
+            'instansi_asal',
+            'provinsi',
+            'kota_kabupaten',
+            'pekerjaan',
+            'negara',
+            'onboarding_completed',
             'is_student',
             'is_instructor',
             'is_admin',
@@ -193,6 +214,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='user.full_name', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
+    phone = serializers.CharField(source='user.phone', read_only=True, allow_null=True)
+    user_type = serializers.CharField(source='user.user_type', read_only=True, allow_null=True)
+    is_internal = serializers.BooleanField(source='user.is_internal', read_only=True)
     nip = serializers.CharField(source='user.nip', read_only=True, allow_null=True)
     golongan = serializers.CharField(source='user.golongan', read_only=True, allow_null=True)
     kelas_jabatan = serializers.CharField(source='user.kelas_jabatan', read_only=True, allow_null=True)
@@ -231,11 +255,29 @@ class ProfileSerializer(serializers.ModelSerializer):
             representation['jenis_jabatan'] = ""
         
         # Also ensure other nullable user fields are properly converted
-        nullable_fields = ['nip', 'golongan', 'kelas_jabatan']
+        nullable_fields = ['nip', 'golongan', 'kelas_jabatan', 'phone']
         for field in nullable_fields:
             if field in representation and representation[field] is None:
                 representation[field] = ""
             
+        # Fallbacks for participant demographic fields from user
+        if instance.user:
+            if not representation.get('user_type'):
+                representation['user_type'] = getattr(instance.user, 'user_type', 'UMUM') or 'UMUM'
+            if not representation.get('instansi_asal'):
+                representation['instansi_asal'] = getattr(instance.user, 'instansi_asal', '') or ''
+            if not representation.get('pekerjaan'):
+                representation['pekerjaan'] = getattr(instance.user, 'pekerjaan', '') or ''
+            if not representation.get('provinsi'):
+                representation['provinsi'] = getattr(instance.user, 'provinsi', '') or ''
+            if not representation.get('kota_kabupaten'):
+                representation['kota_kabupaten'] = getattr(instance.user, 'kota_kabupaten', '') or ''
+            if not representation.get('country'):
+                representation['country'] = getattr(instance.user, 'negara', '') or ''
+            if not representation.get('phone'):
+                representation['phone'] = getattr(instance.user, 'phone', '') or ''
+            representation['is_internal'] = getattr(instance.user, 'is_internal', False)
+
         return representation
     
     def update(self, instance, validated_data):
@@ -519,6 +561,20 @@ class TeacherSerializer(serializers.ModelSerializer):
         ).values('user').distinct().count()
         return total
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.user:
+            data['email'] = instance.user.email
+            data['phone'] = getattr(instance.user, 'phone', '') or ''
+            data['nip'] = getattr(instance.user, 'nip', '') or ''
+            data['user_type'] = getattr(instance.user, 'user_type', 'UMUM') or 'UMUM'
+            data['is_internal'] = getattr(instance.user, 'is_internal', False)
+            data['instansi_asal'] = getattr(instance.user, 'instansi_asal', '') or ''
+            data['pekerjaan'] = getattr(instance.user, 'pekerjaan', '') or ''
+            data['provinsi'] = getattr(instance.user, 'provinsi', '') or ''
+            data['kota_kabupaten'] = getattr(instance.user, 'kota_kabupaten', '') or ''
+        return data
+
 
 class BasicTeacherSerializer(serializers.ModelSerializer):
     """Simplified Teacher serializer for basic operations without related fields"""
@@ -543,6 +599,23 @@ class BasicTeacherSerializer(serializers.ModelSerializer):
         if obj.full_name and obj.full_name.strip():
             return obj.full_name
         return "Instruktur"
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.user:
+            data['email'] = instance.user.email
+            data['phone'] = getattr(instance.user, 'phone', '') or ''
+            data['nip'] = getattr(instance.user, 'nip', '') or ''
+            data['user_type'] = getattr(instance.user, 'user_type', 'UMUM') or 'UMUM'
+            data['is_internal'] = getattr(instance.user, 'is_internal', False)
+            data['instansi_asal'] = getattr(instance.user, 'instansi_asal', '') or ''
+            data['pekerjaan'] = getattr(instance.user, 'pekerjaan', '') or ''
+            data['provinsi'] = getattr(instance.user, 'provinsi', '') or ''
+            data['kota_kabupaten'] = getattr(instance.user, 'kota_kabupaten', '') or ''
+            data['jenis_jabatan'] = getattr(instance.user, 'jenis_jabatan', '') or ''
+            data['golongan'] = getattr(instance.user, 'golongan', '') or ''
+            data['kelas_jabatan'] = getattr(instance.user, 'kelas_jabatan', '') or ''
+        return data
 
 
 class LearningModuleSerializer(serializers.ModelSerializer):

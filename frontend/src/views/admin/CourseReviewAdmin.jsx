@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
-import BaseHeader from "../partials/BaseHeader";
 import apiInstance from "../../utils/axios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
@@ -137,32 +136,28 @@ function CourseReviewAdmin() {
 
     if (loading) {
         return (
-            <>
-                <BaseHeader />
-                <section className="admin-dashboard pt-5 pb-5">
-                    <div className="container">
-                        <AdminHeader />
-                        <div className="text-center mt-5">
-                            <div className="spinner-border text-primary" role="status">
-                                <span className="visually-hidden">Memuat...</span>
-                            </div>
-                            <p className="mt-3 text-muted">Memuat kursus yang menunggu review...</p>
+            <div className="admin-page-wrapper">
+                <AdminHeader />
+                <main className="admin-dashboard-container d-flex align-items-center justify-content-center" style={{ minHeight: "60vh" }}>
+                    <div className="text-center py-5">
+                        <div className="spinner-border text-primary" role="status">
+                            <span className="visually-hidden">Memuat...</span>
                         </div>
+                        <p className="mt-3 text-muted">Memuat kursus yang menunggu review...</p>
                     </div>
-                </section>
+                </main>
                 <Footer />
-            </>
+            </div>
         );
     }
 
     return (
-        <>
-            <BaseHeader />
-            <section className="admin-dashboard pt-5 pb-5">
-                <div className="container">
-                    <AdminHeader />
-                    
-                    <div className="course-review-container mt-4">
+        <div className="admin-page-wrapper">
+            <AdminHeader />
+            
+            <main className="admin-dashboard-container">
+                <div className="container-fluid px-3 px-xl-4 footer-container">
+                    <div className="course-review-container">
                         <div className="d-flex justify-content-between align-items-center mb-4">
                             <div>
                                 <h2 className="section-title mb-1">
@@ -286,9 +281,9 @@ function CourseReviewAdmin() {
                         )}
                     </div>
                 </div>
-            </section>
+            </main>
             <Footer />
-        </>
+        </div>
     );
 }
 

@@ -8,7 +8,7 @@ import { getImageUrl } from "../../../utils/courseUtils";
  * Course Review Tab Component (Redesigned Compact & Live)
  * Setjen DPD RI Learning Platform
  */
-function CourseReviewTab({ onCountsUpdated, refreshSignal }) {
+function CourseReviewTab({ onCountsUpdated }) {
     const [courses, setCourses] = useState([]);
     const [categories, setCategories] = useState([]);
     const [stats, setStats] = useState({
@@ -25,6 +25,7 @@ function CourseReviewTab({ onCountsUpdated, refreshSignal }) {
     // Filters & view options
     const [filterStatus, setFilterStatus] = useState("Review");
     const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [sortOrder, setSortOrder] = useState("recent");
     const [viewMode, setViewMode] = useState(() => {
@@ -32,6 +33,14 @@ function CourseReviewTab({ onCountsUpdated, refreshSignal }) {
     });
 
     const navigate = useNavigate();
+
+    // Debounce search query to prevent network request spam
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
 
     // Toggle view mode and persist
     const handleSetViewMode = (mode) => {
@@ -64,7 +73,7 @@ function CourseReviewTab({ onCountsUpdated, refreshSignal }) {
             if (filterStatus) params.append("status", filterStatus);
             if (selectedCategory && selectedCategory !== "all") params.append("category", selectedCategory);
             if (sortOrder) params.append("ordering", sortOrder);
-            if (searchQuery.trim()) params.append("search", searchQuery.trim());
+            if (debouncedSearch.trim()) params.append("search", debouncedSearch.trim());
 
             const url = `/admin/courses-pending-review/?${params.toString()}`;
             const response = await apiInstance.get(url);
@@ -82,10 +91,6 @@ function CourseReviewTab({ onCountsUpdated, refreshSignal }) {
             if (response.data?.stats) {
                 setStats(response.data.stats);
             }
-
-            if (onCountsUpdated) {
-                onCountsUpdated();
-            }
         } catch (error) {
             console.error("[CourseReviewTab] Error fetching courses:", error);
             Toast().fire({
@@ -97,7 +102,7 @@ function CourseReviewTab({ onCountsUpdated, refreshSignal }) {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [filterStatus, selectedCategory, sortOrder, searchQuery, onCountsUpdated]);
+    }, [filterStatus, selectedCategory, sortOrder, debouncedSearch]);
 
     useEffect(() => {
         fetchCategories();
@@ -105,7 +110,7 @@ function CourseReviewTab({ onCountsUpdated, refreshSignal }) {
 
     useEffect(() => {
         fetchCourses();
-    }, [fetchCourses, refreshSignal]);
+    }, [fetchCourses]);
 
     // Handle view details navigation
     const handleViewDetails = (course) => {

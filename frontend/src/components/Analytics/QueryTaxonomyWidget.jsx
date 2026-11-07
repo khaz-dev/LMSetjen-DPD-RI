@@ -118,25 +118,28 @@ export default function QueryTaxonomyWidget() {
   return (
     <div className="qtw-widget card">
       <div className="card-header bg-light border-bottom">
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
+        <div className="d-flex justify-content-between align-items-center w-100 gap-3 flex-nowrap">
+          <div className="header-info flex-grow-1 min-w-0">
             <h5 className="mb-0">🏷️ Taksonomi Kueri Pencarian</h5>
-            <small className="text-muted">Kategorikan dan analisis kueri pencarian berdasarkan maksud</small>
+            <small className="text-muted d-block">Kategorikan dan analisis kueri pencarian berdasarkan maksud</small>
           </div>
-          <div className="btn-group btn-group-sm">
+          <div className="btn-group btn-group-sm ms-auto flex-shrink-0" role="group" aria-label="Filter Rentang Hari">
             <button
+              type="button"
               className={`btn ${days === 7 ? 'btn-primary' : 'btn-outline-primary'}`}
               onClick={() => setDays(7)}
             >
               7 hari
             </button>
             <button
+              type="button"
               className={`btn ${days === 30 ? 'btn-primary' : 'btn-outline-primary'}`}
               onClick={() => setDays(30)}
             >
               30 hari
             </button>
             <button
+              type="button"
               className={`btn ${days === 90 ? 'btn-primary' : 'btn-outline-primary'}`}
               onClick={() => setDays(90)}
             >
