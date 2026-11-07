@@ -318,7 +318,7 @@ function CourseReviewTab({ onCountsUpdated }) {
                 <div className="cm-controls-row">
                     {/* Search Input */}
                     <div className="cm-search-box">
-                        <i className="fas fa-search"></i>
+                        <i className="fas fa-search cm-search-icon"></i>
                         <input
                             type="text"
                             className="cm-search-input"

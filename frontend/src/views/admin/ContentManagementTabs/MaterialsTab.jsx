@@ -1,55 +1,54 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import apiInstance from "../../../utils/axios";
 import Toast from "../../plugin/Toast";
 
 /**
- * Materials Tab Component
- * Handles CRUD operations for course categories and tags
- * ✨ PHASE 4: Extracted from KelolaMaterialAdmin.jsx for merged Content Management
- * ✨ PHASE X: Added course tags management alongside categories
+ * Redesigned Compact & Live Materials Management Tab (Categories & Tags)
+ * Setjen DPD RI Learning Platform
  */
-function MaterialsTab() {
+function MaterialsTab({ onCountsUpdated }) {
+    // Active Subtab: 'categories' | 'tags'
+    const [activeTab, setActiveTab] = useState("categories");
+
     // Categories State
     const [categories, setCategories] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
-    const [modalMode, setModalMode] = useState("add"); // 'add' or 'edit'
+    const [loadingCategories, setLoadingCategories] = useState(true);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [categoryModalMode, setCategoryModalMode] = useState("add"); // 'add' | 'edit'
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [formData, setFormData] = useState({ title: "", image: "", active: true });
-    const [formErrors, setFormErrors] = useState({});
-    const [searchTerm, setSearchTerm] = useState("");
-    
+    const [categoryForm, setCategoryForm] = useState({ title: "", image: "", active: true });
+    const [categoryFormErrors, setCategoryFormErrors] = useState({});
+    const [categorySearch, setCategorySearch] = useState("");
+    const [categoryStatusFilter, setCategoryStatusFilter] = useState("all");
+
     // Tags State
     const [tags, setTags] = useState([]);
-    const [tagsLoading, setTagsLoading] = useState(true);
-    const [showTagsModal, setShowTagsModal] = useState(false);
-    const [tagModalMode, setTagModalMode] = useState("add"); // 'add' or 'edit'
+    const [loadingTags, setLoadingTags] = useState(true);
+    const [showTagModal, setShowTagModal] = useState(false);
+    const [tagModalMode, setTagModalMode] = useState("add"); // 'add' | 'edit'
     const [selectedTag, setSelectedTag] = useState(null);
-    const [tagFormData, setTagFormData] = useState({ title: "", active: true });
+    const [tagForm, setTagForm] = useState({ title: "", active: true });
     const [tagFormErrors, setTagFormErrors] = useState({});
-    const [tagSearchTerm, setTagSearchTerm] = useState("");
-    
-    // Active Tab State
-    const [activeTab, setActiveTab] = useState("categories"); // 'categories' or 'tags'
-    
-    // Delete Confirmation Modal State
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [deleteTargetType, setDeleteTargetType] = useState(null); // 'category' or 'tag'
-    const [deleteTarget, setDeleteTarget] = useState(null);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [tagSearch, setTagSearch] = useState("");
+    const [tagStatusFilter, setTagStatusFilter] = useState("all");
 
-    useEffect(() => {
-        fetchCategories();
-        fetchTags();
-    }, []);
+    // Delete Modal State
+    const [deleteModal, setDeleteModal] = useState({
+        show: false,
+        type: 'category', // 'category' | 'tag'
+        item: null,
+        isDeleting: false
+    });
 
-    // ============= CATEGORIES FUNCTIONS =============
-    const fetchCategories = async () => {
+    // Submitting state
+    const [submitting, setSubmitting] = useState(false);
+
+    // ============= FETCH DATA =============
+    const fetchCategories = useCallback(async () => {
         try {
-            setLoading(true);
-            const response = await apiInstance.get("admin/category/");
-            // Handle both paginated and direct array responses
-            const data = Array.isArray(response.data) ? response.data : (response.data?.results || []);
+            setLoadingCategories(true);
+            const res = await apiInstance.get("admin/category/");
+            const data = Array.isArray(res.data) ? res.data : (res.data?.results || []);
             setCategories(data);
         } catch (error) {
             console.error("Error fetching categories:", error);
@@ -58,563 +57,503 @@ function MaterialsTab() {
                 title: "Gagal memuat kategori"
             });
         } finally {
-            setLoading(false);
+            setLoadingCategories(false);
         }
-    };
+    }, []);
 
-    const handleAddCategory = () => {
-        setFormData({ title: "", image: "", active: true });
-        setFormErrors({});
-        setModalMode("add");
-        setSelectedCategory(null);
-        setShowModal(true);
-    };
-
-    const handleEditCategory = (category) => {
-        setFormData({
-            title: category.title,
-            image: category.image,
-            active: category.active
-        });
-        setFormErrors({});
-        setModalMode("edit");
-        setSelectedCategory(category);
-        setShowModal(true);
-    };
-
-    const handleFormChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value
-        }));
-        // Clear error for this field
-        if (formErrors[name]) {
-            setFormErrors(prev => ({
-                ...prev,
-                [name]: ""
-            }));
-        }
-    };
-
-    const validateForm = () => {
-        const errors = {};
-        if (!formData.title || formData.title.trim() === "") {
-            errors.title = "Nama kategori wajib diisi";
-        }
-        if (formData.title.trim().length < 2) {
-            errors.title = "Nama kategori setidaknya harus 2 karakter";
-        }
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
-
-    const handleSaveCategory = async () => {
-        if (!validateForm()) return;
-
+    const fetchTags = useCallback(async () => {
         try {
-            const payload = {
-                title: formData.title.trim(),
-                image: formData.image || "",
-                active: formData.active
-            };
-
-            if (modalMode === "add") {
-                await apiInstance.post("admin/category/", payload);
-                Toast().fire({
-                    icon: "success",
-                    title: "Kategori berhasil dibuat"
-                });
-            } else {
-                await apiInstance.put(`admin/category/${selectedCategory.id}/`, payload);
-                Toast().fire({
-                    icon: "success",
-                    title: "Kategori berhasil diperbarui"
-                });
-            }
-
-            setShowModal(false);
-            setFormData({ title: "", image: "", active: true });
-            fetchCategories();
-        } catch (error) {
-            console.error("Error saving category:", error);
-            const errorMsg = error.response?.data?.title?.[0] || error.response?.data?.error || "Gagal menyimpan kategori";
-            setFormErrors({ submit: errorMsg });
-            Toast().fire({
-                icon: "error",
-                title: errorMsg
-            });
-        }
-    };
-
-    const handleDeleteCategoryClick = (category) => {
-        setDeleteTargetType('category');
-        setDeleteTarget(category);
-        setShowDeleteConfirm(true);
-    };
-
-    const handleDeleteCategory = async (category) => {
-
-        try {
-            const response = await apiInstance.delete(`admin/category/${category.id}/`);
-            
-            // Handle both 200 OK and 204 NO_CONTENT responses
-            if (response.status === 204 || response.status === 200) {
-                Toast().fire({
-                    icon: "success",
-                    title: "Kategori berhasil dihapus"
-                });
-                setShowDeleteConfirm(false);
-                setDeleteTarget(null);
-                fetchCategories();
-            }
-        } catch (error) {
-            console.error("Error deleting category:", error);
-            
-            // Handle different error scenarios
-            if (error.response?.status === 400) {
-                // Category has courses
-                const errorMsg = error.response?.data?.error || "Tidak dapat menghapus kategori yang memiliki kursus";
-                Toast().fire({
-                    icon: "warning",
-                    title: errorMsg
-                });
-            } else if (error.response?.status === 404) {
-                Toast().fire({
-                    icon: "error",
-                    title: "Kategori tidak ditemukan"
-                });
-                fetchCategories();
-            } else if (error.response?.status === 403) {
-                Toast().fire({
-                    icon: "error",
-                    title: "Anda tidak memiliki izin untuk menghapus kategori ini"
-                });
-            } else {
-                const errorMsg = error.response?.data?.error || error.response?.data?.detail || "Gagal menghapus kategori";
-                Toast().fire({
-                    icon: "error",
-                    title: errorMsg
-                });
-            }
-        } finally {
-            setIsDeleting(false);
-        }
-    };
-
-    // ============= TAGS FUNCTIONS =============
-    const fetchTags = async () => {
-        try {
-            setTagsLoading(true);
-            const response = await apiInstance.get("admin/tag/");
-            // Handle both paginated and direct array responses
-            const data = Array.isArray(response.data) ? response.data : (response.data?.results || []);
+            setLoadingTags(true);
+            const res = await apiInstance.get("admin/tag/");
+            const data = Array.isArray(res.data) ? res.data : (res.data?.results || []);
             setTags(data);
         } catch (error) {
             console.error("Error fetching tags:", error);
-            Toast().fire({
-                icon: "error",
-                title: "Gagal memuat tag"
-            });
+            // Fallback to public tag endpoint if admin 404s
+            try {
+                const resPublic = await apiInstance.get("course/tag/");
+                const dataPublic = Array.isArray(resPublic.data) ? resPublic.data : (resPublic.data?.results || []);
+                setTags(dataPublic);
+            } catch (e) {
+                console.error("Error fetching public tags:", e);
+            }
         } finally {
-            setTagsLoading(false);
+            setLoadingTags(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchCategories();
+        fetchTags();
+    }, [fetchCategories, fetchTags]);
+
+    // Live Stats Computed
+    const categoryStats = useMemo(() => {
+        const total = categories.length;
+        const active = categories.filter(c => c.active).length;
+        const withCourses = categories.filter(c => (c.course_count || 0) > 0).length;
+        const totalCourses = categories.reduce((sum, c) => sum + (c.course_count || 0), 0);
+        return { total, active, withCourses, totalCourses };
+    }, [categories]);
+
+    const tagStats = useMemo(() => {
+        const total = tags.length;
+        const active = tags.filter(t => t.active).length;
+        const withCourses = tags.filter(t => (t.course_count || 0) > 0).length;
+        const totalCourses = tags.reduce((sum, t) => sum + (t.course_count || 0), 0);
+        return { total, active, withCourses, totalCourses };
+    }, [tags]);
+
+    // Filtered Categories
+    const filteredCategories = useMemo(() => {
+        return categories.filter(cat => {
+            if (categorySearch.trim()) {
+                const q = categorySearch.toLowerCase();
+                const title = (cat.title || '').toLowerCase();
+                const slug = (cat.slug || '').toLowerCase();
+                if (!title.includes(q) && !slug.includes(q)) return false;
+            }
+            if (categoryStatusFilter !== 'all') {
+                const isActive = categoryStatusFilter === 'active';
+                if (Boolean(cat.active) !== isActive) return false;
+            }
+            return true;
+        });
+    }, [categories, categorySearch, categoryStatusFilter]);
+
+    // Filtered Tags
+    const filteredTags = useMemo(() => {
+        return tags.filter(tag => {
+            if (tagSearch.trim()) {
+                const q = tagSearch.toLowerCase();
+                const title = (tag.title || '').toLowerCase();
+                const slug = (tag.slug || '').toLowerCase();
+                if (!title.includes(q) && !slug.includes(q)) return false;
+            }
+            if (tagStatusFilter !== 'all') {
+                const isActive = tagStatusFilter === 'active';
+                if (Boolean(tag.active) !== isActive) return false;
+            }
+            return true;
+        });
+    }, [tags, tagSearch, tagStatusFilter]);
+
+    // ============= CATEGORY HANDLERS =============
+    const handleOpenAddCategory = () => {
+        setCategoryForm({ title: "", image: "", active: true });
+        setCategoryFormErrors({});
+        setCategoryModalMode("add");
+        setSelectedCategory(null);
+        setShowCategoryModal(true);
+    };
+
+    const handleOpenEditCategory = (cat) => {
+        setCategoryForm({
+            title: cat.title || "",
+            image: cat.image || "",
+            active: Boolean(cat.active)
+        });
+        setCategoryFormErrors({});
+        setCategoryModalMode("edit");
+        setSelectedCategory(cat);
+        setShowCategoryModal(true);
+    };
+
+    const handleSaveCategory = async () => {
+        if (!categoryForm.title || !categoryForm.title.trim()) {
+            setCategoryFormErrors({ title: "Nama kategori wajib diisi" });
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const payload = {
+                title: categoryForm.title.trim(),
+                image: categoryForm.image || "",
+                active: categoryForm.active
+            };
+
+            if (categoryModalMode === "add") {
+                await apiInstance.post("admin/category/", payload);
+                Toast().fire({ icon: "success", title: "Kategori berhasil dibuat" });
+            } else {
+                await apiInstance.put(`admin/category/${selectedCategory.id}/`, payload);
+                Toast().fire({ icon: "success", title: "Kategori berhasil diperbarui" });
+            }
+
+            setShowCategoryModal(false);
+            fetchCategories();
+            if (typeof onCountsUpdated === 'function') onCountsUpdated();
+        } catch (error) {
+            console.error("Error saving category:", error);
+            const msg = error.response?.data?.title?.[0] || error.response?.data?.error || "Gagal menyimpan kategori";
+            setCategoryFormErrors({ submit: msg });
+            Toast().fire({ icon: "error", title: msg });
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    const handleAddTag = () => {
-        setTagFormData({ title: "", active: true });
+    const handleToggleCategoryActive = async (cat) => {
+        try {
+            await apiInstance.put(`admin/category/${cat.id}/`, {
+                title: cat.title,
+                image: cat.image || "",
+                active: !cat.active
+            });
+            Toast().fire({
+                icon: "success",
+                title: `Kategori ${!cat.active ? 'diaktifkan' : 'dinonaktifkan'}`
+            });
+            fetchCategories();
+            if (typeof onCountsUpdated === 'function') onCountsUpdated();
+        } catch (error) {
+            Toast().fire({ icon: "error", title: "Gagal memperbarui status kategori" });
+        }
+    };
+
+    // ============= TAG HANDLERS =============
+    const handleOpenAddTag = () => {
+        setTagForm({ title: "", active: true });
         setTagFormErrors({});
         setTagModalMode("add");
         setSelectedTag(null);
-        setShowTagsModal(true);
+        setShowTagModal(true);
     };
 
-    const handleEditTag = (tag) => {
-        setTagFormData({
-            title: tag.title,
-            active: tag.active
+    const handleOpenEditTag = (tag) => {
+        setTagForm({
+            title: tag.title || "",
+            active: tag.active !== undefined ? Boolean(tag.active) : true
         });
         setTagFormErrors({});
         setTagModalMode("edit");
         setSelectedTag(tag);
-        setShowTagsModal(true);
-    };
-
-    const handleTagFormChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setTagFormData(prev => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value
-        }));
-        // Clear error for this field
-        if (tagFormErrors[name]) {
-            setTagFormErrors(prev => ({
-                ...prev,
-                [name]: ""
-            }));
-        }
-    };
-
-    const validateTagForm = () => {
-        const errors = {};
-        if (!tagFormData.title || tagFormData.title.trim() === "") {
-            errors.title = "Nama tag wajib diisi";
-        }
-        if (tagFormData.title.trim().length < 2) {
-            errors.title = "Nama tag setidaknya harus 2 karakter";
-        }
-        setTagFormErrors(errors);
-        return Object.keys(errors).length === 0;
+        setShowTagModal(true);
     };
 
     const handleSaveTag = async () => {
-        if (!validateTagForm()) return;
+        if (!tagForm.title || !tagForm.title.trim()) {
+            setTagFormErrors({ title: "Nama tag wajib diisi" });
+            return;
+        }
 
+        setSubmitting(true);
         try {
             const payload = {
-                title: tagFormData.title.trim(),
-                active: tagFormData.active
+                title: tagForm.title.trim(),
+                active: tagForm.active
             };
 
             if (tagModalMode === "add") {
                 await apiInstance.post("admin/tag/", payload);
-                Toast().fire({
-                    icon: "success",
-                    title: "Tag berhasil dibuat"
-                });
+                Toast().fire({ icon: "success", title: "Tag berhasil dibuat" });
             } else {
                 await apiInstance.put(`admin/tag/${selectedTag.id}/`, payload);
-                Toast().fire({
-                    icon: "success",
-                    title: "Tag berhasil diperbarui"
-                });
+                Toast().fire({ icon: "success", title: "Tag berhasil diperbarui" });
             }
 
-            setShowTagsModal(false);
-            setTagFormData({ title: "", active: true });
+            setShowTagModal(false);
             fetchTags();
+            if (typeof onCountsUpdated === 'function') onCountsUpdated();
         } catch (error) {
             console.error("Error saving tag:", error);
-            const errorMsg = error.response?.data?.title?.[0] || error.response?.data?.error || "Gagal menyimpan tag";
-            setTagFormErrors({ submit: errorMsg });
-            Toast().fire({
-                icon: "error",
-                title: errorMsg
-            });
-        }
-    };
-
-    const handleDeleteTagClick = (tag) => {
-        setDeleteTargetType('tag');
-        setDeleteTarget(tag);
-        setShowDeleteConfirm(true);
-    };
-
-    const handleDeleteTag = async (tag) => {
-        setIsDeleting(true);
-
-        try {
-            const response = await apiInstance.delete(`admin/tag/${tag.id}/`);
-            
-            // Handle both 200 OK and 204 NO_CONTENT responses
-            if (response.status === 204 || response.status === 200) {
-                Toast().fire({
-                    icon: "success",
-                    title: "Tag berhasil dihapus"
-                });
-                setShowDeleteConfirm(false);
-                setDeleteTarget(null);
-                fetchTags();
-            }
-        } catch (error) {
-            console.error("Error deleting tag:", error);
-            
-            // Handle different error scenarios
-            if (error.response?.status === 400) {
-                // Tag has courses
-                const errorMsg = error.response?.data?.error || "Tidak dapat menghapus tag yang memiliki kursus";
-                Toast().fire({
-                    icon: "warning",
-                    title: errorMsg
-                });
-            } else if (error.response?.status === 404) {
-                Toast().fire({
-                    icon: "error",
-                    title: "Tag tidak ditemukan"
-                });
-                fetchTags();
-            } else if (error.response?.status === 403) {
-                Toast().fire({
-                    icon: "error",
-                    title: "Anda tidak memiliki izin untuk menghapus tag ini"
-                });
-            } else {
-                const errorMsg = error.response?.data?.error || error.response?.data?.detail || "Gagal menghapus tag";
-                Toast().fire({
-                    icon: "error",
-                    title: errorMsg
-                });
-            }
+            const msg = error.response?.data?.title?.[0] || error.response?.data?.error || "Gagal menyimpan tag";
+            setTagFormErrors({ submit: msg });
+            Toast().fire({ icon: "error", title: msg });
         } finally {
-            setIsDeleting(false);
+            setSubmitting(false);
         }
     };
 
-    const filteredCategories = categories.filter(cat =>
-        cat.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const filteredTags = tags.filter(tag =>
-        tag.title.toLowerCase().includes(tagSearchTerm.toLowerCase())
-    );
-
-    // Calculate stats
-    const stats = {
-        total: categories.length,
-        active: categories.filter(c => c.active).length,
-        withCourses: categories.filter(c => c.course_count > 0).length,
-        totalCourses: categories.reduce((sum, c) => sum + c.course_count, 0)
+    const handleToggleTagActive = async (tag) => {
+        try {
+            await apiInstance.put(`admin/tag/${tag.id}/`, {
+                title: tag.title,
+                active: !(tag.active !== undefined ? tag.active : true)
+            });
+            Toast().fire({
+                icon: "success",
+                title: `Tag ${!tag.active ? 'diaktifkan' : 'dinonaktifkan'}`
+            });
+            fetchTags();
+            if (typeof onCountsUpdated === 'function') onCountsUpdated();
+        } catch (error) {
+            Toast().fire({ icon: "error", title: "Gagal memperbarui status tag" });
+        }
     };
 
-    const tagStats = {
-        total: tags.length,
-        active: tags.filter(t => t.active).length,
-        withCourses: tags.filter(t => t.course_count > 0).length,
-        totalCourses: tags.reduce((sum, t) => sum + t.course_count, 0)
+    // ============= DELETE HANDLERS =============
+    const handleConfirmDelete = async () => {
+        const { type, item } = deleteModal;
+        if (!item) return;
+
+        setDeleteModal(prev => ({ ...prev, isDeleting: true }));
+        try {
+            if (type === 'category') {
+                await apiInstance.delete(`admin/category/${item.id}/`);
+                Toast().fire({ icon: "success", title: "Kategori berhasil dihapus" });
+                fetchCategories();
+            } else {
+                await apiInstance.delete(`admin/tag/${item.id}/`);
+                Toast().fire({ icon: "success", title: "Tag berhasil dihapus" });
+                fetchTags();
+            }
+            setDeleteModal({ show: false, type: 'category', item: null, isDeleting: false });
+            if (typeof onCountsUpdated === 'function') onCountsUpdated();
+        } catch (error) {
+            console.error("Error deleting:", error);
+            const msg = error.response?.data?.error || error.response?.data?.detail || "Gagal menghapus data";
+            Toast().fire({ icon: "warning", title: msg });
+            setDeleteModal(prev => ({ ...prev, isDeleting: false }));
+        }
     };
+
+    const isLoading = activeTab === 'categories' ? loadingCategories : loadingTags;
 
     return (
-        <div className="cm-tab-content cm-materials-tab">
-            <div className="cm-tab-header d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h3 className="mb-1">
-                        <i className="fas fa-book-atlas me-2"></i>
-                        Kelola Materi
-                    </h3>
-                    <p className="text-muted small mb-0">Kelola kategori dan tag kursus dengan kontrol penuh atas organisasi konten</p>
-                </div>
-                <button 
-                    className="btn btn-primary"
-                    onClick={activeTab === 'categories' ? handleAddCategory : handleAddTag}
-                >
-                    <i className="fas fa-plus me-2"></i>
-                    {activeTab === 'categories' ? 'Tambah Kategori' : 'Tambah Tag'}
-                </button>
-            </div>
-
-            {/* Tab Navigation */}
-            <div className="mb-4">
-                <ul className="nav nav-tabs" role="tablist">
-                    <li className="nav-item" role="presentation">
-                        <button 
-                            className={`nav-link ${activeTab === 'categories' ? 'active' : ''}`}
-                            id="categories-tab"
-                            type="button"
-                            role="tab"
-                            aria-controls="categories-content"
-                            aria-selected={activeTab === 'categories'}
-                            onClick={() => setActiveTab('categories')}
-                        >
-                            <i className="fas fa-layer-group me-2"></i>Kategori Kursus
-                        </button>
-                    </li>
-                    <li className="nav-item" role="presentation">
-                        <button 
-                            className={`nav-link ${activeTab === 'tags' ? 'active' : ''}`}
-                            id="tags-tab"
-                            type="button"
-                            role="tab"
-                            aria-controls="tags-content"
-                            aria-selected={activeTab === 'tags'}
-                            onClick={() => setActiveTab('tags')}
-                        >
-                            <i className="fas fa-tags me-2"></i>Kursus Tag ({tags.length})
-                        </button>
-                    </li>
-                </ul>
-            </div>
-
-            {/* CATEGORIES SECTION */}
-            {activeTab === 'categories' && (
-            <>
-            {/* Statistics Cards */}
-            <div className="row mb-4">
-                <div className="col-lg-3 col-md-6 mb-3">
-                    <div className="cm-stat-card stat-primary">
-                        <div className="cm-stat-card-body">
-                            <div className="cm-stat-icon">
-                                <i className="fas fa-layer-group"></i>
-                            </div>
-                            <div className="cm-stat-info">
-                                <h4 className="cm-stat-number">{stats.total}</h4>
-                                <p className="cm-stat-label">Total Kategori</p>
-                            </div>
+        <div className="cm-tab-content cm-materials-v2">
+            {/* 1. Header Bar with Live KPIs */}
+            <div className="cm-compact-header-card mb-3">
+                <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div className="d-flex align-items-center gap-2">
+                        <div className="cm-header-icon-box bg-teal-subtle text-teal">
+                            <i className="fas fa-book-atlas"></i>
+                        </div>
+                        <div>
+                            <h3 className="cm-module-title mb-0">Kelola Taksonomi Materi Kursus</h3>
+                            <p className="cm-module-desc mb-0">Atur pengelompokan kurikulum, kategori rumpun ilmu, dan label tag kursus Setjen DPD RI</p>
                         </div>
                     </div>
-                </div>
 
-                <div className="col-lg-3 col-md-6 mb-3">
-                    <div className="cm-stat-card stat-success">
-                        <div className="cm-stat-card-body">
-                            <div className="cm-stat-icon">
-                                <i className="fas fa-check-circle"></i>
-                            </div>
-                            <div className="cm-stat-info">
-                                <h4 className="cm-stat-number">{stats.active}</h4>
-                                <p className="cm-stat-label">Aktif</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="col-lg-3 col-md-6 mb-3">
-                    <div className="cm-stat-card stat-warning">
-                        <div className="cm-stat-card-body">
-                            <div className="cm-stat-icon">
-                                <i className="fas fa-book"></i>
-                            </div>
-                            <div className="cm-stat-info">
-                                <h4 className="cm-stat-number">{stats.withCourses}</h4>
-                                <p className="cm-stat-label">Dengan Kursus</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="col-lg-3 col-md-6 mb-3">
-                    <div className="cm-stat-card stat-info">
-                        <div className="cm-stat-card-body">
-                            <div className="cm-stat-icon">
-                                <i className="fas fa-graduation-cap"></i>
-                            </div>
-                            <div className="cm-stat-info">
-                                <h4 className="cm-stat-number">{stats.totalCourses}</h4>
-                                <p className="cm-stat-label">Total Kursus</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Search and Filter */}
-            <div className="row mb-4">
-                <div className="col-md-6">
-                    <div className="input-group cm-search-input">
-                        <span className="input-group-text bg-white border-end-0">
-                            <i className="fas fa-search"></i>
-                        </span>
-                        <input
-                            type="text"
-                            className="form-control border-start-0"
-                            placeholder="Cari kategori..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
-                <div className="col-md-6 text-end">
-                    <span className="text-muted">
-                        Menampilkan <strong>{filteredCategories.length}</strong> dari <strong>{categories.length}</strong> kategori
-                    </span>
-                </div>
-            </div>
-
-            {/* Categories List */}
-            {loading ? (
-                <div className="cm-card">
-                    <div className="text-center py-5">
-                        <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">Memuat...</span>
-                        </div>
-                        <p className="mt-3 text-muted">Memuat kategori...</p>
-                    </div>
-                </div>
-            ) : filteredCategories.length === 0 ? (
-                <div className="cm-card">
-                    <div className="cm-empty-state">
-                        <div className="cm-empty-state-icon">
-                            <i className="fas fa-inbox"></i>
-                        </div>
-                        <h4>Kategori Tidak Ditemukan</h4>
-                        <p className="text-muted">
-                            {searchTerm ? "Pencarian Anda tidak cocok dengan kategori apapun" : "Buat kategori pertama Anda untuk memulai"}
-                        </p>
-                        {!searchTerm && (
-                            <button 
-                                className="btn btn-primary mt-3"
-                                onClick={handleAddCategory}
-                            >
-                                <i className="fas fa-plus me-2"></i>Buat Kategori
-                            </button>
+                    {/* Compact Live KPI Chips */}
+                    <div className="cm-kpi-chips-row">
+                        {activeTab === 'categories' ? (
+                            <>
+                                <div className="cm-kpi-chip" title="Total Kategori">
+                                    <i className="fas fa-layer-group text-primary"></i>
+                                    <span className="cm-kpi-label">Kategori:</span>
+                                    <span className="cm-kpi-value">{categoryStats.total}</span>
+                                </div>
+                                <div className="cm-kpi-chip" title="Kategori Aktif">
+                                    <i className="fas fa-check-circle text-success"></i>
+                                    <span className="cm-kpi-label">Aktif:</span>
+                                    <span className="cm-kpi-value">{categoryStats.active}</span>
+                                </div>
+                                <div className="cm-kpi-chip" title="Total Kursus Terkait Kategori">
+                                    <i className="fas fa-book text-warning"></i>
+                                    <span className="cm-kpi-label">Kursus:</span>
+                                    <span className="cm-kpi-value">{categoryStats.totalCourses}</span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="cm-kpi-chip" title="Total Tag Kursus">
+                                    <i className="fas fa-tags text-primary"></i>
+                                    <span className="cm-kpi-label">Total Tag:</span>
+                                    <span className="cm-kpi-value">{tagStats.total}</span>
+                                </div>
+                                <div className="cm-kpi-chip" title="Tag Aktif">
+                                    <i className="fas fa-check-circle text-success"></i>
+                                    <span className="cm-kpi-label">Aktif:</span>
+                                    <span className="cm-kpi-value">{tagStats.active}</span>
+                                </div>
+                                <div className="cm-kpi-chip" title="Kursus Terkait Tag">
+                                    <i className="fas fa-book text-teal"></i>
+                                    <span className="cm-kpi-label">Kursus:</span>
+                                    <span className="cm-kpi-value">{tagStats.totalCourses}</span>
+                                </div>
+                            </>
                         )}
+                        <button
+                            type="button"
+                            className="cm-btn-mini-refresh"
+                            onClick={() => {
+                                fetchCategories();
+                                fetchTags();
+                            }}
+                            disabled={isLoading}
+                            title="Segarkan data taksonomi"
+                        >
+                            <i className={`fas fa-sync-alt ${isLoading ? 'fa-spin' : ''}`}></i>
+                        </button>
                     </div>
                 </div>
-            ) : (
-                <div className="cm-card">
-                    <div className="cm-categories-table-responsive">
-                        <table className="cm-categories-table">
+            </div>
+
+            {/* 2. Compact Control Toolbar: Subtabs + Search + Filter + Add Button */}
+            <div className="cm-toolbar-card mb-3">
+                <div className="row g-2 align-items-center">
+                    {/* Subtab Segmented Switcher */}
+                    <div className="col-12 col-md-auto">
+                        <div className="cm-segmented-pills">
+                            <button
+                                type="button"
+                                className={`cm-seg-btn ${activeTab === 'categories' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('categories')}
+                            >
+                                <i className="fas fa-layer-group me-1"></i>
+                                Kategori
+                                <span className="cm-pill-count">{categoryStats.total}</span>
+                            </button>
+                            <button
+                                type="button"
+                                className={`cm-seg-btn ${activeTab === 'tags' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('tags')}
+                            >
+                                <i className="fas fa-tags me-1"></i>
+                                Tag Kursus
+                                <span className="cm-pill-count">{tagStats.total}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Search Field */}
+                    <div className="col-12 col-sm-6 col-md">
+                        <div className="cm-search-box">
+                            <i className="fas fa-search cm-search-icon"></i>
+                            <input
+                                type="text"
+                                className="form-control cm-input-compact"
+                                placeholder={activeTab === 'categories' ? "Cari nama kategori atau slug..." : "Cari tag kursus..."}
+                                value={activeTab === 'categories' ? categorySearch : tagSearch}
+                                onChange={(e) => activeTab === 'categories' ? setCategorySearch(e.target.value) : setTagSearch(e.target.value)}
+                            />
+                            {(activeTab === 'categories' ? categorySearch : tagSearch) && (
+                                <button
+                                    type="button"
+                                    className="cm-search-clear"
+                                    onClick={() => activeTab === 'categories' ? setCategorySearch('') : setTagSearch('')}
+                                >
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Status Filter */}
+                    <div className="col-6 col-sm-3 col-md-auto">
+                        <select
+                            className="form-select cm-select-compact"
+                            value={activeTab === 'categories' ? categoryStatusFilter : tagStatusFilter}
+                            onChange={(e) => activeTab === 'categories' ? setCategoryStatusFilter(e.target.value) : setTagStatusFilter(e.target.value)}
+                        >
+                            <option value="all">Semua Status</option>
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Nonaktif</option>
+                        </select>
+                    </div>
+
+                    {/* Primary Action Button */}
+                    <div className="col-6 col-sm-3 col-md-auto ms-auto text-end">
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-teal cm-btn-action-primary w-100"
+                            onClick={activeTab === 'categories' ? handleOpenAddCategory : handleOpenAddTag}
+                        >
+                            <i className="fas fa-plus me-1"></i>
+                            {activeTab === 'categories' ? 'Tambah Kategori' : 'Tambah Tag'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* 3. High-Density Table Area */}
+            {isLoading ? (
+                <div className="cm-loading-box py-5 text-center">
+                    <div className="spinner-border text-teal spinner-border-sm me-2" role="status"></div>
+                    <span className="text-muted small fw-semibold">Memuat data taksonomi materi...</span>
+                </div>
+            ) : activeTab === 'categories' ? (
+                /* Categories Table */
+                filteredCategories.length === 0 ? (
+                    <div className="cm-empty-box py-4 text-center">
+                        <div className="cm-empty-icon mb-2">
+                            <i className="fas fa-folder-open"></i>
+                        </div>
+                        <h5 className="cm-empty-title mb-1">Tidak Ada Kategori</h5>
+                        <p className="cm-empty-text text-muted small mb-0">
+                            {categorySearch ? 'Tidak ada kategori yang cocok dengan pencarian.' : 'Belum ada kategori yang dibuat.'}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="cm-table-responsive">
+                        <table className="table table-hover cm-dense-table mb-0">
                             <thead>
                                 <tr>
-                                    <th>Nama Kategori</th>
-                                    <th>Status</th>
-                                    <th>Kursus</th>
-                                    <th>Aksi</th>
+                                    <th style={{ width: '40px' }}>#</th>
+                                    <th>Kategori & Slug</th>
+                                    <th>Kursus Terkait</th>
+                                    <th>Status Publik</th>
+                                    <th style={{ width: '130px' }} className="text-end">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredCategories.map(category => (
-                                    <tr key={category.id}>
+                                {filteredCategories.map((cat, idx) => (
+                                    <tr key={cat.id}>
+                                        <td className="text-muted small">{idx + 1}</td>
                                         <td>
-                                            <div className="cm-category-row">
-                                                {category.image && (
-                                                    <img 
-                                                        src={category.image} 
-                                                        alt={category.title}
-                                                        className="cm-category-image"
-                                                        onError={(e) => {
-                                                            e.target.style.display = "none";
-                                                        }}
-                                                    />
-                                                )}
-                                                <div>
-                                                    <h6 className="mb-1">{category.title}</h6>
-                                                    {category.slug && <small className="text-muted">Slug: {category.slug}</small>}
+                                            <div className="d-flex align-items-center gap-2.5">
+                                                <div className="cm-cat-icon-avatar">
+                                                    {cat.image ? (
+                                                        <img
+                                                            src={cat.image}
+                                                            alt={cat.title}
+                                                            className="cm-cat-thumb"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.style.display = 'none';
+                                                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                                                            }}
+                                                        />
+                                                    ) : null}
+                                                    <div
+                                                        className="cm-cat-fallback"
+                                                        style={{ display: cat.image ? 'none' : 'flex' }}
+                                                    >
+                                                        <i className="fas fa-folder"></i>
+                                                    </div>
+                                                </div>
+                                                <div className="cm-cat-text">
+                                                    <strong className="text-dark d-block small mb-0.5">{cat.title}</strong>
+                                                    <span className="cm-slug-badge font-monospace tiny">/{cat.slug || cat.title.toLowerCase().replace(/\s+/g, '-')}</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            {category.active ? (
-                                                <span className="badge bg-success">
-                                                    <i className="fas fa-check-circle me-1"></i>Aktif
-                                                </span>
-                                            ) : (
-                                                <span className="badge bg-secondary">
-                                                    <i className="fas fa-times-circle me-1"></i>Tidak Aktif
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td>
-                                            <span className="badge bg-info">
-                                                <i className="fas fa-book me-1"></i>
-                                                {category.course_count}
+                                            <span className="cm-course-count-badge">
+                                                <i className="fas fa-book-open me-1 text-teal"></i>
+                                                <strong>{cat.course_count || 0}</strong> Kursus
                                             </span>
                                         </td>
                                         <td>
-                                            <div className="cm-action-buttons">
+                                            <button
+                                                type="button"
+                                                className={`cm-toggle-badge ${cat.active ? 'badge-active' : 'badge-inactive'}`}
+                                                onClick={() => handleToggleCategoryActive(cat)}
+                                                title="Klik untuk beralih status aktif/nonaktif"
+                                            >
+                                                <i className={`fas fa-${cat.active ? 'check' : 'ban'} me-1`}></i>
+                                                {cat.active ? 'Aktif' : 'Nonaktif'}
+                                            </button>
+                                        </td>
+                                        <td className="text-end">
+                                            <div className="btn-group btn-group-sm">
                                                 <button
-                                                    className="btn btn-sm btn-primary"
-                                                    onClick={() => handleEditCategory(category)}
-                                                    title="Edit kategori"
+                                                    type="button"
+                                                    className="btn btn-outline-secondary btn-xs"
+                                                    onClick={() => handleOpenEditCategory(cat)}
+                                                    title="Ubah Kategori"
                                                 >
-                                                    <i className="fas fa-edit"></i>
+                                                    <i className="fas fa-pencil-alt"></i>
                                                 </button>
                                                 <button
-                                                    className="btn btn-sm btn-danger"
-                                                    onClick={() => handleDeleteCategoryClick(category)}
-                                                    disabled={category.course_count > 0}
-                                                    title={category.course_count > 0 ? "Tidak dapat menghapus kategori yang memiliki kursus" : "Hapus kategori"}
+                                                    type="button"
+                                                    className="btn btn-outline-danger btn-xs"
+                                                    onClick={() => setDeleteModal({ show: true, type: 'category', item: cat, isDeleting: false })}
+                                                    title="Hapus Kategori"
                                                 >
-                                                    <i className="fas fa-trash"></i>
+                                                    <i className="fas fa-trash-alt"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -623,465 +562,341 @@ function MaterialsTab() {
                             </tbody>
                         </table>
                     </div>
-                </div>
-            )}
-            </>
-            )}
-
-            {/* TAGS SECTION */}
-            {activeTab === 'tags' && (
-            <>
-            <div className="row mb-4">
-                <div className="col-lg-3 col-md-6 mb-3">
-                    <div className="cm-stat-card stat-primary">
-                        <div className="cm-stat-card-body">
-                            <div className="cm-stat-icon">
-                                <i className="fas fa-tags"></i>
-                            </div>
-                            <div className="cm-stat-info">
-                                <h4 className="cm-stat-number">{tagStats.total}</h4>
-                                <p className="cm-stat-label">Total Tag</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="col-lg-3 col-md-6 mb-3">
-                    <div className="cm-stat-card stat-success">
-                        <div className="cm-stat-card-body">
-                            <div className="cm-stat-icon">
-                                <i className="fas fa-check-circle"></i>
-                            </div>
-                            <div className="cm-stat-info">
-                                <h4 className="cm-stat-number">{tagStats.active}</h4>
-                                <p className="cm-stat-label">Aktif</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="col-lg-3 col-md-6 mb-3">
-                    <div className="cm-stat-card stat-warning">
-                        <div className="cm-stat-card-body">
-                            <div className="cm-stat-icon">
-                                <i className="fas fa-book"></i>
-                            </div>
-                            <div className="cm-stat-info">
-                                <h4 className="cm-stat-number">{tagStats.withCourses}</h4>
-                                <p className="cm-stat-label">Dengan Kursus</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="col-lg-3 col-md-6 mb-3">
-                    <div className="cm-stat-card stat-info">
-                        <div className="cm-stat-card-body">
-                            <div className="cm-stat-icon">
-                                <i className="fas fa-graduation-cap"></i>
-                            </div>
-                            <div className="cm-stat-info">
-                                <h4 className="cm-stat-number">{tagStats.totalCourses}</h4>
-                                <p className="cm-stat-label">Total Kursus</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Search and Filter for Tags */}
-            <div className="row mb-4">
-                <div className="col-md-6">
-                    <div className="input-group cm-search-input">
-                        <span className="input-group-text bg-white border-end-0">
-                            <i className="fas fa-search"></i>
-                        </span>
-                        <input
-                            type="text"
-                            className="form-control border-start-0"
-                            placeholder="Cari tag..."
-                            value={tagSearchTerm}
-                            onChange={(e) => setTagSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
-                <div className="col-md-6 text-end">
-                    <span className="text-muted">
-                        Menampilkan <strong>{filteredTags.length}</strong> dari <strong>{tags.length}</strong> tag
-                    </span>
-                </div>
-            </div>
-
-            {/* Tags List */}
-            {tagsLoading ? (
-                <div className="cm-card">
-                    <div className="text-center py-5">
-                        <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">Memuat...</span>
-                        </div>
-                        <p className="mt-3 text-muted">Memuat tag...</p>
-                    </div>
-                </div>
-            ) : filteredTags.length === 0 ? (
-                <div className="cm-card">
-                    <div className="cm-empty-state">
-                        <div className="cm-empty-state-icon">
-                            <i className="fas fa-inbox"></i>
-                        </div>
-                        <h4>Tag Tidak Ditemukan</h4>
-                        <p className="text-muted">
-                            {tagSearchTerm ? "Pencarian Anda tidak cocok dengan tag apapun" : "Buat tag pertama Anda untuk memulai"}
-                        </p>
-                        {!tagSearchTerm && (
-                            <button 
-                                className="btn btn-primary mt-3"
-                                onClick={handleAddTag}
-                            >
-                                <i className="fas fa-plus me-2"></i>Buat Tag
-                            </button>
-                        )}
-                    </div>
-                </div>
+                )
             ) : (
-                <div className="cm-card">
-                    <div className="cm-tags-table-responsive">
-                        <table className="cm-tags-table">
+                /* Tags Table */
+                filteredTags.length === 0 ? (
+                    <div className="cm-empty-box py-4 text-center">
+                        <div className="cm-empty-icon mb-2">
+                            <i className="fas fa-tags"></i>
+                        </div>
+                        <h5 className="cm-empty-title mb-1">Tidak Ada Tag</h5>
+                        <p className="cm-empty-text text-muted small mb-0">
+                            {tagSearch ? 'Tidak ada tag yang cocok dengan pencarian.' : 'Belum ada tag yang dibuat.'}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="cm-table-responsive">
+                        <table className="table table-hover cm-dense-table mb-0">
                             <thead>
                                 <tr>
-                                    <th>Nama Tag</th>
+                                    <th style={{ width: '40px' }}>#</th>
+                                    <th>Tag & Slug</th>
+                                    <th>Kursus Terkait</th>
                                     <th>Status</th>
-                                    <th>Kursus</th>
-                                    <th>Aksi</th>
+                                    <th style={{ width: '130px' }} className="text-end">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredTags.map(tag => (
-                                    <tr key={tag.id}>
-                                        <td>
-                                            <div className="cm-tag-row">
-                                                <h6 className="mb-1">{tag.title}</h6>
-                                                {tag.slug && <small className="text-muted">Slug: {tag.slug}</small>}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {tag.active ? (
-                                                <span className="badge bg-success">
-                                                    <i className="fas fa-check-circle me-1"></i>Aktif
+                                {filteredTags.map((tag, idx) => {
+                                    const isActive = tag.active !== undefined ? tag.active : true;
+                                    return (
+                                        <tr key={tag.id}>
+                                            <td className="text-muted small">{idx + 1}</td>
+                                            <td>
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <span className="cm-tag-icon-circle">
+                                                        <i className="fas fa-tag"></i>
+                                                    </span>
+                                                    <div>
+                                                        <strong className="text-dark d-block small mb-0.5">{tag.title}</strong>
+                                                        <span className="cm-slug-badge font-monospace tiny">#{tag.slug || tag.title.toLowerCase()}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span className="cm-course-count-badge">
+                                                    <i className="fas fa-book-open me-1 text-teal"></i>
+                                                    <strong>{tag.course_count || 0}</strong> Kursus
                                                 </span>
-                                            ) : (
-                                                <span className="badge bg-secondary">
-                                                    <i className="fas fa-times-circle me-1"></i>Tidak Aktif
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td>
-                                            <span className="badge bg-info">
-                                                <i className="fas fa-book me-1"></i>
-                                                {tag.course_count}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="cm-action-buttons">
+                                            </td>
+                                            <td>
                                                 <button
-                                                    className="btn btn-sm btn-primary"
-                                                    onClick={() => handleEditTag(tag)}
-                                                    title="Edit tag"
+                                                    type="button"
+                                                    className={`cm-toggle-badge ${isActive ? 'badge-active' : 'badge-inactive'}`}
+                                                    onClick={() => handleToggleTagActive(tag)}
+                                                    title="Klik untuk beralih status"
                                                 >
-                                                    <i className="fas fa-edit"></i>
+                                                    <i className={`fas fa-${isActive ? 'check' : 'ban'} me-1`}></i>
+                                                    {isActive ? 'Aktif' : 'Nonaktif'}
                                                 </button>
-                                                <button
-                                                    className="btn btn-sm btn-danger"
-                                                    onClick={() => handleDeleteTagClick(tag)}
-                                                    disabled={tag.course_count > 0}
-                                                    title={tag.course_count > 0 ? "Tidak dapat menghapus tag yang memiliki kursus" : "Hapus tag"}
-                                                >
-                                                    <i className="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                            </td>
+                                            <td className="text-end">
+                                                <div className="btn-group btn-group-sm">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-secondary btn-xs"
+                                                        onClick={() => handleOpenEditTag(tag)}
+                                                        title="Ubah Tag"
+                                                    >
+                                                        <i className="fas fa-pencil-alt"></i>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-danger btn-xs"
+                                                        onClick={() => setDeleteModal({ show: true, type: 'tag', item: tag, isDeleting: false })}
+                                                        title="Hapus Tag"
+                                                    >
+                                                        <i className="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
-                </div>
-            )}
-            </>
+                )
             )}
 
-            {/* Add/Edit Category Modal */}
-            {showModal && (
-                <div className="cm-modal-overlay cm-modal-show" onClick={() => setShowModal(false)}>
-                    <div className="cm-modal cm-modal-lg" onClick={(e) => e.stopPropagation()}>
-                        <div className="cm-modal-header">
-                            <h5 className="modal-title">
-                                <i className={`fas fa-${modalMode === "add" ? "plus-circle" : "edit"} me-2`}></i>
-                                {modalMode === "add" ? "Tambah Kategori Baru" : "Edit Kategori"}
-                            </h5>
+            {/* 4. Sleek Category Add/Edit Modal */}
+            {showCategoryModal && (
+                <div className="cm-modal-backdrop" onClick={() => setShowCategoryModal(false)}>
+                    <div className="cm-modal-dialog-compact" onClick={(e) => e.stopPropagation()}>
+                        <div className="cm-modal-header-compact">
+                            <div className="d-flex align-items-center gap-2">
+                                <i className={`fas fa-${categoryModalMode === 'add' ? 'folder-plus' : 'edit'} text-teal`}></i>
+                                <h5 className="mb-0 fw-bold">
+                                    {categoryModalMode === 'add' ? 'Tambah Kategori Kursus' : 'Ubah Kategori Kursus'}
+                                </h5>
+                            </div>
                             <button
                                 type="button"
-                                className="btn-close"
-                                onClick={() => setShowModal(false)}
-                            ></button>
+                                className="cm-modal-close-btn"
+                                onClick={() => setShowCategoryModal(false)}
+                            >
+                                <i className="fas fa-times"></i>
+                            </button>
                         </div>
-                        <div className="cm-modal-body">
-                            {formErrors.submit && (
-                                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <i className="fas fa-exclamation-circle me-2"></i>
-                                    {formErrors.submit}
-                                    <button type="button" className="btn-close" onClick={() => setFormErrors({...formErrors, submit: ""})}></button>
+                        <div className="cm-modal-body-compact">
+                            {categoryFormErrors.submit && (
+                                <div className="alert alert-danger py-1.5 px-2.5 small mb-2.5">
+                                    <i className="fas fa-exclamation-circle me-1"></i>
+                                    {categoryFormErrors.submit}
                                 </div>
                             )}
-                            
-                            <div className="mb-4">
-                                <label htmlFor="categoryTitle" className="form-label">
+
+                            <div className="mb-2.5">
+                                <label className="form-label small fw-semibold text-dark mb-1">
                                     Nama Kategori <span className="text-danger">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    id="categoryTitle"
-                                    className={`form-control ${formErrors.title ? "is-invalid" : ""}`}
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleFormChange}
-                                    placeholder="Misalnya, Pemrograman, Desain, Bisnis"
+                                    className={`form-control cm-input-compact ${categoryFormErrors.title ? 'is-invalid' : ''}`}
+                                    placeholder="Contoh: Hukum & Regulasi Parlemen"
+                                    value={categoryForm.title}
+                                    onChange={(e) => {
+                                        setCategoryForm(prev => ({ ...prev, title: e.target.value }));
+                                        if (categoryFormErrors.title) setCategoryFormErrors({});
+                                    }}
                                 />
-                                {formErrors.title && (
-                                    <div className="invalid-feedback d-block">
-                                        <i className="fas fa-times-circle me-1"></i>{formErrors.title}
-                                    </div>
+                                {categoryFormErrors.title && (
+                                    <div className="invalid-feedback small">{categoryFormErrors.title}</div>
                                 )}
                             </div>
 
-                            <div className="mb-4">
-                                <label htmlFor="categoryImage" className="form-label">
-                                    URL Gambar
+                            <div className="mb-2.5">
+                                <label className="form-label small fw-semibold text-dark mb-1">
+                                    URL Ikon / Gambar Thumbnail
                                 </label>
                                 <input
-                                    type="url"
-                                    id="categoryImage"
-                                    className="form-control"
-                                    name="image"
-                                    value={formData.image}
-                                    onChange={handleFormChange}
-                                    placeholder="https://contoh.com/gambar.jpg"
+                                    type="text"
+                                    className="form-control cm-input-compact"
+                                    placeholder="https://... atau /media/..."
+                                    value={categoryForm.image}
+                                    onChange={(e) => setCategoryForm(prev => ({ ...prev, image: e.target.value }))}
                                 />
-                                <small className="text-muted d-block mt-2">
-                                    <i className="fas fa-info-circle me-1"></i>
-                                    Masukkan URL lengkap ke file gambar (JPG, PNG, GIF)
-                                </small>
-                                {formData.image && (
-                                    <div className="mt-3">
-                                        <img
-                                            src={formData.image}
-                                            alt="Preview"
-                                            className="img-thumbnail"
-                                            style={{ maxHeight: "150px", maxWidth: "100%" }}
-                                            onError={() => null}
-                                        />
-                                    </div>
-                                )}
+                                <span className="tiny text-muted d-block mt-0.5">Opsional: Gambar preview kategori untuk katalog pembelajaran</span>
                             </div>
 
-                            <div className="form-check modern-form-check">
+                            <div className="form-check form-switch mt-2">
                                 <input
                                     type="checkbox"
-                                    id="categoryActive"
                                     className="form-check-input"
-                                    name="active"
-                                    checked={formData.active}
-                                    onChange={handleFormChange}
+                                    id="catActiveSwitch"
+                                    checked={categoryForm.active}
+                                    onChange={(e) => setCategoryForm(prev => ({ ...prev, active: e.target.checked }))}
                                 />
-                                <label className="form-check-label" htmlFor="categoryActive">
-                                    Buat kategori ini terlihat di platform
+                                <label className="form-check-label small fw-semibold text-dark" htmlFor="catActiveSwitch">
+                                    Kategori Aktif & Ditampilkan di Katalog
                                 </label>
                             </div>
                         </div>
-                        <div className="cm-modal-footer">
+                        <div className="cm-modal-footer-compact">
                             <button
                                 type="button"
-                                className="btn btn-outline-secondary"
-                                onClick={() => setShowModal(false)}
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => setShowCategoryModal(false)}
                             >
-                                <i className="fas fa-times me-2"></i>Batal
+                                Batal
                             </button>
                             <button
                                 type="button"
-                                className="btn btn-primary"
+                                className="btn btn-sm btn-teal"
                                 onClick={handleSaveCategory}
+                                disabled={submitting}
                             >
-                                <i className={`fas fa-${modalMode === "add" ? "check" : "save"} me-2`}></i>
-                                {modalMode === "add" ? "Buat Kategori" : "Simpan Perubahan"}
+                                {submitting ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm me-1"></span>
+                                        Menyimpan...
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="fas fa-save me-1"></i>
+                                        {categoryModalMode === 'add' ? 'Buat Kategori' : 'Simpan Perubahan'}
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Add/Edit Tag Modal */}
-            {showTagsModal && (
-                <div className="cm-modal-overlay cm-modal-show" onClick={() => setShowTagsModal(false)}>
-                    <div className="cm-modal cm-modal-lg" onClick={(e) => e.stopPropagation()}>
-                        <div className="cm-modal-header">
-                            <h5 className="modal-title">
-                                <i className={`fas fa-${tagModalMode === "add" ? "plus-circle" : "edit"} me-2`}></i>
-                                {tagModalMode === "add" ? "Tambah Tag Baru" : "Edit Tag"}
-                            </h5>
+            {/* 5. Sleek Tag Add/Edit Modal */}
+            {showTagModal && (
+                <div className="cm-modal-backdrop" onClick={() => setShowTagModal(false)}>
+                    <div className="cm-modal-dialog-compact" onClick={(e) => e.stopPropagation()}>
+                        <div className="cm-modal-header-compact">
+                            <div className="d-flex align-items-center gap-2">
+                                <i className={`fas fa-${tagModalMode === 'add' ? 'tag' : 'edit'} text-teal`}></i>
+                                <h5 className="mb-0 fw-bold">
+                                    {tagModalMode === 'add' ? 'Tambah Tag Kursus' : 'Ubah Tag Kursus'}
+                                </h5>
+                            </div>
                             <button
                                 type="button"
-                                className="btn-close"
-                                onClick={() => setShowTagsModal(false)}
-                            ></button>
+                                className="cm-modal-close-btn"
+                                onClick={() => setShowTagModal(false)}
+                            >
+                                <i className="fas fa-times"></i>
+                            </button>
                         </div>
-                        <div className="cm-modal-body">
+                        <div className="cm-modal-body-compact">
                             {tagFormErrors.submit && (
-                                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <i className="fas fa-exclamation-circle me-2"></i>
+                                <div className="alert alert-danger py-1.5 px-2.5 small mb-2.5">
+                                    <i className="fas fa-exclamation-circle me-1"></i>
                                     {tagFormErrors.submit}
-                                    <button type="button" className="btn-close" onClick={() => setTagFormErrors({...tagFormErrors, submit: ""})}></button>
                                 </div>
                             )}
-                            
-                            <div className="mb-4">
-                                <label htmlFor="tagTitle" className="form-label">
+
+                            <div className="mb-2.5">
+                                <label className="form-label small fw-semibold text-dark mb-1">
                                     Nama Tag <span className="text-danger">*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    id="tagTitle"
-                                    className={`form-control ${tagFormErrors.title ? "is-invalid" : ""}`}
-                                    name="title"
-                                    value={tagFormData.title}
-                                    onChange={handleTagFormChange}
-                                    placeholder="Misalnya, Python, Web Development, Mobile App"
+                                    className={`form-control cm-input-compact ${tagFormErrors.title ? 'is-invalid' : ''}`}
+                                    placeholder="Contoh: Kesekretariatan"
+                                    value={tagForm.title}
+                                    onChange={(e) => {
+                                        setTagForm(prev => ({ ...prev, title: e.target.value }));
+                                        if (tagFormErrors.title) setTagFormErrors({});
+                                    }}
                                 />
                                 {tagFormErrors.title && (
-                                    <div className="invalid-feedback d-block">
-                                        <i className="fas fa-times-circle me-1"></i>{tagFormErrors.title}
-                                    </div>
+                                    <div className="invalid-feedback small">{tagFormErrors.title}</div>
                                 )}
                             </div>
 
-                            <div className="mb-4">
-                                <div className="form-check">
-                                    <input
-                                        type="checkbox"
-                                        id="tagActive"
-                                        className="form-check-input"
-                                        name="active"
-                                        checked={tagFormData.active}
-                                        onChange={handleTagFormChange}
-                                    />
-                                    <label className="form-check-label" htmlFor="tagActive">
-                                        Buat tag ini terlihat di platform
-                                    </label>
-                                </div>
+                            <div className="form-check form-switch mt-2">
+                                <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    id="tagActiveSwitch"
+                                    checked={tagForm.active}
+                                    onChange={(e) => setTagForm(prev => ({ ...prev, active: e.target.checked }))}
+                                />
+                                <label className="form-check-label small fw-semibold text-dark" htmlFor="tagActiveSwitch">
+                                    Tag Aktif
+                                </label>
                             </div>
                         </div>
-                        <div className="cm-modal-footer">
+                        <div className="cm-modal-footer-compact">
                             <button
                                 type="button"
-                                className="btn btn-outline-secondary"
-                                onClick={() => setShowTagsModal(false)}
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => setShowTagModal(false)}
                             >
-                                <i className="fas fa-times me-2"></i>Batal
+                                Batal
                             </button>
                             <button
                                 type="button"
-                                className="btn btn-primary"
+                                className="btn btn-sm btn-teal"
                                 onClick={handleSaveTag}
+                                disabled={submitting}
                             >
-                                <i className={`fas fa-${tagModalMode === "add" ? "check" : "save"} me-2`}></i>
-                                {tagModalMode === "add" ? "Buat Tag" : "Simpan Perubahan"}
+                                {submitting ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm me-1"></span>
+                                        Menyimpan...
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="fas fa-save me-1"></i>
+                                        {tagModalMode === 'add' ? 'Buat Tag' : 'Simpan Perubahan'}
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
-            {showDeleteConfirm && deleteTarget && (
-                <div className="cm-modal-overlay cm-modal-show" onClick={() => !isDeleting && setShowDeleteConfirm(false)}>
-                    <div className="cm-modal" style={{ maxWidth: '450px' }} onClick={(e) => e.stopPropagation()}>
-                        <div className="cm-modal-header" style={{ borderBottom: '2px solid #fee2e2', background: '#fef2f2' }}>
-                            <h5 className="modal-title" style={{ color: '#dc2626' }}>
-                                <i className="fas fa-trash-alt me-2"></i>
-                                Konfirmasi Penghapusan
-                            </h5>
+            {/* 6. Sleek Delete Confirmation Modal */}
+            {deleteModal.show && deleteModal.item && (
+                <div className="cm-modal-backdrop" onClick={() => setDeleteModal(prev => ({ ...prev, show: false }))}>
+                    <div className="cm-modal-dialog-compact" onClick={(e) => e.stopPropagation()}>
+                        <div className="cm-modal-header-compact">
+                            <div className="d-flex align-items-center gap-2">
+                                <i className="fas fa-exclamation-triangle text-danger"></i>
+                                <h5 className="mb-0 fw-bold">
+                                    Konfirmasi Hapus {deleteModal.type === 'category' ? 'Kategori' : 'Tag'}
+                                </h5>
+                            </div>
                             <button
                                 type="button"
-                                className="btn-close"
-                                onClick={() => !isDeleting && setShowDeleteConfirm(false)}
-                                disabled={isDeleting}
-                            ></button>
-                        </div>
-                        <div className="cm-modal-body" style={{ paddingTop: '25px', paddingBottom: '20px' }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '20px' }}>
-                                <div style={{
-                                    width: '50px',
-                                    height: '50px',
-                                    borderRadius: '50%',
-                                    background: '#fee2e2',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    flexShrink: 0
-                                }}>
-                                    <i className="fas fa-exclamation-triangle" style={{ fontSize: '24px', color: '#dc2626' }}></i>
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <p style={{ margin: 0, marginBottom: '8px', fontWeight: 600, color: '#1a1a1a', fontSize: '1rem' }}>
-                                        Anda akan menghapus {deleteTargetType === 'category' ? 'kategori' : 'tag'} ini secara permanen
-                                    </p>
-                                    <p style={{ margin: 0, color: '#666', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                        <strong style={{ color: '#1a1a1a' }}>"{deleteTarget.title}"</strong>
-                                    </p>
-                                </div>
-                            </div>
-                            <div style={{
-                                padding: '12px 15px',
-                                background: '#fef2f2',
-                                borderLeft: '3px solid #dc2626',
-                                borderRadius: '4px',
-                                marginBottom: '10px'
-                            }}>
-                                <p style={{ margin: 0, color: '#991b1b', fontSize: '0.85rem', fontWeight: 500 }}>
-                                    <i className="fas fa-info-circle me-2"></i>
-                                    Tindakan ini tidak dapat dibatalkan. Pastikan Anda benar-benar ingin menghapus {deleteTargetType === 'category' ? 'kategori' : 'tag'} ini.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="cm-modal-footer">
-                            <button
-                                type="button"
-                                className="btn btn-outline-secondary"
-                                onClick={() => setShowDeleteConfirm(false)}
-                                disabled={isDeleting}
+                                className="cm-modal-close-btn"
+                                onClick={() => setDeleteModal(prev => ({ ...prev, show: false }))}
                             >
-                                <i className="fas fa-times me-2"></i>Batal
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div className="cm-modal-body-compact">
+                            <p className="small text-dark mb-2">
+                                Apakah Anda yakin ingin menghapus {deleteModal.type === 'category' ? 'kategori' : 'tag'} <strong>"{deleteModal.item.title}"</strong>?
+                            </p>
+                            {(deleteModal.item.course_count || 0) > 0 && (
+                                <div className="alert alert-warning py-2 px-2.5 small mb-0">
+                                    <i className="fas fa-exclamation-triangle me-1"></i>
+                                    Perhatian: Ada <strong>{deleteModal.item.course_count} kursus</strong> yang terkait dengan {deleteModal.type === 'category' ? 'kategori' : 'tag'} ini.
+                                </div>
+                            )}
+                        </div>
+                        <div className="cm-modal-footer-compact">
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => setDeleteModal(prev => ({ ...prev, show: false }))}
+                            >
+                                Batal
                             </button>
                             <button
                                 type="button"
-                                className="btn btn-danger"
-                                onClick={() => {
-                                    if (deleteTargetType === 'category') {
-                                        handleDeleteCategory(deleteTarget);
-                                    } else {
-                                        handleDeleteTag(deleteTarget);
-                                    }
-                                }}
-                                disabled={isDeleting}
-                                style={{ position: 'relative' }}
+                                className="btn btn-sm btn-danger"
+                                onClick={handleConfirmDelete}
+                                disabled={deleteModal.isDeleting}
                             >
-                                {isDeleting ? (
+                                {deleteModal.isDeleting ? (
                                     <>
-                                        <i className="fas fa-spinner fa-spin me-2"></i>
+                                        <span className="spinner-border spinner-border-sm me-1"></span>
                                         Menghapus...
                                     </>
                                 ) : (
                                     <>
-                                        <i className="fas fa-trash-alt me-2"></i>
-                                        Ya, Hapus {deleteTargetType === 'category' ? 'Kategori' : 'Tag'}
+                                        <i className="fas fa-trash-alt me-1"></i>
+                                        Ya, Hapus
                                     </>
                                 )}
                             </button>

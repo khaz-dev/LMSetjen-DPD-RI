@@ -118,7 +118,7 @@ function ContentManagementAdmin() {
             badge: liveMetrics.testimonialsPending,
             badgeType: liveMetrics.testimonialsPending > 0 ? "has-pending" : "normal",
             description: "Kelola, moderasi, dan setujui ulasan testimoni peserta pembelajaran",
-            component: <TestimonialTab />
+            component: <TestimonialTab onCountsUpdated={fetchLiveMetrics} />
         },
         {
             id: "materials",
@@ -127,7 +127,7 @@ function ContentManagementAdmin() {
             badge: liveMetrics.categoriesCount,
             badgeType: "normal",
             description: "Kelola taksonomi kategori materi, tag, dan struktur kurikulum kursus",
-            component: <MaterialsTab />
+            component: <MaterialsTab onCountsUpdated={fetchLiveMetrics} />
         },
         {
             id: "requests",
@@ -136,7 +136,7 @@ function ContentManagementAdmin() {
             badge: liveMetrics.requestsPending,
             badgeType: liveMetrics.requestsPending > 0 ? "has-pending" : "normal",
             description: "Tinjau dan setujui permohonan pegawai untuk menjadi instruktur resmi",
-            component: <InstructorRequestsTab />
+            component: <InstructorRequestsTab onCountsUpdated={fetchLiveMetrics} />
         },
         {
             id: "certificate",

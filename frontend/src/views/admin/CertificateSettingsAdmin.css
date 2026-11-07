@@ -339,3 +339,83 @@
     margin-top: 1.5rem;
 }
 
+/* ========================================
+   Certificate Switches (Visibilitas Elemen Resmi)
+   Fix for accessibility-fixes.css margin & padding overlap
+   ======================================== */
+.cert-switch-item,
+.certificate-design-tab-wrapper .form-switch,
+.certificate-settings-container .form-switch {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-height: 44px !important;
+    height: auto !important;
+    padding: 8px 12px !important;
+    padding-left: 12px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.cert-switch-item:hover,
+.certificate-design-tab-wrapper .form-switch:hover,
+.certificate-settings-container .form-switch:hover {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+}
+
+.cert-switch-item .form-check-input,
+.certificate-design-tab-wrapper .form-switch .form-check-input,
+.certificate-settings-container .form-switch .form-check-input {
+    float: none !important;
+    order: 2 !important;
+    margin: 0 !important;
+    margin-left: 10px !important;
+    width: 2.5rem !important;
+    min-width: 2.5rem !important;
+    max-width: 2.5rem !important;
+    height: 1.35rem !important;
+    min-height: 1.35rem !important;
+    max-height: 1.35rem !important;
+    background-color: #cbd5e1 !important;
+    border: 1px solid #94a3b8 !important;
+    border-radius: 2rem !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+    background-position: left center !important;
+    background-repeat: no-repeat !important;
+    transition: background-position 0.15s ease-in-out, background-color 0.15s ease-in-out !important;
+}
+
+.cert-switch-item .form-check-input:checked,
+.certificate-design-tab-wrapper .form-switch .form-check-input:checked,
+.certificate-settings-container .form-switch .form-check-input:checked {
+    background-color: #0f766e !important;
+    border-color: #0f766e !important;
+    background-position: right center !important;
+}
+
+.cert-switch-item .form-check-label,
+.certificate-design-tab-wrapper .form-switch .form-check-label,
+.certificate-settings-container .form-switch .form-check-label {
+    order: 1 !important;
+    flex: 1 !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    line-height: 1.3 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+

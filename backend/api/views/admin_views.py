@@ -1725,9 +1725,22 @@ class AdminPendingTestimonialsListAPIView(generics.ListAPIView):
                 'date': review.date.isoformat()
             })
         
+        all_testimonials = api_models.Review.objects.filter(course__isnull=True)
+        pending_count = all_testimonials.filter(Q(active=False) & (Q(reply__isnull=True) | Q(reply=''))).count()
+        approved_count = all_testimonials.filter(active=True).count()
+        rejected_count = all_testimonials.filter(Q(active=False) & ~Q(reply='') & Q(reply__isnull=False)).count()
+        avg_rating = all_testimonials.aggregate(Avg('rating'))['rating__avg'] or 0.0
+
         return Response({
             'count': len(testimonials_data),
             'results': testimonials_data,
+            'stats': {
+                'pending': pending_count,
+                'approved': approved_count,
+                'rejected': rejected_count,
+                'total': all_testimonials.count(),
+                'avg_rating': round(float(avg_rating), 1)
+            },
             'timestamp': timezone.now().isoformat()
         }, status=status.HTTP_200_OK)
 
@@ -1887,9 +1900,22 @@ class AdminApprovedTestimonialsListAPIView(generics.ListAPIView):
                 'date': review.date.isoformat()
             })
         
+        all_testimonials = api_models.Review.objects.filter(course__isnull=True)
+        pending_count = all_testimonials.filter(Q(active=False) & (Q(reply__isnull=True) | Q(reply=''))).count()
+        approved_count = all_testimonials.filter(active=True).count()
+        rejected_count = all_testimonials.filter(Q(active=False) & ~Q(reply='') & Q(reply__isnull=False)).count()
+        avg_rating = all_testimonials.aggregate(Avg('rating'))['rating__avg'] or 0.0
+
         return Response({
             'count': len(testimonials_data),
             'results': testimonials_data,
+            'stats': {
+                'pending': pending_count,
+                'approved': approved_count,
+                'rejected': rejected_count,
+                'total': all_testimonials.count(),
+                'avg_rating': round(float(avg_rating), 1)
+            },
             'timestamp': timezone.now().isoformat()
         }, status=status.HTTP_200_OK)
 
@@ -1918,17 +1944,40 @@ class AdminInstructorRequestListAPIView(generics.ListAPIView):
     pagination_class = PageNumberPagination
     
     def get_queryset(self):
-        queryset = api_models.InstructorRequest.objects.all()
+        queryset = api_models.InstructorRequest.objects.all().select_related('user')
         
         # Filter by status
-        status = self.request.query_params.get('status')
-        if status and status in ['PENDING', 'APPROVED', 'REJECTED']:
-            queryset = queryset.filter(status=status)
+        status_param = self.request.query_params.get('status', 'PENDING')
+        if status_param and status_param.upper() in ['PENDING', 'APPROVED', 'REJECTED']:
+            queryset = queryset.filter(status=status_param.upper())
+        elif status_param and status_param.upper() == 'ALL':
+            pass
         else:
-            # Default to pending
             queryset = queryset.filter(status='PENDING')
+
+        # Filter by search term
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            queryset = queryset.filter(
+                Q(user__full_name__icontains=search) |
+                Q(user__email__icontains=search) |
+                Q(expertise_areas__icontains=search)
+            )
         
         return queryset.order_by('-request_date')
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        all_reqs = api_models.InstructorRequest.objects.all()
+        stats = {
+            'pending': all_reqs.filter(status='PENDING').count(),
+            'approved': all_reqs.filter(status='APPROVED').count(),
+            'rejected': all_reqs.filter(status='REJECTED').count(),
+            'total': all_reqs.count(),
+        }
+        if isinstance(response.data, dict):
+            response.data['stats'] = stats
+        return response
 
 
 

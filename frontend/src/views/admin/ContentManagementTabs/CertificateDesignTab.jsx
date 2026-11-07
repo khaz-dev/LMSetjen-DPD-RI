@@ -714,10 +714,13 @@ function CertificateDesignTab() {
                                     </div>
                                 </div>
 
-                                <div className="cert-form-label mb-2">Visibilitas Elemen Resmi:</div>
+                                <div className="cert-form-label mb-2">
+                                    <i className="fas fa-eye text-teal me-1"></i>
+                                    Visibilitas Elemen Resmi:
+                                </div>
                                 <div className="row g-2">
                                     <div className="col-sm-6">
-                                        <div className="form-check form-switch">
+                                        <div className="form-check form-switch cert-switch-item">
                                             <input 
                                                 className="form-check-input" 
                                                 type="checkbox" 
@@ -727,12 +730,13 @@ function CertificateDesignTab() {
                                                 onChange={handleInputChange}
                                             />
                                             <label className="form-check-label" htmlFor="tabToggleGoldSeal">
+                                                <i className="fas fa-certificate text-warning me-1"></i>
                                                 Segel Emas Resmi (Gold Medallion)
                                             </label>
                                         </div>
                                     </div>
                                     <div className="col-sm-6">
-                                        <div className="form-check form-switch">
+                                        <div className="form-check form-switch cert-switch-item">
                                             <input 
                                                 className="form-check-input" 
                                                 type="checkbox" 
@@ -742,12 +746,13 @@ function CertificateDesignTab() {
                                                 onChange={handleInputChange}
                                             />
                                             <label className="form-check-label" htmlFor="tabToggleWatermark">
+                                                <i className="fas fa-shield-alt text-teal me-1"></i>
                                                 Watermark Lambang DPD RI
                                             </label>
                                         </div>
                                     </div>
                                     <div className="col-sm-6">
-                                        <div className="form-check form-switch">
+                                        <div className="form-check form-switch cert-switch-item">
                                             <input 
                                                 className="form-check-input" 
                                                 type="checkbox" 
@@ -757,12 +762,13 @@ function CertificateDesignTab() {
                                                 onChange={handleInputChange}
                                             />
                                             <label className="form-check-label" htmlFor="tabToggleBpsdm">
+                                                <i className="fas fa-landmark text-primary me-1"></i>
                                                 Logo Pendamping (LMSetjen DPD RI)
                                             </label>
                                         </div>
                                     </div>
                                     <div className="col-sm-6">
-                                        <div className="form-check form-switch">
+                                        <div className="form-check form-switch cert-switch-item">
                                             <input 
                                                 className="form-check-input" 
                                                 type="checkbox" 
@@ -772,6 +778,7 @@ function CertificateDesignTab() {
                                                 onChange={handleInputChange}
                                             />
                                             <label className="form-check-label" htmlFor="tabToggleQr">
+                                                <i className="fas fa-qrcode text-dark me-1"></i>
                                                 QR Code Validasi Digital
                                             </label>
                                         </div>
