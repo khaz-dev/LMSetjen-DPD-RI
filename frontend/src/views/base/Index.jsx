@@ -986,7 +986,7 @@ function Index() {
                                     Statistik Platform
                                 </div>
 
-                                <h2 className="display-6 fw-bold mb-1 about-section-heading" style={{ fontSize: "clamp(1.5rem, 2.5vw, 2rem)" }}>
+                                <h2 className="display-6 fw-bold mb-1 about-section-heading" style={{ fontSize: "clamp(1rem, 2vw, 2rem)" }}>
                                     Pencapaian LMSetjen <span className="about-title-accent">DPD RI</span>
                                 </h2>
 
@@ -1119,7 +1119,7 @@ function Index() {
                                     Kategori Kursus
                                 </div>
 
-                                <h2 className="display-6 fw-bold mb-1" style={{ color: "#2c3e50", fontSize: "clamp(1.5rem, 2.5vw, 2rem)" }}>
+                                <h2 className="display-6 fw-bold mb-1" style={{ color: "#2c3e50", fontSize: "clamp(1rem, 2vw, 2rem)" }}>
                                     Jelajahi Berdasarkan <span className="about-title-accent">Kategori</span>
                                 </h2>
 
@@ -1338,7 +1338,7 @@ function Index() {
                                                         height: "150px",
                                                         background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
                                                         backgroundSize: "200% 100%",
-                                                        animation: "shimmer 1.5s infinite"
+                                                        animation: "shimmer 1s infinite"
                                                     }}
                                                 />
                                                 <div
@@ -1379,7 +1379,7 @@ function Index() {
                                                     {/* Top Accent Line based on Category */}
                                                     <div
                                                         style={{
-                                                            height: "3.5px",
+                                                            height: "3px",
                                                             width: "100%",
                                                             background: theme.gradient,
                                                             flexShrink: 0
@@ -1640,7 +1640,7 @@ function Index() {
                                     <h2 className="display-6 fw-bold mb-2" style={{ color: "white", fontSize: "clamp(1.4rem, 2.2vw, 1.85rem)", lineHeight: 1.25 }}>
                                         Siap Memulai Perjalanan Pembelajaran Anda?
                                     </h2>
-                                    <p className="mb-3" style={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "0.88rem", lineHeight: 1.5 }}>
+                                    <p className="mb-3" style={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "0.88rem", lineHeight: 1 }}>
                                         Bergabunglah dengan ribuan pegawai Setjen DPD RI yang telah meningkatkan kompetensi mereka
                                         melalui platform LMSetjen DPD RI. Akses seluruh kursus secara gratis!
                                     </p>

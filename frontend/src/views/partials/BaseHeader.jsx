@@ -801,6 +801,7 @@ function BaseHeader() {
                                                     onMouseEnter={() => setSelectedResultIndex(index)}
                                                     role="option"
                                                     aria-selected={index === selectedResultIndex}
+                                                    title={item}
                                                 >
                                                     <i className="fas fa-clock me-2"></i>
                                                     <span>{item}</span>
@@ -844,6 +845,7 @@ function BaseHeader() {
                                                     onMouseEnter={() => setSelectedResultIndex(index)}
                                                     role="option"
                                                     aria-selected={index === selectedResultIndex}
+                                                    title={item}
                                                 >
                                                     <i className="fas fa-fire"></i>
                                                     <span>{item}</span>

@@ -284,7 +284,7 @@ function InstructorNotifications() {
                             <Sidebar />
                             <div className="col-lg-9 col-md-8 col-12 d-flex align-items-center justify-content-center" style={{ minHeight: "50vh" }}>
                                 <div className="text-center">
-                                    <div className="spinner-grow text-teal" role="status" style={{ width: "2.5rem", height: "2.5rem" }}>
+                                    <div className="spinner-grow text-teal" role="status" style={{ width: "2rem", height: "2rem" }}>
                                         <span className="visually-hidden">Sedang memuat...</span>
                                     </div>
                                     <p className="mt-3 text-muted small fw-medium">Menyiapkan riwayat aktivitas Anda...</p>
@@ -831,7 +831,7 @@ function InstructorNotifications() {
 
                                             {/* Category Breakdown Badges */}
                                             <div className="p-3 bg-light rounded-3 border mb-3">
-                                                <small className="fw-bold text-muted d-block mb-2 text-uppercase" style={{ fontSize: '0.72rem', letterSpacing: '0.5px' }}>
+                                                <small className="fw-bold text-muted d-block mb-2 text-uppercase" style={{ fontSize: '0.72rem', letterSpacing: '0px' }}>
                                                     Sumber Akumulasi Poin:
                                                 </small>
                                                 <div className="d-flex flex-wrap gap-2">
