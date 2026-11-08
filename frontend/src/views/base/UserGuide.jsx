@@ -4,6 +4,7 @@ import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
 import { userGuideContent } from './userGuideData';
 import useStickyHero from '../../hooks/useStickyHero';
+import useSystemVersion from '../../hooks/useSystemVersion';
 import './UserGuide.css';
 
 function UserGuide() {
@@ -14,6 +15,7 @@ function UserGuide() {
     const [openFaq, setOpenFaq] = useState({ 0: true });
     const [activeSection, setActiveSection] = useState('getting-started');
     const { isScrolled, headerHeight } = useStickyHero(55);
+    const { version: liveVersion } = useSystemVersion();
 
     // Ensure body background is properly tinted for silhouette layer
     useEffect(() => {
@@ -61,7 +63,7 @@ function UserGuide() {
     // Scroll spy for sidebar active indicator
     useEffect(() => {
         const handleScroll = () => {
-            const sections = ['getting-started', 'for-students', 'for-instructors', 'features', 'troubleshooting', 'faq'];
+            const sections = ['getting-started', 'for-students', 'for-instructors', 'manta-ai', 'features', 'troubleshooting', 'faq'];
             const scrollPos = window.scrollY + (headerHeight || 60) + 56 + 58 + 30;
 
             for (let i = sections.length - 1; i >= 0; i--) {
@@ -142,6 +144,7 @@ function UserGuide() {
         { id: 'getting-started', title: t.sections.gettingStarted.title, icon: 'fa-rocket' },
         { id: 'for-students', title: t.sections.forStudents.title, icon: 'fa-graduation-cap' },
         { id: 'for-instructors', title: t.sections.forInstructors.title, icon: 'fa-chalkboard-teacher' },
+        { id: 'manta-ai', title: 'Manta AI', icon: 'fa-robot' },
         { id: 'features', title: t.sections.features.title, icon: 'fa-star' },
         { id: 'troubleshooting', title: t.sections.troubleshooting.title, icon: 'fa-tools' },
         { id: 'faq', title: 'FAQ', icon: 'fa-question-circle' }
@@ -174,7 +177,7 @@ function UserGuide() {
                                             <i className="fas fa-shield-alt text-teal me-1"></i>
                                             <span>LMSetjen DPD RI • Dokumentasi Resmi</span>
                                             <span className="badge-dot"></span>
-                                            <span className="badge-version">{t.version}</span>
+                                            <span className="badge-version">{liveVersion ? `v${liveVersion}` : t.version}</span>
                                         </div>
                                         <h1 className="hero-title">
                                             <i className="fas fa-book-reader me-2"></i>
@@ -226,13 +229,13 @@ function UserGuide() {
                                     </div>
                                     <div className="hero-quick-meta">
                                         <span className="quick-meta-pill">
-                                            <i className="fas fa-book-open me-1"></i> 6 Topik Panduan
+                                            <i className="fas fa-book-open me-1"></i> 7 {language === 'en' ? 'Guide Topics' : 'Topik Panduan'}
                                         </span>
                                         <span className="quick-meta-pill">
-                                            <i className="fas fa-user-check me-1"></i> Peserta & Pemateri
+                                            <i className="fas fa-user-check me-1"></i> {language === 'en' ? 'Students, Instructors & Admins' : 'Peserta, Pemateri & Admin'}
                                         </span>
                                         <span className="quick-meta-pill">
-                                            <i className="fas fa-calendar-check me-1"></i> {t.lastUpdated}: 20 Okt 2025
+                                            <i className="fas fa-calendar-check me-1"></i> {t.lastUpdated}: {liveVersion ? `v${liveVersion}` : 'v1.1.0'} (Nov 2026)
                                         </span>
                                     </div>
                                 </div>
@@ -641,6 +644,71 @@ function UserGuide() {
                                                     </div>
                                                 ))}
                                             </div>
+                                        </div>
+                                    </section>
+                                )}
+
+                                {/* SECTION: Manta AI (Flagship Assistant) */}
+                                {shouldShowSection('manta-ai') && t.sections.mantaAi && (
+                                    <section id="manta-ai" className="guide-card-section">
+                                        <div className="section-header-compact">
+                                            <div className="section-header-left">
+                                                <div className="section-icon-badge" style={{ background: 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)', color: '#fff' }}>
+                                                    <i className="fas fa-robot"></i>
+                                                </div>
+                                                <div>
+                                                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                                                        <h2 className="section-title-compact mb-0">{t.sections.mantaAi.title}</h2>
+                                                        <span className="badge bg-teal-subtle text-teal">
+                                                            <i className="fas fa-sparkles me-1"></i> {language === 'en' ? 'Flagship AI Feature v1.1.0' : 'Fitur Unggulan v1.1.0'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="section-desc-compact">{t.sections.mantaAi.subtitle}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Intro description */}
+                                        <div className="subcard-compact mb-3" style={{ background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.06) 0%, rgba(2, 132, 199, 0.06) 100%)', border: '1px solid rgba(13, 148, 136, 0.2)' }}>
+                                            <p className="mb-0 text-secondary" style={{ lineHeight: '1.65' }}>
+                                                {t.sections.mantaAi.description}
+                                            </p>
+                                        </div>
+
+                                        {/* Capabilities Grid */}
+                                        <div className="row g-3 mb-3">
+                                            {t.sections.mantaAi.capabilities.map((cap, idx) => (
+                                                <div key={idx} className="col-md-4 col-sm-6">
+                                                    <div className="subcard-compact h-100">
+                                                        <div className="subcard-header">
+                                                            <i className={`fas ${cap.icon} subcard-icon text-teal`}></i>
+                                                            <h3 style={{ fontSize: '0.98rem' }}>{cap.title}</h3>
+                                                        </div>
+                                                        <p className="subcard-subtext mb-0" style={{ fontSize: '0.85rem', lineHeight: '1.55' }}>
+                                                            {cap.description}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* How to Use Manta AI */}
+                                        <div className="subcard-compact highlight-box-teal">
+                                            <div className="subcard-header">
+                                                <i className="fas fa-lightbulb subcard-icon text-teal"></i>
+                                                <div>
+                                                    <h3>{language === 'en' ? 'How to Interact with Manta AI' : 'Cara Menggunakan Manta AI'}</h3>
+                                                    <p className="subcard-subtext mb-0">{language === 'en' ? 'Easy steps to communicate with your AI learning tutor' : 'Langkah praktis berinteraksi dengan asisten belajar cerdas Anda'}</p>
+                                                </div>
+                                            </div>
+                                            <ul className="compact-stepper stepper-teal mt-2">
+                                                {t.sections.mantaAi.howToUse.map((step, idx) => (
+                                                    <li key={idx} className="stepper-item">
+                                                        <span className="step-num">{idx + 1}</span>
+                                                        <span className="step-text">{step}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
                                         </div>
                                     </section>
                                 )}
