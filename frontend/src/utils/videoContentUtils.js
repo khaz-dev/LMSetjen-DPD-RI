@@ -9,7 +9,7 @@ import { getMediaUrl } from "./constants";
  * @returns {boolean} True if the URL points to a video file
  */
 export const isVideoFile = (fileUrl) => {
-    if (!fileUrl) return false;
+    if (!fileUrl || typeof fileUrl !== 'string') return false;
     
     const videoExtensions = ['mp4', 'avi', 'mov', 'mkv', 'webm', 'ogg'];
     const url = fileUrl.toLowerCase();
@@ -29,7 +29,7 @@ export const isVideoFile = (fileUrl) => {
  * @returns {string|null} The file ID or null if not found
  */
 export const extractGoogleDriveFileId = (url) => {
-    if (!url) return null;
+    if (!url || typeof url !== 'string') return null;
     
     const regexps = [
         /drive\.google\.com\/open\?id=([a-zA-Z0-9-_]+)/,
@@ -37,6 +37,8 @@ export const extractGoogleDriveFileId = (url) => {
         /drive\.google\.com\/file\/d\/([a-zA-Z0-9-_]+)\/view/,
         /drive\.google\.com\/file\/d\/([a-zA-Z0-9-_]+)\/preview/,
         /drive\.google\.com\/file\/d\/([a-zA-Z0-9-_]+)\/edit/,
+        /drive\.google\.com\/[a-zA-Z0-9/?=&-_]*[?&]id=([a-zA-Z0-9-_]+)/,
+        /[?&]id=([a-zA-Z0-9-_]+)/,
         /docs\.google\.com\/presentation\/d\/([a-zA-Z0-9-_]+)/,
         /docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/,
         /docs\.google\.com\/document\/d\/([a-zA-Z0-9-_]+)/
@@ -133,9 +135,9 @@ export const getFileTypeIcon = (fileUrl, variantItem = null) => {
         return "fas fa-play";
     }
     
-    if (!fileUrl) return "fas fa-file";
+    if (!fileUrl || typeof fileUrl !== 'string') return "fas fa-file";
     
-    const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0];
+    const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0].split("#")[0];
     const iconMap = {
         "mp4": "fas fa-play", "avi": "fas fa-play", "mov": "fas fa-play",
         "mkv": "fas fa-play", "webm": "fas fa-play", "ogg": "fas fa-play",
@@ -160,9 +162,9 @@ export const getFileTypeLabel = (fileUrl, variantItem = null) => {
         return "Video";
     }
     
-    if (!fileUrl) return "File";
+    if (!fileUrl || typeof fileUrl !== 'string') return "File";
     
-    const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0];
+    const extension = fileUrl.toLowerCase().split(".").pop().split("?")[0].split("#")[0];
     const labelMap = {
         "mp4": "Video", "avi": "Video", "mov": "Video", "mkv": "Video",
         "webm": "Video", "ogg": "Video",

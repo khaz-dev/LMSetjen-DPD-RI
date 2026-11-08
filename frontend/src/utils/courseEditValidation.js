@@ -67,16 +67,17 @@ export const validateLevel = (level) => {
     return { errors: [], warnings };
 };
 
-export const validateAllFields = (courseData) => {
+export const validateAllFields = (courseData = {}) => {
     const allErrors = {};
     const allWarnings = {};
+    const data = courseData || {};
     
     // Validate all required fields
-    const titleValidation = validateTitle(courseData?.title);
-    const descriptionValidation = validateDescription(courseData?.description);
-    const categoryValidation = validateCategory(courseData?.category?.id || courseData?.category);
-    const imageValidation = validateImage(courseData?.image);
-    const levelValidation = validateLevel(courseData?.level);
+    const titleValidation = validateTitle(data.title);
+    const descriptionValidation = validateDescription(data.description);
+    const categoryValidation = validateCategory(data.category?.id || data.category);
+    const imageValidation = validateImage(data.image);
+    const levelValidation = validateLevel(data.level);
 
     allErrors.title = titleValidation.errors;
     allErrors.description = descriptionValidation.errors;
@@ -98,10 +99,10 @@ export const validateAllFields = (courseData) => {
 
 export const getValidationClass = (fieldName, errors, warnings, value) => {
     const baseClass = "form-control";
-    if (errors[fieldName]?.length > 0) {
+    if (errors?.[fieldName]?.length > 0) {
         return `${baseClass} is-invalid`;
     }
-    if (warnings[fieldName]?.length > 0) {
+    if (warnings?.[fieldName]?.length > 0) {
         return `${baseClass} is-warning`;
     }
     if (value) {
@@ -112,10 +113,10 @@ export const getValidationClass = (fieldName, errors, warnings, value) => {
 
 export const getSelectValidationClass = (fieldName, errors, warnings, value) => {
     const baseClass = "form-select";
-    if (errors[fieldName]?.length > 0) {
+    if (errors?.[fieldName]?.length > 0) {
         return `${baseClass} is-invalid`;
     }
-    if (warnings[fieldName]?.length > 0) {
+    if (warnings?.[fieldName]?.length > 0) {
         return `${baseClass} is-warning`;
     }
     if (value) {

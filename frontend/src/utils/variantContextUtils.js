@@ -12,13 +12,13 @@
  * @returns {Object|null} - The variant (bagian) object or null
  */
 export const findVariantContext = (variantItem, curriculum) => {
-    if (!variantItem || !curriculum) {
+    if (!variantItem || !curriculum || !Array.isArray(curriculum)) {
         return null;
     }
 
     // Search through curriculum variants
     for (const variant of curriculum) {
-        if (variant.variant_items?.some(item => item.variant_item_id === variantItem.variant_item_id)) {
+        if (Array.isArray(variant?.variant_items) && variant.variant_items.some(item => item?.variant_item_id === variantItem?.variant_item_id)) {
             return variant;
         }
     }
@@ -53,14 +53,16 @@ export const getVariantContextData = (variantItem, course) => {
  * @returns {Array} - Array of bagian items with id and title
  */
 export const getBagianList = (curriculum) => {
-    if (!curriculum) return [];
+    if (!curriculum || !Array.isArray(curriculum)) return [];
 
-    return curriculum.map(variant => ({
-        id: variant.id || variant.variant_id,
-        title: variant.title || variant.name || 'Unnamed Section',
-        variant_id: variant.variant_id,
-        variant_items: variant.variant_items || []
-    }));
+    return curriculum
+        .filter(Boolean)
+        .map(variant => ({
+            id: variant.id || variant.variant_id,
+            title: variant.title || variant.name || 'Unnamed Section',
+            variant_id: variant.variant_id,
+            variant_items: variant.variant_items || []
+        }));
 };
 
 /**
@@ -70,14 +72,16 @@ export const getBagianList = (curriculum) => {
  * @returns {Array} - Array of pelajaran items with id and title
  */
 export const getPelajaranList = (variant) => {
-    if (!variant?.variant_items) return [];
+    if (!variant?.variant_items || !Array.isArray(variant.variant_items)) return [];
 
-    return variant.variant_items.map(item => ({
-        id: item.variant_item_id,
-        variant_item_id: item.variant_item_id,
-        title: item.title || 'Unnamed Lesson',
-        item
-    }));
+    return variant.variant_items
+        .filter(Boolean)
+        .map(item => ({
+            id: item.variant_item_id,
+            variant_item_id: item.variant_item_id,
+            title: item.title || 'Unnamed Lesson',
+            item
+        }));
 };
 
 /**

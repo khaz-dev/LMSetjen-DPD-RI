@@ -6,7 +6,7 @@
 /**
  * Common invalid image placeholders that should be silently ignored
  */
-const INVALID_PLACEHOLDERS = [
+export const INVALID_PLACEHOLDERS = [
   'default-user.jpg',
   'default.jpg',
   'placeholder.jpg',
@@ -48,7 +48,7 @@ export const isValidImageUrl = (url) => {
  * @returns {string|null} - Safe URL or null
  */
 export const getSafeImageUrl = (imageUrl) => {
-  if (!imageUrl) {
+  if (!imageUrl || typeof imageUrl !== 'string') {
     return null;
   }
 
@@ -140,7 +140,7 @@ export const preloadImage = (url) => {
  * @returns {string|null} - Full image URL or null
  */
 export const getImageUrl = (imagePath, baseUrl = null) => {
-  if (!imagePath) {
+  if (!imagePath || typeof imagePath !== 'string') {
     return null;
   }
 

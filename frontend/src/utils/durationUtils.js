@@ -249,7 +249,14 @@ export const getDurationStats = (items, durationKey = 'content_duration') => {
     }
     
     const durations = items
-        .map(item => parseDurationToSeconds(item[durationKey]))
+        .filter(item => Boolean(item))
+        .map(item => {
+            if (typeof item.duration_seconds === 'number' && item.duration_seconds > 0) {
+                return item.duration_seconds;
+            }
+            const val = item[durationKey] || item.duration || item.content_duration;
+            return parseDurationToSeconds(val);
+        })
         .filter(seconds => seconds > 0);
     
     if (durations.length === 0) {

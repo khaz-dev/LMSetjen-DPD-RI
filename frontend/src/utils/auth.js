@@ -62,9 +62,12 @@ export const redirectUserByRole = (userData) => {
         if (typeof userData === 'string') {
             // userData is a string role like 'instructor' or 'teacher'
             role = userData.toLowerCase().trim();
-        } else if (userData && userData.role) {
-            // userData is a user object with role property
-            role = userData.role.toLowerCase().trim();
+        } else if (userData && (userData.current_role || userData.role)) {
+            // userData is a user object with current_role or role property
+            const rawRole = userData.current_role || userData.role;
+            if (typeof rawRole === 'string') {
+                role = rawRole.toLowerCase().trim();
+            }
         }
         
         if (!role) {
@@ -403,8 +406,8 @@ export const getRefreshToken = async () => {
 };
 
 export const isAccessTokenExpired = (access_token) => {
-    // Check if token exists and is not empty
-    if (!access_token || access_token.trim() === "") {
+    // Check if token exists and is a valid non-empty string
+    if (!access_token || typeof access_token !== 'string' || access_token.trim() === "") {
         return true;
     }
 

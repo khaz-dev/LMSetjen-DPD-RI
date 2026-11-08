@@ -17,16 +17,18 @@ export const validateTitle = (title) => {
   const errors = [];
   const warnings = [];
 
-  if (!title.trim()) {
+  const safeTitle = typeof title === 'string' ? title.trim() : '';
+
+  if (!safeTitle) {
     errors.push("Judul kursus diperlukan");
   } else {
-    if (title.length < courseValidationRules.title.minLength) {
+    if (safeTitle.length < courseValidationRules.title.minLength) {
       warnings.push("Judul terlalu pendek. Pertimbangkan untuk menambahkan kata-kata yang lebih deskriptif");
     }
-    if (title.length > courseValidationRules.title.maxLength) {
+    if (safeTitle.length > courseValidationRules.title.maxLength) {
       errors.push(`Judul terlalu panjang. Maksimal ${courseValidationRules.title.maxLength} karakter diizinkan`);
     }
-    if (!courseValidationRules.title.pattern.test(title)) {
+    if (!courseValidationRules.title.pattern.test(safeTitle)) {
       errors.push("Judul berisi karakter yang tidak valid");
     }
   }
@@ -37,7 +39,7 @@ export const validateTitle = (title) => {
 export const validateDescription = (description) => {
   const errors = [];
   const warnings = [];
-  const plainText = description.replace(/<[^>]*>/g, '').trim();
+  const plainText = typeof description === 'string' ? description.replace(/<[^>]*>/g, '').trim() : '';
 
   if (!plainText) {
     errors.push("Deskripsi kursus diperlukan");
@@ -84,16 +86,17 @@ export const validateLevel = (level) => {
 // Updated: Using external URLs instead (Google Drive, YouTube, image CDNs)
 // Users now provide links directly instead of uploading files
 
-export const validateAllFields = (courseData) => {
+export const validateAllFields = (courseData = {}) => {
   const allErrors = {};
   const allWarnings = {};
+  const data = courseData || {};
   
   // Validate all required fields
-  const titleValidation = validateTitle(courseData.title);
-  const descriptionValidation = validateDescription(courseData.description);
-  const categoryValidation = validateCategory(courseData.category);
-  const imageValidation = validateImage(courseData.image);
-  const levelValidation = validateLevel(courseData.level);
+  const titleValidation = validateTitle(data.title);
+  const descriptionValidation = validateDescription(data.description);
+  const categoryValidation = validateCategory(data.category);
+  const imageValidation = validateImage(data.image);
+  const levelValidation = validateLevel(data.level);
 
   allErrors.title = titleValidation.errors;
   allErrors.description = descriptionValidation.errors;
@@ -115,10 +118,10 @@ export const validateAllFields = (courseData) => {
 
 export const getValidationClass = (fieldName, errors, warnings, value) => {
   const baseClass = "form-control-modern";
-  if (errors[fieldName]?.length > 0) {
+  if (errors?.[fieldName]?.length > 0) {
     return `${baseClass} is-invalid`;
   }
-  if (warnings[fieldName]?.length > 0) {
+  if (warnings?.[fieldName]?.length > 0) {
     return `${baseClass} is-warning`;
   }
   if (value) {
@@ -129,10 +132,10 @@ export const getValidationClass = (fieldName, errors, warnings, value) => {
 
 export const getSelectValidationClass = (fieldName, errors, warnings, value) => {
   const baseClass = "form-control-modern";
-  if (errors[fieldName]?.length > 0) {
+  if (errors?.[fieldName]?.length > 0) {
     return `${baseClass} is-invalid`;
   }
-  if (warnings[fieldName]?.length > 0) {
+  if (warnings?.[fieldName]?.length > 0) {
     return `${baseClass} is-warning`;
   }
   if (value) {

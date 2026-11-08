@@ -100,6 +100,9 @@ export const getLevelText = (level) => {
         Beginner: '🟢 Pemula',
         Intermediate: '🟡 Menengah',
         Advanced: '🔴 Lanjutan',
+        beginner: '🟢 Pemula',
+        intermediate: '🟡 Menengah',
+        advanced: '🔴 Lanjutan',
         default: 'N/A'
     };
     return texts[level] || texts.default;
@@ -111,6 +114,10 @@ export const getStatusText = (status) => {
         Published: 'Dipublikasikan',
         Disabled: 'Dinonaktifkan',
         Review: 'Ditinjau',
+        draft: 'Draf',
+        published: 'Dipublikasikan',
+        disabled: 'Dinonaktifkan',
+        review: 'Ditinjau',
         default: 'Tidak Tersedia'
     };
     return texts[status] || texts.default;
@@ -127,6 +134,15 @@ export const getStatusText = (status) => {
  * 5. Default to Tidak Tersedia - Gray
  */
 export const getActualCourseStatus = (course) => {
+    if (!course) {
+        return {
+            status: 'Unknown',
+            text: 'Tidak Tersedia',
+            icon: 'fa-question-circle',
+            color: '#6c757d'
+        };
+    }
+
     // Check if course has been rejected
     if (course.rejection_reason || course.platform_status === 'Rejected') {
         return {

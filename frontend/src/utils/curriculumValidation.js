@@ -85,18 +85,19 @@ export const validateCurriculumIntroVideo = (file) => {
     return { errors, warnings };
 };
 
-export const validateAllCurriculumFields = (courseData) => {
+export const validateAllCurriculumFields = (courseData = {}) => {
     const errors = {};
     const warnings = {};
     let hasErrors = false;
+    const data = courseData || {};
 
     // Validate each field
-    const titleValidation = validateCurriculumTitle(courseData.title);
-    const descriptionValidation = validateCurriculumDescription(courseData.description);
-    const imageValidation = validateCurriculumImage(courseData.image);
-    const categoryValidation = validateCurriculumCategory(courseData.category);
-    const levelValidation = validateCurriculumLevel(courseData.level);
-    const videoValidation = validateCurriculumIntroVideo(courseData.file);
+    const titleValidation = validateCurriculumTitle(data.title);
+    const descriptionValidation = validateCurriculumDescription(data.description);
+    const imageValidation = validateCurriculumImage(data.image);
+    const categoryValidation = validateCurriculumCategory(data.category);
+    const levelValidation = validateCurriculumLevel(data.level);
+    const videoValidation = validateCurriculumIntroVideo(data.file);
 
     // Collect errors and warnings
     errors.title = titleValidation.errors;
@@ -128,10 +129,10 @@ export const validateAllCurriculumFields = (courseData) => {
 };
 
 export const getCurriculumValidationClass = (fieldName, errors, warnings, courseData, baseClass = "form-control") => {
-    if (errors[fieldName]?.length > 0) {
+    if (errors?.[fieldName]?.length > 0) {
         return `${baseClass} is-invalid`;
     }
-    if (warnings[fieldName]?.length > 0) {
+    if (warnings?.[fieldName]?.length > 0) {
         return `${baseClass} is-warning`;
     }
     if (courseData?.[fieldName]) {

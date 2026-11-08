@@ -54,7 +54,14 @@ export const getRoleDisplayName = (role) => {
  */
 export const switchRole = async (role, options = {}) => {
   try {
-    const normalizedTargetRole = role.toLowerCase().trim() === 'teacher' ? 'instructor' : role.toLowerCase().trim();
+    const safeRole = (role || '').toLowerCase().trim();
+    if (!safeRole) {
+      return {
+        success: false,
+        error: 'Pilihan peran tidak valid'
+      };
+    }
+    const normalizedTargetRole = safeRole === 'teacher' ? 'instructor' : safeRole;
     console.log(`[RoleSystem] Switching to role: ${normalizedTargetRole}`);
     
     // Set global and session switching flags to prevent old routes from auto-reverting roles during transit
