@@ -141,6 +141,7 @@ export const getFileTypeIcon = (fileUrl, variantItem = null) => {
         "mkv": "fas fa-play", "webm": "fas fa-play", "ogg": "fas fa-play",
         "pdf": "fas fa-file-pdf", "doc": "fas fa-file-word", "docx": "fas fa-file-word",
         "txt": "fas fa-file-alt", "ppt": "fas fa-file-powerpoint", "pptx": "fas fa-file-powerpoint",
+        "mp3": "fas fa-headphones", "wav": "fas fa-headphones", "m4a": "fas fa-headphones", "aac": "fas fa-headphones",
         "jpg": "fas fa-image", "jpeg": "fas fa-image", "png": "fas fa-image",
         "gif": "fas fa-image", "bmp": "fas fa-image"
     };
@@ -167,6 +168,7 @@ export const getFileTypeLabel = (fileUrl, variantItem = null) => {
         "webm": "Video", "ogg": "Video",
         "pdf": "PDF", "doc": "Dokumen", "docx": "Dokumen", "txt": "Teks",
         "ppt": "Presentasi", "pptx": "Presentasi",
+        "mp3": "Audio", "wav": "Audio", "m4a": "Audio", "aac": "Audio",
         "jpg": "Gambar", "jpeg": "Gambar", "png": "Gambar", "gif": "Gambar", "bmp": "Gambar"
     };
     

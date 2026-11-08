@@ -2,76 +2,114 @@ import React, { useState, useRef, useEffect } from "react";
 import Toast from "../../plugin/Toast";
 import useAxios from "../../../utils/useAxios";
 
-// ✨ PHASE X.X: Upload-only video system - removed YouTube and Google Drive support
+/**
+ * VideoUpload Component
+ * Pengantar Kursus (Opsional) untuk Instruktur LMS Setjen DPD RI:
+ * - Mendukung 2 mode sumber media:
+ *   1. 📁 Unggah Berkas Video (MP4, WebM, OGV, MOV, AVI, MKV)
+ *   2. 🔗 Tautan URL Video (YouTube, Google Drive, atau URL Streaming Langsung)
+ */
 const VideoUpload = ({ courseData, setCourseData, onVideoChange, onVideoDelete }) => {
   const [videoLoading, setVideoLoading] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  
-  // ✨ PHASE 4.103: File upload state for video files
+  const [showPreview, setShowPreview] = useState(true);
+
+  // Sumber media aktif: 'upload' atau 'url'
+  const isInitialUrl = Boolean(
+    courseData?.file && (
+      courseData.intro_video_source === "url" ||
+      courseData.file.includes("youtube.com") ||
+      courseData.file.includes("youtu.be") ||
+      courseData.file.includes("drive.google.com") ||
+      (!courseData.file.includes("/media/course-file/") && !courseData.file.includes("media/course-file/"))
+    )
+  );
+  const [sourceType, setSourceType] = useState(isInitialUrl ? "url" : "upload");
+  const [urlInput, setUrlInput] = useState(isInitialUrl ? (courseData?.file || "") : "");
+  const [urlValidationError, setUrlValidationError] = useState("");
+
+  // File upload state
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadValidationError, setUploadValidationError] = useState("");
   const fileInputRef = useRef(null);
-  
+
   const FILE_UPLOAD_CONFIG = {
     VIDEO_TYPES: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'],
-    MAX_VIDEO_SIZE: 500 * 1024 * 1024, // 500MB (large enough for videos)
+    MAX_VIDEO_SIZE: 500 * 1024 * 1024, // 500MB
     ALLOWED_EXTENSIONS: ['.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv', '.flv', '.wmv', '.m4v']
   };
 
-  // ✨ PHASE X.X: Simplified useEffect - upload-only system
-  // No need to sync YouTube/Google Drive URLs anymore
+  // Sinkronisasi data awal jika berubah dari props
   useEffect(() => {
-    if (!courseData?.file) {
-      setShowPreview(false);
+    if (courseData?.file) {
+      const isUrl = (
+        courseData.intro_video_source === "url" ||
+        courseData.file.includes("youtube.com") ||
+        courseData.file.includes("youtu.be") ||
+        courseData.file.includes("drive.google.com") ||
+        (!courseData.file.includes("/media/course-file/") && !courseData.file.includes("media/course-file/"))
+      );
+      if (isUrl) {
+        setUrlInput(courseData.file);
+      }
+    } else {
+      setUrlInput("");
     }
-  }, [courseData?.file]);
+  }, [courseData?.file, courseData?.intro_video_source]);
 
-  // ✨ PHASE X.X: Simplified display name function - uploads only
+  // Ekstrak ID YouTube
+  const extractYoutubeId = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  // Ekstrak ID Google Drive
+  const extractGoogleDriveFileId = (url) => {
+    if (!url) return null;
+    const regexps = [
+      /drive\.google\.com\/file\/d\/([a-zA-Z0-9-_]+)/,
+      /drive\.google\.com\/open\?id=([a-zA-Z0-9-_]+)/,
+      /drive\.google\.com\/file\/d\/([a-zA-Z0-9-_]+)\/preview/,
+      /drive\.google\.com\/file\/d\/([a-zA-Z0-9-_]+)\/view/
+    ];
+    for (const r of regexps) {
+      const match = url.match(r);
+      if (match?.[1]) return match[1];
+    }
+    return null;
+  };
+
   const getVideoDisplayName = (file) => {
     if (!file) return '';
-    // For uploaded files, extract just the filename
-    // e.g., "http://localhost:8001/media/course-file/271157-intro.mp4" → "271157-intro.mp4"
     return file.split('/').pop() || file;
   };
 
-  // ✨ PHASE 4.103: Validate video file before upload
+  // Validasi Berkas Video
   const validateVideoFile = (file) => {
     if (!file) {
-      return { isValid: false, error: "File video diperlukan" };
+      return { isValid: false, error: "Berkas video diperlukan" };
     }
-
-    // Check file size
     if (file.size > FILE_UPLOAD_CONFIG.MAX_VIDEO_SIZE) {
       const maxSizeMB = FILE_UPLOAD_CONFIG.MAX_VIDEO_SIZE / (1024 * 1024);
-      return { isValid: false, error: `Ukuran file maksimal adalah ${maxSizeMB}MB` };
+      return { isValid: false, error: `Ukuran berkas maksimal adalah ${maxSizeMB}MB` };
     }
-
-    // Check file extension
     const fileExtension = "." + file.name.split(".").pop().toLowerCase();
     if (!FILE_UPLOAD_CONFIG.ALLOWED_EXTENSIONS.includes(fileExtension)) {
-      return { isValid: false, error: `Format file tidak didukung. Gunakan: ${FILE_UPLOAD_CONFIG.ALLOWED_EXTENSIONS.join(", ")}` };
+      return { isValid: false, error: `Format berkas tidak didukung. Gunakan: ${FILE_UPLOAD_CONFIG.ALLOWED_EXTENSIONS.join(", ")}` };
     }
-
-    // Check file type (MIME type)
-    if (!FILE_UPLOAD_CONFIG.VIDEO_TYPES.includes(file.type) && !file.type.startsWith("video/")) {
-      return { isValid: false, error: "File harus berupa video" };
-    }
-
     return { isValid: true };
   };
 
-  // ✨ PHASE 4.103: Handle video file upload
+  // Handler Upload Berkas
   const handleVideoFileUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file
     const validation = validateVideoFile(file);
     if (!validation.isValid) {
       setUploadValidationError(validation.error);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
       Toast().fire({
         icon: "error",
         title: validation.error,
@@ -86,77 +124,46 @@ const VideoUpload = ({ courseData, setCourseData, onVideoChange, onVideoDelete }
     try {
       const formData = new FormData();
       formData.append("file", file);
-      
-      console.log('[VideoUpload.handleVideoFileUpload] 📤 About to upload video file...');
-      console.log('[VideoUpload.handleVideoFileUpload] Course ID (course_id):', courseData?.course_id);
-      console.log('[VideoUpload.handleVideoFileUpload] Current courseData.file:', courseData?.file);
-      
-      // ✨ PHASE 4.103: Pass course_id so backend uses consistent filename {course_id}-intro.{ext}
-      // This ensures each course has only one intro video file (overwrites on new upload)
       if (courseData?.course_id) {
         formData.append("course_id", courseData.course_id);
-        console.log('[VideoUpload.handleVideoFileUpload] Sending course_id for consistent filename:', courseData.course_id);
       }
+      formData.append("upload_type", "course");
 
       const response = await useAxios.post("file-upload/", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percentCompleted);
         },
       });
 
-      console.log('[VideoUpload.handleVideoFileUpload] ✅ Upload complete. Response URL:', response?.data?.url);
-
       if (response?.data?.url) {
-        console.log('[VideoUpload.handleVideoFileUpload] Setting courseData.file to:', response.data.url);
-        
-        // Update course data with uploaded video URL
         setCourseData(prevData => ({
           ...prevData,
-          file: response?.data?.url,
-          video_file_id: response?.data?.file_id,
+          file: response.data.url,
+          video_file_id: response.data.file_id || response.data.id,
           intro_video_source: "upload"
         }));
 
-        const uploadedFileName = file.name || 'Video';
-        console.log('[VideoUpload.handleVideoFileUpload] File uploaded as:', uploadedFileName);
-        
-        // ✨ PHASE 4.103: Old video deleted before new one saved
-        const successMessage = courseData?.course_id 
-          ? `Video lama dihapus dan "${uploadedFileName}" berhasil disimpan!`
-          : `"${uploadedFileName}" telah diunggah!`;
-        
-        // Trigger callback to mark form as dirty
-        if (onVideoChange) {
-          onVideoChange();
-        }
+        if (onVideoChange) onVideoChange();
 
-        // Show success message
         Toast().fire({
           icon: "success",
           title: "Video Berhasil Diunggah",
-          text: successMessage,
+          text: `"${file.name}" berhasil disimpan sebagai video pengantar!`,
           timer: 2500,
           showConfirmButton: false
         });
 
-        console.log('[VideoUpload.handleVideoFileUpload] ✅ Complete success flow');
-
-        // Reset file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+        if (fileInputRef.current) fileInputRef.current.value = "";
       }
     } catch (error) {
       console.error("Error uploading video:", error);
-      const errorMessage = error.response?.data?.message || "Gagal mengunggah video. Silakan coba lagi.";
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || "Gagal mengunggah video. Silakan coba lagi.";
       setUploadValidationError(errorMessage);
       Toast().fire({
         icon: "error",
-        title: "Gagal mengunggah video",
+        title: "Gagal Mengunggah Video",
         text: errorMessage,
       });
     } finally {
@@ -165,269 +172,335 @@ const VideoUpload = ({ courseData, setCourseData, onVideoChange, onVideoDelete }
     }
   };
 
-  // ✨ PHASE 4.167: Delete intro video file from server
-  // Handles both uploaded files (course-file/) and curriculum media cleanup
+  // Handler Simpan Tautan URL Video
+  const handleApplyUrl = () => {
+    const trimmed = urlInput.trim();
+    if (!trimmed) {
+      setUrlValidationError("Silakan masukkan URL tautan video pengantar.");
+      return;
+    }
+
+    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+      setUrlValidationError("URL harus diawali dengan http:// atau https://");
+      return;
+    }
+
+    setUrlValidationError("");
+    setCourseData(prev => ({
+      ...prev,
+      file: trimmed,
+      intro_video_source: "url"
+    }));
+
+    if (onVideoChange) onVideoChange();
+
+    Toast().fire({
+      icon: "success",
+      title: "Tautan Video Disimpan",
+      text: "Tautan URL video pengantar kursus berhasil diterapkan!",
+      timer: 2000,
+      showConfirmButton: false
+    });
+  };
+
+  // Handler Hapus Video
   const handleDeleteIntroVideo = async () => {
     if (!courseData?.file) {
-      // No file to delete, just clear the state
       setCourseData(prev => ({ ...prev, file: null, intro_video_source: null }));
-      setYoutubeUrl("");
-      setGoogleDriveUrl("");
-      setYoutubeValidationError("");
-      setGoogleDriveValidationError("");
+      setUrlInput("");
+      setUrlValidationError("");
       setUploadValidationError("");
       setShowPreview(false);
-      
-      if (onVideoChange) {
-        onVideoChange();
-      }
-      
-      // Trigger auto-save after deletion
-      if (onVideoDelete) {
-        setTimeout(() => {
-          onVideoDelete();
-        }, 50);
-      }
+      if (onVideoChange) onVideoChange();
+      if (onVideoDelete) setTimeout(onVideoDelete, 50);
       return;
     }
 
     try {
-      // Only delete local files (uploaded to server), not external URLs
-      const isLocalFile = courseData.file.includes('/media/course-file/') || 
-                          courseData.file.includes('media/course-file/');
-
+      const isLocalFile = courseData.file.includes('/media/course-file/') || courseData.file.includes('media/course-file/');
       if (isLocalFile) {
-        // Call backend to delete the actual file
         await useAxios.delete('file-cleanup/', {
-          data: { 
+          data: {
             file_url: courseData.file,
-            file_id: courseData.video_file_id 
+            file_id: courseData.video_file_id
           }
         });
-        console.log('[VideoUpload] Intro video deleted successfully:', courseData.file);
-      } else {
-        console.log('[VideoUpload] External URL not deleted:', courseData.file);
       }
 
-      // Clear the state regardless of file type
       setCourseData(prev => ({ ...prev, file: null, intro_video_source: null }));
-      setYoutubeUrl("");
-      setGoogleDriveUrl("");
-      setYoutubeValidationError("");
-      setGoogleDriveValidationError("");
+      setUrlInput("");
+      setUrlValidationError("");
       setUploadValidationError("");
       setShowPreview(false);
-      
-      // ✨ PHASE 4.49: Trigger callback when video is removed
-      if (onVideoChange) {
-        onVideoChange();
-      }
-      
+
+      if (onVideoChange) onVideoChange();
+
       Toast().fire({
         icon: "info",
         title: "Video Dihapus",
-        text: "Video pengantar telah dihapus dari server dan formulir",
+        text: "Video pengantar kursus berhasil dihapus.",
         timer: 2000,
         showConfirmButton: false
       });
 
-      // ✨ PHASE 4.167: Trigger auto-save after deletion
-      // Schedule save after state update completes
-      if (onVideoDelete) {
-        setTimeout(() => {
-          onVideoDelete();
-        }, 50);
-      }
+      if (onVideoDelete) setTimeout(onVideoDelete, 50);
     } catch (error) {
       console.error('[VideoUpload] Error deleting video:', error);
-      
-      // Still clear state even if delete fails
       setCourseData(prev => ({ ...prev, file: null, intro_video_source: null }));
-      setYoutubeUrl("");
-      setGoogleDriveUrl("");
-      setYoutubeValidationError("");
-      setGoogleDriveValidationError("");
+      setUrlInput("");
+      setUrlValidationError("");
       setUploadValidationError("");
       setShowPreview(false);
 
-      if (onVideoChange) {
-        onVideoChange();
-      }
-      
-      Toast().fire({
-        icon: "warning",
-        title: "Video Dihapus dari Formulir",
-        text: "Catatan: File fisik mungkin tidak berhasil dihapus dari server",
-        timer: 3000,
-        showConfirmButton: false
-      });
-
-      // Still trigger auto-save to persist the cleared file field
-      if (onVideoDelete) {
-        setTimeout(() => {
-          onVideoDelete();
-        }, 50);
-      }
+      if (onVideoChange) onVideoChange();
+      if (onVideoDelete) setTimeout(onVideoDelete, 50);
     }
   };
 
-  return (
-    <div className="video-upload-container">
-      <label className="form-label">
-        <i className="fas fa-video me-2"></i>
-        Video Pengantar Kursus
-        <span className="text-muted ms-1">(Opsional)</span>
-      </label>
+  const youtubeId = extractYoutubeId(courseData?.file);
+  const driveId = extractGoogleDriveFileId(courseData?.file);
 
-      {/* ✨ PHASE X.X: File Upload Section - Upload Only System */}
-      <div className="mb-3">
-          <label htmlFor="videoFileInput" className="form-label">
-            <i className="fas fa-cloud-upload-alt text-success me-2"></i>
-            Unggah File Video
+  return (
+    <div className="video-upload-container mb-4">
+      <div className="d-flex align-items-center justify-content-between mb-2">
+        <label className="form-label fw-bold text-dark m-0 d-flex align-items-center gap-2">
+          <i className="fas fa-video text-teal"></i>
+          <span>Video Pengantar Kursus</span>
+          <span className="text-muted fw-normal small">(Opsional)</span>
+        </label>
+        {courseData?.file && (
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold"
+            style={{ fontSize: "11px" }}
+            onClick={handleDeleteIntroVideo}
+            title="Hapus video pengantar saat ini"
+          >
+            <i className="fas fa-trash-alt me-1"></i>Hapus Video
+          </button>
+        )}
+      </div>
+
+      <p className="text-muted small mb-3">
+        Video pengantar atau cuplikan (*teaser*) yang ditampilkan di halaman awal kursus untuk menarik minat belajar aparatur.
+      </p>
+
+      {/* Mode Switcher: Unggah Berkas vs Tautan URL */}
+      <div className="btn-group btn-group-sm mb-3 w-100 shadow-xs" role="group">
+        <button
+          type="button"
+          className={`btn ${sourceType === 'upload' ? 'btn-teal text-white fw-bold' : 'btn-outline-secondary'}`}
+          onClick={() => setSourceType('upload')}
+          style={{ transition: 'all 0.2s ease' }}
+        >
+          <i className="fas fa-cloud-upload-alt me-2"></i>
+          Unggah Berkas Video
+        </button>
+        <button
+          type="button"
+          className={`btn ${sourceType === 'url' ? 'btn-teal text-white fw-bold' : 'btn-outline-secondary'}`}
+          onClick={() => setSourceType('url')}
+          style={{ transition: 'all 0.2s ease' }}
+        >
+          <i className="fas fa-link me-2"></i>
+          Tautan URL Video (YouTube / Google Drive / URL Langsung)
+        </button>
+      </div>
+
+      {/* MODE 1: UNGGAH BERKAS VIDEO */}
+      {sourceType === 'upload' && (
+        <div className="p-3 bg-light rounded-3 border mb-3">
+          <label htmlFor="videoFileInput" className="form-label fw-semibold small text-dark d-flex align-items-center gap-2 mb-2">
+            <i className="fas fa-file-video text-teal"></i>
+            <span>Pilih Berkas Video dari Komputer</span>
           </label>
-          
-          <div className="mb-3">
-            <div className="input-group">
-              <input 
-                id="videoFileInput"
-                ref={fileInputRef}
-                type="file" 
-                className={`form-control ${uploadValidationError ? "is-invalid" : ""}`}
-                accept={FILE_UPLOAD_CONFIG.ALLOWED_EXTENSIONS.join(",")}
-                onChange={handleVideoFileUpload}
-                disabled={videoLoading}
-              />
-              <button 
-                className="btn btn-success btn-sm d-inline-flex align-items-center gap-2"
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={videoLoading}
-                style={{ fontSize: "0.8125rem", padding: "6px 14px", fontWeight: "600" }}
-              >
-                {videoLoading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Mengunggah... {uploadProgress}%
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-folder-open"></i>
-                    <span>Pilih Video</span>
-                  </>
-                )}
-              </button>
-            </div>
-            
-            {uploadValidationError && (
-              <div className="invalid-feedback d-block mt-2">
-                <i className="fas fa-exclamation-circle me-1"></i>
-                {uploadValidationError}
-              </div>
-            )}
+
+          <div className="input-group mb-2">
+            <input
+              id="videoFileInput"
+              ref={fileInputRef}
+              type="file"
+              className={`form-control ${uploadValidationError ? "is-invalid" : ""}`}
+              accept={FILE_UPLOAD_CONFIG.ALLOWED_EXTENSIONS.join(",")}
+              onChange={handleVideoFileUpload}
+              disabled={videoLoading}
+            />
+            <button
+              className="btn btn-teal btn-sm d-inline-flex align-items-center gap-2 px-3 fw-semibold"
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={videoLoading}
+            >
+              {videoLoading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  Mengunggah... {uploadProgress}%
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-folder-open"></i>
+                  <span>Pilih Berkas</span>
+                </>
+              )}
+            </button>
           </div>
 
-          {/* File Upload Info */}
-          <small className="text-muted d-block mb-2">
-            <i className="fas fa-info-circle me-1"></i>
-            Format yang didukung: MP4, WebM, OGV, MOV, AVI, MKV | Ukuran maksimal: 500MB
+          {uploadValidationError && (
+            <div className="invalid-feedback d-block mb-2">
+              <i className="fas fa-exclamation-circle me-1"></i>
+              {uploadValidationError}
+            </div>
+          )}
+
+          <small className="text-muted d-block" style={{ fontSize: "11px" }}>
+            <i className="fas fa-info-circle me-1 text-teal"></i>
+            Format didukung: <strong>MP4, WebM, OGV, MOV, AVI, MKV</strong> &bull; Ukuran maksimal: <strong>500MB</strong>.
           </small>
 
-          {/* Upload Progress Bar */}
           {uploadProgress > 0 && uploadProgress < 100 && (
-            <div className="progress mb-2" style={{ height: "25px" }}>
-              <div 
-                className="progress-bar progress-bar-striped progress-bar-animated" 
-                role="progressbar" 
+            <div className="progress mt-2" style={{ height: "18px", borderRadius: "999px" }}>
+              <div
+                className="progress-bar progress-bar-striped progress-bar-animated bg-teal"
+                role="progressbar"
                 style={{ width: `${uploadProgress}%` }}
               >
                 {uploadProgress}%
               </div>
             </div>
           )}
-
-          {/* File Upload Tips */}
-          <div className="mt-2 p-3 bg-light rounded">
-            <small className="text-muted d-block mb-2">
-              <strong>💡 Tips untuk upload video:</strong>
-            </small>
-            <ul className="text-muted small mb-0 ps-3">
-              <li>Pastikan file video dalam format yang didukung (MP4 paling umum)</li>
-              <li>File maksimal 500MB untuk performa optimal</li>
-              <li>Resolusi 1080p (1920x1080) atau lebih tinggi untuk kualitas terbaik</li>
-              <li>Video akan dihost di server, dapat diakses kapan saja</li>
-            </ul>
-          </div>
         </div>
+      )}
 
-      {/* ✨ PHASE X.X: Preview Section - Only shown when video is added (upload-only system) */}
-      {/* Note: intro_video_source may not be present for legacy courses, so we default to upload */}
-      {courseData.file && (!courseData.intro_video_source || courseData.intro_video_source === "upload") && (
-        <>
-          <div className="mb-3 d-flex align-items-center justify-content-between">
-            <label className="form-label m-0">
-              <i className="fas fa-play-circle me-2 text-success"></i>
-              Pratinjau Video
-            </label>
+      {/* MODE 2: TAUTAN URL VIDEO */}
+      {sourceType === 'url' && (
+        <div className="p-3 bg-light rounded-3 border mb-3">
+          <label htmlFor="videoUrlInput" className="form-label fw-semibold small text-dark d-flex align-items-center gap-2 mb-2">
+            <i className="fas fa-link text-teal"></i>
+            <span>Tautan URL Video (YouTube / Google Drive / URL MP4)</span>
+          </label>
+
+          <div className="input-group mb-2">
+            <span className="input-group-text bg-white text-muted">
+              <i className="fas fa-globe"></i>
+            </span>
+            <input
+              id="videoUrlInput"
+              type="url"
+              className={`form-control ${urlValidationError ? "is-invalid" : ""}`}
+              placeholder="Contoh: https://www.youtube.com/watch?v=... atau https://drive.google.com/file/d/.../view"
+              value={urlInput}
+              onChange={(e) => {
+                setUrlInput(e.target.value);
+                setUrlValidationError("");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleApplyUrl();
+                }
+              }}
+            />
             <button
-              className={`btn btn-sm ${showPreview ? 'btn-warning' : 'btn-primary'}`}
               type="button"
-              onClick={() => setShowPreview(!showPreview)}
-              title={showPreview ? "Sembunyikan pratinjau" : "Tampilkan pratinjau video"}
+              className="btn btn-teal fw-semibold px-3"
+              onClick={handleApplyUrl}
             >
-              <i className={`fas fa-${showPreview ? 'eye-slash' : 'eye'} me-2`}></i>
-              {showPreview ? "Sembunyikan" : "Tampilkan"} Pratinjau
+              <i className="fas fa-check me-1"></i>Terapkan URL
             </button>
           </div>
 
-          {/* ✨ PHASE 4.103: Native video player for uploaded videos */}
-          {showPreview && (
-            <div className="mb-3" style={{ borderRadius: "12px", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
-              <video 
-                width="100%" 
-                height="auto"
-                controls
-                controlsList="nodownload"
-                style={{ borderRadius: "12px" }}
-              >
-                <source src={courseData.file} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+          {urlValidationError && (
+            <div className="invalid-feedback d-block mb-2">
+              <i className="fas fa-exclamation-circle me-1"></i>
+              {urlValidationError}
             </div>
           )}
 
-          {/* Current Video Display */}
-          <div className="current-value-display mb-3 p-3 bg-light border rounded">
-            <div className="d-flex align-items-center justify-content-between">
-              <div className="d-flex align-items-center flex-grow-1">
-                <i className='fas fa-cloud-upload-alt text-success me-2'></i>
-                <div className="flex-grow-1">
-                  <strong className="text-dark">Video Unggahan Saat Ini:</strong>
-                  <br />
-                  <small className="text-muted text-break">{getVideoDisplayName(courseData.file)}</small>
-                </div>
-              </div>
-              <span className="badge bg-success ms-2">
-                <i className="fas fa-check-circle me-1"></i>
-                Aktif
-              </span>
-            </div>
-          </div>
-        </>
+          <small className="text-muted d-block" style={{ fontSize: "11px" }}>
+            <i className="fab fa-youtube text-danger me-1"></i>
+            Dapat berupa tautan publik YouTube, share link Google Drive, atau tautan streaming MP4 langsung.
+          </small>
+        </div>
       )}
 
-      {/* No Video Selected Message */}
-      {!courseData.file && (
-        <div className="alert alert-info" role="alert">
-          <i className="fas fa-info-circle me-2"></i>
-          <strong>Tidak ada video yang dipilih</strong>
-          <br />
-          <small>Upload file video untuk menambahkan video pengantar kursus Anda</small>
+      {/* INFORMASI VIDEO AKTIF SAAT INI */}
+      {courseData?.file && (
+        <div className="current-video-banner p-3 bg-white border rounded-3 shadow-xs mb-3">
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <div className="d-flex align-items-center gap-2">
+              <span className={`badge ${youtubeId ? 'bg-danger text-white' : driveId ? 'bg-primary text-white' : 'bg-teal text-white'} px-2 py-1`}>
+                <i className={`fas ${youtubeId ? 'fa-play' : driveId ? 'fa-hdd' : 'fa-film'} me-1`}></i>
+                {youtubeId ? 'YouTube' : driveId ? 'Google Drive' : 'Video Berkas'}
+              </span>
+              <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                <i className="fas fa-check-circle me-1"></i>Video Pengantar Aktif
+              </span>
+            </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-link text-decoration-none py-0 px-1 text-teal fw-semibold"
+              style={{ fontSize: "12px" }}
+              onClick={() => setShowPreview(!showPreview)}
+            >
+              <i className={`fas fa-${showPreview ? 'eye-slash' : 'eye'} me-1`}></i>
+              {showPreview ? 'Sembunyikan Pratinjau' : 'Tampilkan Pratinjau'}
+            </button>
+          </div>
+
+          <div className="text-muted small text-break mb-2" style={{ fontSize: "11.5px" }}>
+            <strong>URL/Berkas:</strong> <code>{courseData.file}</code>
+          </div>
+
+          {/* PRATINJAU VIDEO */}
+          {showPreview && (
+            <div className="mt-3">
+              {youtubeId ? (
+                <div className="ratio ratio-16x9 rounded-3 overflow-hidden shadow-sm" style={{ maxHeight: '380px' }}>
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
+                    title="Pratinjau Video YouTube"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ border: 'none' }}
+                  ></iframe>
+                </div>
+              ) : driveId ? (
+                <div className="ratio ratio-16x9 rounded-3 overflow-hidden shadow-sm" style={{ maxHeight: '380px' }}>
+                  <iframe
+                    src={`https://drive.google.com/file/d/${driveId}/preview`}
+                    title="Pratinjau Video Google Drive"
+                    allow="autoplay"
+                    style={{ border: 'none' }}
+                  ></iframe>
+                </div>
+              ) : (
+                <div className="rounded-3 overflow-hidden shadow-sm bg-dark" style={{ maxHeight: '380px' }}>
+                  <video
+                    width="100%"
+                    height="auto"
+                    controls
+                    controlsList="nodownload"
+                    style={{ maxHeight: '380px', display: 'block' }}
+                  >
+                    <source src={courseData.file} />
+                    Browser Anda tidak mendukung tag video HTML5.
+                  </video>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Status Belum Ada Video */}
+      {!courseData?.file && (
+        <div className="alert alert-secondary py-2 px-3 small d-flex align-items-center gap-2 mb-0" style={{ borderRadius: '8px' }}>
+          <i className="fas fa-info-circle text-muted"></i>
+          <span>Belum ada video pengantar yang dipilih. Anda dapat mengunggah berkas video atau menempelkan tautan URL di atas.</span>
         </div>
       )}
     </div>
   );
 };
 
-// ✨ PHASE 4.176: Memoize component to prevent unnecessary re-renders from parent
-// This prevents VideoUpload from being re-rendered when parent updates unless its props actually change
 export default React.memo(VideoUpload);

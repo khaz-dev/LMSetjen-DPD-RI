@@ -350,13 +350,24 @@ class AIAssistantChatAPIView(APIView):
 
         # 4.5. Handle Smart Learning Reminder / Nudge Query
         is_nudge_query = re.search(
-            r"\b(pengingat\s*belajar|tugas\s*belum\s*selesai|kursus\s*belum\s*selesai|ingatkan\s*(saya)?|jadwal\s*belajar|materi\s*tersisa|progres\s*tertunda)\b",
+            r"\b(pengingat\s*belajar|tugas\s*belum\s*selesai|kursus\s*belum\s*selesai|ingatkan\s*(saya)?|materi\s*tersisa|progres\s*tertunda)\b",
             norm_query
         )
-        if is_nudge_query:
+        if is_nudge_query and not re.search(r"\b(20\s*jp|jam\s*pelajaran|target\s*jp|pemenuhan\s*jp|jadwal\s*belajar|rencana\s*belajar)\b", norm_query):
             response_data = self._handle_learning_nudge_query(user_ctx)
             cache.set(cache_key, response_data, timeout=60)
             return Response(response_data, status=status.HTTP_200_OK)
+
+        # 4.6. AI Study Coach & Pemenuhan 20 JP ASN Tracker (Personalized Learning Plan)
+        is_jp_coach_query = bool(re.search(
+            r"\b(20\s*jp|jam\s*pelajaran|target\s*jp|pemenuhan\s*jp|status\s*jp|study\s*coach|rencana\s*belajar|jadwal\s*belajar|roadmap\s*belajar|kewajiban\s*(asn|belajar)|progress\s*jp|cek\s*jp|hitung\s*jp|target\s*belajar|jam\s*belajar|jp\s*saya)\b",
+            norm_query
+        ))
+        if is_jp_coach_query:
+            jp_response = self._handle_asn_jp_tracker(user_ctx, norm_query)
+            if jp_response:
+                cache.set(cache_key, jp_response, timeout=60)
+                return Response(jp_response, status=status.HTTP_200_OK)
 
         # 5. Handle Pertanyaan Terpersonalisasi Khusus (Sertifikat Saya)
         is_my_cert_query = re.search(
@@ -410,6 +421,17 @@ class AIAssistantChatAPIView(APIView):
             if notes_response:
                 cache.set(cache_key, notes_response, timeout=60)
                 return Response(notes_response, status=status.HTTP_200_OK)
+
+        # 6.95. AI Contextual Video Milestone & Timestamp Jumper
+        is_video_jump_query = bool(re.search(
+            r"\b(menit|detik|timestamp|lompat|tonton|putar|seek|milestone|chapter|bagian\s*mana|posisi\s*video|di\s*menit\s*berapa)\b",
+            norm_query
+        )) and not bool(re.search(r"\b(20\s*jp|jam\s*pelajaran|target\s*jp|jadwal\s*belajar)\b", norm_query))
+        if is_video_jump_query:
+            video_jump_response = self._handle_video_timestamp_jumper(user_message, norm_query, user_ctx, current_course)
+            if video_jump_response:
+                cache.set(cache_key, video_jump_response, timeout=60)
+                return Response(video_jump_response, status=status.HTTP_200_OK)
 
         # 7. Deep Syllabus & Lesson Search (Pencarian Isi Modul, Bab, & Materi Pembelajaran Spesifik)
         is_lesson_search = bool(re.search(
@@ -2357,6 +2379,747 @@ class AIAssistantChatAPIView(APIView):
                 "Rangkum materi lainnya",
                 "Latihan kuis materi kursus saya",
                 "Bagaimana cara unduh sertifikat?"
+            ],
+            "actions": actions
+        }
+
+    def _calculate_course_jp(self, course: api_models.Course) -> int:
+        """
+        Menghitung bobot Jam Pelajaran (JP) resmi e-learning untuk kursus LMS Setjen DPD RI
+        berdasarkan standar LAN RI (1 JP = 45 menit e-learning / pembelajaran mandiri).
+        """
+        if not course:
+            return 2
+
+        try:
+            total_seconds = 0
+            lectures = api_models.VariantItem.objects.filter(variant__course=course)
+            lecture_count = lectures.count()
+            for item in lectures:
+                if getattr(item, 'duration', None):
+                    total_seconds += item.duration.total_seconds()
+                elif getattr(item, 'duration_seconds', None):
+                    total_seconds += item.duration_seconds
+
+            if total_seconds > 0:
+                minutes = total_seconds / 60.0
+                calc_jp = max(2, round(minutes / 45.0))
+                return min(12, int(calc_jp))
+
+            # Hitung berdasarkan level & jumlah modul
+            if course.level == "Advanced":
+                return max(4, min(8, round(lecture_count * 1.2 + 2)))
+            elif course.level == "Intermediate":
+                return max(3, min(6, round(lecture_count * 1.0 + 1)))
+            else:
+                return max(2, min(4, round(lecture_count * 0.8 + 1)))
+        except Exception:
+            return 2
+
+    def _handle_asn_jp_tracker(self, user_ctx: Dict[str, Any], norm_query: str) -> Dict[str, Any]:
+        """
+        AI Study Coach & Pemenuhan 20 JP ASN Tracker:
+        Memantau akumulasi Jam Pelajaran (JP) tahunan pegawai Setjen DPD RI sesuai mandat LAN RI (minimal 20 JP/tahun),
+        menghitung sisa kebutuhan JP, menyusun rencana belajar mingguan cerdas (AI Weekly Study Schedule),
+        dan merekomendasikan kursus-kursus pengejar JP yang tepat.
+        """
+        import math
+        current_year = timezone.now().year
+        target_jp = 20
+        name = user_ctx.get("name") or "Rekan ASN"
+
+        if not user_ctx.get("is_authenticated"):
+            # Tamu / Pengguna belum login
+            return {
+                "status": "success",
+                "reply": (
+                    f"🎯 **Standar Pemenuhan Kewajiban 20 JP ASN Setjen DPD RI (Tahun {current_year}):**\n\n"
+                    "Berdasarkan **Peraturan LAN RI No. 10 Tahun 2018** tentang Pengembangan Kompetensi PNS, "
+                    "setiap Aparatur Sipil Negara diwajibkan memenuhi hak & kewajiban minimal **20 Jam Pelajaran (JP)** per tahun anggaran.\n\n"
+                    "• **Ketentuan JP:** 1 JP setara dengan 45 menit pembelajaran daring / e-learning mandiri.\n"
+                    "• **Pemanfaatan:** Perolehan JP dan sertifikat digital LMS terintegrasi langsung dengan Sasaran Kinerja Pegawai (SKP) dan rekam jejak kompetensi BPSDM Setjen DPD RI.\n\n"
+                    "👉 **Silakan masuk menggunakan akun SSO Setjen DPD RI** untuk memantau akumulasi JP Anda secara real-time dan mendapatkan rekomendasi jadwal belajar mingguan dari Manta AI!"
+                ),
+                "source": "asn_jp_tracker",
+                "jp_tracker": {
+                    "target_jp": target_jp,
+                    "achieved_jp": 0,
+                    "in_progress_jp": 0,
+                    "remaining_jp": target_jp,
+                    "completion_pct": 0,
+                    "projected_pct": 0,
+                    "status_code": "LOGIN_REQUIRED",
+                    "status_label": "Masuk SSO Diperlukan",
+                    "status_badge_theme": "amber",
+                    "year": current_year,
+                    "user_name": name,
+                    "weekly_plan": [],
+                    "needed_weeks": 10,
+                    "recommended_courses": []
+                },
+                "suggested_questions": [
+                    "Bagaimana cara login dengan SSO Setjen DPD RI?",
+                    "Rekomendasi kursus populer",
+                    "Apa itu LMS Setjen DPD RI?"
+                ],
+                "actions": [
+                    {"label": "🔐 Masuk Akun SSO", "url": "/login/", "type": "route"},
+                    {"label": "🔍 Katalog Kursus Pemenuhan JP", "url": "/search/", "type": "route"}
+                ]
+            }
+
+        user = api_models.User.objects.filter(id=user_ctx["user_id"]).first()
+        enrollments = api_models.EnrolledCourse.objects.filter(user=user).select_related('course') if user else []
+
+        completed_courses = []
+        active_courses = []
+        enrolled_course_ids = set()
+        achieved_jp = 0
+        in_progress_jp = 0
+
+        for enr in enrollments:
+            course = enr.course
+            enrolled_course_ids.add(course.id)
+            course_jp = self._calculate_course_jp(course)
+
+            has_cert = api_models.Certificate.objects.filter(user=user, course=course).exists()
+            pct = 0.0
+            try:
+                pct = round(enr.completion_percentage(), 1)
+            except Exception:
+                pct = 0.0
+
+            if has_cert or pct >= 100:
+                achieved_jp += course_jp
+                completed_courses.append({
+                    "id": course.id,
+                    "title": course.title,
+                    "jp": course_jp,
+                    "level": getattr(course, "level", "Umum"),
+                    "date": enr.date.strftime("%d %b %Y") if enr.date else ""
+                })
+            else:
+                in_progress_jp += course_jp
+                active_courses.append({
+                    "id": course.id,
+                    "title": course.title,
+                    "jp": course_jp,
+                    "level": getattr(course, "level", "Umum"),
+                    "progress": pct,
+                    "enrollment_id": enr.enrollment_id
+                })
+
+        remaining_jp = max(0, target_jp - achieved_jp)
+        completion_pct = min(100.0, round((achieved_jp / target_jp) * 100, 1))
+        projected_pct = min(100.0, round(((achieved_jp + in_progress_jp) / target_jp) * 100, 1))
+
+        # Penentuan status level
+        if achieved_jp >= target_jp:
+            status_code = "COMPLETED"
+            status_label = "Target 20 JP Terpenuhi! 🏆"
+            status_badge_theme = "emerald"
+        elif achieved_jp + in_progress_jp >= target_jp:
+            status_code = "ON_TRACK"
+            status_label = "Di Jalur Tepat (On Track) 🚀"
+            status_badge_theme = "cyan"
+        elif achieved_jp >= 10:
+            status_code = "HALF_WAY"
+            status_label = "Separuh Tercapai (50%+) ⏳"
+            status_badge_theme = "amber"
+        else:
+            status_code = "NEEDS_BOOST"
+            status_label = "Perlu Akselerasi Belajar ⚡"
+            status_badge_theme = "orange"
+
+        # AI Weekly Study Schedule (Rencana Belajar Mingguan Cerdas)
+        needed_weeks = max(1, math.ceil(remaining_jp / 2)) if remaining_jp > 0 else 0
+        weekly_plan = [
+            {
+                "day": "Rabu",
+                "time": "15:30 - 16:15 WIB (1 JP / 45 mnt)",
+                "focus": "Fokus modul video atau pembelajaran interaktif SCORM di sela-sela jam tenang tanpa rapat dinas.",
+                "tag": "Program Rabuan ASN"
+            },
+            {
+                "day": "Jumat",
+                "time": "14:00 - 14:45 WIB (1 JP / 45 mnt)",
+                "focus": "Uji pemahaman mandiri, kerjakan kuis evaluasi, dan terbitkan sertifikat digital resmi ber-QR Code.",
+                "tag": "Review Akhir Pekan"
+            }
+        ]
+
+        # Rekomendasi Kursus Pengejar JP (Kursus yang belum diambil oleh pengguna)
+        recommended_courses_qs = api_models.Course.objects.filter(
+            platform_status="Published"
+        ).exclude(id__in=enrolled_course_ids)
+
+        recommended_courses = []
+        for rc in recommended_courses_qs[:8]:
+            rc_jp = self._calculate_course_jp(rc)
+            recommended_courses.append({
+                "id": rc.id,
+                "title": rc.title,
+                "slug": rc.slug,
+                "level": getattr(rc, "level", "Umum"),
+                "jp": rc_jp,
+                "category": rc.category.title if getattr(rc, "category", None) else "Kompetensi ASN"
+            })
+
+        # Urutkan agar kursus dengan bobot JP optimal muncul terlebih dahulu
+        recommended_courses.sort(key=lambda x: x["jp"], reverse=True)
+        recommended_courses = recommended_courses[:3]
+
+        # Susun narasi personalisasi untuk pegawai
+        unit_info = f" ({user_ctx.get('organization_unit')})" if user_ctx.get('organization_unit') else ""
+        position_info = f" selaku **{user_ctx.get('position')}**" if user_ctx.get('position') else ""
+
+        reply = f"🎯 **Laporan Pemenuhan 20 JP ASN & AI Study Coach (Tahun {current_year})**\n\n"
+        reply += f"Yth. Bapak/Ibu **{name}**{position_info}{unit_info},\n\n"
+
+        if status_code == "COMPLETED":
+            reply += (
+                f"🎉 **Selamat! Target minimal tahunan 20 JP Anda telah TERPENUHI ({achieved_jp}/{target_jp} JP - {completion_pct}%).**\n\n"
+                f"Anda telah mengumpulkan total **{achieved_jp} JP** dari {len(completed_courses)} kursus bersertifikat resmi. "
+                "Capaian ini menjadi portofolio kompetensi yang sangat berharga dalam mendukung sasaran kinerja pegawai (SKP) di Setjen DPD RI.\n\n"
+                "💡 Anda tetap dapat mengambil kursus pengayaan (*masterclass / elective courses*) di bawah untuk terus mengasah spesialisasi keahlian."
+            )
+        elif status_code == "ON_TRACK":
+            reply += (
+                f"🚀 **Kabar Baik! Anda berada di jalur yang sangat tepat (On Track).**\n\n"
+                f"• **JP Terverifikasi Selesai:** **{achieved_jp} JP** ({completion_pct}%)\n"
+                f"• **JP Sedang Dipelajari:** **+{in_progress_jp} JP** (Potensi Proyeksi: **{projected_pct}%**)\n"
+                f"• **Kekurangan Kebutuhan:** **{remaining_jp} JP lagi**\n\n"
+                f"Jika Anda menyelesaikan kursus aktif Anda saat ini, target 20 JP tahunan Anda akan otomatis terpenuhi! "
+                f"Manta AI merekomendasikan komitmen 45 menit pada hari Rabu & Jumat untuk segera menuntaskannya."
+            )
+        else:
+            reply += (
+                f"📊 **Ringkasan Capaian Jam Pelajaran (JP) Anda:**\n\n"
+                f"• **JP Terselesaikan:** **{achieved_jp}** dari target 20 JP ({completion_pct}%)\n"
+                f"• **JP Sedang Berjalan:** **+{in_progress_jp} JP** di kursus aktif\n"
+                f"• **Kekurangan Target:** **{remaining_jp} JP lagi**\n\n"
+                f"💡 **AI Study Coach Recommendation:**\n"
+                f"Untuk menuntaskan sisa **{remaining_jp} JP** dengan santai dan tanpa mengganggu rutinitas dinas, "
+                f"Manta AI telah menyusun rencana belajar **2 sesi per minggu** (masing-masing 45 menit / 1 JP). "
+                f"Dengan ritme ini, target Anda diproyeksikan tuntas dalam **{needed_weeks} minggu ke depan**!"
+            )
+
+        actions = [
+            {"label": "📚 Buka Kursus Saya", "url": "/student/courses/", "type": "route"},
+            {"label": "🔍 Katalog Kursus Pengejar JP", "url": "/search/", "type": "route"}
+        ]
+        if user_ctx.get("certificates_count", 0) > 0:
+            actions.append({
+                "label": f"📜 Bukti Sertifikat ({user_ctx['certificates_count']})",
+                "url": "/student/sertifikat/",
+                "type": "route"
+            })
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "asn_jp_tracker",
+            "jp_tracker": {
+                "target_jp": target_jp,
+                "achieved_jp": achieved_jp,
+                "in_progress_jp": in_progress_jp,
+                "remaining_jp": remaining_jp,
+                "completion_pct": completion_pct,
+                "projected_pct": projected_pct,
+                "status_code": status_code,
+                "status_label": status_label,
+                "status_badge_theme": status_badge_theme,
+                "year": current_year,
+                "user_name": name,
+                "organization_unit": user_ctx.get("organization_unit"),
+                "position": user_ctx.get("position"),
+                "completed_courses": completed_courses,
+                "active_courses": active_courses,
+                "weekly_plan": weekly_plan,
+                "needed_weeks": needed_weeks,
+                "recommended_courses": recommended_courses
+            },
+            "suggested_questions": [
+                "Bagaimana cara unduh sertifikat setelah selesai?",
+                "Rekomendasi kursus sesuai unit kerja saya",
+                "Latihan kuis materi kursus saya"
+            ],
+            "actions": actions
+        }
+
+    def _get_learning_media_info(self, variant_item: Any) -> Dict[str, Any]:
+        """
+        Mengidentifikasi jenis media pembelajaran di LMS Setjen DPD RI:
+        - video: MP4, WebM, streaming video
+        - presentation: PPT, PPTX, Google Slides
+        - document: PDF, DOCX, naskah kajian
+        - audio: MP3, WAV, podcast pembelajaran
+        - scorm: SCORM 1.2, H5P modul interaktif
+        - general: Materi umum
+        """
+        if not variant_item:
+            return {
+                "media_type": "general",
+                "label": "Materi Pembelajaran",
+                "icon": "fas fa-book-open",
+                "action_verb": "Buka Materi",
+                "is_playable_media": False
+            }
+
+        # Cek SCORM / H5P
+        if getattr(variant_item, 'learning_module_id', None) or getattr(variant_item, 'item_type', None) in ['scorm', 'h5p']:
+            return {
+                "media_type": "scorm",
+                "label": "Modul Interaktif SCORM / H5P",
+                "icon": "fas fa-cube",
+                "action_verb": "Buka Modul Interaktif",
+                "is_playable_media": False
+            }
+
+        file_val = str(getattr(variant_item, 'file', '') or '').lower()
+
+        # Cek Video
+        video_exts = ['.mp4', '.webm', '.avi', '.mov', '.mkv']
+        if any(file_val.endswith(ext) or ext in file_val for ext in video_exts) or 'youtube.com' in file_val or 'youtu.be' in file_val:
+            return {
+                "media_type": "video",
+                "label": "Video Pembelajaran",
+                "icon": "fas fa-play-circle",
+                "action_verb": "Tonton Video",
+                "is_playable_media": True
+            }
+
+        # Cek Audio
+        audio_exts = ['.mp3', '.wav', '.ogg', '.m4a', '.aac']
+        if any(file_val.endswith(ext) or ext in file_val for ext in audio_exts):
+            return {
+                "media_type": "audio",
+                "label": "Audio Pembelajaran / Podcast",
+                "icon": "fas fa-headphones",
+                "action_verb": "Dengarkan Audio",
+                "is_playable_media": True
+            }
+
+        # Cek Presentasi PPT / PPTX / Google Slides
+        ppt_exts = ['.ppt', '.pptx', '.odp']
+        if any(file_val.endswith(ext) or ext in file_val for ext in ppt_exts) or 'docs.google.com/presentation' in file_val:
+            return {
+                "media_type": "presentation",
+                "label": "Paparan Presentasi (PPT/PPTX)",
+                "icon": "fas fa-file-powerpoint",
+                "action_verb": "Buka Paparan Slide",
+                "is_playable_media": False
+            }
+
+        # Cek Dokumen PDF / Word
+        doc_exts = ['.pdf', '.doc', '.docx', '.odt', '.txt']
+        if any(file_val.endswith(ext) or ext in file_val for ext in doc_exts) or 'docs.google.com/document' in file_val:
+            return {
+                "media_type": "document",
+                "label": "Dokumen / Naskah PDF",
+                "icon": "fas fa-file-pdf",
+                "action_verb": "Buka Dokumen PDF",
+                "is_playable_media": False
+            }
+
+        return {
+            "media_type": "general",
+            "label": "Materi Pembelajaran",
+            "icon": "fas fa-book-open",
+            "action_verb": "Buka Materi",
+            "is_playable_media": False
+        }
+
+    def _check_lesson_lock_status(self, user: Any, course: Any, target_item: Any) -> Tuple[bool, str, Dict[str, Any]]:
+        """
+        Memeriksa apakah materi/lesson dalam kursus masih terkunci (locked)
+        berdasarkan aturan sequential progression LMS Setjen DPD RI:
+        1. Pre-test wajib diselesaikan (jika kursus memiliki Pre-test).
+        2. Materi/kuis sebelumnya dalam kurikulum wajib dituntaskan (CompletedLesson / QuizAttempt passed).
+        """
+        if not user or not course or not target_item:
+            return False, "", None
+
+        # 1. Cek Pre-test
+        pre_test = api_models.Quiz.objects.filter(course=course, quiz_type='pre_post_test').first()
+        if not pre_test and getattr(course, 'parent_course', None):
+            pre_test = api_models.Quiz.objects.filter(course=course.parent_course, quiz_type='pre_post_test').first()
+
+        if pre_test:
+            has_pretest_done = api_models.QuizAttempt.objects.filter(user=user, quiz=pre_test, attempt_type='pre_test').exists()
+            if not has_pretest_done:
+                return True, "Selesaikan Pre-test terlebih dahulu untuk membuka kurikulum pembelajaran.", {
+                    "type": "pretest",
+                    "title": "Pre-test Kursus",
+                    "variant_item_id": None
+                }
+
+        # 2. Urutkan seluruh item kurikulum dalam kursus
+        curriculum_items = list(api_models.VariantItem.objects.filter(
+            variant__course=course
+        ).select_related('variant', 'quiz').order_by('variant__id', 'order', 'id'))
+
+        if not curriculum_items and getattr(course, 'parent_course', None):
+            curriculum_items = list(api_models.VariantItem.objects.filter(
+                variant__course=course.parent_course
+            ).select_related('variant', 'quiz').order_by('variant__id', 'order', 'id'))
+
+        target_idx = -1
+        for idx, item in enumerate(curriculum_items):
+            if item.variant_item_id == target_item.variant_item_id or item.id == target_item.id:
+                target_idx = idx
+                break
+
+        # Jika materi pertama (idx 0), otomatis terbuka
+        if target_idx <= 0:
+            return False, "", None
+
+        # Cek seluruh materi/kuis sebelumnya
+        for p_idx in range(target_idx):
+            prev_item = curriculum_items[p_idx]
+            if prev_item.item_type == 'quiz' or getattr(prev_item, 'quiz_id', None):
+                quiz_obj = prev_item.quiz
+                if quiz_obj:
+                    is_quiz_passed = api_models.QuizAttempt.objects.filter(user=user, quiz=quiz_obj, is_passed=True).exists()
+                    if not is_quiz_passed:
+                        return True, f'Luluskan kuis "{prev_item.title}" terlebih dahulu.', {
+                            "type": "quiz",
+                            "title": prev_item.title,
+                            "variant_item_id": prev_item.variant_item_id
+                        }
+            else:
+                is_lesson_done = api_models.CompletedLesson.objects.filter(
+                    user=user,
+                    variant_item__variant_item_id=prev_item.variant_item_id
+                ).exists()
+                if not is_lesson_done:
+                    return True, f'Selesaikan pembelajaran "{prev_item.title}" terlebih dahulu.', {
+                        "type": "lesson",
+                        "title": prev_item.title,
+                        "variant_item_id": prev_item.variant_item_id
+                    }
+
+        return False, "", None
+
+    def _handle_video_timestamp_jumper(
+        self,
+        raw_message: str,
+        norm_query: str,
+        user_ctx: Dict[str, Any],
+        current_course: Any
+    ) -> Dict[str, Any]:
+        """
+        AI Contextual Learning Navigator & Milestone Jumper:
+        Membantu siswa menemukan letak topik/pembahasan spesifik dalam berbagai bentuk materi
+        (Video, Paparan Presentasi PPTX/PPT, Dokumen PDF, Audio, atau Modul SCORM),
+        mengevaluasi status kuncian kurikulum (sequential locking), dan menyediakan tombol aksi langsung
+        yang aman dan selaras dengan progres belajar pengguna.
+        """
+        import re
+
+        user = api_models.User.objects.filter(id=user_ctx.get("user_id")).first() if user_ctx.get("is_authenticated") else None
+
+        # 1. Resolusi Target Kursus & Penyelarasan Versi Draft vs Published
+        target_course = current_course
+        if not target_course:
+            # Deteksi apakah query merujuk pada topik/kursus tertentu
+            if any(k in norm_query for k in ["design", "thinking", "empathize", "emphatize", "elemen", "art"]):
+                target_course = api_models.Course.objects.filter(
+                    platform_status="Published",
+                    title__icontains="Design Thinking"
+                ).order_by('-id').first()
+
+        if not target_course and user:
+            # Ambil dari kursus terdaftar pengguna yang memiliki materi
+            for enr in api_models.EnrolledCourse.objects.filter(user=user).select_related('course').order_by('-date'):
+                if api_models.VariantItem.objects.filter(variant__course=enr.course, item_type='lesson').exists():
+                    target_course = enr.course
+                    break
+
+        if not target_course:
+            target_course = api_models.Course.objects.filter(
+                platform_status="Published",
+                title__icontains="Design Thinking"
+            ).order_by('-id').first() or api_models.Course.objects.filter(platform_status="Published").order_by('-id').first()
+
+        if not target_course:
+            return None
+
+        # 2. Resolusi Enrollment: Hubungkan relasi draft/parent dan published copy
+        related_course_ids = [target_course.id]
+        if getattr(target_course, 'parent_course_id', None):
+            related_course_ids.append(target_course.parent_course_id)
+        child_ids = list(api_models.Course.objects.filter(parent_course=target_course).values_list('id', flat=True))
+        related_course_ids.extend(child_ids)
+
+        enrollment_id = None
+        user_enrolled_course = None
+        if user:
+            user_enr = api_models.EnrolledCourse.objects.filter(user=user, course_id__in=related_course_ids).first()
+            if user_enr:
+                user_enrolled_course = user_enr.course
+                enrollment_id = user_enr.enrollment_id
+                target_course = user_enrolled_course
+
+        # 3. Ambil seluruh materi kurikulum dalam kursus target (atau parent jika copy kosong)
+        all_lessons = api_models.VariantItem.objects.filter(
+            variant__course=target_course,
+            item_type='lesson'
+        ).select_related('variant').order_by('variant__id', 'order', 'id')
+
+        if not all_lessons.exists() and getattr(target_course, 'parent_course', None):
+            all_lessons = api_models.VariantItem.objects.filter(
+                variant__course=target_course.parent_course,
+                item_type='lesson'
+            ).select_related('variant').order_by('variant__id', 'order', 'id')
+
+        if not all_lessons.exists():
+            return None
+
+        # 4. Cari lesson yang paling sesuai dengan topik yang ditanyakan user
+        matched_lesson = None
+        highest_score = 0
+        for lsn in all_lessons:
+            score = 0
+            lsn_title_norm = lsn.title.lower()
+            for word in lsn_title_norm.split():
+                if len(word) > 2 and word in norm_query:
+                    score += 3
+            if "empathize" in norm_query and ("emphatize" in lsn_title_norm or "empathize" in lsn_title_norm):
+                score += 15
+            elif ("desain" in norm_query or "art" in norm_query) and "art" in lsn_title_norm:
+                score += 15
+            elif "elemen" in norm_query and "elemen" in lsn_title_norm:
+                score += 15
+            elif "pengenalan" in norm_query and "pengenalan" in lsn_title_norm:
+                score += 15
+
+            if score > highest_score:
+                highest_score = score
+                matched_lesson = lsn
+
+        if not matched_lesson:
+            matched_lesson = all_lessons.first()
+
+        # 5. Identifikasi jenis media pembelajaran (Video, Audio, PPTX, PDF, SCORM)
+        media_info = self._get_learning_media_info(matched_lesson)
+
+        # 6. Evaluasi Status Kuncian Kurikulum (Sequential Locking Integrity)
+        is_locked = False
+        lock_reason = ""
+        prereq_info = None
+        if user:
+            is_locked, lock_reason, prereq_info = self._check_lesson_lock_status(user, target_course, matched_lesson)
+
+        # 7. Deteksi Timestamp / Menit (untuk media playable: Video & Audio)
+        requested_seconds = None
+        time_match = re.search(r"\b(\d{1,2}):(\d{2})\b", raw_message)
+        if time_match:
+            requested_seconds = int(time_match.group(1)) * 60 + int(time_match.group(2))
+        else:
+            min_match = re.search(r"\bmenit\s*(ke\s*)?(\d+)\b", norm_query)
+            if min_match:
+                requested_seconds = int(min_match.group(2)) * 60
+            else:
+                sec_match = re.search(r"\bdetik\s*(ke\s*)?(\d+)\b", norm_query)
+                if sec_match:
+                    requested_seconds = int(sec_match.group(2))
+
+        # 8. Milestones Tematik Berbasis Topik Modul (bekerja pada semua versi kursus)
+        CURATED_TOPIC_MILESTONES = {
+            "pengenalan": [
+                {"seconds": 0, "label": "00:00", "title": "Pengenalan Paradigma Design Thinking"},
+                {"seconds": 30, "label": "00:30", "title": "Urgensi ASN Inovatif & Birokrasi Adaptif"},
+                {"seconds": 65, "label": "01:05", "title": "5 Tahapan Kunci Design Thinking (Empathize s/d Test)"}
+            ],
+            "elemen": [
+                {"seconds": 0, "label": "00:00", "title": "3 Pilar Inti: Human-Centered, Kolaboratif, Iteratif"},
+                {"seconds": 25, "label": "00:25", "title": "Mengapa Kolaborasi Lintas Unit Diperlukan"},
+                {"seconds": 45, "label": "00:45", "title": "Menghilangkan Asumsi & Bias Birokrasi"}
+            ],
+            "art": [
+                {"seconds": 0, "label": "00:00", "title": "Perbedaan Mendasar Seni vs Desain Solutif"},
+                {"seconds": 45, "label": "00:45", "title": "Desain Berorientasi Pemecahan Masalah Publik"},
+                {"seconds": 90, "label": "01:30", "title": "Menyelaraskan Estetika dan Efektivitas Regulasi"},
+                {"seconds": 130, "label": "02:10", "title": "Penerapan pada Tata Kelola Parlemen DPD RI"}
+            ],
+            "emphatize": [
+                {"seconds": 0, "label": "00:00", "title": "Pengantar Tahap Empathize (Mendengar Suara Publik)"},
+                {"seconds": 35, "label": "00:35", "title": "Memahami Sudut Pandang Pengguna Layanan DPD RI"},
+                {"seconds": 75, "label": "01:15", "title": "Teknik Wawancara & Observasi Langsung ASN"},
+                {"seconds": 110, "label": "01:50", "title": "Sintesis Temuan Empati ke Problem Statement"}
+            ]
+        }
+
+        total_seconds = 120
+        if getattr(matched_lesson, 'duration', None):
+            try:
+                total_seconds = int(matched_lesson.duration.total_seconds())
+            except Exception:
+                total_seconds = 120
+
+        matched_title_lower = matched_lesson.title.lower()
+        milestones = None
+        for key, ms_list in CURATED_TOPIC_MILESTONES.items():
+            if key in matched_title_lower:
+                milestones = ms_list
+                break
+
+        if not milestones:
+            s1 = 0
+            s2 = max(10, int(total_seconds * 0.35))
+            s3 = max(20, int(total_seconds * 0.70))
+            def fmt(s):
+                m = s // 60
+                sec = s % 60
+                return f"{m:02d}:{sec:02d}"
+            milestones = [
+                {"seconds": s1, "label": fmt(s1), "title": f"Pengantar & Konsep Pokok {matched_lesson.title}"},
+                {"seconds": s2, "label": fmt(s2), "title": "Pembahasan Inti & Teori Utama"},
+                {"seconds": s3, "label": fmt(s3), "title": "Studi Kasus & Penerapan di Setjen DPD RI"}
+            ]
+
+        # Tentukan target detik dan milestone aktif
+        if requested_seconds is not None:
+            target_seconds = min(total_seconds, max(0, requested_seconds))
+            active_milestone = milestones[0]
+            for ms in milestones:
+                if ms["seconds"] <= target_seconds:
+                    active_milestone = ms
+        else:
+            active_milestone = milestones[0]
+            for ms in milestones:
+                ms_title_norm = ms["title"].lower()
+                for token in norm_query.split():
+                    if len(token) > 3 and token in ms_title_norm:
+                        active_milestone = ms
+                        break
+            target_seconds = active_milestone["seconds"]
+
+        target_minutes = target_seconds // 60
+        target_secs_rem = target_seconds % 60
+        timestamp_label = f"{target_minutes:02d}:{target_secs_rem:02d}"
+
+        # URL Ruang Belajar Mahasiswa
+        player_url = f"/student/courses/{enrollment_id}/" if enrollment_id else f"/course-detail/{target_course.slug}/"
+
+        # 9. Susun Narasi Respon & Tombol Aksi Cerdas
+        actions = []
+
+        if is_locked:
+            reply = (
+                f"🔒 **Materi Pembelajaran Masih Terkunci:**\n\n"
+                f"Topik yang Anda tanyakan berada pada modul **{matched_lesson.title}** ({media_info['label']}) "
+                f"di pelatihan *{target_course.title}*.\n\n"
+                f"Namun, kurikulum LMS Setjen DPD RI menerapkan prinsip **pembelajaran berurutan (*sequential progression*)** "
+                f"untuk memastikan pemahaman menyeluruh sebelum melangkah ke bab berikutnya.\n\n"
+                f"⚠️ **Prasyarat yang Perlu Diselesaikan Terlebih Dahulu:**\n"
+                f"• {lock_reason}\n\n"
+                f"👉 Silakan selesaikan pembelajaran/kuis prasyarat tersebut terlebih dahulu agar materi ini otomatis terbuka dan dapat diakses."
+            )
+            if enrollment_id:
+                actions.append({
+                    "label": f"🔓 Buka Pembelajaran Prasyarat ↗",
+                    "url": f"/student/courses/{enrollment_id}/",
+                    "type": "route"
+                })
+            else:
+                actions.append({
+                    "label": "📚 Buka Kursus Saya",
+                    "url": "/student/courses/",
+                    "type": "route"
+                })
+        else:
+            # Kondisi materi sudah terbuka (unlocked)
+            if media_info["is_playable_media"]:
+                # Media Video / Audio
+                reply = (
+                    f"🎬 **AI {media_info['label']} Milestone & Timestamp Jumper:**\n\n"
+                    f"Materi yang Anda tanyakan berada pada {media_info['label'].lower()} **{matched_lesson.title}** "
+                    f"(Pelatihan *{target_course.title}*).\n\n"
+                    f"📌 **Poin Pembahasan Terkait:**\n"
+                    f"• **Topik:** {active_milestone['title']}\n"
+                    f"• **Posisi Pembahasan:** Menit **{timestamp_label}**\n\n"
+                    f"👉 Klik tombol **{media_info['action_verb']} di Menit {timestamp_label}** di bawah untuk langsung menuju detik pembahasan tersebut!"
+                )
+                actions.append({
+                    "label": f"▶️ {media_info['action_verb']} di Menit {timestamp_label}",
+                    "action": "jump_to_video",
+                    "seconds": target_seconds,
+                    "variant_item_id": matched_lesson.variant_item_id,
+                    "milestone_title": active_milestone["title"],
+                    "course_slug": target_course.slug,
+                    "enrollment_id": enrollment_id,
+                    "timestamp_label": timestamp_label,
+                    "media_type": media_info["media_type"],
+                    "type": "video_jump"
+                })
+            else:
+                # Media Non-Playable (PPT/PPTX, Dokumen PDF, Modul SCORM)
+                reply = (
+                    f"📚 **AI Learning Navigator ({media_info['label']}):**\n\n"
+                    f"Materi yang Anda tanyakan dibahas pada modul **{matched_lesson.title}** "
+                    f"dalam format **{media_info['label']}** (Pelatihan *{target_course.title}*).\n\n"
+                    f"📌 **Detail Materi:**\n"
+                    f"• **Tipe Media:** {media_info['label']}\n"
+                    f"• **Topik Pokok:** {active_milestone['title']}\n\n"
+                    f"👉 Klik tombol **{media_info['action_verb']}** di bawah untuk langsung membuka materi ini di Ruang Belajar!"
+                )
+                actions.append({
+                    "label": f"📖 {media_info['action_verb']} ↗",
+                    "action": "jump_to_video",
+                    "seconds": 0,
+                    "variant_item_id": matched_lesson.variant_item_id,
+                    "milestone_title": active_milestone["title"],
+                    "course_slug": target_course.slug,
+                    "enrollment_id": enrollment_id,
+                    "timestamp_label": "Awal Modul",
+                    "media_type": media_info["media_type"],
+                    "type": "video_jump"
+                })
+
+            if enrollment_id:
+                actions.append({
+                    "label": "📖 Buka Ruang Belajar Kursus",
+                    "url": player_url,
+                    "type": "route"
+                })
+            else:
+                actions.append({
+                    "label": "🔍 Silabus & Info Kursus",
+                    "url": f"/course-detail/{target_course.slug}/",
+                    "type": "route"
+                })
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "video_timestamp_jumper",
+            "video_jumper": {
+                "course_id": target_course.id,
+                "course_title": target_course.title,
+                "course_slug": target_course.slug,
+                "enrollment_id": enrollment_id,
+                "lesson_id": matched_lesson.id,
+                "variant_item_id": matched_lesson.variant_item_id,
+                "lesson_title": matched_lesson.title,
+                "target_seconds": target_seconds,
+                "timestamp_label": timestamp_label,
+                "milestone_title": active_milestone["title"],
+                "milestones": milestones if media_info["is_playable_media"] else [],
+                "player_url": player_url,
+                "media_type": media_info["media_type"],
+                "media_label": media_info["label"],
+                "media_icon": media_info["icon"],
+                "action_verb": media_info["action_verb"],
+                "is_locked": is_locked,
+                "lock_reason": lock_reason,
+                "prerequisite": prereq_info
+            },
+            "suggested_questions": [
+                "Bagaimana cara menyelesaikan kursus ini?",
+                "Rangkum materi ini ke catatan belajar",
+                "Latihan kuis materi kursus saya"
             ],
             "actions": actions
         }

@@ -521,7 +521,13 @@ class FileUploadAPIView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser,)
 
-    ALLOWED_EXTENSIONS = {'.pdf', '.png', '.jpg', '.jpeg', '.mp4'}
+    ALLOWED_EXTENSIONS = {
+        '.pdf', '.png', '.jpg', '.jpeg', '.webp',
+        '.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv',
+        '.ppt', '.pptx',
+        '.doc', '.docx', '.txt',
+        '.mp3', '.wav', '.ogg', '.m4a', '.aac'
+    }
     DANGEROUS_EXTENSIONS = {
         '.html', '.htm', '.svg', '.php', '.phtml', '.php3', '.php4', '.php5',
         '.phps', '.phar', '.sh', '.bash', '.exe', '.bat', '.cmd', '.js',
@@ -533,7 +539,27 @@ class FileUploadAPIView(APIView):
         '.png': ['image/png'],
         '.jpg': ['image/jpeg', 'image/pjpeg'],
         '.jpeg': ['image/jpeg', 'image/pjpeg'],
-        '.mp4': ['video/mp4', 'application/mp4', 'video/x-m4v'],
+        '.webp': ['image/webp'],
+        # Video
+        '.mp4': ['video/mp4', 'application/mp4', 'video/x-m4v', 'video/octet-stream', 'application/octet-stream'],
+        '.webm': ['video/webm'],
+        '.ogv': ['video/ogg'],
+        '.mov': ['video/quicktime'],
+        '.avi': ['video/x-msvideo', 'video/avi'],
+        '.mkv': ['video/x-matroska', 'video/mkv'],
+        # Presentasi
+        '.ppt': ['application/vnd.ms-powerpoint'],
+        '.pptx': ['application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/zip', 'application/octet-stream'],
+        # Dokumen
+        '.doc': ['application/msword'],
+        '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/octet-stream'],
+        '.txt': ['text/plain'],
+        # Audio
+        '.mp3': ['audio/mpeg', 'audio/mp3'],
+        '.wav': ['audio/wav', 'audio/x-wav'],
+        '.ogg': ['audio/ogg', 'application/ogg'],
+        '.m4a': ['audio/mp4', 'audio/x-m4a', 'audio/m4a'],
+        '.aac': ['audio/aac']
     }
 
     @swagger_auto_schema(
@@ -665,8 +691,8 @@ class FileUploadAPIView(APIView):
             "file_type": file_category
         }
 
-        # Handle video duration metadata if it is an MP4 video
-        if file_extension == '.mp4':
+        # Handle video duration metadata if it is a supported video
+        if file_extension in ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogv']:
             file_full_path = os.path.join(default_storage.location, file_path)
             try:
                 if VideoFileClip:
@@ -692,11 +718,15 @@ class FileUploadAPIView(APIView):
 
     def determine_file_type(self, file_extension):
         """Determine file type category based on extension"""
-        if file_extension == '.mp4':
+        if file_extension in ['.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv']:
             return "video"
-        elif file_extension == '.pdf':
+        elif file_extension in ['.ppt', '.pptx']:
+            return "presentation"
+        elif file_extension in ['.pdf', '.doc', '.docx', '.txt']:
             return "document"
-        elif file_extension in ['.jpg', '.jpeg', '.png']:
+        elif file_extension in ['.mp3', '.wav', '.ogg', '.m4a', '.aac']:
+            return "audio"
+        elif file_extension in ['.jpg', '.jpeg', '.png', '.webp']:
             return "image"
         return "other"
 

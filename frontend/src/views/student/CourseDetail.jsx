@@ -1873,129 +1873,173 @@ function CourseDetail() {
 
 
 
-    // ✨ Pilar 3: Video Timestamp Linking handler
-
+    // ✨ Pilar 3: Video Timestamp Linking handler (with Sequential Progression & Multi-Format Protection)
     const handleJumpToVideoTimestamp = useCallback((targetVariantItemId, seconds) => {
-
         const secNum = Math.max(0, Math.floor(Number(seconds) || 0));
 
-
-
-        // If target lesson is already active
-
-        if (variantItem && (!targetVariantItemId || variantItem.variant_item_id === targetVariantItemId)) {
-
-            if (videoPlayerRef.current?.seekToPosition) {
-
-                videoPlayerRef.current.seekToPosition(secNum);
-
-            }
-
-            if (videoPlayerContainerRef.current) {
-
-                videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            }
-
+        // 1. Verifikasi Prasyarat Pre-test
+        if (pretestRequired && !hasCompletedPretest) {
             Toast().fire({
-
-                icon: 'info',
-
-                title: `Melompat ke menit ${formatTimestamp(secNum)}`,
-
-                timer: 1800,
-
-                showConfirmButton: false
-
+                icon: 'warning',
+                title: 'Kurikulum Terkunci 🔒',
+                text: 'Harap selesaikan Pre-test diagnostik terlebih dahulu untuk membuka akses kurikulum pembelajaran.',
+                timer: 4500
             });
-
             return;
-
         }
 
-
-
-        // If target lesson is different or no lesson open, locate in curriculum
-
+        // 2. Evaluasi Status Kuncian Sekuensial Kurikulum
         let targetLesson = null;
+        let isLocked = false;
+        let lockReason = '';
 
         if (course?.curriculum && targetVariantItemId) {
-
+            const flattened = [];
             for (const variant of course.curriculum) {
-
-                const found = (variant.variant_items || variant.items || []).find(
-
-                    it => it.variant_item_id === targetVariantItemId
-
-                );
-
-                if (found) {
-
-                    targetLesson = found;
-
-                    break;
-
+                const items = variant.variant_items || variant.items || [];
+                for (const it of items) {
+                    flattened.push({
+                        ...it,
+                        sectionTitle: variant.title
+                    });
                 }
-
             }
 
+            const targetIdx = flattened.findIndex(it => it.variant_item_id === targetVariantItemId);
+            if (targetIdx !== -1) {
+                targetLesson = flattened[targetIdx];
+                // Periksa apakah semua materi dan kuis sebelumnya sudah selesai / lulus
+                for (let i = 0; i < targetIdx; i++) {
+                    const prev = flattened[i];
+                    const isQuiz = prev.item_type === 'quiz' || Boolean(prev.quiz_id) || Boolean(prev.quiz);
+                    let isDone = false;
+
+                    if (isQuiz) {
+                        const qId = prev.quiz_id || (prev.quiz && typeof prev.quiz === 'object' ? prev.quiz.quiz_id : prev.quiz);
+                        const matchedQuiz = (quizzes || []).find(q => q.quiz_id === qId || String(q.id) === String(qId)) || prev.quiz_detail;
+                        isDone = Boolean(matchedQuiz?.is_passed || prev.is_completed);
+                    } else {
+                        isDone = Boolean(
+                            prev.is_completed ||
+                            course.completed_lesson?.some(cl => cl.variant_item?.variant_item_id === prev.variant_item_id)
+                        );
+                    }
+
+                    if (!isDone) {
+                        isLocked = true;
+                        lockReason = `Selesaikan ${isQuiz ? 'kuis' : 'pembelajaran'} "${prev.title}" terlebih dahulu sebelum membuka materi ini.`;
+                        break;
+                    }
+                }
+            }
         }
 
-
-
-        if (targetLesson) {
-
-            handlePlayLessonWithAutoplay(targetLesson);
-
-            setSeekPosition(secNum);
-
-            setTimeout(() => {
-
-                if (videoPlayerRef.current?.seekToPosition) {
-
-                    videoPlayerRef.current.seekToPosition(secNum);
-
-                }
-
-                if (videoPlayerContainerRef.current) {
-
-                    videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                }
-
-            }, 350);
-
+        if (isLocked) {
             Toast().fire({
-
-                icon: 'info',
-
-                title: `Membuka materi & melompat ke ${formatTimestamp(secNum)}`,
-
-                timer: 2200,
-
-                showConfirmButton: false
-
+                icon: 'warning',
+                title: 'Materi Masih Terkunci 🔒',
+                text: lockReason,
+                timer: 4500
             });
-
-        } else {
-
-            // Fallback: seek current player if possible
-
-            if (videoPlayerRef.current?.seekToPosition) {
-
-                videoPlayerRef.current.seekToPosition(secNum);
-
-            }
-
-            if (videoPlayerContainerRef.current) {
-
-                videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            }
-
+            return;
         }
 
-    }, [variantItem, course]);
+        // If target lesson is already active
+        if (variantItem && (!targetVariantItemId || variantItem.variant_item_id === targetVariantItemId)) {
+            if (videoPlayerRef.current?.seekToPosition) {
+                videoPlayerRef.current.seekToPosition(secNum);
+            }
+            if (videoPlayerContainerRef.current) {
+                videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            if (secNum > 0) {
+                Toast().fire({
+                    icon: 'info',
+                    title: `Melompat ke menit ${formatTimestamp(secNum)}`,
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+            }
+            return;
+        }
+
+        // If target lesson is different or no lesson open, locate and play
+        if (targetLesson) {
+            handlePlayLessonWithAutoplay(targetLesson);
+            if (secNum > 0) {
+                setSeekPosition(secNum);
+                setTimeout(() => {
+                    if (videoPlayerRef.current?.seekToPosition) {
+                        videoPlayerRef.current.seekToPosition(secNum);
+                    }
+                    if (videoPlayerContainerRef.current) {
+                        videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 350);
+                Toast().fire({
+                    icon: 'info',
+                    title: `Membuka materi & melompat ke ${formatTimestamp(secNum)}`,
+                    timer: 2200,
+                    showConfirmButton: false
+                });
+            } else {
+                setTimeout(() => {
+                    if (videoPlayerContainerRef.current) {
+                        videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 200);
+                Toast().fire({
+                    icon: 'info',
+                    title: `Membuka materi: ${targetLesson.title}`,
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+            }
+        } else {
+            // Fallback: seek current player if possible
+            if (videoPlayerRef.current?.seekToPosition && secNum > 0) {
+                videoPlayerRef.current.seekToPosition(secNum);
+            }
+            if (videoPlayerContainerRef.current) {
+                videoPlayerContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }, [variantItem, course, pretestRequired, hasCompletedPretest, quizzes]);
+
+    // ✨ Listener untuk Manta AI Contextual Video Timestamp Jumper
+    useEffect(() => {
+        const handleMantaJumpEvent = (e) => {
+            const { variantItemId, seconds } = e.detail || {};
+            if (seconds !== undefined && seconds !== null) {
+                handleJumpToVideoTimestamp(variantItemId, seconds);
+            }
+        };
+        window.addEventListener('manta_jump_to_video_timestamp', handleMantaJumpEvent);
+        return () => {
+            window.removeEventListener('manta_jump_to_video_timestamp', handleMantaJumpEvent);
+        };
+    }, [handleJumpToVideoTimestamp]);
+
+    // ✨ Cek URL Search Params (?seek=xx&lesson=yy) saat dibuka dari tautan Manta AI
+    useEffect(() => {
+        if (!course) return;
+        const searchParams = new URLSearchParams(window.location.search);
+        const seekVal = searchParams.get('seek');
+        const lessonVal = searchParams.get('lesson');
+        if (seekVal !== null) {
+            const parsedSec = parseInt(seekVal, 10);
+            if (!isNaN(parsedSec)) {
+                const timer = setTimeout(() => {
+                    handleJumpToVideoTimestamp(lessonVal, parsedSec);
+                    const cleanUrl = new URL(window.location.href);
+                    cleanUrl.searchParams.delete('seek');
+                    cleanUrl.searchParams.delete('lesson');
+                    window.history.replaceState({}, '', cleanUrl.toString());
+                }, 600);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [course, handleJumpToVideoTimestamp]);
 
 
 

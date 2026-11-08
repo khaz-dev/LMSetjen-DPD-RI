@@ -809,6 +809,25 @@ function SortableLessonItem({
 
     const uploadState = fileUploadStates[`${variantIndex}_${itemIndex}`] || {};
 
+    // ✨ Multi-Format Media State (Video, Presentation PPTX, Document PDF, Audio MP3, Links)
+    const activeMediaUrl = item?.uploadedFile || item?.file || item?.youtubeLink || item?.gdriveLink || '';
+    const hasExistingUrlMedia = Boolean(item?.youtubeLink || item?.gdriveLink || (typeof activeMediaUrl === 'string' && activeMediaUrl.startsWith('http') && !activeMediaUrl.includes('/media/curriculum-media/')));
+    const [mediaTab, setMediaTab] = useState(hasExistingUrlMedia ? 'url' : 'upload');
+    const [mediaUrlInput, setMediaUrlInput] = useState(item?.youtubeLink || item?.gdriveLink || (hasExistingUrlMedia ? activeMediaUrl : ''));
+
+    useEffect(() => {
+        if (item?.youtubeLink) {
+            setMediaUrlInput(item.youtubeLink);
+            setMediaTab('url');
+        } else if (item?.gdriveLink) {
+            setMediaUrlInput(item.gdriveLink);
+            setMediaTab('url');
+        } else if (activeMediaUrl && typeof activeMediaUrl === 'string' && activeMediaUrl.startsWith('http') && !activeMediaUrl.includes('/media/curriculum-media/')) {
+            setMediaUrlInput(activeMediaUrl);
+            setMediaTab('url');
+        }
+    }, [item?.youtubeLink, item?.gdriveLink, activeMediaUrl]);
+
     return (
         <div
             ref={setNodeRef}
@@ -861,10 +880,64 @@ function SortableLessonItem({
                             </button>
                         </div>
 
-                        <span className={`lesson-number-badge ${isItemQuiz ? 'bg-warning-subtle text-dark border border-warning' : ''}`}>
-                            <i className={`fas ${isItemQuiz ? 'fa-clipboard-check text-warning' : isItemScorm ? 'fa-cubes' : 'fa-play-circle'} me-1`}></i>
-                            {isItemQuiz ? `Kuis ${itemIndex + 1}` : `Pelajaran ${itemIndex + 1}`}
-                        </span>
+                        {(() => {
+                            const rawMedia = item?.uploadedFile || item?.file || item?.youtubeLink || item?.gdriveLink || '';
+                            const mediaExt = rawMedia.toLowerCase().split('.').pop().split('?')[0];
+                            const isItemAudio = ['mp3', 'wav', 'ogg', 'm4a', 'aac'].includes(mediaExt);
+                            const isItemPdf = mediaExt === 'pdf';
+                            const isItemPpt = ['ppt', 'pptx'].includes(mediaExt) || rawMedia.includes('docs.google.com/presentation');
+                            const isItemWord = ['doc', 'docx', 'txt'].includes(mediaExt);
+                            const isItemVideo = ['mp4', 'webm', 'ogv', 'mov', 'avi', 'mkv'].includes(mediaExt) || rawMedia.includes('youtube.com') || rawMedia.includes('youtu.be') || Boolean(item?.youtubeLink);
+                            const isItemWebLink = Boolean(rawMedia && rawMedia.startsWith('http') && !isItemAudio && !isItemPdf && !isItemPpt && !isItemWord && !isItemVideo);
+
+                            return (
+                                <div className="d-flex align-items-center gap-1 flex-wrap">
+                                    <span className={`lesson-number-badge ${isItemQuiz ? 'bg-warning-subtle text-dark border border-warning' : ''}`}>
+                                        <i className={`fas ${
+                                            isItemQuiz ? 'fa-clipboard-check text-warning' : 
+                                            isItemScorm ? 'fa-cubes' : 
+                                            isItemAudio ? 'fa-headphones text-info' :
+                                            isItemPpt ? 'fa-file-powerpoint text-warning' :
+                                            isItemPdf ? 'fa-file-pdf text-danger' :
+                                            isItemWord ? 'fa-file-word text-primary' :
+                                            isItemWebLink ? 'fa-link text-secondary' :
+                                            'fa-play-circle text-teal'
+                                        } me-1`}></i>
+                                        {isItemQuiz ? `Kuis ${itemIndex + 1}` : `Pelajaran ${itemIndex + 1}`}
+                                    </span>
+                                    {isItemVideo && !isItemScorm && !isItemQuiz && (
+                                        <span className="badge bg-teal-subtle text-teal border border-teal-subtle ms-1" style={{ fontSize: "11px" }}>
+                                            <i className="fas fa-video me-1"></i>Video
+                                        </span>
+                                    )}
+                                    {isItemPpt && (
+                                        <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1" style={{ fontSize: "11px" }}>
+                                            <i className="fas fa-file-powerpoint me-1"></i>Presentasi
+                                        </span>
+                                    )}
+                                    {isItemPdf && (
+                                        <span className="badge bg-danger-subtle text-danger border border-danger-subtle ms-1" style={{ fontSize: "11px" }}>
+                                            <i className="fas fa-file-pdf me-1"></i>PDF
+                                        </span>
+                                    )}
+                                    {isItemAudio && (
+                                        <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle ms-1" style={{ fontSize: "11px" }}>
+                                            <i className="fas fa-headphones me-1"></i>Audio
+                                        </span>
+                                    )}
+                                    {isItemWord && (
+                                        <span className="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" style={{ fontSize: "11px" }}>
+                                            <i className="fas fa-file-word me-1"></i>Dokumen
+                                        </span>
+                                    )}
+                                    {isItemWebLink && (
+                                        <span className="badge bg-secondary-subtle text-dark border ms-1" style={{ fontSize: "11px" }}>
+                                            <i className="fas fa-link me-1"></i>Tautan Web
+                                        </span>
+                                    )}
+                                </div>
+                            );
+                        })()}
                         {isItemScorm && (
                             <>
                                 <span className="badge badge-scorm-pill bg-white text-dark border shadow-sm ms-1 fw-bold d-inline-flex align-items-center" style={{ fontSize: "11px", padding: "3px 8px", gap: "6px" }}>
@@ -1347,258 +1420,456 @@ function SortableLessonItem({
                             </div>
                         ) : (
                             <>
-                                {/* ✨ PHASE 4.173: Video Preview Section - Shows currently selected media */}
-                                {(item?.youtubeLink || item?.uploadedFile) && (
-                                    <div className="mb-4">
-                                        <div className="card border-info shadow-sm">
-                                            <div className="card-header bg-info text-white d-flex align-items-center justify-content-between" style={{ cursor: 'pointer' }} onClick={() => togglePreviewVisibility(variantIndex, itemIndex)}>
-                                                <div className="d-flex align-items-center">
-                                                    <i className="fas fa-play-circle me-2"></i>
-                                                    <strong>Pratinjau Video Pelajaran</strong>
-                                                </div>
-                                                <i className={`fas fa-chevron-${previewVisibility[`${variantIndex}_${itemIndex}`] ? 'up' : 'down'}`}></i>
-                                            </div>
-                                            {previewVisibility[`${variantIndex}_${itemIndex}`] === true && (
-                                                <div className="card-body">
-                                                    {/* YouTube Preview */}
-                                                    {item?.youtubeLink && getMediaSourceForPreview(item) === 'youtube' && (
-                                                        <div className="ratio ratio-16x9 mb-2">
-                                                            <iframe
-                                                                src={`https://www.youtube-nocookie.com/embed/${extractYoutubeIdLesson(item.youtubeLink) || ''}`}
-                                                                title="YouTube video player"
-                                                                frameBorder="0"
-                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                                allowFullScreen
-                                                            ></iframe>
-                                                        </div>
-                                                    )}
+                                {(() => {
+                                    const mediaUrl = activeMediaUrl || '';
+                                    const isYouTube = Boolean(item?.youtubeLink || (typeof mediaUrl === 'string' && (mediaUrl.includes('youtube.com') || mediaUrl.includes('youtu.be'))));
+                                    const isGDrive = Boolean(item?.gdriveLink || (typeof mediaUrl === 'string' && mediaUrl.includes('drive.google.com')));
+                                    const isAudio = /\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i.test(mediaUrl) || item?.file_type === 'audio';
+                                    const isPdf = /\.pdf(\?.*)?$/i.test(mediaUrl) || item?.file_type === 'pdf';
+                                    const isPresentation = /\.(ppt|pptx)(\?.*)?$/i.test(mediaUrl) || (typeof mediaUrl === 'string' && mediaUrl.includes('docs.google.com/presentation')) || item?.file_type === 'presentation';
+                                    const isDoc = /\.(doc|docx|txt)(\?.*)?$/i.test(mediaUrl) || (typeof mediaUrl === 'string' && mediaUrl.includes('docs.google.com/document')) || item?.file_type === 'document';
 
-                                                    {/* Uploaded File Preview */}
-                                                    {item?.uploadedFile && getMediaSourceForPreview(item) === 'upload' && (
-                                                        <div>
-                                                            <video
-                                                                width="100%"
-                                                                controls
-                                                                className="rounded"
-                                                                style={{ maxHeight: '400px', backgroundColor: '#000' }}
-                                                            >
-                                                                <source src={item.uploadedFile} type="video/mp4" />
-                                                                <p>Browser Anda tidak mendukung putar video HTML5.</p>
-                                                            </video>
+                                    return (
+                                        <>
+                                            {/* Media Preview Section */}
+                                            {Boolean(mediaUrl) && (
+                                                <div className="mb-4">
+                                                    <div className="card border-primary shadow-sm">
+                                                        <div
+                                                            className="card-header bg-light d-flex align-items-center justify-content-between py-2"
+                                                            style={{ cursor: 'pointer' }}
+                                                            onClick={() => togglePreviewVisibility(variantIndex, itemIndex)}
+                                                        >
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                <span className="badge bg-primary">
+                                                                    <i className={
+                                                                        isAudio ? "fas fa-headphones me-1" :
+                                                                        isPdf ? "fas fa-file-pdf me-1" :
+                                                                        isPresentation ? "fas fa-file-powerpoint me-1" :
+                                                                        isDoc ? "fas fa-file-word me-1" :
+                                                                        "fas fa-play-circle me-1"
+                                                                    }></i>
+                                                                    {isAudio ? "Audio Materi" :
+                                                                     isPdf ? "Dokumen PDF" :
+                                                                     isPresentation ? "Slide Presentasi" :
+                                                                     isDoc ? "Dokumen Teks" :
+                                                                     "Video Pelajaran"}
+                                                                </span>
+                                                                <strong className="text-dark small text-truncate" style={{ maxWidth: '300px' }}>
+                                                                    {mediaUrl.split('/').pop().split('?')[0] || "Media Terpasang"}
+                                                                </strong>
+                                                            </div>
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-outline-danger py-0 px-2"
+                                                                    title="Hapus media dari pelajaran ini"
+                                                                    onClick={async (e) => {
+                                                                        e.stopPropagation();
+                                                                        if (window.confirm("Hapus media ini dari materi pembelajaran?")) {
+                                                                            if (item?.uploadedFile && item.uploadedFile.includes('/media/')) {
+                                                                                await handleDeleteLessonFile(variantIndex, itemIndex, item.uploadedFile);
+                                                                            } else {
+                                                                                handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
+                                                                                handleLessonChange(variantIndex, itemIndex, "file", "");
+                                                                                handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
+                                                                                handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
+                                                                                handleLessonChange(variantIndex, itemIndex, "media_source", "");
+                                                                                setTimeout(() => autoSaveCurriculum(), 100);
+                                                                            }
+                                                                            setMediaUrlInput('');
+                                                                            Toast().fire({
+                                                                                icon: "success",
+                                                                                title: "Media Dihapus",
+                                                                                text: "Media pelajaran berhasil dilepas.",
+                                                                                timer: 1500,
+                                                                                showConfirmButton: false
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <i className="fas fa-trash-alt me-1"></i> Hapus Media
+                                                                </button>
+                                                                <i className={`fas fa-chevron-${previewVisibility[`${variantIndex}_${itemIndex}`] ? 'up' : 'down'} text-muted`}></i>
+                                                            </div>
                                                         </div>
-                                                    )}
+                                                        {previewVisibility[`${variantIndex}_${itemIndex}`] !== false && (
+                                                            <div className="card-body p-3">
+                                                                {isYouTube && (
+                                                                    <div className="ratio ratio-16x9 rounded overflow-hidden shadow-sm">
+                                                                        <iframe
+                                                                            src={`https://www.youtube-nocookie.com/embed/${extractYoutubeIdLesson(item.youtubeLink || mediaUrl) || ''}`}
+                                                                            title="YouTube video player"
+                                                                            frameBorder="0"
+                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                            allowFullScreen
+                                                                        ></iframe>
+                                                                    </div>
+                                                                )}
+
+                                                                {isGDrive && !isYouTube && (
+                                                                    <div className="ratio ratio-16x9 rounded overflow-hidden shadow-sm">
+                                                                        <iframe
+                                                                            src={mediaUrl.includes('/preview') ? mediaUrl : mediaUrl.replace(/\/view(\?.*)?$/, '/preview')}
+                                                                            title="Google Drive Media"
+                                                                            allow="autoplay"
+                                                                        ></iframe>
+                                                                    </div>
+                                                                )}
+
+                                                                {isAudio && !isYouTube && !isGDrive && (
+                                                                    <div className="p-3 bg-light rounded text-center border">
+                                                                        <div className="mb-2 text-primary">
+                                                                            <i className="fas fa-music fa-2x"></i>
+                                                                        </div>
+                                                                        <audio controls className="w-100" style={{ maxWidth: '600px' }}>
+                                                                            <source src={mediaUrl} />
+                                                                            Browser Anda tidak mendukung pemutar audio HTML5.
+                                                                        </audio>
+                                                                    </div>
+                                                                )}
+
+                                                                {isPdf && !isYouTube && !isGDrive && (
+                                                                    <div className="border rounded overflow-hidden" style={{ height: '350px' }}>
+                                                                        <iframe
+                                                                            src={mediaUrl}
+                                                                            title="Pratinjau PDF"
+                                                                            className="w-100 h-100 border-0"
+                                                                        ></iframe>
+                                                                    </div>
+                                                                )}
+
+                                                                {isPresentation && !isYouTube && !isGDrive && (
+                                                                    <div className="p-3 bg-light rounded border text-center">
+                                                                        <i className="fas fa-file-powerpoint text-warning fa-3x mb-2"></i>
+                                                                        <h6 className="fw-bold mb-1">Materi Presentasi Slide</h6>
+                                                                        <p className="text-muted small mb-2">
+                                                                            Slide presentasi siap dipelajari oleh peserta.
+                                                                        </p>
+                                                                        <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
+                                                                            <i className="fas fa-external-link-alt me-1"></i> Buka / Unduh Slide
+                                                                        </a>
+                                                                    </div>
+                                                                )}
+
+                                                                {isDoc && !isYouTube && !isGDrive && (
+                                                                    <div className="p-3 bg-light rounded border text-center">
+                                                                        <i className="fas fa-file-word text-primary fa-3x mb-2"></i>
+                                                                        <h6 className="fw-bold mb-1">Dokumen Materi Belajar</h6>
+                                                                        <p className="text-muted small mb-2">
+                                                                            Dokumen modul pembelajaran peserta.
+                                                                        </p>
+                                                                        <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
+                                                                            <i className="fas fa-external-link-alt me-1"></i> Unduh / Buka Dokumen
+                                                                        </a>
+                                                                    </div>
+                                                                )}
+
+                                                                {!isYouTube && !isGDrive && !isAudio && !isPdf && !isPresentation && !isDoc && (
+                                                                    <div className="rounded overflow-hidden bg-black text-center">
+                                                                        <video
+                                                                            width="100%"
+                                                                            controls
+                                                                            className="rounded"
+                                                                            style={{ maxHeight: '380px', backgroundColor: '#000' }}
+                                                                        >
+                                                                            <source src={mediaUrl} />
+                                                                            Browser Anda tidak mendukung putar video HTML5.
+                                                                        </video>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             )}
-                                        </div>
-                                    </div>
-                                )}
 
-                                {/* ✨ PHASE X.X: File Upload Section - Upload Only System */}
-                                <div className="mb-3">
-                                    <label className="form-label fw-bold">
-                                        <i className="fas fa-cloud-upload-alt me-2 text-success"></i>
-                                        Unggah File Media Pelajaran
-                                    </label>
-                                    <div className="curriculum-file-upload-wrapper">
-                                        <div className="input-group mb-2">
-                                            <input
-                                                type="file"
-                                                className="form-control curriculum-form-control"
-                                                accept="video/*"
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) {
-                                                        // Validate file
-                                                        const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
-                                                        if (!validTypes.includes(file.type) && !file.type.startsWith('video/')) {
-                                                            Toast().fire({
-                                                                icon: "error",
-                                                                title: "Tipe File Tidak Valid",
-                                                                text: "Silakan unggah file video (MP4, WebM, OGV, MOV, AVI)",
-                                                            });
-                                                            return;
-                                                        }
+                                            {/* Media Mode Switcher (Upload vs URL) */}
+                                            <div className="mb-3">
+                                                <div className="d-flex align-items-center justify-content-between mb-2">
+                                                    <label className="form-label fw-bold mb-0">
+                                                        <i className="fas fa-photo-video me-2 text-primary"></i>
+                                                        {mediaUrl ? "Ganti / Perbarui Media Pelajaran" : "Pilih Media Pelajaran"}
+                                                    </label>
+                                                    <div className="btn-group btn-group-sm" role="group">
+                                                        <button
+                                                            type="button"
+                                                            className={`btn ${mediaTab === 'upload' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                                                            onClick={() => setMediaTab('upload')}
+                                                        >
+                                                            <i className="fas fa-cloud-upload-alt me-1"></i> Unggah Berkas
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className={`btn ${mediaTab === 'url' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                                                            onClick={() => setMediaTab('url')}
+                                                        >
+                                                            <i className="fas fa-link me-1"></i> Tautan URL / Cloud
+                                                        </button>
+                                                    </div>
+                                                </div>
 
-                                                        // Validate file size (500MB)
-                                                        if (file.size > 500 * 1024 * 1024) {
-                                                            Toast().fire({
-                                                                icon: "error",
-                                                                title: "File Terlalu Besar",
-                                                                text: "Ukuran file maksimal 500MB. Ukuran file Anda: " + (file.size / 1024 / 1024).toFixed(2) + "MB",
-                                                            });
-                                                            return;
-                                                        }
+                                                {mediaTab === 'upload' ? (
+                                                    <div className="curriculum-file-upload-wrapper p-3 border rounded-3 bg-light">
+                                                        <div className="input-group mb-2">
+                                                            <input
+                                                                type="file"
+                                                                className="form-control curriculum-form-control"
+                                                                accept=".mp4,.webm,.ogv,.mov,.avi,.mkv,.ppt,.pptx,.pdf,.doc,.docx,.txt,.mp3,.wav,.ogg,.m4a,video/*,audio/*,application/pdf"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (file) {
+                                                                        const validExts = ['.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv', '.ppt', '.pptx', '.pdf', '.doc', '.docx', '.txt', '.mp3', '.wav', '.ogg', '.m4a', '.aac'];
+                                                                        const fileName = (file.name || '').toLowerCase();
+                                                                        const isExtOk = validExts.some(ext => fileName.endsWith(ext));
+                                                                        const isMimeOk = file.type.startsWith('video/') || file.type.startsWith('audio/') || file.type === 'application/pdf' || file.type.includes('presentation') || file.type.includes('document');
 
-                                                        // Handle file upload
-                                                        const formData = new FormData();
-                                                        formData.append("file", file);
-                                                        if (course?.course_id) {
-                                                            formData.append("course_id", course.course_id);
-                                                        }
-                                                        // ✨ PHASE 4.107: Send upload type so backend knows this is curriculum media, not intro video
-                                                        formData.append("upload_type", "curriculum");
-                                                        // Send variant and item IDs for unique lesson naming
-                                                        if (variant?.variant_id) {
-                                                            formData.append("variant_id", variant.variant_id);
-                                                        }
-                                                        // ✨ PHASE 4.174: Use variant_item_id for more unique filename
-                                                        // This ensures each lesson gets unique filename: {course_id}_{variant_id}_{variant_item_id}.mp4
-                                                        if (item?.variant_item_id) {
-                                                            formData.append("item_id", item.variant_item_id);
-                                                        } else {
-                                                            // Fallback to itemIndex if variant_item_id not yet assigned
-                                                            formData.append("item_id", itemIndex + 1);
-                                                        }
+                                                                        if (!isExtOk && !isMimeOk) {
+                                                                            Toast().fire({
+                                                                                icon: "error",
+                                                                                title: "Tipe Berkas Tidak Didukung",
+                                                                                text: "Silakan unggah video (MP4/WebM/MOV), presentasi (PPT/PPTX), dokumen (PDF/DOCX), atau audio (MP3/WAV).",
+                                                                            });
+                                                                            return;
+                                                                        }
 
-                                                        // ✨ PHASE 4.108: Track upload progress with percentage
-                                                        const progressKey = `${variantIndex}_${itemIndex}`;
-                                                        setCurriculumUploadProgress(prev => ({
-                                                            ...prev,
-                                                            [progressKey]: { percentage: 0, isUploading: true }
-                                                        }));
+                                                                        if (file.size > 500 * 1024 * 1024) {
+                                                                            Toast().fire({
+                                                                                icon: "error",
+                                                                                title: "Berkas Terlalu Besar",
+                                                                                text: "Ukuran maksimal 500MB. Berkas Anda: " + (file.size / 1024 / 1024).toFixed(2) + "MB",
+                                                                            });
+                                                                            return;
+                                                                        }
 
-                                                        (async () => {
-                                                            try {
-                                                                const response = await useAxios.post("file-upload/", formData, {
-                                                                    headers: {
-                                                                        "Content-Type": "multipart/form-data",
-                                                                    },
-                                                                    onUploadProgress: (progressEvent) => {
-                                                                        // ✨ PHASE 4.108: Calculate and update progress percentage
-                                                                        const percentCompleted = Math.round(
-                                                                            (progressEvent.loaded * 100) / progressEvent.total
-                                                                        );
+                                                                        const formData = new FormData();
+                                                                        formData.append("file", file);
+                                                                        if (course?.course_id) {
+                                                                            formData.append("course_id", course.course_id);
+                                                                        }
+                                                                        formData.append("upload_type", "curriculum");
+                                                                        if (variant?.variant_id) {
+                                                                            formData.append("variant_id", variant.variant_id);
+                                                                        }
+                                                                        if (item?.variant_item_id) {
+                                                                            formData.append("item_id", item.variant_item_id);
+                                                                        } else {
+                                                                            formData.append("item_id", itemIndex + 1);
+                                                                        }
+
+                                                                        const progressKey = `${variantIndex}_${itemIndex}`;
                                                                         setCurriculumUploadProgress(prev => ({
                                                                             ...prev,
-                                                                            [progressKey]: { percentage: percentCompleted, isUploading: true }
+                                                                            [progressKey]: { percentage: 0, isUploading: true }
                                                                         }));
+
+                                                                        (async () => {
+                                                                            try {
+                                                                                const response = await useAxios.post("file-upload/", formData, {
+                                                                                    headers: {
+                                                                                        "Content-Type": "multipart/form-data",
+                                                                                    },
+                                                                                    onUploadProgress: (progressEvent) => {
+                                                                                        const percentCompleted = Math.round(
+                                                                                            (progressEvent.loaded * 100) / progressEvent.total
+                                                                                        );
+                                                                                        setCurriculumUploadProgress(prev => ({
+                                                                                            ...prev,
+                                                                                            [progressKey]: { percentage: percentCompleted, isUploading: true }
+                                                                                        }));
+                                                                                    }
+                                                                                });
+
+                                                                                if (response?.data?.url) {
+                                                                                    handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
+                                                                                    handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
+                                                                                    handleLessonChange(variantIndex, itemIndex, "uploadedFile", response.data.url);
+                                                                                    handleLessonChange(variantIndex, itemIndex, "file", response.data.url);
+                                                                                    handleLessonChange(variantIndex, itemIndex, "file_id", response.data.file_id || response.data.id);
+                                                                                    handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
+                                                                                    handleLessonChange(variantIndex, itemIndex, "file_type", response.data.file_type || (file.type.startsWith('audio/') ? 'audio' : file.type === 'application/pdf' ? 'pdf' : 'video'));
+
+                                                                                    if (response.data.duration_seconds) {
+                                                                                        const key = `${variantIndex}_${itemIndex}`;
+                                                                                        setExtractedDuration(prev => ({
+                                                                                            ...prev,
+                                                                                            [key]: response.data.duration_seconds
+                                                                                        }));
+                                                                                        handleDurationInput(variantIndex, itemIndex, response.data.duration_seconds);
+                                                                                    }
+
+                                                                                    setCurriculumUploadProgress(prev => ({
+                                                                                        ...prev,
+                                                                                        [progressKey]: { percentage: 100, isUploading: false }
+                                                                                    }));
+
+                                                                                    setTimeout(() => {
+                                                                                        autoSaveCurriculum();
+                                                                                    }, 100);
+
+                                                                                    Toast().fire({
+                                                                                        icon: "success",
+                                                                                        title: "Berkas Berhasil Diunggah",
+                                                                                        text: response.data.video_duration
+                                                                                            ? `Berkas materi berhasil diunggah! Durasi: ${response.data.video_duration}`
+                                                                                            : "Berkas materi berhasil disimpan!",
+                                                                                        timer: 2000,
+                                                                                        showConfirmButton: false
+                                                                                    });
+
+                                                                                    setTimeout(() => {
+                                                                                        setCurriculumUploadProgress(prev => {
+                                                                                            const updated = { ...prev };
+                                                                                            delete updated[progressKey];
+                                                                                            return updated;
+                                                                                        });
+                                                                                    }, 1000);
+                                                                                }
+                                                                            } catch (error) {
+                                                                                console.error("Error uploading file:", error);
+                                                                                setCurriculumUploadProgress(prev => {
+                                                                                    const updated = { ...prev };
+                                                                                    delete updated[progressKey];
+                                                                                    return updated;
+                                                                                });
+                                                                                Toast().fire({
+                                                                                    icon: "error",
+                                                                                    title: "Unggahan Gagal",
+                                                                                    text: error.response?.data?.message || "Gagal mengunggah berkas. Silakan coba lagi.",
+                                                                                });
+                                                                            }
+                                                                            e.target.value = '';
+                                                                        })();
                                                                     }
-                                                                });
+                                                                }}
+                                                                id={`file-input-${variantIndex}-${itemIndex}`}
+                                                            />
+                                                            <label htmlFor={`file-input-${variantIndex}-${itemIndex}`} className="btn btn-success ms-2">
+                                                                <i className="fas fa-folder-open me-2"></i>
+                                                                Pilih Berkas
+                                                            </label>
+                                                        </div>
 
-                                                                if (response?.data?.url) {
-                                                                    // ✨ PHASE 4.193: Clear other media sources to prevent backend conflicts
-                                                                    // When upload completes, clear YouTube and GDrive to avoid conflicting data
-                                                                    handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
-                                                                    handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
-                                                                    handleLessonChange(variantIndex, itemIndex, "uploadedFile", response.data.url);
-                                                                    handleLessonChange(variantIndex, itemIndex, "file_id", response.data.file_id || response.data.id);
-                                                                    // ✨ PHASE 4.189: Set media_source to 'upload' so it updates in admin panel
-                                                                    handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
+                                                        <div className="d-flex flex-wrap gap-3 mt-2 text-muted small">
+                                                            <span><i className="fas fa-film text-primary me-1"></i> Video (MP4, WebM, MOV, AVI)</span>
+                                                            <span><i className="fas fa-file-powerpoint text-warning me-1"></i> Slide (PPT, PPTX)</span>
+                                                            <span><i className="fas fa-file-pdf text-danger me-1"></i> Dokumen (PDF, DOCX)</span>
+                                                            <span><i className="fas fa-headphones text-info me-1"></i> Audio (MP3, WAV)</span>
+                                                            <span><i className="fas fa-database text-secondary me-1"></i> Maks. 500MB</span>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="p-3 border rounded-3 bg-light">
+                                                        <div className="input-group">
+                                                            <span className="input-group-text bg-white">
+                                                                <i className="fas fa-link text-primary"></i>
+                                                            </span>
+                                                            <input
+                                                                type="url"
+                                                                className="form-control"
+                                                                placeholder="Tempelkan URL YouTube, Google Drive, Google Slides, Podcast Audio, atau Link Pembelajaran..."
+                                                                value={mediaUrlInput}
+                                                                onChange={(e) => setMediaUrlInput(e.target.value)}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-primary px-3"
+                                                                disabled={!mediaUrlInput.trim()}
+                                                                onClick={() => {
+                                                                    const trimmed = mediaUrlInput.trim();
+                                                                    if (!trimmed) return;
 
-                                                                    // ✨ PHASE 4.110.1: Extract video duration from upload response
-                                                                    // Backend uses VideoFileClip to extract duration and returns it
-                                                                    // ✨ PHASE 4.197: Call handleDurationInput to properly calculate duration_formatted
-                                                                    // ✨ PHASE 4.204: Also store in extractedDuration state
-                                                                    if (response.data.duration_seconds) {
-                                                                        const key = `${variantIndex}_${itemIndex}`;
-                                                                        // Store extracted duration
-                                                                        setExtractedDuration(prev => ({
-                                                                            ...prev,
-                                                                            [key]: response.data.duration_seconds
-                                                                        }));
-                                                                        // Also set as initial duration if not already set
-                                                                        handleDurationInput(variantIndex, itemIndex, response.data.duration_seconds);
-                                                                        console.log(`Duration extracted: ${response.data.video_duration} (${response.data.duration_seconds}s)`);
+                                                                    if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
+                                                                        handleLessonChange(variantIndex, itemIndex, "youtubeLink", trimmed);
+                                                                        handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "file", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "media_source", "youtube");
+                                                                        handleLessonChange(variantIndex, itemIndex, "file_type", "video");
+                                                                    } else if (trimmed.includes('drive.google.com')) {
+                                                                        handleLessonChange(variantIndex, itemIndex, "gdriveLink", trimmed);
+                                                                        handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "file", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "media_source", "gdrive");
+                                                                        handleLessonChange(variantIndex, itemIndex, "file_type", "video");
+                                                                    } else {
+                                                                        handleLessonChange(variantIndex, itemIndex, "uploadedFile", trimmed);
+                                                                        handleLessonChange(variantIndex, itemIndex, "file", trimmed);
+                                                                        handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "media_source", "url");
+                                                                        const lower = trimmed.toLowerCase();
+                                                                        if (lower.endsWith('.mp3') || lower.endsWith('.wav') || lower.endsWith('.m4a')) {
+                                                                            handleLessonChange(variantIndex, itemIndex, "file_type", "audio");
+                                                                        } else if (lower.endsWith('.pdf')) {
+                                                                            handleLessonChange(variantIndex, itemIndex, "file_type", "pdf");
+                                                                        } else if (lower.endsWith('.ppt') || lower.endsWith('.pptx') || lower.includes('presentation')) {
+                                                                            handleLessonChange(variantIndex, itemIndex, "file_type", "presentation");
+                                                                        } else {
+                                                                            handleLessonChange(variantIndex, itemIndex, "file_type", "video");
+                                                                        }
                                                                     }
 
-                                                                    // ✨ PHASE 4.108: Clear progress after successful upload
-                                                                    setCurriculumUploadProgress(prev => ({
-                                                                        ...prev,
-                                                                        [progressKey]: { percentage: 100, isUploading: false }
-                                                                    }));
-                                                                    // ✨ PHASE 4.110: Auto-save curriculum after file upload completes
-                                                                    // This ensures uploaded file is persisted even if user closes/reloads page
                                                                     setTimeout(() => {
                                                                         autoSaveCurriculum();
                                                                     }, 100);
+
                                                                     Toast().fire({
                                                                         icon: "success",
-                                                                        title: "File Berhasil Diunggah",
-                                                                        text: response.data.video_duration
-                                                                            ? `File media pelajaran berhasil diunggah! Durasi: ${response.data.video_duration}`
-                                                                            : "File media pelajaran berhasil diunggah!",
-                                                                        timer: 2000,
+                                                                        title: "Tautan Berhasil Disimpan",
+                                                                        text: "Media tautan pelajaran berhasil diperbarui!",
+                                                                        timer: 1800,
                                                                         showConfirmButton: false
                                                                     });
-                                                                    // Clear progress bar after a delay
-                                                                    setTimeout(() => {
-                                                                        setCurriculumUploadProgress(prev => {
-                                                                            const updated = { ...prev };
-                                                                            delete updated[progressKey];
-                                                                            return updated;
-                                                                        });
-                                                                    }, 1000);
-                                                                }
-                                                            } catch (error) {
-                                                                console.error("Error uploading file:", error);
-                                                                // ✨ PHASE 4.108: Clear progress on error
-                                                                setCurriculumUploadProgress(prev => {
-                                                                    const updated = { ...prev };
-                                                                    delete updated[progressKey];
-                                                                    return updated;
-                                                                });
-                                                                Toast().fire({
-                                                                    icon: "error",
-                                                                    title: "Unggahan Gagal",
-                                                                    text: error.response?.data?.message || "Gagal mengunggah file. Silakan coba lagi.",
-                                                                });
-                                                            }
-                                                            // Reset file input
-                                                            e.target.value = '';
-                                                        })();
-                                                    }
-                                                }}
-                                                id={`file-input-${variantIndex}-${itemIndex}`}
-                                            />
-                                            <label htmlFor={`file-input-${variantIndex}-${itemIndex}`} className="btn btn-success ms-2">
-                                                <i className="fas fa-folder-open me-2"></i>
-                                                Pilih File
-                                            </label>
-                                        </div>
-
-                                        <small className="text-muted d-block mt-2">
-                                            <i className="fas fa-info-circle me-1"></i>
-                                            Format yang didukikan: <strong>MP4</strong>, <strong>WebM</strong>, <strong>OGV</strong>, <strong>MOV</strong>, <strong>AVI</strong>
-                                        </small>
-                                        <small className="text-muted d-block mt-1">
-                                            <i className="fas fa-database me-1"></i>
-                                            Ukuran maksimal: <strong>500MB</strong>. Durasi akan dihitung otomatis.
-                                        </small>
-
-
-                                    </div>
-                                </div>
-
-                                {/* ✨ PHASE 4.108: Upload Progress Bar for Curriculum Media */}
-                                {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.isUploading && (
-                                    <div className="mt-3 mb-3">
-                                        <div className="d-flex justify-content-between align-items-center mb-2">
-                                            <label className="form-label mb-0 fw-bold text-info">
-                                                <i className="fas fa-spinner fa-spin me-2"></i>
-                                                Mengunggah File...
-                                            </label>
-                                            <span className="badge bg-info">
-                                                {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%
-                                            </span>
-                                        </div>
-                                        <div className="progress" style={{ height: '24px' }}>
-                                            <div
-                                                className="progress-bar progress-bar-striped progress-bar-animated bg-info"
-                                                role="progressbar"
-                                                style={{
-                                                    width: `${curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%`
-                                                }}
-                                                aria-valuenow={curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}
-                                                aria-valuemin="0"
-                                                aria-valuemax="100"
-                                            >
-                                                <span className="d-flex align-items-center justify-content-center h-100 text-white fw-bold">
-                                                    {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%
-                                                </span>
+                                                                }}
+                                                            >
+                                                                <i className="fas fa-check me-1"></i> Terapkan Tautan
+                                                            </button>
+                                                        </div>
+                                                        <div className="d-flex flex-wrap gap-3 mt-2 text-muted small">
+                                                            <span><i className="fab fa-youtube text-danger me-1"></i> YouTube</span>
+                                                            <span><i className="fab fa-google-drive text-success me-1"></i> Google Drive Video</span>
+                                                            <span><i className="fas fa-file-powerpoint text-warning me-1"></i> Google Slides / PPT Link</span>
+                                                            <span><i className="fas fa-globe text-info me-1"></i> Direct Web Stream / Link</span>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-                                    </div>
-                                )}
+
+                                            {/* Upload Progress Bar for Curriculum Media */}
+                                            {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.isUploading && (
+                                                <div className="mt-3 mb-3">
+                                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                                        <label className="form-label mb-0 fw-bold text-info">
+                                                            <i className="fas fa-spinner fa-spin me-2"></i>
+                                                            Mengunggah Berkas...
+                                                        </label>
+                                                        <span className="badge bg-info">
+                                                            {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="progress" style={{ height: '24px' }}>
+                                                        <div
+                                                            className="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                                            role="progressbar"
+                                                            style={{
+                                                                width: `${curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%`
+                                                            }}
+                                                            aria-valuenow={curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}
+                                                            aria-valuemin="0"
+                                                            aria-valuemax="100"
+                                                        >
+                                                            <span className="d-flex align-items-center justify-content-center h-100 text-white fw-bold">
+                                                                {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </>
                         )}
                     </div>

@@ -1,16 +1,12 @@
 import React, { forwardRef } from "react";
 import { isVideoFile } from "../../utils/videoContentUtils";
 import VideoPlayerUnggah from "./VideoPlayerUnggah";
+import NonVideoMediaViewer from "./NonVideoMediaViewer";
 
 // ✨ PHASE X.X: VideoPlayer Router Component
-// Routes video playback to appropriate player based on video type:
+// Routes media playback to appropriate player based on media type:
 // - VideoPlayerUnggah: HTML5 uploaded videos (MP4, WebM, OGV, etc)
-// 
-// REMOVED: YouTube video support (upload-only system)
-// Previously routed to VideoPlayerYoutubeClean for YouTube URLs
-//
-// This component determines the video type and renders the correct player
-// without mixing logic between different player implementations.
+// - NonVideoMediaViewer: Multi-Format learning materials (Audio, PPTX/PPT, PDF, Word, Links)
 
 const VideoPlayer = forwardRef(({
     variantItem,
@@ -24,24 +20,40 @@ const VideoPlayer = forwardRef(({
     seekPosition,
     course,  // ✨ PHASE 12.9: Pass course data to check actual completed_lesson array (source of truth)
 }, ref) => {
-    if (!variantItem?.file) {
+    const activeMedia = variantItem?.file || variantItem?.uploadedFile || variantItem?.youtubeLink || variantItem?.gdriveLink || '';
+    if (!activeMedia) {
         return null;
     }
 
-    // ✨ PHASE X.X: Determine video type (upload only)
-    const isUploadedVideo = isVideoFile(variantItem.file);
+    // ✨ Multi-Format Media Routing: Direct Uploaded Video vs Multi-Format (Audio, Presentation, PDF, YouTube, GDrive)
+    const isUploadedVideo = isVideoFile(activeMedia) && !activeMedia.includes('youtube.com') && !activeMedia.includes('youtu.be') && !activeMedia.includes('drive.google.com');
 
-    // ✨ PHASE X.X: Only uploaded videos supported now
+    const normalizedVariantItem = {
+        ...variantItem,
+        file: activeMedia
+    };
+
     if (!isUploadedVideo) {
-        console.warn('[VideoPlayer Router] ⚠️ Non-video file type detected, skipping playback:', variantItem.file);
-        return null;
+        // Route to Multi-Format Media Viewer (Audio, PPTX, PDF, Docs, Links, YouTube, GDrive)
+        return (
+            <NonVideoMediaViewer
+                ref={ref}
+                variantItem={normalizedVariantItem}
+                variantContext={variantContext}
+                onClose={onClose}
+                handleMarkLessonAsCompleted={handleMarkLessonAsCompleted}
+                courseId={courseId}
+                course={course}
+                seekPosition={seekPosition}
+            />
+        );
     }
 
     // Route to uploaded video player
     return (
         <VideoPlayerUnggah
             ref={ref}
-            variantItem={variantItem}
+            variantItem={normalizedVariantItem}
             variantContext={variantContext}  // ✨ PHASE 6.3: Pass context
             onClose={onClose}
             handleMarkLessonAsCompleted={handleMarkLessonAsCompleted}

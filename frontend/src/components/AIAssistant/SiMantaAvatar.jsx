@@ -16,6 +16,14 @@ const CHAT_STORAGE_KEY = 'manta_chat_session_history';
 // Saran pertanyaan cepat bawaan umum
 const DEFAULT_SUGGESTIONS = [
     {
+        label: '🎯 Target 20 JP ASN',
+        query: 'Bagaimana progres pemenuhan 20 JP belajar saya tahun ini?'
+    },
+    {
+        label: '📅 AI Study Coach',
+        query: 'Buatkan rencana belajar mingguan untuk mengejar target JP saya'
+    },
+    {
         label: '🎓 Panduan Kursus',
         query: 'Bagaimana cara mulai belajar atau mendaftar kursus di LMS?'
     },
@@ -41,6 +49,7 @@ const getContextualSuggestions = (pathname) => {
 
     if (pathname.includes('/course-detail/')) {
         return [
+            { label: '🎯 Nilai JP Kursus Ini', query: 'Berapa bobot JP kursus ini untuk target 20 JP tahunan saya?' },
             { label: '📖 Tentang Kursus Ini', query: 'Jelaskan ringkasan materi dan silabus kursus ini' },
             { label: '📝 Syarat & Evaluasi', query: 'Bagaimana evaluasi kuis dan syarat kelulusan kursus ini?' },
             { label: '👨‍🏫 Instruktur & Modul', query: 'Siapa instruktur dan berapa banyak modul di kursus ini?' },
@@ -49,6 +58,7 @@ const getContextualSuggestions = (pathname) => {
     }
     if (pathname.includes('/student/sertifikat/')) {
         return [
+            { label: '🎯 Cek Akumulasi 20 JP', query: 'Berapa akumulasi JP yang sudah saya penuhi dari sertifikat resmi saya?' },
             { label: '📜 Sertifikat Saya', query: 'Berapa banyak sertifikat yang sudah saya miliki?' },
             { label: '🔍 Verifikasi QR Code', query: 'Bagaimana cara memverifikasi keaslian QR Code sertifikat?' },
             { label: '📥 Syarat Terbit Sertifikat', query: 'Apa syarat agar sertifikat kelulusan otomatis terbit?' },
@@ -57,6 +67,9 @@ const getContextualSuggestions = (pathname) => {
     }
     if (pathname.includes('/student/courses/')) {
         return [
+            { label: '🎬 Lompat ke Bagian Video', query: 'Di menit berapa pembahasan tentang tahap Empathize?' },
+            { label: '🎯 Target 20 JP ASN', query: 'Bagaimana progres pemenuhan 20 JP belajar saya tahun ini?' },
+            { label: '📅 AI Study Coach', query: 'Buatkan rencana belajar mingguan untuk mengejar target JP saya' },
             { label: '📊 Progres Belajar Saya', query: 'Bagaimana progres kursus saya saat ini?' },
             { label: '▶️ Lanjut Kursus Tertunda', query: 'Kursus apa yang belum saya selesaikan?' },
             { label: '⚡ Modul SCORM Macet', query: 'Video atau modul SCORM macet, apa solusinya?' },
@@ -780,6 +793,26 @@ const SiMantaAvatar = () => {
                 handleSendMessage('Beri saya latihan kuis berikutnya');
             } else if (action.action === 'save_to_notes') {
                 handleSaveSummaryToNotes(action);
+            }
+        } else if (action.type === 'video_jump' || action.action === 'jump_to_video') {
+            const currentPath = location.pathname;
+            const targetUrl = action.enrollment_id ? `/student/courses/${action.enrollment_id}/` : null;
+
+            if (targetUrl && currentPath.includes(`/student/courses/${action.enrollment_id}`)) {
+                window.dispatchEvent(new CustomEvent('manta_jump_to_video_timestamp', {
+                    detail: {
+                        variantItemId: action.variant_item_id,
+                        seconds: action.seconds,
+                        milestoneTitle: action.milestone_title
+                    }
+                }));
+                setIsChatOpen(false);
+            } else if (targetUrl) {
+                navigate(`${targetUrl}?seek=${action.seconds}&lesson=${action.variant_item_id || ''}`);
+                setIsChatOpen(false);
+            } else if (action.course_slug) {
+                navigate(`/course-detail/${action.course_slug}/`);
+                setIsChatOpen(false);
             }
         }
     };
@@ -1509,6 +1542,296 @@ const SiMantaAvatar = () => {
                                                     </div>
                                                 ))}
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {/* Kartu AI Study Coach & Pemenuhan 20 JP ASN Tracker */}
+                                    {msg.jp_tracker && (
+                                        <div className="simanta-jp-tracker-card">
+                                            {/* Header Card */}
+                                            <div className="simanta-jp-header">
+                                                <div className="simanta-jp-badge">
+                                                    <span className="simanta-jp-badge-icon">🎯</span>
+                                                    <span className="simanta-jp-badge-text">AI Study Coach • 20 JP ASN</span>
+                                                </div>
+                                                <div className={`simanta-jp-status-pill pill-${msg.jp_tracker.status_badge_theme || 'emerald'}`}>
+                                                    {msg.jp_tracker.status_label}
+                                                </div>
+                                            </div>
+
+                                            {/* Subtitle Meta */}
+                                            <div className="simanta-jp-meta-row">
+                                                <span className="simanta-jp-year-tag">
+                                                    <i className="fas fa-calendar-alt me-1"></i>
+                                                    Tahun Anggaran {msg.jp_tracker.year}
+                                                </span>
+                                                <span className="simanta-jp-reg-tag" title="Peraturan LAN RI No. 10 Tahun 2018">
+                                                    Mandat LAN RI (Min. 20 JP)
+                                                </span>
+                                            </div>
+
+                                            {/* Progress Bar Multi-Segment */}
+                                            <div className="simanta-jp-progress-container">
+                                                <div className="simanta-jp-progress-labels">
+                                                    <span className="simanta-jp-progress-title">Progres Pemenuhan JP:</span>
+                                                    <span className="simanta-jp-progress-val">
+                                                        <strong>{msg.jp_tracker.achieved_jp}</strong> / {msg.jp_tracker.target_jp} JP ({msg.jp_tracker.completion_pct}%)
+                                                    </span>
+                                                </div>
+                                                <div className="simanta-jp-progress-track">
+                                                    {/* Segmen 1: Selesai / Terverifikasi */}
+                                                    <div
+                                                        className="simanta-jp-segment completed"
+                                                        style={{ width: `${Math.min(100, msg.jp_tracker.completion_pct)}%` }}
+                                                        title={`Terselesaikan: ${msg.jp_tracker.achieved_jp} JP`}
+                                                    ></div>
+                                                    {/* Segmen 2: Sedang Berjalan (Potensi Proyeksi) */}
+                                                    {msg.jp_tracker.in_progress_jp > 0 && (
+                                                        <div
+                                                            className="simanta-jp-segment in-progress"
+                                                            style={{
+                                                                width: `${Math.min(
+                                                                    100 - msg.jp_tracker.completion_pct,
+                                                                    (msg.jp_tracker.in_progress_jp / msg.jp_tracker.target_jp) * 100
+                                                                )}%`
+                                                            }}
+                                                            title={`Sedang Berjalan: +${msg.jp_tracker.in_progress_jp} JP`}
+                                                        ></div>
+                                                    )}
+                                                </div>
+                                                {/* Legend */}
+                                                <div className="simanta-jp-legend">
+                                                    <span className="legend-item">
+                                                        <span className="legend-dot dot-completed"></span> Lulus: <strong>{msg.jp_tracker.achieved_jp} JP</strong>
+                                                    </span>
+                                                    <span className="legend-item">
+                                                        <span className="legend-dot dot-inprogress"></span> Berjalan: <strong>+{msg.jp_tracker.in_progress_jp} JP</strong>
+                                                    </span>
+                                                    <span className="legend-item">
+                                                        <span className="legend-dot dot-remaining"></span> Sisa: <strong>{msg.jp_tracker.remaining_jp} JP</strong>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* 3 Metric Mini Tiles */}
+                                            <div className="simanta-jp-tiles-grid">
+                                                <div className="simanta-jp-tile tile-achieved">
+                                                    <span className="jp-tile-label">Terselesaikan</span>
+                                                    <div className="jp-tile-value-row">
+                                                        <span className="jp-tile-number">{msg.jp_tracker.achieved_jp}</span>
+                                                        <span className="jp-tile-unit">JP</span>
+                                                    </div>
+                                                    <span className="jp-tile-sub">Lulus Kuis & Modul</span>
+                                                </div>
+                                                <div className="simanta-jp-tile tile-progress">
+                                                    <span className="jp-tile-label">Sedang Aktif</span>
+                                                    <div className="jp-tile-value-row">
+                                                        <span className="jp-tile-number">+{msg.jp_tracker.in_progress_jp}</span>
+                                                        <span className="jp-tile-unit">JP</span>
+                                                    </div>
+                                                    <span className="jp-tile-sub">Kursus Berjalan</span>
+                                                </div>
+                                                <div className="simanta-jp-tile tile-remaining">
+                                                    <span className="jp-tile-label">Kekurangan Target</span>
+                                                    <div className="jp-tile-value-row">
+                                                        <span className="jp-tile-number">{msg.jp_tracker.remaining_jp}</span>
+                                                        <span className="jp-tile-unit">JP</span>
+                                                    </div>
+                                                    <span className="jp-tile-sub">Sisa Kewajiban</span>
+                                                </div>
+                                            </div>
+
+                                            {/* AI Weekly Study Plan (Jadwal Belajar Mingguan) */}
+                                            {msg.jp_tracker.weekly_plan && msg.jp_tracker.weekly_plan.length > 0 && (
+                                                <div className="simanta-jp-weekly-box">
+                                                    <div className="simanta-jp-section-title">
+                                                        <span className="section-icon">📅</span>
+                                                        <span>Rencana Belajar Mingguan (AI Study Coach)</span>
+                                                    </div>
+                                                    <div className="simanta-jp-schedule-list">
+                                                        {msg.jp_tracker.weekly_plan.map((planItem, pIdx) => (
+                                                            <div key={pIdx} className="simanta-jp-schedule-item">
+                                                                <div className="schedule-item-header">
+                                                                    <span className="schedule-day-badge">{planItem.day}</span>
+                                                                    <span className="schedule-time-text">{planItem.time}</span>
+                                                                    {planItem.tag && <span className="schedule-tag">{planItem.tag}</span>}
+                                                                </div>
+                                                                <p className="schedule-focus-text">{planItem.focus}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    {msg.jp_tracker.remaining_jp > 0 && (
+                                                        <div className="simanta-jp-coach-tip">
+                                                            <span className="tip-sparkle">✨</span>
+                                                            <span>
+                                                                Komitmen <strong>2 sesi per minggu (45 menit / 1 JP)</strong> akan menuntaskan target dalam{' '}
+                                                                <strong>{msg.jp_tracker.needed_weeks} minggu</strong> tanpa mengganggu jam dinas.
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Kursus Rekomendasi Pengejar JP */}
+                                            {msg.jp_tracker.recommended_courses && msg.jp_tracker.recommended_courses.length > 0 && msg.jp_tracker.remaining_jp > 0 && (
+                                                <div className="simanta-jp-courses-box">
+                                                    <div className="simanta-jp-section-title">
+                                                        <span className="section-icon">⚡</span>
+                                                        <span>Kursus Rekomendasi Pengejar JP</span>
+                                                    </div>
+                                                    <div className="simanta-jp-rec-list">
+                                                        {msg.jp_tracker.recommended_courses.map((c) => (
+                                                            <div key={c.id} className="simanta-jp-course-card">
+                                                                <div className="course-card-top">
+                                                                    <span className="course-title-text" title={c.title}>{c.title}</span>
+                                                                    <span className="course-jp-pill">+{c.jp} JP</span>
+                                                                </div>
+                                                                <div className="course-card-bottom">
+                                                                    <span className="course-cat-tag">{c.category || c.level}</span>
+                                                                    <Link
+                                                                        to={`/course-detail/${c.slug}/`}
+                                                                        className="course-enroll-btn"
+                                                                        onClick={() => setIsChatOpen(false)}
+                                                                    >
+                                                                        Mulai Kursus (+{c.jp} JP) ↗
+                                                                    </Link>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Kartu AI Contextual Video Milestone & Learning Material Jumper */}
+                                    {msg.video_jumper && (
+                                        <div className={`simanta-video-jumper-card ${msg.video_jumper.is_locked ? 'is-locked' : ''}`}>
+                                            {/* Header Widget */}
+                                            <div className="simanta-video-jumper-header">
+                                                <div className={`simanta-video-jumper-badge ${msg.video_jumper.is_locked ? 'badge-locked' : ''}`}>
+                                                    <span className="simanta-video-jumper-icon">
+                                                        {msg.video_jumper.is_locked ? '🔒' : (msg.video_jumper.media_type === 'presentation' ? '📊' : msg.video_jumper.media_type === 'document' ? '📄' : msg.video_jumper.media_type === 'scorm' ? '📦' : msg.video_jumper.media_type === 'audio' ? '🎧' : '🎬')}
+                                                    </span>
+                                                    <span className="simanta-video-jumper-badge-text">
+                                                        {msg.video_jumper.is_locked 
+                                                            ? 'Materi Masih Terkunci' 
+                                                            : `AI ${msg.video_jumper.media_label || 'Learning Navigator'}`}
+                                                    </span>
+                                                </div>
+                                                {msg.video_jumper.is_locked ? (
+                                                    <div className="simanta-video-time-pill pill-locked">
+                                                        🔒 Prasyarat Diperlukan
+                                                    </div>
+                                                ) : msg.video_jumper.timestamp_label && (msg.video_jumper.media_type === 'video' || msg.video_jumper.media_type === 'audio') ? (
+                                                    <div className="simanta-video-time-pill">
+                                                        ⏱️ Menit {msg.video_jumper.timestamp_label}
+                                                    </div>
+                                                ) : (
+                                                    <div className="simanta-video-time-pill pill-format">
+                                                        {msg.video_jumper.media_label || 'Modul Pembelajaran'}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Video Lesson & Course Meta */}
+                                            <div className="simanta-video-meta-box">
+                                                <span className="simanta-video-lesson-title">
+                                                    <i className={`fas ${msg.video_jumper.is_locked ? 'fa-lock text-danger' : msg.video_jumper.media_type === 'presentation' ? 'fa-file-powerpoint text-warning' : msg.video_jumper.media_type === 'document' ? 'fa-file-pdf text-danger' : msg.video_jumper.media_type === 'audio' ? 'fa-headphones text-info' : 'fa-play-circle text-teal'} me-1`}></i>
+                                                    {msg.video_jumper.lesson_title}
+                                                </span>
+                                                <span className="simanta-video-course-name">
+                                                    Pelatihan: {msg.video_jumper.course_title}
+                                                </span>
+                                            </div>
+
+                                            {/* Kondisi Terkunci vs Terbuka */}
+                                            {msg.video_jumper.is_locked ? (
+                                                <div className="simanta-locked-banner">
+                                                    <div className="locked-banner-icon">
+                                                        <i className="fas fa-exclamation-triangle"></i>
+                                                    </div>
+                                                    <div className="locked-banner-text">
+                                                        <div className="locked-banner-title">Prasyarat Pembelajaran Belum Terpenuhi</div>
+                                                        <div className="locked-banner-desc">
+                                                            {msg.video_jumper.lock_reason || 'Selesaikan materi atau kuis prasyarat terlebih dahulu untuk membuka akses bab ini.'}
+                                                        </div>
+                                                    </div>
+                                                    {msg.video_jumper.enrollment_id && (
+                                                        <button
+                                                            type="button"
+                                                            className="simanta-video-instant-jump-btn prereq-btn mt-2"
+                                                            onClick={() => {
+                                                                navigate(`/student/courses/${msg.video_jumper.enrollment_id}/`);
+                                                                setIsChatOpen(false);
+                                                            }}
+                                                        >
+                                                            🔓 Selesaikan Prasyarat di Ruang Belajar ↗
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    {/* Highlighted Topic Banner */}
+                                                    <div className="simanta-video-highlight-banner">
+                                                        <div className="highlight-banner-label">📌 Poin Pembahasan Terkait:</div>
+                                                        <div className="highlight-banner-topic">{msg.video_jumper.milestone_title}</div>
+                                                        <button
+                                                            type="button"
+                                                            className="simanta-video-instant-jump-btn"
+                                                            onClick={() => handleActionClick({
+                                                                type: 'video_jump',
+                                                                seconds: msg.video_jumper.target_seconds,
+                                                                variant_item_id: msg.video_jumper.variant_item_id,
+                                                                milestone_title: msg.video_jumper.milestone_title,
+                                                                course_slug: msg.video_jumper.course_slug,
+                                                                enrollment_id: msg.video_jumper.enrollment_id
+                                                            })}
+                                                        >
+                                                            {msg.video_jumper.media_type === 'video'
+                                                                ? `▶️ Putar Video di Menit ${msg.video_jumper.timestamp_label}`
+                                                                : msg.video_jumper.media_type === 'audio'
+                                                                    ? `🎧 Dengarkan Audio di Menit ${msg.video_jumper.timestamp_label}`
+                                                                    : `📖 ${msg.video_jumper.action_verb || 'Buka Materi'} ↗`
+                                                            }
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Daftar Milestone / Chapter Video */}
+                                                    {msg.video_jumper.milestones && msg.video_jumper.milestones.length > 0 && (
+                                                        <div className="simanta-video-milestones-box">
+                                                            <div className="milestones-box-title">
+                                                                <i className="fas fa-list-ol me-1 text-teal"></i>
+                                                                Daftar Pembahasan Penting (Chapters):
+                                                            </div>
+                                                            <div className="milestones-list">
+                                                                {msg.video_jumper.milestones.map((ms, msIdx) => {
+                                                                    const isCurrent = ms.seconds === msg.video_jumper.target_seconds;
+                                                                    return (
+                                                                        <div
+                                                                            key={msIdx}
+                                                                            className={`milestone-item ${isCurrent ? 'active' : ''}`}
+                                                                            onClick={() => handleActionClick({
+                                                                                type: 'video_jump',
+                                                                                seconds: ms.seconds,
+                                                                                variant_item_id: msg.video_jumper.variant_item_id,
+                                                                                milestone_title: ms.title,
+                                                                                course_slug: msg.video_jumper.course_slug,
+                                                                                enrollment_id: msg.video_jumper.enrollment_id
+                                                                            })}
+                                                                            title={`Lompat ke pembahasan ${ms.label}`}
+                                                                        >
+                                                                            <span className="milestone-time-badge">{ms.label}</span>
+                                                                            <span className="milestone-title-text">{ms.title}</span>
+                                                                            <span className="milestone-jump-icon">▶️</span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
                                         </div>
                                     )}
 
