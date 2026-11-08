@@ -16,16 +16,31 @@ import FeedbackVerificationModal from './FeedbackVerificationModal';
  *   - onClose: Callback function to close the form/modal
  *   - relatedCourse: Optional course ID to pre-select
  */
-const FeedbackForm = ({ onSuccess, onClose, relatedCourse }) => {
+const FeedbackForm = ({ onSuccess, onClose, relatedCourse, prefillData }) => {
     const [formData, setFormData] = useState({
-        feedback_type: 'bug',
-        title: '',
-        description: '',
-        related_course: relatedCourse || '',
-        related_url: '',
-        affected_area: '',
+        feedback_type: prefillData?.feedback_type || 'bug',
+        title: prefillData?.title || '',
+        description: prefillData?.description || '',
+        related_course: prefillData?.related_course || relatedCourse || '',
+        related_url: prefillData?.related_url || (typeof window !== 'undefined' ? window.location.href : ''),
+        affected_area: prefillData?.affected_area || '',
         attachments: '',
     });
+
+    // Update formData jika prefillData baru dikirim dari aksi cerdas Manta AI
+    React.useEffect(() => {
+        if (prefillData) {
+            setFormData(prev => ({
+                ...prev,
+                feedback_type: prefillData.feedback_type || prev.feedback_type || 'bug',
+                title: prefillData.title || prev.title,
+                description: prefillData.description || prev.description,
+                related_course: prefillData.related_course || prev.related_course || relatedCourse || '',
+                related_url: prefillData.related_url || prev.related_url || (typeof window !== 'undefined' ? window.location.href : ''),
+                affected_area: prefillData.affected_area || prev.affected_area || ''
+            }));
+        }
+    }, [prefillData, relatedCourse]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState({});

@@ -1,6 +1,43 @@
 import React from "react";
 import { moment } from "../../utils/dayjs";
 
+// Helper normalisasi warna hex
+const normalizeNoteColor = (color) => {
+    if (!color || typeof color !== 'string') return '#0d9488';
+    const c = color.trim().toLowerCase();
+    const map = {
+        'emerald': '#059669',
+        'teal': '#0d9488',
+        'teal-deep': '#0f766e',
+        'green': '#10b981',
+        'orange': '#f39c12',
+        'red': '#ef4444',
+        'blue': '#3b82f6',
+        'purple': '#8b5cf6',
+        'yellow': '#f59e0b',
+        'gray': '#64748b'
+    };
+    if (map[c]) return map[c];
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c)) return c;
+    return '#0d9488';
+};
+
+// Pembersih teks cuplikan agar tidak menampilkan simbol mentah markdown di kartu grid
+const getCleanSnippet = (text) => {
+    if (!text) return "";
+    return text
+        .replace(/^#+\s+/gm, "")
+        .replace(/^---$/gm, "")
+        .replace(/\*\*/g, "")
+        .replace(/^[•\-\*]\s+/gm, "• ")
+        .replace(/Pelatihan:.*?\n/g, "")
+        .replace(/Waktu Rangkuman:.*?\n/g, "")
+        .replace(/Catatan ini dirangkum.*/g, "")
+        .replace(/\n\s*\n/g, "  •  ")
+        .replace(/\n/g, " ")
+        .trim();
+};
+
 /**
  * NotesTab Component
  * Displays the user's personal notes for this course with search, filtering, and floating cards support.
@@ -133,11 +170,16 @@ const NotesTab = ({
             <div className="note-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', gridAutoRows: 'max-content' }}>
                 {filteredNotes?.length > 0 ? (
                     filteredNotes.map((n, index) => {
-                        const noteColor = n.color || "#f39c12";
+                        const isManta = Boolean(
+                            n.note_id?.startsWith('manta_') ||
+                            (n.title && n.title.toLowerCase().includes('manta')) ||
+                            (n.note && n.note.includes('Manta AI'))
+                        );
+                        const noteColor = normalizeNoteColor(n.color || (isManta ? '#0d9488' : '#f39c12'));
                         const colorVariations = getColorVariations ? getColorVariations(noteColor) : {
-                            light: "rgba(243, 156, 18, 0.2)",
-                            hover: "rgba(243, 156, 18, 0.13)",
-                            shadow: "rgba(243, 156, 18, 0.3)"
+                            light: "rgba(13, 148, 136, 0.2)",
+                            hover: "rgba(13, 148, 136, 0.13)",
+                            shadow: "rgba(13, 148, 136, 0.3)"
                         };
 
                         return (
@@ -171,14 +213,23 @@ const NotesTab = ({
                                         <div
                                             className="note-icon-wrapper"
                                             style={{
-                                                background: `linear-gradient(135deg, ${noteColor} 0%, ${noteColor}dd 100%)`,
+                                                background: isManta
+                                                    ? 'linear-gradient(135deg, #0f766e 0%, #0d9488 100%)'
+                                                    : `linear-gradient(135deg, ${noteColor} 0%, ${noteColor}dd 100%)`,
                                                 boxShadow: `0 4px 12px ${colorVariations.shadow}`
                                             }}
                                         >
-                                            <i className="fas fa-sticky-note"></i>
+                                            <i className={isManta ? "fas fa-wand-magic-sparkles" : "fas fa-sticky-note"}></i>
                                         </div>
                                         <div className="note-content-info">
-                                            <h5 className="note-title">{n.title}</h5>
+                                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                                <h5 className="note-title mb-0">{n.title}</h5>
+                                                {isManta && (
+                                                    <span className="badge" style={{ backgroundColor: '#0d9488', color: '#ffffff', fontSize: '9px', padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.2px' }}>
+                                                        ✨ Manta AI
+                                                    </span>
+                                                )}
+                                            </div>
                                             {(n.variant || n.variant_item) && (
                                                 <div className="note-context">
                                                     <i className="fas fa-layer-group"></i>
@@ -223,10 +274,12 @@ const NotesTab = ({
                                     className="note-content-text"
                                     style={{
                                         background: `linear-gradient(135deg, ${colorVariations.hover} 0%, ${colorVariations.light} 100%)`,
-                                        borderColor: colorVariations.light
+                                        borderColor: colorVariations.light,
+                                        fontSize: '0.85rem',
+                                        lineHeight: 1.55
                                     }}
                                 >
-                                    {n.note}
+                                    {getCleanSnippet(n.note)}
                                 </p>
                             </div>
                         );

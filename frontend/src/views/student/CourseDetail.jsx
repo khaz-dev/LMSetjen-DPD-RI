@@ -5483,23 +5483,20 @@ function CourseDetail() {
     // ✨ PHASE 4.233: Prevent page scroll when quiz is active
 
     useEffect(() => {
-
         if (isQuizActive) {
-
-            // Disable scrolling by adding overflow hidden to body
-
-            // document.body.style.overflow = 'hidden';
+            // Tandai body bahwa kuis/pre-test/post-test sedang aktif & sembunyikan asisten AI
+            document.body.classList.add('lms-quiz-active');
+            window.dispatchEvent(new CustomEvent('lms-quiz-status-change', { detail: { isQuizActive: true } }));
 
             return () => {
-
-                // Re-enable scrolling when quiz closes
-
+                document.body.classList.remove('lms-quiz-active');
+                window.dispatchEvent(new CustomEvent('lms-quiz-status-change', { detail: { isQuizActive: false } }));
                 document.body.style.overflow = 'unset';
-
             };
-
+        } else {
+            document.body.classList.remove('lms-quiz-active');
+            window.dispatchEvent(new CustomEvent('lms-quiz-status-change', { detail: { isQuizActive: false } }));
         }
-
     }, [isQuizActive]);
 
 

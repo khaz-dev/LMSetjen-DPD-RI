@@ -324,5 +324,7 @@ urlpatterns = [
     # ✨ AI Virtual Assistant (Si Manta) Endpoints
     path("ai/chat/", api_views.AIAssistantChatAPIView.as_view(), name="ai-assistant-chat"),
     path("ai/suggestions/", api_views.AIAssistantSuggestionsAPIView.as_view(), name="ai-assistant-suggestions"),
+    path("ai/nudge/", api_views.AILearningNudgeAPIView.as_view(), name="ai-assistant-nudge"),
+    path("ai/notes/save/", api_views.AIAssistantSaveNoteAPIView.as_view(), name="ai-assistant-save-note"),
 ]
 

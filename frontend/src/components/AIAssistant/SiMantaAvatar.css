@@ -15,6 +15,20 @@
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* ==========================================================================
+   INTEGRITAS UJIAN & ANTI-KECURANGAN (QUIZ / PRE-TEST / POST-TEST)
+   Sembunyikan Manta AI secara mutlak saat user sedang mengerjakan kuis.
+   ========================================================================== */
+body.lms-quiz-active .simanta-container,
+body:has(.quiz-active-screen-inline) .simanta-container,
+body:has(.quiz-active-screen) .simanta-container,
+body:has(.inline-quiz-fullscreen) .simanta-container {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
 /* Base Avatar Wrapper */
 .simanta-avatar-wrapper {
     position: relative;
@@ -411,6 +425,156 @@
     gap: 14px;
 }
 
+/* ==========================================================================
+   SMART LEARNING NUDGE BANNER (Pengingat Belajar Cerdas)
+   ========================================================================== */
+.simanta-nudge-banner {
+    background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 4px;
+    box-shadow: 0 4px 14px rgba(13, 110, 253, 0.08);
+    position: relative;
+    animation: simanta-slide-down 0.25s ease-out;
+}
+
+@keyframes simanta-slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.simanta-nudge-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.simanta-nudge-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1d4ed8;
+    background: #dbeafe;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    letter-spacing: 0.2px;
+}
+
+.simanta-nudge-icon {
+    font-size: 12px;
+}
+
+.simanta-nudge-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 4px;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+
+.simanta-nudge-close:hover {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.simanta-nudge-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.simanta-nudge-course-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.35;
+}
+
+.simanta-nudge-progress-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.simanta-nudge-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #475569;
+}
+
+.simanta-nudge-pct {
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+.simanta-nudge-progress-track {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.simanta-nudge-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+    border-radius: 9999px;
+    transition: width 0.4s ease;
+}
+
+.simanta-nudge-desc {
+    font-size: 11.5px;
+    color: #334155;
+    margin: 2px 0 0 0;
+    line-height: 1.45;
+}
+
+.simanta-nudge-actions {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 4px;
+}
+
+.simanta-nudge-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #0d6efd;
+    color: #ffffff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
+}
+
+.simanta-nudge-action-btn:hover {
+    background: #0b5ed7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.35);
+}
+
 .simanta-msg {
     display: flex;
     flex-direction: column;
@@ -460,6 +624,19 @@
 
 .simanta-msg-paragraph:last-child {
     margin-bottom: 0;
+}
+
+.simanta-msg-blockquote {
+    margin: 8px 0 10px 0;
+    padding: 9px 13px;
+    background: #f0fdf4;
+    border-left: 3.5px solid #059669;
+    border-radius: 0 10px 10px 0;
+    font-size: 12.6px;
+    color: #064e3b;
+    font-style: italic;
+    line-height: 1.5;
+    box-shadow: 0 1px 3px rgba(5, 150, 105, 0.06);
 }
 
 .simanta-msg-user .simanta-msg-paragraph {
@@ -560,12 +737,161 @@
 .simanta-msg-time {
     font-size: 10px;
     color: #94a3b8;
+}
+
+/* Message Meta (Waktu & Tombol Audio TTS) */
+.simanta-msg-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin-top: 3px;
     align-self: flex-start;
 }
 
-.simanta-msg-user .simanta-msg-time {
+.simanta-msg-user .simanta-msg-meta {
     align-self: flex-end;
+}
+
+.simanta-tts-btn {
+    background: transparent;
+    border: none;
+    font-size: 11px;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+
+.simanta-tts-btn:hover {
+    color: #0d6efd;
+    background: #e0f2fe;
+}
+
+.simanta-tts-btn.active {
+    color: #dc2626;
+    background: #fee2e2;
+    animation: pulse-speaker 1.2s infinite ease-in-out;
+}
+
+@keyframes pulse-speaker {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.18);
+    }
+}
+
+/* ==========================================================================
+   DEEP SYLLABUS & LESSON SEARCH CARDS (Pencarian Bab & Modul)
+   ========================================================================== */
+.simanta-recommended-lessons {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.simanta-lesson-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 9px 12px;
+    transition: all 0.18s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.simanta-lesson-card:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+.simanta-lesson-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.simanta-lesson-type-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    background: #e0f2fe;
+    color: #0369a1;
+    letter-spacing: 0.2px;
+}
+
+.simanta-lesson-duration {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.simanta-lesson-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.simanta-lesson-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.35;
+}
+
+.simanta-lesson-meta {
+    font-size: 10.5px;
+    color: #64748b;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.simanta-lesson-chapter {
+    font-weight: 500;
+    color: #475569;
+}
+
+.simanta-lesson-course {
+    color: #64748b;
+}
+
+.simanta-lesson-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2px;
+}
+
+.simanta-lesson-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #0d6efd;
+    color: #ffffff !important;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.simanta-lesson-btn:hover {
+    background: #0b5ed7;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
 }
 
 /* Rekomendasi Kursus di dalam Balasan AI */
@@ -607,6 +933,44 @@
     font-size: 10.5px;
     color: #15803d;
     opacity: 0.85;
+}
+
+/* Tombol Aksi Cepat (Quick Action Buttons) */
+.simanta-msg-actions {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.simanta-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    box-shadow: 0 1px 3px rgba(29, 78, 216, 0.08);
+    text-decoration: none;
+    line-height: 1.3;
+}
+
+.simanta-action-btn:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1e40af;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(29, 78, 216, 0.16);
+}
+
+.simanta-action-btn:active {
+    transform: translateY(0);
 }
 
 /* Quick Question Chips */
@@ -689,6 +1053,49 @@
     cursor: not-allowed;
 }
 
+/* Tombol Mikrofon Input Suara (Speech Recognition) */
+.simanta-mic-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.simanta-mic-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    border-color: #94a3b8;
+    transform: scale(1.05);
+}
+
+.simanta-mic-btn.active {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+    animation: pulse-listening 1.3s infinite ease-in-out;
+}
+
+@keyframes pulse-listening {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.12);
+    }
+}
+
 /* ==========================================================================
    RESPONSIVITAS MOBILE & ACCESSIBILITY
    ========================================================================== */
@@ -715,6 +1122,707 @@
         bottom: 10px !important;
         left: 0 !important;
     }
+}
+
+/* ==========================================================================
+   AI INTERACTIVE QUIZ PREP & KNOWLEDGE FLASHCARDS
+   ========================================================================== */
+.simanta-interactive-quiz-card {
+    background: #ffffff;
+    border: 1.5px solid #e0e7ff;
+    border-radius: 14px;
+    padding: 14px;
+    margin: 10px 0 12px 0;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.simanta-quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.simanta-quiz-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eef2ff;
+    color: #4338ca;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 11.5px;
+    padding: 3px 10px;
+    border: 1px solid #c7d2fe;
+}
+
+.simanta-quiz-badge-icon {
+    font-size: 13px;
+}
+
+.simanta-quiz-topic {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 180px;
+}
+
+.simanta-quiz-question-box {
+    margin: 8px 0 12px 0;
+}
+
+.simanta-quiz-question-text {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #1e1b4b;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.simanta-quiz-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.simanta-quiz-choice-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 12.8px;
+    color: #1e293b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.simanta-quiz-choice-btn:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #818cf8;
+    transform: translateX(2px);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+}
+
+.simanta-quiz-choice-key {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: #e2e8f0;
+    color: #334155;
+    font-weight: 800;
+    font-size: 11.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.simanta-quiz-choice-text {
+    flex: 1;
+    line-height: 1.45;
+}
+
+.simanta-quiz-choice-icon {
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.simanta-quiz-choice-btn.correct {
+    background: #ecfdf5 !important;
+    border-color: #10b981 !important;
+    color: #064e3b !important;
+    font-weight: 600;
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.18);
+}
+
+.simanta-quiz-choice-btn.correct .simanta-quiz-choice-key {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.simanta-quiz-choice-btn.wrong {
+    background: #fef2f2 !important;
+    border-color: #ef4444 !important;
+    color: #7f1d1d !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.12);
+}
+
+.simanta-quiz-choice-btn.wrong .simanta-quiz-choice-key {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+.simanta-quiz-choice-btn.dim {
+    opacity: 0.52;
+    cursor: default;
+}
+
+/* Panel Evaluasi & Penjelasan */
+.simanta-quiz-feedback {
+    border-radius: 11px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    animation: simanta-slide-down 0.25s ease-out;
+}
+
+.simanta-quiz-feedback.feedback-correct {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+}
+
+.simanta-quiz-feedback.feedback-wrong {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+}
+
+.simanta-quiz-feedback-header {
+    margin-bottom: 8px;
+}
+
+.simanta-quiz-feedback-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 3px;
+}
+
+.feedback-correct .simanta-quiz-feedback-title {
+    color: #15803d;
+}
+
+.feedback-wrong .simanta-quiz-feedback-title {
+    color: #c2410c;
+}
+
+.simanta-quiz-feedback-sub {
+    display: block;
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.45;
+}
+
+.simanta-quiz-explanation {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 9px 12px;
+    border: 1px dashed rgba(0, 0, 0, 0.12);
+    margin-bottom: 10px;
+}
+
+.simanta-explanation-label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 4px;
+}
+
+.simanta-explanation-text {
+    font-size: 12.3px;
+    color: #1e293b;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.simanta-quiz-feedback-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.simanta-quiz-next-btn {
+    background: #4f46e5;
+    color: #ffffff;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.simanta-quiz-next-btn:hover {
+    background: #4338ca;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);
+}
+
+.simanta-quiz-speak-btn {
+    background: #ffffff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-family: inherit;
+}
+
+.simanta-quiz-speak-btn:hover {
+    background: #eef2ff;
+}
+
+/* ==========================================================================
+   INSTANT COURSE & CHAPTER AI SUMMARIZER WITH NOTE EXPORT
+   ========================================================================== */
+.simanta-summary-card {
+    background: #ffffff;
+    border: 1.5px solid #a7f3d0;
+    border-radius: 14px;
+    padding: 14px;
+    margin: 10px 0 12px 0;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.simanta-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.simanta-summary-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ecfdf5;
+    color: #047857;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 11.5px;
+    padding: 3px 10px;
+    border: 1px solid #a7f3d0;
+}
+
+.simanta-summary-badge-icon {
+    font-size: 13px;
+}
+
+.simanta-summary-course-tag {
+    font-size: 11px;
+    color: #059669;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 170px;
+}
+
+.simanta-summary-topic-box {
+    margin: 6px 0 10px 0;
+}
+
+.simanta-summary-topic-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #064e3b;
+    line-height: 1.45;
+}
+
+.simanta-summary-section-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    color: #065f46;
+    margin: 10px 0 6px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.simanta-summary-takeaways-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.simanta-summary-takeaway-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #f0fdf4;
+    border: 1px solid #d1fae5;
+    border-radius: 9px;
+    padding: 8px 11px;
+    font-size: 12.4px;
+    line-height: 1.5;
+    color: #064e3b;
+}
+
+.simanta-takeaway-bullet {
+    color: #059669;
+    font-weight: 900;
+    font-size: 12px;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.simanta-summary-action-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+}
+
+.simanta-action-box-label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
+
+.simanta-summary-action-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.simanta-summary-action-item {
+    font-size: 12.2px;
+    color: #334155;
+    line-height: 1.45;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.simanta-action-step-num {
+    color: #0284c7;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.simanta-summary-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.simanta-save-note-btn {
+    background: #059669;
+    color: #ffffff;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: inherit;
+}
+
+.simanta-save-note-btn:hover:not(:disabled) {
+    background: #047857;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.simanta-save-note-btn.saved {
+    background: #ecfdf5 !important;
+    color: #047857 !important;
+    border: 1.5px solid #10b981 !important;
+    cursor: default;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.simanta-copy-summary-btn {
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    padding: 6px 11px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.simanta-copy-summary-btn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+.simanta-tts-summary-btn {
+    background: #f8fafc;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    padding: 6px 11px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-family: inherit;
+}
+
+.simanta-tts-summary-btn:hover {
+    background: #ecfdf5;
+}
+
+.simanta-saved-note-container {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: simanta-slide-down 0.2s ease-out;
+}
+
+.simanta-saved-note-toast {
+    padding: 8px 12px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    font-size: 11.5px;
+    color: #065f46;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.simanta-saved-note-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 180px;
+}
+
+.simanta-saved-badge {
+    background: #059669;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.simanta-saved-text {
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: #065f46;
+}
+
+.simanta-saved-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.simanta-note-preview-toggle-btn {
+    background: #ffffff;
+    border: 1px solid #10b981;
+    color: #047857;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.simanta-note-preview-toggle-btn:hover {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.simanta-view-notes-link {
+    color: #ffffff;
+    background: #059669;
+    font-weight: 700;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+}
+
+.simanta-view-notes-link:hover {
+    background: #047857;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.simanta-saved-note-inline-box {
+    background: #ffffff;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.08);
+}
+
+.simanta-note-inline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed #d1fae5;
+}
+
+.simanta-note-inline-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #065f46;
+}
+
+.simanta-note-inline-meta {
+    font-size: 10.5px;
+    color: #6b7280;
+}
+
+.simanta-note-inline-content {
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #1f2937;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #f9fafb;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin: 0 0 6px 0;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.simanta-note-inline-hint {
+    font-size: 10.5px;
+    color: #047857;
+    line-height: 1.35;
+}
+
+/* User Notes Navigator Card */
+.simanta-user-notes-card {
+    margin-top: 10px;
+    background: #ffffff;
+    border: 1px solid #ccfbf1;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.08);
+}
+
+.simanta-user-notes-header {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    color: #ffffff;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.simanta-user-notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+}
+
+.simanta-user-note-item {
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    border-radius: 8px;
+    padding: 9px 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.simanta-user-note-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.simanta-user-note-item-title {
+    font-size: 12px;
+    color: #0f766e;
+    font-weight: 700;
+}
+
+.simanta-user-note-date {
+    font-size: 10px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.simanta-user-note-course {
+    font-size: 11px;
+    color: #334155;
+    font-weight: 600;
+}
+
+.simanta-user-note-snippet {
+    font-size: 11px;
+    color: #475569;
+    line-height: 1.4;
+    margin: 0;
+    font-style: italic;
+}
+
+.simanta-user-note-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.simanta-user-note-btn {
+    display: inline-block;
+    background: #0d9488;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+.simanta-user-note-btn:hover {
+    background: #0f766e;
+    color: #ffffff;
+    text-decoration: none;
 }
 
 /* Reduced Motion */

@@ -2,9 +2,10 @@
 Backend AI Assistant untuk LMS Sekretariat Jenderal DPD RI (Manta)
 Dirancang dengan prinsip:
 1. Smart Intent & Context Scoring: Memahami pertanyaan santai, formal, maupun spesifik.
-2. Respons Komprehensif & Edukatif: Tidak menjawab template pendek yang monoton.
-3. Live Database Search: Merekomendasikan kursus aktif langsung dari database LMS.
-4. Plug-and-Play LLM: Mendukung Google Gemini / OpenAI jika GEMINI_API_KEY disetel di .env.
+2. Personalisasi Terpadu: Mengenali nama, kursus terdaftar, progres aktif, dan sertifikat pengguna.
+3. Tombol Aksi Cepat (Quick Actions): Navigasi instan ke kursus, sertifikat, atau modal pelaporan.
+4. Live Database Search: Merekomendasikan kursus aktif langsung dari database LMS.
+5. Plug-and-Play LLM: Mengintegrasikan Google Gemini API dengan prompt yang dipersonalisasi.
 """
 
 import os
@@ -12,9 +13,12 @@ import re
 import json
 import logging
 import hashlib
+import random
+import uuid
 from typing import Dict, Any, List, Tuple
 
 from django.conf import settings
+from django.utils import timezone
 from django.core.cache import cache
 from django.db.models import Q
 from rest_framework.views import APIView
@@ -48,6 +52,10 @@ KNOWLEDGE_BASE = [
             "Bagaimana cara mulai belajar?",
             "Bagaimana cara unduh sertifikat?",
             "Rekomendasi kursus populer"
+        ],
+        "actions": [
+            {"label": "🔍 Jelajahi Katalog Kursus", "url": "/search/", "type": "route"},
+            {"label": "🔐 Masuk SSO", "url": "/login/", "type": "route"}
         ]
     },
     {
@@ -72,6 +80,10 @@ KNOWLEDGE_BASE = [
             "Bagaimana cara mulai belajar?",
             "Kursus apa saja yang tersedia?",
             "Cara unduh sertifikat kelulusan"
+        ],
+        "actions": [
+            {"label": "🔍 Jelajahi Katalog Kursus", "url": "/search/", "type": "route"},
+            {"label": "✨ Capaian Belajar", "url": "/capaian/", "type": "route"}
         ]
     },
     {
@@ -93,6 +105,10 @@ KNOWLEDGE_BASE = [
             "Rekomendasi kursus populer",
             "Berapa batas nilai kelulusan kuis?",
             "Di mana sertifikat saya?"
+        ],
+        "actions": [
+            {"label": "📚 Buka Katalog Kursus", "url": "/search/", "type": "route"},
+            {"label": "📖 Panduan Pengguna", "url": "/user-guide/", "type": "route"}
         ]
     },
     {
@@ -112,6 +128,10 @@ KNOWLEDGE_BASE = [
             "Bagaimana jika nilai kuis saya belum lulus?",
             "Halaman verifikasi sertifikat publik",
             "Tanya kendala teknis"
+        ],
+        "actions": [
+            {"label": "📜 Sertifikat Saya", "url": "/student/sertifikat/", "type": "route"},
+            {"label": "📚 Kursus Saya", "url": "/student/courses/", "type": "route"}
         ]
     },
     {
@@ -131,6 +151,10 @@ KNOWLEDGE_BASE = [
             "Bagaimana cara ubah profil?",
             "Hubungi administrator helpdesk",
             "Kembali ke panduan kursus"
+        ],
+        "actions": [
+            {"label": "🔐 Halaman Login SSO", "url": "/login/", "type": "route"},
+            {"label": "👤 Profil Akun", "url": "/student/profile/", "type": "route"}
         ]
     },
     {
@@ -147,12 +171,16 @@ KNOWLEDGE_BASE = [
             "2. **Cek Ekstensi Peramban:** Beberapa modul SCORM menggunakan popup/frame interaktif. Nonaktifkan sementara *AdBlocker* atau ekstensi pengubah skrip di peramban Anda.\n"
             "3. **Gunakan Peramban Rekomendasi:** Disarankan menggunakan Google Chrome, Microsoft Edge, atau Mozilla Firefox versi terbaru.\n"
             "4. **Koneksi Jaringan:** Pastikan kuota dan stabilitas jaringan mencukupi untuk streaming media berkualitas tinggi.\n\n"
-            "Jika kendala berlanjut, Anda dapat menggunakan tombol **Kirim Masukan** di pojok kanan bawah untuk melaporkan langsung ke tim teknis!"
+            "Jika kendala berlanjut, Anda dapat langsung mengklik tombol **Laporkan Kendala** di bawah untuk mengirim pesan ke tim admin!"
         ),
         "suggestions": [
             "Cara lapor kendala ke admin",
             "Bagaimana progres kursus disimpan?",
             "Panduan sertifikat"
+        ],
+        "actions": [
+            {"label": "💬 Laporkan Kendala", "action": "open_feedback", "type": "event"},
+            {"label": "📞 Kontak Helpdesk", "url": "/contact/", "type": "route"}
         ]
     },
     {
@@ -172,6 +200,10 @@ KNOWLEDGE_BASE = [
             "Syarat klaim sertifikat",
             "Rekomendasi kursus populer",
             "Tanya kendala teknis"
+        ],
+        "actions": [
+            {"label": "📚 Kembali ke Kursus", "url": "/student/courses/", "type": "route"},
+            {"label": "📜 Cek Sertifikat", "url": "/student/sertifikat/", "type": "route"}
         ]
     },
     {
@@ -184,7 +216,7 @@ KNOWLEDGE_BASE = [
         "reply": (
             "📞 **Layanan Bantuan & Helpdesk Setjen DPD RI:**\n\n"
             "Jika Anda mengalami kendala teknis sistem atau memiliki pertanyaan khusus kepegawaian:\n"
-            "• **Fitur Kirim Masukan:** Klik tombol floating **Kirim Masukan** di pojok kanan bawah halaman untuk mengirim tiket kendala langsung ke tim admin.\n"
+            "• **Fitur Laporkan Kendala:** Klik tombol di bawah untuk langsung membuka formulir pengaduan teknis ke tim admin.\n"
             "• **Unit Pengelola:** Pusat Pelatihan & Pengembangan ASN / Bagian TI Sekretariat Jenderal DPD RI, Gedung DPD RI Kompleks Parlemen Senayan, Jakarta.\n"
             "• **Jam Layanan:** Senin – Jumat, pukul 08:00 – 16:30 WIB."
         ),
@@ -192,6 +224,10 @@ KNOWLEDGE_BASE = [
             "Video atau modul SCORM macet",
             "Cara unduh sertifikat",
             "Kembali ke katalog kursus"
+        ],
+        "actions": [
+            {"label": "💬 Laporkan Kendala", "action": "open_feedback", "type": "event"},
+            {"label": "📞 Kontak Helpdesk", "url": "/contact/", "type": "route"}
         ]
     },
     {
@@ -209,6 +245,10 @@ KNOWLEDGE_BASE = [
             "Cari kursus populer",
             "Cara unduh sertifikat",
             "Apa itu LMS Setjen DPD RI?"
+        ],
+        "actions": [
+            {"label": "🔍 Cari Pelatihan Baru", "url": "/search/", "type": "route"},
+            {"label": "📜 Sertifikat Saya", "url": "/student/sertifikat/", "type": "route"}
         ]
     },
     {
@@ -226,6 +266,10 @@ KNOWLEDGE_BASE = [
             "Apa saja yang bisa Manta bantu?",
             "Bagaimana cara mulai kursus?",
             "Apa itu LMS Setjen DPD RI?"
+        ],
+        "actions": [
+            {"label": "🚀 Mulai Belajar", "url": "/search/", "type": "route"},
+            {"label": "🏛️ Tentang LMS", "url": "/tentang/", "type": "route"}
         ]
     }
 ]
@@ -238,8 +282,10 @@ class AIAssistantChatAPIView(APIView):
     
     Fitur:
     - Smart Multi-Tier Intent Matching (memahami pertanyaan natural, formal, hingga santai).
+    - Personalisasi Data Pengguna (Nama, Kursus Diikuti, Progres Belajar, Sertifikat).
+    - Tombol Aksi Cepat (Quick Action Buttons) untuk navigasi instan.
     - Terintegrasi Database Kursus Aktif LMS Setjen DPD RI secara real-time.
-    - Caching 5 menit untuk respons kilat (< 2ms).
+    - User-Isolated Caching untuk respons kilat (< 2ms).
     - Plug-and-Play LLM: Memanggil Gemini Flash / OpenAI jika API key dikonfigurasi.
     """
     permission_classes = [AllowAny]
@@ -254,54 +300,263 @@ class AIAssistantChatAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 1. Normalisasi teks
+        # 1. Ekstraksi Konteks Pengguna (Personalisasi) & Halaman Aktif (Page Awareness)
+        user_ctx = self._get_user_context(request)
+        user_id_str = str(user_ctx.get("user_id") or "guest")
+
+        page_ctx = request.data.get("page_context") or {}
+        course_slug = page_ctx.get("course_slug")
+        pathname = page_ctx.get("pathname") or request.data.get("current_path") or ""
+        if not course_slug and "/course-detail/" in pathname:
+            slug_match = re.search(r"/course-detail/([^/]+)/?", pathname)
+            if slug_match:
+                course_slug = slug_match.group(1)
+
+        current_course = None
+        if course_slug:
+            try:
+                current_course = api_models.Course.objects.filter(slug=course_slug, platform_status="Published").first()
+            except Exception:
+                current_course = None
+
+        # 2. Normalisasi teks & User-Isolated Caching (termasuk course_slug jika ada)
         norm_query = re.sub(r"[^\w\s]", "", user_message.lower()).strip()
-        cache_key = f"ai_manta_chat_{hashlib.md5(norm_query.encode('utf-8')).hexdigest()}"
+        course_slug_key = f"_{course_slug}" if course_slug else ""
+        cache_key = f"ai_manta_chat_{user_id_str}{course_slug_key}_{hashlib.md5(norm_query.encode('utf-8')).hexdigest()}"
         cached_result = cache.get(cache_key)
         if cached_result:
             return Response(cached_result, status=status.HTTP_200_OK)
 
-        # 2. Periksa apakah pertanyaan eksplisit mencari / meminta rekomendasi Kursus
+        # 3. Handle Pertanyaan Kontekstual Khusus Halaman Kursus yang Sedang Dilihat
+        if current_course:
+            is_course_context_query = bool(re.search(
+                r"\b(kursus\s*ini|pelatihan\s*ini|materi\s*ini|silabus|modul\s*ini|bab\s*ini|instruktur(\s*ini)?|pengajar(\s*ini)?|prasyarat|syarat\s*lulus|evaluasi|tentang\s*kursus\s*ini|ringkasan\s*kursus|jadwal\s*kursus)\b",
+                norm_query
+            ))
+            if is_course_context_query:
+                response_data = self._handle_current_course_query(current_course, user_message, norm_query, user_ctx)
+                cache.set(cache_key, response_data, timeout=180)
+                return Response(response_data, status=status.HTTP_200_OK)
+
+        # 4. Handle Pertanyaan Terpersonalisasi Khusus (Kursus Saya & Progres Belajar)
+        is_my_courses_query = re.search(
+            r"\b(kursus\s*saya|kelas\s*saya|progres\s*belajar|progres\s*saya|pelatihan\s*saya|daftar\s*kursus\s*saya|lanjut\s*belajar)\b",
+            norm_query
+        )
+        if is_my_courses_query:
+            response_data = self._handle_personalized_courses(user_ctx)
+            cache.set(cache_key, response_data, timeout=60)
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        # 4.5. Handle Smart Learning Reminder / Nudge Query
+        is_nudge_query = re.search(
+            r"\b(pengingat\s*belajar|tugas\s*belum\s*selesai|kursus\s*belum\s*selesai|ingatkan\s*(saya)?|jadwal\s*belajar|materi\s*tersisa|progres\s*tertunda)\b",
+            norm_query
+        )
+        if is_nudge_query:
+            response_data = self._handle_learning_nudge_query(user_ctx)
+            cache.set(cache_key, response_data, timeout=60)
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        # 5. Handle Pertanyaan Terpersonalisasi Khusus (Sertifikat Saya)
+        is_my_cert_query = re.search(
+            r"\b(sertifikat\s*(saya|ku|milik\s*saya)|unduh\s*sertifikat\s*saya|lihat\s*sertifikat|piagam\s*saya)\b",
+            norm_query
+        )
+        if is_my_cert_query:
+            response_data = self._handle_personalized_certificates(user_ctx)
+            cache.set(cache_key, response_data, timeout=60)
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        # 6. Handle Sapaan Ramah Terpersonalisasi (Greeting)
+        is_greeting_match = re.search(
+            r"\b(halo+|hai+|hei+|hello+|hi+|hey+|selamat\s+(pagi|siang|sore|malam)|assalamu\s*['a-z]*)\b",
+            norm_query
+        )
+        if is_greeting_match and len(norm_query.split()) <= 4:
+            response_data = self._handle_personalized_greeting(user_ctx)
+            cache.set(cache_key, response_data, timeout=120)
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        # 6.5. Smart Helpdesk & Auto-Diagnostic Kendala Teknis
+        is_tech_issue = bool(re.search(
+            r"\b(macet|error|kendala|masalah|tidak\s*(bisa|jalan|putar|simpan|play|buka|submit|unduh|muncul)|blank|layar\s*hitam|loading\s*terus|gagal\s*(submit|simpan|unduh|login)|buffering|rusak|freeze|hang|lapor\s*(bug|kendala)|bantuan\s*teknis|helpdesk)\b",
+            norm_query
+        ))
+        if is_tech_issue and not re.search(r"\b(jadwal|sertifikat\s*saya|kursus\s*saya|progres\s*saya)\b", norm_query):
+            tech_response = self._handle_smart_helpdesk_diagnostic(user_message, norm_query, user_ctx, current_course)
+            if tech_response:
+                cache.set(cache_key, tech_response, timeout=120)
+                return Response(tech_response, status=status.HTTP_200_OK)
+
+        # 6.8. Instant Course & Chapter AI Summarizer with Smart Note Export
+        is_summary_query = bool(re.search(
+            r"\b(rangkum(an)?|ringkas(an)?|kesimpulan|poin\s*penting|key\s*takeaways?|takeaways?|garis\s*besar|intisari|resume|apa\s*inti\s*(dari)?|ulasan\s*singkat)\b",
+            norm_query
+        ))
+        if is_summary_query:
+            summary_response = self._handle_course_summarizer(user_message, norm_query, user_ctx, current_course)
+            if summary_response:
+                cache.set(cache_key, summary_response, timeout=120)
+                return Response(summary_response, status=status.HTTP_200_OK)
+
+        # 6.9. User Saved Notes Navigator & Locator (Pencarian & Penunjuk Lokasi Catatan Belajar)
+        is_notes_query = bool(re.search(
+            r"\b(catatan(\s*saya|\s*belajar|\s*tersimpan)?|di\s*mana\s*catatan|buka\s*catatan|lihat\s*catatan|tampilkan\s*catatan|temukan\s*catatan|cari\s*catatan|tidak\s*(bisa\s*)?menemukan\s*catatan|note(\s*saya)?|my\s*notes)\b",
+            norm_query
+        )) and not bool(re.search(r"\b(rangkum|ringkas|simpan\s*ke\s*catatan)\b", norm_query))
+        if is_notes_query:
+            notes_response = self._handle_user_notes_query(user_message, norm_query, user_ctx, current_course)
+            if notes_response:
+                cache.set(cache_key, notes_response, timeout=60)
+                return Response(notes_response, status=status.HTTP_200_OK)
+
+        # 7. Deep Syllabus & Lesson Search (Pencarian Isi Modul, Bab, & Materi Pembelajaran Spesifik)
+        is_lesson_search = bool(re.search(
+            r"\b(materi\s*(apa|mana)|modul\s*(apa|mana)|bab\s*(apa|mana)|pelajaran\s*(apa|mana)|isi\s*modul|isi\s*bab|silabus|topik\s*apa|bahas(an)?\s*tentang|ada\s*materi|cari\s*materi|cari\s*modul|pembahasan\s*tentang|apakah\s*ada\s*materi|di\s*materi\s*apa|ada\s*bab|materi\s*tentang|modul\s*tentang)\b",
+            norm_query
+        ))
+        if is_lesson_search:
+            lesson_response = self._search_lessons_response(user_message, norm_query, user_ctx, current_course)
+            if lesson_response:
+                cache.set(cache_key, lesson_response, timeout=180)
+                return Response(lesson_response, status=status.HTTP_200_OK)
+
+        # 7.5. Role & Unit-Based Competency Recommender (Rekomendasi Berbasis Unit Kerja Setjen DPD RI atau Jabatan)
+        role_unit_keywords = (
+            r"(persidangan|risalah|perisalah|paripurna|rapat|notulen|"
+            r"hukum|perundang|legislatif|legislasi|perancang|telaahan|advokasi|"
+            r"protokol|humas|hubungan\s*masyarakat|pemberitaan|media\s*parlemen|"
+            r"keuangan|anggaran|perbendaharaan|akuntansi|pengadaan|pbj|bmn|"
+            r"kepegawaian|sdm|ortala|tata\s*laksana|reformasi\s*birokrasi|kearsipan|arsip|"
+            r"ti|teknologi\s*informasi|sistem\s*informasi|keanggotaan)"
+        )
+        is_role_unit_query = bool(re.search(
+            rf"\b(kursus|pelatihan|materi|rekomendasi|kompetensi)\b.*\b{role_unit_keywords}\b",
+            norm_query
+        )) or bool(re.search(
+            r"\b(kursus\s*untuk\s*(saya|unit|bidang|staf|tim|jabatan|bagian|biro)|rekomendasi\s*(unit|jabatan|kompetensi|tupoksi|karier|bidang|bagian|biro|peran|staf|tim)|rekomendasi\s*pelatihan\s*(saya|untuk\s*saya)?|kompetensi\s*(jabatan|saya|unit)|sesuai\s*(unit|jabatan|posisi|tupoksi)|rekomendasi\s*tupoksi|tupoksi\s*saya|rekomendasi\s*karier)\b",
+            norm_query
+        )) or (
+            bool(re.search(r"\b(rekomendasi|cocok|sesuai)\b", norm_query)) and
+            bool(re.search(r"\b(jabatan|posisi|unit|bagian|biro|subbagian|tupoksi|staf|tim|pegawai|aparatur)\b", norm_query))
+        )
+        if is_role_unit_query:
+            role_rec_response = self._handle_role_unit_competency_recommendation(user_message, norm_query, user_ctx)
+            if role_rec_response:
+                cache.set(cache_key, role_rec_response, timeout=180)
+                return Response(role_rec_response, status=status.HTTP_200_OK)
+
+        # 7.8. AI Interactive Quiz Prep & Knowledge Flashcards (Simulasi Uji Pemahaman Mandiri)
+        is_quiz_prep_query = bool(re.search(
+            r"\b(latihan|simulasi|flashcard|uji\s*pemahaman|tes\s*pemahaman)\b.*\b(kuis|soal|ujian|evaluasi|materi)\b",
+            norm_query
+        )) or bool(re.search(
+            r"\b(kuis|soal|pertanyaan)\b.*\b(latihan|simulasi|interaktif|flashcard|pemahaman|persidangan|design\s*thinking|berakhlak|hukum|legislasi|tata\s*tertib|berikutnya|lain)\b",
+            norm_query
+        )) or bool(re.search(
+            r"\b(latihan\s*(kuis|soal|ujian|evaluasi)|uji\s*pemahaman|simulasi\s*(kuis|soal|ujian)|flashcard|tanya\s*jawab|tes\s*kemampuan|beri\s*(saya\s*)?(latihan|soal|kuis)|kuis\s*interaktif|soal\s*(berikutnya|lain)|kuis\s*berikutnya)\b",
+            norm_query
+        ))
+        if is_quiz_prep_query:
+            quiz_prep_response = self._handle_quiz_prep_simulator(user_message, norm_query, user_ctx, current_course)
+            if quiz_prep_response:
+                return Response(quiz_prep_response, status=status.HTTP_200_OK)
+
+        # 8. Periksa apakah pertanyaan eksplisit mencari / meminta rekomendasi Kursus
         explicit_course_search = re.search(
             r"\b(rekomendasi\s*kursus|kursus\s*populer|cari\s*kursus|katalog\s*kursus|daftar\s*kursus|ada\s*kursus|kursus\s*terbaru|pilihan\s*kursus)\b",
             norm_query
         )
         if explicit_course_search:
-            course_response = self._search_courses_response(user_message, norm_query)
+            course_response = self._search_courses_response(user_message, norm_query, user_ctx)
             if course_response:
                 cache.set(cache_key, course_response, timeout=180)
                 return Response(course_response, status=status.HTTP_200_OK)
 
-        # 3. Smart Intent Scoring terhadap Basis Pengetahuan Lokal Terlebih Dahulu
+        # 9. Smart Intent Scoring terhadap Basis Pengetahuan Lokal
         best_rule, score = self._find_best_knowledge_match(user_message, norm_query)
         if best_rule and score >= 3:
+            actions = list(best_rule.get("actions", []))
+            # Jika user terautentikasi dan ada kursus aktif, sertakan tombol lanjut belajar jika relevan
+            if user_ctx["is_authenticated"] and user_ctx.get("latest_course"):
+                latest = user_ctx["latest_course"]
+                if not latest.get("is_completed") and latest.get("enrollment_id"):
+                    # Tambahkan jika belum ada aksi lanjut belajar
+                    if not any(a.get("url", "").startswith("/student/courses/") for a in actions):
+                        actions.insert(0, {
+                            "label": "▶️ Lanjut Belajar",
+                            "url": f"/student/courses/{latest['enrollment_id']}/",
+                            "type": "route"
+                        })
+
             result = {
                 "status": "success",
                 "reply": best_rule["reply"],
                 "source": "knowledge_engine",
                 "confidence": score,
                 "suggested_questions": best_rule["suggestions"],
+                "actions": actions,
                 "recommended_courses": []
             }
             cache.set(cache_key, result, timeout=300)
             return Response(result, status=status.HTTP_200_OK)
 
-        # 4. Periksa apakah pertanyaan terkait pencarian Kursus umum (topik tertentu)
+        # 8. Periksa apakah pertanyaan terkait pencarian Kursus umum (topik tertentu)
         course_query_pattern = re.search(
             r"\b(kursus|materi|pelatihan|kelas|belajar\s*apa)\b",
             norm_query
         )
         if course_query_pattern and not re.search(r"\b(cara\s*mulai|langkah\s*awal|panduan|sertifikat|piagam)\b", norm_query):
-            course_response = self._search_courses_response(user_message, norm_query)
+            course_response = self._search_courses_response(user_message, norm_query, user_ctx)
             if course_response:
                 cache.set(cache_key, course_response, timeout=180)
                 return Response(course_response, status=status.HTTP_200_OK)
 
-        # 4. Optional Cloud AI Engine (Google Gemini / OpenAI) jika tersedia di .env
+        # 10. Cloud AI Engine (Google Gemini / OpenAI) jika tersedia di .env
         ai_api_key = os.environ.get("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", None)
         if ai_api_key:
-            cloud_reply = self._call_gemini_api(user_message, history, ai_api_key)
+            # Ambil konteks silabus/modul terkait untuk memperkaya pemahaman LLM
+            matched_lessons_ctx = None
+            try:
+                base_tokens = [t for t in norm_query.split() if len(t) > 2]
+                if base_tokens:
+                    q_ctx = Q()
+                    for t in base_tokens[:3]:
+                        q_ctx |= Q(title__icontains=t) | Q(variant__title__icontains=t)
+                    ctx_items = api_models.VariantItem.objects.filter(
+                        variant__course__platform_status="Published",
+                        variant__course__is_published_version=True
+                    ).filter(q_ctx).select_related('variant', 'variant__course')[:4]
+                    if ctx_items.exists():
+                        matched_lessons_ctx = [
+                            {"title": it.title, "chapter": it.variant.title, "course_title": it.variant.course.title}
+                            for it in ctx_items
+                        ]
+            except Exception:
+                matched_lessons_ctx = None
+
+            cloud_reply = self._call_gemini_api(user_message, history, ai_api_key, user_ctx, current_course, matched_lessons_ctx)
             if cloud_reply:
+                actions = [
+                    {"label": "🔍 Katalog Kursus", "url": "/search/", "type": "route"},
+                    {"label": "📜 Sertifikat Saya", "url": "/student/sertifikat/", "type": "route"}
+                ]
+                if current_course:
+                    actions.insert(0, {
+                        "label": f"📖 Kursus: {current_course.title[:20]}...",
+                        "url": f"/course-detail/{current_course.slug}/",
+                        "type": "route"
+                    })
+                elif user_ctx["is_authenticated"] and user_ctx.get("latest_course"):
+                    latest = user_ctx["latest_course"]
+                    if not latest.get("is_completed") and latest.get("enrollment_id"):
+                        actions.insert(0, {
+                            "label": "▶️ Lanjut Belajar",
+                            "url": f"/student/courses/{latest['enrollment_id']}/",
+                            "type": "route"
+                        })
+
                 result = {
                     "status": "success",
                     "reply": cloud_reply,
@@ -311,12 +566,13 @@ class AIAssistantChatAPIView(APIView):
                         "Cari kursus terbaru",
                         "Apa itu LMS Setjen DPD RI?"
                     ],
+                    "actions": actions,
                     "recommended_courses": []
                 }
                 cache.set(cache_key, result, timeout=300)
                 return Response(result, status=status.HTTP_200_OK)
 
-        # 5. Smart Contextual Fallback (Sopan, Ramah, Membantu & Tidak Monoton)
+        # 10. Smart Contextual Fallback (Sopan, Ramah, Membantu & Tidak Monoton)
         featured_courses = self._get_featured_courses()
         fallback_reply = (
             f"Terima kasih atas pertanyaan Anda: *\"{user_message}\"*.\n\n"
@@ -326,8 +582,21 @@ class AIAssistantChatAPIView(APIView):
             "• **Penerbitan & Unduh Sertifikat Ber-QR Code**\n"
             "• **Akses Akun & Integrasi SSO Pegawai DPD RI**\n"
             "• **Penanganan Kendala Video atau Modul SCORM**\n\n"
-            "Silakan pilih topik bantuan cepat di bawah atau buka katalog kursus pelatihan kami!"
+            "Silakan pilih tombol aksi cepat di bawah atau buka katalog kursus pelatihan kami!"
         )
+
+        default_actions = [
+            {"label": "🔍 Jelajahi Katalog Kursus", "url": "/search/", "type": "route"},
+            {"label": "📜 Sertifikat Saya", "url": "/student/sertifikat/", "type": "route"}
+        ]
+        if user_ctx["is_authenticated"] and user_ctx.get("latest_course"):
+            latest = user_ctx["latest_course"]
+            if not latest.get("is_completed") and latest.get("enrollment_id"):
+                default_actions.insert(0, {
+                    "label": "▶️ Lanjut Belajar",
+                    "url": f"/student/courses/{latest['enrollment_id']}/",
+                    "type": "route"
+                })
 
         result = {
             "status": "success",
@@ -339,16 +608,1763 @@ class AIAssistantChatAPIView(APIView):
                 "Cara unduh sertifikat kelulusan",
                 "Rekomendasi kursus populer"
             ],
+            "actions": default_actions,
             "recommended_courses": featured_courses
         }
         cache.set(cache_key, result, timeout=120)
         return Response(result, status=status.HTTP_200_OK)
 
+    def _get_user_context(self, request) -> Dict[str, Any]:
+        """Ekstraksi konteks pengguna aktif (profil, kursus, dan sertifikat)."""
+        user = None
+        if request.user and request.user.is_authenticated:
+            user = request.user
+        else:
+            uid = request.data.get("user_id")
+            if uid:
+                try:
+                    user = api_models.User.objects.filter(id=uid).first()
+                except Exception:
+                    user = None
+
+        if not user:
+            client_name = (request.data.get("user_name") or "").strip()
+            return {
+                "is_authenticated": False,
+                "user_id": None,
+                "name": client_name or "Rekan Pembelajar",
+                "organization_unit": None,
+                "position": None,
+                "jenis_jabatan": None,
+                "golongan": None,
+                "nip": None,
+                "enrolled_count": 0,
+                "certificates_count": 0,
+                "active_courses": [],
+                "completed_courses_count": 0,
+                "latest_course": None
+            }
+
+        display_name = user.full_name or user.first_name or user.username or "Rekan ASN"
+
+        # Ekstraksi Unit Kerja, Jabatan, Jenis Jabatan, dan Golongan ASN Setjen DPD RI
+        org_unit_name = None
+        position_name = None
+        jenis_jabatan = getattr(user, 'jenis_jabatan', None)
+        golongan = getattr(user, 'golongan', None)
+        nip = getattr(user, 'nip', None)
+
+        try:
+            profile = getattr(user, 'profile', None)
+            if profile:
+                if getattr(profile, 'organization_unit', None):
+                    org_unit_name = getattr(profile.organization_unit, 'name', None) or str(profile.organization_unit)
+                if getattr(profile, 'position', None):
+                    position_name = getattr(profile.position, 'name', None) or str(profile.position)
+        except Exception:
+            pass
+
+        # Ambil riwayat kursus terdaftar
+        enrollments = api_models.EnrolledCourse.objects.filter(user=user).select_related('course').order_by('-date')
+        enrolled_count = enrollments.count()
+
+        active_courses = []
+        completed_courses_count = 0
+        latest_course = None
+
+        for enr in enrollments[:5]:
+            try:
+                pct = round(enr.completion_percentage(), 1)
+            except Exception:
+                pct = 0.0
+            is_completed = pct >= 100
+            if is_completed:
+                completed_courses_count += 1
+            course_data = {
+                "id": enr.course.id,
+                "enrollment_id": enr.enrollment_id,
+                "title": enr.course.title,
+                "slug": enr.course.slug,
+                "progress": pct,
+                "is_completed": is_completed
+            }
+            active_courses.append(course_data)
+            if not latest_course:
+                latest_course = course_data
+
+        cert_count = api_models.Certificate.objects.filter(user=user).count()
+
+        return {
+            "is_authenticated": True,
+            "user_id": user.id,
+            "name": display_name,
+            "organization_unit": org_unit_name,
+            "position": position_name,
+            "jenis_jabatan": jenis_jabatan,
+            "golongan": golongan,
+            "nip": nip,
+            "enrolled_count": enrolled_count,
+            "certificates_count": cert_count,
+            "active_courses": active_courses,
+            "completed_courses_count": completed_courses_count,
+            "latest_course": latest_course
+        }
+
+    def _handle_personalized_greeting(self, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
+        """Menghasilkan sapaan cerdas dan terpersonalisasi sesuai data pengguna."""
+        if user_ctx["is_authenticated"]:
+            name = user_ctx["name"]
+            enrolled_count = user_ctx["enrolled_count"]
+            cert_count = user_ctx["certificates_count"]
+            latest = user_ctx["latest_course"]
+
+            reply = f"Halo, Bapak/Ibu **{name}**! 👋 Senang bertemu kembali di LMS Sekretariat Jenderal DPD RI.\n\n"
+            actions = []
+
+            if enrolled_count > 0 and latest:
+                reply += (
+                    f"Saat ini Anda terdaftar dalam **{enrolled_count} pelatihan**. Kursus aktif terakhir Anda adalah "
+                    f"**{latest['title']}** dengan progres belajar **{latest['progress']}%**.\n\n"
+                )
+                if not latest.get("is_completed") and latest.get("enrollment_id"):
+                    actions.append({
+                        "label": "▶️ Lanjut Belajar",
+                        "url": f"/student/courses/{latest['enrollment_id']}/",
+                        "type": "route"
+                    })
+                actions.append({
+                    "label": "📚 Kursus Saya",
+                    "url": "/student/courses/",
+                    "type": "route"
+                })
+            else:
+                reply += (
+                    "Anda belum memiliki kursus yang sedang aktif. Manta siap membantu merekomendasikan pelatihan "
+                    "terbaik untuk peningkatan kompetensi Anda hari ini!\n\n"
+                )
+                actions.append({
+                    "label": "🔍 Jelajahi Katalog Kursus",
+                    "url": "/search/",
+                    "type": "route"
+                })
+
+            if cert_count > 0:
+                actions.append({
+                    "label": f"📜 Sertifikat Saya ({cert_count})",
+                    "url": "/student/sertifikat/",
+                    "type": "route"
+                })
+
+            reply += "Ada materi pembelajaran atau informasi yang ingin Manta bantu carikan?"
+
+            return {
+                "status": "success",
+                "reply": reply,
+                "source": "personalized_greeting",
+                "suggested_questions": [
+                    "Progres kursus saya",
+                    "Bagaimana cara unduh sertifikat?",
+                    "Rekomendasi kursus populer",
+                    "Apa itu LMS Setjen DPD RI?"
+                ],
+                "actions": actions,
+                "recommended_courses": []
+            }
+        else:
+            return {
+                "status": "success",
+                "reply": (
+                    "Halo! Senang menyapa Anda 👋 Saya **Manta**, Asisten AI Virtual LMS Sekretariat Jenderal DPD RI.\n\n"
+                    "Saya siap membantu Anda dengan informasi seputar kursus keparlemenan, modul SCORM, panduan sertifikat digital resmi, hingga panduan akses akun SSO.\n\n"
+                    "Ada yang bisa Manta bantu untuk kegiatan belajar Anda hari ini?"
+                ),
+                "source": "general_greeting",
+                "suggested_questions": [
+                    "Apa itu LMS Setjen DPD RI?",
+                    "Bagaimana cara mulai belajar?",
+                    "Bagaimana cara unduh sertifikat?",
+                    "Rekomendasi kursus populer"
+                ],
+                "actions": [
+                    {"label": "🔍 Jelajahi Katalog Kursus", "url": "/search/", "type": "route"},
+                    {"label": "🔐 Masuk SSO", "url": "/login/", "type": "route"}
+                ],
+                "recommended_courses": []
+            }
+
+    def _handle_personalized_courses(self, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
+        """Menampilkan daftar kursus dan progres belajar pengguna secara personal."""
+        if not user_ctx["is_authenticated"]:
+            return {
+                "status": "success",
+                "reply": (
+                    "Untuk melihat daftar dan progres kursus pribadi Anda, silakan masuk terlebih dahulu menggunakan akun SSO Setjen DPD RI."
+                ),
+                "source": "user_context_courses",
+                "suggested_questions": [
+                    "Bagaimana cara masuk menggunakan SSO Setjen DPD RI?",
+                    "Apa itu LMS Setjen DPD RI?",
+                    "Rekomendasi kursus populer"
+                ],
+                "actions": [
+                    {"label": "🔐 Masuk Akun SSO", "url": "/login/", "type": "route"},
+                    {"label": "🔍 Jelajahi Katalog Kursus", "url": "/search/", "type": "route"}
+                ],
+                "recommended_courses": []
+            }
+
+        enrolled_count = user_ctx["enrolled_count"]
+        name = user_ctx["name"]
+        courses = user_ctx["active_courses"]
+
+        if enrolled_count > 0:
+            reply = f"📚 **Progres Belajar Anda, Bapak/Ibu {name}:**\n\n"
+            reply += f"Saat ini Anda terdaftar pada **{enrolled_count} pelatihan** di LMS Setjen DPD RI:\n\n"
+            for i, c in enumerate(courses, 1):
+                status_str = "✅ *Selesai 100%*" if c["is_completed"] else f"⏳ *Progres: {c['progress']}%*"
+                reply += f"{i}. **{c['title']}** — {status_str}\n"
+
+            actions = []
+            latest = user_ctx["latest_course"]
+            if latest and not latest["is_completed"] and latest.get("enrollment_id"):
+                actions.append({
+                    "label": f"▶️ Lanjut: {latest['title'][:20]}...",
+                    "url": f"/student/courses/{latest['enrollment_id']}/",
+                    "type": "route"
+                })
+            actions.append({
+                "label": "📚 Buka Kursus Saya",
+                "url": "/student/courses/",
+                "type": "route"
+            })
+            if user_ctx["certificates_count"] > 0:
+                actions.append({
+                    "label": f"📜 Sertifikat Saya ({user_ctx['certificates_count']})",
+                    "url": "/student/sertifikat/",
+                    "type": "route"
+                })
+
+            reply += "\nSilakan klik tombol di bawah untuk melanjutkan pembelajaran atau melihat seluruh daftar kursus Anda!"
+
+            return {
+                "status": "success",
+                "reply": reply,
+                "source": "user_context_courses",
+                "suggested_questions": [
+                    "Bagaimana cara unduh sertifikat?",
+                    "Rekomendasi kursus populer",
+                    "Tanya kendala teknis"
+                ],
+                "actions": actions,
+                "recommended_courses": []
+            }
+        else:
+            return {
+                "status": "success",
+                "reply": (
+                    f"Bapak/Ibu **{name}**, Anda saat ini belum terdaftar di kursus manapun.\n\n"
+                    "Silakan buka katalog kursus untuk memilih dan mendaftar pelatihan kompetensi resmi Setjen DPD RI yang Anda minati!"
+                ),
+                "source": "user_context_courses",
+                "suggested_questions": [
+                    "Rekomendasi kursus populer",
+                    "Bagaimana cara mulai belajar?",
+                    "Apa itu LMS Setjen DPD RI?"
+                ],
+                "actions": [
+                    {"label": "🔍 Jelajahi Katalog Kursus", "url": "/search/", "type": "route"}
+                ],
+                "recommended_courses": self._get_featured_courses()
+            }
+
+    def _handle_personalized_certificates(self, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
+        """Menampilkan status sertifikat terpersonalisasi untuk pengguna aktif."""
+        if not user_ctx["is_authenticated"]:
+            return {
+                "status": "success",
+                "reply": (
+                    "Untuk melihat dan mengunduh sertifikat resmi Anda, silakan masuk terlebih dahulu menggunakan akun SSO Setjen DPD RI."
+                ),
+                "source": "user_context_certificates",
+                "suggested_questions": [
+                    "Bagaimana cara masuk menggunakan SSO Setjen DPD RI?",
+                    "Syarat memperoleh sertifikat",
+                    "Apa itu LMS Setjen DPD RI?"
+                ],
+                "actions": [
+                    {"label": "🔐 Masuk Akun SSO", "url": "/login/", "type": "route"},
+                    {"label": "🔍 Cari Pelatihan Baru", "url": "/search/", "type": "route"}
+                ],
+                "recommended_courses": []
+            }
+
+        cert_count = user_ctx["certificates_count"]
+        name = user_ctx["name"]
+
+        if cert_count > 0:
+            reply = (
+                f"📜 **Sertifikat Anda, Bapak/Ibu {name}:**\n\n"
+                f"Selamat! Anda telah berhasil meraih **{cert_count} sertifikat kelulusan resmi** ber-QR Code di LMS Setjen DPD RI.\n\n"
+                "Setiap sertifikat telah dilengkapi tanda tangan elektronik resmi dan kode verifikasi keabsahan. "
+                "Anda dapat langsung melihat daftar dan mengunduh berkas PDF sertifikat Anda melalui tombol di bawah:"
+            )
+            actions = [
+                {"label": f"📜 Unduh Sertifikat ({cert_count})", "url": "/student/sertifikat/", "type": "route"},
+                {"label": "📚 Kursus Saya", "url": "/student/courses/", "type": "route"}
+            ]
+        else:
+            reply = (
+                f"Bapak/Ibu **{name}**, saat ini Anda belum memiliki sertifikat yang diterbitkan.\n\n"
+                "**Syarat Memperoleh Sertifikat Resmi:**\n"
+                "1. Tuntaskan seluruh materi modul/video hingga 100%.\n"
+                "2. Kerjakan kuis evaluasi akhir hingga mencapai batas nilai kelulusan (*passing grade*).\n\n"
+                "Setelah syarat terpenuhi, sertifikat digital resmi otomatis terbit di menu **Sertifikat Saya**!"
+            )
+            actions = [
+                {"label": "📚 Lanjut Kursus Saya", "url": "/student/courses/", "type": "route"},
+                {"label": "🔍 Cari Pelatihan Baru", "url": "/search/", "type": "route"}
+            ]
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "user_context_certificates",
+            "suggested_questions": [
+                "Berapa batas nilai kelulusan kuis?",
+                "Bagaimana jika nilai kuis belum lulus?",
+                "Rekomendasi kursus populer"
+            ],
+            "actions": actions,
+            "recommended_courses": []
+        }
+
+    def _handle_learning_nudge_query(self, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
+        """Menghasilkan respon pengingat belajar cerdas (Smart Learning Reminder) saat ditanyakan di chat."""
+        if not user_ctx["is_authenticated"]:
+            return {
+                "status": "success",
+                "reply": (
+                    "Untuk melihat pengingat belajar dan tugas materi aktif Anda, silakan masuk terlebih dahulu menggunakan akun SSO Setjen DPD RI."
+                ),
+                "source": "smart_learning_reminder",
+                "suggested_questions": [
+                    "Bagaimana cara masuk menggunakan SSO Setjen DPD RI?",
+                    "Rekomendasi kursus populer",
+                    "Apa itu LMS Setjen DPD RI?"
+                ],
+                "actions": [
+                    {"label": "🔐 Masuk Akun SSO", "url": "/login/", "type": "route"},
+                    {"label": "🔍 Katalog Kursus", "url": "/search/", "type": "route"}
+                ],
+                "recommended_courses": []
+            }
+
+        user = api_models.User.objects.filter(id=user_ctx["user_id"]).first()
+        nudge = get_user_learning_nudge(user)
+
+        name = user_ctx["name"]
+        actions = []
+
+        if nudge["nudge_type"] == "in_progress":
+            reply = (
+                f"⏰ **Pengingat Belajar Pribadi untuk Bapak/Ibu {name}:**\n\n"
+                f"Anda sedang aktif mempelajari kursus:\n"
+                f"📌 **{nudge['course_title']}**\n\n"
+                f"• **Capaian Progres:** {nudge['progress']}%\n"
+                f"• **Materi Tersisa:** {nudge['remaining_lessons']} materi lagi untuk memenuhi syarat penerbitan sertifikat digital resmi.\n\n"
+                "Mari luangkan waktu sejenak untuk menuntaskan bab pembelajaran berikutnya hari ini!"
+            )
+            actions = [
+                {"label": nudge["action_label"], "url": nudge["action_url"], "type": "route"},
+                {"label": "📚 Semua Kursus Saya", "url": "/student/courses/", "type": "route"}
+            ]
+        elif nudge["nudge_type"] == "not_started":
+            reply = (
+                f"⏰ **Pengingat Belajar Pribadi untuk Bapak/Ibu {name}:**\n\n"
+                f"Anda telah terdaftar pada kursus:\n"
+                f"📌 **{nudge['course_title']}**\n\n"
+                f"Namun Anda belum memulai bab pembelajaran pertama (Progres: 0%). "
+                f"Tersedia {nudge['remaining_lessons']} materi yang siap dipelajari untuk meningkatkan kompetensi Anda."
+            )
+            actions = [
+                {"label": "▶️ Mulai Belajar Sekarang", "url": nudge["action_url"], "type": "route"},
+                {"label": "📚 Kursus Saya", "url": "/student/courses/", "type": "route"}
+            ]
+        elif nudge["nudge_type"] == "all_completed":
+            reply = (
+                f"🎉 **Status Belajar Bapak/Ibu {name}:**\n\n"
+                "Luar biasa! Seluruh pelatihan yang Anda ambil telah diselesaikan hingga **100%**.\n\n"
+                "Anda dapat mengunduh seluruh sertifikat resmi kelulusan ber-QR Code di menu **Sertifikat Saya**, "
+                "atau memilih pelatihan kompetensi baru di katalog kursus kami."
+            )
+            actions = [
+                {"label": "📜 Unduh Sertifikat", "url": "/student/sertifikat/", "type": "route"},
+                {"label": "🔍 Cari Pelatihan Baru", "url": "/search/", "type": "route"}
+            ]
+        else:
+            reply = (
+                f"Bapak/Ibu **{name}**, saat ini Anda belum memiliki kursus yang sedang berjalan.\n\n"
+                "Silakan buka katalog kursus untuk memilih pelatihan kompetensi resmi Setjen DPD RI yang Anda minati!"
+            )
+            actions = [
+                {"label": "🔍 Jelajahi Katalog Kursus", "url": "/search/", "type": "route"}
+            ]
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "smart_learning_reminder",
+            "suggested_questions": [
+                "Bagaimana cara unduh sertifikat?",
+                "Rekomendasi kursus populer",
+                "Tanya kendala teknis"
+            ],
+            "actions": actions,
+            "nudge_data": nudge,
+            "recommended_courses": []
+        }
+
+    def _handle_smart_helpdesk_diagnostic(self, raw_message: str, norm_query: str, user_ctx: Dict[str, Any], current_course: Any = None) -> Dict[str, Any]:
+        """
+        Smart Helpdesk & Auto-Diagnostic Kendala Teknis:
+        Mendiagnosis kendala peramban, modul SCORM, video pemutar, evaluasi kuis, atau akun,
+        serta menyediakan tombol tiket bantuan otomatis dengan data prefill lengkap.
+        """
+        course_title_str = f" pada kursus '{current_course.title}'" if current_course else ""
+        course_id = current_course.id if current_course else None
+
+        # 1. Kendala Video / SCORM Pemutar
+        if re.search(r"\b(video|scorm|h5p|materi|player|pemutar|modul|putar|play|layar\s*hitam|loading\s*terus|buffering|freeze|hang)\b", norm_query):
+            reply = (
+                "🛠️ **Auto-Diagnostic Manta: Kendala Pemutaran Video & Modul SCORM**\n\n"
+                f"Manta mendeteksi kendala pada pemutaran media pembelajaran{course_title_str}. "
+                "Berikut langkah diagnosis dan perbaikan mandiri cepat:\n\n"
+                "1. 🔄 **Segarkan Halaman (*Hard Refresh*):** Tekan `Ctrl + F5` (Windows) atau `Cmd + Shift + R` (Mac) untuk memuat ulang skrip pemutar SCORM.\n"
+                "2. 🛡️ **Nonaktifkan AdBlocker & Ekstensi:** Ekstensi pemblokir iklan seringkali menahan skrip tracking SCORM/video interaktif.\n"
+                "3. 🍪 **Izinkan Third-Party Cookies:** Pastikan peramban mengizinkan cookie untuk portal LMS Setjen DPD RI.\n"
+                "4. 🌐 **Gunakan Peramban Rekomendasi:** Disarankan menggunakan Google Chrome atau Microsoft Edge versi terbaru.\n\n"
+                "Jika materi masih belum dapat berputar, klik tombol **Laporkan Tiket ke Helpdesk** di bawah. "
+                "Data halaman, materi, dan spesifikasi peramban Anda akan terisi otomatis untuk ditindaklanjuti tim TI Setjen DPD RI!"
+            )
+            actions = [
+                {
+                    "label": "💬 Laporkan Tiket ke Helpdesk",
+                    "action": "open_feedback",
+                    "affected_area": "video",
+                    "course_id": course_id,
+                    "report_title": f"Kendala Pemutaran Video/SCORM{course_title_str}",
+                    "category_desc": "Pemutaran Video & Modul SCORM",
+                    "user_problem": raw_message,
+                    "type": "event"
+                },
+                {"label": "📞 Kontak Helpdesk TI", "url": "/contact/", "type": "route"},
+                {"label": "📖 Panduan Pengguna", "url": "/user-guide/", "type": "route"}
+            ]
+            area = "video"
+
+        # 2. Kendala Kuis / Evaluasi
+        elif re.search(r"\b(kuis|quiz|ujian|soal|evaluasi|submit|nilai|skor|passing\s*grade)\b", norm_query):
+            reply = (
+                "📝 **Auto-Diagnostic Manta: Kendala Sistem Evaluasi & Kuis**\n\n"
+                f"Manta mendeteksi kendala pada sistem kuis/evaluasi pemahaman{course_title_str}:\n\n"
+                "1. ⚠️ **Koneksi Terputus:** Saat mengerjakan kuis, pastikan koneksi internet stabil agar jawaban terkirim ke server secara berkala.\n"
+                "2. 🔄 **Jangan Tutup Tab Sebelum Nilai Muncul:** Sistem memerlukan waktu 1-3 detik untuk memvalidasi seluruh butir jawaban.\n"
+                "3. ⏳ **Sesi SSO Habis:** Jika Anda berada di halaman ujian terlalu lama tanpa interaksi, sesi login mungkin kedaluwarsa.\n\n"
+                "Jika nilai kuis Anda tidak terekam atau gagal disubmit, klik tombol di bawah untuk melaporkan langsung ke administrator sistem!"
+            )
+            actions = [
+                {
+                    "label": "💬 Laporkan Kendala Kuis ke Helpdesk",
+                    "action": "open_feedback",
+                    "affected_area": "quiz",
+                    "course_id": course_id,
+                    "report_title": f"Kendala Sistem Kuis/Evaluasi{course_title_str}",
+                    "category_desc": "Sistem Kuis & Evaluasi",
+                    "user_problem": raw_message,
+                    "type": "event"
+                },
+                {"label": "📞 Kontak Helpdesk TI", "url": "/contact/", "type": "route"}
+            ]
+            area = "quiz"
+
+        # 3. Kendala Sertifikat
+        elif re.search(r"\b(sertifikat|piagam|unduh|download|pdf|qr\s*code)\b", norm_query):
+            reply = (
+                "📜 **Auto-Diagnostic Manta: Kendala Penerbitan & Unduh Sertifikat**\n\n"
+                "Berikut hal-hal yang perlu dipastikan terkait sertifikat kelulusan digital resmi:\n\n"
+                "1. ✅ **Syarat Kelulusan:** Seluruh materi harus berstatus tuntas 100% dan nilai kuis akhir memenuhi *passing grade*.\n"
+                "2. 🛡️ **Blokir Pop-up Download:** Beberapa peramban memblokir unduhan file PDF baru secara otomatis. Cek ikon pop-up di bilah alamat (*address bar*) dan pilih 'Selalu Izinkan'.\n"
+                "3. 🔍 **Validasi QR Code:** Setiap sertifikat memiliki kode unik keabsahan yang dapat diverifikasi di portal resmi Setjen DPD RI.\n\n"
+                "Jika syarat sudah terpenuhi namun tombol unduh belum muncul, silakan kirim laporan bantuan di bawah:"
+            )
+            actions = [
+                {
+                    "label": "💬 Laporkan Kendala Sertifikat",
+                    "action": "open_feedback",
+                    "affected_area": "other",
+                    "course_id": course_id,
+                    "report_title": "Kendala Unduh Sertifikat Digital Resmi",
+                    "category_desc": "Penerbitan & Unduh Sertifikat",
+                    "user_problem": raw_message,
+                    "type": "event"
+                },
+                {"label": "📜 Buka Sertifikat Saya", "url": "/student/sertifikat/", "type": "route"}
+            ]
+            area = "certificate"
+
+        # 4. Kendala Akun / SSO
+        elif re.search(r"\b(sso|login|masuk|akun|password|sandi|nip|profil)\b", norm_query):
+            reply = (
+                "🔐 **Auto-Diagnostic Manta: Kendala Akun & Layanan SSO**\n\n"
+                "Panduan penanganan kendala autentikasi akun pegawai Setjen DPD RI:\n\n"
+                "1. 🔑 **Single Sign-On (SSO):** Pastikan Anda menggunakan NIP dan kata sandi portal SSO Nusa DPD yang masih aktif.\n"
+                "2. 🧹 **Hapus Cache Sesi:** Lakukan *logout* lalu bersihkan cookies peramban sebelum mencoba masuk kembali.\n"
+                "3. 📱 **Bantuan Administrator:** Jika akun Anda terblokir atau lupa sandi SSO, silakan hubungi tim Helpdesk TI Setjen DPD RI."
+            )
+            actions = [
+                {
+                    "label": "💬 Laporkan Kendala Akun ke Helpdesk",
+                    "action": "open_feedback",
+                    "affected_area": "account",
+                    "course_id": None,
+                    "report_title": "Kendala Akun & Autentikasi SSO Pegawai",
+                    "category_desc": "Akun & SSO Pegawai",
+                    "user_problem": raw_message,
+                    "type": "event"
+                },
+                {"label": "🔐 Halaman Login SSO", "url": "/login/", "type": "route"},
+                {"label": "📞 Kontak Helpdesk TI", "url": "/contact/", "type": "route"}
+            ]
+            area = "account"
+
+        # 5. Kendala Umum / Sistem / Bug
+        else:
+            reply = (
+                "🛠️ **Layanan Bantuan & Laporan Kendala Sistem LMS:**\n\n"
+                f"Mohon maaf atas ketidaknyamanan yang Anda alami{course_title_str}. "
+                "Tim Helpdesk Bagian TI Sekretariat Jenderal DPD RI siap membantu menyelesaikan kendala Anda.\n\n"
+                "Silakan klik tombol **Laporkan ke Helpdesk** di bawah. Laporan akan otomatis mencakup URL halaman aktif "
+                "serta deskripsi perangkat Anda sehingga tim teknis dapat segera menindaklanjuti!"
+            )
+            actions = [
+                {
+                    "label": "💬 Laporkan ke Helpdesk",
+                    "action": "open_feedback",
+                    "affected_area": "ui",
+                    "course_id": course_id,
+                    "report_title": "Laporan Kendala Sistem LMS Setjen DPD RI",
+                    "category_desc": "Kendala Sistem & Antarmuka",
+                    "user_problem": raw_message,
+                    "type": "event"
+                },
+                {"label": "📞 Kontak Helpdesk TI", "url": "/contact/", "type": "route"},
+                {"label": "📖 Panduan Pengguna", "url": "/user-guide/", "type": "route"}
+            ]
+            area = "general"
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "smart_helpdesk_diagnostic",
+            "suggested_questions": [
+                "Bagaimana cara unduh sertifikat?",
+                "Panduan login SSO DPD",
+                "Rekomendasi kursus populer"
+            ],
+            "actions": actions,
+            "diagnostic_area": area,
+            "recommended_courses": []
+        }
+
+    def _handle_current_course_query(self, course: Any, raw_message: str, norm_query: str, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
+        """Menjawab pertanyaan spesifik mengenai kursus yang sedang dibuka pengguna di layar."""
+        teacher_name = getattr(course.teacher, "full_name", None) or getattr(course.teacher, "name", None) or "Instruktur BPSDM Setjen DPD RI"
+        cat_title = course.category.title if course.category else "Kompetensi Umum"
+        level_name = getattr(course, "level", "Semua Tingkatan")
+
+        try:
+            if hasattr(course, "curriculum"):
+                variants_qs = course.curriculum.all() if hasattr(course.curriculum, "all") else course.curriculum()
+            else:
+                variants_qs = api_models.Variant.objects.filter(course=course)
+            variant_count = variants_qs.count()
+            variant_list = list(variants_qs.order_by("order")[:4])
+        except Exception:
+            variant_count = 0
+            variant_list = []
+
+        try:
+            lecture_items = list(api_models.VariantItem.objects.filter(variant__course=course).select_related('variant').order_by('order')[:6])
+            lecture_count = api_models.VariantItem.objects.filter(variant__course=course).count()
+        except Exception:
+            lecture_items = []
+            lecture_count = 0
+
+        try:
+            quiz_count = course.quizzes().count() if hasattr(course, 'quizzes') and callable(course.quizzes) else api_models.Quiz.objects.filter(course=course).count()
+        except Exception:
+            quiz_count = 0
+
+        # Cek status enrollment pengguna untuk kursus ini
+        user_enrolled = None
+        if user_ctx["is_authenticated"]:
+            user_enrolled = api_models.EnrolledCourse.objects.filter(
+                user_id=user_ctx["user_id"],
+                course=course
+            ).first()
+
+        reply = f"📖 **Informasi Kursus: {course.title}**\n\n"
+
+        # Ringkasan deskripsi (bersihkan tag html)
+        clean_desc = re.sub(r'<[^>]+>', '', course.description or "").strip()
+        if clean_desc:
+            short_desc = clean_desc[:250] + ("..." if len(clean_desc) > 250 else "")
+            reply += f"*{short_desc}*\n\n"
+
+        reply += "📋 **Rincian Pelatihan:**\n"
+        reply += f"• **Kategori:** {cat_title}\n"
+        reply += f"• **Tingkat Kesulitan:** {level_name}\n"
+        reply += f"• **Instruktur:** {teacher_name}\n"
+        reply += f"• **Struktur Modul:** {variant_count} Bab ({lecture_count} Modul/Materi Pembelajaran)\n"
+        if quiz_count > 0:
+            reply += f"• **Evaluasi:** {quiz_count} Kuis / Ujian Pemahaman\n"
+        reply += "• **Sertifikasi:** Sertifikat Digital Resmi ber-QR Code otomatis terbit setelah selesai 100% dan lulus kuis.\n\n"
+
+        if variant_list:
+            reply += "📑 **Silabus Bab Pembelajaran:**\n"
+            for v in variant_list:
+                item_count = v.variant_items.count() if hasattr(v, 'variant_items') else 0
+                order_num = f"Bab {v.order}: " if v.order is not None else "• "
+                reply += f"{order_num}**{v.title}** ({item_count} materi)\n"
+            if variant_count > len(variant_list):
+                reply += f"*...dan {variant_count - len(variant_list)} bab lainnya.*\n"
+            reply += "\n"
+
+        actions = []
+        matched_lessons = []
+        is_enrolled_flag = bool(user_enrolled)
+        enrollment_id_val = user_enrolled.enrollment_id if user_enrolled else None
+
+        for item in lecture_items[:4]:
+            dur_str = ""
+            if item.duration:
+                total_sec = int(item.duration.total_seconds())
+                if total_sec > 0:
+                    m, s = divmod(total_sec, 60)
+                    dur_str = f"{m} menit" if m > 0 else f"{s} dtk"
+
+                action_url = f"/student/courses/{enrollment_id_val}/" if is_enrolled_flag else f"/course-detail/{course.slug}/"
+                matched_lessons.append({
+                    "id": item.id,
+                    "title": item.title,
+                    "chapter": item.variant.title,
+                    "course_title": course.title,
+                    "course_slug": course.slug,
+                    "item_type": item.item_type,
+                    "duration": dur_str,
+                    "is_enrolled": is_enrolled_flag,
+                    "action_url": action_url
+                })
+
+        if user_enrolled:
+            pct = round(user_enrolled.completion_percentage(), 1)
+            if pct >= 100:
+                reply += "🎉 **Status Anda:** Anda telah menyelesaikan pelatihan ini (*Kelulusan 100%*)!"
+                actions.append({
+                    "label": "📜 Unduh Sertifikat",
+                    "url": "/student/sertifikat/",
+                    "type": "route"
+                })
+            else:
+                reply += f"⏳ **Status Anda:** Anda telah terdaftar dengan progres **{pct}%**."
+                actions.append({
+                    "label": "▶️ Lanjut Belajar Sekarang",
+                    "url": f"/student/courses/{user_enrolled.enrollment_id}/",
+                    "type": "route"
+                })
+            actions.append({
+                "label": "📚 Kursus Saya",
+                "url": "/student/courses/",
+                "type": "route"
+            })
+        else:
+            if user_ctx["is_authenticated"]:
+                reply += "💡 **Status Anda:** Anda belum terdaftar di kursus ini. Silakan klik tombol **Mulai Belajar / Daftar** di halaman ini untuk memulai pelatihan resmi Setjen DPD RI secara gratis!"
+            else:
+                reply += "💡 **Status Anda:** Silakan masuk menggunakan akun SSO Setjen DPD RI untuk mendaftar dan mengikuti pelatihan ini secara gratis."
+                actions.append({
+                    "label": "🔐 Masuk SSO",
+                    "url": "/login/",
+                    "type": "route"
+                })
+            actions.append({
+                "label": "🔍 Cari Kursus Lain",
+                "url": "/search/",
+                "type": "route"
+            })
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "contextual_course_details",
+            "suggested_questions": [
+                "Berapa batas nilai kelulusan kuis?",
+                "Bagaimana cara unduh sertifikat?",
+                "Rekomendasi kursus populer lainnya"
+            ],
+            "actions": actions,
+            "matched_lessons": matched_lessons,
+            "recommended_courses": []
+        }
+
+    def _search_lessons_response(self, raw_message: str, norm_query: str, user_ctx: Dict[str, Any], current_course: Any = None) -> Dict[str, Any]:
+        """
+        Deep Syllabus & Lesson Search:
+        Mencari modul, bab, dan materi pembelajaran spesifik di database LMS Setjen DPD RI.
+        Menjelajahi Variant (Bab/Bagian) dan VariantItem (Modul/Materi).
+        """
+        try:
+            stop_words = {
+                "materi", "modul", "bab", "pelajaran", "topik", "bahasan", "pembahasan",
+                "tentang", "mengenai", "ada", "apa", "mana", "yang", "di", "kursus",
+                "kelas", "lms", "setjen", "dpd", "ri", "tolong", "bantu", "cari",
+                "carikan", "apakah", "bagaimana", "bisa", "sebutkan", "daftar", "isi",
+                "adakah", "atau", "pada", "dalam", "dan", "untuk", "pelatihan",
+                "ini", "itu", "tersebut", "jelaskan", "info", "informasi", "ringkasan", "ulasan"
+            }
+            tokens = [t for t in norm_query.split() if t not in stop_words and len(t) > 1]
+
+            base_qs = api_models.VariantItem.objects.filter(
+                variant__course__platform_status="Published",
+                variant__course__is_published_version=True
+            ).select_related('variant', 'variant__course')
+
+            # Jika user sedang membuka kursus tertentu, prioritaskan materi dari kursus tersebut
+            is_referring_to_current = bool(current_course and re.search(
+                r"\b(kursus\s*ini|pelatihan\s*ini|materi\s*ini|di\s*kursus\s*ini|di\s*sini|pada\s*kursus\s*ini)\b",
+                norm_query
+            ))
+
+            if current_course:
+                current_course_items = base_qs.filter(variant__course=current_course)
+                if current_course_items.exists():
+                    if is_referring_to_current or not tokens:
+                        base_qs = current_course_items
+                    else:
+                        q_course = Q()
+                        for t in tokens:
+                            q_course |= Q(title__icontains=t) | Q(description__icontains=t) | Q(variant__title__icontains=t)
+                        matched_in_current = current_course_items.filter(q_course)
+                        if matched_in_current.exists():
+                            base_qs = matched_in_current
+
+            matched_items = []
+            if tokens:
+                q_or = Q()
+                for t in tokens:
+                    q_or |= Q(title__icontains=t) | Q(description__icontains=t) | Q(variant__title__icontains=t) | Q(variant__course__title__icontains=t)
+
+                candidate_items = list(base_qs.filter(q_or).order_by('order')[:20])
+
+                # Hitung bobot relevansi: kemunculan pada judul materi > bab > deskripsi > judul kursus
+                scored_items = []
+                for item in candidate_items:
+                    score = 0
+                    t_lower = (item.title or "").lower()
+                    v_lower = (item.variant.title or "").lower()
+                    c_lower = (item.variant.course.title or "").lower()
+                    d_lower = (item.description or "").lower()
+
+                    for t in tokens:
+                        if t in t_lower:
+                            score += 5
+                        if t in v_lower:
+                            score += 3
+                        if t in d_lower:
+                            score += 2
+                        if t in c_lower:
+                            score += 2
+
+                    scored_items.append((score, item))
+
+                scored_items.sort(key=lambda x: x[0], reverse=True)
+
+                # Deduplikasi materi berdasarkan judul dan ID kursus
+                seen = set()
+                for _, it in scored_items:
+                    key = (it.title.strip().lower(), it.variant.course_id)
+                    if key not in seen:
+                        seen.add(key)
+                        matched_items.append(it)
+                    if len(matched_items) >= 4:
+                        break
+
+            # Fallback jika tidak ada hasil spesifik dengan token
+            if not matched_items:
+                if current_course:
+                    matched_items = list(base_qs.filter(variant__course=current_course).order_by('order')[:4])
+                else:
+                    matched_items = list(base_qs.order_by('-variant__course__id', 'order')[:4])
+
+            if not matched_items:
+                return None
+
+            # Ambil peta enrollment pengguna jika login
+            user_enrolled_map = {}
+            if user_ctx.get("is_authenticated") and user_ctx.get("user_id"):
+                enrolled_records = api_models.EnrolledCourse.objects.filter(
+                    user_id=user_ctx["user_id"]
+                ).values('course_id', 'enrollment_id')
+                for er in enrolled_records:
+                    user_enrolled_map[er['course_id']] = er['enrollment_id']
+
+            lesson_list = []
+            for item in matched_items:
+                c = item.variant.course
+                dur_str = ""
+                if item.duration:
+                    total_sec = int(item.duration.total_seconds())
+                    if total_sec > 0:
+                        m, s = divmod(total_sec, 60)
+                        dur_str = f"{m} menit" if m > 0 else f"{s} dtk"
+
+                enrollment_id = user_enrolled_map.get(c.id)
+                is_enrolled = bool(enrollment_id)
+                action_url = f"/student/courses/{enrollment_id}/" if is_enrolled else f"/course-detail/{c.slug}/"
+
+                lesson_list.append({
+                    "id": item.id,
+                    "title": item.title,
+                    "chapter": item.variant.title,
+                    "course_title": c.title,
+                    "course_slug": c.slug,
+                    "item_type": item.item_type,
+                    "duration": dur_str,
+                    "is_enrolled": is_enrolled,
+                    "action_url": action_url
+                })
+
+            search_desc = f"*{' '.join(tokens)}*" if tokens else "pembelajaran terkait"
+            reply = "🎯 **Hasil Pencarian Modul & Materi Pembelajaran:**\n\n"
+            reply += f"Manta menemukan materi di database LMS Setjen DPD RI yang membahas tentang {search_desc}:\n\n"
+
+            for i, l in enumerate(lesson_list, 1):
+                type_icon = "📝 Kuis Evaluasi" if l["item_type"] == "quiz" else "🎬 Modul Materi"
+                dur_info = f" • ⏱️ {l['duration']}" if l["duration"] else ""
+                reply += f"{i}. 📌 **{l['title']}**\n"
+                reply += f"   • **Bab:** {l['chapter']}\n"
+                reply += f"   • **Pelatihan:** [{l['course_title']}](/course-detail/{l['course_slug']}/)\n"
+                reply += f"   • **Tipe:** {type_icon}{dur_info}\n\n"
+
+            reply += "Silakan klik tombol di bawah untuk langsung membuka materi atau membaca silabus lengkapnya!"
+
+            actions = []
+            seen_courses = set()
+            for l in lesson_list:
+                if l["course_slug"] not in seen_courses:
+                    seen_courses.add(l["course_slug"])
+                    if l["is_enrolled"]:
+                        actions.append({
+                            "label": f"▶️ Lanjut: {l['title'][:22]}...",
+                            "url": l["action_url"],
+                            "type": "route"
+                        })
+                    else:
+                        actions.append({
+                            "label": f"📖 Silabus: {l['course_title'][:22]}...",
+                            "url": l["action_url"],
+                            "type": "route"
+                        })
+                if len(actions) >= 3:
+                    break
+
+            actions.append({
+                "label": "🔍 Katalog Semua Kursus",
+                "url": "/search/",
+                "type": "route"
+            })
+
+            return {
+                "status": "success",
+                "reply": reply,
+                "source": "deep_lesson_search",
+                "suggested_questions": [
+                    "Rekomendasi kursus populer",
+                    "Bagaimana cara mulai belajar?",
+                    "Bagaimana cara unduh sertifikat?"
+                ],
+                "actions": actions,
+                "matched_lessons": lesson_list,
+                "recommended_courses": [
+                    {"id": l["id"], "title": l["course_title"], "slug": l["course_slug"], "category": "Pelatihan Terkait"}
+                    for l in lesson_list[:2]
+                ]
+            }
+        except Exception as e:
+            logger.warning(f"Deep lesson search error: {e}", exc_info=True)
+            return None
+
+    def _handle_role_unit_competency_recommendation(
+        self, raw_message: str, norm_query: str, user_ctx: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Role & Unit-Based Competency Recommender:
+        Memberikan rekomendasi pelatihan, klaster kompetensi, dan jalur pembelajaran
+        berdasarkan Unit Kerja (Subbagian/Bagian/Biro) dan Jabatan ASN di lingkungan
+        Sekretariat Jenderal Dewan Perwakilan Daerah Republik Indonesia (Setjen DPD RI).
+        """
+        clusters_def = {
+            "ti_digital": {
+                "title": "Transformasi Digital, TI & Manajemen Keanggotaan",
+                "badge": "💻 Klaster Teknologi Informasi & Keanggotaan Parlemen",
+                "keywords": [
+                    "ti", "it", "teknologi", "sistem informasi", "keanggotaan", "komputer",
+                    "jaringan", "siber", "cyber", "data", "software", "programmer",
+                    "pranata komputer", "penata kelola sistem", "infrastruktur ti", "aplikasi"
+                ],
+                "tupoksi": "Mendukung penyelenggaraan sistem informasi keanggotaan dewan, pemeliharaan infrastruktur digital parlemen, dan penerapan teknologi modern untuk transparansi serta efisiensi kelembagaan DPD RI.",
+                "competencies": [
+                    "Penerapan Metodologi Design Thinking untuk Inovasi Layanan ASN & Birokrasi Adaptif",
+                    "Keamanan Informasi, Proteksi Data Keanggotaan & Kesadaran Siber (Cybersecurity Awareness)",
+                    "Manajemen Basis Data, Integrasi API, dan Digitalisasi Layanan Parlemen Modern",
+                    "Service Excellence Digital bagi Anggota Dewan, Stakeholder Daerah, dan Publik"
+                ],
+                "learning_path": [
+                    "Tahap 1: Mindset & Inovasi Layanan (Design Thinking ASN)",
+                    "Tahap 2: Literasi Keamanan Informasi & Privasi Data Parlemen",
+                    "Tahap 3: Optimalisasi Tata Kelola Sistem Informasi Terintegrasi"
+                ],
+                "search_tags": ["design thinking", "inovasi", "sistem", "digital"]
+            },
+            "persidangan_risalah": {
+                "title": "Dukungan Substansi Persidangan & Manajemen Risalah Parlemen",
+                "badge": "🏛️ Klaster Persidangan & Risalah Sidang Dewan",
+                "keywords": [
+                    "persidangan", "risalah", "rapat", "sidang", "notulen", "notulensi",
+                    "perisalah", "paripurna", "komite", "puld", "purw", "bap", "musyawarah",
+                    "acara persidangan", "alat kelengkapan"
+                ],
+                "tupoksi": "Menyiapkan kelengkapan administrasi persidangan, menyusun risalah resmi rapat paripurna dan alat kelengkapan dewan, serta memastikan kepatuhan tata tertib persidangan DPD RI.",
+                "competencies": [
+                    "Teknik Transkripsi Cepat & Notulensi Akurat Risalah Resmi Parlemen",
+                    "Penguasaan Mendalam Tata Tertib Persidangan & Mekanisme Pengambilan Keputusan DPD RI",
+                    "Manajemen Administrasi & Penyiapan Dokumen Sidang Komite / Alat Kelengkapan Dewan",
+                    "Digitalisasi Tata Kelola Arsip Risalah dan Kerahasiaan Dokumen Persidangan Negara"
+                ],
+                "learning_path": [
+                    "Tahap 1: Penguasaan Tata Tertib & Mekanisme Sidang Paripurna DPD RI",
+                    "Tahap 2: Teknik Penyusunan Risalah Rapat Legislatif yang Terstandarisasi",
+                    "Tahap 3: Inovasi Alur Kerja & Manajemen Dokumen Persidangan Adaptif"
+                ],
+                "search_tags": ["persidangan", "parlemen", "risalah", "inovasi"]
+            },
+            "hukum_legislasi": {
+                "title": "Perancangan Peraturan Perundang-undangan & Analisis Legislasi",
+                "badge": "⚖️ Klaster Hukum & Analisis Kebijakan Legislatif",
+                "keywords": [
+                    "hukum", "legislasi", "legislatif", "perundang", "perancang",
+                    "telaahan", "advokasi", "regulasi", "naskah akademik", "kebijakan",
+                    "legal drafting", "opini hukum", "ppuu", "uji sahih"
+                ],
+                "tupoksi": "Menyusun dan menganalisis rancangan undang-undang inisiatif DPD RI, naskah akademik, telaahan staf, serta memberikan pertimbangan hukum dan advokasi konstitusional kelembagaan.",
+                "competencies": [
+                    "Teknik Legal Drafting & Harmonisasi Rancangan Peraturan Perundang-undangan",
+                    "Penyusunan Naskah Akademik Berbasis Bukti (Evidence-Based Policy Analysis)",
+                    "Teknik Penyusunan Telaahan Staf (Staff Paper) & Pertimbangan Hukum (Legal Opinion)",
+                    "Analisis Dampak Regulasi (Regulatory Impact Assessment/RIA) bagi Kepentingan Daerah"
+                ],
+                "learning_path": [
+                    "Tahap 1: Penguatan Prinsip-Prinsip Pembentukan Peraturan Perundang-Undangan",
+                    "Tahap 2: Metodologi Penyusunan Telaahan Staf & Rekomendasi Kebijakan Daerah",
+                    "Tahap 3: Pemikiran Desain Kebijakan (Policy Design) & Inovasi Regulasi Daerah"
+                ],
+                "search_tags": ["hukum", "kebijakan", "legislasi", "inovasi"]
+            },
+            "protokol_humas": {
+                "title": "Keprotokolan Pejabat Negara, Media & Komunikasi Publik Parlemen",
+                "badge": "🎙️ Klaster Keprotokolan & Komunikasi Publik Parlemen",
+                "keywords": [
+                    "protokol", "humas", "hubungan masyarakat", "komunikasi", "media",
+                    "pemberitaan", "pimpinan", "audiensi", "peliputan", "siaran", "acara",
+                    "keprotokolan", "tata usaha pimpinan"
+                ],
+                "tupoksi": "Mengelola tata tempat, tata upacara, dan tata penghormatan pejabat negara, serta mempublikasikan kebijakan dan kinerja kelembagaan DPD RI ke media massa dan publik secara transparan.",
+                "competencies": [
+                    "Standar Etiket Keprotokolan Resmi Pejabat Tinggi Negara & Lembaga Parlemen",
+                    "Service Excellence & Pelayanan Prima dalam Fasilitasi Kegiatan Pimpinan Dewan",
+                    "Strategi Komunikasi Publik & Manajemen Isu Parlemen di Media Konvensional dan Digital",
+                    "Teknik Produksi Siaran Pers, Berita Parlemen & Konten Edukasi Publik Terpercaya"
+                ],
+                "learning_path": [
+                    "Tahap 1: Fundamental Tata Keprotokolan Lembaga Negara & Etiket Resmi",
+                    "Tahap 2: Komunikasi Publik Efektif & Strategi Relasi Media Parlemen",
+                    "Tahap 3: Transformasi Digital Konten Komunikasi & Pelayanan Publik Adaptif"
+                ],
+                "search_tags": ["protokol", "komunikasi", "humas", "inovasi"]
+            },
+            "keuangan_pengadaan": {
+                "title": "Pengelolaan Keuangan Negara, PBJ & Akuntabilitas Anggaran",
+                "badge": "💰 Klaster Keuangan & Pengadaan Barang/Jasa Negara",
+                "keywords": [
+                    "keuangan", "anggaran", "perbendaharaan", "akuntansi", "gaji",
+                    "tunjangan", "pengadaan", "pbj", "bmn", "perlengkapan", "belanja",
+                    "perbendaharaan belanja dewan", "bendahara"
+                ],
+                "tupoksi": "Mengelola perbendaharaan belanja dewan, verifikasi anggaran, akuntansi pelaporan keuangan negara, serta pengadaan barang dan jasa pemerintah secara efisien dan akuntabel.",
+                "competencies": [
+                    "Kepatuhan Tata Kelola Keuangan Negara & Pengelolaan Perbendaharaan APBN",
+                    "Prinsip Pengadaan Barang/Jasa Pemerintah (PBJ) Berintegritas Sesuai Standar LKPP",
+                    "Pengelolaan, Pencatatan, dan Pengamanan Barang Milik Negara (BMN) Parlemen",
+                    "Pencegahan Fraud, Manajemen Risiko, dan Pengendalian Internal Pemerintah (SPIP)"
+                ],
+                "learning_path": [
+                    "Tahap 1: Kepatuhan Regulasi Keuangan & Perbendaharaan Belanja APBN",
+                    "Tahap 2: Akuntabilitas Pengadaan Barang/Jasa & Manajemen Aset BMN",
+                    "Tahap 3: Inovasi Efisiensi Anggaran & Budaya Kerja BerAKHLAK"
+                ],
+                "search_tags": ["keuangan", "anggaran", "pengadaan", "inovasi"]
+            },
+            "sdm_organisasi": {
+                "title": "Manajemen ASN, Budaya Kerja BerAKHLAK & Reformasi Birokrasi",
+                "badge": "👥 Klaster SDM Aparatur, Ortala & Tata Laksana",
+                "keywords": [
+                    "kepegawaian", "sdm", "organisasi", "ketatalaksanaan", "ortala",
+                    "reformasi birokrasi", "arsip", "kearsipan", "tata usaha", "kinerja",
+                    "aparatur", "analis sdm", "arsiparis"
+                ],
+                "tupoksi": "Mengembangkan kompetensi aparatur, mengelola administrasi kepegawaian, memfasilitasi penataan organisasi dan tata laksana, serta memperkuat reformasi birokrasi internal DPD RI.",
+                "competencies": [
+                    "Internalisasi & Implementasi Core Values ASN BerAKHLAK dan Budaya Kerja Adaptif",
+                    "Penerapan Metodologi Design Thinking untuk Birokrasi yang Adaptif & Agile",
+                    "Tata Kelola Kearsipan Modern & Transformasi Arsip Digital Terintegrasi (SRIKANDI)",
+                    "Penyusunan Analisis Jabatan (Anjab), Analisis Beban Kerja (ABK), dan Evaluasi Kelembagaan"
+                ],
+                "learning_path": [
+                    "Tahap 1: Budaya Kerja ASN BerAKHLAK & Disiplin Aparatur Modern",
+                    "Tahap 2: Metodologi Inovasi Design Thinking untuk Layanan Birokrasi Adaptif",
+                    "Tahap 3: Digitalisasi Kearsipan Dinamis & Manajemen Kinerja Berkelanjutan"
+                ],
+                "search_tags": ["design thinking", "inovasi", "sdm", "arsip"]
+            }
+        }
+
+        # 1. Tentukan Klaster Target
+        chosen_cluster_key = None
+        is_user_personal = False
+
+        user_pos = (user_ctx.get("position") or "").strip()
+        user_unit = (user_ctx.get("organization_unit") or "").strip()
+        user_jenis_jab = (user_ctx.get("jenis_jabatan") or "").strip()
+        user_gol = (user_ctx.get("golongan") or "").strip()
+
+        # Deteksi apakah user menanyakan untuk dirinya sendiri
+        asking_for_self = bool(re.search(
+            r"\b(saya|untuk\s*saya|jabatan\s*saya|unit\s*saya|posisi\s*saya|pekerjaan\s*saya|tupoksi\s*saya|profil\s*saya|rekomendasi\s*pelatihan\s*saya|rekomendasi\s*kursus\s*saya)\b",
+            norm_query
+        ))
+
+        if (asking_for_self or not any(kw in norm_query for c in clusters_def.values() for kw in c["keywords"][:4])) and (user_pos or user_unit):
+            # Coba cocokkan berdasarkan profil ASN pengguna
+            is_user_personal = True
+            combined_profile = f"{user_pos} {user_unit}".lower()
+            best_score = 0
+            for ckey, cinfo in clusters_def.items():
+                score = 0
+                for kw in cinfo["keywords"]:
+                    if kw in combined_profile:
+                        score += 2
+                if score > best_score:
+                    best_score = score
+                    chosen_cluster_key = ckey
+
+        # Jika belum terpilih atau pengguna menyebutkan unit/bidang tertentu secara eksplisit di pertanyaan
+        if not chosen_cluster_key:
+            best_score = 0
+            for ckey, cinfo in clusters_def.items():
+                score = 0
+                for kw in cinfo["keywords"]:
+                    # Gunakan regex word boundary
+                    if re.search(rf"\b{re.escape(kw)}\b", norm_query):
+                        score += 3
+                if score > best_score:
+                    best_score = score
+                    chosen_cluster_key = ckey
+
+        # Fallback klaster default jika masih umum
+        if not chosen_cluster_key:
+            if user_pos or user_unit:
+                chosen_cluster_key = "ti_digital" if "sistem" in (user_pos + user_unit).lower() else "sdm_organisasi"
+                is_user_personal = True
+            else:
+                chosen_cluster_key = "sdm_organisasi"
+
+        cluster = clusters_def[chosen_cluster_key]
+
+        # 2. Cari Kursus Aktif Terkait di LMS
+        matched_courses = []
+        try:
+            q_filter = Q(platform_status="Published")
+            tag_filter = Q()
+            for tag in cluster["search_tags"]:
+                tag_filter |= Q(title__icontains=tag) | Q(description__icontains=tag)
+            
+            c_qs = api_models.Course.objects.filter(q_filter).filter(tag_filter).distinct()
+            if not c_qs.exists():
+                c_qs = api_models.Course.objects.filter(platform_status="Published").order_by("-id")[:3]
+            
+            for c in c_qs[:3]:
+                matched_courses.append({
+                    "id": c.id,
+                    "title": c.title,
+                    "slug": c.slug,
+                    "category": c.category.title if c.category else "Kompetensi Utama",
+                    "level": getattr(c, "level", "Semua Tingkat")
+                })
+        except Exception as e:
+            logger.warning(f"Error fetching cluster courses: {e}")
+            matched_courses = []
+
+        # 3. Bentuk Balasan Cerdas & Menarik (Markdown)
+        reply = f"🎯 **Rekomendasi Jalur Pembelajaran & Kompetensi ASN DPD RI**\n\n"
+
+        if is_user_personal and (user_pos or user_unit):
+            user_name = user_ctx.get("name") or "Rekan ASN"
+            reply += f"Halo **{user_name}**! Berdasarkan profil kepegawaian Anda di lingkungan Sekretariat Jenderal DPD RI:\n\n"
+            if user_pos:
+                reply += f"• **Jabatan:** {user_pos}\n"
+            if user_unit:
+                reply += f"• **Unit Kerja:** {user_unit}\n"
+            if user_jenis_jab or user_gol:
+                jab_info = f"{user_jenis_jab or 'Aparatur Sipil Negara'}"
+                if user_gol:
+                    jab_info += f" (Golongan {user_gol})"
+                reply += f"• **Klasifikasi:** {jab_info}\n"
+            reply += "\n"
+            reply += f"Tupoksi Anda selaras dengan **{cluster['badge']}**:\n"
+            reply += f"> *\"{cluster['tupoksi']}\"*\n\n"
+        else:
+            reply += f"Berikut rekomendasi kompetensi untuk **{cluster['badge']}**:\n"
+            reply += f"> *\"{cluster['tupoksi']}\"*\n\n"
+
+        reply += "📌 **Fokus Kebutuhan Kompetensi Utama:**\n"
+        for i, comp in enumerate(cluster["competencies"], 1):
+            reply += f"{i}. {comp}\n"
+        reply += "\n"
+
+        reply += "🗺️ **Jalur Pembelajaran Terstruktur (*Recommended Learning Pathway*):**\n"
+        for step in cluster["learning_path"]:
+            reply += f"• {step}\n"
+        reply += "\n"
+
+        if matched_courses:
+            reply += "🚀 **Pelatihan Tersedia di LMS Setjen DPD RI Saat Ini:**\n"
+            reply += "Anda dapat langsung mendaftar atau melanjutkan pelatihan relevan di bawah ini:"
+        else:
+            reply += "Silakan jelajahi katalog lengkap untuk melihat seluruh modul pelatihan yang siap diakses!"
+
+        # 4. Susun Aksi Interaktif
+        actions = []
+        if matched_courses:
+            first_c = matched_courses[0]
+            actions.append({
+                "label": f"📖 Mulai: {first_c['title'][:22]}...",
+                "url": f"/course-detail/{first_c['slug']}/",
+                "type": "route"
+            })
+        actions.append({
+            "label": "🔍 Katalog Semua Kursus",
+            "url": "/search/",
+            "type": "route"
+        })
+        if user_ctx.get("is_authenticated"):
+            actions.append({
+                "label": "📜 Sertifikat Saya",
+                "url": "/student/sertifikat/",
+                "type": "route"
+            })
+
+        # 5. Suggested Questions Tindak Lanjut
+        suggested = [
+            f"Silabus materi {matched_courses[0]['title'][:25]}..." if matched_courses else "Cari kursus keparlemenan",
+            "Bagaimana cara mendapatkan sertifikat kelulusan?",
+            "Rekomendasi pelatihan untuk bagian persidangan" if chosen_cluster_key != "persidangan_risalah" else "Rekomendasi untuk bagian hukum dan legislasi"
+        ]
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "role_unit_competency_recommender",
+            "cluster_key": chosen_cluster_key,
+            "suggested_questions": suggested,
+            "actions": actions,
+            "recommended_courses": matched_courses
+        }
+
+    def _handle_quiz_prep_simulator(
+        self, raw_message: str, norm_query: str, user_ctx: Dict[str, Any], current_course: Any = None
+    ) -> Dict[str, Any]:
+        """
+        AI Interactive Quiz Prep & Knowledge Flashcards:
+        Menyajikan kuis simulasi interaktif pilihan ganda (A, B, C, D) dengan instant
+        feedback dan penjelasan komprehensif untuk menguji pemahaman materi pelatihan.
+        """
+        curated_quiz_bank = [
+            {
+                "id": "quiz_dt_definition",
+                "course_title": "Rabuan IV - Design Thinking: Kunci ASN Inovatif dan Birokrasi Adaptif",
+                "course_slug": "rabuan-iv-design-thinking-kunci-asn-inovatif-dan-birokrasi-yang-lebih-adaptif",
+                "topic": "Konsep Dasar Design Thinking",
+                "question": "Menurut materi pelatihan inovasi ASN, apa esensi dan definisi utama dari metodologi Design Thinking?",
+                "choices": [
+                    {"key": "A", "text": "Metode teknis untuk menyusun laporan keuangan otomatis"},
+                    {"key": "B", "text": "Pendekatan inovasi berpusat pada manusia (Human-Centered) yang diawali dengan empati"},
+                    {"key": "C", "text": "Alat restrukturisasi kelembagaan secara formalistik"},
+                    {"key": "D", "text": "Aplikasi komputasi awan untuk digitalisasi arsip"}
+                ],
+                "correct_key": "B",
+                "explanation": "Design Thinking adalah pendekatan inovasi yang berpusat pada manusia (Human-Centered Design). Pendekatan ini memprioritaskan pemahaman mendalam terhadap kebutuhan, keresahan, dan harapan pengguna layanan sebelum merancang solusi inovatif."
+            },
+            {
+                "id": "quiz_dt_three_lenses",
+                "course_title": "Rabuan IV - Design Thinking: Kunci ASN Inovatif dan Birokrasi Adaptif",
+                "course_slug": "rabuan-iv-design-thinking-kunci-asn-inovatif-dan-birokrasi-yang-lebih-adaptif",
+                "topic": "Tiga Lensa Inovasi (Three Lenses of Innovation)",
+                "question": "Tiga lensa utama (Three Lenses of Innovation) yang harus seimbang agar inovasi birokrasi berkelanjutan adalah...",
+                "choices": [
+                    {"key": "A", "text": "Desirability (Keinginan Pengguna), Feasibility (Kelayakan Teknis), dan Viability (Keberlanjutan Organisasi)"},
+                    {"key": "B", "text": "Besaran Anggaran, Jumlah Staf, dan Fasilitas Kantor"},
+                    {"key": "C", "text": "Kecepatan Viral di Media Sosial, Jumlah Pengikut, dan Desain Grafis"},
+                    {"key": "D", "text": "Regulasi Lama, Kebiasaan Rutin, dan Instruksi Lisan"}
+                ],
+                "correct_key": "A",
+                "explanation": "Inovasi yang sukses dan berdampak harus berada di titik iris ketiga lensa: Desirability (apakah solusi ini benar-benar diinginkan pengguna?), Feasibility (apakah layak secara teknis/organisasi?), dan Viability (apakah berkelanjutan secara sumber daya dan aturan?)."
+            },
+            {
+                "id": "quiz_dt_prototype",
+                "course_title": "Rabuan IV - Design Thinking: Kunci ASN Inovatif dan Birokrasi Adaptif",
+                "course_slug": "rabuan-iv-design-thinking-kunci-asn-inovatif-dan-birokrasi-yang-lebih-adaptif",
+                "topic": "Tahap Prototyping Cepat",
+                "question": "Tujuan utama pembuatan prototipe (rapid prototyping) dalam pelayanan publik adalah...",
+                "choices": [
+                    {"key": "A", "text": "Menghabiskan alokasi anggaran riset sebelum akhir tahun anggaran"},
+                    {"key": "B", "text": "Menguji asumsi solusi lebih awal kepada pengguna dengan risiko dan biaya minimal"},
+                    {"key": "C", "text": "Menggantikan dokumen resmi peraturan perundang-undangan"},
+                    {"key": "D", "text": "Menunda waktu peluncuran layanan kepada publik"}
+                ],
+                "correct_key": "B",
+                "explanation": "Pembuatan prototipe cepat bertujuan untuk 'gagal lebih awal dan murah' (fail fast, learn cheap), sehingga asumsi dan kelemahan solusi dapat diverifikasi langsung oleh pengguna nyata sebelum diimplementasikan dalam skala besar."
+            },
+            {
+                "id": "quiz_asn_adaptif",
+                "course_title": "Core Values ASN BerAKHLAK",
+                "course_slug": "rabuan-iv-design-thinking-kunci-asn-inovatif-dan-birokrasi-yang-lebih-adaptif",
+                "topic": "Budaya Kerja ASN BerAKHLAK",
+                "question": "Perilaku 'Cepat menyesuaikan diri menghadapi perubahan, terus berinovasi, dan bertindak proaktif' merupakan panduan perilaku dari nilai dasar...",
+                "choices": [
+                    {"key": "A", "text": "Akuntabel"},
+                    {"key": "B", "text": "Harmonis"},
+                    {"key": "C", "text": "Adaptif"},
+                    {"key": "D", "text": "Loyal"}
+                ],
+                "correct_key": "C",
+                "explanation": "Nilai Adaptif dalam Core Values ASN BerAKHLAK menuntut aparatur negara untuk tidak resistan terhadap perubahan zaman, melainkan proaktif berinovasi dan adaptif terhadap perkembangan teknologi dan dinamika kebutuhan masyarakat."
+            },
+            {
+                "id": "quiz_parlemen_kuorum",
+                "course_title": "Tata Tertib & Persidangan Parlemen DPD RI",
+                "course_slug": "rabuan-iv-design-thinking-kunci-asn-inovatif-dan-birokrasi-yang-lebih-adaptif",
+                "topic": "Tata Tertib Persidangan Parlemen",
+                "question": "Berdasarkan tata tertib DPD RI, kuorum pengambilan keputusan dalam sidang paripurna dinyatakan sah apabila...",
+                "choices": [
+                    {"key": "A", "text": "Dihadiri sekurang-kurangnya 1/3 dari jumlah Anggota DPD RI"},
+                    {"key": "B", "text": "Dihadiri lebih dari 1/2 jumlah Anggota DPD RI yang mewakili lebih dari 1/2 jumlah provinsi"},
+                    {"key": "C", "text": "Dihadiri seluruh Pimpinan Komite dan Pimpinan Lembaga"},
+                    {"key": "D", "text": "Mendapat persetujuan bulat dari Pimpinan Badan Urusan Rumah Tangga"}
+                ],
+                "correct_key": "B",
+                "explanation": "Tata Tertib DPD RI menetapkan bahwa pengambilan keputusan dalam Sidang Paripurna sah jika dihadiri oleh lebih dari separuh (1/2) jumlah seluruh Anggota DPD RI yang mewakili lebih dari separuh (1/2) jumlah provinsi di Indonesia."
+            },
+            {
+                "id": "quiz_legal_naskah_akademik",
+                "course_title": "Perancangan Perundang-Undangan & Analisis Legislasi",
+                "course_slug": "rabuan-iv-design-thinking-kunci-asn-inovatif-dan-birokrasi-yang-lebih-adaptif",
+                "topic": "Pembentukan RUU Inisiatif DPD RI",
+                "question": "Dokumen penelitian ilmiah yang memuat landasan filosofis, sosiologis, dan yuridis sebagai dasar perumusan draf RUU inisiatif DPD RI adalah...",
+                "choices": [
+                    {"key": "A", "text": "Naskah Akademik"},
+                    {"key": "B", "text": "Risalah Rapat Panitia Perancang Undang-Undang"},
+                    {"key": "C", "text": "Catatan Audiensi Publik"},
+                    {"key": "D", "text": "Surat Edaran Sekretaris Jenderal"}
+                ],
+                "correct_key": "A",
+                "explanation": "Naskah Akademik adalah naskah hasil penelitian atau pengkajian hukum dan hasil penelitian lainnya terhadap suatu masalah tertentu yang dapat dipertanggungjawabkan secara ilmiah mengenai pengaturan masalah tersebut dalam suatu RUU inisiatif DPD RI."
+            },
+            {
+                "id": "quiz_risalah_verbatim",
+                "course_title": "Dukungan Administrasi Risalah & Notulensi Parlemen",
+                "course_slug": "rabuan-iv-design-thinking-kunci-asn-inovatif-dan-birokrasi-yang-lebih-adaptif",
+                "topic": "Manajemen Risalah Parlemen",
+                "question": "Catatan resmi persidangan parlemen yang memuat seluruh pembicaraan dan perdebatan secara kata demi kata (verbatim) adalah...",
+                "choices": [
+                    {"key": "A", "text": "Notula Rapat Ringkas"},
+                    {"key": "B", "text": "Risalah Resmi Persidangan"},
+                    {"key": "C", "text": "Laporan Pandangan Fraksi/Kelompok"},
+                    {"key": "D", "text": "Ringkasan Eksekutif Rapat"}
+                ],
+                "correct_key": "B",
+                "explanation": "Risalah Resmi Persidangan memuat transkripsi utuh kata demi kata (verbatim) dari seluruh rekaman jalannya sidang paripurna atau rapat alat kelengkapan DPD RI, yang disusun oleh Perisalah Legislatif sebagai dokumen otentik negara."
+            }
+        ]
+
+        # Ambil pertanyaan dari database kuis nyata LMS jika tersedia
+        db_candidates = []
+        try:
+            q_filter = Q(quiz__course__platform_status="Published")
+            if current_course:
+                q_filter &= Q(quiz__course=current_course)
+            elif "design" in norm_query or "inovasi" in norm_query:
+                q_filter &= Q(quiz__course__title__icontains="design")
+
+            db_qq_list = api_models.QuizQuestion.objects.filter(q_filter).select_related('quiz', 'quiz__course')
+            for qq in db_qq_list:
+                # Lewati soal dummy/tes yang terlalu pendek
+                if len(qq.question_text.strip()) < 15 or "asas" in qq.question_text.lower() or "waqq" in qq.question_text.lower():
+                    continue
+                choices = list(api_models.QuizChoice.objects.filter(question=qq).order_by('id'))
+                if len(choices) >= 3 and any(c.is_correct for c in choices):
+                    letters = ["A", "B", "C", "D", "E"]
+                    formatted_choices = []
+                    correct_key = "A"
+                    correct_text = ""
+                    for idx, c in enumerate(choices[:4]):
+                        key = letters[idx]
+                        formatted_choices.append({"key": key, "text": c.choice_text})
+                        if c.is_correct:
+                            correct_key = key
+                            correct_text = c.choice_text
+
+                    c_title = qq.quiz.course.title if qq.quiz and qq.quiz.course else "Pelatihan LMS Setjen DPD RI"
+                    c_slug = qq.quiz.course.slug if qq.quiz and qq.quiz.course else "search"
+                    db_candidates.append({
+                        "id": f"db_qq_{qq.id}",
+                        "course_title": c_title,
+                        "course_slug": c_slug,
+                        "topic": qq.quiz.title,
+                        "question": qq.question_text,
+                        "choices": formatted_choices,
+                        "correct_key": correct_key,
+                        "explanation": f"Jawaban yang tepat adalah opsi {correct_key}: '{correct_text}'. Pemahaman materi ini menjadi indikator penting dalam evaluasi kompetensi pada modul {qq.quiz.title}."
+                    })
+        except Exception as e:
+            logger.warning(f"Error fetching database quiz questions: {e}")
+
+        # Gabungkan bank soal
+        pool = []
+        if "persidangan" in norm_query or "sidang" in norm_query or "paripurna" in norm_query:
+            pool = [q for q in curated_quiz_bank if "parlemen" in q["id"] or "risalah" in q["id"]]
+        elif "hukum" in norm_query or "naskah" in norm_query or "legislasi" in norm_query:
+            pool = [q for q in curated_quiz_bank if "legal" in q["id"]]
+        elif "berakhlak" in norm_query or "asn" in norm_query or "nilai" in norm_query:
+            pool = [q for q in curated_quiz_bank if "asn" in q["id"]]
+        elif "design" in norm_query or "inovasi" in norm_query:
+            pool = db_candidates + [q for q in curated_quiz_bank if "dt_" in q["id"]]
+
+        if not pool:
+            pool = db_candidates + curated_quiz_bank
+
+        quiz_item = random.choice(pool)
+
+        reply = (
+            f"🧠 **Simulasi Uji Pemahaman Mandiri (Quiz Prep & Flashcard):**\n\n"
+            f"Topik: **{quiz_item['topic']}**\n"
+            f"Pelatihan: *{quiz_item['course_title']}*\n\n"
+            f"📌 **Pertanyaan:**\n"
+            f"> {quiz_item['question']}\n\n"
+            f"Silakan klik salah satu opsi jawaban di bawah untuk melihat apakah jawaban Anda tepat!"
+        )
+
+        actions = [
+            {"label": "🔄 Soal Selanjutnya", "action": "next_quiz", "type": "event"},
+            {"label": "🔍 Katalog Semua Kursus", "url": "/search/", "type": "route"}
+        ]
+        if quiz_item.get("course_slug"):
+            actions.insert(1, {
+                "label": "📖 Buka Silabus Kursus",
+                "url": f"/course-detail/{quiz_item['course_slug']}/",
+                "type": "route"
+            })
+        if user_ctx.get("is_authenticated"):
+            actions.append({
+                "label": "📜 Cek Sertifikat Saya",
+                "url": "/student/sertifikat/",
+                "type": "route"
+            })
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "quiz_prep_simulator",
+            "interactive_quiz": quiz_item,
+            "suggested_questions": [
+                "Latihan kuis soal berikutnya",
+                "Apa itu Tiga Lensa Inovasi (Three Lenses)?",
+                "Beri saya latihan kuis tata tertib persidangan",
+                "Bagaimana passing grade kelulusan kuis?"
+            ],
+            "actions": actions,
+            "recommended_courses": []
+        }
+
+    def _handle_course_summarizer(
+        self, raw_message: str, norm_query: str, user_ctx: Dict[str, Any], current_course: Any = None
+    ) -> Dict[str, Any]:
+        """
+        Instant Course & Chapter AI Summarizer:
+        Menghasilkan rangkuman intisari materi pelatihan/bab secara instan, 3-4 golden key takeaways,
+        dan langkah implementasi aksi di lingkungan kerja Sekretariat Jenderal DPD RI.
+        Menyediakan payload ringkasan siap ekspor ke model Note (Catatan Belajar) mahasiswa.
+        """
+        # 1. Tentukan target course
+        target_course = current_course
+        user_enrollment = None
+        if user_ctx.get("is_authenticated") and user_ctx.get("user_id"):
+            uid = user_ctx["user_id"]
+            enrolled_qs = api_models.EnrolledCourse.objects.filter(user_id=uid).select_related("course")
+            # Jika user belum di halaman kursus tertentu, cek kursus yang diikuti user yang paling relevan
+            if not target_course:
+                if "design" in norm_query or "inovasi" in norm_query or "thinking" in norm_query:
+                    match_enr = enrolled_qs.filter(course__title__icontains="design").first() or enrolled_qs.filter(course__title__icontains="inovasi").first()
+                    if match_enr:
+                        target_course = match_enr.course
+                        user_enrollment = match_enr
+                elif "persidangan" in norm_query or "sidang" in norm_query or "risalah" in norm_query:
+                    match_enr = enrolled_qs.filter(course__title__icontains="persidangan").first() or enrolled_qs.filter(course__title__icontains="risalah").first()
+                    if match_enr:
+                        target_course = match_enr.course
+                        user_enrollment = match_enr
+
+            if target_course and not user_enrollment:
+                user_enrollment = enrolled_qs.filter(course=target_course).first() or enrolled_qs.filter(course__title__iexact=target_course.title).first()
+                if user_enrollment and user_enrollment.course != target_course:
+                    target_course = user_enrollment.course
+
+        if not target_course:
+            # Cari dari seluruh kursus Published
+            if "design" in norm_query or "inovasi" in norm_query or "thinking" in norm_query:
+                target_course = api_models.Course.objects.filter(platform_status="Published", title__icontains="design").order_by("-id").first()
+            elif "persidangan" in norm_query or "sidang" in norm_query or "risalah" in norm_query:
+                target_course = api_models.Course.objects.filter(platform_status="Published", title__icontains="persidangan").order_by("-id").first()
+
+            # Jika user punya kursus aktif terakhir
+            if not target_course and user_ctx.get("latest_course"):
+                target_course = api_models.Course.objects.filter(id=user_ctx["latest_course"]["id"]).first()
+
+            # Fallback ke kursus unggulan terbitan
+            if not target_course:
+                target_course = api_models.Course.objects.filter(platform_status="Published").order_by("-id").first()
+
+        course_title = target_course.title if target_course else "Pelatihan Inovasi Birokrasi ASN"
+        course_slug = target_course.slug if target_course else "search"
+        course_id = target_course.id if target_course else None
+
+        # 2. Cek apakah ada bab / materi spesifik yang disebut di query
+        chapter_title = None
+        variants = []
+        if target_course:
+            try:
+                variants = list(api_models.Variant.objects.filter(course=target_course).order_by("order"))
+            except Exception:
+                variants = []
+
+        if "bab 1" in norm_query or "pendahuluan" in norm_query or "definisi" in norm_query:
+            chapter_title = variants[0].title if variants else "Bab 1: Konsep Dasar & Mindset Inovasi"
+        elif "bab 2" in norm_query or "tiga lensa" in norm_query or "three lenses" in norm_query:
+            chapter_title = variants[1].title if len(variants) > 1 else "Bab 2: Tiga Lensa Inovasi (Three Lenses)"
+        elif "bab 3" in norm_query or "prototipe" in norm_query or "prototype" in norm_query:
+            chapter_title = variants[2].title if len(variants) > 2 else "Bab 3: Prototyping Cepat & Validasi Solusi"
+
+        # 3. Bentuk konten Golden Takeaways & Action Steps
+        if target_course and "design" in target_course.title.lower():
+            topic_label = chapter_title or "Intisari Lengkap Design Thinking ASN"
+            takeaways = [
+                "Human-Centered Mindset (Empati Pengguna): Inovasi birokrasi sejati selalu diawali dengan empati mendalam terhadap kebutuhan, keresahan, dan harapan pengguna layanan (Anggota Dewan, publik, dan sesama rekan ASN), bukan sekadar kepatuhan prosedur administratif yang kaku.",
+                "Tiga Lensa Inovasi (Three Lenses of Innovation): Solusi pelayanan publik harus berada di titik iris seimbang antara Desirability (apakah solusi diinginkan pengguna?), Feasibility (apakah layak dan dapat dieksekusi secara teknis?), dan Viability (apakah berkelanjutan secara sumber daya, regulasi, dan organisasi?).",
+                "Fail Fast, Learn Cheap (Prototyping Cepat): Jangan menunggu draf sistem atau regulasi sempurna berbulan-bulan. Uji coba asumsi lebih awal melalui simulasi atau alur kerja mini agar kelemahan terdeteksi sejak dini dengan risiko dan biaya minimal.",
+                "Budaya Kerja Agile & Kolaborasi Lintas Silo: Memecah sekat birokrasi konvensional antarsubbagian demi menghasilkan layanan parlemen yang adaptif, transparan, dan berorientasi hasil nyata (outcomes)."
+            ]
+            action_steps = [
+                "Lakukan wawancara empati singkat (5–10 menit) dengan staf atau pengguna layanan sebelum merancang formulir atau alur kerja baru.",
+                "Buat sketsa alur dokumen atau mock-up sederhana (low-fidelity prototype) untuk mendapatkan masukan awal sebelum menyusun draf SOP final.",
+                "Tinjau kembali efektivitas layanan subbagian secara berkala menggunakan kotak masukan dan evaluasi kepuasan pengguna (user feedback loop)."
+            ]
+        elif target_course and ("persidangan" in target_course.title.lower() or "risalah" in target_course.title.lower()):
+            topic_label = chapter_title or "Intisari Tata Tertib & Manajemen Persidangan Parlemen"
+            takeaways = [
+                "Prinsip Kuorum Sah Sidang Paripurna: Pengambilan keputusan sah mensyaratkan kehadiran lebih dari separuh (1/2) jumlah seluruh Anggota DPD RI yang mewakili lebih dari separuh (1/2) jumlah provinsi di Indonesia.",
+                "Autentisitas Risalah Resmi Persidangan: Risalah adalah dokumen negara verbatim yang mencatat setiap kata dan dinamika musyawarah dewan secara akurat oleh Perisalah Legislatif sebagai arsip ketatanegaraan.",
+                "Hierarki & Mekanisme Pengambilan Keputusan: Mengutamakan musyawarah mufakat, dan apabila tidak tercapai, dilakukan pemungutan suara (voting) sesuai koridor tata tertib dewan."
+            ]
+            action_steps = [
+                "Lakukan verifikasi daftar hadir dan surat mandat anggota dewan secara terintegrasi sebelum sidang paripurna dimulai.",
+                "Lakukan pengarsipan digital ganda terhadap rekaman audio dan naskah risalah sidang demi integritas data ketatanegaraan."
+            ]
+        else:
+            clean_desc = re.sub(r'<[^>]+>', '', target_course.description or "").strip() if target_course else ""
+            topic_label = chapter_title or f"Intisari Pelatihan {course_title}"
+            takeaways = [
+                f"Penguasaan Kompetensi Inti: Memahami prinsip fundamental dan metodologi utama yang diajarkan dalam pelatihan {course_title}.",
+                "Peningkatan Kapasitas ASN: Menerapkan standar operasional dan etika pelayanan publik modern yang selaras dengan nilai BerAKHLAK.",
+                "Efisiensi Tata Kelola Dokumen: Mengoptimalkan penggunaan teknologi informasi untuk mempercepat alur koordinasi dan pelaporan kerja di Setjen DPD RI."
+            ]
+            if clean_desc and len(clean_desc) > 30:
+                takeaways.insert(0, f"Fokus Pembelajaran: {clean_desc[:140]}...")
+            action_steps = [
+                "Terapkan materi modul ini dalam tugas pokok dan fungsi harian di unit kerja masing-masing.",
+                "Diskusikan poin pembelajaran ini bersama rekan kerja satu tim untuk harmonisasi prosedur pelayanan."
+            ]
+
+        # 4. Susun plain text untuk Note ekspor
+        date_now_str = timezone.now().strftime("%d %b %Y, %H:%M WIB")
+        plain_text_lines = [
+            f"# {topic_label}",
+            f"Pelatihan: {course_title}",
+            f"Waktu Rangkuman: {date_now_str}",
+            "",
+            "## 🎯 Poin Kunci Utama (Key Takeaways):"
+        ]
+        for i, t in enumerate(takeaways, 1):
+            plain_text_lines.append(f"{i}. {t}")
+        plain_text_lines.append("")
+        plain_text_lines.append("## ⚡ Langkah Implementasi di Tempat Kerja (Setjen DPD RI):")
+        for step in action_steps:
+            plain_text_lines.append(f"• {step}")
+        plain_text_lines.append("")
+        plain_text_lines.append("---")
+        plain_text_lines.append("Catatan ini dirangkum secara otomatis oleh Manta AI - Asisten Virtual LMS Setjen DPD RI")
+        plain_text_note = "\n".join(plain_text_lines)
+
+        # 5. Susun teks balasan Manta (Markdown)
+        reply = (
+            f"📑 **Rangkuman Cerdas & Key Takeaways Materi:**\n\n"
+            f"Pelatihan: **{course_title}**\n"
+            f"Topik: *{topic_label}*\n\n"
+            f"🎯 **Poin Kunci Utama (Golden Takeaways):**\n"
+        )
+        for i, t in enumerate(takeaways, 1):
+            reply += f"{i}. {t}\n\n"
+
+        reply += "⚡ **Langkah Aksi di Lingkungan Kerja Setjen DPD RI:**\n"
+        for step in action_steps:
+            reply += f"• {step}\n"
+        reply += "\n"
+        reply += "💡 *Anda dapat langsung mengekspor rangkuman ini ke **Catatan Belajar** akun Anda dengan mengklik tombol aksi di bawah!*"
+
+        enrollment_id = user_enrollment.enrollment_id if user_enrollment else None
+        if not enrollment_id and user_ctx.get("is_authenticated") and user_ctx.get("user_id") and target_course:
+            enr = api_models.EnrolledCourse.objects.filter(user_id=user_ctx["user_id"], course=target_course).first()
+            if not enr:
+                enr = api_models.EnrolledCourse.objects.filter(user_id=user_ctx["user_id"], course__title__iexact=target_course.title).first()
+            if enr:
+                enrollment_id = enr.enrollment_id
+
+        summary_card = {
+            "id": f"summary_{course_id or 'gen'}",
+            "course_id": course_id,
+            "course_title": course_title,
+            "course_slug": course_slug,
+            "enrollment_id": enrollment_id,
+            "course_player_url": f"/student/courses/{enrollment_id}/" if enrollment_id else None,
+            "topic": topic_label,
+            "title": f"Rangkuman: {topic_label}",
+            "takeaways": takeaways,
+            "action_steps": action_steps,
+            "plain_text_note": plain_text_note
+        }
+
+        actions = [
+            {
+                "label": "📝 Simpan ke Catatan Belajar",
+                "action": "save_to_notes",
+                "summary_id": summary_card["id"],
+                "course_id": course_id,
+                "course_slug": course_slug,
+                "enrollment_id": enrollment_id,
+                "title": f"Rangkuman: {topic_label[:40]}",
+                "content": plain_text_note,
+                "type": "event"
+            },
+            {
+                "label": "🧠 Latihan Kuis Materi Ini",
+                "action": "next_quiz",
+                "type": "event"
+            }
+        ]
+        if enrollment_id:
+            actions.append({
+                "label": "🎓 Buka Ruang Belajar Kursus",
+                "url": f"/student/courses/{enrollment_id}/",
+                "type": "route"
+            })
+        elif course_slug:
+            actions.append({
+                "label": "📖 Buka Silabus Kursus",
+                "url": f"/course-detail/{course_slug}/",
+                "type": "route"
+            })
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "instant_course_summarizer",
+            "summary_card": summary_card,
+            "suggested_questions": [
+                "Di mana catatan saya?",
+                "Latihan kuis materi ini",
+                "Rangkum bab lainnya"
+            ],
+            "actions": actions,
+            "recommended_courses": [
+                {"id": course_id or 1, "title": course_title, "slug": course_slug, "category": "Materi Dirangkum"}
+            ]
+        }
+
+    def _handle_user_notes_query(
+        self, raw_message: str, norm_query: str, user_ctx: Dict[str, Any], current_course: Any = None
+    ) -> Dict[str, Any]:
+        """
+        Membantu pengguna menemukan dan melihat Catatan Belajar mereka di LMS Setjen DPD RI.
+        Menjelaskan letak catatan di Ruang Belajar (Tab Catatan) dan menampilkan daftar catatan aktif.
+        """
+        if not user_ctx.get("is_authenticated") or not user_ctx.get("user_id"):
+            return {
+                "status": "success",
+                "reply": (
+                    "Untuk melihat dan mengelola **Catatan Belajar** pribadi Anda, silakan masuk terlebih dahulu menggunakan akun SSO Setjen DPD RI."
+                ),
+                "source": "user_notes_locator",
+                "suggested_questions": [
+                    "Bagaimana cara login?",
+                    "Rekomendasi kursus populer",
+                    "Apa itu LMS Setjen DPD RI?"
+                ],
+                "actions": [
+                    {"label": "🔐 Masuk Akun SSO", "url": "/login/", "type": "route"},
+                    {"label": "🔍 Katalog Kursus", "url": "/search/", "type": "route"}
+                ],
+                "recommended_courses": []
+            }
+
+        user = api_models.User.objects.filter(id=user_ctx["user_id"]).first()
+        if not user:
+            return {
+                "status": "success",
+                "reply": "Profil pengguna tidak ditemukan.",
+                "source": "user_notes_locator",
+                "actions": [{"label": "📚 Kursus Saya", "url": "/student/courses/", "type": "route"}]
+            }
+
+        # Ambil seluruh catatan milik user
+        notes_qs = api_models.Note.objects.filter(user=user).select_related("course").order_by("-id")
+        notes_count = notes_qs.count()
+
+        if notes_count == 0:
+            reply = (
+                f"Halo Bapak/Ibu **{user_ctx.get('name', 'Pegawai')}**,\n\n"
+                "Anda saat ini belum memiliki catatan pembelajaran yang tersimpan.\n\n"
+                "💡 **Cara membuat dan menyimpan catatan di LMS Setjen DPD RI:**\n"
+                "1. **Melalui Manta AI:** Minta rangkuman materi (misal: *'Rangkumkan materi Design Thinking'*), lalu klik tombol **📝 Simpan ke Catatan Belajar**.\n"
+                "2. **Melalui Ruang Belajar:** Buka kursus yang Anda ikuti di menu [Kursus Saya](/student/courses/), pilih tab **Catatan Saya**, lalu klik tombol **+ Tambah Catatan**."
+            )
+            return {
+                "status": "success",
+                "reply": reply,
+                "source": "user_notes_locator",
+                "suggested_questions": [
+                    "Rangkumkan materi Design Thinking",
+                    "Rangkum materi tata tertib persidangan",
+                    "Lihat kemajuan kursus saya"
+                ],
+                "actions": [
+                    {"label": "📚 Buka Kursus Saya", "url": "/student/courses/", "type": "route"},
+                    {"label": "📑 Rangkum Design Thinking", "action": "quick_query", "query": "Rangkumkan poin penting materi Design Thinking", "type": "event"}
+                ]
+            }
+
+        recent_notes = list(notes_qs[:5])
+        
+        reply = (
+            f"📌 **Lokasi Catatan Belajar Anda di LMS Setjen DPD RI:**\n\n"
+            f"Di LMS Setjen DPD RI, setiap catatan pembelajaran tersimpan dan terintegrasi di dalam **Ruang Belajar Kursus** pada tab **Catatan Saya** (terletak di bagian bawah pemutar video materi).\n\n"
+            f"Anda memiliki total **{notes_count} catatan tersimpan**. Berikut adalah daftar catatan terbaru Anda:\n\n"
+        )
+
+        user_notes_data = []
+        actions = []
+
+        for idx, n in enumerate(recent_notes, 1):
+            c_title = n.course.title if n.course else "Umum"
+            # Cari enrollment
+            enr = api_models.EnrolledCourse.objects.filter(user=user, course=n.course).first()
+            if not enr and n.course:
+                enr = api_models.EnrolledCourse.objects.filter(user=user, course__title__iexact=n.course.title).first()
+            
+            enr_id = enr.enrollment_id if enr else None
+            open_url = f"/student/courses/{enr_id}/" if enr_id else (f"/course-detail/{n.course.slug}/" if n.course else "/student/courses/")
+            date_str = n.date.strftime("%d %b %Y, %H:%M WIB") if hasattr(n, 'date') and n.date else "Tersimpan"
+
+            reply += f"**{idx}. {n.title}**\n"
+            reply += f"   • **Pelatihan:** {c_title}\n"
+            reply += f"   • **Waktu Simpan:** {date_str}\n"
+            if n.note:
+                snippet = n.note[:140].replace("\n", " ").strip()
+                reply += f"   • **Cuplikan:** _{snippet}..._\n\n"
+
+            user_notes_data.append({
+                "id": n.id,
+                "note_id": n.note_id,
+                "title": n.title,
+                "course_title": c_title,
+                "date": date_str,
+                "enrollment_id": enr_id,
+                "open_url": open_url,
+                "content": n.note
+            })
+
+            if enr_id and len(actions) < 2:
+                short_title = c_title[:24]
+                actions.append({
+                    "label": f"📖 Buka Catatan di {short_title}... ↗",
+                    "url": open_url,
+                    "type": "route"
+                })
+
+        actions.append({
+            "label": "📚 Daftar Semua Kursus Saya",
+            "url": "/student/courses/",
+            "type": "route"
+        })
+
+        reply += (
+            "👉 **Cara Menemukan Catatan:** Klik salah satu tombol di bawah atau buka menu **Kursus Saya**, pilih kursus yang bersangkutan, dan Anda akan langsung melihat tab **Catatan Saya** aktif dengan seluruh poin rangkuman yang telah tersimpan!"
+        )
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "user_notes_locator",
+            "user_notes": user_notes_data,
+            "suggested_questions": [
+                "Rangkum materi lainnya",
+                "Latihan kuis materi kursus saya",
+                "Bagaimana cara unduh sertifikat?"
+            ],
+            "actions": actions
+        }
+
     def _find_best_knowledge_match(self, raw_message: str, norm_query: str) -> Tuple[Dict[str, Any], int]:
         """Menghitung skor kesesuaian antara pertanyaan pengguna dengan basis pengetahuan."""
         best_match = None
         highest_score = 0
-
         query_tokens = set(norm_query.split())
 
         for rule in KNOWLEDGE_BASE:
@@ -360,12 +2376,12 @@ class AIAssistantChatAPIView(APIView):
 
             # Cek Kemunculan Kata Kunci
             for kw in rule["keywords"]:
-                if kw in norm_query:
+                # Cocokkan kata utuh menggunakan word boundary agar kata pendek tidak salah mencocokkan potongan kata (mis. 'ok' dalam 'birokrasi')
+                if re.search(rf"\b{re.escape(kw)}\b", norm_query):
                     score += 4
                 else:
                     kw_tokens = set(kw.split())
                     matched_tokens = query_tokens.intersection(kw_tokens)
-                    # Hanya beri skor jika setidaknya 2 kata cocok atau setidaknya 50% kata dalam frasa cocok
                     if len(matched_tokens) >= 2 and (len(matched_tokens) / len(kw_tokens)) >= 0.5:
                         score += len(matched_tokens) * 2
 
@@ -375,7 +2391,7 @@ class AIAssistantChatAPIView(APIView):
 
         return best_match, highest_score
 
-    def _search_courses_response(self, raw_message: str, norm_query: str) -> Dict[str, Any]:
+    def _search_courses_response(self, raw_message: str, norm_query: str, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
         """Mencari kursus aktif di database LMS secara instan dan efisien."""
         try:
             stop_words = {"kursus", "materi", "pelatihan", "kelas", "rekomendasi", "cari", "ada", "apa", "saja", "yang", "di", "lms", "tentang", "minta", "tolong"}
@@ -419,6 +2435,16 @@ class AIAssistantChatAPIView(APIView):
 
             reply += "\nAnda dapat langsung mengklik kartu kursus di bawah ini untuk melihat silabus lengkapnya!"
 
+            actions = [
+                {"label": "🔍 Semua Kursus di Katalog", "url": "/search/", "type": "route"}
+            ]
+            if user_ctx["is_authenticated"]:
+                actions.append({
+                    "label": "📚 Kursus Saya",
+                    "url": "/student/courses/",
+                    "type": "route"
+                })
+
             return {
                 "status": "success",
                 "reply": reply,
@@ -428,6 +2454,7 @@ class AIAssistantChatAPIView(APIView):
                     "Cara unduh sertifikat setelah lulus",
                     "Apa itu LMS Setjen DPD RI?"
                 ],
+                "actions": actions,
                 "recommended_courses": course_list
             }
         except Exception as e:
@@ -453,14 +2480,51 @@ class AIAssistantChatAPIView(APIView):
         except Exception:
             return []
 
-    def _call_gemini_api(self, message: str, history: List[Dict[str, Any]], api_key: str) -> str:
-        """Panggilan opsional ke Google Gemini API dengan timeout 4.5 detik."""
+    def _call_gemini_api(self, message: str, history: List[Dict[str, Any]], api_key: str, user_ctx: Dict[str, Any], current_course: Any = None, matched_lessons_context: List[Dict[str, Any]] = None) -> str:
+        """Panggilan ke Google Gemini API dengan prompt terpersonalisasi, peka konteks kursus, dan silabus aktual."""
         try:
+            user_name = user_ctx.get("name", "Rekan Pembelajar")
+            auth_status = "Pengguna Terdaftar / Login" if user_ctx.get("is_authenticated") else "Tamu / Belum Login"
+            enrolled_info = f"{user_ctx.get('enrolled_count', 0)} kursus terdaftar"
+            cert_info = f"{user_ctx.get('certificates_count', 0)} sertifikat diperoleh"
+            latest = user_ctx.get("latest_course")
+            latest_info = f"Kursus aktif terakhir: {latest['title']} ({latest['progress']}%)" if latest else "Belum ada kursus aktif"
+
+            course_context_str = ""
+            if current_course:
+                teacher_disp = getattr(current_course.teacher, "full_name", None) or getattr(current_course.teacher, "name", "Instruktur")
+                cat_disp = current_course.category.title if current_course.category else "Kompetensi Umum"
+                course_context_str = (
+                    f"\n- Halaman Kursus Yang Sedang Dibuka Pengguna:\n"
+                    f"  Judul: {current_course.title}\n"
+                    f"  Kategori: {cat_disp}\n"
+                    f"  Instruktur: {teacher_disp}\n"
+                    f"  Tingkat: {current_course.level}\n"
+                )
+
+            syllabus_context_str = ""
+            if matched_lessons_context:
+                syllabus_context_str = "\n- Modul & Materi Terkait di Database LMS:\n" + "\n".join([
+                    f"  * Modul '{item['title']}' di Bab '{item['chapter']}' (Pelatihan: '{item['course_title']}')"
+                    for item in matched_lessons_context[:4]
+                ])
+
             system_instruction = (
                 "Anda adalah Manta, maskot resmi sekaligus Asisten AI Virtual LMS Sekretariat Jenderal "
                 "Dewan Perwakilan Daerah Republik Indonesia (Setjen DPD RI). Jawablah pertanyaan pengguna "
-                "dengan ramah, cerdas, solutif, dan rapi dalam Bahasa Indonesia yang santun. Format balasan "
-                "menggunakan Markdown tebal, bullet points, dan emoji yang relevan."
+                "dengan ramah, cerdas, solutif, dan rapi dalam Bahasa Indonesia yang santun.\n\n"
+                f"Konteks Pengguna Saat Ini:\n"
+                f"- Nama: {user_name}\n"
+                f"- Status Akun: {auth_status}\n"
+                f"- Riwayat: {enrolled_info}, {cert_info}\n"
+                f"- {latest_info}"
+                f"{course_context_str}"
+                f"{syllabus_context_str}\n\n"
+                "Pedoman Balasan:\n"
+                "- Sapalah pengguna dengan hormat (misalnya 'Bapak/Ibu ' diikuti nama jika pengguna terdaftar).\n"
+                "- Gunakan Markdown tebal (**teks**), poin bernomor/bullet, dan emoji yang relevan.\n"
+                "- Jika pengguna bertanya tentang 'kursus ini', materi, bab, atau silabus, manfaatkan informasi di atas secara akurat dan faktual.\n"
+                "- Selalu berorientasi mendukung peningkatan kompetensi aparatur di lingkungan Setjen DPD RI."
             )
 
             models_to_try = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.1-flash-lite"]
@@ -506,6 +2570,180 @@ class AIAssistantChatAPIView(APIView):
         return None
 
 
+def get_user_learning_nudge(user: Any) -> Dict[str, Any]:
+    """Menghitung dan menghasilkan pengingat belajar cerdas (Smart Learning Nudge) untuk pengguna."""
+    if not user:
+        return {
+            "has_nudge": False,
+            "nudge_type": "guest",
+            "bubble_text": "Halo! Saya Manta 👋 Ada yang bisa Manta bantu hari ini?",
+            "title": "Selamat Datang di LMS Setjen DPD RI",
+            "message": "Silakan masuk menggunakan akun SSO Setjen DPD RI untuk melacak progres belajar dan sertifikat resmi Anda.",
+            "action_label": "🔐 Masuk SSO",
+            "action_url": "/login/",
+            "progress": 0,
+            "remaining_lessons": 0,
+            "course_title": "",
+            "enrollment_id": None
+        }
+
+    display_name = user.full_name or user.first_name or user.username or "Rekan ASN"
+    enrollments = api_models.EnrolledCourse.objects.filter(user=user).select_related('course').order_by('-date')
+
+    if not enrollments.exists():
+        return {
+            "has_nudge": True,
+            "nudge_type": "no_courses",
+            "bubble_text": f"Halo Bapak/Ibu {display_name} 👋 Belum ada kursus aktif. Mari jelajahi katalog pelatihan!",
+            "title": "Mulai Perjalanan Belajar Anda",
+            "message": f"Bapak/Ibu {display_name}, Anda saat ini belum terdaftar pada pelatihan manapun. Jelajahi katalog kursus untuk memilih pelatihan resmi Setjen DPD RI.",
+            "action_label": "🔍 Jelajahi Katalog Kursus",
+            "action_url": "/search/",
+            "progress": 0,
+            "remaining_lessons": 0,
+            "course_title": "",
+            "enrollment_id": None
+        }
+
+    in_progress_enr = None
+    not_started_enr = None
+    all_completed = True
+
+    for enr in enrollments:
+        try:
+            pct = round(enr.completion_percentage(), 1)
+        except Exception:
+            pct = 0.0
+
+        if pct < 100:
+            all_completed = False
+
+        if 0 < pct < 100 and not in_progress_enr:
+            in_progress_enr = (enr, pct)
+        elif pct == 0 and not not_started_enr:
+            not_started_enr = (enr, pct)
+
+    if in_progress_enr:
+        enr, pct = in_progress_enr
+        course = enr.course
+        total_lessons = api_models.VariantItem.objects.filter(variant__course=course).count()
+        completed_lessons = api_models.CompletedLesson.objects.filter(user=user, course=course).count()
+        remaining = max(0, total_lessons - completed_lessons)
+
+        remaining_str = f"Tersisa {remaining} materi lagi" if remaining > 0 else "Sedikit lagi"
+        course_short = course.title[:24] + "..." if len(course.title) > 24 else course.title
+        bubble_text = f"Halo Bapak/Ibu {display_name} 👋 Kursus '{course_short}' sudah {pct}%. {remaining_str} untuk sertifikat!"
+
+        return {
+            "has_nudge": True,
+            "nudge_type": "in_progress",
+            "bubble_text": bubble_text,
+            "title": "Lanjutkan Pelatihan Aktif",
+            "course_title": course.title,
+            "course_slug": course.slug,
+            "enrollment_id": enr.enrollment_id,
+            "progress": pct,
+            "remaining_lessons": remaining,
+            "total_lessons": total_lessons,
+            "action_label": f"▶️ Lanjut Belajar ({pct}%)",
+            "action_url": f"/student/courses/{enr.enrollment_id}/"
+        }
+
+    if not_started_enr:
+        enr, pct = not_started_enr
+        course = enr.course
+        total_lessons = api_models.VariantItem.objects.filter(variant__course=course).count()
+        course_short = course.title[:24] + "..." if len(course.title) > 24 else course.title
+        bubble_text = f"Halo Bapak/Ibu {display_name} 👋 Anda terdaftar di '{course_short}'. Siap mulai materi pertama?"
+
+        return {
+            "has_nudge": True,
+            "nudge_type": "not_started",
+            "bubble_text": bubble_text,
+            "title": "Mulai Modul Pembelajaran Pertama",
+            "course_title": course.title,
+            "course_slug": course.slug,
+            "enrollment_id": enr.enrollment_id,
+            "progress": 0,
+            "remaining_lessons": total_lessons,
+            "total_lessons": total_lessons,
+            "action_label": "▶️ Mulai Belajar Sekarang",
+            "action_url": f"/student/courses/{enr.enrollment_id}/"
+        }
+
+    if all_completed:
+        cert_count = api_models.Certificate.objects.filter(user=user).count()
+        cert_info = f" ({cert_count} sertifikat diperoleh)" if cert_count > 0 else ""
+        bubble_text = f"Luar biasa, Bapak/Ibu {display_name}! 🎉 Seluruh kursus Anda telah selesai 100%{cert_info}."
+
+        return {
+            "has_nudge": True,
+            "nudge_type": "all_completed",
+            "bubble_text": bubble_text,
+            "title": "Selamat! Seluruh Pelatihan Tuntas 100%",
+            "course_title": "",
+            "course_slug": "",
+            "enrollment_id": None,
+            "progress": 100,
+            "remaining_lessons": 0,
+            "total_lessons": 0,
+            "action_label": "📜 Unduh Sertifikat" if cert_count > 0 else "🔍 Cari Pelatihan Baru",
+            "action_url": "/student/sertifikat/" if cert_count > 0 else "/search/"
+        }
+
+    return {
+        "has_nudge": False,
+        "nudge_type": "default",
+        "bubble_text": f"Halo Bapak/Ibu {display_name}! 👋 Ada topik pelatihan yang ingin dipelajari hari ini?",
+        "title": "Asisten Pembelajaran LMS Setjen DPD RI",
+        "action_label": "🔍 Jelajahi Katalog",
+        "action_url": "/search/",
+        "progress": 0,
+        "remaining_lessons": 0,
+        "course_title": "",
+        "enrollment_id": None
+    }
+
+
+class AILearningNudgeAPIView(APIView):
+    """
+    Endpoint untuk mengambil pengingat belajar proaktif pengguna (Smart Learning Nudge):
+    GET /api/v1/ai/nudge/?user_id=...
+    POST /api/v1/ai/nudge/
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        user = None
+        if request.user and request.user.is_authenticated:
+            user = request.user
+        else:
+            uid = request.GET.get("user_id")
+            if uid:
+                try:
+                    user = api_models.User.objects.filter(id=uid).first()
+                except Exception:
+                    user = None
+
+        nudge_data = get_user_learning_nudge(user)
+        return Response({"status": "success", "nudge": nudge_data})
+
+    def post(self, request, *args, **kwargs):
+        user = None
+        if request.user and request.user.is_authenticated:
+            user = request.user
+        else:
+            uid = request.data.get("user_id")
+            if uid:
+                try:
+                    user = api_models.User.objects.filter(id=uid).first()
+                except Exception:
+                    user = None
+
+        nudge_data = get_user_learning_nudge(user)
+        return Response({"status": "success", "nudge": nudge_data})
+
+
 class AIAssistantSuggestionsAPIView(APIView):
     """
     Endpoint untuk mengambil saran pertanyaan dan metadata asisten:
@@ -514,30 +2752,228 @@ class AIAssistantSuggestionsAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
+        pathname = request.GET.get("pathname", "")
+        user = None
+        if request.user and request.user.is_authenticated:
+            user = request.user
+        else:
+            uid = request.GET.get("user_id")
+            if uid:
+                try:
+                    user = api_models.User.objects.filter(id=uid).first()
+                except Exception:
+                    user = None
+        
+        quick_prompts = [
+            {
+                "label": "🧠 Latihan Kuis Mandiri",
+                "query": "Beri saya latihan kuis dan uji pemahaman materi"
+            },
+            {
+                "label": "📑 Rangkuman Materi",
+                "query": "Rangkumkan poin penting dari materi pelatihan Design Thinking"
+            },
+            {
+                "label": "🏛️ Apa itu LMS DPD RI?",
+                "query": "Apa itu LMSetjen DPD RI?"
+            },
+            {
+                "label": "🚀 Panduan Belajar",
+                "query": "Bagaimana cara saya memulai untuk belajar?"
+            },
+            {
+                "label": "⏰ Pengingat Belajar",
+                "query": "Apa pengingat belajar saya hari ini?"
+            },
+            {
+                "label": "📚 Progres Kursus Saya",
+                "query": "Bagaimana progres kursus saya saat ini?"
+            },
+            {
+                "label": "📜 Unduh Sertifikat",
+                "query": "Bagaimana cara mendapatkan dan mengunduh sertifikat pelatihan?"
+            },
+            {
+                "label": "⚡ Kendala SCORM/Video",
+                "query": "Video atau modul SCORM macet, apa solusinya?"
+            },
+            {
+                "label": "🔐 Login SSO DPD",
+                "query": "Bagaimana cara masuk menggunakan SSO Setjen DPD RI?"
+            }
+        ]
+
+        if "/course-detail/" in pathname:
+            quick_prompts = [
+                {"label": "📑 Rangkum Materi Kursus", "query": "Rangkumkan poin penting dan key takeaways materi ini"},
+                {"label": "🧠 Latihan Kuis Kursus Ini", "query": "Beri saya latihan kuis simulasi dari materi kursus ini"},
+                {"label": "📖 Silabus & Bab Kursus", "query": "Jelaskan ringkasan materi, silabus bab, dan modul di kursus ini"},
+                {"label": "🔍 Materi yang Dipelajari", "query": "Modul dan materi apa saja yang ada di kursus ini?"},
+                {"label": "📝 Syarat & Evaluasi", "query": "Bagaimana evaluasi kuis dan syarat kelulusan kursus ini?"},
+                {"label": "📜 Sertifikat Kelulusan", "query": "Apakah kursus ini menerbitkan sertifikat digital resmi?"}
+            ]
+        elif "/student/sertifikat/" in pathname:
+            quick_prompts = [
+                {"label": "📜 Sertifikat Saya", "query": "Berapa banyak sertifikat yang sudah saya miliki?"},
+                {"label": "🔍 Verifikasi QR Code", "query": "Bagaimana cara memverifikasi keaslian QR Code sertifikat?"},
+                {"label": "📥 Syarat Terbit Sertifikat", "query": "Apa syarat agar sertifikat kelulusan otomatis terbit?"},
+                {"label": "📚 Lanjut Belajar", "query": "Lihat progres kursus saya"}
+            ]
+        elif "/student/courses/" in pathname:
+            quick_prompts = [
+                {"label": "⏰ Pengingat Belajar", "query": "Apa pengingat belajar saya hari ini?"},
+                {"label": "📊 Progres Belajar Saya", "query": "Bagaimana progres kursus saya saat ini?"},
+                {"label": "▶️ Lanjut Kursus Tertunda", "query": "Kursus apa yang belum saya selesaikan?"},
+                {"label": "⚡ Modul SCORM Macet", "query": "Video atau modul SCORM macet, apa solusinya?"},
+                {"label": "📜 Cek Sertifikat", "query": "Bagaimana cara unduh sertifikat setelah selesai?"}
+            ]
+        elif "/search/" in pathname:
+            quick_prompts = [
+                {"label": "💡 Cari Modul Inovatif", "query": "Modul mana yang membahas design thinking?"},
+                {"label": "🏛️ Pelatihan Keparlemenan", "query": "Cari kursus keparlemenan Setjen DPD RI"},
+                {"label": "🌟 Kursus Terpopuler", "query": "Rekomendasikan kursus paling populer di LMS"},
+                {"label": "🚀 Cara Mendaftar", "query": "Bagaimana cara mendaftar kursus di katalog?"}
+            ]
+
+        # Personalisasi quick prompt berdasarkan Unit Kerja & Jabatan ASN Setjen DPD RI
+        user_unit_name = None
+        user_pos_name = None
+        if user:
+            try:
+                prof = getattr(user, 'profile', None)
+                if prof:
+                    if getattr(prof, 'organization_unit', None):
+                        user_unit_name = getattr(prof.organization_unit, 'name', None) or str(prof.organization_unit)
+                    if getattr(prof, 'position', None):
+                        user_pos_name = getattr(prof.position, 'name', None) or str(prof.position)
+            except Exception:
+                pass
+
+        if user_pos_name or user_unit_name:
+            label_text = "🎯 Pelatihan Sesuai Jabatan"
+            if user_unit_name:
+                short_unit = user_unit_name.replace("Subbagian", "Subbag").replace("Sekretariat", "Sekr")
+                if len(short_unit) > 22:
+                    short_unit = short_unit[:20] + ".."
+                label_text = f"🎯 Rekomendasi: {short_unit}"
+
+            quick_prompts.insert(0, {
+                "label": label_text,
+                "query": "Rekomendasi pelatihan yang sesuai dengan unit kerja dan jabatan saya"
+            })
+        else:
+            quick_prompts.insert(1, {
+                "label": "🎯 Rekomendasi Unit Kerja",
+                "query": "Rekomendasi pelatihan yang sesuai dengan unit kerja di Setjen DPD RI"
+            })
+
         data = {
             "assistant_name": "Manta",
             "assistant_title": "Asisten Virtual LMS Setjen DPD RI",
-            "quick_prompts": [
-                {
-                    "label": "🏛️ Apa itu LMS DPD RI?",
-                    "query": "Apa itu LMSetjen DPD RI?"
-                },
-                {
-                    "label": "🚀 Panduan Belajar",
-                    "query": "Bagaimana cara saya memulai untuk belajar?"
-                },
-                {
-                    "label": "📜 Unduh Sertifikat",
-                    "query": "Bagaimana cara mendapatkan dan mengunduh sertifikat pelatihan?"
-                },
-                {
-                    "label": "⚡ Kendala SCORM/Video",
-                    "query": "Video atau modul SCORM macet, apa solusinya?"
-                },
-                {
-                    "label": "🔐 Login SSO DPD",
-                    "query": "Bagaimana cara masuk menggunakan SSO Setjen DPD RI?"
-                }
-            ]
+            "quick_prompts": quick_prompts,
+            "learning_nudge": get_user_learning_nudge(user)
         }
         return Response(data)
+
+
+class AIAssistantSaveNoteAPIView(APIView):
+    """
+    Menyimpan Rangkuman Materi Manta AI langsung ke Catatan Belajar Pengguna:
+    POST /api/v1/ai/notes/save/
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        user = None
+        if request.user and request.user.is_authenticated:
+            user = request.user
+        else:
+            uid = request.data.get("user_id")
+            if uid:
+                try:
+                    user = api_models.User.objects.filter(id=uid).first()
+                except Exception:
+                    user = None
+
+        if not user:
+            return Response(
+                {"status": "error", "message": "Harap masuk (login) terlebih dahulu untuk menyimpan catatan pembelajaran."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        course_id = request.data.get("course_id")
+        course_slug = request.data.get("course_slug")
+        title = (request.data.get("title") or "Rangkuman Materi Manta AI").strip()
+        content = (request.data.get("content") or "").strip()
+        raw_color = request.data.get("color")
+        color = "#0d9488" if (not raw_color or raw_color == "emerald") else raw_color
+
+        if not content:
+            return Response(
+                {"status": "error", "message": "Konten rangkuman tidak boleh kosong."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        course = None
+        if course_id:
+            try:
+                course = api_models.Course.objects.filter(id=course_id).first()
+            except Exception:
+                course = None
+        if not course and course_slug:
+            try:
+                course = api_models.Course.objects.filter(slug=course_slug).first()
+            except Exception:
+                course = None
+
+        # Cek apakah user memiliki EnrolledCourse untuk course ini, atau course dengan judul serupa
+        enrollment = None
+        if course:
+            enrollment = api_models.EnrolledCourse.objects.filter(user=user, course=course).first()
+            if not enrollment:
+                # Cek apakah ada enrollment dengan judul yang sama (misal duplikat instance Course)
+                alt_enr = api_models.EnrolledCourse.objects.filter(user=user, course__title__iexact=course.title).first()
+                if alt_enr:
+                    enrollment = alt_enr
+                    course = alt_enr.course
+        else:
+            # Ambil enrollment terbaru jika course tidak spesifik
+            enrollment = api_models.EnrolledCourse.objects.filter(user=user).order_by("-id").first()
+            if enrollment:
+                course = enrollment.course
+
+        enrollment_id = enrollment.enrollment_id if enrollment else None
+        note_url = f"/student/courses/{enrollment_id}/" if enrollment_id else (f"/course-detail/{course.slug}/" if course else "/student/courses/")
+
+        note_unique_id = f"manta_{uuid.uuid4().hex[:8]}"
+
+        try:
+            note = api_models.Note.objects.create(
+                user=user,
+                course=course,
+                title=title[:100],
+                note=content,
+                color=color,
+                note_id=note_unique_id
+            )
+            created_date_str = note.date.strftime("%d %b %Y, %H:%M WIB") if hasattr(note, 'date') and note.date else "Baru saja"
+            return Response({
+                "status": "success",
+                "message": "Rangkuman materi berhasil disimpan ke Catatan Belajar Anda! 🎉",
+                "note": {
+                    "id": note.id,
+                    "note_id": note.note_id,
+                    "title": note.title,
+                    "course_title": course.title if course else "Umum",
+                    "enrollment_id": enrollment_id,
+                    "note_url": note_url,
+                    "content": note.note,
+                    "date": created_date_str
+                }
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Error saving Manta AI note: {e}", exc_info=True)
+            return Response(
+                {"status": "error", "message": f"Gagal menyimpan catatan: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

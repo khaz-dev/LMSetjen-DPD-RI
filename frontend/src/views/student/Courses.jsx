@@ -671,6 +671,17 @@ function Courses() {
                                                                     <i className="fas fa-calendar-check text-muted"></i>
                                                                     {formatEnrolledDate(c.date)}
                                                                 </span>
+                                                                {Array.isArray(c.note) && c.note.length > 0 && (
+                                                                    <Link
+                                                                        to={courseTargetUrl}
+                                                                        className="course-meta-chip"
+                                                                        title={`${c.note.length} catatan tersimpan di kelas ini. Klik untuk membuka Tab Catatan.`}
+                                                                        style={{ color: "#047857", background: "#ecfdf5", border: "1px solid #a7f3d0", fontWeight: 700, textDecoration: "none" }}
+                                                                    >
+                                                                        <i className="fas fa-sticky-note text-emerald"></i>
+                                                                        {c.note.length} Catatan
+                                                                    </Link>
+                                                                )}
                                                             </div>
                                                         </div>
 
@@ -802,6 +813,17 @@ function Courses() {
                                                                     <i className="fas fa-circle-check text-emerald"></i>
                                                                     {metrics.completedItems}/{metrics.totalItems} Selesai
                                                                 </span>
+                                                                {Array.isArray(c.note) && c.note.length > 0 && (
+                                                                    <Link
+                                                                        to={courseTargetUrl}
+                                                                        className="course-meta-chip"
+                                                                        title={`${c.note.length} catatan tersimpan di kelas ini. Klik untuk membuka Tab Catatan.`}
+                                                                        style={{ color: "#047857", background: "#ecfdf5", border: "1px solid #a7f3d0", fontWeight: 700, textDecoration: "none" }}
+                                                                    >
+                                                                        <i className="fas fa-sticky-note text-emerald"></i>
+                                                                        {c.note.length} Catatan
+                                                                    </Link>
+                                                                )}
 
                                                                 {/* Inline Progress Bar in List Mode */}
                                                                 <div className="course-list-inline-progress">

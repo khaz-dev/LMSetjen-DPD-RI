@@ -21,6 +21,7 @@ const FeedbackFloatingButton = () => {
     const feedback = useFeedback();
     const [isVisible, setIsVisible] = useState(true);
     const [recentCountdown, setRecentCountdown] = useState(0);
+    const [prefillData, setPrefillData] = useState(null);
 
     // Auto-hide button briefly after submission
     useEffect(() => {
@@ -32,8 +33,27 @@ const FeedbackFloatingButton = () => {
         }
     }, [recentCountdown]);
 
+    // Buka formulir masukan jika dipicu dari aksi cepat Manta AI (dengan diagnostik otomatis)
+    useEffect(() => {
+        const handleTriggerFeedback = (e) => {
+            const detail = e?.detail || {};
+            if (detail.prefill) {
+                setPrefillData(detail.prefill);
+            }
+            feedback.openFeedback(detail.courseId || null);
+        };
+        window.addEventListener('lms-open-feedback-modal', handleTriggerFeedback);
+        return () => window.removeEventListener('lms-open-feedback-modal', handleTriggerFeedback);
+    }, [feedback]);
+
+    const handleModalClose = () => {
+        setPrefillData(null);
+        feedback.closeFeedback();
+    };
+
     const handleFeedbackSuccess = (data) => {
         setRecentCountdown(3);
+        setPrefillData(null);
         feedback.onFeedbackSuccess(data);
     };
 
@@ -41,7 +61,10 @@ const FeedbackFloatingButton = () => {
         <>
             <button
                 className={`feedback-floating-button ${!isVisible ? 'hidden' : ''}`}
-                onClick={() => feedback.openFeedback()}
+                onClick={() => {
+                    setPrefillData(null);
+                    feedback.openFeedback();
+                }}
                 title="Kirimkan masukan atau laporkan bug"
                 aria-label="Open feedback form"
             >
@@ -51,9 +74,10 @@ const FeedbackFloatingButton = () => {
 
             <FeedbackModal
                 isOpen={feedback.isOpen}
-                onClose={feedback.closeFeedback}
+                onClose={handleModalClose}
                 onSuccess={handleFeedbackSuccess}
                 relatedCourse={feedback.relatedCourse}
+                prefillData={prefillData}
             />
         </>
     );
