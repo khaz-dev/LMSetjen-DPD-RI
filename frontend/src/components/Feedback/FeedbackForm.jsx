@@ -3,20 +3,41 @@ import './FeedbackForm.css';
 import useAxios from '../../utils/useAxios';
 import Toast from '../../views/plugin/Toast';
 import FeedbackVerificationModal from './FeedbackVerificationModal';
+import useSystemVersion from '../../hooks/useSystemVersion';
+import dayjs, { moment } from '../../utils/dayjs';
 
 /**
- * ✨ PHASE 11.1: Bug Report & Feature Request Form Component
- * Allows users to submit feedback to improve the platform
- * 
- * ✨ PHASE 11.3: Integrated verification modal to prevent spam
- * Shows verification step before final submission
+ * ✨ PHASE 11.1 & 11.4: User Feedback & What's New Update Log Dialog
+ * Multi-tab modal allowing users to:
+ *   1. Submit feedback / bug reports ("Bantu Kami Berkembang")
+ *   2. View platform release notes & version changelog ("Update Log / What's New on LMSetjen DPD RI")
  * 
  * Props:
  *   - onSuccess: Callback function when feedback is submitted successfully
  *   - onClose: Callback function to close the form/modal
  *   - relatedCourse: Optional course ID to pre-select
+ *   - prefillData: Optional prefill data from AI assistant
+ *   - initialTab: 'feedback' | 'updates'
  */
-const FeedbackForm = ({ onSuccess, onClose, relatedCourse, prefillData }) => {
+const FeedbackForm = ({ onSuccess, onClose, relatedCourse, prefillData, initialTab = 'feedback' }) => {
+    const [activeModalTab, setActiveModalTab] = useState(initialTab || 'feedback');
+    const [updateSearch, setUpdateSearch] = useState('');
+
+    const {
+        version: currentVersion,
+        releases,
+        currentRelease,
+        loading: releasesLoading,
+        fetchReleases
+    } = useSystemVersion({ fetchReleases: true });
+
+    // Sync activeModalTab if initialTab changes
+    React.useEffect(() => {
+        if (initialTab) {
+            setActiveModalTab(initialTab);
+        }
+    }, [initialTab]);
+
     const [formData, setFormData] = useState({
         feedback_type: prefillData?.feedback_type || 'bug',
         title: prefillData?.title || '',
@@ -195,20 +216,59 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse, prefillData }) => {
         setPendingFeedbackData(null);
     };
 
+    // Category helper for update items
+    const getCatIcon = (cat) => {
+        const c = String(cat || '').toLowerCase();
+        if (c.includes('feat') || c.includes('fitur')) return { icon: 'bi-rocket-takeoff-fill text-primary', label: 'Fitur Baru' };
+        if (c.includes('improv') || c.includes('peningkatan')) return { icon: 'bi-lightning-charge-fill text-success', label: 'Peningkatan' };
+        if (c.includes('bug') || c.includes('fix') || c.includes('perbaikan')) return { icon: 'bi-bug-fill text-danger', label: 'Perbaikan Bug' };
+        if (c.includes('sec') || c.includes('aman')) return { icon: 'bi-shield-check text-purple', label: 'Keamanan' };
+        if (c.includes('ui') || c.includes('tampilan')) return { icon: 'bi-palette-fill text-warning', label: 'Antarmuka' };
+        return { icon: 'bi-check2-circle text-primary', label: 'Pembaruan' };
+    };
+
+    // Filter releases for update log tab
+    const filteredReleases = React.useMemo(() => {
+        if (!updateSearch.trim()) return releases;
+        const q = updateSearch.toLowerCase();
+        return releases.filter(r => 
+            (r.version && r.version.toLowerCase().includes(q)) ||
+            (r.title && r.title.toLowerCase().includes(q)) ||
+            (r.summary && r.summary.toLowerCase().includes(q)) ||
+            (r.changes && r.changes.some(c => 
+                (c.title && c.title.toLowerCase().includes(q)) ||
+                (c.description && c.description.toLowerCase().includes(q))
+            ))
+        );
+    }, [releases, updateSearch]);
+
     return (
         <div className="feedback-form-container">
-            <form onSubmit={handleSubmit} className="feedback-form">
-                {/* Close button (if modal context) */}
-                {onClose && (
+            <div className="feedback-form position-relative">
+                {/* 2-Tab Navigation Bar */}
+                <div className="feedback-modal-tabs">
                     <button
                         type="button"
-                        className="feedback-form-close"
-                        onClick={onClose}
-                        aria-label="Tutup Formulir"
+                        className={`feedback-tab-button ${activeModalTab === 'feedback' ? 'is-active' : ''}`}
+                        onClick={() => setActiveModalTab('feedback')}
                     >
-                        <i className="bi bi-x-lg" aria-hidden="true"></i>
+                        <i className="bi bi-chat-heart-fill feedback-tab-icon text-danger"></i>
+                        <span>Bantu Kami Berkembang</span>
                     </button>
-                )}
+                    <button
+                        type="button"
+                        className={`feedback-tab-button ${activeModalTab === 'updates' ? 'is-active' : ''}`}
+                        onClick={() => setActiveModalTab('updates')}
+                    >
+                        <i className="bi bi-rocket-takeoff-fill feedback-tab-icon text-primary"></i>
+                        <span>Update Log (What's New on LMSetjen DPD RI)</span>
+                        <span className="feedback-tab-badge">v{currentVersion || "1.0.1"}</span>
+                    </button>
+                </div>
+
+                {/* TAB 1: BANTU KAMI BERKEMBANG */}
+                {activeModalTab === 'feedback' && (
+                    <form onSubmit={handleSubmit}>
 
                 {/* Header with DPD RI Identity */}
                 <div className="feedback-form-header">
@@ -416,7 +476,135 @@ const FeedbackForm = ({ onSuccess, onClose, relatedCourse, prefillData }) => {
                         )}
                     </button>
                 </div>
-            </form>
+                    </form>
+                )}
+
+                {/* TAB 2: UPDATE LOG (WHAT'S NEW ON LMSETJEN DPD RI) */}
+                {activeModalTab === 'updates' && (
+                    <div className="update-log-panel">
+                        {/* Hero Section */}
+                        <div className="update-log-hero">
+                            <div className="update-log-hero-badge">
+                                <span className="badge-dot-pulsing"></span>
+                                <span>LMSetjen DPD RI v{currentVersion || "1.0.1"}</span>
+                            </div>
+                            <h2 className="update-log-hero-title">
+                                Apa yang Baru di LMSetjen DPD RI
+                            </h2>
+                            <p className="update-log-hero-subtitle">
+                                Simak riwayat pembaruan, fitur terbaru, dan peningkatan berkelanjutan platform pembelajaran aparatur sipil negara Setjen DPD RI.
+                            </p>
+                        </div>
+
+                        {/* Search Bar */}
+                        <div className="update-log-search-bar">
+                            <i className="bi bi-search update-log-search-icon"></i>
+                            <input
+                                type="text"
+                                className="update-log-search-input"
+                                placeholder="Cari fitur, modul, atau perbaikan bug..."
+                                value={updateSearch}
+                                onChange={e => setUpdateSearch(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Release Timeline Cards */}
+                        <div className="update-log-timeline">
+                            {releasesLoading ? (
+                                <div className="text-center py-4">
+                                    <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                    <p className="text-muted small mt-2">Memuat catatan pembaruan...</p>
+                                </div>
+                            ) : filteredReleases.length === 0 ? (
+                                <div className="text-center py-4 text-muted">
+                                    <i className="bi bi-inbox fs-2 d-block mb-1 text-secondary"></i>
+                                    <p className="small mb-0">Tidak ada log rilis yang sesuai dengan pencarian.</p>
+                                </div>
+                            ) : (
+                                filteredReleases.map((rel, idx) => {
+                                    const isCurrent = rel.is_current;
+                                    const changes = rel.changes || [];
+
+                                    return (
+                                        <div
+                                            key={rel.id || idx}
+                                            className={`update-log-card ${isCurrent ? 'is-latest' : ''}`}
+                                        >
+                                            <div className="update-log-card-header">
+                                                <div className="update-log-version-pill">
+                                                    <span>v{rel.version}</span>
+                                                    {isCurrent && (
+                                                        <span className="badge-latest-tag">
+                                                            <i className="bi bi-check-circle-fill me-1"></i>
+                                                            Versi Aktif
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="update-log-date">
+                                                    <i className="bi bi-calendar3 me-1"></i>
+                                                    {rel.release_date ? moment(rel.release_date).format('DD MMM YYYY') : '-'}
+                                                </div>
+                                            </div>
+
+                                            <h4 className="update-log-title">{rel.title}</h4>
+                                            {rel.summary && (
+                                                <p className="update-log-summary">{rel.summary}</p>
+                                            )}
+
+                                            {changes.length > 0 && (
+                                                <div className="update-log-items-list">
+                                                    {changes.map((item, itemIdx) => {
+                                                        const cat = getCatIcon(item.category);
+                                                        return (
+                                                            <div key={itemIdx} className="update-log-single-item">
+                                                                <i className={`bi ${cat.icon} item-cat-icon`}></i>
+                                                                <div>
+                                                                    <div>
+                                                                        <span className="item-title-text">{item.title}</span>
+                                                                        {item.module && (
+                                                                            <span className="item-module-badge">{item.module}</span>
+                                                                        )}
+                                                                    </div>
+                                                                    {item.description && (
+                                                                        <div className="item-desc-text">{item.description}</div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        {/* Bottom Action Bar */}
+                        <div className="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <span className="text-muted small">
+                                Punya ide atau kendala?
+                                <button
+                                    type="button"
+                                    className="btn btn-link text-primary p-0 ms-1 fw-bold text-decoration-none small"
+                                    onClick={() => setActiveModalTab('feedback')}
+                                >
+                                    Beri Masukan Aparatur
+                                </button>
+                            </span>
+                            {onClose && (
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary px-3"
+                                    onClick={onClose}
+                                >
+                                    Tutup
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* ✨ PHASE 11.3: Verification Modal */}
             <FeedbackVerificationModal

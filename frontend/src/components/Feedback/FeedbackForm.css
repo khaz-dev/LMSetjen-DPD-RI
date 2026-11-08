@@ -525,3 +525,270 @@
         justify-content: center;
     }
 }
+
+/* ==========================================================================
+   Feedback Modal Top Tab Bar (Bantu Kami Berkembang & Update Log)
+   ========================================================================== */
+.feedback-modal-tabs {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 1.25rem;
+    gap: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.feedback-tab-button {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.feedback-tab-button:hover {
+    color: #0f172a;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.feedback-tab-button.is-active {
+    background: #ffffff;
+    color: #0f172a;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.feedback-tab-icon {
+    font-size: 0.95rem;
+}
+
+.feedback-tab-badge {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: #10b981;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* Update Log Content Panel inside Feedback Dialog */
+.update-log-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    animation: fadeInSlide 0.2s ease-out;
+}
+
+.update-log-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+
+.update-log-hero::after {
+    content: "";
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.update-log-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #67e8f9;
+    margin-bottom: 0.65rem;
+}
+
+.update-log-hero-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.update-log-hero-subtitle {
+    font-size: 0.82rem;
+    color: #cbd5e1;
+    margin: 0.35rem 0 0;
+    line-height: 1.4;
+}
+
+.update-log-search-bar {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.update-log-search-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 0.95rem;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.update-log-search-input {
+    width: 100%;
+    padding: 0.65rem 1rem 0.65rem 2.75rem !important;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    color: #0f172a;
+    background: #ffffff;
+    box-sizing: border-box;
+    transition: all 0.15s;
+}
+
+.update-log-search-input::placeholder {
+    color: #94a3b8;
+    opacity: 1;
+}
+
+.update-log-search-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* User Timeline List */
+.update-log-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.update-log-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem 1.15rem;
+    transition: all 0.15s;
+}
+
+.update-log-card.is-latest {
+    border-color: #93c5fd;
+    background: linear-gradient(180deg, #f0f7ff 0%, #ffffff 100%);
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.06);
+}
+
+.update-log-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+}
+
+.update-log-version-pill {
+    font-family: monospace;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0f172a;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.badge-latest-tag {
+    font-size: 0.68rem;
+    font-family: inherit;
+    font-weight: 700;
+    background: #10b981;
+    color: #ffffff;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+
+.update-log-date {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.update-log-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 0.35rem;
+}
+
+.update-log-summary {
+    font-size: 0.82rem;
+    color: #475569;
+    line-height: 1.45;
+    margin-bottom: 0.65rem;
+}
+
+.update-log-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.update-log-single-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    background: rgba(248, 250, 252, 0.8);
+    border: 1px solid #f1f5f9;
+    border-radius: 6px;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.8rem;
+}
+
+.item-cat-icon {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.item-title-text {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.item-module-badge {
+    font-size: 0.68rem;
+    color: #475569;
+    background: #e2e8f0;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    margin-left: 0.35rem;
+}
+
+.item-desc-text {
+    color: #64748b;
+    margin-top: 0.15rem;
+    line-height: 1.35;
+}
+

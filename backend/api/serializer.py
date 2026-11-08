@@ -4041,3 +4041,38 @@ class CourseGameAttemptSerializer(serializers.ModelSerializer):
     def get_user_name(self, obj):
         return obj.user.full_name or obj.user.username if obj.user else None
 
+
+class SystemReleaseSerializer(serializers.ModelSerializer):
+    """
+    ✨ Serializer for System Releases & Update Logs
+    """
+    created_by_name = serializers.SerializerMethodField()
+    version_type_display = serializers.CharField(source='get_version_type_display', read_only=True)
+
+    class Meta:
+        model = api_models.SystemRelease
+        fields = [
+            'id',
+            'version',
+            'title',
+            'version_type',
+            'version_type_display',
+            'release_date',
+            'is_current',
+            'summary',
+            'changes',
+            'raw_notes',
+            'created_by',
+            'created_by_name',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'version_type_display']
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            name = f"{obj.created_by.first_name} {obj.created_by.last_name}".strip()
+            return name or obj.created_by.username
+        return "Tim Pengembang DPD RI"
+
+

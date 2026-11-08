@@ -12,7 +12,7 @@ import FeedbackForm from './FeedbackForm';
  *   - onSuccess: Function to call when feedback is submitted
  *   - relatedCourse: Optional course ID
  */
-const FeedbackModal = ({ isOpen, onClose, onSuccess, relatedCourse, prefillData }) => {
+const FeedbackModal = ({ isOpen, onClose, onSuccess, relatedCourse, prefillData, initialTab = 'feedback' }) => {
     if (!isOpen) return null;
 
     return (
@@ -26,6 +26,7 @@ const FeedbackModal = ({ isOpen, onClose, onSuccess, relatedCourse, prefillData 
                 onSuccess={onSuccess}
                 relatedCourse={relatedCourse}
                 prefillData={prefillData}
+                initialTab={initialTab}
             />
         </div>
     );

@@ -1,19 +1,21 @@
 import React, { memo } from "react";
 import { Link } from "react-router-dom";
 import { APP_VERSION } from "../../utils/version";
+import useSystemVersion, { openUpdateLogModal } from "../../hooks/useSystemVersion";
 import logoSetjenWebP from "../../assets/logo/logo-setjen-dpd.webp";
 import logoSetjenPNG from "../../assets/logo/logo-setjen-dpd.png";
 import "./Footer.css";
 
 function Footer() {
   const currentYear = new Date().getFullYear();
+  const { version } = useSystemVersion();
 
   // Content configuration
   const content = {
     brand: {
       name: "LMSetjen DPD RI",
       copyright: `©${currentYear} BPSDM OKK Setjen DPD RI`,
-      version: `v${APP_VERSION}`
+      version: `v${version || APP_VERSION}`
     },
     contact: {
       email: "sdm@dpd.go.id"
@@ -40,7 +42,16 @@ function Footer() {
             </Link>
             <span className="footer-brand-divider" aria-hidden="true">·</span>
             <small className="footer-brand-copyright">{content.brand.copyright}</small>
-            <span className="footer-brand-version" title="Versi Aplikasi">
+            <span
+              className="footer-brand-version"
+              title="Versi Aplikasi - Klik untuk melihat Update Log"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openUpdateLogModal();
+              }}
+              style={{ cursor: "pointer" }}
+            >
               {content.brand.version}
             </span>
           </div>

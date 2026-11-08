@@ -1,6 +1,6 @@
 """
 LMSetjen DPD RI - Application Version
-Single source of truth for the app version, read from the root VERSION file.
+Single source of truth for the app version, read from database or the root VERSION file.
 """
 import os
 
@@ -13,7 +13,19 @@ def _read_version() -> str:
         with open(version_file, "r", encoding="utf-8") as f:
             return f.read().strip()
     except Exception:
-        return "unknown"
+        return "1.0.1"
+
+
+def get_current_app_version() -> str:
+    """Get active version from database or fallback to file."""
+    try:
+        from api.models import SystemRelease
+        current = SystemRelease.objects.filter(is_current=True).first()
+        if current and current.version:
+            return current.version
+    except Exception:
+        pass
+    return _read_version()
 
 
 APP_VERSION: str = _read_version()

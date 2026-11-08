@@ -9,3 +9,4 @@ from .admin_views import *
 from .sync_ai import *
 from .ai_assistant import *
 from .common import *
+from .system_version_views import *

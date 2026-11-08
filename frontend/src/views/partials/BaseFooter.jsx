@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Toast from "../plugin/Toast";
 import "./BaseFooter.css";
 import { APP_VERSION } from "../../utils/version";
+import useSystemVersion, { openUpdateLogModal } from "../../hooks/useSystemVersion";
 
 // Import institution logos (optimized WebP with PNG fallback)
 import logoSetjenWebP from "../../assets/logo/logo-setjen-dpd.webp";
@@ -14,6 +15,7 @@ import logoBpsdmPNG from "../../assets/logo/logo-bpsdm.png";
 
 function BaseFooter() {
   const currentYear = new Date().getFullYear();
+  const { version } = useSystemVersion();
 
   const handleComingSoon = (e) => {
     e.preventDefault();
@@ -29,7 +31,7 @@ function BaseFooter() {
       name: "LMSetjen DPD RI",
       description: "Platform e-learning BPSDM OKK Setjen DPD RI untuk pelatihan digital & pengembangan kompetensi aparatur sipil negara terpadu.",
       copyright: `©${currentYear} BPSDM OKK Setjen DPD RI`,
-      version: `${APP_VERSION}`
+      version: `${version || APP_VERSION}`
     },
     contact: {
       email: "sdm@dpd.go.id",
@@ -49,7 +51,16 @@ function BaseFooter() {
           <div className="base-footer-brand-col">
             <Link to="/" className="footer-brand-link" title="Beranda LMSetjen DPD RI">
               <span className="footer-brand-title">{config.brand.name}</span>
-              <span className="footer-brand-version" title="Versi Aplikasi">
+              <span
+                className="footer-brand-version"
+                title="Versi Aplikasi - Klik untuk melihat Update Log"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openUpdateLogModal();
+                }}
+                style={{ cursor: "pointer" }}
+              >
                 v{config.brand.version}
               </span>
             </Link>

@@ -4,6 +4,7 @@ import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
 import SystemDocumentation from "./SystemDocumentation";
 import SystemTestAdmin from "./SystemTestAdmin";
+import SystemVersioningAdmin from "./SystemVersioningAdmin";
 import apiInstance from "../../utils/axios";
 import dayjs, { moment } from "../../utils/dayjs";
 import "./SystemAdmin.css";
@@ -18,6 +19,7 @@ function SystemAdmin() {
     const [activeTab, setActiveTab] = useState(() => {
         const tab = searchParams.get("tab");
         if (tab === "diagnostics" || tab === "system-test" || tab === "test") return "diagnostics";
+        if (tab === "versioning" || tab === "version" || tab === "updates" || tab === "changelog" || tab === "update-log") return "versioning";
         return "docs";
     });
 
@@ -72,6 +74,19 @@ function SystemAdmin() {
             description: "Panduan teknis komprehensif, arsitektur sistem, spesifikasi API RESTful, dan skema basis data PostgreSQL",
             component: (
                 <SystemDocumentation
+                    isEmbedded={true}
+                    refreshTrigger={refreshTrigger}
+                />
+            )
+        },
+        {
+            id: "versioning",
+            label: "Versioning & Update Log",
+            icon: "fas fa-code-branch",
+            badge: <span className="tab-badge tab-badge-neutral">Rilis & Log</span>,
+            description: "Peningkatan versi aplikasi LMSetjen DPD RI, publikasi catatan rilis (changelog), dan riwayat pembaruan sistem",
+            component: (
+                <SystemVersioningAdmin
                     isEmbedded={true}
                     refreshTrigger={refreshTrigger}
                 />

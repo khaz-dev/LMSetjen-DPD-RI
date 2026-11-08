@@ -38,7 +38,7 @@ from rest_framework.pagination import PageNumberPagination
 
 from api.permissions import IsAdminUser
 from api.serializer import MyTokenObtainPairSerializer
-from api.version import APP_VERSION, APP_NAME
+from api.version import APP_VERSION, APP_NAME, get_current_app_version
 
 import random
 from decimal import Decimal
@@ -866,7 +866,7 @@ class AdminSystemHealthAPIView(generics.RetrieveAPIView):
             # Server information
             server_info = {
                 'operating_system': f"{platform.system()} {platform.release()}",
-                'app_version': APP_VERSION,
+                'app_version': get_current_app_version(),
                 'django_version': django.get_version(),
                 'python_version': platform.python_version(),
                 'database_engine': settings.DATABASES['default']['ENGINE'].split('.')[-1].upper(),

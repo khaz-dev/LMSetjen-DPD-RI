@@ -5454,6 +5454,80 @@ class CourseGameAttempt(models.Model):
         return f"{self.user.username} - {self.game.title} - Attempt #{self.attempt_number} ({self.score}%)"
 
 
+class SystemRelease(models.Model):
+    """
+    ✨ System Versioning & Update Log (Release Notes)
+    Tracks version bumps, release titles, dates, categorized changes, and historical logs
+    for LMSetjen DPD RI.
+    """
+    VERSION_TYPE_CHOICES = (
+        ('major', 'Major Update'),
+        ('minor', 'Minor Update'),
+        ('patch', 'Patch / Perbaikan'),
+    )
+
+    version = models.CharField(max_length=50, unique=True, db_index=True, help_text="Nomor versi (misal: 1.0.2)")
+    title = models.CharField(max_length=255, help_text="Judul rilis atau ringkasan pembaruan")
+    version_type = models.CharField(max_length=20, choices=VERSION_TYPE_CHOICES, default='patch')
+    release_date = models.DateTimeField(default=timezone.now, db_index=True)
+    is_current = models.BooleanField(default=False, db_index=True, help_text="Menandai apakah ini versi aktif LMS saat ini")
+    summary = models.TextField(blank=True, default="", help_text="Ringkasan pembaruan yang dapat dibaca pengguna")
+    changes = models.JSONField(
+        default=list, 
+        blank=True, 
+        help_text="Daftar item pembaruan [{'category': 'feature'|'improvement'|'bugfix'|'security'|'ui', 'title': '', 'description': '', 'module': ''}]"
+    )
+    raw_notes = models.TextField(blank=True, default="", help_text="Catatan rilis teknis atau format teks/markdown")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="created_releases")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-release_date', '-created_at']
+        verbose_name = "System Release & Update Log"
+        verbose_name_plural = "System Releases & Update Logs"
+
+    def __str__(self):
+        return f"v{self.version} - {self.title} ({'Versi Aktif' if self.is_current else 'Riwayat'})"
+
+    def save(self, *args, **kwargs):
+        if self.is_current:
+            # Pastikan versi aktif lainnya dinonaktifkan
+            SystemRelease.objects.filter(is_current=True).exclude(pk=self.pk).update(is_current=False)
+
+            # Sinkronkan file root VERSION
+            try:
+                import os
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                version_file = os.path.join(base_dir, "VERSION")
+                with open(version_file, "w", encoding="utf-8") as f:
+                    f.write(self.version.strip())
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to sync VERSION file: {e}")
+
+            # Sinkronkan juga file frontend/src/utils/version.js
+            try:
+                import os, re
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                fe_version_file = os.path.join(base_dir, "frontend", "src", "utils", "version.js")
+                if os.path.exists(fe_version_file):
+                    with open(fe_version_file, "r", encoding="utf-8") as f:
+                        fe_content = f.read()
+                    new_fe_content = re.sub(
+                        r'export const APP_VERSION = "[^"]+";',
+                        f'export const APP_VERSION = "{self.version.strip()}";',
+                        fe_content
+                    )
+                    with open(fe_version_file, "w", encoding="utf-8") as f:
+                        f.write(new_fe_content)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to sync frontend version.js: {e}")
+
+        super().save(*args, **kwargs)
+
+
 
 # Connect the signals
 post_save.connect(sync_teacher_with_profile, sender=Teacher)

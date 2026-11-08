@@ -573,3 +573,13 @@ admin.site.register(models.LearningModule, LearningModuleAdmin)
 admin.site.register(models.UserProgress, UserProgressAdmin)
 
 
+class SystemReleaseAdmin(admin.ModelAdmin):
+    list_display = ('version', 'title', 'version_type', 'is_current', 'release_date', 'created_by')
+    list_filter = ('version_type', 'is_current', 'release_date')
+    search_fields = ('version', 'title', 'summary', 'raw_notes')
+    readonly_fields = ('created_at', 'updated_at')
+
+admin.site.register(models.SystemRelease, SystemReleaseAdmin)
+
+
+

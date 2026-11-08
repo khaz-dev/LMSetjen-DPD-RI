@@ -9,6 +9,7 @@ import {
 import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
 import apiInstance from "../../utils/axios";
+import useSystemVersion from "../../hooks/useSystemVersion";
 import "./SystemDocumentation.css";
 
 /**
@@ -17,6 +18,7 @@ import "./SystemDocumentation.css";
  * category pill navigation, real-time search filter, and bilingual support.
  */
 function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
+    const { version: liveVersion } = useSystemVersion();
     const [language, setLanguage] = useState("id"); // default Bahasa Indonesia
     const [activeSection, setActiveSection] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
@@ -754,7 +756,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                         <div className="d-flex align-items-center gap-2 mb-1">
                             <span className="doc-badge-tag">
                                 <FaBook className="me-1" />
-                                {t.version}: {serverInfo.app_version || "1.0.0"}
+                                {t.version}: {serverInfo.app_version || liveVersion || "1.0.1"}
                             </span>
                             <span className={`doc-health-pill ${isHealthy ? "status-healthy" : "status-warning"}`}>
                                 <span className="doc-pulse-dot"></span>

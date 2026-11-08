@@ -22,6 +22,7 @@ const FeedbackFloatingButton = () => {
     const [isVisible, setIsVisible] = useState(true);
     const [recentCountdown, setRecentCountdown] = useState(0);
     const [prefillData, setPrefillData] = useState(null);
+    const [activeTab, setActiveTab] = useState('feedback');
 
     // Auto-hide button briefly after submission
     useEffect(() => {
@@ -40,6 +41,11 @@ const FeedbackFloatingButton = () => {
             if (detail.prefill) {
                 setPrefillData(detail.prefill);
             }
+            if (detail.initialTab) {
+                setActiveTab(detail.initialTab);
+            } else {
+                setActiveTab('feedback');
+            }
             feedback.openFeedback(detail.courseId || null);
         };
         window.addEventListener('lms-open-feedback-modal', handleTriggerFeedback);
@@ -48,6 +54,7 @@ const FeedbackFloatingButton = () => {
 
     const handleModalClose = () => {
         setPrefillData(null);
+        setActiveTab('feedback');
         feedback.closeFeedback();
     };
 
@@ -63,13 +70,14 @@ const FeedbackFloatingButton = () => {
                 className={`feedback-floating-button ${!isVisible ? 'hidden' : ''}`}
                 onClick={() => {
                     setPrefillData(null);
+                    setActiveTab('feedback');
                     feedback.openFeedback();
                 }}
-                title="Kirimkan masukan atau laporkan bug"
-                aria-label="Open feedback form"
+                title="Kirimkan masukan atau lihat apa yang baru di LMSetjen DPD RI"
+                aria-label="Open feedback and update log"
             >
                 <span className="feedback-button-icon">💬</span>
-                <span className="feedback-button-tooltip">Masukan</span>
+                <span className="feedback-button-tooltip">Masukan & Log</span>
             </button>
 
             <FeedbackModal
@@ -78,6 +86,7 @@ const FeedbackFloatingButton = () => {
                 onSuccess={handleFeedbackSuccess}
                 relatedCourse={feedback.relatedCourse}
                 prefillData={prefillData}
+                initialTab={activeTab}
             />
         </>
     );

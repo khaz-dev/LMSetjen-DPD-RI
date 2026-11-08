@@ -5,6 +5,7 @@ import apiInstance from "../../utils/axios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { APP_VERSION } from "../../utils/version";
+import useSystemVersion from "../../hooks/useSystemVersion";
 
 // Analytics Components
 import ContentGapWidget from "../../components/Analytics/ContentGapWidget";
@@ -48,6 +49,9 @@ ChartJS.register(
 );
 
 function DashboardAdmin() {
+    const { version: liveAppVersion } = useSystemVersion();
+    const activeVersion = liveAppVersion || APP_VERSION;
+
     const [dashboardData, setDashboardData] = useState(null);
     const [enrollmentAnalytics, setEnrollmentAnalytics] = useState(null);
     const [systemHealth, setSystemHealth] = useState(null);
@@ -156,7 +160,7 @@ function DashboardAdmin() {
                 [""],
                 ["STATUS KESEHATAN SISTEM"],
                 ["Sistem Operasi", systemHealth?.server_information?.operating_system || "-"],
-                ["Versi Aplikasi LMS", `v${APP_VERSION}`],
+                ["Versi Aplikasi LMS", `v${activeVersion}`],
                 ["Versi Django Backend", systemHealth?.server_information?.django_version || "-"],
                 ["Versi Python", systemHealth?.server_information?.python_version || "-"],
                 ["Engine Database", systemHealth?.server_information?.database_engine || "-"],
@@ -902,7 +906,7 @@ function DashboardAdmin() {
                                                 )}
                                                 <div className="d-flex justify-content-between small text-muted">
                                                     <span>Versi LMS:</span>
-                                                    <strong className="text-dark">v{APP_VERSION}</strong>
+                                                    <strong className="text-dark">v{activeVersion}</strong>
                                                 </div>
                                             </div>
                                         </div>
@@ -1059,9 +1063,9 @@ function DashboardAdmin() {
                                     </div>
                                     <div className="d-flex align-items-center gap-2 mt-2 mt-sm-0">
                                         <span className="badge bg-primary px-3 py-2">
-                                            LMS v{APP_VERSION}
+                                            LMS v{activeVersion}
                                         </span>
-                                        {systemHealth.server_information?.app_version && systemHealth.server_information.app_version !== APP_VERSION && (
+                                        {systemHealth.server_information?.app_version && systemHealth.server_information.app_version !== activeVersion && (
                                             <span className="badge bg-warning text-dark px-3 py-2">
                                                 Backend: v{systemHealth.server_information.app_version}
                                             </span>
