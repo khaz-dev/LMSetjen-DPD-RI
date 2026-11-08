@@ -3628,6 +3628,14 @@ class StudentPointsBreakdownAPIView(APIView):
             }
         ]
         
+        # Ambil data gamifikasi terpadu Manta AI untuk pengguna target
+        gamification_data = None
+        try:
+            from api.views.ai_assistant import get_user_gamification_data
+            gamification_data = get_user_gamification_data(target_user)
+        except Exception:
+            pass
+
         return Response({
             'user_id': target_user.id,
             'student_name': target_user.get_full_name() or target_user.username,
@@ -3639,7 +3647,8 @@ class StudentPointsBreakdownAPIView(APIView):
             'rank_position': rank_pos,
             'summary': summary,
             'history': history,
-            'rules': rules
+            'rules': rules,
+            'gamification': gamification_data
         }, status=status.HTTP_200_OK)
 
 
@@ -4464,6 +4473,14 @@ class StudentNotificationListAPIView(generics.ListAPIView):
         user_id = self.kwargs.get('user_id')
         if not self.request.user.is_staff and str(self.request.user.id) != str(user_id):
             return api_models.Notification.objects.none()
+        
+        # Trigger proactive Manta AI learning nudges check (rate-limited)
+        try:
+            from api.views.ai_assistant import sync_manta_proactive_notifications
+            sync_manta_proactive_notifications(self.request.user)
+        except Exception:
+            pass
+
         return api_models.Notification.objects.filter(user_id=user_id, teacher__isnull=True).order_by('-date')
 
 

@@ -321,10 +321,12 @@ urlpatterns = [
     path("api/v1/modules/<int:module_id>/detail/", scorm_views.ModuleDetailAPIView.as_view(), name="scorm_module_detail_v1"),
     path("modules/<int:module_id>/player/", scorm_views.scorm_player_view, name="scorm_player"),
 
-    # ✨ AI Virtual Assistant (Si Manta) Endpoints
+    # ✨ AI Virtual Assistant (Manta) Endpoints
     path("ai/chat/", api_views.AIAssistantChatAPIView.as_view(), name="ai-assistant-chat"),
     path("ai/suggestions/", api_views.AIAssistantSuggestionsAPIView.as_view(), name="ai-assistant-suggestions"),
     path("ai/nudge/", api_views.AILearningNudgeAPIView.as_view(), name="ai-assistant-nudge"),
     path("ai/notes/save/", api_views.AIAssistantSaveNoteAPIView.as_view(), name="ai-assistant-save-note"),
+    path("ai/notifications/sync/", api_views.AIMantaNotificationsSyncAPIView.as_view(), name="ai-manta-notifications-sync"),
+    path("ai/milestones/", api_views.AIMantaMilestonesAPIView.as_view(), name="ai-manta-milestones"),
 ]
 

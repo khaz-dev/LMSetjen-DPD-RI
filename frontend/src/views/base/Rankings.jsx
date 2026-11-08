@@ -191,6 +191,117 @@ function Rankings() {
               </div>
             </div>
 
+            {/* ✨ PHASE: Integrated Manta AI Gamification Hierarchy & Badges Explanation */}
+            <div className="card border-0 shadow-sm rounded-4 p-3 p-md-4 mt-2" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f0fdfa 100%)', borderColor: '#ccfbf1' }}>
+              <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+                <div className="d-flex align-items-center gap-3">
+                  <div className="rule-icon-box" style={{ background: '#ccfbf1', color: '#0f766e', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <i className="fas fa-trophy fs-5"></i>
+                  </div>
+                  <div>
+                    <h6 className="fw-bold mb-0 text-dark fs-6">Jenjang Level Kompetensi ASN & Milestone Badges Manta AI</h6>
+                    <span className="small text-muted" style={{ fontSize: '0.8rem' }}>
+                      Sistem ranking terintegrasi secara otomatis dengan kurva level ASN, Study Streak, dan 8 Lencana Prestasi belajar.
+                    </span>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <Link to="/student/profile/" className="btn btn-sm btn-outline-teal rounded-pill px-3 py-1 fw-semibold">
+                    <i className="fas fa-id-card me-1"></i> Buka Profil & Lencana Saya
+                  </Link>
+                </div>
+              </div>
+
+              {/* 6 Level Progression Tier Pills */}
+              <div className="mb-3">
+                <small className="fw-bold text-muted text-uppercase d-block mb-2" style={{ fontSize: '0.72rem' }}>
+                  6 Tingkatan Level Pembelajar ASN (Dikalibrasi Berimbang):
+                </small>
+                <div className="row g-2">
+                  <div className="col-6 col-md-4 col-lg-2">
+                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#10b981', fontSize: '0.65rem' }}>
+                        <i className="fas fa-seedling me-1"></i> Level 1
+                      </span>
+                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Pratama</div>
+                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>0 – 249 XP</small>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-4 col-lg-2">
+                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#0ea5e9', fontSize: '0.65rem' }}>
+                        <i className="fas fa-shield-halved me-1"></i> Level 2
+                      </span>
+                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Muda</div>
+                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>250 – 599 XP</small>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-4 col-lg-2">
+                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#6366f1', fontSize: '0.65rem' }}>
+                        <i className="fas fa-gem me-1"></i> Level 3
+                      </span>
+                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Madya</div>
+                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>600 – 1.199 XP</small>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-4 col-lg-2">
+                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#8b5cf6', fontSize: '0.65rem' }}>
+                        <i className="fas fa-medal me-1"></i> Level 4
+                      </span>
+                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Utama</div>
+                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>1.200 – 2.499 XP</small>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-4 col-lg-2">
+                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#f59e0b', fontSize: '0.65rem' }}>
+                        <i className="fas fa-crown me-1"></i> Level 5
+                      </span>
+                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Ksatria Parlemen</div>
+                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>2.500 – 4.499 XP</small>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-4 col-lg-2">
+                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#eab308', fontSize: '0.65rem' }}>
+                        <i className="fas fa-trophy me-1"></i> Level 6
+                      </span>
+                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Pakar Reformasi</div>
+                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>4.500+ XP</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 8 Badges Mention */}
+              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top">
+                <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                  <i className="fas fa-certificate text-teal me-1"></i>
+                  <strong>8 Lencana Prestasi Manta:</strong> Langkah Perdana • Pembelajar Tangguh • Jawara Evaluasi • Lulusan Kompeten • Ksatria 20 JP • Penjelajah Pengetahuan • Maestro Recall • Multitalenta Parlemen
+                </small>
+                <button 
+                  type="button" 
+                  className="btn btn-link btn-sm p-0 text-decoration-none fw-semibold text-teal" 
+                  style={{ fontSize: '0.75rem' }}
+                  onClick={() => {
+                    const prompt = 'Apa saja lencana prestasi yang sudah saya raih?';
+                    if (typeof window !== 'undefined') {
+                      if (typeof window.openMantaChat === 'function') {
+                        window.openMantaChat(prompt);
+                      } else {
+                        window.dispatchEvent(new CustomEvent('manta_open_chat', { detail: { prompt } }));
+                        window.dispatchEvent(new CustomEvent('manta-open-chat', { detail: { prompt, query: prompt } }));
+                      }
+                    }
+                  }}
+                >
+                  <i className="fas fa-comment-dots me-1"></i> Tanya Manta AI
+                </button>
+              </div>
+            </div>
+
           </div>
         </section>
 

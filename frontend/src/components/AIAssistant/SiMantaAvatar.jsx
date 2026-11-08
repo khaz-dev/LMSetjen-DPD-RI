@@ -16,6 +16,18 @@ const CHAT_STORAGE_KEY = 'manta_chat_session_history';
 // Saran pertanyaan cepat bawaan umum
 const DEFAULT_SUGGESTIONS = [
     {
+        label: '🏆 Lencana & Level Saya',
+        query: 'Lihat lencana prestasi dan progres level belajar saya'
+    },
+    {
+        label: '🗂️ Flashcard Pemahaman',
+        query: 'Buatkan flashcard pemahaman materi pembelajaran'
+    },
+    {
+        label: '🧠 Latihan Kuis Mandiri',
+        query: 'Beri saya latihan kuis dan simulasi uji pemahaman'
+    },
+    {
         label: '🎯 Target 20 JP ASN',
         query: 'Bagaimana progres pemenuhan 20 JP belajar saya tahun ini?'
     },
@@ -49,10 +61,11 @@ const getContextualSuggestions = (pathname) => {
 
     if (pathname.includes('/course-detail/')) {
         return [
+            { label: '🗂️ Flashcard Materi', query: 'Buatkan flashcard pemahaman materi kursus ini' },
+            { label: '🧠 Latihan Kuis Mandiri', query: 'Beri saya latihan kuis pemahaman materi ini' },
             { label: '🎯 Nilai JP Kursus Ini', query: 'Berapa bobot JP kursus ini untuk target 20 JP tahunan saya?' },
             { label: '📖 Tentang Kursus Ini', query: 'Jelaskan ringkasan materi dan silabus kursus ini' },
             { label: '📝 Syarat & Evaluasi', query: 'Bagaimana evaluasi kuis dan syarat kelulusan kursus ini?' },
-            { label: '👨‍🏫 Instruktur & Modul', query: 'Siapa instruktur dan berapa banyak modul di kursus ini?' },
             { label: '📜 Sertifikat Kelulusan', query: 'Apakah kursus ini menerbitkan sertifikat digital resmi?' }
         ];
     }
@@ -67,13 +80,13 @@ const getContextualSuggestions = (pathname) => {
     }
     if (pathname.includes('/student/courses/')) {
         return [
+            { label: '🗂️ Flashcard Materi', query: 'Buatkan flashcard pemahaman materi bab ini' },
+            { label: '🧠 Latihan Kuis Mandiri', query: 'Beri saya latihan kuis pemahaman materi ini' },
             { label: '🎬 Lompat ke Bagian Video', query: 'Di menit berapa pembahasan tentang tahap Empathize?' },
             { label: '🎯 Target 20 JP ASN', query: 'Bagaimana progres pemenuhan 20 JP belajar saya tahun ini?' },
             { label: '📅 AI Study Coach', query: 'Buatkan rencana belajar mingguan untuk mengejar target JP saya' },
             { label: '📊 Progres Belajar Saya', query: 'Bagaimana progres kursus saya saat ini?' },
-            { label: '▶️ Lanjut Kursus Tertunda', query: 'Kursus apa yang belum saya selesaikan?' },
-            { label: '⚡ Modul SCORM Macet', query: 'Video atau modul SCORM macet, apa solusinya?' },
-            { label: '📜 Cek Sertifikat', query: 'Bagaimana cara unduh sertifikat setelah selesai?' }
+            { label: '▶️ Lanjut Kursus Tertunda', query: 'Kursus apa yang belum saya selesaikan?' }
         ];
     }
     if (pathname.includes('/search/')) {
@@ -400,9 +413,21 @@ const SiMantaAvatar = () => {
 
     // Chat state (Dipersistensikan di sessionStorage + Terpersonalisasi)
     const [quizAnswers, setQuizAnswers] = useState({}); // { [quizId]: { selectedKey: 'B', isCorrect: true } }
+    const [flashcardStates, setFlashcardStates] = useState({}); // { [deckId]: { cardIndex: 0, isFlipped: false, masteredIds: [] } }
+    const [activeCardModes, setActiveCardModes] = useState({}); // { [msgIndex]: 'quiz' | 'flashcards' }
     const [savedNotes, setSavedNotes] = useState({}); // { [summaryId]: { status: 'saved' | 'saving' | 'error', message: '', note: {} } }
     const [previewNoteIds, setPreviewNoteIds] = useState({});
     const [copiedSummaryId, setCopiedSummaryId] = useState(null);
+    const [badgeFilter, setBadgeFilter] = useState({}); // { [msgIndex]: 'all' | 'unlocked' | 'locked' }
+    const [selectedBadge, setSelectedBadge] = useState({}); // { [msgIndex]: badgeId }
+    const [confettiActive, setConfettiActive] = useState(false);
+
+    const triggerConfetti = useCallback(() => {
+        setConfettiActive(true);
+        setTimeout(() => {
+            setConfettiActive(false);
+        }, 3600);
+    }, []);
     const [chatMessages, setChatMessages] = useState(() => {
         if (typeof window !== 'undefined') {
             try {
@@ -425,6 +450,7 @@ const SiMantaAvatar = () => {
 
         const initialActions = user
             ? [
+                { label: '🏆 Lencana & Level', query: 'Lihat lencana prestasi dan progres level belajar saya', type: 'query' },
                 { label: '📚 Kursus Saya', url: '/student/courses/', type: 'route' },
                 { label: '📜 Sertifikat Saya', url: '/student/sertifikat/', type: 'route' },
                 { label: '🔍 Cari Pelatihan Baru', url: '/search/', type: 'route' }
@@ -494,6 +520,7 @@ const SiMantaAvatar = () => {
 
         const initialActions = user
             ? [
+                { label: '🏆 Lencana & Level', query: 'Lihat lencana prestasi dan progres level belajar saya', type: 'query' },
                 { label: '📚 Kursus Saya', url: '/student/courses/', type: 'route' },
                 { label: '📜 Sertifikat Saya', url: '/student/sertifikat/', type: 'route' },
                 { label: '🔍 Cari Pelatihan Baru', url: '/search/', type: 'route' }
@@ -751,6 +778,11 @@ const SiMantaAvatar = () => {
     const handleActionClick = (action) => {
         if (!action) return;
 
+        if (action.type === 'query' || action.query) {
+            handleSendMessage(action.query);
+            return;
+        }
+
         if (action.type === 'route' && action.url) {
             navigate(action.url);
             setIsChatOpen(false);
@@ -889,6 +921,85 @@ const SiMantaAvatar = () => {
         });
     };
 
+    // Handler flip kartu flashcard 3D
+    const handleFlipFlashcard = (deckId) => {
+        setFlashcardStates((prev) => {
+            const curr = prev[deckId] || { cardIndex: 0, isFlipped: false, masteredIds: [] };
+            return {
+                ...prev,
+                [deckId]: {
+                    ...curr,
+                    isFlipped: !curr.isFlipped
+                }
+            };
+        });
+    };
+
+    // Handler navigasi flashcard ke kartu berikutnya
+    const handleNextFlashcard = (deckId, totalCards) => {
+        setFlashcardStates((prev) => {
+            const curr = prev[deckId] || { cardIndex: 0, isFlipped: false, masteredIds: [] };
+            const nextIdx = Math.min(totalCards - 1, curr.cardIndex + 1);
+            return {
+                ...prev,
+                [deckId]: {
+                    ...curr,
+                    cardIndex: nextIdx,
+                    isFlipped: false
+                }
+            };
+        });
+    };
+
+    // Handler navigasi flashcard ke kartu sebelumnya
+    const handlePrevFlashcard = (deckId) => {
+        setFlashcardStates((prev) => {
+            const curr = prev[deckId] || { cardIndex: 0, isFlipped: false, masteredIds: [] };
+            const prevIdx = Math.max(0, curr.cardIndex - 1);
+            return {
+                ...prev,
+                [deckId]: {
+                    ...curr,
+                    cardIndex: prevIdx,
+                    isFlipped: false
+                }
+            };
+        });
+    };
+
+    // Handler tandai kartu flashcard sudah dipahami / perlu diulang
+    const handleToggleMasteredFlashcard = (deckId, cardId) => {
+        setFlashcardStates((prev) => {
+            const curr = prev[deckId] || { cardIndex: 0, isFlipped: false, masteredIds: [] };
+            const exists = curr.masteredIds?.includes(cardId);
+            const nextMastered = exists
+                ? curr.masteredIds.filter((id) => id !== cardId)
+                : [...(curr.masteredIds || []), cardId];
+            return {
+                ...prev,
+                [deckId]: {
+                    ...curr,
+                    masteredIds: nextMastered
+                }
+            };
+        });
+    };
+
+    // Handler menyimpan kartu flashcard ke Catatan Belajar (Student Notes)
+    const handleSaveFlashcardToNotes = (card, deck) => {
+        if (!card || !deck) return;
+        handleSaveSummaryToNotes({
+            id: card.id,
+            summary_id: card.id,
+            title: `Flashcard: ${card.front_title}`,
+            course_title: deck.course_title,
+            course_slug: deck.course_slug,
+            topic: deck.topic,
+            plain_text_note: card.plain_text_note || `📌 FLASHCARD: ${card.front_title}\n\nKonsep / Pertanyaan:\n${card.front_prompt}\n\nIntisari Penjelasan:\n${card.back_summary}\n\nPoin Aksi ASN:\n${card.key_takeaway || ''}`,
+            content: card.plain_text_note || card.back_summary
+        });
+    };
+
     // Kirim pesan interaktif ke Backend AI
     const handleSendMessage = async (textToSend) => {
         const query = textToSend || inputText.trim();
@@ -941,7 +1052,13 @@ const SiMantaAvatar = () => {
                 const nextSuggestions = response.data.suggested_questions || [];
                 const replyActions = response.data.actions || [];
                 const interactiveQuiz = response.data.interactive_quiz || null;
+                const flashcardDeck = response.data.flashcard_deck || null;
+                const activeMode = response.data.active_mode || 'quiz';
                 const summaryCard = response.data.summary_card || null;
+                const milestoneGamification = response.data.milestone_gamification || null;
+                if (milestoneGamification?.has_new_celebration) {
+                    triggerConfetti();
+                }
 
                 setChatMessages((prev) => [
                     ...prev,
@@ -953,7 +1070,10 @@ const SiMantaAvatar = () => {
                         lessons: matchedLessons,
                         actions: replyActions,
                         quiz: interactiveQuiz,
-                        summary: summaryCard
+                        flashcard_deck: flashcardDeck,
+                        active_mode: activeMode,
+                        summary: summaryCard,
+                        milestone_gamification: milestoneGamification
                     }
                 ]);
 
@@ -1025,6 +1145,48 @@ const SiMantaAvatar = () => {
             handleSendMessage();
         }
     };
+
+    // Listener integrasi notifikasi proaktif: Buka obrolan Manta AI saat tombol "Tanya Manta" di lonceng notifikasi diklik
+    const handleSendMessageRef = useRef(handleSendMessage);
+    useEffect(() => {
+        handleSendMessageRef.current = handleSendMessage;
+    });
+
+    useEffect(() => {
+        const openChat = (promptText) => {
+            setIsChatOpen(true);
+            setIsMinimized(false);
+            setShowBubble(false);
+            if (promptText && typeof promptText === 'string' && promptText.trim().length > 0) {
+                setTimeout(() => {
+                    if (handleSendMessageRef.current) {
+                        handleSendMessageRef.current(promptText.trim());
+                    }
+                }, 350);
+            }
+        };
+
+        // Daftarkan fungsi global agar dapat langsung membuka Manta AI dari komponen manapun
+        window.openMantaChat = openChat;
+
+        const handleOpenChatEvent = (e) => {
+            const prompt = e.detail?.prompt || e.detail?.query || e.detail?.message;
+            openChat(prompt);
+        };
+
+        window.addEventListener('manta_open_chat', handleOpenChatEvent);
+        window.addEventListener('manta-open-chat', handleOpenChatEvent);
+        window.addEventListener('open_manta_chat', handleOpenChatEvent);
+        window.addEventListener('open-manta-chat', handleOpenChatEvent);
+
+        return () => {
+            delete window.openMantaChat;
+            window.removeEventListener('manta_open_chat', handleOpenChatEvent);
+            window.removeEventListener('manta-open-chat', handleOpenChatEvent);
+            window.removeEventListener('open_manta_chat', handleOpenChatEvent);
+            window.removeEventListener('open-manta-chat', handleOpenChatEvent);
+        };
+    }, []);
 
     // 🔒 Integritas Ujian & Pengecualian Layar:
     // Jangan render Manta jika di dalam iframe, player SCORM, atau saat kuis/ujian aktif
@@ -1129,6 +1291,25 @@ const SiMantaAvatar = () => {
                     className="simanta-chat-window"
                     aria-labelledby="simanta-dialog-title"
                 >
+                    {/* Partikel Konfeti Perayaan Prestasi Belajar (Confetti Particle Burst) */}
+                    {confettiActive && (
+                        <div className="simanta-confetti-container" aria-hidden="true">
+                            {Array.from({ length: 42 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className="simanta-confetti-piece"
+                                    style={{
+                                        left: `${(i * 2.38) % 96 + 2}%`,
+                                        animationDelay: `${(i % 12) * 0.1}s`,
+                                        backgroundColor: ['#0d9488', '#f59e0b', '#ec4899', '#6366f1', '#10b981', '#0ea5e9', '#eab308'][i % 7],
+                                        transform: `rotate(${i * 31}deg)`,
+                                        width: `${(i % 3) * 3 + 6}px`,
+                                        height: `${(i % 4) * 4 + 7}px`
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
                     {/* Header Chat Window */}
                     <header className="simanta-chat-header">
                         <div className="simanta-chat-header-info">
@@ -1242,113 +1423,325 @@ const SiMantaAvatar = () => {
                                 <div className="simanta-msg-content">
                                     {renderFormattedMessageText(msg.text)}
 
-                                    {/* Kartu Simulasi Kuis Interaktif (Interactive Quiz Prep & Flashcard) */}
-                                    {msg.quiz && (
-                                        <div className="simanta-interactive-quiz-card">
-                                            <div className="simanta-quiz-header">
-                                                <div className="simanta-quiz-badge">
-                                                    <span className="simanta-quiz-badge-icon">🧠</span>
-                                                    <span className="simanta-quiz-badge-text">Simulasi Kuis Mandiri</span>
-                                                </div>
-                                                {msg.quiz.topic && (
-                                                    <span className="simanta-quiz-topic" title={msg.quiz.course_title}>
-                                                        {msg.quiz.topic}
-                                                    </span>
-                                                )}
-                                            </div>
+                                    {/* Kartu Uji Pemahaman Mandiri: Dual-Mode Interactive Self-Quiz & 3D Flashcards */}
+                                    {Boolean(msg.quiz || msg.flashcard_deck) && (() => {
+                                        const currentMode = activeCardModes[idx] || msg.active_mode || (msg.flashcard_deck ? 'flashcards' : 'quiz');
+                                        const hasBothModes = Boolean(msg.quiz && msg.flashcard_deck);
+                                        const deck = msg.flashcard_deck;
+                                        const deckState = deck ? (flashcardStates[deck.deck_id] || { cardIndex: 0, isFlipped: false, masteredIds: [] }) : null;
+                                        const cardIndex = deckState?.cardIndex || 0;
+                                        const currentCard = deck?.cards?.[cardIndex];
+                                        const totalCards = deck?.cards?.length || 0;
+                                        const isMastered = Boolean(currentCard && deckState?.masteredIds?.includes(currentCard.id));
+                                        const isCardSaved = Boolean(currentCard && savedNotes[currentCard.id]?.status === 'saved');
+                                        const isCardSaving = Boolean(currentCard && savedNotes[currentCard.id]?.status === 'saving');
 
-                                            <div className="simanta-quiz-question-box">
-                                                <p className="simanta-quiz-question-text">{msg.quiz.question}</p>
-                                            </div>
+                                        return (
+                                            <div className="simanta-interactive-quiz-card">
+                                                {/* Header Kartu: Badge, Switcher Tab, & Topik */}
+                                                <div className="simanta-quiz-header">
+                                                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                                                        <div className="simanta-quiz-badge">
+                                                            <span className="simanta-quiz-badge-icon">
+                                                                {currentMode === 'flashcards' ? '🗂️' : '🧠'}
+                                                            </span>
+                                                            <span className="simanta-quiz-badge-text">
+                                                                {currentMode === 'flashcards' ? 'Flashcard Belajar' : 'Simulasi Kuis Mandiri'}
+                                                            </span>
+                                                        </div>
 
-                                            <div className="simanta-quiz-choices">
-                                                {msg.quiz.choices.map((choice) => {
-                                                    const quizState = quizAnswers[msg.quiz.id];
-                                                    const isSelected = quizState?.selectedKey === choice.key;
-                                                    const isAnswered = Boolean(quizState);
-                                                    const isCorrectChoice = choice.key === msg.quiz.correct_key;
-
-                                                    let choiceClass = 'simanta-quiz-choice-btn';
-                                                    if (isAnswered) {
-                                                        if (isCorrectChoice) {
-                                                            choiceClass += ' correct';
-                                                        } else if (isSelected) {
-                                                            choiceClass += ' wrong';
-                                                        } else {
-                                                            choiceClass += ' dim';
-                                                        }
-                                                    }
-
-                                                    return (
-                                                        <button
-                                                            key={choice.key}
-                                                            type="button"
-                                                            className={choiceClass}
-                                                            disabled={isAnswered}
-                                                            onClick={() => handleSelectQuizChoice(msg.quiz.id, choice.key, msg.quiz.correct_key)}
-                                                        >
-                                                            <span className="simanta-quiz-choice-key">{choice.key}</span>
-                                                            <span className="simanta-quiz-choice-text">{choice.text}</span>
-                                                            {isAnswered && isCorrectChoice && (
-                                                                <span className="simanta-quiz-choice-icon" aria-label="Benar">✅</span>
-                                                            )}
-                                                            {isAnswered && isSelected && !isCorrectChoice && (
-                                                                <span className="simanta-quiz-choice-icon" aria-label="Salah">❌</span>
-                                                            )}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-
-                                            {/* Panel Evaluasi & Penjelasan Rationale setelah Dijawab */}
-                                            {quizAnswers[msg.quiz.id] && (
-                                                <div className={`simanta-quiz-feedback ${quizAnswers[msg.quiz.id].isCorrect ? 'feedback-correct' : 'feedback-wrong'}`}>
-                                                    <div className="simanta-quiz-feedback-header">
-                                                        {quizAnswers[msg.quiz.id].isCorrect ? (
-                                                            <>
-                                                                <span className="simanta-quiz-feedback-title">🎉 Jawaban Anda Tepat Sekali!</span>
-                                                                <span className="simanta-quiz-feedback-sub">Hebat, pemahaman Anda terhadap materi ini sudah sangat baik.</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <span className="simanta-quiz-feedback-title">💡 Jawaban Anda Kurang Tepat</span>
-                                                                <span className="simanta-quiz-feedback-sub">
-                                                                    Jawaban yang benar adalah Opsi <strong>{msg.quiz.correct_key}</strong>.
-                                                                </span>
-                                                            </>
+                                                        {hasBothModes && (
+                                                            <div className="simanta-card-mode-toggle">
+                                                                <button
+                                                                    type="button"
+                                                                    className={`simanta-mode-toggle-btn ${currentMode === 'quiz' ? 'active' : ''}`}
+                                                                    onClick={() => setActiveCardModes(prev => ({ ...prev, [idx]: 'quiz' }))}
+                                                                >
+                                                                    🧠 Kuis
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className={`simanta-mode-toggle-btn ${currentMode === 'flashcards' ? 'active' : ''}`}
+                                                                    onClick={() => setActiveCardModes(prev => ({ ...prev, [idx]: 'flashcards' }))}
+                                                                >
+                                                                    🗂️ Flashcard
+                                                                </button>
+                                                            </div>
                                                         )}
                                                     </div>
 
-                                                    {msg.quiz.explanation && (
-                                                        <div className="simanta-quiz-explanation">
-                                                            <span className="simanta-explanation-label">💡 Penjelasan & Rationale:</span>
-                                                            <p className="simanta-explanation-text">{msg.quiz.explanation}</p>
-                                                        </div>
+                                                    {(msg.quiz?.topic || deck?.topic) && (
+                                                        <span className="simanta-quiz-topic" title={msg.quiz?.course_title || deck?.course_title}>
+                                                            {currentMode === 'flashcards' ? (deck?.topic || msg.quiz?.topic) : (msg.quiz?.topic || deck?.topic)}
+                                                        </span>
                                                     )}
+                                                </div>
 
-                                                    <div className="simanta-quiz-feedback-actions">
-                                                        <button
-                                                            type="button"
-                                                            className="simanta-quiz-next-btn"
-                                                            onClick={() => handleSendMessage('Beri saya latihan kuis berikutnya')}
+                                                {/* TAMPILAN MODE 1: KUIS INTERAKTIF PILIHAN GANDA */}
+                                                {currentMode === 'quiz' && msg.quiz ? (
+                                                    <>
+                                                        <div className="simanta-quiz-question-box">
+                                                            <p className="simanta-quiz-question-text">{msg.quiz.question}</p>
+                                                        </div>
+
+                                                        <div className="simanta-quiz-choices">
+                                                            {msg.quiz.choices.map((choice) => {
+                                                                const quizState = quizAnswers[msg.quiz.id];
+                                                                const isSelected = quizState?.selectedKey === choice.key;
+                                                                const isAnswered = Boolean(quizState);
+                                                                const isCorrectChoice = choice.key === msg.quiz.correct_key;
+
+                                                                let choiceClass = 'simanta-quiz-choice-btn';
+                                                                if (isAnswered) {
+                                                                    if (isCorrectChoice) {
+                                                                        choiceClass += ' correct';
+                                                                    } else if (isSelected) {
+                                                                        choiceClass += ' wrong';
+                                                                    } else {
+                                                                        choiceClass += ' dim';
+                                                                    }
+                                                                }
+
+                                                                return (
+                                                                    <button
+                                                                        key={choice.key}
+                                                                        type="button"
+                                                                        className={choiceClass}
+                                                                        disabled={isAnswered}
+                                                                        onClick={() => handleSelectQuizChoice(msg.quiz.id, choice.key, msg.quiz.correct_key)}
+                                                                    >
+                                                                        <span className="simanta-quiz-choice-key">{choice.key}</span>
+                                                                        <span className="simanta-quiz-choice-text">{choice.text}</span>
+                                                                        {isAnswered && isCorrectChoice && (
+                                                                            <span className="simanta-quiz-choice-icon" aria-label="Benar">✅</span>
+                                                                        )}
+                                                                        {isAnswered && isSelected && !isCorrectChoice && (
+                                                                            <span className="simanta-quiz-choice-icon" aria-label="Salah">❌</span>
+                                                                        )}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+
+                                                        {/* Panel Evaluasi & Penjelasan Rationale setelah Dijawab */}
+                                                        {quizAnswers[msg.quiz.id] && (
+                                                            <div className={`simanta-quiz-feedback ${quizAnswers[msg.quiz.id].isCorrect ? 'feedback-correct' : 'feedback-wrong'}`}>
+                                                                <div className="simanta-quiz-feedback-header">
+                                                                    {quizAnswers[msg.quiz.id].isCorrect ? (
+                                                                        <>
+                                                                            <span className="simanta-quiz-feedback-title">🎉 Jawaban Anda Tepat Sekali!</span>
+                                                                            <span className="simanta-quiz-feedback-sub">Hebat, pemahaman Anda terhadap materi ini sudah sangat baik.</span>
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <span className="simanta-quiz-feedback-title">💡 Jawaban Anda Kurang Tepat</span>
+                                                                            <span className="simanta-quiz-feedback-sub">
+                                                                                Jawaban yang benar adalah Opsi <strong>{msg.quiz.correct_key}</strong>.
+                                                                            </span>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+
+                                                                {msg.quiz.explanation && (
+                                                                    <div className="simanta-quiz-explanation">
+                                                                        <span className="simanta-explanation-label">💡 Penjelasan & Rationale:</span>
+                                                                        <p className="simanta-explanation-text">{msg.quiz.explanation}</p>
+                                                                    </div>
+                                                                )}
+
+                                                                <div className="simanta-quiz-feedback-actions">
+                                                                    <button
+                                                                        type="button"
+                                                                        className="simanta-quiz-next-btn"
+                                                                        onClick={() => handleSendMessage('Beri saya latihan kuis berikutnya')}
+                                                                    >
+                                                                        🔄 Soal Selanjutnya
+                                                                    </button>
+                                                                    {msg.quiz.explanation && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="simanta-quiz-speak-btn"
+                                                                            onClick={() => handleToggleSpeak(msg.quiz.explanation, idx)}
+                                                                            title="Dengarkan penjelasan suara"
+                                                                        >
+                                                                            🔊 Baca Penjelasan
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                ) : deck && currentCard ? (
+                                                    /* TAMPILAN MODE 2: DECK FLASHCARD 3D INTERAKTIF */
+                                                    <div className="simanta-flashcard-deck-container">
+                                                        {/* Bar Info Kartu */}
+                                                        <div className="simanta-flashcard-topbar">
+                                                            <span className="simanta-flashcard-counter">
+                                                                Kartu <strong>{cardIndex + 1}</strong> dari {totalCards}
+                                                            </span>
+                                                            <span className="simanta-flashcard-mastery-status">
+                                                                {deckState?.masteredIds?.length > 0
+                                                                    ? `✅ ${deckState.masteredIds.length}/${totalCards} Dipahami`
+                                                                    : `💡 Ketuk kartu untuk membalik`}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Wadah 3D Flip Card */}
+                                                        <div
+                                                            className="simanta-flashcard-scene"
+                                                            onClick={() => handleFlipFlashcard(deck.deck_id)}
+                                                            title="Klik untuk membalik kartu (bolak-balik)"
                                                         >
-                                                            🔄 Soal Selanjutnya
-                                                        </button>
-                                                        {msg.quiz.explanation && (
+                                                            <div className={`simanta-flashcard-inner ${deckState?.isFlipped ? 'is-flipped' : ''}`}>
+                                                                {/* SISI DEPAN (Pertanyaan / Konsep Kunci) */}
+                                                                <div className="simanta-flashcard-face simanta-flashcard-front">
+                                                                    <div className="simanta-flashcard-badge-row">
+                                                                        <span className="simanta-flashcard-tag-pill">
+                                                                            {currentCard.tag || 'Konsep Esensial'}
+                                                                        </span>
+                                                                        <span className="simanta-flashcard-flip-hint">
+                                                                            <i className="fas fa-sync-alt me-1"></i> Balik Kartu
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <h6 className="simanta-flashcard-front-title">
+                                                                        {currentCard.front_title}
+                                                                    </h6>
+
+                                                                    <p className="simanta-flashcard-front-prompt">
+                                                                        {currentCard.front_prompt}
+                                                                    </p>
+
+                                                                    <div className="simanta-flashcard-front-footer">
+                                                                        <small className="text-muted">
+                                                                            <i className="fas fa-lightbulb text-warning me-1"></i>
+                                                                            Pikirkan intisari pemahaman Anda sebelum membalik
+                                                                        </small>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* SISI BELAKANG (Jawaban & Intisari Penjelasan) */}
+                                                                <div className="simanta-flashcard-face simanta-flashcard-back">
+                                                                    <div className="simanta-flashcard-badge-row">
+                                                                        <span className="badge bg-teal text-white px-2 py-1">
+                                                                            💡 Intisari Penjelasan
+                                                                        </span>
+                                                                        <span className="simanta-flashcard-flip-hint">
+                                                                            <i className="fas fa-undo me-1"></i> Balik ke Soal
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <div className="simanta-flashcard-back-content">
+                                                                        <p className="simanta-flashcard-back-text">
+                                                                            {currentCard.back_summary}
+                                                                        </p>
+
+                                                                        {currentCard.key_takeaway && (
+                                                                            <div className="simanta-flashcard-takeaway-box">
+                                                                                <i className="fas fa-bullseye text-teal me-1"></i>
+                                                                                <strong>Poin Kunci ASN: </strong>
+                                                                                <span>{currentCard.key_takeaway}</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Navigasi Kartu (Sebelumnya, Balik, Berikutnya) */}
+                                                        <div className="simanta-flashcard-nav-controls">
                                                             <button
                                                                 type="button"
-                                                                className="simanta-quiz-speak-btn"
-                                                                onClick={() => handleToggleSpeak(msg.quiz.explanation, idx)}
-                                                                title="Dengarkan penjelasan suara"
+                                                                className="simanta-flashcard-nav-btn"
+                                                                disabled={cardIndex === 0}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handlePrevFlashcard(deck.deck_id);
+                                                                }}
+                                                                title="Kartu sebelumnya"
                                                             >
-                                                                🔊 Baca Penjelasan
+                                                                <i className="fas fa-chevron-left me-1"></i> Sebelumnya
                                                             </button>
-                                                        )}
+
+                                                            <button
+                                                                type="button"
+                                                                className="simanta-flashcard-flip-action-btn"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleFlipFlashcard(deck.deck_id);
+                                                                }}
+                                                            >
+                                                                <i className="fas fa-sync-alt me-1"></i>
+                                                                {deckState?.isFlipped ? 'Lihat Soal' : 'Buka Jawaban'}
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                className="simanta-flashcard-nav-btn"
+                                                                disabled={cardIndex >= totalCards - 1}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleNextFlashcard(deck.deck_id, totalCards);
+                                                                }}
+                                                                title="Kartu berikutnya"
+                                                            >
+                                                                Berikutnya <i className="fas fa-chevron-right ms-1"></i>
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Bar Aksi Tambahan: Tandai Paham, Simpan ke Catatan, Narasi Suara */}
+                                                        <div className="simanta-flashcard-footer-actions">
+                                                            <button
+                                                                type="button"
+                                                                className={`simanta-flashcard-mastery-btn ${isMastered ? 'mastered' : ''}`}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleToggleMasteredFlashcard(deck.deck_id, currentCard.id);
+                                                                }}
+                                                            >
+                                                                <i className={`fas ${isMastered ? 'fa-check-circle' : 'fa-circle'} me-1`}></i>
+                                                                {isMastered ? 'Sudah Dipahami' : 'Tandai Sudah Paham'}
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                className={`simanta-flashcard-save-note-btn ${isCardSaved ? 'saved' : ''}`}
+                                                                disabled={isCardSaved || isCardSaving}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleSaveFlashcardToNotes(currentCard, deck);
+                                                                }}
+                                                                title="Simpan kartu konsep ini ke Catatan Belajar Anda"
+                                                            >
+                                                                {isCardSaving ? (
+                                                                    <>⏳ Menyimpan...</>
+                                                                ) : isCardSaved ? (
+                                                                    <>✅ Tersimpan di Catatan</>
+                                                                ) : (
+                                                                    <>📝 Simpan ke Catatan</>
+                                                                )}
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                className="simanta-flashcard-audio-btn"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleToggleSpeak(
+                                                                        `${currentCard.front_title}. Pertanyaan: ${currentCard.front_prompt}. Intisari Pembahasan: ${currentCard.back_summary}. ${currentCard.key_takeaway ? `Poin Kunci: ${currentCard.key_takeaway}` : ''}`,
+                                                                        idx
+                                                                    );
+                                                                }}
+                                                                title="Dengarkan pembacaan suara flashcard ini"
+                                                            >
+                                                                🔊 Audio
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                                                ) : null}
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Kartu Rangkuman Cerdas & Key Takeaways (Smart Course Summarizer) */}
                                     {msg.summary && (
@@ -1703,6 +2096,196 @@ const SiMantaAvatar = () => {
                                             )}
                                         </div>
                                     )}
+
+                                    {/* Kartu AI Learning Journey Milestone Badges & Gamifikasi Progres Belajar */}
+                                    {msg.milestone_gamification && (() => {
+                                        const gamif = msg.milestone_gamification;
+                                        const filter = badgeFilter[idx] || 'all';
+                                        const activeSelectedBadgeId = selectedBadge[idx] || null;
+                                        const filteredBadges = (gamif.badges || []).filter(b => {
+                                            if (filter === 'unlocked') return b.is_unlocked;
+                                            if (filter === 'locked') return !b.is_unlocked;
+                                            return true;
+                                        });
+
+                                        const activeBadgeObj = activeSelectedBadgeId 
+                                            ? (gamif.badges || []).find(b => b.id === activeSelectedBadgeId)
+                                            : null;
+
+                                        return (
+                                            <div className="simanta-gamif-card">
+                                                {/* Header: Level ASN, XP Bar, & Streak */}
+                                                <div className="simanta-gamif-header">
+                                                    <div className="simanta-gamif-header-top">
+                                                        <div className="simanta-gamif-level-badge" style={{ borderColor: gamif.level_color || '#10b981' }}>
+                                                            <i className={gamif.level_icon || 'fas fa-seedling'} style={{ color: gamif.level_color || '#10b981' }}></i>
+                                                            <span className="simanta-gamif-level-num">Lv.{gamif.level}</span>
+                                                        </div>
+                                                        <div className="simanta-gamif-user-info">
+                                                            <div className="simanta-gamif-level-title">
+                                                                Level {gamif.level}: {gamif.level_name}
+                                                            </div>
+                                                            <div className="simanta-gamif-xp-text">
+                                                                <strong>{Number(gamif.xp || 0).toLocaleString()} XP</strong>
+                                                                {gamif.level < 5 ? ` / ${Number(gamif.next_level_xp || 0).toLocaleString()} XP` : ' (Tingkat Maksimal)'}
+                                                            </div>
+                                                        </div>
+                                                        <div className="simanta-gamif-streak-badge" title="Konsistensi belajar hari beruntun">
+                                                            <span className="streak-flame">🔥</span>
+                                                            <span className="streak-count">{gamif.streak_days || 0}</span>
+                                                            <span className="streak-label">Hari Streak</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* XP Progress Bar to Next Level */}
+                                                    {gamif.level < 5 && (
+                                                        <div className="simanta-gamif-xp-progress-wrap">
+                                                            <div className="simanta-gamif-xp-bar-bg">
+                                                                <div 
+                                                                    className="simanta-gamif-xp-bar-fill" 
+                                                                    style={{ width: `${Math.min(100, Math.max(0, gamif.xp_progress_pct || 0))}%` }}
+                                                                ></div>
+                                                            </div>
+                                                            <div className="simanta-gamif-xp-meta">
+                                                                <span>Progres Menuju Level {gamif.level + 1}</span>
+                                                                <span>{gamif.xp_progress_pct}%</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Quick Summary Pill & Confetti Celebration Button */}
+                                                    <div className="simanta-gamif-summary-row">
+                                                        <span className="simanta-gamif-counter-pill">
+                                                            🏆 <strong>{gamif.unlocked_count}</strong> dari {gamif.total_badges} Lencana Diraih
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className="simanta-gamif-celebrate-btn"
+                                                            onClick={triggerConfetti}
+                                                            title="Rayakan capaian belajar dengan pesta konfeti"
+                                                        >
+                                                            🎉 Rayakan Capaian
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Filter Tabs: Semua / Diraih / Terkunci */}
+                                                <div className="simanta-gamif-filter-tabs">
+                                                    <button
+                                                        type="button"
+                                                        className={`simanta-gamif-tab-btn ${filter === 'all' ? 'active' : ''}`}
+                                                        onClick={() => setBadgeFilter(prev => ({ ...prev, [idx]: 'all' }))}
+                                                    >
+                                                        Semua ({gamif.total_badges})
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={`simanta-gamif-tab-btn ${filter === 'unlocked' ? 'active' : ''}`}
+                                                        onClick={() => setBadgeFilter(prev => ({ ...prev, [idx]: 'unlocked' }))}
+                                                    >
+                                                        Diraih ({gamif.unlocked_count})
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className={`simanta-gamif-tab-btn ${filter === 'locked' ? 'active' : ''}`}
+                                                        onClick={() => setBadgeFilter(prev => ({ ...prev, [idx]: 'locked' }))}
+                                                    >
+                                                        Terkunci ({gamif.total_badges - gamif.unlocked_count})
+                                                    </button>
+                                                </div>
+
+                                                {/* Badges Grid */}
+                                                <div className="simanta-gamif-badges-grid">
+                                                    {filteredBadges.map((badge) => {
+                                                        const isSelected = activeSelectedBadgeId === badge.id;
+                                                        return (
+                                                            <div
+                                                                key={badge.id}
+                                                                className={`simanta-badge-tile ${badge.is_unlocked ? 'is-unlocked' : 'is-locked'} ${isSelected ? 'is-selected' : ''}`}
+                                                                onClick={() => setSelectedBadge(prev => ({ ...prev, [idx]: isSelected ? null : badge.id }))}
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                title={`${badge.title} - Klik untuk melihat detail & tips`}
+                                                            >
+                                                                <div 
+                                                                    className="simanta-badge-icon-box" 
+                                                                    style={{ 
+                                                                        background: badge.is_unlocked ? `${badge.color}18` : '#f1f5f9', 
+                                                                        color: badge.is_unlocked ? badge.color : '#94a3b8' 
+                                                                    }}
+                                                                >
+                                                                    <i className={badge.icon}></i>
+                                                                    {!badge.is_unlocked && (
+                                                                        <span className="badge-lock-overlay">
+                                                                            <i className="fas fa-lock"></i>
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="simanta-badge-tile-info">
+                                                                    <div className="simanta-badge-tile-title">{badge.title}</div>
+                                                                    <div className="simanta-badge-tile-cat">{badge.category}</div>
+                                                                </div>
+                                                                <div className="simanta-badge-tile-status">
+                                                                    {badge.is_unlocked ? (
+                                                                        <span className="badge-status-pill pill-unlocked">
+                                                                            <i className="fas fa-check-circle me-1"></i> Diraih
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="badge-status-pill pill-progress">
+                                                                            {badge.progress}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {/* Detail Drawer / Card when a badge is selected */}
+                                                {activeBadgeObj && (
+                                                    <div className={`simanta-badge-detail-box ${activeBadgeObj.is_unlocked ? 'detail-unlocked' : 'detail-locked'}`}>
+                                                        <div className="simanta-badge-detail-header">
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                <span className="detail-icon" style={{ color: activeBadgeObj.color }}>
+                                                                    <i className={activeBadgeObj.icon}></i>
+                                                                </span>
+                                                                <div>
+                                                                    <strong className="detail-title">{activeBadgeObj.title}</strong>
+                                                                    <span className="detail-cat ms-2">({activeBadgeObj.category})</span>
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                className="simanta-badge-detail-close"
+                                                                onClick={() => setSelectedBadge(prev => ({ ...prev, [idx]: null }))}
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                                                        <p className="detail-desc">{activeBadgeObj.description}</p>
+                                                        <div className="detail-progress-row">
+                                                            <span className="detail-progress-label">Status Capaian:</span>
+                                                            <strong className="detail-progress-val">
+                                                                {activeBadgeObj.is_unlocked ? '✅ Lencana Telah Diperoleh' : `⏳ Progres: ${activeBadgeObj.progress}`}
+                                                            </strong>
+                                                        </div>
+                                                        {!activeBadgeObj.is_unlocked && (
+                                                            <div className="detail-tip">
+                                                                💡 <strong>Tips Manta:</strong> {
+                                                                    activeBadgeObj.id === 'study_streak' ? 'Pelajari minimal 1 modul setiap hari berturut-turut untuk menjaga streak Anda.' :
+                                                                    activeBadgeObj.id === 'quiz_ace' ? 'Pelajari rangkuman materi dan ikuti latihan kuis mandiri Manta sebelum evaluasi.' :
+                                                                    activeBadgeObj.id === 'course_finisher' ? 'Selesaikan semua bab dan kuis kelulusan di ruang belajar kursus aktif Anda.' :
+                                                                    activeBadgeObj.id === 'jp_champion' ? 'Tanyakan rekomendasi kursus pemenuhan 20 JP pada Manta untuk menambah jam pelajaran.' :
+                                                                    activeBadgeObj.id === 'multi_course' ? 'Ikuti dan selesaikan pelatihan di bidang hukum, keprotokolan, persidangan, maupun TI Setjen DPD RI.' :
+                                                                    'Selesaikan materi pembelajaran yang tersedia di katalog pelatihan Setjen DPD RI.'
+                                                                }
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Kartu AI Contextual Video Milestone & Learning Material Jumper */}
                                     {msg.video_jumper && (

@@ -154,6 +154,36 @@ function InAppNotificationBell() {
         }
     };
 
+    // Buka Manta AI dan mulai obrolan otomatis sesuai topik notifikasi
+    const handleOpenMantaChat = async (noti) => {
+        if (!noti.seen) {
+            try {
+                if (isInstructorMode && teacherId) {
+                    await useAxios.patch(`teacher/noti-detail/${teacherId}/${noti.id}`, { seen: true });
+                } else {
+                    await useAxios.patch(`student/noti-detail/${userId}/${noti.id}/`, { seen: true });
+                }
+                setNotifications(prev =>
+                    prev.map(item => item.id === noti.id ? { ...item, seen: true } : item)
+                );
+                setUnreadCount(prev => Math.max(0, prev - 1));
+            } catch (err) {
+                console.debug('Error marking notification seen for Manta AI:', err);
+            }
+        }
+
+        setIsOpen(false);
+        const prompt = noti.manta_prompt || (noti.title ? `Manta, tolong jelaskan tentang: ${noti.title}` : 'Halo Manta, berikan panduan belajar untuk saya');
+        if (typeof window !== 'undefined') {
+            if (typeof window.openMantaChat === 'function') {
+                window.openMantaChat(prompt);
+            } else {
+                window.dispatchEvent(new CustomEvent('manta_open_chat', { detail: { prompt } }));
+                window.dispatchEvent(new CustomEvent('manta-open-chat', { detail: { prompt, query: prompt } }));
+            }
+        }
+    };
+
     // Tandai semua notifikasi peran aktif sebagai telah dibaca
     const handleMarkAllRead = async (e) => {
         e.stopPropagation();
@@ -179,6 +209,34 @@ function InAppNotificationBell() {
     // Helper ikon dan label metadata
     const getNotificationMeta = (type) => {
         switch (type) {
+            case 'AI Learning Nudge':
+                return {
+                    icon: 'fas fa-lightbulb',
+                    badgeClass: 'badge-manta',
+                    label: 'Manta Learning Nudge',
+                    isAi: true
+                };
+            case 'AI JP Target Reminder':
+                return {
+                    icon: 'fas fa-bullseye',
+                    badgeClass: 'badge-teal',
+                    label: 'Target 20 JP ASN',
+                    isAi: true
+                };
+            case 'AI Microlearning Digest':
+                return {
+                    icon: 'fas fa-wand-magic-sparkles',
+                    badgeClass: 'badge-purple',
+                    label: 'Microlearning Manta',
+                    isAi: true
+                };
+            case 'AI Flashcard Challenge':
+                return {
+                    icon: 'fas fa-layer-group',
+                    badgeClass: 'badge-indigo',
+                    label: 'Tantangan Belajar AI',
+                    isAi: true
+                };
             case 'Exam Verified':
                 return {
                     icon: 'fas fa-check-circle',
@@ -387,6 +445,27 @@ function InAppNotificationBell() {
                                                 <div className="in-app-noti-course-pill" title={noti.course_data.title}>
                                                     <i className="fas fa-book-open me-1"></i>
                                                     <span>{noti.course_data.title}</span>
+                                                </div>
+                                            )}
+
+                                            {noti.manta_prompt && (
+                                                <div className="in-app-noti-manta-action">
+                                                    <button
+                                                        type="button"
+                                                        className="in-app-noti-manta-btn"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleOpenMantaChat(noti);
+                                                        }}
+                                                        title="Buka Manta AI dan diskusikan topik ini"
+                                                    >
+                                                        <i className="fas fa-comment-dots me-1"></i> Tanya Manta
+                                                    </button>
+                                                    {noti.course_data?.slug && (
+                                                        <span className="in-app-noti-manta-sublink">
+                                                            Lanjut Belajar <i className="fas fa-chevron-right ms-1"></i>
+                                                        </span>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>

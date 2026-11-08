@@ -15,6 +15,8 @@ import logging
 import hashlib
 import random
 import uuid
+import copy
+import math
 from typing import Dict, Any, List, Tuple
 
 from django.conf import settings
@@ -275,6 +277,298 @@ KNOWLEDGE_BASE = [
 ]
 
 
+def get_user_gamification_data(user: Any) -> Dict[str, Any]:
+    """
+    Menghitung metrik gamifikasi terpadu ASN Setjen DPD RI:
+    - Level Kompetensi ASN (6 Jenjang Dikalibrasi Berimbang):
+        Level 1: Aparatur Pratama (0 – 249 XP) | #10b981
+        Level 2: Aparatur Muda (250 – 599 XP) | #0ea5e9
+        Level 3: Aparatur Madya (600 – 1.199 XP) | #6366f1
+        Level 4: Aparatur Utama (1.200 – 2.499 XP) | #8b5cf6
+        Level 5: Ksatria Parlemen (2.500 – 4.499 XP) | #f59e0b
+        Level 6: Pakar Reformasi Birokrasi (4.500+ XP) | #eab308
+    - Study Streak (Hari Belajar Berurutan)
+    - Total JP Terkumpul (terhadap target 20 JP LAN RI)
+    - 8 Lencana Prestasi Belajar (Milestone Badges)
+    """
+    import datetime
+
+    default_badges = [
+        {"id": "first_step", "title": "Langkah Perdana", "category": "Dasar", "icon": "fas fa-seedling", "color": "#10b981", "description": "Menyelesaikan materi pembelajaran pertama di LMS Setjen DPD RI.", "is_unlocked": False, "progress": "0/1 Materi", "progress_pct": 0},
+        {"id": "study_streak", "title": "Pembelajar Tangguh", "category": "Kedisiplinan", "icon": "fas fa-fire-flame-curved", "color": "#f97316", "description": "Menjaga ritme belajar aktif selama minimal 3 hari berurutan.", "is_unlocked": False, "progress": "0/3 Hari", "progress_pct": 0},
+        {"id": "quiz_ace", "title": "Jawara Evaluasi", "category": "Penguasaan", "icon": "fas fa-award", "color": "#6366f1", "description": "Meraih nilai sempurna 100% pada evaluasi pemahaman materi.", "is_unlocked": False, "progress": "Perlu skor 100", "progress_pct": 0},
+        {"id": "course_finisher", "title": "Lulusan Kompeten", "category": "Penyelesaian", "icon": "fas fa-graduation-cap", "color": "#0ea5e9", "description": "Menuntaskan kursus penuh dan memperoleh sertifikat resmi kelulusan.", "is_unlocked": False, "progress": "0/1 Kursus", "progress_pct": 0},
+        {"id": "jp_champion", "title": "Ksatria 20 JP ASN", "category": "Mandat Regulasi", "icon": "fas fa-trophy", "color": "#eab308", "description": "Memenuhi target tahunan minimal 20 JP sesuai standar LAN RI.", "is_unlocked": False, "progress": "0/20 JP", "progress_pct": 0},
+        {"id": "manta_explorer", "title": "Penjelajah Pengetahuan", "category": "Keaktifan AI", "icon": "fas fa-compass", "color": "#0d9488", "description": "Berdiskusi aktif dan menggali materi bersama Asisten AI Manta.", "is_unlocked": True, "progress": "Aktif & Terbuka", "progress_pct": 100},
+        {"id": "flashcard_master", "title": "Maestro Active Recall", "category": "Metode Belajar", "icon": "fas fa-layer-group", "color": "#8b5cf6", "description": "Menguji daya ingat konsep kunci dengan Flashcard & Self-Quiz Manta.", "is_unlocked": True, "progress": "Siap Digunakan", "progress_pct": 100},
+        {"id": "multi_course", "title": "Multitalenta Parlemen", "category": "Keberagaman", "icon": "fas fa-crown", "color": "#ec4899", "description": "Menyelesaikan 3 kursus pelatihan atau lebih di lingkungan Setjen DPD RI.", "is_unlocked": False, "progress": "0/3 Kursus", "progress_pct": 0}
+    ]
+
+    if not user or not getattr(user, 'is_authenticated', False):
+        return {
+            "is_guest": True,
+            "user_id": None,
+            "user_name": "Tamu LMS",
+            "level": 1,
+            "level_name": "Aparatur Pratama",
+            "level_icon": "fas fa-seedling",
+            "level_color": "#10b981",
+            "xp": 0,
+            "min_xp": 0,
+            "next_level_xp": 250,
+            "next_level_name": "Aparatur Muda",
+            "xp_progress_pct": 0,
+            "remaining_xp": 250,
+            "streak_days": 0,
+            "total_jp": 0,
+            "target_jp": 20,
+            "jp_progress_pct": 0,
+            "unlocked_count": 2,
+            "total_badges": len(default_badges),
+            "badges": default_badges,
+            "completed_lessons_count": 0,
+            "certificates_count": 0,
+            "quizzes_passed_count": 0,
+            "has_new_celebration": False
+        }
+
+    # 1. Poin Aktual (XP)
+    student_pts = api_models.StudentPoints.objects.filter(user=user).first()
+    points = student_pts.lifetime_points if student_pts else 0
+
+    completed_lessons_count = api_models.CompletedLesson.objects.filter(user=user).count()
+    certificates_count = api_models.Certificate.objects.filter(user=user, is_valid=True).count()
+    quizzes_passed = api_models.QuizAttempt.objects.filter(user=user, is_passed=True)
+    quizzes_passed_count = quizzes_passed.count()
+    has_perfect_quiz = quizzes_passed.filter(score__gte=99.9).exists()
+
+    if points == 0:
+        points = (completed_lessons_count * 15) + (certificates_count * 100) + (quizzes_passed_count * 25)
+
+    # 2. Skala 6 Tingkat Kompetensi ASN (Calibrated Progression Curve)
+    if points < 250:
+        level = 1
+        level_name = "Aparatur Pratama"
+        level_icon = "fas fa-seedling"
+        level_color = "#10b981"
+        min_xp = 0
+        next_level_xp = 250
+        next_level_name = "Aparatur Muda"
+        xp_progress_pct = min(100, int((points / 250.0) * 100))
+        remaining_xp = max(0, next_level_xp - points)
+    elif points < 600:
+        level = 2
+        level_name = "Aparatur Muda"
+        level_icon = "fas fa-shield-halved"
+        level_color = "#0ea5e9"
+        min_xp = 250
+        next_level_xp = 600
+        next_level_name = "Aparatur Madya"
+        xp_progress_pct = min(100, int(((points - 250) / 350.0) * 100))
+        remaining_xp = max(0, next_level_xp - points)
+    elif points < 1200:
+        level = 3
+        level_name = "Aparatur Madya"
+        level_icon = "fas fa-gem"
+        level_color = "#6366f1"
+        min_xp = 600
+        next_level_xp = 1200
+        next_level_name = "Aparatur Utama"
+        xp_progress_pct = min(100, int(((points - 600) / 600.0) * 100))
+        remaining_xp = max(0, next_level_xp - points)
+    elif points < 2500:
+        level = 4
+        level_name = "Aparatur Utama"
+        level_icon = "fas fa-medal"
+        level_color = "#8b5cf6"
+        min_xp = 1200
+        next_level_xp = 2500
+        next_level_name = "Ksatria Parlemen"
+        xp_progress_pct = min(100, int(((points - 1200) / 1300.0) * 100))
+        remaining_xp = max(0, next_level_xp - points)
+    elif points < 4500:
+        level = 5
+        level_name = "Ksatria Parlemen"
+        level_icon = "fas fa-crown"
+        level_color = "#f59e0b"
+        min_xp = 2500
+        next_level_xp = 4500
+        next_level_name = "Pakar Reformasi Birokrasi"
+        xp_progress_pct = min(100, int(((points - 2500) / 2000.0) * 100))
+        remaining_xp = max(0, next_level_xp - points)
+    else:
+        level = 6
+        level_name = "Pakar Reformasi Birokrasi"
+        level_icon = "fas fa-trophy"
+        level_color = "#eab308"
+        min_xp = 4500
+        next_level_xp = points
+        next_level_name = "Puncak Prestasi ASN"
+        xp_progress_pct = 100
+        remaining_xp = 0
+
+    # 3. Hitung Hari Belajar Berurutan (Study Streak)
+    today = timezone.now().date()
+    yesterday = today - datetime.timedelta(days=1)
+    active_dates = set()
+
+    for d in api_models.ActivityLog.objects.filter(user=user).values_list('activity_date', flat=True):
+        if d:
+            active_dates.add(d.date())
+    for d in api_models.CompletedLesson.objects.filter(user=user).values_list('date', flat=True):
+        if d:
+            active_dates.add(d.date())
+
+    streak_days = 0
+    if today in active_dates or yesterday in active_dates:
+        check_date = today if today in active_dates else yesterday
+        while check_date in active_dates:
+            streak_days += 1
+            check_date = check_date - datetime.timedelta(days=1)
+    else:
+        streak_days = 0
+
+    # 4. Hitung Total JP ASN
+    enrollments = api_models.EnrolledCourse.objects.filter(user=user).select_related('course')
+    completed_enrollments = [e for e in enrollments if getattr(e, 'completed', False) or (hasattr(e, 'completion_percentage') and e.completion_percentage() >= 100)]
+    total_jp = 0
+    for ce in completed_enrollments:
+        c = ce.course
+        dur_secs = 0
+        lectures = api_models.VariantItem.objects.filter(variant__course=c)
+        for vi in lectures:
+            if getattr(vi, 'duration', None):
+                dur_secs += vi.duration.total_seconds()
+            elif getattr(vi, 'duration_seconds', None):
+                dur_secs += vi.duration_seconds
+        course_jp = max(2, min(12, round((dur_secs / 60.0) / 45.0))) if dur_secs > 0 else 2
+        total_jp += course_jp
+
+    jp_progress_pct = min(100, int((total_jp / 20.0) * 100))
+
+    # 5. Evaluasi 8 Lencana Prestasi Belajar
+    badges = [
+        {
+            "id": "first_step",
+            "title": "Langkah Perdana",
+            "category": "Dasar",
+            "icon": "fas fa-seedling",
+            "color": "#10b981",
+            "description": "Menyelesaikan materi pembelajaran pertama di LMS Setjen DPD RI.",
+            "is_unlocked": completed_lessons_count >= 1,
+            "progress": f"{min(1, completed_lessons_count)}/1 Materi",
+            "progress_pct": 100 if completed_lessons_count >= 1 else 0
+        },
+        {
+            "id": "study_streak",
+            "title": "Pembelajar Tangguh",
+            "category": "Kedisiplinan",
+            "icon": "fas fa-fire-flame-curved",
+            "color": "#f97316",
+            "description": "Menjaga ritme belajar aktif selama minimal 3 hari berurutan.",
+            "is_unlocked": streak_days >= 3,
+            "progress": f"{min(3, streak_days)}/3 Hari Beruntun",
+            "progress_pct": min(100, int((streak_days / 3.0) * 100))
+        },
+        {
+            "id": "quiz_ace",
+            "title": "Jawara Evaluasi",
+            "category": "Penguasaan",
+            "icon": "fas fa-award",
+            "color": "#6366f1",
+            "description": "Meraih nilai sempurna 100% pada evaluasi kuis pemahaman materi.",
+            "is_unlocked": has_perfect_quiz,
+            "progress": "Sempurna 100%" if has_perfect_quiz else ("Lulus Kuis" if quizzes_passed_count > 0 else "Belum Kuis"),
+            "progress_pct": 100 if has_perfect_quiz else (50 if quizzes_passed_count > 0 else 0)
+        },
+        {
+            "id": "course_finisher",
+            "title": "Lulusan Kompeten",
+            "category": "Penyelesaian",
+            "icon": "fas fa-graduation-cap",
+            "color": "#0ea5e9",
+            "description": "Menuntaskan kursus penuh dan memperoleh sertifikat resmi kelulusan.",
+            "is_unlocked": certificates_count >= 1,
+            "progress": f"{min(1, certificates_count)}/1 Kursus Lulus",
+            "progress_pct": 100 if certificates_count >= 1 else 0
+        },
+        {
+            "id": "jp_champion",
+            "title": "Ksatria 20 JP ASN",
+            "category": "Mandat Regulasi",
+            "icon": "fas fa-trophy",
+            "color": "#eab308",
+            "description": "Memenuhi target tahunan minimal 20 JP sesuai standar LAN RI.",
+            "is_unlocked": total_jp >= 20,
+            "progress": f"{total_jp}/20 JP",
+            "progress_pct": jp_progress_pct
+        },
+        {
+            "id": "manta_explorer",
+            "title": "Penjelajah Pengetahuan",
+            "category": "Keaktifan AI",
+            "icon": "fas fa-compass",
+            "color": "#0d9488",
+            "description": "Berdiskusi aktif dan menggali materi bersama Asisten AI Manta.",
+            "is_unlocked": True,
+            "progress": "Aktif & Terbuka",
+            "progress_pct": 100
+        },
+        {
+            "id": "flashcard_master",
+            "title": "Maestro Active Recall",
+            "category": "Metode Belajar",
+            "icon": "fas fa-layer-group",
+            "color": "#8b5cf6",
+            "description": "Menguji daya ingat konsep kunci dengan Flashcard & Self-Quiz Manta.",
+            "is_unlocked": True,
+            "progress": "Siap Digunakan",
+            "progress_pct": 100
+        },
+        {
+            "id": "multi_course",
+            "title": "Multitalenta Parlemen",
+            "category": "Keberagaman",
+            "icon": "fas fa-crown",
+            "color": "#ec4899",
+            "description": "Menyelesaikan 3 kursus pelatihan atau lebih di lingkungan Setjen DPD RI.",
+            "is_unlocked": certificates_count >= 3,
+            "progress": f"{min(3, certificates_count)}/3 Kursus",
+            "progress_pct": min(100, int((certificates_count / 3.0) * 100))
+        }
+    ]
+
+    unlocked_count = sum(1 for b in badges if b["is_unlocked"])
+    user_name = user.full_name or user.username or "Rekan ASN"
+
+    return {
+        "is_guest": False,
+        "user_id": user.id,
+        "user_name": user_name,
+        "level": level,
+        "level_name": level_name,
+        "level_icon": level_icon,
+        "level_color": level_color,
+        "xp": points,
+        "min_xp": min_xp,
+        "next_level_xp": next_level_xp,
+        "next_level_name": next_level_name,
+        "xp_progress_pct": xp_progress_pct,
+        "remaining_xp": remaining_xp,
+        "streak_days": streak_days,
+        "total_jp": total_jp,
+        "target_jp": 20,
+        "jp_progress_pct": jp_progress_pct,
+        "unlocked_count": unlocked_count,
+        "total_badges": len(badges),
+        "badges": badges,
+        "completed_lessons_count": completed_lessons_count,
+        "certificates_count": certificates_count,
+        "quizzes_passed_count": quizzes_passed_count,
+        "has_new_celebration": unlocked_count > 0
+    }
+
+
 class AIAssistantChatAPIView(APIView):
     """
     Endpoint Backend AI Asisten Manta:
@@ -368,6 +662,17 @@ class AIAssistantChatAPIView(APIView):
             if jp_response:
                 cache.set(cache_key, jp_response, timeout=60)
                 return Response(jp_response, status=status.HTTP_200_OK)
+
+        # 4.7. AI Learning Journey Milestone Badges & Gamifikasi Progres Belajar
+        is_gamification_badges_query = bool(re.search(
+            r"\b(lencana|badge|lencana\s*saya|badge\s*saya|gamifikasi|milestone|pencapaian|prestasi|level\s*(saya|belajar)?|xp(\s*saya)?|streak|hari\s*beruntun|peringkat\s*saya|poin\s*saya|tampilkan\s*lencana|lihat\s*badge|koleksi\s*lencana)\b",
+            norm_query
+        ))
+        if is_gamification_badges_query:
+            badges_response = self._handle_learning_journey_badges(user_ctx, norm_query)
+            if badges_response:
+                cache.set(cache_key, badges_response, timeout=30)
+                return Response(badges_response, status=status.HTTP_200_OK)
 
         # 5. Handle Pertanyaan Terpersonalisasi Khusus (Sertifikat Saya)
         is_my_cert_query = re.search(
@@ -471,13 +776,16 @@ class AIAssistantChatAPIView(APIView):
 
         # 7.8. AI Interactive Quiz Prep & Knowledge Flashcards (Simulasi Uji Pemahaman Mandiri)
         is_quiz_prep_query = bool(re.search(
-            r"\b(latihan|simulasi|flashcard|uji\s*pemahaman|tes\s*pemahaman)\b.*\b(kuis|soal|ujian|evaluasi|materi)\b",
+            r"\b(flashcard|flash\s*card|kartu\s*(belajar|konsep|hafalan|pintar|materi|pemahaman)|kartu|deck)\b",
             norm_query
         )) or bool(re.search(
-            r"\b(kuis|soal|pertanyaan)\b.*\b(latihan|simulasi|interaktif|flashcard|pemahaman|persidangan|design\s*thinking|berakhlak|hukum|legislasi|tata\s*tertib|berikutnya|lain)\b",
+            r"\b(latihan|simulasi|flashcard|uji\s*pemahaman|tes\s*pemahaman)\b.*\b(kuis|soal|ujian|evaluasi|materi|kartu)\b",
             norm_query
         )) or bool(re.search(
-            r"\b(latihan\s*(kuis|soal|ujian|evaluasi)|uji\s*pemahaman|simulasi\s*(kuis|soal|ujian)|flashcard|tanya\s*jawab|tes\s*kemampuan|beri\s*(saya\s*)?(latihan|soal|kuis)|kuis\s*interaktif|soal\s*(berikutnya|lain)|kuis\s*berikutnya)\b",
+            r"\b(kuis|soal|pertanyaan|kartu)\b.*\b(latihan|simulasi|interaktif|flashcard|pemahaman|persidangan|design\s*thinking|berakhlak|hukum|legislasi|tata\s*tertib|berikutnya|lain)\b",
+            norm_query
+        )) or bool(re.search(
+            r"\b(latihan\s*(kuis|soal|ujian|evaluasi)|uji\s*pemahaman|simulasi\s*(kuis|soal|ujian)|flashcard|tanya\s*jawab|tes\s*kemampuan|beri\s*(saya\s*)?(latihan|soal|kuis|flashcard)|kuis\s*interaktif|soal\s*(berikutnya|lain)|kuis\s*berikutnya)\b",
             norm_query
         ))
         if is_quiz_prep_query:
@@ -1826,10 +2134,144 @@ class AIAssistantChatAPIView(APIView):
         self, raw_message: str, norm_query: str, user_ctx: Dict[str, Any], current_course: Any = None
     ) -> Dict[str, Any]:
         """
-        AI Interactive Quiz Prep & Knowledge Flashcards:
-        Menyajikan kuis simulasi interaktif pilihan ganda (A, B, C, D) dengan instant
-        feedback dan penjelasan komprehensif untuk menguji pemahaman materi pelatihan.
+        AI Interactive Flashcards & Self-Quiz Generator (Latihan Mandiri Interaktif di Chat):
+        Menyajikan:
+        1. Kuis interaktif pilihan ganda (A, B, C, D) dengan instant rationale & pembahasan
+        2. Flashcards pembelajaran 3D (kartu bolak-balik: konsep kunci, intisari, dan takeaways)
+        3. Opsi simpan ke Catatan Belajar & audio narration (TTS).
         """
+        curated_flashcard_decks = {
+            "design_thinking": {
+                "deck_id": "deck_design_thinking",
+                "topic": "Metodologi Design Thinking & Inovasi ASN",
+                "course_title": "Rabuan IV - Design Thinking: Kunci ASN Inovatif dan Birokrasi Adaptif",
+                "course_slug": "rabuan-iv-design-thinking-kunci-asn-inovatif-dan-birokrasi-yang-lebih-adaptif-46",
+                "cards": [
+                    {
+                        "id": "dt_c1",
+                        "front_title": "Human-Centered Design (Desain Berpusat Manusia)",
+                        "front_prompt": "Apa esensi dan prinsip utama dari Human-Centered Design dalam konteks inovasi pelayanan birokrasi ASN Setjen DPD RI?",
+                        "back_summary": "Pendekatan inovasi yang menempatkan kebutuhan, empati, dan aspirasi pengguna layanan publik sebagai pusat perancangan solusi. Bukan sekadar membuat aplikasi baru, melainkan memahami keresahan riil (pain points) stakeholder dan aparatur secara mendalam sebelum menyusun solusi.",
+                        "key_takeaway": "Mulailah dari 'Empati' (mendengar kebutuhan pengguna), bukan dari asumsi internal birokrasi.",
+                        "tag": "Konsep Utama"
+                    },
+                    {
+                        "id": "dt_c2",
+                        "front_title": "Three Lenses of Innovation (Tiga Lensa Inovasi)",
+                        "front_prompt": "Sebutkan dan jelaskan 3 lensa inovasi yang wajib seimbang agar inovasi pelayanan publik dapat berkelanjutan!",
+                        "back_summary": "Inovasi berkelanjutan berada di titik temu 3 lensa:\n1. Desirability (Dibutuhkan dan diinginkan pengguna layanan)\n2. Feasibility (Layak secara teknologi dan kapasitas organisasi)\n3. Viability (Berkelanjutan secara regulasi hukum dan efisiensi anggaran negara).",
+                        "key_takeaway": "Inovasi yang hebat harus legal, aplikatif, dan benar-benar menyelesaikan masalah masyarakat/daerah.",
+                        "tag": "Kerangka Kerja"
+                    },
+                    {
+                        "id": "dt_c3",
+                        "front_title": "Rapid Prototyping (Pembuatan Prototipe Cepat)",
+                        "front_prompt": "Mengapa prinsip 'Fail Fast, Learn Cheap' sangat penting dalam tahapan prototyping inovasi ASN?",
+                        "back_summary": "Prototipe cepat dibuat dengan sumber daya sederhana untuk menguji asumsi solusi langsung kepada pengguna. Tujuannya adalah mendeteksi kelemahan lebih awal sehingga perbaikan dapat dilakukan tanpa membuang anggaran besar dan waktu berbulan-bulan.",
+                        "key_takeaway": "Uji coba solusi dalam skala kecil sebelum meluncurkan kebijakan atau sistem dalam skala penuh.",
+                        "tag": "Tahapan Aksi"
+                    },
+                    {
+                        "id": "dt_c4",
+                        "front_title": "Mindset ASN Adaptif dalam Design Thinking",
+                        "front_prompt": "Bagaimana mengubah pola pikir birokrasi dari 'Rutinitas Administratif' menuju 'Problem Solver Kolaboratif'?",
+                        "back_summary": "ASN adaptif memandang masalah sebagai peluang perbaikan (opportunity), terbuka terhadap masukan dari berbagai jenjang, tidak takut bereksperimen dalam koridor aturan, dan selalu mengutamakan kemudahan layanan publik.",
+                        "key_takeaway": "Fokus pada 'Dampak (Outcome)' dan 'Kepuasan Pengguna', bukan sekadar menggugurkan kewajiban serapan anggaran.",
+                        "tag": "Budaya Kerja"
+                    }
+                ]
+            },
+            "berakhlak": {
+                "deck_id": "deck_berakhlak",
+                "topic": "Core Values ASN BerAKHLAK & Budaya Kerja Parlemen",
+                "course_title": "Core Values ASN BerAKHLAK Setjen DPD RI",
+                "course_slug": "rabuan-iv-design-thinking-kunci-asn-inovatif-dan-birokrasi-yang-lebih-adaptif-46",
+                "cards": [
+                    {
+                        "id": "akhlak_c1",
+                        "front_title": "Berorientasi Pelayanan",
+                        "front_prompt": "Apa komitmen dasar nilai 'Berorientasi Pelayanan' bagi pegawai di lingkungan Sekretariat Jenderal DPD RI?",
+                        "back_summary": "Berkomitmen memberikan pelayanan prima demi kepuasan masyarakat, Anggota DPD RI, dan pemangku kepentingan daerah, dengan panduan perilaku: memahami & memenuhi kebutuhan, ramah, cekatan, solutif, serta melakukan perbaikan tiada henti.",
+                        "key_takeaway": "Pelayanan parlemen yang responsif memperkuat legitimasi dan peran DPD RI di mata publik.",
+                        "tag": "Core Values"
+                    },
+                    {
+                        "id": "akhlak_c2",
+                        "front_title": "Akuntabel & Kompeten",
+                        "front_prompt": "Bagaimana mengintegrasikan nilai Akuntabel dan Kompeten dalam pengelolaan administrasi kedinasan?",
+                        "back_summary": "Akuntabel: Bertanggung jawab atas kepercayaan yang diberikan dengan bekerja jujur, cermat, disiplin, dan tidak menyalahgunakan kewenangan jabatan. Kompeten: Terus belajar meningkatkan kapabilitas diri (memenuhi minimal 20 JP/tahun) dan memberikan kinerja terbaik.",
+                        "key_takeaway": "Integritas moral dan kapabilitas teknis adalah dua pilar profesionalisme ASN DPD RI.",
+                        "tag": "Core Values"
+                    },
+                    {
+                        "id": "akhlak_c3",
+                        "front_title": "Adaptif & Kolaboratif",
+                        "front_prompt": "Apa wujud nyata implementasi nilai Adaptif dan Kolaboratif di era transformasi digital DPD RI?",
+                        "back_summary": "Adaptif: Cepat menyesuaikan diri terhadap perubahan zaman, proaktif berinovasi, dan memanfaatkan teknologi digital (LMS, persidangan elektronik). Kolaboratif: Membuka kesempatan berbagai pihak (lintas biro/bagian dan pemerintah daerah) untuk bersinergi.",
+                        "key_takeaway": "Sinergi lintas unit kerja meruntuhkan ego sektoral demi efektivitas dukungan kelembagaan DPD RI.",
+                        "tag": "Core Values"
+                    }
+                ]
+            },
+            "tata_tertib": {
+                "deck_id": "deck_tata_tertib",
+                "topic": "Tata Tertib, Risalah & Administrasi Persidangan DPD RI",
+                "course_title": "Dukungan Keahlian & Administrasi Persidangan Parlemen",
+                "course_slug": "rabuan-iv-design-thinking-kunci-asn-inovatif-dan-birokrasi-yang-lebih-adaptif-46",
+                "cards": [
+                    {
+                        "id": "tatib_c1",
+                        "front_title": "Kuorum Sidang Paripurna DPD RI",
+                        "front_prompt": "Kapan suatu Sidang Paripurna DPD RI dinyatakan memenuhi kuorum untuk pengambilan keputusan yang sah?",
+                        "back_summary": "Berdasarkan Peraturan Tata Tertib DPD RI, kuorum pengambilan keputusan sah apabila dihadiri oleh lebih dari separuh (1/2) jumlah seluruh Anggota DPD RI yang mewakili lebih dari separuh (1/2) jumlah provinsi di Indonesia.",
+                        "key_takeaway": "Representasi ganda (jumlah anggota dan keterwakilan daerah provinsi) adalah ciri khas kuorum perwakilan daerah.",
+                        "tag": "Tata Tertib"
+                    },
+                    {
+                        "id": "tatib_c2",
+                        "front_title": "Naskah Akademik RUU Inisiatif DPD RI",
+                        "front_prompt": "Apa fungsi fundamental Naskah Akademik dalam proses pembentukan RUU inisiatif DPD RI?",
+                        "back_summary": "Sebagai dokumen pertanggungjawaban ilmiah yang memuat telaah landasan filosofis, sosiologis, dan yuridis mengenai urgensi, jangkauan, dan arah materi muatan suatu RUU sebelum diajukan dalam Program Legislasi Nasional (Prolegnas).",
+                        "key_takeaway": "Naskah Akademik menjamin setiap pasal RUU inisiatif berakar kuat pada data empiris dan kajian hukum.",
+                        "tag": "Legislasi"
+                    },
+                    {
+                        "id": "tatib_c3",
+                        "front_title": "Risalah Resmi Persidangan (Verbatim)",
+                        "front_prompt": "Apa perbedaan dokumen 'Risalah Resmi Persidangan' dengan 'Notula Rapat' di Setjen DPD RI?",
+                        "back_summary": "Risalah adalah catatan resmi persidangan yang disusun secara kata demi kata (verbatim) dari rekaman audio sidang sebagai dokumen otentik kenegaraan. Notula adalah catatan ringkas pokok-pokok bahasan dan kesimpulan rapat.",
+                        "key_takeaway": "Risalah verbatim merupakan arsip otentik yang menjadi rujukan original intent kebijakan negara.",
+                        "tag": "Tata Naskah Dinas"
+                    }
+                ]
+            }
+        }
+
+        # Format teks siap simpan ke Catatan Belajar untuk setiap kartu
+        for deck_key, d in curated_flashcard_decks.items():
+            for c in d["cards"]:
+                c["plain_text_note"] = (
+                    f"📌 FLASHCARD BELAJAR: {c['front_title']}\n"
+                    f"Topik: {d['topic']}\n"
+                    f"Pelatihan: {d['course_title']}\n\n"
+                    f"❓ Pertanyaan / Konsep Kunci:\n{c['front_prompt']}\n\n"
+                    f"💡 Intisari Penjelasan:\n{c['back_summary']}\n\n"
+                    f"🎯 Poin Aksi ASN:\n{c.get('key_takeaway', '')}\n\n"
+                    f"(Disimpan dari Manta AI - LMS Setjen DPD RI)"
+                )
+
+        # Pilih deck flashcard yang sesuai
+        if "persidangan" in norm_query or "sidang" in norm_query or "paripurna" in norm_query or "tatib" in norm_query:
+            selected_deck = copy.deepcopy(curated_flashcard_decks["tata_tertib"])
+        elif "berakhlak" in norm_query or "asn" in norm_query or "nilai" in norm_query or "akhlak" in norm_query:
+            selected_deck = copy.deepcopy(curated_flashcard_decks["berakhlak"])
+        else:
+            selected_deck = copy.deepcopy(curated_flashcard_decks["design_thinking"])
+
+        if current_course:
+            selected_deck["course_title"] = current_course.title
+            selected_deck["course_slug"] = current_course.slug
+
         curated_quiz_bank = [
             {
                 "id": "quiz_dt_definition",
@@ -1949,7 +2391,6 @@ class AIAssistantChatAPIView(APIView):
 
             db_qq_list = api_models.QuizQuestion.objects.filter(q_filter).select_related('quiz', 'quiz__course')
             for qq in db_qq_list:
-                # Lewati soal dummy/tes yang terlalu pendek
                 if len(qq.question_text.strip()) < 15 or "asas" in qq.question_text.lower() or "waqq" in qq.question_text.lower():
                     continue
                 choices = list(api_models.QuizChoice.objects.filter(question=qq).order_by('id'))
@@ -1996,23 +2437,36 @@ class AIAssistantChatAPIView(APIView):
 
         quiz_item = random.choice(pool)
 
-        reply = (
-            f"🧠 **Simulasi Uji Pemahaman Mandiri (Quiz Prep & Flashcard):**\n\n"
-            f"Topik: **{quiz_item['topic']}**\n"
-            f"Pelatihan: *{quiz_item['course_title']}*\n\n"
-            f"📌 **Pertanyaan:**\n"
-            f"> {quiz_item['question']}\n\n"
-            f"Silakan klik salah satu opsi jawaban di bawah untuk melihat apakah jawaban Anda tepat!"
-        )
+        is_flashcard_mode = bool(re.search(r"\b(flashcard|flash\s*card|kartu|hafalan|deck)\b", norm_query))
+        active_mode = "flashcards" if is_flashcard_mode else "quiz"
+
+        if is_flashcard_mode:
+            reply = (
+                f"🗂️ **Flashcard Pemahaman Mandiri (Self-Study Knowledge Deck):**\n\n"
+                f"Topik: **{selected_deck['topic']}**\n"
+                f"Pelatihan: *{selected_deck['course_title']}*\n"
+                f"Total Kartu: **{len(selected_deck['cards'])} Kartu Konsep**\n\n"
+                f"Silakan klik tombol **'Balik Kartu'** untuk mempelajari intisari konsep dan poin pentingnya. "
+                f"Anda juga dapat beralih ke mode **Kuis Pilihan Ganda** atau menyimpan kartu ke **Catatan Belajar**!"
+            )
+        else:
+            reply = (
+                f"🧠 **Simulasi Uji Pemahaman Mandiri (Quiz Prep & Flashcard):**\n\n"
+                f"Topik: **{quiz_item['topic']}**\n"
+                f"Pelatihan: *{quiz_item['course_title']}*\n\n"
+                f"📌 **Pertanyaan:**\n"
+                f"> {quiz_item['question']}\n\n"
+                f"Silakan klik salah satu opsi jawaban di bawah untuk melihat pembahasan instan dari Manta!"
+            )
 
         actions = [
-            {"label": "🔄 Soal Selanjutnya", "action": "next_quiz", "type": "event"},
+            {"label": "🔄 Soal / Kartu Lain", "action": "next_quiz", "type": "event"},
             {"label": "🔍 Katalog Semua Kursus", "url": "/search/", "type": "route"}
         ]
-        if quiz_item.get("course_slug"):
+        if selected_deck.get("course_slug"):
             actions.insert(1, {
                 "label": "📖 Buka Silabus Kursus",
-                "url": f"/course-detail/{quiz_item['course_slug']}/",
+                "url": f"/course-detail/{selected_deck['course_slug']}/",
                 "type": "route"
             })
         if user_ctx.get("is_authenticated"):
@@ -2026,12 +2480,14 @@ class AIAssistantChatAPIView(APIView):
             "status": "success",
             "reply": reply,
             "source": "quiz_prep_simulator",
+            "active_mode": active_mode,
             "interactive_quiz": quiz_item,
+            "flashcard_deck": selected_deck,
             "suggested_questions": [
+                "🗂️ Buka Flashcard materi ini" if active_mode == "quiz" else "🧠 Latihan Kuis Pilihan Ganda",
                 "Latihan kuis soal berikutnya",
                 "Apa itu Tiga Lensa Inovasi (Three Lenses)?",
-                "Beri saya latihan kuis tata tertib persidangan",
-                "Bagaimana passing grade kelulusan kuis?"
+                "Beri saya latihan kuis tata tertib persidangan"
             ],
             "actions": actions,
             "recommended_courses": []
@@ -2645,6 +3101,92 @@ class AIAssistantChatAPIView(APIView):
                 "Latihan kuis materi kursus saya"
             ],
             "actions": actions
+        }
+
+    def _handle_learning_journey_badges(self, user_ctx: Dict[str, Any], norm_query: str) -> Dict[str, Any]:
+        """
+        AI Learning Journey Milestone Badges & Gamifikasi Progres Belajar:
+        Menghitung level dan XP ASN Setjen DPD RI, menghitung streak hari belajar aktif,
+        mengevaluasi status 8 Lencana Prestasi (unlocked vs locked), dan menghasilkan
+        kartu gamifikasi interaktif lengkap dengan perayaan milestone (confetti).
+        """
+        name = user_ctx.get("name") or "Rekan ASN"
+
+        # Tamu / Belum login
+        if not user_ctx.get("is_authenticated"):
+            guest_gamification = get_user_gamification_data(None)
+            guest_gamification["user_name"] = name
+            return {
+                "status": "success",
+                "reply": (
+                    f"🏆 **Sistem Gamifikasi & Lencana Prestasi Belajar ASN Setjen DPD RI:**\n\n"
+                    "LMS Setjen DPD RI dilengkapi sistem gamifikasi terintegrasi untuk mengapresiasi setiap capaian belajar Anda:\n\n"
+                    "• **Level Kompetensi ASN:** Dari *Aparatur Pratama* (Level 1) hingga *Pakar Reformasi Birokrasi* (Level 6).\n"
+                    "• **Study Streak:** Penghitungan konsistensi hari belajar tanpa putus.\n"
+                    "• **Lencana Prestasi (Milestone Badges):** 8 lencana eksklusif untuk pencapaian materi perdana, evaluasi kuis 100%, kelulusan kursus, dan pemenuhan 20 JP ASN.\n\n"
+                    "👉 **Silakan masuk menggunakan akun SSO Setjen DPD RI** untuk melihat lencana yang sudah Anda raih dan melacak progres kenaikan level Anda!"
+                ),
+                "source": "learning_milestone_badges",
+                "milestone_gamification": guest_gamification,
+                "actions": [
+                    {"label": "🔐 Masuk Akun SSO", "url": "/login/", "type": "route"},
+                    {"label": "🔍 Jelajahi Kursus", "url": "/search/", "type": "route"}
+                ],
+                "suggested_questions": [
+                    "Bagaimana cara login dengan SSO Setjen DPD RI?",
+                    "Rekomendasi kursus populer",
+                    "Apa itu 20 JP ASN?"
+                ]
+            }
+
+        user = api_models.User.objects.filter(id=user_ctx["user_id"]).first()
+        if not user:
+            return None
+
+        gamification = get_user_gamification_data(user)
+        level = gamification["level"]
+        level_name = gamification["level_name"]
+        points = gamification["xp"]
+        next_level_xp = gamification["next_level_xp"]
+        next_level_name = gamification["next_level_name"]
+        remaining_xp = gamification["remaining_xp"]
+        streak_days = gamification["streak_days"]
+        badges = gamification["badges"]
+        unlocked_count = gamification["unlocked_count"]
+
+        # Pesan Manta yang memotivasi dan personal
+        reply_lines = [
+            f"Selamat datang di Galeri Prestasi Belajar, Bapak/Ibu **{name}**! 🎖️\n",
+            f"Saat ini Anda berada di **Level {level}: {level_name}** dengan akumulasi **{points:,} XP**.",
+        ]
+        if level < 6:
+            reply_lines.append(f"Tersisa **{remaining_xp:,} XP** lagi untuk naik ke tingkat *{next_level_name}*.")
+        else:
+            reply_lines.append("Luar biasa! Anda telah mencapai tingkat kompetensi tertinggi (*Pakar Reformasi Birokrasi*) di portal LMS Setjen DPD RI.")
+
+        if streak_days > 0:
+            reply_lines.append(f"\n🔥 **Study Streak:** Anda telah aktif belajar **{streak_days} hari beruntun**! Pertahankan konsistensi ini.")
+        else:
+            reply_lines.append("\n💡 **Tips Manta:** Selesaikan 1 materi hari ini untuk memulai rekor hari beruntun (*Study Streak*) Anda!")
+
+        reply_lines.append(f"\n🏆 **Koleksi Lencana:** **{unlocked_count} dari {len(badges)}** lencana telah berhasil Anda raih. Jelajahi detail kartu di bawah:")
+
+        return {
+            "status": "success",
+            "reply": "\n".join(reply_lines),
+            "source": "learning_milestone_badges",
+            "milestone_gamification": gamification,
+            "actions": [
+                {"label": "🎯 Cek Target 20 JP", "query": "Bagaimana status pemenuhan 20 JP saya?", "type": "query"},
+                {"label": "🧠 Latihan Kuis Mandiri", "query": "Beri saya latihan kuis dan uji pemahaman", "type": "query"},
+                {"label": "📚 Kursus Saya", "url": "/student/courses/", "type": "route"}
+            ],
+            "suggested_questions": [
+                "Bagaimana cara menaikkan level ASN saya?",
+                "Beri saya latihan kuis untuk menambah poin",
+                "Bagaimana status pemenuhan 20 JP saya?",
+                "Rekomendasi kursus populer"
+            ]
         }
 
     def _get_learning_media_info(self, variant_item: Any) -> Dict[str, Any]:
@@ -3491,6 +4033,173 @@ class AILearningNudgeAPIView(APIView):
         nudge_data = get_user_learning_nudge(user)
         return Response({"status": "success", "nudge": nudge_data})
 
+
+def sync_manta_proactive_notifications(user: Any) -> int:
+    """
+    Menghasilkan notifikasi proaktif cerdas Manta AI (Smart Notification Digest & Learning Nudge)
+    secara otomatis dan santun untuk aparatur sipil negara di lingkungan Setjen DPD RI:
+    1. AI Learning Nudge: Pengingat kelanjutan pelatihan yang sedang aktif berjalan.
+    2. AI JP Target Reminder: Pengingat target 20 JP ASN tahunan.
+    3. AI Microlearning Digest: Wawasan 1 menit seputar inovasi birokrasi, tata tertib parlemen, dan nilai BerAKHLAK.
+    4. AI Flashcard Challenge: Latihan mandiri konsep kunci.
+    
+    Dilengkapi mekanisme rate-limiting pintar (maksimal 1 notifikasi AI baru per 6 jam)
+    agar tidak mengganggu atau membanjiri peserta.
+    """
+    if not user or not user.is_authenticated:
+        return 0
+
+    try:
+        now = timezone.now()
+        # Periksa notifikasi AI terakhir untuk user ini dalam 6 jam terakhir
+        recent_ai_notif = api_models.Notification.objects.filter(
+            user=user,
+            type__startswith="AI ",
+            date__gte=now - timezone.timedelta(hours=6)
+        ).first()
+
+        if recent_ai_notif:
+            return 0
+
+        # Ambil kursus aktif yang belum selesai (< 100%)
+        enrollments = api_models.EnrolledCourse.objects.filter(user=user).select_related('course').order_by('-date')
+        
+        in_progress_enr = None
+        for enr in enrollments:
+            try:
+                pct = enr.completion_percentage()
+                if 0 < pct < 100:
+                    in_progress_enr = (enr, pct)
+                    break
+            except Exception:
+                continue
+
+        # 1. Prioritas Utama: Kursus Aktif Berjalan (Learning Nudge)
+        if in_progress_enr:
+            enr, pct = in_progress_enr
+            course = enr.course
+            total_lessons = api_models.VariantItem.objects.filter(variant__course=course).count()
+            completed_lessons = api_models.CompletedLesson.objects.filter(user=user, course=course).count()
+            remaining = max(0, total_lessons - completed_lessons)
+
+            existing_unread = api_models.Notification.objects.filter(
+                user=user,
+                course=course,
+                type="AI Learning Nudge",
+                seen=False
+            ).exists()
+
+            if not existing_unread:
+                api_models.Notification.objects.create(
+                    user=user,
+                    course=course,
+                    type="AI Learning Nudge",
+                    title=f"💡 Manta Nudge: Lanjutkan Pelatihan '{course.title[:35]}...' ({round(pct)}%)",
+                    message=(
+                        f"Progres belajar Anda pada '{course.title}' sudah mencapai {round(pct)}%. "
+                        f"Tersisa {remaining} materi lagi untuk menuntaskan evaluasi dan menerbitkan sertifikat resmi Anda. "
+                        f"Mari luangkan 10 menit untuk melanjutkan!"
+                    ),
+                    seen=False,
+                    date=now
+                )
+                return 1
+
+        # 2. Prioritas Kedua: Pemenuhan Target 20 JP ASN Tahunan
+        completed_enrollments = [e for e in enrollments if getattr(e, 'completed', False) or (hasattr(e, 'completion_percentage') and e.completion_percentage() >= 100)]
+        total_jp = 0
+        for ce in completed_enrollments:
+            c = ce.course
+            dur_secs = 0
+            lectures = api_models.VariantItem.objects.filter(variant__course=c)
+            for vi in lectures:
+                if getattr(vi, 'duration', None):
+                    dur_secs += vi.duration.total_seconds()
+                elif getattr(vi, 'duration_seconds', None):
+                    dur_secs += vi.duration_seconds
+            course_jp = max(2, min(12, round((dur_secs / 60.0) / 45.0))) if dur_secs > 0 else 2
+            total_jp += course_jp
+
+        if total_jp < 20:
+            existing_jp_notif = api_models.Notification.objects.filter(
+                user=user,
+                type="AI JP Target Reminder",
+                seen=False
+            ).exists()
+
+            if not existing_jp_notif:
+                remaining_jp = 20 - total_jp
+                rec_course = api_models.Course.objects.filter(platform_status="Published").exclude(
+                    id__in=[e.course_id for e in enrollments]
+                ).first()
+
+                api_models.Notification.objects.create(
+                    user=user,
+                    course=rec_course,
+                    type="AI JP Target Reminder",
+                    title=f"🎯 Target 20 JP ASN: Masih perlu {remaining_jp} JP lagi tahun ini",
+                    message=(
+                        f"Akumulasi pengembangan kompetensi Anda saat ini adalah {total_jp}/20 JP. "
+                        f"Sesuai UU ASN, setiap aparatur diimbau memenuhi minimal 20 JP/tahun. "
+                        f"Konsultasikan rencana belajar Anda dengan Manta AI untuk memilih pelatihan yang tepat!"
+                    ),
+                    seen=False,
+                    date=now
+                )
+                return 1
+
+        # 3. Prioritas Ketiga: Microlearning Digest of the Day
+        microlearning_pool = [
+            {
+                "topic": "Tiga Lensa Inovasi Birokrasi (Three Lenses)",
+                "summary": "Inovasi pelayanan publik yang berdampak harus berada di titik iris Desirability (diinginkan pengguna), Feasibility (layak teknis), dan Viability (berkelanjutan secara hukum & anggaran)."
+            },
+            {
+                "topic": "Prinsip Nilai Adaptif ASN BerAKHLAK",
+                "summary": "Aparatur adaptif cepat menyesuaikan diri menghadapi transformasi digital, proaktif berinovasi, dan tidak resistan terhadap pembaruan sistem administrasi parlemen."
+            },
+            {
+                "topic": "Kuorum Sah Sidang Paripurna DPD RI",
+                "summary": "Berdasarkan Tata Tertib DPD RI, keputusan sidang paripurna sah jika dihadiri oleh lebih dari 1/2 jumlah Anggota DPD RI yang mewakili lebih dari 1/2 jumlah provinsi di Indonesia."
+            },
+            {
+                "topic": "Urgensi Naskah Akademik RUU Inisiatif",
+                "summary": "Naskah Akademik menyajikan kajian ilmiah landasan filosofis, sosiologis, dan yuridis yang memperkuat argumentasi substansi pasal-pasal RUU inisiatif DPD RI."
+            }
+        ]
+
+        digest_item = random.choice(microlearning_pool)
+        existing_digest = api_models.Notification.objects.filter(
+            user=user,
+            type="AI Microlearning Digest",
+            seen=False
+        ).exists()
+
+        if not existing_digest:
+            api_models.Notification.objects.create(
+                user=user,
+                type="AI Microlearning Digest",
+                title=f"💡 Wawasan 1 Menit Manta: {digest_item['topic']}",
+                message=f"{digest_item['summary']} Klik 'Tanya Manta' untuk mendiskusikan implementasinya di unit kerja Anda.",
+                seen=False,
+                date=now
+            )
+            return 1
+
+    except Exception as e:
+        logger.warning(f"Error syncing Manta proactive notifications: {e}")
+        return 0
+
+    return 0
+
+
+class AIMantaNotificationsSyncAPIView(APIView):
+    """
+    Endpoint sinkronisasi notifikasi cerdas Manta AI:
+    POST /api/v1/ai/notifications/sync/
+    """
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         user = None
         if request.user and request.user.is_authenticated:
@@ -3503,8 +4212,11 @@ class AILearningNudgeAPIView(APIView):
                 except Exception:
                     user = None
 
-        nudge_data = get_user_learning_nudge(user)
-        return Response({"status": "success", "nudge": nudge_data})
+        if not user:
+            return Response({"status": "error", "message": "User tidak ditemukan"}, status=status.HTTP_400_BAD_REQUEST)
+
+        created_count = sync_manta_proactive_notifications(user)
+        return Response({"status": "success", "created_count": created_count})
 
 
 class AIAssistantSuggestionsAPIView(APIView):
@@ -3740,3 +4452,35 @@ class AIAssistantSaveNoteAPIView(APIView):
                 {"status": "error", "message": f"Gagal menyimpan catatan: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class AIMantaMilestonesAPIView(APIView):
+    """
+    Endpoint untuk mengambil ringkasan gamifikasi & lencana milestone belajar ASN:
+    GET /api/v1/ai/milestones/
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        user = None
+        if request.user and request.user.is_authenticated:
+            user = request.user
+        else:
+            uid = request.GET.get("user_id")
+            if uid:
+                try:
+                    user = api_models.User.objects.filter(id=uid).first()
+                except Exception:
+                    user = None
+
+        user_ctx = {
+            "is_authenticated": bool(user and user.is_authenticated),
+            "user_id": user.id if user else None,
+            "name": (user.full_name or user.username) if user else "Tamu",
+            "organization_unit": getattr(user, "organization_unit", None) if user else None,
+            "position": getattr(user, "position", None) if user else None,
+        }
+
+        chat_helper = AIAssistantChatAPIView()
+        badges_data = chat_helper._handle_learning_journey_badges(user_ctx, "lencana saya")
+        return Response(badges_data)

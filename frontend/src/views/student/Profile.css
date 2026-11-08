@@ -89,3 +89,122 @@
     color: #115e59 !important;
     transform: translateY(-1px);
 }
+
+/* ========================================================
+   ✨ MANTA AI GAMIFICATION & ACHIEVEMENTS TAB
+   ======================================================== */
+.gamification-hero-banner {
+    background: linear-gradient(135deg, #042f2e 0%, #0f766e 60%, #14b8a6 100%);
+    border-radius: 16px;
+    padding: 24px;
+    color: #ffffff;
+    box-shadow: 0 10px 25px -5px rgba(15, 118, 110, 0.3);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.gamification-hero-banner::after {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.gamification-level-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.gamification-stat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    height: 100%;
+    transition: all 0.25s ease;
+}
+
+.gamification-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
+    border-color: #cbd5e1;
+}
+
+.stat-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.milestones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.milestone-badge-card {
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.milestone-badge-card.unlocked {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.08);
+}
+
+.milestone-badge-card.unlocked:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 118, 110, 0.12);
+}
+
+.milestone-badge-card.locked {
+    background: #f8fafc;
+    border-color: #f1f5f9;
+    opacity: 0.85;
+}
+
+.milestone-badge-card.locked:hover {
+    opacity: 1;
+    border-color: #e2e8f0;
+}
+
+.badge-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+}
+
+.manta-consult-card {
+    background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
+    border: 1px solid #99f6e4;
+    border-radius: 16px;
+    padding: 20px 24px;
+}

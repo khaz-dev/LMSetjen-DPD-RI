@@ -23,6 +23,7 @@ import { ProfileContext } from "../plugin/Context";
 import { useRoles } from "../../utils/useRoles";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import { getValidProfileImageUrl } from "../../utils/imageUtils";
+import mantaHappyWebp from "../../assets/avatar/manta-happy.webp";
 import "./Profile.css";
 
 // Constants
@@ -936,6 +937,24 @@ function Profile() {
                                                     <i className="fas fa-layer-group"></i> Gol: {profileData.golongan}
                                                 </span>
                                             )}
+
+                                            {profileData.gamification && (
+                                                <button
+                                                    type="button"
+                                                    className="role-tag-pill border-0"
+                                                    style={{
+                                                        backgroundColor: `${profileData.gamification.level_color || '#10b981'}22`,
+                                                        color: profileData.gamification.level_color || '#10b981',
+                                                        fontWeight: 700,
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    onClick={() => setActiveTab("achievements")}
+                                                    title={`Tingkat Kompetensi ASN: Level ${profileData.gamification.level} (${profileData.gamification.level_name}) - ${profileData.gamification.xp} XP. Klik untuk melihat galeri lencana`}
+                                                >
+                                                    <i className={profileData.gamification.level_icon || 'fas fa-seedling'}></i>
+                                                    Level {profileData.gamification.level}: {profileData.gamification.level_name} ({profileData.gamification.xp} XP)
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
 
@@ -1064,6 +1083,27 @@ function Profile() {
                                 >
                                     <i className="fas fa-share-nodes"></i>
                                     <span>Media Sosial & Tautan</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className={`profile-tab-btn ${activeTab === "achievements" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("achievements")}
+                                >
+                                    <i className="fas fa-trophy text-warning"></i>
+                                    <span>Prestasi & Lencana Manta</span>
+                                    {profileData.gamification && (
+                                        <span 
+                                            className="badge rounded-pill text-white ms-1" 
+                                            style={{ 
+                                                backgroundColor: profileData.gamification.level_color || '#10b981',
+                                                fontSize: '0.66rem',
+                                                padding: '2px 7px'
+                                            }}
+                                        >
+                                            Lv. {profileData.gamification.level}
+                                        </span>
+                                    )}
                                 </button>
                             </div>
 
@@ -1982,6 +2022,301 @@ function Profile() {
                                                     </div>
                                                 ) : null}
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {/* ========================================================
+                                        TAB 5: ✨ MANTA AI ACHIEVEMENTS & MILESTONE BADGES
+                                        ======================================================== */}
+                                    {activeTab === "achievements" && (
+                                        <div className="tab-pane-content">
+                                            {(() => {
+                                                const g = profileData.gamification || {
+                                                    level: 1,
+                                                    level_name: "Aparatur Pratama",
+                                                    level_icon: "fas fa-seedling",
+                                                    level_color: "#10b981",
+                                                    xp: 0,
+                                                    next_level_xp: 250,
+                                                    next_level_name: "Aparatur Muda",
+                                                    remaining_xp: 250,
+                                                    xp_progress_pct: 0,
+                                                    streak_days: 0,
+                                                    total_jp: 0,
+                                                    target_jp: 20,
+                                                    jp_progress_pct: 0,
+                                                    unlocked_count: 2,
+                                                    total_badges: 8,
+                                                    badges: []
+                                                };
+
+                                                return (
+                                                    <div className="gamification-tab-container">
+                                                        {/* Hero Banner Level ASN */}
+                                                        <div className="gamification-hero-banner">
+                                                            <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3">
+                                                                <div>
+                                                                    <div className="d-flex align-items-center gap-2 mb-2">
+                                                                        <span 
+                                                                            className="gamification-level-pill"
+                                                                            style={{ backgroundColor: g.level_color || '#10b981' }}
+                                                                        >
+                                                                            <i className={g.level_icon || 'fas fa-seedling'}></i>
+                                                                            Level {g.level}: {g.level_name}
+                                                                        </span>
+                                                                        <span className="badge bg-white text-dark px-3 py-2 fw-bold" style={{ borderRadius: '9999px' }}>
+                                                                            {g.xp?.toLocaleString('id-ID')} XP
+                                                                        </span>
+                                                                    </div>
+                                                                    <h4 className="fw-bold text-white mb-1">
+                                                                        Prestasi & Jenjang Pembelajaran ASN Setjen DPD RI
+                                                                    </h4>
+                                                                    <p className="text-white-50 mb-0 small">
+                                                                        Sistem gamifikasi cerdas terintegrasi Manta AI untuk mengapresiasi konsistensi, keaktifan, dan penguasaan kompetensi Anda.
+                                                                    </p>
+                                                                </div>
+
+                                                                <div className="flex-shrink-0">
+                                                                    <Link 
+                                                                        to="/rankings/" 
+                                                                        className="btn btn-light btn-sm px-3 py-2 rounded-pill fw-bold text-teal shadow-sm"
+                                                                    >
+                                                                        <i className="fas fa-ranking-star me-2"></i>
+                                                                        Lihat Peringkat Global
+                                                                    </Link>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* XP Progression Bar */}
+                                                            <div className="p-3 rounded-3" style={{ background: 'rgba(0, 0, 0, 0.22)', backdropFilter: 'blur(6px)' }}>
+                                                                <div className="d-flex justify-content-between align-items-center mb-1 text-white" style={{ fontSize: '0.8rem' }}>
+                                                                    <span>
+                                                                        Progres Level: <strong>{g.xp_progress_pct}%</strong>
+                                                                    </span>
+                                                                    {g.level < 6 ? (
+                                                                        <span>
+                                                                            Menuju <strong>{g.next_level_name}</strong>: tersisa <strong>{g.remaining_xp} XP</strong> lagi
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-warning fw-bold">
+                                                                            <i className="fas fa-crown me-1"></i> Telah Mencapai Tingkat Tertinggi
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="progress" style={{ height: '8px', borderRadius: '4px', backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
+                                                                    <div 
+                                                                        className="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                                                        role="progressbar" 
+                                                                        style={{ width: `${g.xp_progress_pct}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 3 Pillars Summary Cards */}
+                                                        <div className="row g-3 mb-4">
+                                                            <div className="col-12 col-md-4">
+                                                                <div className="gamification-stat-card">
+                                                                    <div className="d-flex align-items-center gap-3">
+                                                                        <div className="stat-icon-wrapper" style={{ background: '#fef3c7', color: '#d97706' }}>
+                                                                            <i className="fas fa-fire-flame-curved"></i>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Study Streak</span>
+                                                                            <h5 className="fw-bold mb-0 text-dark">
+                                                                                {g.streak_days} Hari Beruntun
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <small className="text-muted d-block mt-2" style={{ fontSize: '0.74rem' }}>
+                                                                        {g.streak_days > 0 
+                                                                            ? "🔥 Ritme belajar aktif terjaga! Terus pertahankan."
+                                                                            : "Selesaikan 1 modul hari ini untuk mulai mencetak rekor!"}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="col-12 col-md-4">
+                                                                <div className="gamification-stat-card">
+                                                                    <div className="d-flex align-items-center gap-3">
+                                                                        <div className="stat-icon-wrapper" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+                                                                            <i className="fas fa-clock"></i>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Target 20 JP ASN</span>
+                                                                            <h5 className="fw-bold mb-0 text-dark">
+                                                                                {g.total_jp} / 20 JP
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="progress mt-2" style={{ height: '5px' }}>
+                                                                        <div 
+                                                                            className="progress-bar bg-info" 
+                                                                            style={{ width: `${g.jp_progress_pct}%` }}
+                                                                        ></div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="col-12 col-md-4">
+                                                                <div className="gamification-stat-card">
+                                                                    <div className="d-flex align-items-center gap-3">
+                                                                        <div className="stat-icon-wrapper" style={{ background: '#dcfce7', color: '#16a34a' }}>
+                                                                            <i className="fas fa-award"></i>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Lencana Prestasi</span>
+                                                                            <h5 className="fw-bold mb-0 text-dark">
+                                                                                {g.unlocked_count} / {g.total_badges} Terbuka
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <small className="text-muted d-block mt-2" style={{ fontSize: '0.74rem' }}>
+                                                                        Tersisa {Math.max(0, g.total_badges - g.unlocked_count)} lencana lagi untuk melengkapi koleksi.
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Section Header: Milestone Badges */}
+                                                        <div className="d-flex align-items-center justify-content-between mb-3">
+                                                            <div>
+                                                                <h6 className="fw-bold mb-0 text-dark fs-6">
+                                                                    <i className="fas fa-medal text-warning me-2"></i>
+                                                                    Galeri 8 Lencana Prestasi (Milestone Badges)
+                                                                </h6>
+                                                                <span className="text-muted small">
+                                                                    Setiap lencana mencerminkan tahapan kemahiran, kedisiplinan, dan dedikasi belajar Anda.
+                                                                </span>
+                                                            </div>
+                                                            <span className="badge bg-light text-dark border px-3 py-1">
+                                                                {g.unlocked_count} dari {g.total_badges} Terbuka
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Badges Grid */}
+                                                        <div className="milestones-grid mb-4">
+                                                            {(g.badges || []).map((b) => (
+                                                                <div 
+                                                                    key={b.id} 
+                                                                    className={`milestone-badge-card ${b.is_unlocked ? 'unlocked' : 'locked'}`}
+                                                                >
+                                                                    <div className="d-flex align-items-start gap-3 mb-2">
+                                                                        <div 
+                                                                            className="badge-icon-box"
+                                                                            style={{ 
+                                                                                background: b.is_unlocked ? `${b.color}15` : '#f1f5f9',
+                                                                                color: b.is_unlocked ? b.color : '#94a3b8' 
+                                                                            }}
+                                                                        >
+                                                                            <i className={b.icon}></i>
+                                                                        </div>
+                                                                        <div className="flex-grow-1 min-w-0">
+                                                                            <div className="d-flex align-items-center justify-content-between gap-1">
+                                                                                <span 
+                                                                                    className="badge px-2 py-0" 
+                                                                                    style={{ 
+                                                                                        fontSize: '0.65rem', 
+                                                                                        backgroundColor: b.is_unlocked ? `${b.color}20` : '#e2e8f0', 
+                                                                                        color: b.is_unlocked ? b.color : '#64748b' 
+                                                                                    }}
+                                                                                >
+                                                                                    {b.category}
+                                                                                </span>
+                                                                                {b.is_unlocked ? (
+                                                                                    <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-0" style={{ fontSize: '0.65rem' }}>
+                                                                                        <i className="fas fa-check-circle me-1"></i> Terbuka
+                                                                                    </span>
+                                                                                ) : (
+                                                                                    <span className="badge bg-secondary-subtle text-muted border px-2 py-0" style={{ fontSize: '0.65rem' }}>
+                                                                                        <i className="fas fa-lock me-1"></i> Terkunci
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            <h6 className="fw-bold mb-1 text-dark mt-1 text-truncate" title={b.title}>
+                                                                                {b.title}
+                                                                            </h6>
+                                                                            <p className="text-muted mb-0" style={{ fontSize: '0.73rem', lineHeight: '1.3' }}>
+                                                                                {b.description}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="mt-auto pt-2 border-top">
+                                                                        <div className="d-flex justify-content-between text-muted" style={{ fontSize: '0.68rem' }}>
+                                                                            <span>Kriteria Progres:</span>
+                                                                            <strong className={b.is_unlocked ? "text-success" : "text-dark"}>{b.progress}</strong>
+                                                                        </div>
+                                                                        <div className="progress mt-1" style={{ height: '4px' }}>
+                                                                            <div 
+                                                                                className={`progress-bar ${b.is_unlocked ? 'bg-success' : 'bg-primary'}`}
+                                                                                style={{ width: `${b.progress_pct}%` }}
+                                                                            ></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* Manta AI Consult Card */}
+                                                        <div className="manta-consult-card d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+                                                            <div className="d-flex align-items-center gap-3">
+                                                                <div 
+                                                                    className="rounded-circle border border-teal d-flex align-items-center justify-content-center overflow-hidden flex-shrink-0 shadow-xs"
+                                                                    style={{ 
+                                                                        width: '54px', 
+                                                                        height: '54px', 
+                                                                        background: 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
+                                                                        padding: '2px'
+                                                                    }}
+                                                                >
+                                                                    <img 
+                                                                        src={mantaHappyWebp} 
+                                                                        alt="Manta AI"
+                                                                        width="48"
+                                                                        height="48"
+                                                                        style={{ objectFit: 'contain' }}
+                                                                        onError={(e) => { e.currentTarget.src = "/images/avatar/manta-happy.png"; }}
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <h6 className="fw-bold mb-1 text-teal-dark fs-6">
+                                                                        Konsultasikan Rencana Belajar dengan Manta AI 🌊
+                                                                    </h6>
+                                                                    <p className="text-muted mb-0 small">
+                                                                        Butuh rekomendasi kursus sesuai unit kerja, tips menaikkan XP, atau latihan kuis interaktif? Manta siap membantu Anda 24/7.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex-shrink-0 d-flex gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-teal btn-sm rounded-pill px-3 py-2 fw-semibold shadow-xs"
+                                                                    onClick={() => {
+                                                                        const prompt = 'Bagaimana status pemenuhan 20 JP dan lencana saya?';
+                                                                        if (typeof window !== 'undefined') {
+                                                                            if (typeof window.openMantaChat === 'function') {
+                                                                                window.openMantaChat(prompt);
+                                                                            } else {
+                                                                                window.dispatchEvent(new CustomEvent('manta_open_chat', { detail: { prompt } }));
+                                                                                window.dispatchEvent(new CustomEvent('manta-open-chat', { detail: { prompt, query: prompt } }));
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <i className="fas fa-comment-dots me-1"></i> Tanya Manta AI
+                                                                </button>
+                                                                <Link 
+                                                                    to="/search/" 
+                                                                    className="btn btn-outline-teal btn-sm rounded-pill px-3 py-2 fw-semibold"
+                                                                >
+                                                                    <i className="fas fa-book-open me-1"></i> Cari Pelatihan
+                                                                </Link>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     )}
 

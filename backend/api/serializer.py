@@ -274,6 +274,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     # Computed fields for frontend display
     organization_unit_name = serializers.SerializerMethodField()
     position_name = serializers.SerializerMethodField()
+    gamification = serializers.SerializerMethodField()
     
     class Meta:
         model = Profile
@@ -352,6 +353,15 @@ class ProfileSerializer(serializers.ModelSerializer):
         
     def get_position_name(self, obj):
         return obj.position.name if obj.position else ""
+
+    def get_gamification(self, obj):
+        try:
+            if obj.user:
+                from api.views.ai_assistant import get_user_gamification_data
+                return get_user_gamification_data(obj.user)
+        except Exception:
+            pass
+        return None
 
     def get_is_super_admin(self, obj):
         try:
@@ -1300,6 +1310,7 @@ class QuestionAnswerMessageReportSerializer(serializers.ModelSerializer):
 
 class NotificationSerializer(serializers.ModelSerializer):
     course_data = serializers.SerializerMethodField()
+    manta_prompt = serializers.SerializerMethodField()
 
     class Meta:
         fields = '__all__'
@@ -1320,6 +1331,21 @@ class NotificationSerializer(serializers.ModelSerializer):
                 "slug": getattr(obj.course, 'slug', None),
                 "enrollment_id": enrollment_id
             }
+        return None
+
+    def get_manta_prompt(self, obj):
+        noti_type = str(getattr(obj, 'type', ''))
+        if noti_type.startswith("AI "):
+            if noti_type == "AI Learning Nudge":
+                c_title = obj.course.title if getattr(obj, 'course', None) else "materi pelatihan aktif saya"
+                return f"Manta, tolong rangkum materi penting dan langkah selanjutnya dari pelatihan '{c_title}'"
+            elif noti_type == "AI JP Target Reminder":
+                return "Manta, bagaimana progres pemenuhan 20 JP belajar saya dan rekomendasikan pelatihan untuk mencapainya"
+            elif noti_type == "AI Microlearning Digest":
+                return f"Manta, jelaskan lebih mendalam wawasan tentang '{obj.title}' dan relevansinya bagi ASN Setjen DPD RI"
+            elif noti_type == "AI Flashcard Challenge":
+                return "Manta, buatkan flashcard dan latihan kuis pemahaman materi ini"
+            return f"Manta, saya ingin berdiskusi tentang: {obj.title}"
         return None
 
 
@@ -3495,6 +3521,37 @@ class RankedStudentSerializer(serializers.Serializer):
     monthly_points = serializers.SerializerMethodField()
     rank = serializers.SerializerMethodField()
     rank_position = serializers.SerializerMethodField()
+    manta_level = serializers.SerializerMethodField()
+    manta_level_name = serializers.SerializerMethodField()
+    manta_level_color = serializers.SerializerMethodField()
+    manta_level_icon = serializers.SerializerMethodField()
+    
+    def _get_level_info(self, obj):
+        pts = getattr(obj, 'lifetime_points', 0) or 0
+        if pts < 250:
+            return 1, "Aparatur Pratama", "#10b981", "fas fa-seedling"
+        elif pts < 600:
+            return 2, "Aparatur Muda", "#0ea5e9", "fas fa-shield-halved"
+        elif pts < 1200:
+            return 3, "Aparatur Madya", "#6366f1", "fas fa-gem"
+        elif pts < 2500:
+            return 4, "Aparatur Utama", "#8b5cf6", "fas fa-medal"
+        elif pts < 4500:
+            return 5, "Ksatria Parlemen", "#f59e0b", "fas fa-crown"
+        else:
+            return 6, "Pakar Reformasi Birokrasi", "#eab308", "fas fa-trophy"
+
+    def get_manta_level(self, obj):
+        return self._get_level_info(obj)[0]
+
+    def get_manta_level_name(self, obj):
+        return self._get_level_info(obj)[1]
+
+    def get_manta_level_color(self, obj):
+        return self._get_level_info(obj)[2]
+
+    def get_manta_level_icon(self, obj):
+        return self._get_level_info(obj)[3]
     
     def get_yearly_points(self, obj):
         from django.utils import timezone

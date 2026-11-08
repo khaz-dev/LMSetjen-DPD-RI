@@ -87,6 +87,10 @@ NOTI_TYPE = (
     ("Exam Rejected", "Exam Rejected"),
     ("Exam Review Needed", "Exam Review Needed"),
     ("Exam Pending Review", "Exam Pending Review"),
+    ("AI Learning Nudge", "AI Learning Nudge"),
+    ("AI JP Target Reminder", "AI JP Target Reminder"),
+    ("AI Microlearning Digest", "AI Microlearning Digest"),
+    ("AI Flashcard Challenge", "AI Flashcard Challenge"),
 )
 
 # ✨ PHASE 4.18: Video source types for course intro videos

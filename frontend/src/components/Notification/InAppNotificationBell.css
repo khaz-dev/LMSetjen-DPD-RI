@@ -297,6 +297,13 @@
     border: 1px solid #fecdd3;
 }
 
+.in-app-noti-item-icon.badge-manta {
+    background: #ccfbf1;
+    color: #0d9488;
+    border: 1px solid #5eead4;
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+}
+
 .in-app-noti-item-icon.badge-sky {
     background: #f0f9ff;
     color: #0284c7;
@@ -343,6 +350,7 @@
 }
 
 .in-app-noti-type-tag.badge-emerald { background: #ecfdf5; color: #059669; }
+.in-app-noti-type-tag.badge-manta { background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4; font-weight: 800; }
 .in-app-noti-type-tag.badge-amber { background: #fffbeb; color: #d97706; }
 .in-app-noti-type-tag.badge-rose { background: #fef2f2; color: #e11d48; }
 .in-app-noti-type-tag.badge-sky { background: #f0f9ff; color: #0284c7; }
@@ -391,6 +399,48 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Action button inside Manta AI notifications */
+.in-app-noti-manta-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.in-app-noti-manta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(13, 148, 136, 0.25);
+}
+
+.in-app-noti-manta-btn:hover {
+    background: linear-gradient(135deg, #0f766e, #115e59);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(13, 148, 136, 0.35);
+    color: #ffffff;
+}
+
+.in-app-noti-manta-sublink {
+    font-size: 0.68rem;
+    color: #64748b;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
 }
 
 /* Unread Indicator Dot */

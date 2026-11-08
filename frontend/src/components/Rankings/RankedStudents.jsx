@@ -236,9 +236,26 @@ const RankedStudents = ({ maxResults = 5 }) => {
 
               {/* Student Info */}
               <div className="ranking-info flex-grow-1 min-w-0 ms-2">
-                <h6 className="mb-0 text-truncate" title={student.full_name}>
-                  {student.full_name}
-                </h6>
+                <div className="d-flex align-items-center gap-1 mb-0 flex-wrap">
+                  <h6 className="mb-0 text-truncate" title={student.full_name}>
+                    {student.full_name}
+                  </h6>
+                  {student.manta_level_name && (
+                    <span 
+                      className="badge rounded-pill text-white flex-shrink-0" 
+                      style={{ 
+                        backgroundColor: student.manta_level_color || '#10b981', 
+                        fontSize: '0.64rem',
+                        padding: '2px 7px',
+                        fontWeight: 600
+                      }}
+                      title={`Tingkat Kompetensi ASN: Level ${student.manta_level || 1} (${student.manta_level_name})`}
+                    >
+                      <i className={`${student.manta_level_icon || 'fas fa-seedling'} me-1`}></i>
+                      {student.manta_level_name}
+                    </span>
+                  )}
+                </div>
                 <small className="text-muted d-block text-truncate">
                   {student.position_name || student.organization_unit_name || student.country || '—'}
                 </small>
@@ -350,6 +367,86 @@ const RankedStudents = ({ maxResults = 5 }) => {
                   </div>
                 ) : (
                   <>
+                    {/* ✨ Manta AI Gamification & Milestone Badges Card */}
+                    {breakdownData?.gamification && (
+                      <div className="p-3 rounded-3 mb-3 border shadow-xs" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f0fdfa 100%)', borderColor: '#ccfbf1' }}>
+                        <div className="d-flex align-items-center justify-content-between mb-2">
+                          <div className="d-flex align-items-center gap-2">
+                            <span 
+                              className="badge rounded-pill text-white px-3 py-1 shadow-xs"
+                              style={{ 
+                                backgroundColor: breakdownData.gamification.level_color || '#10b981',
+                                fontSize: '0.75rem',
+                                fontWeight: 700 
+                              }}
+                            >
+                              <i className={`${breakdownData.gamification.level_icon || 'fas fa-seedling'} me-1`}></i>
+                              Level {breakdownData.gamification.level}: {breakdownData.gamification.level_name}
+                            </span>
+                            <span className="badge bg-white text-dark border px-2 py-1" style={{ fontSize: '0.72rem' }}>
+                              {breakdownData.gamification.xp?.toLocaleString('id-ID')} XP
+                            </span>
+                          </div>
+                          {breakdownData.gamification.streak_days > 0 && (
+                            <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1" style={{ fontSize: '0.72rem' }}>
+                              <i className="fas fa-fire-flame-curved text-danger me-1"></i>
+                              {breakdownData.gamification.streak_days} Hari Streak
+                            </span>
+                          )}
+                        </div>
+
+                        {/* XP Progress Bar */}
+                        <div className="mb-2">
+                          <div className="d-flex justify-content-between text-muted" style={{ fontSize: '0.7rem' }}>
+                            <span>Progres Tingkat ASN: <strong>{breakdownData.gamification.xp_progress_pct}%</strong></span>
+                            {breakdownData.gamification.level < 6 ? (
+                              <span>Ke <strong>{breakdownData.gamification.next_level_name}</strong>: tersisa {breakdownData.gamification.remaining_xp} XP</span>
+                            ) : (
+                              <span className="text-success fw-bold">Tingkat Tertinggi</span>
+                            )}
+                          </div>
+                          <div className="progress mt-1" style={{ height: '6px', borderRadius: '4px', backgroundColor: '#e2e8f0' }}>
+                            <div 
+                              className="progress-bar progress-bar-striped progress-bar-animated"
+                              role="progressbar" 
+                              style={{ 
+                                width: `${breakdownData.gamification.xp_progress_pct}%`,
+                                backgroundColor: breakdownData.gamification.level_color || '#10b981'
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        {/* Mini Badges Shelf */}
+                        {breakdownData.gamification.badges && (
+                          <div className="pt-2 border-top">
+                            <div className="d-flex align-items-center justify-content-between mb-1">
+                              <small className="fw-bold text-muted text-uppercase" style={{ fontSize: '0.68rem' }}>
+                                Lencana Prestasi ({breakdownData.gamification.unlocked_count}/{breakdownData.gamification.total_badges} Terbuka):
+                              </small>
+                              <small className="text-teal fw-semibold" style={{ fontSize: '0.68rem' }}>
+                                Target 20 JP: {breakdownData.gamification.total_jp || 0}/20 JP
+                              </small>
+                            </div>
+                            <div className="d-flex flex-wrap gap-1">
+                              {breakdownData.gamification.badges.map((b) => (
+                                <span
+                                  key={b.id}
+                                  className={`badge d-inline-flex align-items-center gap-1 border px-2 py-1 ${b.is_unlocked ? 'bg-white text-dark shadow-xs' : 'bg-light text-muted opacity-75'}`}
+                                  style={{ fontSize: '0.68rem' }}
+                                  title={`${b.title}: ${b.description} (${b.progress})`}
+                                >
+                                  <i className={b.icon} style={{ color: b.is_unlocked ? b.color : '#94a3b8' }}></i>
+                                  <span>{b.title}</span>
+                                  {b.is_unlocked && <i className="fas fa-check-circle text-success ms-1" style={{ fontSize: '0.6rem' }}></i>}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Summary category badges */}
                     <div className="p-3 bg-light rounded-3 border mb-3">
                       <small className="fw-bold text-muted d-block mb-2 text-uppercase" style={{ fontSize: '0.72rem' }}>
