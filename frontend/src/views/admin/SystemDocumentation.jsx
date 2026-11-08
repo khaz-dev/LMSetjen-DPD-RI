@@ -4,12 +4,14 @@ import {
     FaUsers, FaCog, FaCode, FaNetworkWired, FaDocker, FaCloud,
     FaLock, FaKey, FaUserShield, FaChartLine, FaClipboardCheck,
     FaPrint, FaLanguage, FaCheckCircle, FaInfoCircle, FaSyncAlt,
-    FaSearch, FaTimes, FaGraduationCap, FaCheckDouble, FaLayerGroup
+    FaSearch, FaTimes, FaGraduationCap, FaCheckDouble, FaLayerGroup,
+    FaRobot, FaBell, FaCertificate, FaMedal, FaStickyNote, FaVideo
 } from "react-icons/fa";
 import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
 import apiInstance from "../../utils/axios";
 import useSystemVersion from "../../hooks/useSystemVersion";
+import { APP_VERSION } from "../../utils/version";
 import "./SystemDocumentation.css";
 
 /**
@@ -56,13 +58,13 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
     const content = {
         en: {
             pageTitle: "System Documentation & Technical Architecture",
-            pageSubtitle: "Comprehensive technical reference, database schema, and live runtime diagnostics",
+            pageSubtitle: "Comprehensive technical reference, database schema, and live runtime diagnostics (v1.1.0)",
             printPDF: "Export / Print",
             language: "Language",
             lastUpdated: "Last Synced",
             version: "Version",
             allSections: "All Sections",
-            filterPlaceholder: "Search documentation (e.g. JWT, PostgreSQL, Docker, Roles)...",
+            filterPlaceholder: "Search documentation (e.g. Si Manta, JWT, PostgreSQL, Docker, Roles, API)...",
             liveBadge: "System Online & Normal",
             envInfo: "Live Environment",
 
@@ -83,15 +85,18 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
 
             overview: {
                 title: "System Overview",
-                description: "LMSetjen DPD RI is a modern Learning Management System designed specifically for the Secretariat General of the Regional Representative Council of the Republic of Indonesia. The system provides an integrated platform for digital learning, competency development, and certification.",
+                description: "LMSetjen DPD RI (Version 1.1.0) is the official enterprise Learning Management System of the Secretariat General of the Regional Representative Council of the Republic of Indonesia (Setjen DPD RI). The platform provides an integrated ecosystem for civil servant competency development, AI-assisted self-paced learning via Si Manta, interactive study notes, automated evaluations, tamper-evident digital certificate issuance, and real-time governance diagnostics.",
                 purpose: "Purpose & Objectives",
                 purposeItems: [
-                    "Provide a modern, intuitive, and responsive learning portal for civil servants",
-                    "Facilitate structured competency and skill tracking across departments",
-                    "Support both self-paced modules and collaborative discussion forums",
-                    "Deliver automated evaluations, quizzes, and tamper-evident certificate issuance",
-                    "Enable robust course curriculum curation, rich media support, and video streaming",
-                    "Provide real-time analytics, user moderation, and diagnostics for administrators"
+                    "Provide an intuitive, responsive, and secure digital learning hub for all DPD RI personnel",
+                    "Facilitate structured competency tracking and civil service training roadmaps across departments",
+                    "Empower learners with Si Manta AI: an interactive tutor grounded in course lesson contexts and personal study notes",
+                    "Support rich modular curricula with dual video streaming (HTML5 MP4 & YouTube) and auto-checkpoint resumption",
+                    "Enable in-lesson rich study note taking (Catatan Belajar) with color tagging, search, and AI synthesis",
+                    "Deliver automated evaluations, timed quizzes, and tamper-evident digital certificate issuance with QR verification",
+                    "Drive learner engagement with gamification milestones, experience points, streak tracking, and leaderboards",
+                    "Provide real-time in-app notification dispatch for students, instructors, and system administrators",
+                    "Furnish comprehensive moderation queues, feedback bug reporting, and live server diagnostics for administrators"
                 ],
                 systemInfo: "Runtime & Infrastructure",
                 productionUrl: "Active Runtime Host",
@@ -104,100 +109,111 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
 
             architecture: {
                 title: "System Architecture",
-                description: "The platform is engineered using a decoupled, high-performance architecture with distinct layers:",
+                description: "The platform is engineered using a decoupled, high-performance architecture with distinct enterprise layers:",
                 frontend: "Frontend Presentation Layer",
-                frontendDesc: "React 18.2 SPA powered by Vite bundler, delivering sub-second navigation, lazy-loaded bundles, and modular CSS design tokens.",
+                frontendDesc: "React 18.2 SPA powered by Vite bundler, delivering sub-second navigation, CSS component scope isolation, Zustand state management, integrated Si Manta AI chat companion, and modular design tokens.",
                 backend: "Backend API Layer",
-                backendDesc: "Django 4.2 REST Framework providing RESTful endpoints, JWT security, custom throttle guards, and role-based access control.",
+                backendDesc: "Django 4.2 LTS REST Framework providing semantic RESTful endpoints, Google Gemini AI integration, real-time in-app notification engine, JWT security, custom throttle guards, and role-based access control.",
                 database: "Persistent Database Layer",
-                databaseDesc: "PostgreSQL 15 relational engine with foreign key constraints, connection pooling, and automated schema migrations.",
+                databaseDesc: "PostgreSQL 15 relational engine with full-text search indexing (SearchVector), foreign key constraints, connection pooling, and automated schema migrations.",
                 caching: "High-Speed Caching Layer",
-                cachingDesc: "In-memory caching and session acceleration for query optimization and background worker dispatch.",
+                cachingDesc: "In-memory caching and session acceleration for query optimization, unread notification counters, and background worker dispatch.",
                 proxy: "Reverse Proxy & Edge Gateway",
-                proxyDesc: "Nginx web server managing TLS 1.3 encryption, gzip/brotli compression, rate limiting, and static asset streaming.",
+                proxyDesc: "Nginx web server managing official domain routing (lms.dpd.go.id), TLS 1.3 encryption, gzip/brotli compression, rate limiting, and static/media asset streaming.",
                 deployment: "Containerization Orchestration",
-                deploymentDesc: "Dockerized services orchestrated via Docker Compose ensuring reproducible production and staging environments."
+                deploymentDesc: "Dockerized services orchestrated via Docker Compose ensuring reproducible production and staging environments on official DPD RI infrastructure."
             },
 
             technologies: {
                 title: "Technology Stack",
                 frontend: "Frontend Technologies",
                 frontendList: [
-                    "React 18.2 - Declarative component library",
-                    "Vite 4+ - Next-gen frontend tooling and build pipeline",
-                    "React Router v6 - Client-side URL history & deep linking",
-                    "Axios Interceptors - Authenticated HTTP request pipeline",
-                    "Bootstrap 5.3 & Custom Tokens - Modern UI styling",
-                    "Chart.js - Interactive admin and student analytics",
-                    "SweetAlert2 - Toast dialogs and actionable alerts",
-                    "FontAwesome & React Icons - Vector iconography"
+                    "React 18.2 - Declarative component-based UI library",
+                    "Vite 4+ - Next-gen frontend tooling and lightning build pipeline",
+                    "React Router v6 - Client-side history routing and deep linking",
+                    "Axios Interceptors - Authenticated HTTP request pipeline with automatic token refresh",
+                    "Google Gemini AI SDK / Chat Integration - Conversational engine for Si Manta AI Tutor",
+                    "Bootstrap 5.3 & CSS Scoped Tokens - Modern responsive layout without global style pollution",
+                    "Chart.js - Interactive dashboards, enrollment metrics, and student analytics",
+                    "SweetAlert2 & Toastify - Dynamic feedback modals and non-blocking notifications",
+                    "Canvas Confetti & QR Code Generator - Gamification celebrations and certificate verification",
+                    "FontAwesome & React Icons - Comprehensive vector iconography"
                 ],
                 backend: "Backend Technologies",
                 backendList: [
-                    "Python 3.11+ - Core backend runtime",
-                    "Django 4.2 LTS - Robust web framework",
-                    "Django REST Framework - Serialization and API views",
-                    "SimpleJWT - Stateless token authentication",
-                    "Django CORS Headers - Cross-origin resource sharing",
-                    "Pillow - Media image processing and optimization"
+                    "Python 3.11+ - High-performance core backend runtime",
+                    "Django 4.2 LTS - Enterprise web framework with built-in security features",
+                    "Django REST Framework - Robust serialization, viewsets, and pagination",
+                    "Google Generative AI (Gemini Pro/Flash API) - Intelligent tutor backend for Si Manta",
+                    "SimpleJWT - Stateless token authentication with rotating refresh keys",
+                    "Django CORS Headers - Strict Cross-Origin Resource Sharing whitelist",
+                    "ReportLab & Pillow - Dynamic certificate generation engine and image optimization",
+                    "PostgreSQL Full-Text Search - Native SearchVector querying and search taxonomy analysis"
                 ],
                 infrastructure: "Infrastructure & DevOps",
                 infrastructureList: [
-                    "Docker & Docker Compose - Containerized service stack",
-                    "Nginx - Reverse proxy, SSL termination & asset caching",
-                    "PostgreSQL - High-availability relational database",
-                    "Certbot / Let's Encrypt - Automated SSL/TLS certificates",
-                    "Git Workflow - Continuous integration and versioning"
+                    "Docker & Docker Compose - Containerized service isolation and orchestration",
+                    "Nginx - Reverse proxy, TLS 1.3 termination, rate limiting & static caching",
+                    "PostgreSQL 15 - Enterprise relational database with automated snapshot backups",
+                    "Let's Encrypt / Certbot - Automated SSL/TLS certificates for lms.dpd.go.id",
+                    "Git Release Workflow - Semantic versioning (v1.1.0) and automated migration pipelines"
                 ]
             },
 
             features: {
-                title: "Core Platform Capabilities",
+                title: "Core Platform Capabilities (v1.1.0)",
                 student: "Student & Learner Capabilities",
                 studentList: [
-                    "Course discovery, category filtering, search, and instant enrollment",
-                    "Interactive video player, rich lesson content, and downloadable materials",
-                    "Real-time progress tracking, checkpoint resumption, and completion bars",
-                    "Timed quiz evaluations, automated scoring, and answer reviews",
-                    "Cryptographically verified certificate generation and direct PDF export",
+                    "Course discovery, category filtering, SearchVector search, and instant enrollment",
+                    "Dual video streaming player (HTML5 MP4 & YouTube) with auto-checkpoint and 95% completion auto-unlock",
+                    "Si Manta AI Assistant: contextual AI tutor helping understand lessons, summarize concepts, and review notes",
+                    "Integrated Course Notes (Catatan Belajar): rich note-taking per lesson with color categorization and AI chat link",
+                    "Timed quiz evaluations, automated scoring, answer reviews, and passing grade verification",
+                    "Cryptographically verified digital certificate generation with public QR code and direct PDF export",
+                    "Gamification system: points accumulation, learning streaks, skill badges, and active leaderboards",
+                    "In-app notifications for enrollment, course progress, quiz results, and discussion replies",
                     "Discussion Q&A community forum and course rating reviews"
                 ],
                 instructor: "Instructor & Content Creator Capabilities",
                 instructorList: [
-                    "Course curriculum builder with sections, lectures, and interactive quizzes",
-                    "Rich text editor supporting multimedia embedding and resource attachments",
-                    "Student enrollment metrics, revenue/engagement stats, and review feedback",
+                    "Course curriculum builder with sections, lectures, rich media, and interactive quizzes",
+                    "Rich text editor supporting multimedia embedding, code blocks, and downloadable resources",
+                    "Instructor Notification Center for new student enrollments, Q&A inquiries, and course reviews",
+                    "Student enrollment metrics, revenue/engagement stats, and review feedback analytics",
                     "Q&A management to answer student queries directly from the teacher dashboard",
-                    "Course revision submissions awaiting administrative review"
+                    "Course revision submissions with draft and publishing state transitions"
                 ],
                 admin: "Administrative & Governance Capabilities",
                 adminList: [
-                    "Centralized user lifecycle management (Learners, Instructors, Admins)",
+                    "Centralized user lifecycle management (Learners, Instructors, Admins) with role elevations",
                     "Course publishing moderation, review workflows, and catalog curation",
-                    "Content abuse reporting and automated Q&A moderation queue",
-                    "User feedback tracking (bug reports and feature requests management)",
-                    "Live system diagnostics, environment health verification, and documentation"
+                    "Certificate Template Designer: visual editor for agency stamps, official signatures, and layout presets",
+                    "Content abuse reporting and automated Q&A / review moderation queue",
+                    "User feedback & bug ticket tracker with verification challenge",
+                    "Real-time in-app system notification broadcasts",
+                    "Live system diagnostics, environment health verification, and interactive documentation (v1.1.0)"
                 ]
             },
 
             authentication: {
                 title: "Authentication & Authorization Security",
-                mechanism: "Stateless JWT Architecture",
-                mechanismDesc: "Authentication is governed by JSON Web Tokens (JWT) adhering to RFC 7519. The backend signs access tokens with HMAC-SHA256 and provides rotating refresh tokens.",
+                mechanism: "Stateless JWT Architecture & PBKDF2 Hashing",
+                mechanismDesc: "Authentication is governed by JSON Web Tokens (JWT) adhering to RFC 7519, backed by PBKDF2 password hashing with SHA-256 (390,000+ iterations). The backend signs access tokens with HMAC-SHA256 and provides rotating refresh tokens. Session invalidation triggers immediately on credential modifications.",
                 flow: "Token Lifecycle Flow",
                 flowSteps: [
                     "User inputs credentials; client dispatches POST to /api/v1/user/token/",
-                    "Server validates credentials and issues short-lived Access Token & long-lived Refresh Token",
-                    "Client interceptor injects 'Authorization: Bearer <token>' in all API headers",
+                    "Server validates credentials, verifies active status, and issues short-lived Access Token & long-lived Refresh Token",
+                    "Client interceptor injects 'Authorization: Bearer <token>' in all API request headers",
                     "On access token expiration (401), the interceptor refreshes tokens transparently via /api/v1/user/token/refresh/",
-                    "Logout invalidates active client storage and closes authorized session"
+                    "SSO Integration: Supports Single Sign-On from official DPD RI portal via token exchange (/api/v1/sso/verify/)",
+                    "Logout cleans cookies and client storage, terminating authorized session immediately"
                 ],
                 authorization: "Role-Based Access Control (RBAC)",
                 authorizationDesc: "Each authenticated user is bound to one or more strict authorization scopes:",
                 roles: [
-                    { name: "Student (Peserta)", description: "Can browse courses, enroll, take quizzes, obtain certificates, and post Q&A." },
-                    { name: "Teacher / Instructor (Pengajar)", description: "Can create curriculum drafts, manage owned courses, and review student questions." },
-                    { name: "Administrator (Admin Setjen)", description: "Full operational access over users, course approvals, reports, and platform configurations." }
+                    { name: "Student (Peserta)", description: "Can browse courses, enroll, stream lectures, use Si Manta AI tutor, take quizzes, obtain certificates, take notes, and post Q&A." },
+                    { name: "Teacher / Instructor (Pengajar)", description: "Can create curriculum drafts, upload lecture media, manage owned courses, and review student questions." },
+                    { name: "Administrator (Admin Setjen)", description: "Full operational governance over users, course approvals, certificate designer, reports, and platform configurations." }
                 ],
                 protection: "Defensive Measures",
                 protectionDesc: "Security policies enforced across all incoming traffic:",
@@ -205,8 +221,9 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     "CSRF token validation on sensitive state-mutating requests",
                     "Password hashing via PBKDF2 with SHA-256 algorithm and salt",
                     "Automated IP and user-based throttling against brute-force attempts",
-                    "Strict Cross-Origin Resource Sharing (CORS) origin whitelisting",
-                    "SQL injection prevention via Django ORM parameterized queries"
+                    "Strict Cross-Origin Resource Sharing (CORS) whitelisting official domains (lms.dpd.go.id)",
+                    "SQL injection immunity via Django ORM parameterized queries",
+                    "Anti-spam verification sequence on user feedback and report forms"
                 ]
             },
 
@@ -214,14 +231,22 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 title: "RESTful API Documentation",
                 description: "Standardized RESTful JSON API adhering to semantic HTTP methods and status conventions.",
                 baseUrl: "Base API Endpoint",
-                endpoints: "Primary API Endpoints",
+                endpoints: "Primary API Endpoints (v1.1.0)",
                 endpointsList: [
                     "GET/POST /api/v1/user/token/ - Issue and verify JWT authentication tokens",
+                    "POST /api/v1/ai-assistant/chat/ - Contextual learning dialogue with Si Manta AI",
+                    "GET/POST /api/v1/notifications/ - Real-time in-app notification feed and unread count",
+                    "PATCH /api/v1/notifications/read-all/ - Mark all notifications as read",
+                    "GET/POST /api/v1/student/notes/ - Personal study notes per course and lesson",
                     "GET /api/v1/course/category/ - Retrieve categorized course catalog",
-                    "GET /api/v1/course/course-list/ - Searchable public courses list",
+                    "GET /api/v1/course/course-list/ - Searchable public courses catalog with SearchVector",
                     "GET/POST /api/v1/student/course-detail/<slug>/ - Student enrollment and lesson access",
-                    "GET/PUT /api/v1/admin/abuse-reports/ - Content moderation and abuse reports",
+                    "GET /api/v1/certificate/verify/<hash>/ - Public certificate authenticity verification",
+                    "GET/POST /api/v1/admin/certificates/templates/ - Visual certificate template configuration",
+                    "GET /api/v1/rankings/ - Gamification student leaderboard and point metrics",
+                    "GET/PUT /api/v1/admin/abuse-reports/ - Content moderation and abuse reports queue",
                     "GET/POST /api/v1/feedback/list/ - User bug reports and feature request tracker",
+                    "GET /api/v1/system/releases/ - Version history and system release log (v1.1.0)",
                     "GET /api/v1/admin/system-health/ - Real-time system health and runtime statistics"
                 ],
                 docs: "Interactive API Explorers",
@@ -235,47 +260,56 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
             database: {
                 title: "Database Architecture & Schema",
                 description: "Relational PostgreSQL database schema organized into cohesive domain models with strict referential integrity.",
-                mainModels: "Primary Data Entities",
+                mainModels: "Primary Data Entities (v1.1.0)",
                 modelsList: [
-                    "User & Profile: Core authentication, demographic info, role flags, and avatars",
-                    "Course & Category: Learning titles, pricing/status, thumbnail assets, and hierarchy",
-                    "Variant & VariantItem: Modular curriculum structure (Sections & Lessons)",
-                    "EnrolledCourse & CompletedLesson: Student progress, completion timestamps, and audit log",
-                    "Quiz, Question & Answer: Objective evaluations, passing grade logic, and scores",
-                    "Certificate: Tamper-evident issuance hashes, valid status, and verification URLs",
-                    "Review & AbuseReport: User ratings, moderation queue, and flag audits",
-                    "Feedback: Platform issue tracker, bug classifications, and resolution logs"
+                    "User & Profile: Core authentication, employee NIP/metadata, role flags, and avatars",
+                    "Course & Category: Learning catalog, publishing state, pricing/free status, and metadata",
+                    "Variant & VariantItem: Modular curriculum hierarchy (Chapters/Sections and Lessons)",
+                    "EnrolledCourse & CompletedLesson: Student progress tracking, checkpoint timestamps, and 95% unlock status",
+                    "Quiz, Question & Answer: Timed objective evaluations, passing grade criteria, and score tracking",
+                    "Certificate & CertificateTemplate: Cryptographic SHA-256 issuance hashes, dynamic template presets, signatures, and QR codes",
+                    "AIMessage & AIChatSession: Si Manta AI conversational history, lesson references, and student questions",
+                    "Notification: Real-time in-app notification records with recipient roles and read states",
+                    "StudentNote: Personal lesson notes with color classification, timestamps, and AI integration",
+                    "Gamification (Badge & Point): Points history, streak counters, and awarded skill badges",
+                    "Review & AbuseReport: Course star ratings, moderation queue, and flag audits",
+                    "Feedback: System issue tracker, bug classifications, verification tokens, and resolutions",
+                    "SystemRelease & UpdateLog: Semantic version tracking and production changelog logs"
                 ],
                 relationships: "Key Entity Relationships",
                 relationshipsList: [
                     "One User has One Profile (1:1 with cascading lifecycle)",
                     "One Course contains Many Variants and Many Lessons (1:N with ordered position)",
                     "One User can enroll in Many Courses via EnrolledCourse (M:N junction)",
-                    "One EnrolledCourse generates One Certificate upon 100% curriculum completion"
+                    "One EnrolledCourse generates One Certificate upon 100% curriculum completion",
+                    "One Course or Lesson can associate with Many StudentNotes and Many AIMessages",
+                    "One User receives Many Notifications dispatched across learning and administrative events"
                 ]
             },
 
             deployment: {
                 title: "Deployment & Infrastructure Architecture",
-                description: "Containerized continuous deployment architecture designed for high uptime and isolation.",
+                description: "Containerized continuous deployment architecture designed for high uptime and isolation on official DPD RI infrastructure.",
                 components: "Containerized Services",
                 componentsList: [
-                    "web (Frontend): Vite-built static bundle served via high-performance Nginx worker",
-                    "api (Backend): Gunicorn WSGI server running Django application workers",
-                    "db (Database): PostgreSQL container with persisted volume storage and healthcheck",
-                    "proxy (Nginx Gateway): External SSL termination, reverse proxying, and caching"
+                    "web (Frontend): Vite-built React SPA served by optimized Nginx worker with client caching",
+                    "api (Backend): Gunicorn WSGI server running multi-worker Django application with auto-restart",
+                    "db (Database): PostgreSQL 15 container with persistent volume storage, healthcheck, and regular dumps",
+                    "proxy (Nginx Gateway): External SSL termination, reverse proxying /api/ and /media/, and security headers",
+                    "ai (External Integration): Secure HTTPS gateway to Google Gemini AI API with rate limiting"
                 ],
                 network: "Virtual Network Topology",
                 networkDesc: "Internal Docker network isolates the database from public exposure. Only HTTP (80) and HTTPS (443) ports are exposed to the internet.",
                 routes: [
-                    "Traffic on /api/* routes directly to the Django backend application",
-                    "Traffic on /media/* routes directly to persistent volume storage",
+                    "Traffic on /api/* routes directly to the Django backend application container",
+                    "Traffic on /media/* routes directly to persistent volume storage with MIME-type protection",
+                    "Traffic on /sertifikat/verify/* routes to instant certificate authenticity verification",
                     "Traffic on /* routes directly to the React SPA client"
                 ],
                 ssl: "TLS / SSL Security",
-                sslDesc: "Strict HTTPS enforcement via Let's Encrypt certificates with automatic renewal cron jobs and A+ SSL Labs rating.",
-                domain: "DNS & Host Routing",
-                domainDesc: "Direct domain resolution routing to server IP with Cloudflare / DuckDNS failover."
+                sslDesc: "Strict HTTPS enforcement via Let's Encrypt TLS 1.3 certificates for lms.dpd.go.id with automated renewal cron jobs and HSTS headers.",
+                domain: "DNS & Institutional Host Routing",
+                domainDesc: "Official production domain https://lms.dpd.go.id routed via DPD RI infrastructure, terminated by Nginx reverse proxy with TLS 1.3 encryption, gzip/brotli compression, and failover protection."
             },
 
             security: {
@@ -283,30 +317,33 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 authentication: "Authentication Hardening",
                 authList: [
                     "Cryptographic JWT signing with secret key rotation support",
-                    "PBKDF2 password hashing with 390,000+ iterations",
-                    "Automatic session invalidation on credential modifications"
+                    "PBKDF2 password hashing with 390,000+ iterations and cryptographic salt",
+                    "Immediate session invalidation on credential modifications",
+                    "SSO cryptographic signature verification for portal integration"
                 ],
                 authorization: "Authorization Hardening",
                 authzList: [
-                    "Role verification decorators on all private API endpoints",
+                    "Strict Role-Based Access Control (RBAC) decorators on private API endpoints",
                     "Object-level permission checks preventing horizontal privilege escalation",
-                    "Superuser multi-factor administrative isolation"
+                    "Superuser administrative isolation with dedicated diagnostic audit logs"
                 ],
                 network: "Network Hardening",
                 networkList: [
-                    "Strict TLS 1.3 encryption protocol enforcement",
-                    "HTTP Strict Transport Security (HSTS) headers enabled",
-                    "Isolated Docker bridge network shielding internal databases"
+                    "Production domain lms.dpd.go.id enforced with strict TLS 1.3 encryption",
+                    "HTTP Strict Transport Security (HSTS) headers enabled with preload readiness",
+                    "Isolated internal Docker bridge network shielding database from external IP exposure"
                 ],
                 application: "Application Hardening",
                 appList: [
                     "Django ORM SQL Injection immunity with parameterized queries",
                     "Automatic HTML sanitization defending against Cross-Site Scripting (XSS)",
-                    "Strict Content Security Policy (CSP) and X-Frame-Options: SAMEORIGIN"
+                    "Strict Content Security Policy (CSP) and X-Frame-Options: SAMEORIGIN",
+                    "AI prompt sanitization preventing prompt injection and safeguarding user context",
+                    "Anti-spam CAPTCHA step sequence on feedback forms preventing automated submissions"
                 ],
                 infrastructure: "Infrastructure Hardening",
                 infraList: [
-                    "Automated daily database dumps with remote backup replication",
+                    "Automated scheduled database snapshots with off-site backup protocol",
                     "Container healthcheck monitors with automated restart policies",
                     "Minimal rootless Docker containers reducing attack surfaces"
                 ]
@@ -318,19 +355,25 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 student: "Student Role (Peserta)",
                 studentPerms: [
                     "✓ Access public course catalog and enroll into courses",
-                    "✓ Stream video lectures and read course materials",
+                    "✓ Stream video lectures and read course materials with auto-checkpoint resume",
+                    "✓ Consult Si Manta AI Tutor for contextual course assistance",
+                    "✓ Take rich personal study notes (Catatan Belajar) per lesson",
                     "✓ Take interactive quizzes and view personal scores",
-                    "✓ Download authenticated completion certificates",
+                    "✓ Earn gamification points, learning streak milestones, and skill badges",
+                    "✓ Receive real-time in-app notifications on learning progress",
+                    "✓ Download authenticated completion certificates with public QR code",
                     "✓ Ask questions in course Q&A and rate completed courses",
                     "✗ Create, edit, or delete course curriculum",
-                    "✗ Access admin analytics or user databases"
+                    "✗ Access admin analytics, moderation queues, or user databases"
                 ],
                 teacher: "Instructor Role (Pengajar)",
                 teacherPerms: [
                     "✓ All student privileges included",
                     "✓ Create, draft, and update course materials and quizzes",
+                    "✓ Access Instructor Notification Center for student events",
                     "✓ View enrolled students and course completion metrics",
                     "✓ Reply directly to student questions in assigned courses",
+                    "✓ Submit course revisions for administrative review",
                     "✗ Approve course publishing to the global catalog",
                     "✗ Access system administration or modify user accounts"
                 ],
@@ -339,8 +382,10 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     "✓ Unrestricted access to system configuration and database models",
                     "✓ Approve or reject course submissions",
                     "✓ Manage user accounts, role elevations, and account statuses",
+                    "✓ Design certificate templates with official stamps and signatures",
                     "✓ Moderate reported content, abuse reports, and user feedback",
-                    "✓ Run system diagnostics, test suites, and inspect live metrics"
+                    "✓ Broadcast system-wide in-app notifications",
+                    "✓ Run system diagnostics, test suites, and inspect live metrics (v1.1.0)"
                 ]
             },
 
@@ -363,7 +408,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 ],
                 updates: "Continuous Update Protocol",
                 updateList: [
-                    "Git-driven deployment workflows with tagged production releases",
+                    "Git-driven deployment workflows with tagged production releases (v1.1.0)",
                     "Automated Django schema migrations executing during container bootstrap",
                     "Zero-downtime rolling reload capability with Nginx reverse proxy",
                     "Automated integration test suites executed prior to deployment"
@@ -387,13 +432,13 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
 
         id: {
             pageTitle: "Dokumentasi & Arsitektur Sistem",
-            pageSubtitle: "Panduan teknis komprehensif, skema basis data, dan diagnostik operasional sistem runtime",
+            pageSubtitle: "Panduan teknis komprehensif, skema basis data, dan diagnostik operasional sistem runtime (v1.1.0)",
             printPDF: "Cetak / Ekspor PDF",
             language: "Bahasa",
             lastUpdated: "Sinkronisasi Terakhir",
             version: "Versi Sistem",
             allSections: "Semua Bagian",
-            filterPlaceholder: "Cari topik dokumentasi (misal: JWT, PostgreSQL, Docker, Role, API)...",
+            filterPlaceholder: "Cari topik dokumentasi (misal: Si Manta, JWT, PostgreSQL, Docker, Role, API)...",
             liveBadge: "Sistem Aktif & Normal",
             envInfo: "Lingkungan Runtime",
 
@@ -414,15 +459,18 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
 
             overview: {
                 title: "Gambaran Umum Sistem",
-                description: "LMSetjen DPD RI adalah Learning Management System modern yang dirancang khusus untuk Sekretariat Jenderal Dewan Perwakilan Daerah Republik Indonesia. Platform ini menyediakan ekosistem terpadu untuk pembelajaran digital, peningkatan kompetensi pegawai, dan sertifikasi keahlian aparatur sipil.",
+                description: "LMSetjen DPD RI (Versi 1.1.0) adalah Learning Management System modern dan resmi milik Sekretariat Jenderal Dewan Perwakilan Daerah Republik Indonesia. Platform ini menyediakan ekosistem terpadu untuk pembelajaran digital, peningkatan kompetensi aparatur sipil, bimbingan cerdas bertenaga AI (Si Manta), catatan belajar mandiri terintegrasi, evaluasi otomatis, penerbitan sertifikat digital berkeabsahan sah, dan diagnostik tata kelola sistem secara real-time.",
                 purpose: "Tujuan & Sasaran Strategis",
                 purposeItems: [
-                    "Menyediakan portal pembelajaran digital yang modern, responsif, dan mudah diakses oleh seluruh aparatur",
-                    "Memfasilitasi pelacakan kompetensi dan pengembangan keterampilan pegawai secara terstruktur",
-                    "Mendukung metode pembelajaran mandiri (self-paced) maupun forum diskusi interaktif",
-                    "Menyediakan sistem evaluasi kuis otomatis dan penerbitan sertifikat digital yang sah",
-                    "Memungkinkan kurasi kurikulum kursus yang fleksibel dengan dukungan video dan materi unduhan",
-                    "Menyediakan analitik real-time, moderasi konten, dan diagnostik server untuk administrator"
+                    "Menyediakan portal pembelajaran digital yang modern, responsif, dan aman bagi seluruh aparatur sipil DPD RI",
+                    "Memfasilitasi pelacakan kompetensi dan peta jalan pengembangan pegawai lintas unit secara terstruktur",
+                    "Menghadirkan Si Manta AI: asisten belajar cerdas yang memahami konteks modul materi dan catatan belajar peserta",
+                    "Mendukung kurikulum modular dengan pemutar video ganda (HTML5 MP4 & YouTube) dan auto-checkpoint resume",
+                    "Menyediakan fitur Catatan Belajar mandiri interaktif per modul dengan klasifikasi warna dan rangkuman AI",
+                    "Menyediakan sistem evaluasi kuis otomatis dan penerbitan sertifikat digital berkode hash verifikasi QR sah",
+                    "Meningkatkan motivasi belajar melalui gamifikasi poin capaian, lencana keahlian (badges), dan papan peringkat",
+                    "Menyediakan pusat notifikasi in-app real-time untuk peserta, pengajar, dan admin sistem",
+                    "Menyediakan moderasi konten komprehensif, pelaporan tiket masukan bug pengguna, dan diagnostik kesehatan server"
                 ],
                 systemInfo: "Informasi Runtime & Infrastruktur",
                 productionUrl: "Host Runtime Aktif",
@@ -437,98 +485,109 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 title: "Arsitektur Sistem",
                 description: "Sistem dibangun menggunakan arsitektur microservices terpisah (decoupled) dengan pemisahan tugas yang jelas:",
                 frontend: "Layer Presentasi Frontend",
-                frontendDesc: "Single Page Application (SPA) berbasis React 18.2 dan Vite, menghasilkan navigasi instan tanpa reload, bundling efisien, dan token desain antarmuka modern.",
+                frontendDesc: "Single Page Application (SPA) berbasis React 18.2 dan Vite, menghasilkan navigasi instan tanpa reload, bundling efisien, CSS terisolasi per komponen, manajemen state Zustand, dan asisten Si Manta AI terintegrasi.",
                 backend: "Layer Layanan Backend (API)",
-                backendDesc: "Django 4.2 REST Framework yang menyajikan RESTful API, validasi token JWT, throttle proteksi, dan kontrol hak akses berbasis peran (RBAC).",
+                backendDesc: "Django 4.2 LTS REST Framework yang menyajikan RESTful API, integrasi Google Gemini AI, mesin notifikasi in-app, validasi token JWT, throttle proteksi, dan kontrol hak akses berbasis peran (RBAC).",
                 database: "Layer Penyimpanan Relasional",
-                databaseDesc: "PostgreSQL 15 dengan integritas referensial kuat, indexing teroptimasi, connection pooling, dan migrasi skema terkelola.",
+                databaseDesc: "PostgreSQL 15 dengan pencarian teks penuh (SearchVector), integritas referensial kuat, indexing teroptimasi, connection pooling, dan migrasi skema terkelola.",
                 caching: "Layer Cache Akselerasi",
-                cachingDesc: "In-memory caching untuk optimasi kueri berulang, akselerasi sesi autentikasi, dan dispatch tugas latar belakang.",
+                cachingDesc: "In-memory caching untuk optimasi kueri berulang, akselerasi sesi autentikasi, penghitung notifikasi, dan dispatch tugas latar belakang.",
                 proxy: "Reverse Proxy & Edge Gateway",
-                proxyDesc: "Server web Nginx yang menangani enkripsi SSL/TLS, kompresi aset statis (gzip/brotli), dan pembatasan laju koneksi (rate limiting).",
+                proxyDesc: "Server web Nginx yang menangani perutean domain resmi (lms.dpd.go.id), enkripsi SSL/TLS 1.3, kompresi aset (gzip/brotli), pembatasan laju koneksi (rate limiting), dan streaming berkas statis/media.",
                 deployment: "Kontainerisasi Docker",
-                deploymentDesc: "Layanan terisolasi dalam kontainer Docker yang diorkestrasi via Docker Compose untuk konsistensi lingkungan dev dan produksi."
+                deploymentDesc: "Layanan terisolasi dalam kontainer Docker yang diorkestrasi via Docker Compose untuk konsistensi lingkungan dev dan produksi pada infrastruktur resmi DPD RI."
             },
 
             technologies: {
                 title: "Tumpukan Teknologi (Tech Stack)",
                 frontend: "Teknologi Frontend",
                 frontendList: [
-                    "React 18.2 - Library UI berbasis komponen reaktif",
-                    "Vite 4+ - Bundler modern & dev server performa tinggi",
-                    "React Router v6 - Perutean klien dan deep linking",
-                    "Axios Interceptors - Pipeline request HTTP terautentikasi otomatis",
-                    "Bootstrap 5.3 & Desain Token - Framework tata letak responsif",
-                    "Chart.js - Visualisasi data grafik analitik",
-                    "SweetAlert2 - Dialog notifikasi interaktif",
+                    "React 18.2 - Library UI deklaratif berbasis komponen reaktif",
+                    "Vite 4+ - Bundler modern & build pipeline berkecepatan tinggi",
+                    "React Router v6 - Perutean sisi klien dan deep linking riwayat URL",
+                    "Axios Interceptors - Pipeline request HTTP terautentikasi otomatis dengan refresh token",
+                    "Integrasi Google Gemini AI - Antarmuka chat interaktif asisten belajar cerdas Si Manta",
+                    "Bootstrap 5.3 & Token Desain Scoped - Framework tata letak responsif tanpa polusi CSS global",
+                    "Chart.js - Visualisasi data grafik analitik pendaftaran dan keterlibatan",
+                    "SweetAlert2 & Toastify - Dialog interaktif elegan dan notifikasi toast non-intrusif",
+                    "Canvas Confetti & QR Code Generator - Perayaan kelulusan gamifikasi dan verifikasi sertifikat",
                     "FontAwesome & React Icons - Pustaka ikon vektor komprehensif"
                 ],
                 backend: "Teknologi Backend",
                 backendList: [
                     "Python 3.11+ - Bahasa pemrograman inti performa tinggi",
-                    "Django 4.2 LTS - Web framework andal dan aman",
-                    "Django REST Framework - Toolkit serialisasi dan endpoint API",
-                    "SimpleJWT - Autentikasi stateless berbasis token JWT",
-                    "Django CORS Headers - Manajemen keamanan lintas domain (CORS)",
-                    "Pillow - Pemrosesan dan optimasi gambar berkas"
+                    "Django 4.2 LTS - Web framework andal dan aman standar enterprise",
+                    "Django REST Framework - Toolkit serialisasi, pagination, dan endpoint API",
+                    "Google Generative AI (Gemini Pro/Flash API) - Mesin kecerdasan buatan tutor Si Manta",
+                    "SimpleJWT - Autentikasi stateless berbasis token JWT dengan rotasi kunci",
+                    "Django CORS Headers - Manajemen keamanan lintas domain (CORS) ketat",
+                    "ReportLab & Pillow - Mesin rendering sertifikat digital dan optimasi gambar berkas",
+                    "PostgreSQL Full-Text Search - Kueri SearchVector dan analitik taksonomi pencarian"
                 ],
                 infrastructure: "Infrastruktur & DevOps",
                 infrastructureList: [
-                    "Docker & Docker Compose - Kontainerisasi terisolasi",
-                    "Nginx - Reverse proxy, terminasi SSL & caching file",
-                    "PostgreSQL - Basis data relasional enterprise",
-                    "Certbot / Let's Encrypt - Sertifikat enkripsi TLS/SSL otomatis",
-                    "Git Workflow - Kontrol versi dan integrasi berkelanjutan"
+                    "Docker & Docker Compose - Kontainerisasi terisolasi dan orkestrasi microservices",
+                    "Nginx - Reverse proxy, terminasi SSL TLS 1.3, rate limiting & caching file",
+                    "PostgreSQL 15 - Basis data relasional enterprise dengan backup berkala otomatis",
+                    "Certbot / Let's Encrypt - Sertifikat enkripsi TLS/SSL otomatis untuk lms.dpd.go.id",
+                    "Git Release Workflow - Versioning semantik (v1.1.0) dan pipeline migrasi database"
                 ]
             },
 
             features: {
-                title: "Fitur Utama Platform",
+                title: "Fitur Utama Platform (v1.1.0)",
                 student: "Fitur Peserta / Siswa",
                 studentList: [
-                    "Katalog kursus interaktif dengan filter kategori, pencarian, dan pendaftaran mandiri",
-                    "Pemutar materi video interaktif, modul bacaan, dan berkas lampiran unduhan",
-                    "Pelacakan progres real-time, checkpoint otomatis, dan persentase kelulusan",
-                    "Evaluasi kuis berbatas waktu dengan penilaian otomatis dan tinjauan jawaban",
-                    "Penerbitan sertifikat digital berkode verifikasi sah dengan ekspor PDF",
+                    "Katalog kursus interaktif dengan filter kategori, pencarian SearchVector, dan pendaftaran mandiri",
+                    "Pemutar video ganda (MP4 & YouTube) dengan checkpoint otomatis dan auto-unlock kelulusan 95%",
+                    "Si Manta AI Assistant: tutor cerdas untuk tanya-jawab materi, merangkum konsep, dan berdiskusi",
+                    "Catatan Belajar (Lesson Notes) terintegrasi per modul dengan opsi warna dan tautan ke AI",
+                    "Evaluasi kuis berbatas waktu dengan penilaian instan dan pembahasan jawaban",
+                    "Penerbitan sertifikat digital berkeabsahan sah dengan QR Code verifikasi dan ekspor PDF",
+                    "Sistem gamifikasi: akumulasi poin belajar, streak konsistensi, lencana keahlian, dan papan peringkat",
+                    "Notifikasi in-app real-time untuk status pendaftaran, progres kursus, kuis, dan diskusi",
                     "Forum diskusi tanya jawab (Q&A) kursus dan ulasan rating bintang"
                 ],
                 instructor: "Fitur Pengajar / Instruktur",
                 instructorList: [
-                    "Pusat pembuatan kurikulum modular (bagian, materi pelajaran, dan kuis)",
-                    "Editor teks kaya (rich text) dengan penyematan media dan berkas materi",
-                    "Statistik pendaftaran peserta, metrik keterlibatan, dan evaluasi siswa",
-                    "Pengelolaan forum diskusi tanya-jawab untuk menjawab pertanyaan siswa",
-                    "Pengajuan revisi kursus sebelum dipublikasikan oleh administrator"
+                    "Pusat pembuatan kurikulum modular (bagian, materi pelajaran video/dokumen, dan kuis)",
+                    "Editor teks kaya (rich text) dengan penyematan media, blok kode, dan berkas unduhan",
+                    "Pusat Notifikasi Pengajar untuk pendaftaran baru, pertanyaan Q&A, dan ulasan kursus",
+                    "Statistik pendaftaran peserta, metrik keterlibatan, dan evaluasi kelulusan siswa",
+                    "Pengelolaan forum tanya-jawab untuk merespons pertanyaan siswa secara langsung",
+                    "Alur revisi dan pengajuan penerbitan kursus (draf dan publikasi)"
                 ],
                 admin: "Fitur Administrator Sistem",
                 adminList: [
-                    "Manajemen terpadu akun pengguna (Peserta, Pengajar, Administrator)",
-                    "Alur persetujuan kurasi kursus sebelum tampil ke katalog umum",
+                    "Manajemen terpadu akun pengguna (Peserta, Pengajar, Administrator) dan eskalasi role",
+                    "Alur kurasi dan persetujuan publikasi kursus sebelum tampil ke katalog umum",
+                    "Desainer Template Sertifikat: editor visual stempel dinas, tanda tangan pejabat, dan tata letak",
                     "Pusat moderasi konten, laporan penyalahgunaan ulasan, dan diskusi Q&A",
-                    "Pusat keluhan masukan pengguna (laporan bug teknis dan usulan fitur)",
-                    "Pusat diagnostik kesehatan sistem, pengujian integrasi, dan dokumentasi arsitektur"
+                    "Pusat keluhan masukan pengguna (tiket bug teknis dan usulan fitur) dengan verifikasi anti-spam",
+                    "Pusat siaran notifikasi sistem in-app ke seluruh pengguna",
+                    "Pusat diagnostik kesehatan sistem, pengujian integrasi, dan dokumentasi arsitektur (v1.1.0)"
                 ]
             },
 
             authentication: {
                 title: "Autentikasi & Otorisasi Keamanan",
-                mechanism: "Mekanisme JWT Stateless",
-                mechanismDesc: "Autentikasi dikelola menggunakan standar JSON Web Token (JWT) sesuai RFC 7519. Server backend menandatangani token akses menggunakan algoritma HMAC-SHA256.",
+                mechanism: "Mekanisme JWT Stateless & PBKDF2 Hashing",
+                mechanismDesc: "Autentikasi dikelola menggunakan standar JSON Web Token (JWT) sesuai RFC 7519, diperkuat enkripsi sandi PBKDF2 (390.000+ iterasi). Server backend menandatangani token akses menggunakan algoritma HMAC-SHA256 dengan masa berlaku singkat (15-60 menit) dan refresh token (7 hari). Sesi otomatis diinvalidasi jika terjadi perubahan sandi.",
                 flow: "Alur Siklus Hidup Token",
                 flowSteps: [
                     "Pengguna memasukkan kredensial; klien mengirim POST ke /api/v1/user/token/",
-                    "Server memvalidasi kredensial dan menerbitkan Access Token & Refresh Token",
+                    "Server memvalidasi kredensial, memastikan status akun aktif, dan menerbitkan Access & Refresh Token",
                     "Interceptor klien menyisipkan 'Authorization: Bearer <token>' pada setiap request API",
-                    "Ketika access token kedaluwarsa (401), interceptor memperbarui token secara otomatis via /api/v1/user/token/refresh/",
-                    "Proses logout membersihkan penyimpanan lokal klien dan menutup sesi otorisasi"
+                    "Ketika access token kedaluwarsa (401), interceptor memperbarui token secara transparan via /api/v1/user/token/refresh/",
+                    "Integrasi SSO: Mendukung single sign-on dari portal pegawai DPD RI melalui pertukaran token (/api/v1/sso/verify/)",
+                    "Proses logout membersihkan cookie, penyimpanan lokal klien, dan menutup sesi otorisasi"
                 ],
                 authorization: "Role-Based Access Control (RBAC)",
                 authorizationDesc: "Setiap pengguna terautentikasi memiliki cakupan hak akses yang tegas:",
                 roles: [
-                    { name: "Peserta (Student)", description: "Dapat menjelajah kursus, mendaftar, mengerjakan kuis, memperoleh sertifikat, dan bertanya di forum." },
-                    { name: "Pengajar (Teacher)", description: "Dapat menyusun draf materi kursus, mengelola kurikulum pribadi, dan merespons pertanyaan peserta." },
-                    { name: "Admin Setjen", description: "Akses operasional penuh mencakup manajemen pengguna, kurasi kursus, moderasi laporan, dan diagnostik server." }
+                    { name: "Peserta (Student)", description: "Dapat menjelajah kursus, mendaftar, memutar video, bertanya pada Si Manta AI, mengerjakan kuis, memperoleh sertifikat, membuat catatan belajar, dan bertanya di forum." },
+                    { name: "Pengajar (Teacher)", description: "Dapat menyusun draf materi kursus, mengunggah media video, mengelola kurikulum pribadi, dan merespons pertanyaan peserta." },
+                    { name: "Admin Setjen", description: "Akses operasional penuh mencakup manajemen pengguna, kurasi kursus, desainer sertifikat, moderasi laporan, dan diagnostik server." }
                 ],
                 protection: "Lapisan Proteksi Keamanan",
                 protectionDesc: "Kebijakan keamanan diterapkan pada seluruh lalu lintas masuk:",
@@ -536,8 +595,9 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     "Proteksi token CSRF pada seluruh operasi mutasi status data",
                     "Hashing kata sandi menggunakan algoritma PBKDF2 dengan enkripsi SHA-256 dan salt",
                     "Throttling otomatis berbasis alamat IP dan user id untuk mencegah serangan brute-force",
-                    "Whitelist ketat pada Cross-Origin Resource Sharing (CORS)",
-                    "Pencegahan injeksi SQL melalui kueri terparameterisasi bawaan Django ORM"
+                    "Whitelist ketat pada Cross-Origin Resource Sharing (CORS) untuk domain resmi (lms.dpd.go.id)",
+                    "Pencegahan injeksi SQL melalui kueri terparameterisasi bawaan Django ORM",
+                    "Tantangan verifikasi berurutan pada formulir masukan untuk menangkal bot spam"
                 ]
             },
 
@@ -545,14 +605,22 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 title: "Dokumentasi API RESTful",
                 description: "Layanan API JSON standar yang mematuhi konvensi metode HTTP semantik dan kode status baku.",
                 baseUrl: "Base URL Endpoint API",
-                endpoints: "Endpoint API Utama",
+                endpoints: "Endpoint API Utama (v1.1.0)",
                 endpointsList: [
                     "GET/POST /api/v1/user/token/ - Penerbitan dan validasi token autentikasi JWT",
+                    "POST /api/v1/ai-assistant/chat/ - Percakapan cerdas kontekstual dengan Si Manta AI",
+                    "GET/POST /api/v1/notifications/ - Umpan notifikasi in-app real-time dan jumlah belum dibaca",
+                    "PATCH /api/v1/notifications/read-all/ - Tandai semua notifikasi telah dibaca",
+                    "GET/POST /api/v1/student/notes/ - Manajemen catatan belajar mandiri per kursus dan materi",
                     "GET /api/v1/course/category/ - Daftar kategori kursus untuk navigasi katalog",
-                    "GET /api/v1/course/course-list/ - Daftar kursus publik dengan dukungan pencarian",
+                    "GET /api/v1/course/course-list/ - Daftar kursus publik dengan kueri SearchVector",
                     "GET/POST /api/v1/student/course-detail/<slug>/ - Akses materi pelajaran dan progres siswa",
+                    "GET /api/v1/certificate/verify/<hash>/ - Verifikasi keabsahan sertifikat secara publik",
+                    "GET/POST /api/v1/admin/certificates/templates/ - Konfigurasi template sertifikat dinas",
+                    "GET /api/v1/rankings/ - Papan peringkat gamifikasi & metrik poin keaktifan",
                     "GET/PUT /api/v1/admin/abuse-reports/ - Moderasi ulasan dan laporan penyalahgunaan",
                     "GET/POST /api/v1/feedback/list/ - Pelacak tiket bug dan permintaan fitur pengguna",
+                    "GET /api/v1/system/releases/ - Riwayat versi sistem dan catatan rilis (v1.1.0)",
                     "GET /api/v1/admin/system-health/ - Metrik kesehatan runtime dan statistik basis data real-time"
                 ],
                 docs: "Penjelajah API Interaktif",
@@ -566,47 +634,56 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
             database: {
                 title: "Skema & Model Basis Data",
                 description: "Skema basis data relasional PostgreSQL yang dirancang dengan integritas data referensial yang kuat.",
-                mainModels: "Entitas Data Utama",
+                mainModels: "Entitas Data Utama (v1.1.0)",
                 modelsList: [
-                    "User & Profile: Data autentikasi inti, profil kepegawaian, role, dan foto profil",
-                    "Course & Category: Data kursus, deskripsi, thumbnail, status publikasi, dan kategori",
+                    "User & Profile: Data autentikasi inti, NIP kepegawaian, role pengguna, dan foto profil",
+                    "Course & Category: Data kursus, status publikasi/draf, thumbnail, dan kategori kepegawaian",
                     "Variant & VariantItem: Struktur modular kurikulum (Bagian/Bab dan Materi Pelajaran)",
-                    "EnrolledCourse & CompletedLesson: Catatan pendaftaran siswa, histori waktu, dan progres",
-                    "Quiz, Question & Answer: Evaluasi objektif, nilai ambang batas kelulusan, dan skor",
-                    "Certificate: Hash verifikasi unik anti-pemalsuan, status keabsahan, dan verifikasi sertifikat",
+                    "EnrolledCourse & CompletedLesson: Catatan pendaftaran, timestamp checkpoint, dan status kelulusan 95%",
+                    "Quiz, Question & Answer: Evaluasi objektif berbatas waktu, ambang batas kelulusan, dan riwayat skor",
+                    "Certificate & CertificateTemplate: Hash verifikasi unik SHA-256, stempel digital, tanda tangan, dan validasi QR",
+                    "AIMessage & AIChatSession: Riwayat percakapan interaktif Si Manta AI dengan konteks modul",
+                    "Notification: Entitas notifikasi in-app untuk peserta, pengajar, dan administrator",
+                    "StudentNote: Catatan belajar terstruktur per materi pelajaran dengan klasifikasi warna",
+                    "Gamification (Badge & Point): Riwayat poin keaktifan, streak harian, dan lencana keahlian",
                     "Review & AbuseReport: Ulasan rating bintang, laporan penyalahgunaan, dan audit moderasi",
-                    "Feedback: Laporan keluhan bug teknis sistem dan usulan peningkatan fitur"
+                    "Feedback: Laporan keluhan bug teknis sistem dan usulan peningkatan fitur",
+                    "SystemRelease & UpdateLog: Riwayat versi semantik platform dan catatan pembaruan sistem"
                 ],
                 relationships: "Relasi Kunci Antar Entitas",
                 relationshipsList: [
                     "Satu User berelasi One-to-One dengan Profil Pegawai (1:1 cascade)",
                     "Satu Kursus memiliki Banyak Bab dan Banyak Materi Pelajaran (1:N posisi berurutan)",
                     "Satu Pengguna dapat mendaftar Banyak Kursus melalui EnrolledCourse (M:N junction)",
-                    "Satu Pendaftaran menghasilkan Satu Sertifikat Sah setelah kurikulum 100% selesai"
+                    "Satu Pendaftaran menghasilkan Satu Sertifikat Sah setelah kurikulum 100% selesai",
+                    "Satu Kursus atau Pelajaran dapat memiliki Banyak StudentNotes dan Banyak Percakapan AIMessage",
+                    "Satu Pengguna menerima Banyak Notifikasi in-app berdasarkan aktivitas belajar dan operasional"
                 ]
             },
 
             deployment: {
                 title: "Arsitektur Deployment & Infrastruktur",
-                description: "Arsitektur continuous deployment berbasis kontainer Docker untuk ketersediaan tinggi dan isolasi layanan.",
+                description: "Arsitektur continuous deployment berbasis kontainer Docker untuk ketersediaan tinggi dan isolasi layanan pada infrastruktur DPD RI.",
                 components: "Komponen Kontainer Layanan",
                 componentsList: [
-                    "web (Frontend): Berkas statis React hasil build Vite yang dilayani Nginx berkecepatan tinggi",
-                    "api (Backend): Server WSGI Gunicorn yang menjalankan proses aplikasi Django",
-                    "db (Database): Kontainer PostgreSQL dengan volume penyimpanan persisten dan healthcheck",
-                    "proxy (Nginx Gateway): Terminasi SSL eksternal, reverse proxy lalu lintas, dan caching"
+                    "web (Frontend): Berkas statis React hasil build Vite yang dilayani Nginx dengan caching optimal",
+                    "api (Backend): Server WSGI Gunicorn yang menjalankan proses aplikasi Django multi-worker",
+                    "db (Database): Kontainer PostgreSQL 15 dengan volume penyimpanan persisten dan healthcheck",
+                    "proxy (Nginx Gateway): Terminasi SSL eksternal, reverse proxy rute /api/ dan /media/, serta header keamanan",
+                    "ai (Integrasi Eksternal): Gateway HTTPS aman ke Google Gemini AI API dengan kontrol kuota"
                 ],
                 network: "Topologi Jaringan Virtual",
                 networkDesc: "Jaringan internal Docker mengisolasi basis data dari akses publik luar. Hanya port HTTP (80) dan HTTPS (443) yang dibuka ke internet publik.",
                 routes: [
                     "Lalu lintas pada rute /api/* diteruskan langsung ke kontainer backend Django",
-                    "Lalu lintas pada rute /media/* diteruskan langsung ke volume penyimpanan berkas",
+                    "Lalu lintas pada rute /media/* diteruskan langsung ke volume penyimpanan persisten dengan proteksi MIME",
+                    "Lalu lintas pada rute /sertifikat/verify/* diteruskan untuk verifikasi keabsahan sertifikat publik",
                     "Lalu lintas pada rute /* dilayani oleh aplikasi klien React SPA"
                 ],
                 ssl: "Keamanan Sertifikat SSL / TLS",
-                sslDesc: "Penegakan protokol HTTPS penuh menggunakan sertifikat Let's Encrypt dengan pembaruan otomatis berkala.",
-                domain: "Perutean DNS & Domain",
-                domainDesc: "Resolusi domain langsung ke alamat IP server dengan failover Cloudflare / DuckDNS."
+                sslDesc: "Penegakan protokol HTTPS penuh menggunakan sertifikat Let's Encrypt TLS 1.3 untuk lms.dpd.go.id dengan pembaruan otomatis berkala dan header HSTS.",
+                domain: "Perutean DNS & Domain Instansi",
+                domainDesc: "Domain produksi resmi https://lms.dpd.go.id yang dirutekan melalui infrastruktur DPD RI, diterminasi reverse proxy Nginx berenkripsi TLS 1.3, kompresi aset gzip/brotli, dan proteksi failover."
             },
 
             security: {
@@ -614,26 +691,29 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 authentication: "Penguatan Autentikasi",
                 authList: [
                     "Penandatanganan kriptografi JWT dengan dukungan rotasi kunci rahasia",
-                    "Hashing kata sandi PBKDF2 dengan lebih dari 390.000 iterasi",
-                    "Invalidasi sesi otomatis saat terjadi perubahan kredensial akun"
+                    "Hashing kata sandi PBKDF2 dengan lebih dari 390.000 iterasi dan garam kriptografis",
+                    "Invalidasi sesi otomatis saat terjadi perubahan kredensial akun",
+                    "Verifikasi tanda tangan kriptografis SSO untuk integrasi portal kepegawaian"
                 ],
                 authorization: "Penguatan Otorisasi",
                 authzList: [
                     "Dekorator verifikasi role pada setiap endpoint API privat",
                     "Pemeriksaan izin tingkat objek mencegah eskalasi hak akses horizontal",
-                    "Isolasi hak akses superuser untuk proteksi konsol administratif"
+                    "Isolasi hak akses superuser dengan audit log diagnostik terpisah"
                 ],
                 network: "Penguatan Jaringan",
                 networkList: [
-                    "Penerapan wajib protokol enkripsi TLS 1.3 pada transmisi data",
+                    "Domain produksi lms.dpd.go.id diamankan dengan enkripsi ketat TLS 1.3",
                     "Header HTTP Strict Transport Security (HSTS) diaktifkan secara ketat",
-                    "Jaringan jembatan (bridge) Docker terisolasi melindungi basis data internal"
+                    "Jaringan jembatan (bridge) Docker terisolasi melindungi basis data internal dari eksposur IP luar"
                 ],
                 application: "Penguatan Aplikasi",
                 appList: [
                     "Kekebalan terhadap SQL Injection berkat kueri terparameterisasi Django ORM",
                     "Sanitasi HTML otomatis mencegah serangan Cross-Site Scripting (XSS)",
-                    "Penerapan Content Security Policy (CSP) dan proteksi clickjacking (X-Frame-Options: SAMEORIGIN)"
+                    "Penerapan Content Security Policy (CSP) dan proteksi clickjacking (X-Frame-Options: SAMEORIGIN)",
+                    "Sanitasi prompt AI mencegah serangan prompt injection dan melindungi konteks sistem",
+                    "Tantangan keamanan CAPTCHA bertahap pada formulir masukan menangkal spam otomatis"
                 ],
                 infrastructure: "Penguatan Infrastruktur",
                 infraList: [
@@ -649,19 +729,25 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 student: "Peran Peserta (Student)",
                 studentPerms: [
                     "✓ Menjelajah katalog kursus umum dan mendaftar secara mandiri",
-                    "✓ Memutar video pembelajaran dan membaca modul materi kursus",
+                    "✓ Memutar video pembelajaran dan membaca modul materi kursus (resume checkpoint)",
+                    "✓ Berkonsultasi dengan Si Manta AI Tutor untuk bantuan konteks materi",
+                    "✓ Membuat catatan belajar mandiri (Catatan Belajar) per materi",
                     "✓ Mengerjakan kuis evaluasi dan melihat skor hasil ujian",
-                    "✓ Mengunduh sertifikat kelulusan sah ber-QR verifikasi",
+                    "✓ Memperoleh poin gamifikasi, capaian streak belajar, dan lencana keahlian",
+                    "✓ Menerima notifikasi in-app real-time terkait progres dan aktivitas belajar",
+                    "✓ Mengunduh sertifikat kelulusan sah ber-QR verifikasi publik",
                     "✓ Bertanya di forum diskusi Q&A dan memberi rating ulasan kursus",
-                    "✗ Membuat, mengedit, atau menghapus materi kursus",
-                    "✗ Mengakses analitik administratif atau basis data pengguna"
+                    "✗ Membuat, mengedit, atau menghapus materi kurikulum kursus",
+                    "✗ Mengakses analitik administratif, antrean moderasi, atau basis data pengguna"
                 ],
                 teacher: "Peran Pengajar (Teacher)",
                 teacherPerms: [
                     "✓ Seluruh hak akses peserta sudah termasuk",
                     "✓ Membuat, mengunggah draf kurikulum, materi, dan soal kuis",
+                    "✓ Mengakses Pusat Notifikasi Pengajar untuk pendaftaran dan diskusi baru",
                     "✓ Melihat daftar peserta terdaftar dan progres kelulusan materi",
-                    "✓ Merespons pertanyaan siswa pada kursus yang diampu",
+                    "✓ Merespons pertanyaan siswa pada kursus yang diampu secara langsung",
+                    "✓ Mengajukan revisi dan publikasi kursus untuk ditinjau admin",
                     "✗ Menyetujui kursus untuk tayang di katalog publik",
                     "✗ Mengakses konfigurasi sistem atau memodifikasi akun pengguna lain"
                 ],
@@ -670,8 +756,10 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     "✓ Akses tanpa batas ke pengaturan sistem dan model basis data",
                     "✓ Menyetujui atau menolak publikasi kursus pengajar",
                     "✓ Mengelola akun pengguna, kenaikan role, dan status keaktifan",
+                    "✓ Mendesain template sertifikat resmi dengan stempel dan tanda tangan dinas",
                     "✓ Memoderasi laporan penyalahgunaan ulasan, Q&A, dan keluhan tiket",
-                    "✓ Menjalankan pengujian diagnostik, inspeksi log, dan metrik kesehatan server"
+                    "✓ Menyiarkan notifikasi in-app sistem ke seluruh pengguna",
+                    "✓ Menjalankan pengujian diagnostik, inspeksi log, dan metrik kesehatan server (v1.1.0)"
                 ]
             },
 
@@ -694,7 +782,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 ],
                 updates: "Protokol Pembaruan Berkelanjutan",
                 updateList: [
-                    "Alur deployment berbasis Git dengan tag rilis produksi",
+                    "Alur deployment berbasis Git dengan tag rilis produksi (v1.1.0)",
                     "Migrasi skema database Django otomatis saat proses inisialisasi kontainer",
                     "Kemampuan reload zero-downtime dengan dukungan reverse proxy Nginx",
                     "Uji coba integrasi otomatis sebelum pembaruan dinaikkan ke server"
@@ -756,7 +844,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                         <div className="d-flex align-items-center gap-2 mb-1">
                             <span className="doc-badge-tag">
                                 <FaBook className="me-1" />
-                                {t.version}: {serverInfo.app_version || liveVersion || "1.0.1"}
+                                {t.version}: {serverInfo.app_version || liveVersion || APP_VERSION || "1.1.0"}
                             </span>
                             <span className={`doc-health-pill ${isHealthy ? "status-healthy" : "status-warning"}`}>
                                 <span className="doc-pulse-dot"></span>
@@ -1013,15 +1101,23 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                                                 </div>
                                                 <div className="spec-row">
                                                     <span className="spec-label">Domain Target</span>
-                                                    <span className="spec-val font-monospace">https://lmsetjendpdri.duckdns.org</span>
+                                                    <span className="spec-val font-monospace text-primary fw-bold">https://lms.dpd.go.id</span>
+                                                </div>
+                                                <div className="spec-row">
+                                                    <span className="spec-label">Subdomain Resmi</span>
+                                                    <span className="spec-val font-monospace">lms.dpd.go.id (Setjen DPD RI)</span>
                                                 </div>
                                                 <div className="spec-row">
                                                     <span className="spec-label">{t.overview.developmentFramework}</span>
-                                                    <span className="spec-val">Django {serverInfo.django_version || "4.2"} + React 18.2</span>
+                                                    <span className="spec-val">Django {serverInfo.django_version || "4.2"} + React 18.2 (Vite)</span>
                                                 </div>
                                                 <div className="spec-row">
                                                     <span className="spec-label">{t.overview.databaseSystem}</span>
                                                     <span className="spec-val">{serverInfo.database_engine || "PostgreSQL"} ({dbStats.database_size || "Live"})</span>
+                                                </div>
+                                                <div className="spec-row">
+                                                    <span className="spec-label">Asisten AI Tutor</span>
+                                                    <span className="spec-val">Google Gemini (Si Manta AI)</span>
                                                 </div>
                                                 <div className="spec-row">
                                                     <span className="spec-label">{t.overview.hostingPlatform}</span>
@@ -1029,7 +1125,100 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                                                 </div>
                                                 <div className="spec-row">
                                                     <span className="spec-label">{t.overview.projectStatus}</span>
-                                                    <span className="spec-val text-success font-weight-bold">● {t.overview.statusReady}</span>
+                                                    <span className="spec-val text-success font-weight-bold">● {t.overview.statusReady} (v1.1.0)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* ✨ v1.1.0 Release Innovations Showcase */}
+                                    <div className="doc-v110-highlights-box mt-3 pt-3 border-top">
+                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                            <h5 className="mb-0 text-dark fw-bold" style={{ fontSize: "0.88rem" }}>
+                                                <FaGraduationCap className="text-teal me-1" />
+                                                {language === "id" ? "Sorotan Pembaruan & Fitur Baru (Versi 1.1.0)" : "Key Release Innovations & Updates (Version 1.1.0)"}
+                                            </h5>
+                                            <span className="badge bg-teal-soft text-teal font-monospace px-2 py-1" style={{ fontSize: "0.72rem" }}>
+                                                Release v1.1.0
+                                            </span>
+                                        </div>
+                                        <div className="row g-2">
+                                            <div className="col-12 col-md-6 col-lg-4">
+                                                <div className="p-2 rounded bg-light border h-100">
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <FaRobot className="text-primary" />
+                                                        <strong className="text-dark" style={{ fontSize: "0.78rem" }}>Si Manta AI Assistant</strong>
+                                                    </div>
+                                                    <p className="mb-0 text-muted" style={{ fontSize: "0.72rem" }}>
+                                                        {language === "id"
+                                                            ? "Tutor cerdas Gemini AI yang terintegrasi dengan materi pelajaran, catatan belajar, dan personalisasi profil peserta."
+                                                            : "Contextual Gemini AI tutor grounded in course materials, personal study notes, and student profiles."}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="col-12 col-md-6 col-lg-4">
+                                                <div className="p-2 rounded bg-light border h-100">
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <FaBell className="text-amber" />
+                                                        <strong className="text-dark" style={{ fontSize: "0.78rem" }}>In-App Notification Center</strong>
+                                                    </div>
+                                                    <p className="mb-0 text-muted" style={{ fontSize: "0.72rem" }}>
+                                                        {language === "id"
+                                                            ? "Pusat notifikasi lonceng real-time untuk peserta, pengajar, dan admin dengan filter kategori dan mark-as-read."
+                                                            : "Real-time in-app notification bell for learners, instructors, and admins with category filters."}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="col-12 col-md-6 col-lg-4">
+                                                <div className="p-2 rounded bg-light border h-100">
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <FaCertificate className="text-success" />
+                                                        <strong className="text-dark" style={{ fontSize: "0.78rem" }}>Certificate Designer & QR</strong>
+                                                    </div>
+                                                    <p className="mb-0 text-muted" style={{ fontSize: "0.72rem" }}>
+                                                        {language === "id"
+                                                            ? "Editor template visual dengan tanda tangan/stempel dinas, hash SHA-256, dan verifikasi publik di lms.dpd.go.id."
+                                                            : "Visual template designer with agency stamps, SHA-256 tamper-evident hash, and public QR verification."}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="col-12 col-md-6 col-lg-4">
+                                                <div className="p-2 rounded bg-light border h-100">
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <FaMedal className="text-warning" />
+                                                        <strong className="text-dark" style={{ fontSize: "0.78rem" }}>Gamifikasi & Leaderboard</strong>
+                                                    </div>
+                                                    <p className="mb-0 text-muted" style={{ fontSize: "0.72rem" }}>
+                                                        {language === "id"
+                                                            ? "Akumulasi poin capaian, streak harian, lencana keahlian (badges), dan papan peringkat keaktifan peserta."
+                                                            : "Achievement points, learning streaks, competency skill badges, and student leaderboards."}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="col-12 col-md-6 col-lg-4">
+                                                <div className="p-2 rounded bg-light border h-100">
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <FaStickyNote className="text-info" />
+                                                        <strong className="text-dark" style={{ fontSize: "0.78rem" }}>Catatan Belajar (Study Notes)</strong>
+                                                    </div>
+                                                    <p className="mb-0 text-muted" style={{ fontSize: "0.72rem" }}>
+                                                        {language === "id"
+                                                            ? "Catatan mandiri terstruktur per pelajaran dengan klasifikasi warna, pencarian, dan integrasi dialog Si Manta."
+                                                            : "In-lesson rich study notes with color tagging, instant search, and direct AI dialogue integration."}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="col-12 col-md-6 col-lg-4">
+                                                <div className="p-2 rounded bg-light border h-100">
+                                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                                        <FaVideo className="text-danger" />
+                                                        <strong className="text-dark" style={{ fontSize: "0.78rem" }}>Enhanced Video & 95% Unlock</strong>
+                                                    </div>
+                                                    <p className="mb-0 text-muted" style={{ fontSize: "0.72rem" }}>
+                                                        {language === "id"
+                                                            ? "Dukungan streaming ganda (MP4 & YouTube), auto-checkpoint resume, dan auto-unlock kelulusan di ambang 95%."
+                                                            : "Dual streaming engine (MP4 & YouTube), auto-checkpoint resume, and 95% completion auto-unlock."}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>

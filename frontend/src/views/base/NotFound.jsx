@@ -81,7 +81,7 @@ function NotFound() {
                                         </p>
                                         <div className="notfound-help-links">
                                             <a 
-                                                href="mailto:support@lmsetjendpdri.go.id"
+                                                href="mailto:support@lms.dpd.go.id"
                                                 className="notfound-help-link"
                                             >
                                                 <i className="fas fa-envelope me-1"></i>

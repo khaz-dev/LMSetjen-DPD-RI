@@ -107,7 +107,7 @@ class Command(BaseCommand):
                     f'   User: lmsetjendpdri@gmail.com / Admin@LMS2025!'
                 ))
                 self.stdout.write(self.style.SUCCESS(
-                    f'\n🔗 Login at: https://lmsetjendpdri.duckdns.org/login/'
+                    f'\n🔗 Login at: https://lms.dpd.go.id/login/'
                 ))
                 
         except Exception as e:

@@ -66,8 +66,8 @@ if '127.0.0.1' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('127.0.0.1')
 
 # Frontend and Backend URLs (for emails, redirects, etc.)
-FRONTEND_SITE_URL = env('FRONTEND_SITE_URL', default='https://lmsetjendpdri.duckdns.org')
-BACKEND_SITE_URL = env('BACKEND_SITE_URL', default='https://lmsetjendpdri.duckdns.org')
+FRONTEND_SITE_URL = env('FRONTEND_SITE_URL', default='https://lms.dpd.go.id')
+BACKEND_SITE_URL = env('BACKEND_SITE_URL', default='https://lms.dpd.go.id')
 
 # ===========================
 # Google OAuth Configuration (PHASE 4.16)
