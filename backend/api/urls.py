@@ -332,5 +332,9 @@ urlpatterns = [
     path("ai/notes/save/", api_views.AIAssistantSaveNoteAPIView.as_view(), name="ai-assistant-save-note"),
     path("ai/notifications/sync/", api_views.AIMantaNotificationsSyncAPIView.as_view(), name="ai-manta-notifications-sync"),
     path("ai/milestones/", api_views.AIMantaMilestonesAPIView.as_view(), name="ai-manta-milestones"),
+
+    # 🎮 MantaType Arcade Typing Game Endpoints
+    path("manta-game/leaderboard/", api_views.MantaTypeLeaderboardAPIView.as_view(), name="manta-game-leaderboard"),
+    path("manta-game/leaderboard", api_views.MantaTypeLeaderboardAPIView.as_view()),
 ]
 

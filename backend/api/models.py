@@ -5454,6 +5454,35 @@ class CourseGameAttempt(models.Model):
         return f"{self.user.username} - {self.game.title} - Attempt #{self.attempt_number} ({self.score}%)"
 
 
+# =====================================================================
+# 🎮 MantaType Arcade Typing Game Models
+# =====================================================================
+
+class MantaTypeLeaderboard(models.Model):
+    """
+    Papan peringkat (Ranked Top 10) Game MantaType arcade.
+    Mendukung pencatatan pemain terautentikasi (LMS user) maupun guest (arcade initials).
+    """
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="mantatype_scores")
+    player_name = models.CharField(max_length=60, help_text="Nama tampilan pemain (Guest atau akun LMS)")
+    avatar_url = models.CharField(max_length=500, blank=True, null=True, help_text="URL avatar pemain jika ada")
+    score = models.PositiveIntegerField(default=0, db_index=True)
+    words_typed = models.PositiveIntegerField(default=0)
+    accuracy = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
+    wpm = models.PositiveIntegerField(default=0)
+    wave_reached = models.PositiveIntegerField(default=1)
+    is_guest = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        verbose_name = "MantaType Leaderboard"
+        verbose_name_plural = "MantaType Leaderboard"
+        ordering = ['-score', '-accuracy', '-wpm', 'created_at']
+
+    def __str__(self):
+        return f"{self.player_name} - Skor: {self.score} (Wave {self.wave_reached})"
+
+
 class SystemRelease(models.Model):
     """
     ✨ System Versioning & Update Log (Release Notes)

@@ -4484,3 +4484,181 @@ class AIMantaMilestonesAPIView(APIView):
         chat_helper = AIAssistantChatAPIView()
         badges_data = chat_helper._handle_learning_journey_badges(user_ctx, "lencana saya")
         return Response(badges_data)
+
+
+# ==============================================================================
+# 🎮 MANTATYPE ARCADE TYPING GAME LEADERBOARD
+# ==============================================================================
+
+class MantaTypeLeaderboardAPIView(APIView):
+    """
+    🎮 Leaderboard API untuk mini-game arcade MantaType.
+    GET  /api/v1/manta-game/leaderboard/ -> Mengambil Top 10 High Scores
+    POST /api/v1/manta-game/leaderboard/ -> Mengirimkan skor baru dan menghitung peringkat pemain
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        try:
+            top_scores = api_models.MantaTypeLeaderboard.objects.all().order_by(
+                '-score', '-accuracy', '-wpm', 'created_at'
+            )[:10]
+
+            leaderboard_data = []
+            for rank, entry in enumerate(top_scores, start=1):
+                avatar = entry.avatar_url or ""
+                if not avatar and entry.user:
+                    try:
+                        from userauths.models import Profile
+                        prof = Profile.objects.filter(user=entry.user).first()
+                        if prof and prof.image:
+                            avatar = request.build_absolute_uri(prof.image.url) if hasattr(request, 'build_absolute_uri') else prof.image.url
+                    except Exception:
+                        pass
+
+                leaderboard_data.append({
+                    "id": entry.id,
+                    "rank": rank,
+                    "player_name": entry.player_name,
+                    "avatar_url": avatar,
+                    "score": entry.score,
+                    "words_typed": entry.words_typed,
+                    "accuracy": float(entry.accuracy),
+                    "wpm": entry.wpm,
+                    "wave_reached": entry.wave_reached,
+                    "is_guest": entry.is_guest,
+                    "created_at": entry.created_at.strftime("%d %b %Y %H:%M"),
+                })
+
+            total_entries = api_models.MantaTypeLeaderboard.objects.count()
+
+            return Response({
+                "status": "success",
+                "leaderboard": leaderboard_data,
+                "total_entries": total_entries,
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error fetching MantaType leaderboard: {e}", exc_info=True)
+            return Response({
+                "status": "error",
+                "message": "Gagal mengambil data papan peringkat MantaType.",
+                "leaderboard": [],
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def post(self, request):
+        try:
+            data = request.data or {}
+            score = int(data.get("score", 0))
+            words_typed = int(data.get("words_typed", 0))
+            accuracy = float(data.get("accuracy", 100.0))
+            wpm = int(data.get("wpm", 0))
+            wave_reached = int(data.get("wave_reached", 1))
+            user_id = data.get("user_id")
+            raw_player_name = str(data.get("player_name", "")).strip()
+
+            from userauths.models import User, Profile
+
+            user = None
+            is_guest = True
+            player_name = ""
+            avatar_url = ""
+
+            # Check authenticated user or user_id
+            if request.user and request.user.is_authenticated:
+                user = request.user
+            elif user_id:
+                try:
+                    user = User.objects.filter(id=user_id).first()
+                except Exception:
+                    user = None
+
+            if user:
+                is_guest = False
+                full_name = getattr(user, 'get_full_name', lambda: '')()
+                player_name = full_name or user.username
+                try:
+                    prof = Profile.objects.filter(user=user).first()
+                    if prof and prof.image:
+                        avatar_url = request.build_absolute_uri(prof.image.url) if hasattr(request, 'build_absolute_uri') else prof.image.url
+                except Exception:
+                    pass
+            else:
+                # Guest mode: sanitize raw_player_name
+                is_guest = True
+                cleaned = re.sub(r'[^\w\s\-\.]', '', raw_player_name)
+                player_name = cleaned[:25].strip() if cleaned else "Pelaut Manta"
+
+            # Save entry
+            new_entry = api_models.MantaTypeLeaderboard.objects.create(
+                user=user,
+                player_name=player_name,
+                avatar_url=avatar_url,
+                score=score,
+                words_typed=words_typed,
+                accuracy=round(accuracy, 2),
+                wpm=wpm,
+                wave_reached=wave_reached,
+                is_guest=is_guest,
+            )
+
+            # Hitung peringkat pemain saat ini
+            higher_scores_count = api_models.MantaTypeLeaderboard.objects.filter(
+                Q(score__gt=score) |
+                Q(score=score, accuracy__gt=accuracy) |
+                Q(score=score, accuracy=accuracy, wpm__gt=wpm) |
+                Q(score=score, accuracy=accuracy, wpm=wpm, created_at__lt=new_entry.created_at)
+            ).count()
+
+            current_rank = higher_scores_count + 1
+            is_top_10 = current_rank <= 10
+
+            # Get Top 10 Leaderboard
+            top_scores = api_models.MantaTypeLeaderboard.objects.all().order_by(
+                '-score', '-accuracy', '-wpm', 'created_at'
+            )[:10]
+
+            leaderboard_data = []
+            for rank, entry in enumerate(top_scores, start=1):
+                avatar = entry.avatar_url or ""
+                if not avatar and entry.user:
+                    try:
+                        prof = Profile.objects.filter(user=entry.user).first()
+                        if prof and prof.image:
+                            avatar = request.build_absolute_uri(prof.image.url) if hasattr(request, 'build_absolute_uri') else prof.image.url
+                    except Exception:
+                        pass
+
+                leaderboard_data.append({
+                    "id": entry.id,
+                    "rank": rank,
+                    "player_name": entry.player_name,
+                    "avatar_url": avatar,
+                    "score": entry.score,
+                    "words_typed": entry.words_typed,
+                    "accuracy": float(entry.accuracy),
+                    "wpm": entry.wpm,
+                    "wave_reached": entry.wave_reached,
+                    "is_guest": entry.is_guest,
+                    "created_at": entry.created_at.strftime("%d %b %Y %H:%M"),
+                    "is_current_player": entry.id == new_entry.id
+                })
+
+            return Response({
+                "status": "success",
+                "message": "Skor MantaType berhasil disimpan!",
+                "entry_id": new_entry.id,
+                "current_rank": current_rank,
+                "is_top_10": is_top_10,
+                "player_name": player_name,
+                "score": score,
+                "leaderboard": leaderboard_data,
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            logger.error(f"Error submitting MantaType score: {e}", exc_info=True)
+            return Response({
+                "status": "error",
+                "message": f"Gagal menyimpan skor: {str(e)}",
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import apiInstance from '../../utils/axios';
 import UserData from '../../views/plugin/UserData';
+import MantaTypeGame from './MantaTypeGame';
 import './SiMantaAvatar.css';
 
 // Import sprite assets (WebP format with fallback)
@@ -324,6 +325,8 @@ const SiMantaAvatar = () => {
     const [showBubble, setShowBubble] = useState(false);
     const [bubbleDismissed, setBubbleDismissed] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [isGameOpen, setIsGameOpen] = useState(false); // Mini Game Arcade MantaType
+    const [isActionMenuOpen, setIsActionMenuOpen] = useState(false); // Balon Menu Aksi Cepat (Chat vs Game)
     const [isMinimized, setIsMinimized] = useState(() => {
         try {
             return localStorage.getItem('manta_minimized') === 'true';
@@ -756,15 +759,39 @@ const SiMantaAvatar = () => {
         }
     };
 
-    // Klik Avatar: Buka dialog asisten AI & pose bahagia
+    // Klik Avatar: Buka balon menu aksi cepat (Chat AI atau Game MantaType) & pose bahagia
     const handleAvatarClick = () => {
         setPose('happy');
-        setIsChatOpen((prev) => !prev);
         setShowBubble(false);
+
+        if (isChatOpen) {
+            setIsChatOpen(false);
+            setIsActionMenuOpen(false);
+        } else if (isGameOpen) {
+            setIsGameOpen(false);
+            setIsActionMenuOpen(false);
+        } else {
+            // Munculkan menu aksi cepat (Opsi A)
+            setIsActionMenuOpen((prev) => !prev);
+        }
 
         setTimeout(() => {
             setPose('idle');
         }, 1200);
+    };
+
+    // Buka Jendela Chat AI
+    const handleOpenChat = () => {
+        setIsActionMenuOpen(false);
+        setIsGameOpen(false);
+        setIsChatOpen(true);
+    };
+
+    // Buka Mini Game Arcade MantaType
+    const handleOpenGame = () => {
+        setIsActionMenuOpen(false);
+        setIsChatOpen(false);
+        setIsGameOpen(true);
     };
 
     // Pilih sprite berdasarkan status aktif
@@ -1229,7 +1256,7 @@ const SiMantaAvatar = () => {
                     </button>
 
                     {/* Balon Sapaan Cerdas (Smart Proactive Learning Nudge) */}
-                    {showBubble && !isChatOpen && (
+                    {showBubble && !isChatOpen && !isActionMenuOpen && !isGameOpen && (
                         <div 
                             className="simanta-speech-bubble"
                             onClick={handleAvatarClick}
@@ -1251,6 +1278,47 @@ const SiMantaAvatar = () => {
                             >
                                 ×
                             </button>
+                        </div>
+                    )}
+
+                    {/* Menu Aksi Cepat Manta: Pilihan Chat vs Game MantaType (Opsi A) */}
+                    {isActionMenuOpen && !isChatOpen && !isGameOpen && (
+                        <div className="simanta-action-menu-popover" role="dialog" aria-label="Menu Pilihan Manta">
+                            <div className="simanta-action-menu-header">
+                                <span className="simanta-action-menu-greeting">Halo! Mau ngobrol atau main bareng Manta? 🌊</span>
+                                <button 
+                                    className="simanta-action-menu-close"
+                                    onClick={() => setIsActionMenuOpen(false)}
+                                    title="Tutup menu"
+                                    aria-label="Tutup menu"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            <div className="simanta-action-menu-buttons">
+                                <button 
+                                    className="simanta-action-menu-btn chat-btn"
+                                    onClick={handleOpenChat}
+                                >
+                                    <span className="simanta-action-icon">💬</span>
+                                    <div className="simanta-action-text">
+                                        <strong>Ngobrol dengan Manta AI</strong>
+                                        <small>Tanya materi, kuis, atau panduan LMS</small>
+                                    </div>
+                                </button>
+                                <button 
+                                    className="simanta-action-menu-btn game-btn"
+                                    onClick={handleOpenGame}
+                                >
+                                    <span className="simanta-action-icon">🎮</span>
+                                    <div className="simanta-action-text">
+                                        <strong>Mainkan MantaType</strong>
+                                        <small>Game arcade ketangkasan mengetik</small>
+                                    </div>
+                                    <span className="simanta-game-new-tag">BARU!</span>
+                                </button>
+                            </div>
+                            <div className="simanta-action-menu-arrow" />
                         </div>
                     )}
 
@@ -1326,6 +1394,15 @@ const SiMantaAvatar = () => {
                         </div>
 
                         <div className="simanta-chat-header-actions">
+                            {/* Tombol Pintasan Mini Game MantaType Arcade */}
+                            <button
+                                className="simanta-chat-header-btn simanta-game-shortcut-btn"
+                                onClick={handleOpenGame}
+                                title="Mainkan Mini Game MantaType Arcade"
+                                aria-label="Mainkan Mini Game MantaType Arcade"
+                            >
+                                🎮
+                            </button>
                             {/* Tombol Obrolan Baru (Reset Chat) */}
                             <button
                                 className="simanta-chat-header-btn"
@@ -2561,6 +2638,16 @@ const SiMantaAvatar = () => {
                     </footer>
                 </section>
             )}
+
+            {/* 🎮 Mini Game Arcade MantaType */}
+            <MantaTypeGame 
+                isOpen={isGameOpen} 
+                onClose={() => setIsGameOpen(false)}
+                onSwitchToChat={() => {
+                    setIsGameOpen(false);
+                    setIsChatOpen(true);
+                }}
+            />
         </aside>
     );
 };

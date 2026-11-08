@@ -582,4 +582,14 @@ class SystemReleaseAdmin(admin.ModelAdmin):
 admin.site.register(models.SystemRelease, SystemReleaseAdmin)
 
 
+class MantaTypeLeaderboardAdmin(admin.ModelAdmin):
+    list_display = ('player_name', 'score', 'wave_reached', 'words_typed', 'accuracy', 'wpm', 'is_guest', 'created_at')
+    list_filter = ('is_guest', 'wave_reached', 'created_at')
+    search_fields = ('player_name', 'user__username', 'user__email')
+    readonly_fields = ('created_at',)
+
+admin.site.register(models.MantaTypeLeaderboard, MantaTypeLeaderboardAdmin)
+
+
+
 
