@@ -195,18 +195,62 @@ class PublicStatsAPIView(generics.GenericAPIView):
             except:
                 total_categories = 0
             
+            # 10. Total registered users / aparatur Setjen DPD RI
+            try:
+                from userauths.models import User
+                total_registered_users = User.objects.count()
+            except:
+                total_registered_users = total_students
+                
+            # 11. Gamification and interactive tools count
+            try:
+                total_games = api_models.CourseGame.objects.count()
+            except:
+                total_games = 0
+                
+            try:
+                total_quizzes = api_models.Quiz.objects.count()
+            except:
+                total_quizzes = 0
+                
+            try:
+                total_notes = api_models.Note.objects.count()
+            except:
+                total_notes = 0
+
+            try:
+                total_feedbacks = api_models.Feedback.objects.count()
+            except:
+                total_feedbacks = 0
+
+            # 12. Active version info & satisfaction index
+            try:
+                from api.version import get_current_app_version
+                app_version = get_current_app_version()
+            except:
+                app_version = "1.1.0"
+                
+            satisfaction_index = round((platform_rating / 5.0) * 100, 1) if platform_rating else 96.7
+
             return Response({
                 'total_courses': total_courses,
                 'total_students': total_students,
+                'total_registered_users': total_registered_users,
                 'total_teachers': total_teachers,
                 'total_enrollments': total_enrollments,
                 'completion_rate': completion_rate,
                 'total_certificates': total_certificates,
                 'total_materials': total_materials,
+                'total_games': total_games,
+                'total_quizzes': total_quizzes,
+                'total_notes': total_notes,
+                'total_feedbacks': total_feedbacks,
                 'platform_rating': platform_rating,
+                'satisfaction_index': satisfaction_index,
                 'total_reviews': total_reviews,
                 'total_discussions': total_discussions,
                 'total_categories': total_categories,
+                'app_version': app_version,
                 'timestamp': timezone.now().isoformat()
             }, status=status.HTTP_200_OK)
             

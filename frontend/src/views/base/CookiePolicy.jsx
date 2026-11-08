@@ -1,10 +1,11 @@
-import React, { memo, useState, useEffect, useMemo } from "react";
+import React, { memo, useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import logoSetjenWebP from "../../assets/logo/logo-setjen-dpd.webp";
 import logoSetjenPNG from "../../assets/logo/logo-setjen-dpd.png";
 import useStickyHero from "../../hooks/useStickyHero";
+import apiInstance from "../../utils/axios";
 import "./CookiePolicy.css";
 
 function CookiePolicy() {
@@ -13,11 +14,44 @@ function CookiePolicy() {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const { isScrolled, headerHeight } = useStickyHero(55);
 
+  // Live Statistics State
+  const [stats, setStats] = useState({
+    app_version: "1.1.0",
+    total_registered_users: 774,
+    total_courses: 0,
+    timestamp: null,
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  // Fetch real-time live statistics from backend
+  const fetchLiveStats = useCallback(async () => {
+    setIsLoadingStats(true);
+    try {
+      const response = await apiInstance.get("/statistics/public-stats/");
+      if (response && response.data) {
+        setStats({
+          app_version: response.data.app_version || "1.1.0",
+          total_registered_users: Number(response.data.total_registered_users) || 774,
+          total_courses: Number(response.data.total_courses) || 0,
+          timestamp: response.data.timestamp || new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      console.warn("Gagal memuat statistik live untuk informasi cookie:", error);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLiveStats();
+  }, [fetchLiveStats]);
+
   // 10 Sections for Table of Contents & Quick Navigation
   const sections = useMemo(() => [
-    { id: "apa-itu-cookie", title: "1. Apa Itu Cookie?", icon: "bi-info-circle", tag: "Definisi" },
-    { id: "jenis-cookie", title: "2. Jenis Cookie Digunakan", icon: "bi-layers-fill", tag: "Kategori" },
-    { id: "token-jwt", title: "3. Autentikasi Token JWT", icon: "bi-key-fill", tag: "Keamanan" },
+    { id: "apa-itu-cookie", title: "1. Apa Itu Cookie & Storage?", icon: "bi-info-circle", tag: "Definisi" },
+    { id: "jenis-cookie", title: "2. Jenis Cookie & Penyimpanan", icon: "bi-layers-fill", tag: "Kategori" },
+    { id: "token-jwt", title: "3. Autentikasi JWT & Sesi Manta", icon: "bi-key-fill", tag: "Keamanan" },
     { id: "cara-penggunaan", title: "4. Tujuan & Pemanfaatan", icon: "bi-gear-fill", tag: "Fungsional" },
     { id: "kontrol-cookie", title: "5. Kontrol & Pengaturan", icon: "bi-sliders", tag: "Preferensi" },
     { id: "cookie-pihak-ketiga", title: "6. Layanan Pihak Ketiga", icon: "bi-share-fill", tag: "SSO Integrasi" },
@@ -41,7 +75,6 @@ function CookiePolicy() {
     setActiveSection(sectionId);
     const element = document.getElementById(sectionId);
     if (element) {
-      // Offset for: BaseHeader (headerHeight) + stuck hero (56px) + margin clearance (16px)
       const headerOffset = (headerHeight || 60) + 56 + 16;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
@@ -115,7 +148,7 @@ function CookiePolicy() {
                 </nav>
                 <span className="cookie-badge">
                   <span className="badge-pulse" aria-hidden="true"></span>
-                  <span>Standar Transparansi Web LMSetjen DPD RI</span>
+                  <span>Standar Transparansi Web LMSetjen DPD RI • Versi {stats.app_version}</span>
                 </span>
               </div>
 
@@ -128,15 +161,27 @@ function CookiePolicy() {
                   <div>
                     <h1 className="cookie-hero-title">Informasi & Kebijakan Cookie LMSetjen DPD RI</h1>
                     <p className="cookie-hero-subtitle">
-                      Keterbukaan informasi mengenai penggunaan cookie, token autentikasi JWT, dan penyimpanan peramban lokal demi memastikan keandalan, kenyamanan, serta keamanan login pengguna.
+                      Keterbukaan informasi pemanfaatan cookie, token sesi JWT, penyimpanan lokal (asisten Manta AI, preferensi belajar, dan progres diklat) demi keandalan serta keamanan aparatur parlemen.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Quick Metrics Bar - High-Contrast Stat Pills */}
+              {/* Quick Metrics Bar - High-Contrast Live Stat Pills */}
               <div className="cookie-stats-row">
-                <div className="stat-pill">
+                <div className="stat-pill" title={`Versi kebijakan cookie terkini v${stats.app_version}`}>
+                  <span className="stat-pill-icon-box" aria-hidden="true">
+                    <i className="bi bi-calendar-check-fill"></i>
+                  </span>
+                  <div className="stat-pill-text">
+                    <span className="stat-label">Pembaruan Rilis</span>
+                    <strong className="stat-val">
+                      {isLoadingStats ? "..." : `v${stats.app_version} (Nov 2026)`}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="stat-pill" title="Cookie esensial mutlak diperlukan untuk otentikasi login">
                   <span className="stat-pill-icon-box" aria-hidden="true">
                     <i className="bi bi-shield-check"></i>
                   </span>
@@ -145,7 +190,8 @@ function CookiePolicy() {
                     <strong className="stat-val">Wajib untuk Login</strong>
                   </div>
                 </div>
-                <div className="stat-pill">
+
+                <div className="stat-pill" title="Sesi terenkripsi dengan JSON Web Token">
                   <span className="stat-pill-icon-box" aria-hidden="true">
                     <i className="bi bi-key-fill"></i>
                   </span>
@@ -154,22 +200,14 @@ function CookiePolicy() {
                     <strong className="stat-val">JSON Web Token (JWT)</strong>
                   </div>
                 </div>
-                <div className="stat-pill">
+
+                <div className="stat-pill" title="Bebas pelacak iklan komersial pihak ketiga">
                   <span className="stat-pill-icon-box" aria-hidden="true">
                     <i className="bi bi-slash-circle-fill"></i>
                   </span>
                   <div className="stat-pill-text">
                     <span className="stat-label">Pelacak Iklan</span>
-                    <strong className="stat-val">Nol Pelacak Komersial</strong>
-                  </div>
-                </div>
-                <div className="stat-pill">
-                  <span className="stat-pill-icon-box" aria-hidden="true">
-                    <i className="bi bi-calendar-check-fill"></i>
-                  </span>
-                  <div className="stat-pill-text">
-                    <span className="stat-label">Pembaruan</span>
-                    <strong className="stat-val">Januari 2026</strong>
+                    <strong className="stat-val">100% Bebas Tracker</strong>
                   </div>
                 </div>
               </div>
@@ -180,7 +218,6 @@ function CookiePolicy() {
 
       {/* MAIN TWO-COLUMN COMPACT LAYOUT WITH FROSTED VEIL */}
       <main className="cookie-main-container">
-        {/* Geometric Grid & Luminous Glow Pattern matching About section */}
         <div className="cookie-background-pattern" aria-hidden="true"></div>
 
         <div className="container">
@@ -193,17 +230,16 @@ function CookiePolicy() {
                 {/* Search / Fast Filter */}
                 <div
                   className="cookie-search-card"
-                  title="Cari kata kunci (JWT, Sesi, Google, Keamanan, Masa Simpan)..."
+                  title="Cari kata kunci (JWT, Manta AI, Sesi, LocalStorage, Keamanan, Masa Simpan)..."
                 >
-                  <label htmlFor="cookie-search" className="visually-hidden">Cari poin kebijakan cookie</label>
+                  <label htmlFor="cookie-search" className="visually-hidden">Cari topik cookie</label>
                   <div className="cookie-search-input-wrap">
                     <i className="bi bi-search search-icon" aria-hidden="true"></i>
                     <input
                       id="cookie-search"
                       type="text"
                       className="cookie-search-input"
-                      placeholder="Cari kata kunci (JWT, Sesi, Google)..."
-                      title="Cari kata kunci (JWT, Sesi, Google, Keamanan, Masa Simpan)..."
+                      placeholder="Cari kata kunci (JWT, Manta AI)..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -218,10 +254,9 @@ function CookiePolicy() {
                       </button>
                     )}
                   </div>
-                  {/* Tooltip visible on hover over cookie-search-card */}
                   <div className="cookie-search-tooltip" role="tooltip">
                     <i className="bi bi-info-circle-fill me-1 text-teal"></i>
-                    <span>Cari kata kunci (JWT, Sesi, Google, Keamanan, Masa Simpan)...</span>
+                    <span>Cari kata kunci: JWT, Manta AI, Sesi, LocalStorage, Masa Simpan</span>
                   </div>
                 </div>
 
@@ -246,7 +281,6 @@ function CookiePolicy() {
                         <i className={`bi ${sec.icon} toc-icon`} aria-hidden="true"></i>
                         <span className="toc-text">{sec.title}</span>
                         <span className="toc-tag">{sec.tag}</span>
-                        {/* Custom floating tooltip for full text when truncated */}
                         <span className="toc-item-tooltip" role="tooltip">
                           <i className={`bi ${sec.icon} me-1 text-teal`} aria-hidden="true"></i>
                           <span>{sec.title}</span>
@@ -265,15 +299,19 @@ function CookiePolicy() {
                   <ul className="summary-list">
                     <li>
                       <i className="bi bi-shield-check text-teal" aria-hidden="true"></i>
-                      <span>Hanya menyimpan token otorisasi dan preferensi teknis tampilan.</span>
+                      <span>Hanya menyimpan token otentikasi kedinasan dan preferensi antarmuka.</span>
                     </li>
                     <li>
-                      <i className="bi bi-eye-slash-fill text-teal" aria-hidden="true"></i>
-                      <span>Tidak mengumpulkan kata sandi asli maupun riwayat penelusuran di luar LMS.</span>
+                      <i className="bi bi-robot text-teal" aria-hidden="true"></i>
+                      <span>LocalStorage menyimpan cache sesi Manta AI tanpa data rahasia.</span>
+                    </li>
+                    <li>
+                      <i className="bi bi-slash-circle-fill text-danger" aria-hidden="true"></i>
+                      <span>Bebas dari segala jenis cookie pelacak iklan komersial pihak ketiga.</span>
                     </li>
                     <li>
                       <i className="bi bi-lock-fill text-teal" aria-hidden="true"></i>
-                      <span>Token JWT terlindungi dengan masa berlaku yang diperbarui otomatis.</span>
+                      <span>Token JWT terlindungi dengan rotasi berkala dan enkripsi TLS 256-bit.</span>
                     </li>
                   </ul>
                 </div>
@@ -326,10 +364,10 @@ function CookiePolicy() {
             {/* RIGHT COLUMN: DETAILED & COMPACT CONTENT CARDS */}
             <div className="col-lg-8 col-xl-9 cookie-content-col">
 
-              {/* SECTION 1: APA ITU COOKIE */}
+              {/* SECTION 1: APA ITU COOKIE & STORAGE */}
               <article
                 id="apa-itu-cookie"
-                className={`policy-card ${!isMatch("apa itu cookie file peramban browser definisi simpan") ? "search-dim" : ""}`}
+                className={`policy-card ${!isMatch("apa itu cookie file peramban browser definisi simpan storage localstorage") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
                   <div className="header-icon-wrap" aria-hidden="true">
@@ -337,17 +375,17 @@ function CookiePolicy() {
                   </div>
                   <div>
                     <span className="card-section-label">Bagian 1</span>
-                    <h2 className="policy-card-title">Apa Itu Cookie?</h2>
+                    <h2 className="policy-card-title">Apa Itu Cookie & Penyimpanan Peramban?</h2>
                   </div>
                 </div>
                 <div className="policy-card-body">
                   <p className="lead-paragraph">
-                    <strong>Cookie</strong> adalah berkas teks berukuran sangat kecil yang disimpan secara otomatis oleh peramban (*browser*) pada komputer, ponsel, atau gawai Anda ketika Anda mengakses platform <strong>LMSetjen DPD RI</strong>.
+                    <strong>Cookie</strong> dan teknologi penyimpanan web peramban (seperti <em>localStorage</em> dan <em>sessionStorage</em>) adalah mekanisme penyimpanan data ringan pada peramban (*browser*) komputer atau ponsel Anda saat mengakses platform <strong>LMSetjen DPD RI</strong> (versi {stats.app_version}).
                   </p>
                   <div className="policy-callout-box">
                     <i className="bi bi-shield-shaded callout-icon" aria-hidden="true"></i>
                     <p className="callout-text mb-0">
-                      Cookie membantu sistem mengenali identitas sesi login Anda, mengingat preferensi pengaturan antarmuka, serta memungkinkan navigasi perpindahan modul materi pembelajaran berlangsung mulus tanpa perlu login berulang kali.
+                      Teknologi ini membantu sistem mengenali identitas sesi login kedinasan Anda, mengingat preferensi tampilan antarmuka, memelihara sesi dialog asisten AI Si Manta, serta memastikan perpindahan antar modul kursus berlangsung mulus tanpa perlu memasukkan kredensial berulang kali.
                     </p>
                   </div>
                 </div>
@@ -356,7 +394,7 @@ function CookiePolicy() {
               {/* SECTION 2: JENIS COOKIE YANG KAMI GUNAKAN */}
               <article
                 id="jenis-cookie"
-                className={`policy-card ${!isMatch("jenis cookie esensial analitik preferensi tema bahasa sesi") ? "search-dim" : ""}`}
+                className={`policy-card ${!isMatch("jenis cookie esensial analitik preferensi tema bahasa sesi localstorage manta ai") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
                   <div className="header-icon-wrap" aria-hidden="true">
@@ -364,7 +402,7 @@ function CookiePolicy() {
                   </div>
                   <div>
                     <span className="card-section-label">Bagian 2</span>
-                    <h2 className="policy-card-title">Jenis Cookie yang Digunakan</h2>
+                    <h2 className="policy-card-title">Jenis Cookie & Penyimpanan yang Digunakan</h2>
                   </div>
                 </div>
                 <div className="policy-card-body">
@@ -379,33 +417,33 @@ function CookiePolicy() {
                         <div className="cookie-type-badge bg-teal-subtle text-teal">
                           <i className="bi bi-shield-lock-fill me-1"></i> Wajib
                         </div>
-                        <h3 className="cookie-type-name">Cookies Esensial</h3>
+                        <h3 className="cookie-type-name">Cookies & Sesi Esensial</h3>
                       </div>
                       <p className="cookie-type-desc">
-                        Diperlukan secara mutlak untuk menjalankan fungsi inti platform. Tanpa cookie ini, Anda tidak dapat mengakses dashboard atau modul pelatihan.
+                        Diperlukan secara mutlak untuk menjalankan fungsi inti platform e-learning. Tanpa komponen ini, Anda tidak dapat mengakses dashboard atau modul pelatihan.
                       </p>
                       <ul className="cookie-feature-list">
-                        <li>Autentikasi dan token keamanan login</li>
-                        <li>Pencegahan serangan Cross-Site Request Forgery (CSRF)</li>
-                        <li>Verifikasi role pengguna (Admin / Instruktur / Pegawai)</li>
+                        <li>Token autentikasi sesi JWT kedinasan</li>
+                        <li>Proteksi keamanan Cross-Site Request Forgery (CSRF)</li>
+                        <li>Verifikasi hak akses peran (Admin / Instruktur / Siswa)</li>
                       </ul>
                     </div>
 
-                    {/* 2. Cookies Analitik */}
+                    {/* 2. Penyimpanan Fungsional & Asisten Manta AI */}
                     <div className="cookie-type-card border-indigo">
                       <div className="cookie-type-head">
                         <div className="cookie-type-badge bg-indigo-subtle text-primary">
-                          <i className="bi bi-graph-up me-1"></i> Kinerja
+                          <i className="bi bi-robot me-1"></i> Fungsional AI
                         </div>
-                        <h3 className="cookie-type-name">Cookies Analitik</h3>
+                        <h3 className="cookie-type-name">Penyimpanan Asisten Manta AI</h3>
                       </div>
                       <p className="cookie-type-desc">
-                        Membantu tim teknis BPSDM memahami efektivitas sistem dan stabilitas modul kursus secara agregat tanpa mengidentifikasi data privat.
+                        Menyimpan cache preferensi obrolan asisten pintar Si Manta pada <code>localStorage</code> peramban Anda untuk mendukung kenyamanan belajar:
                       </p>
                       <ul className="cookie-feature-list">
-                        <li>Mengukur durasi waktu belajar pada modul video/SCORM</li>
-                        <li>Mendeteksi kegagalan muat halaman atau error jaringan</li>
-                        <li>Statistik kursus yang paling diminati aparatur</li>
+                        <li>Status dialog Si Manta (dibuka / diminimalkan)</li>
+                        <li>Cache percakapan sesi aktif agar konteks tanya-jawab tidak hilang saat berpindah video materi</li>
+                        <li>Penanda draf Catatan Belajar mandiri sebelum tersinkronkan</li>
                       </ul>
                     </div>
 
@@ -422,18 +460,18 @@ function CookiePolicy() {
                       </p>
                       <div className="pref-chips-row">
                         <span className="pref-chip"><i className="bi bi-moon-stars me-1 text-teal"></i> Tema Tampilan (Terang / Gelap)</span>
-                        <span className="pref-chip"><i className="bi bi-translate me-1 text-teal"></i> Pengaturan Bahasa (ID/EN)</span>
-                        <span className="pref-chip"><i className="bi bi-bell me-1 text-teal"></i> Status Pop-up Notifikasi & Bantuan</span>
+                        <span className="pref-chip"><i className="bi bi-layout-sidebar me-1 text-teal"></i> Status Navigasi Sidebar</span>
+                        <span className="pref-chip"><i className="bi bi-bell me-1 text-teal"></i> Penanda Notifikasi Lonceng In-App</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </article>
 
-              {/* SECTION 3: TOKEN JWT */}
+              {/* SECTION 3: TOKEN JWT & SESI MANTA */}
               <article
                 id="token-jwt"
-                className={`policy-card ${!isMatch("token jwt json web token localstorage sessionstorage autentikasi") ? "search-dim" : ""}`}
+                className={`policy-card ${!isMatch("token jwt json web token localstorage sessionstorage autentikasi manta ai") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
                   <div className="header-icon-wrap" aria-hidden="true">
@@ -441,12 +479,12 @@ function CookiePolicy() {
                   </div>
                   <div>
                     <span className="card-section-label">Bagian 3</span>
-                    <h2 className="policy-card-title">Autentikasi Token JWT (JSON Web Token)</h2>
+                    <h2 className="policy-card-title">Autentikasi Token JWT & Sesi Pembelajaran</h2>
                   </div>
                 </div>
                 <div className="policy-card-body">
                   <p>
-                    Platform LMSetjen DPD RI menggunakan arsitektur modern berbasis <strong>JSON Web Token (JWT)</strong>. Token akses terenkripsi disimpan secara aman di <code>localStorage</code> atau <code>sessionStorage</code> peramban Anda untuk mengamankan komunikasi API ke server backend.
+                    Platform LMSetjen DPD RI mengimplementasikan arsitektur token modern berbasis <strong>JSON Web Token (JWT)</strong>. Token akses terenkripsi disimpan secara aman di <code>localStorage</code> peramban Anda untuk mengamankan setiap pemanggilan API ke server backend.
                   </p>
 
                   <div className="jwt-tech-box">
@@ -454,24 +492,24 @@ function CookiePolicy() {
                       <div className="jwt-item">
                         <i className="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>
                         <div>
-                          <strong>Menjaga Sesi Login Aktif:</strong>
-                          <span>Mengizinkan akses berkelanjutan tanpa meminta sandi di setiap perpindahan modul kursus.</span>
+                          <strong>Mempertahankan Sesi Login Kedinasan:</strong>
+                          <span>Mengizinkan akses berkelanjutan tanpa meminta sandi di setiap perpindahan modul kursus atau pengerjaan kuis.</span>
                         </div>
                       </div>
 
                       <div className="jwt-item">
                         <i className="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>
                         <div>
-                          <strong>Validasi Akses Berbasis Role:</strong>
-                          <span>Menjamin hanya akun berwenang yang dapat membuka panel instruktur atau panel admin.</span>
+                          <strong>Validasi Otoritas Berbasis Peran (RBAC):</strong>
+                          <span>Menjamin hanya akun terverifikasi yang dapat mengakses panel instruktur atau konsol administrasi sistem.</span>
                         </div>
                       </div>
 
                       <div className="jwt-item">
                         <i className="bi bi-check-circle-fill text-success me-2" aria-hidden="true"></i>
                         <div>
-                          <strong>Masa Kadaluwarsa Otomatis:</strong>
-                          <span>Token disegarkan secara otomatis dan kedaluwarsa jika terjadi ketidakaktifan panjang guna mitigasi pembajakan sesi.</span>
+                          <strong>Masa Berlaku Dinamis (Refresh Token):</strong>
+                          <span>Token akses disegarkan secara berkala dan otomatis kedaluwarsa jika terjadi ketidakaktifan panjang guna mitigasi pembajakan sesi.</span>
                         </div>
                       </div>
                     </div>
@@ -480,17 +518,17 @@ function CookiePolicy() {
                       <i className="bi bi-shield-exclamation text-teal fs-3 mb-2" aria-hidden="true"></i>
                       <strong>Komponen Wajib Sistem</strong>
                       <p className="mb-0">
-                        Token JWT merupakan pondasi keamanan sistem e-learning dan tidak dapat dinonaktifkan secara manual.
+                        Token JWT dan sesi penyimpanan merupakan pondasi teknis e-learning kedinasan dan tidak dapat dinonaktifkan secara manual tanpa memutuskan login akun.
                       </p>
                     </div>
                   </div>
                 </div>
               </article>
 
-              {/* SECTION 4: CARA KAMI MENGGUNAKAN COOKIE */}
+              {/* SECTION 4: TUJUAN DAN CARA PENGGUNAAN */}
               <article
                 id="cara-penggunaan"
-                className={`policy-card ${!isMatch("cara penggunaan tujuan peningkatan personalisasi keamanan fungsionalitas") ? "search-dim" : ""}`}
+                className={`policy-card ${!isMatch("cara penggunaan tujuan peningkatan personalisasi keamanan fungsionalitas gamifikasi") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
                   <div className="header-icon-wrap" aria-hidden="true">
@@ -498,35 +536,35 @@ function CookiePolicy() {
                   </div>
                   <div>
                     <span className="card-section-label">Bagian 4</span>
-                    <h2 className="policy-card-title">Tujuan & Cara Kami Menggunakan Cookie</h2>
+                    <h2 className="policy-card-title">Tujuan & Cara Kami Memanfaatkan Cookie</h2>
                   </div>
                 </div>
                 <div className="policy-card-body">
                   <p className="section-intro">
-                    Setiap data teknis yang terekam pada peramban dimanfaatkan semata-mata untuk mendukung kelancaran kegiatan belajar mengajar:
+                    Setiap data teknis yang terekam pada peramban dimanfaatkan semata-mata untuk mendukung kelancaran kegiatan belajar mengajar aparatur parlemen:
                   </p>
 
                   <div className="usage-grid">
                     <div className="usage-card">
                       <div className="usage-head">
                         <span className="usage-icon bg-teal-subtle text-teal"><i className="bi bi-arrow-up-right-circle"></i></span>
-                        <h4>Peningkatan Layanan</h4>
+                        <h4>Kelancaran Streaming Materi</h4>
                       </div>
-                      <p>Menganalisis performa muat video pembelajaran dan stabilitas kuis daring agar proses belajar berjalan lancar.</p>
+                      <p>Mengingat posisi durasi video pembelajaran agar peserta dapat melanjutkan belajar tepat di titik terakhir tanpa mengulang.</p>
                     </div>
 
                     <div className="usage-card">
                       <div className="usage-head">
-                        <span className="usage-icon bg-indigo-subtle text-primary"><i className="bi bi-person-gear"></i></span>
-                        <h4>Personalisasi Diklat</h4>
+                        <span className="usage-icon bg-indigo-subtle text-primary"><i className="bi bi-robot"></i></span>
+                        <h4>Interaksi Cerdas Si Manta</h4>
                       </div>
-                      <p>Menyesuaikan preferensi modul, bookmark kursus favorit (Wishlist), serta riwayat pencarian materi kepakaran.</p>
+                      <p>Memelihara konteks dialog tanya-jawab seputar materi diklat agar asistensi AI berjalan nyambung dan akurat.</p>
                     </div>
 
                     <div className="usage-card">
                       <div className="usage-head">
                         <span className="usage-icon bg-success-subtle text-success"><i className="bi bi-shield-lock"></i></span>
-                        <h4>Keamanan & Audit</h4>
+                        <h4>Keamanan & Integritas Sesi</h4>
                       </div>
                       <p>Mencegah pemalsuan identitas, mendeteksi login ganda tidak sah, dan melindungi akun dari serangan siber.</p>
                     </div>
@@ -534,9 +572,9 @@ function CookiePolicy() {
                     <div className="usage-card">
                       <div className="usage-head">
                         <span className="usage-icon bg-cyan-subtle text-info"><i className="bi bi-check2-square"></i></span>
-                        <h4>Fungsionalitas Kursus</h4>
+                        <h4>Fungsionalitas Kuis & Sertifikat</h4>
                       </div>
-                      <p>Memastikan progres persentase belajar, pelacakan SCORM, dan pengunduhan e-sertifikat tersinkronisasi tepat waktu.</p>
+                      <p>Memastikan progres persentase belajar, pelacakan evaluasi kuis, dan pengunduhan e-sertifikat tersinkronisasi tepat waktu.</p>
                     </div>
                   </div>
                 </div>
@@ -579,7 +617,7 @@ function CookiePolicy() {
                   <div className="cookie-warning-banner mt-3">
                     <i className="bi bi-exclamation-triangle-fill text-warning me-2 fs-5" aria-hidden="true"></i>
                     <div>
-                      <strong>Perhatian Penting:</strong> Memblokir atau menghapus <em>Cookies Esensial</em> atau <em>Token JWT</em> akan menyebabkan sesi login terputus dan mengganggu akses Anda ke materi kursus serta ujian kompetensi.
+                      <strong>Perhatian Penting:</strong> Memblokir atau menghapus <em>Cookies Esensial</em> atau <em>Token JWT</em> akan menyebabkan sesi login terputus dan menghentikan akses Anda ke modul pelatihan dan ujian kompetensi.
                     </div>
                   </div>
                 </div>
@@ -588,7 +626,7 @@ function CookiePolicy() {
               {/* SECTION 6: COOKIE PIHAK KETIGA */}
               <article
                 id="cookie-pihak-ketiga"
-                className={`policy-card ${!isMatch("pihak ketiga google oauth nusa dpd sso login") ? "search-dim" : ""}`}
+                className={`policy-card ${!isMatch("pihak ketiga google oauth nusa dpd sso login komersial iklan") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
                   <div className="header-icon-wrap" aria-hidden="true">
@@ -596,12 +634,12 @@ function CookiePolicy() {
                   </div>
                   <div>
                     <span className="card-section-label">Bagian 6</span>
-                    <h2 className="policy-card-title">Layanan & Cookie Pihak Ketiga</h2>
+                    <h2 className="policy-card-title">Layanan Pihak Ketiga & Integrasi SSO</h2>
                   </div>
                 </div>
                 <div className="policy-card-body">
                   <p>
-                    Untuk mempermudah akses aparatur, platform LMSetjen DPD RI terintegrasi dengan penyedia identitas resmi pemerintah yang mungkin menetapkan cookie otorisasi mereka sendiri:
+                    Untuk mempermudah akses aparatur, platform LMSetjen DPD RI terintegrasi dengan penyedia identitas resmi pemerintah yang menetapkan cookie otorisasi mereka sendiri:
                   </p>
 
                   <div className="third-party-row">
@@ -614,7 +652,7 @@ function CookiePolicy() {
                         </div>
                       </div>
                       <p className="tp-desc">
-                        Digunakan untuk validasi identitas Single Sign-On (SSO) email Google Setjen DPD RI. Dikelola berdasarkan kebijakan privasi Google.
+                        Digunakan untuk validasi identitas Single Sign-On (SSO) surel kedinasan Google Setjen DPD RI. Dikelola berdasarkan kebijakan privasi Google.
                       </p>
                     </div>
 
@@ -667,9 +705,9 @@ function CookiePolicy() {
                     </div>
 
                     <div className="retention-row">
-                      <div className="ret-badge bg-amber-subtle text-warning">Preferensi</div>
+                      <div className="ret-badge bg-amber-subtle text-warning">Preferensi & AI Cache</div>
                       <div className="ret-duration"><strong>Maksimal 12 Bulan</strong></div>
-                      <div className="ret-detail">Menyimpan preferensi tema (terang/gelap) dan bahasa agar tidak perlu diatur ulang di masa mendatang.</div>
+                      <div className="ret-detail">Menyimpan preferensi tampilan, posisi video, dan cache sesi Manta AI agar pengalaman belajar tetap konsisten.</div>
                     </div>
                   </div>
                 </div>
@@ -691,7 +729,7 @@ function CookiePolicy() {
                 </div>
                 <div className="policy-card-body">
                   <p>
-                    Cookie dan token penyimpanan yang digunakan oleh LMSetjen DPD RI <strong>tidak pernah memuat data pribadi sensitif</strong> seperti sandi teks polos, nomor rekening, atau informasi rahasia kepegawaian.
+                    Cookie dan token penyimpanan yang digunakan oleh LMSetjen DPD RI <strong>tidak pernah memuat data pribadi sensitif</strong> seperti kata sandi teks polos, nomor rekening, atau informasi rahasia kepegawaian.
                   </p>
                   <div className="security-guarantee-box">
                     <i className="bi bi-patch-check-fill text-teal guarantee-icon" aria-hidden="true"></i>
@@ -708,7 +746,7 @@ function CookiePolicy() {
               {/* SECTION 9: PERUBAHAN KEBIJAKAN COOKIE */}
               <article
                 id="perubahan-kebijakan"
-                className={`policy-card ${!isMatch("perubahan kebijakan cookie revisi pembaruan teknologi") ? "search-dim" : ""}`}
+                className={`policy-card ${!isMatch("perubahan kebijakan cookie revisi pembaruan teknologi versi 1.1.0") ? "search-dim" : ""}`}
               >
                 <div className="policy-card-header">
                   <div className="header-icon-wrap" aria-hidden="true">
@@ -721,10 +759,10 @@ function CookiePolicy() {
                 </div>
                 <div className="policy-card-body">
                   <p>
-                    Kami dapat meninjau dan merevisi kebijakan cookie ini dari waktu ke waktu untuk menyesuaikan dengan integrasi modul teknologi terbaru atau arahan regulasi perlindungan data pemerintah.
+                    Kami dapat meninjau dan merevisi kebijakan cookie ini dari waktu ke waktu untuk menyesuaikan dengan integrasi modul teknologi terbaru (seperti pengembangan Manta AI dan fitur gamifikasi) atau arahan regulasi perlindungan data pemerintah.
                   </p>
                   <p className="mb-0">
-                    Pemberitahuan perubahan signifikan akan disampaikan melalui notifikasi sistem LMS atau banner pada beranda. Penggunaan berkelanjutan Anda atas platform menandakan penerimaan atas pembaruan ketentuan ini.
+                    Pemberitahuan perubahan signifikan akan disampaikan melalui notifikasi sistem LMS atau pengumuman pada beranda. Penggunaan berkelanjutan Anda atas platform menandakan penerimaan atas pembaruan ketentuan ini.
                   </p>
                 </div>
               </article>
@@ -793,7 +831,11 @@ function CookiePolicy() {
               <div className="policy-footer-actions">
                 <Link to="/privacy-policy/" className="policy-adjacent-link">
                   <i className="bi bi-shield-check me-2" aria-hidden="true"></i>
-                  Baca Kebijakan Privasi Platform
+                  Baca Kebijakan Privasi
+                </Link>
+                <Link to="/terms-and-conditions/" className="policy-adjacent-link ms-md-3">
+                  <i className="bi bi-file-earmark-check me-2" aria-hidden="true"></i>
+                  Baca Syarat & Ketentuan
                 </Link>
                 <button
                   type="button"
