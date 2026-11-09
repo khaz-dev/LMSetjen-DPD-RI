@@ -387,7 +387,7 @@ function CertificateTab({
                                     </div>
                                     <div className="status-content">
                                         <h6>Post-test Akhir</h6>
-                                        <p>{postTestCompleted ? `Selesai (${Math.round(eligibilityData?.post_test_score || 0)}%)` : 'Wajib Dikerjakan'}</p>
+                                        <p>{postTestCompleted ? `Selesai (Nilai: ${Math.round(eligibilityData?.post_test_score || 0)})` : 'Wajib Dikerjakan'}</p>
                                         <small>
                                             {postTestCompleted
                                                 ? `Gain: ${eligibilityData?.learning_gain >= 0 ? '+' : ''}${eligibilityData?.learning_gain || 0}%`

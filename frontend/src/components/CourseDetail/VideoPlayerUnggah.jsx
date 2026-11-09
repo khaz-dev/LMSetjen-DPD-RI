@@ -168,14 +168,9 @@ const VideoPlayerUnggah = forwardRef(({
             durationStr = `${String(durationMinutes).padStart(2, '0')}:${String(durationSeconds).padStart(2, '0')}`;
         }
         
-        // Format persentase dengan 1 desimal jika bukan integer genap agar user melihat perhitungan real-time
-        const percentageStr = percentage <= 0
-            ? '0%'
-            : percentage >= 100
-                ? '100%'
-                : percentage % 1 === 0
-                    ? `${percentage.toFixed(0)}%`
-                    : `${percentage.toFixed(1)}%`;
+        // Format persentase bulat integer tanpa desimal (misal 27% bukan 27.7%)
+        const intPercentage = Math.min(100, Math.max(0, Math.round(percentage)));
+        const percentageStr = `${intPercentage}%`;
         
         return `${currentTimeStr} | ${durationStr} | ${percentageStr}`;
     };
@@ -592,6 +587,27 @@ const VideoPlayerUnggah = forwardRef(({
 
             {/* Content */}
             <div className="video-player-content">
+                {/* Thin red progress bar at top - only visible while video is restricted with overlay blocker */}
+                {!allowVideoAccess && (
+                    <div 
+                        className="video-player-top-progress-bar-container"
+                        title={`Progress Video: ${Math.min(100, Math.max(0, Math.round(
+                            (duration > 0 ? (currentTime / duration) * 100 : progressPercentage) || 0
+                        )))}%`}
+                    >
+                        <div 
+                            className="video-player-top-progress-bar"
+                            style={{ 
+                                width: `${Math.min(100, Math.max(0, (
+                                    duration > 0 
+                                        ? (currentTime / duration) * 100 
+                                        : (progressPercentage || 0)
+                                )))}%` 
+                            }}
+                        />
+                    </div>
+                )}
+
                 {loadError ? (
                     <div className="video-player-error-container">
                         <i className="fas fa-exclamation-triangle video-player-error-icon"></i>

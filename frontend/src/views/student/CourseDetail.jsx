@@ -8862,12 +8862,12 @@ function CourseDetail() {
                                                                             (isPreTest && selectedQuiz.has_pre_test) ? (
                                                                                 <button className="btn btn-secondary btn-sm" disabled>
                                                                                     <i className="fas fa-lock me-1"></i>
-                                                                                    Pre-test Sudah Selesai ({Math.round(selectedQuiz.pre_test_score || 0)}%)
+                                                                                    Pre-test Sudah Selesai (Nilai: {Math.round(selectedQuiz.pre_test_score || 0)})
                                                                                 </button>
                                                                             ) : (isPostTest && selectedQuiz.has_post_test) ? (
                                                                                 <button className="btn btn-secondary btn-sm" disabled>
                                                                                     <i className="fas fa-lock me-1"></i>
-                                                                                    Post-test Sudah Selesai ({Math.round(selectedQuiz.post_test_score || 0)}%)
+                                                                                    Post-test Sudah Selesai (Nilai: {Math.round(selectedQuiz.post_test_score || 0)})
                                                                                 </button>
                                                                             ) : (isPostTest && !canTakePostTest) ? (
                                                                                 <button className="btn btn-secondary btn-sm" disabled>
@@ -9495,7 +9495,7 @@ function CourseDetail() {
 
                                                             Pilih kuis dari daftar di sebelah kanan untuk menguji pemahaman materi kursus Anda.
 
-                                                            Setiap kuis memerlukan skor kelulusan minimal 80% untuk memenuhi syarat penerbitan sertifikat resmi.
+                                                            Setiap kuis memerlukan skor kelulusan minimal 70 untuk memenuhi syarat penerbitan sertifikat resmi.
 
                                                         </p>
 
@@ -9521,7 +9521,7 @@ function CourseDetail() {
 
                                                                 <i className="fas fa-trophy text-amber me-1"></i>
 
-                                                                Passing Grade: 80%
+                                                                Passing Grade: 70
 
                                                             </span>
 

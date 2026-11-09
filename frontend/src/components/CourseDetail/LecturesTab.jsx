@@ -249,16 +249,15 @@ const LecturesTab = ({
         }
         // REMOVED: if (progressData.isCompleted || percentage >= 99.8) { status = "completed"; }
 
-        // ✨ PHASE 4.117: Keep decimal precision instead of rounding to integer
-        // This preserves small percentages like 0.05%, 0.45%, 1.25% instead of truncating to 0%
-        const displayPercentage = Math.round(percentage * 10) / 10;  // Round to 1 decimal place
+        // ✨ Keep integer percentage without decimals (e.g., 27% instead of 27.7%)
+        const displayPercentage = Math.round(percentage);
 
         setProgressStatus(prev => {
             const newState = {
                 ...prev,
                 [progressKey]: { 
                     status, 
-                    percentage: Math.min(Math.max(displayPercentage, 0), 100),  // Keep 1 decimal precision
+                    percentage: Math.min(Math.max(displayPercentage, 0), 100),
                     position: progressData.position || 0,
                     duration: progressData.duration || 0
                 }
@@ -1360,7 +1359,7 @@ const LecturesTab = ({
                         <div>
                             {hasCompletedPretest ? (
                                 <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
-                                    <i className="fas fa-check-circle me-1"></i>Selesai ({Math.round(prePostQuiz.pre_test_score || 0)}%)
+                                    <i className="fas fa-check-circle me-1"></i>Selesai (Nilai: {Math.round(prePostQuiz.pre_test_score || 0)})
                                 </span>
                             ) : (
                                 <button type="button" className="btn btn-sm btn-teal fw-bold px-3 py-1 text-nowrap">
@@ -1554,14 +1553,14 @@ const LecturesTab = ({
                                                     <div className="lesson-meta-wrapper d-flex align-items-center gap-2 text-muted small" style={{ fontSize: '0.75rem' }}>
                                                         <span>{matchedQuiz?.total_questions || matchedQuiz?.questions?.length || 0} Pertanyaan</span>
                                                         <span>&bull;</span>
-                                                        <span>Passing Grade: 70%</span>
+                                                        <span>Passing Grade: {matchedQuiz?.passing_score || 70}</span>
                                                     </div>
                                                 </div>
 
                                                 <div className="lesson-actions ms-2">
                                                     {isQuizPassed ? (
                                                         <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style={{ fontSize: '11px' }}>
-                                                            <i className="fas fa-check me-1"></i>Lulus ({Math.round(matchedQuiz?.best_score || 0)}%)
+                                                            <i className="fas fa-check me-1"></i>Lulus (Nilai: {Math.round(matchedQuiz?.best_score || 0)})
                                                         </span>
                                                     ) : lessonLockStatus.locked ? (
                                                         <span className="badge bg-light text-muted border px-2 py-1" style={{ fontSize: '11px' }}>
@@ -1737,7 +1736,7 @@ const LecturesTab = ({
                                                             ) : progressStatus.status === "in-progress" ? (
                                                                 <small className="lesson-status-badge in-progress">
                                                                     <i className="fas fa-play-circle me-1"></i>
-                                                                    {progressStatus.percentage}% ditonton
+                                                                    {Math.round(progressStatus.percentage)}% ditonton
                                                                 </small>
                                                             ) : isVideoLesson && progressStatus.status === "not-started" ? (
                                                                 <small className="lesson-status-badge not-started">
@@ -1803,7 +1802,7 @@ const LecturesTab = ({
                         <div>
                             {hasCompletedPosttest ? (
                                 <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
-                                    <i className="fas fa-check-circle me-1"></i>Selesai ({Math.round(prePostQuiz.post_test_score || 0)}%)
+                                    <i className="fas fa-check-circle me-1"></i>Selesai (Nilai: {Math.round(prePostQuiz.post_test_score || 0)})
                                 </span>
                             ) : !canTakePostTest ? (
                                 <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" title={postTestLockReason || 'Terkunci'}>

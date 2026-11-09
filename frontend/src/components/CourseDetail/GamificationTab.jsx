@@ -133,7 +133,7 @@ const GamificationTab = ({
             Toast().fire({
                 icon: "info",
                 title: "Batas 3 kesempatan telah habis",
-                text: `Skor terbaik Anda: ${game.user_best_score || 0}%`
+                text: `Skor terbaik Anda: ${game.user_best_score || 0}`
             });
             return;
         }
@@ -238,11 +238,11 @@ const GamificationTab = ({
                                                             )}
                                                             {isPassed ? (
                                                                 <span className="badge bg-success-subtle text-success border border-success-subtle">
-                                                                    <i className="fas fa-check-circle me-1"></i>Lulus ({bestScore}%)
+                                                                    <i className="fas fa-check-circle me-1"></i>Lulus (Nilai: {bestScore})
                                                                 </span>
                                                             ) : attemptsUsed > 0 ? (
                                                                 <span className="badge bg-warning-subtle text-warning border border-warning-subtle">
-                                                                    Skor: {bestScore}%
+                                                                    Nilai: {bestScore}
                                                                 </span>
                                                             ) : (
                                                                 <span className="badge bg-secondary-subtle text-secondary">

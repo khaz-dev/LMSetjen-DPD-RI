@@ -183,7 +183,7 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
                                     <i className="fas fa-question-circle text-teal"></i>
                                     <div>
                                         <div className="text-muted small">Kuis Materi</div>
-                                        <div className="p-val">{myStats.quiz_stats.avg_score}% ({myStats.quiz_stats.points} XP)</div>
+                                        <div className="p-val">{myStats.quiz_stats.avg_score} ({myStats.quiz_stats.points} XP)</div>
                                     </div>
                                 </div>
 
@@ -195,7 +195,7 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
                                             {myStats.learning_stats.has_post ? (
                                                 `+${myStats.learning_stats.improvement} (${myStats.learning_stats.points} XP)`
                                             ) : myStats.learning_stats.has_pre ? (
-                                                `Pre: ${myStats.learning_stats.pre_score}%`
+                                                `Pre: ${myStats.learning_stats.pre_score}`
                                             ) : (
                                                 "Belum Pre-test"
                                             )}
@@ -207,7 +207,7 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
                                     <i className="fas fa-gamepad text-purple"></i>
                                     <div>
                                         <div className="text-muted small">Gamifikasi</div>
-                                        <div className="p-val">{myStats.gamification_stats.avg_score}% ({myStats.gamification_stats.points} XP)</div>
+                                        <div className="p-val">{myStats.gamification_stats.avg_score} ({myStats.gamification_stats.points} XP)</div>
                                     </div>
                                 </div>
 
@@ -405,12 +405,12 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
                                                         +{student.learning_stats.improvement} Poin
                                                     </div>
                                                     <small className="text-muted d-block" style={{ fontSize: "0.725rem" }}>
-                                                        Pre: {student.learning_stats.pre_score}% &rarr; Post: {student.learning_stats.post_score}%
+                                                        Pre: {student.learning_stats.pre_score} &rarr; Post: {student.learning_stats.post_score}
                                                     </small>
                                                 </div>
                                             ) : student.learning_stats.has_pre ? (
                                                 <span className="badge bg-warning-subtle text-warning">
-                                                    Pre-test: {student.learning_stats.pre_score}%
+                                                    Pre-test: {student.learning_stats.pre_score}
                                                 </span>
                                             ) : (
                                                 <span className="badge bg-light text-muted">Belum Tes</span>
@@ -418,7 +418,7 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
                                         </td>
                                         <td className="text-center">
                                             <div className="fw-semibold">
-                                                {student.quiz_stats.avg_score}%
+                                                {student.quiz_stats.avg_score}
                                             </div>
                                             <small className="text-muted" style={{ fontSize: "0.725rem" }}>
                                                 {student.quiz_stats.total_quizzes > 0
@@ -428,7 +428,7 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
                                         </td>
                                         <td className="text-center">
                                             <div className="fw-semibold text-purple">
-                                                {student.gamification_stats.avg_score}%
+                                                {student.gamification_stats.avg_score}
                                             </div>
                                             <small className="text-muted" style={{ fontSize: "0.725rem" }}>
                                                 {student.gamification_stats.total_games > 0
