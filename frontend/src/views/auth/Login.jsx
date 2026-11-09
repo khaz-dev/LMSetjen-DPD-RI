@@ -526,229 +526,229 @@ function Login() {
 
           <div className="login-container">
             <div className="login-card-container">
-            {/* Left Brand Panel */}
-            <div className="login-brand-panel">
-              <div className="login-brand-decor-circle circle-1"></div>
-              <div className="login-brand-decor-circle circle-2"></div>
+              {/* Left Brand Panel */}
+              <div className="login-brand-panel">
+                <div className="login-brand-decor-circle circle-1"></div>
+                <div className="login-brand-decor-circle circle-2"></div>
 
-              <div className="login-brand-content">
-                <div className="login-brand-top">
-                  <div className="login-brand-badge">
-                    <i className="fas fa-shield-alt"></i> Portal Resmi
-                  </div>
+                <div className="login-brand-content">
+                  <div className="login-brand-top">
+                    <div className="login-brand-badge">
+                      <i className="fas fa-shield-alt"></i> Portal Resmi
+                    </div>
 
-                  <div className="login-brand-header">
-                    <div className="login-brand-logo-wrap">
-                      <picture>
-                        <source srcSet={logoWebP} type="image/webp" />
-                        <img
-                          src={logoPNG}
-                          alt="LMSetjen DPD RI Logo"
-                          className="login-brand-logo"
-                          width="52"
-                          height="52"
-                          loading="eager"
-                          decoding="async"
-                        />
-                      </picture>
-                    </div>
-                    <div>
-                      <h2 className="login-brand-title">LMSetjen DPD RI</h2>
-                      <p className="login-brand-subtitle">
-                        Sistem Manajemen Pembelajaran Digital
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="login-features-list">
-                  <div className="login-feature-item">
-                    <div className="login-feature-icon">
-                      <i className="fas fa-graduation-cap"></i>
-                    </div>
-                    <div className="login-feature-text">
-                      <strong>Modul & Pelatihan Digital</strong>
-                      <span>Akses materi terstruktur kapan saja & di mana saja.</span>
-                    </div>
-                  </div>
-
-                  <div className="login-feature-item">
-                    <div className="login-feature-icon">
-                      <i className="fas fa-key"></i>
-                    </div>
-                    <div className="login-feature-text">
-                      <strong>Single Sign-On Nusa</strong>
-                      <span>Autentikasi terpusat & aman via portal Nusa DPD.</span>
-                    </div>
-                  </div>
-
-                  <div className="login-feature-item">
-                    <div className="login-feature-icon">
-                      <i className="fas fa-award"></i>
-                    </div>
-                    <div className="login-feature-text">
-                      <strong>Sertifikasi Resmi</strong>
-                      <span>Peroleh sertifikat digital atas capaian kompetensi.</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="login-brand-footer">
-                  <div className="login-trust-pill">
-                    <i className="fas fa-lock"></i>
-                    <span>Terenkripsi & Terlindungi</span>
-                  </div>
-                  <span className="login-brand-copyright">Sekretariat Jenderal DPD RI</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Authentication Panel */}
-            <div className="login-auth-panel">
-              <div className="login-auth-header">
-                <span className="login-auth-tag">Selamat Datang</span>
-                <h1 className="login-auth-title">Masuk ke Akun Anda</h1>
-                <p className="login-auth-subtitle">
-                  Pilih metode masuk resmi untuk mengakses sistem pembelajaran
-                </p>
-              </div>
-
-              {error && (
-                <div
-                  className="alert alert-danger alert-dismissible fade show login-alert"
-                  role="alert"
-                >
-                  <i className="fas fa-exclamation-circle me-2"></i>
-                  <span>{error}</span>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setError(null)}
-                    aria-label="Close"
-                  ></button>
-                </div>
-              )}
-
-              <div className="login-methods-wrap">
-                {/* Primary Method: SSO Nusa DPD */}
-                <div className="login-method-group">
-                  <a
-                    href="https://nusa.dpd.go.id?app=LMS"
-                    className="login-method-card sso-card"
-                    title="Login menggunakan akun SSO Nusa DPD"
-                  >
-                    <div className="login-method-icon-box nusa-icon-box">
-                      <picture>
-                        <source srcSet={logoNusaWebP} type="image/webp" />
-                        <img
-                          src={logoNusa}
-                          alt="Nusa Logo"
-                          width="28"
-                          height="28"
-                          loading="eager"
-                          decoding="async"
-                          className="nusa-logo-img"
-                        />
-                      </picture>
-                    </div>
-                    <div className="login-method-details">
-                      <div className="login-method-title-row">
-                        <span className="login-method-name">Login dengan SSO Nusa DPD</span>
-                        <span className="login-badge-recommended">Pegawai DPD</span>
+                    <div className="login-brand-header">
+                      <div className="login-brand-logo-wrap">
+                        <picture>
+                          <source srcSet={logoWebP} type="image/webp" />
+                          <img
+                            src={logoPNG}
+                            alt="LMSetjen DPD RI Logo"
+                            className="login-brand-logo"
+                            width="52"
+                            height="52"
+                            loading="eager"
+                            decoding="async"
+                          />
+                        </picture>
                       </div>
-                      <span className="login-method-desc">
-                        Otentikasi cepat untuk Pegawai Setjen DPD RI
-                      </span>
+                      <div>
+                        <h2 className="login-brand-title">LMSetjen DPD RI</h2>
+                        <p className="login-brand-subtitle">
+                          Sistem Manajemen Pembelajaran Digital
+                        </p>
+                      </div>
                     </div>
-                    <div className="login-method-arrow">
-                      <i className="fas fa-arrow-right"></i>
+                  </div>
+
+                  <div className="login-features-list">
+                    <div className="login-feature-item">
+                      <div className="login-feature-icon">
+                        <i className="fas fa-graduation-cap"></i>
+                      </div>
+                      <div className="login-feature-text">
+                        <strong>Modul & Pelatihan Digital</strong>
+                        <span>Akses materi terstruktur kapan saja & di mana saja.</span>
+                      </div>
                     </div>
-                  </a>
+
+                    <div className="login-feature-item">
+                      <div className="login-feature-icon">
+                        <i className="fas fa-key"></i>
+                      </div>
+                      <div className="login-feature-text">
+                        <strong>Single Sign-On Nusa</strong>
+                        <span>Autentikasi terpusat & aman via portal Nusa DPD.</span>
+                      </div>
+                    </div>
+
+                    <div className="login-feature-item">
+                      <div className="login-feature-icon">
+                        <i className="fas fa-award"></i>
+                      </div>
+                      <div className="login-feature-text">
+                        <strong>Sertifikasi Resmi</strong>
+                        <span>Peroleh sertifikat digital atas capaian kompetensi.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="login-brand-footer">
+                    <div className="login-trust-pill">
+                      <i className="fas fa-lock"></i>
+                      <span>Terenkripsi & Terlindungi</span>
+                    </div>
+                    <span className="login-brand-copyright">Sekretariat Jenderal DPD RI</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Authentication Panel */}
+              <div className="login-auth-panel">
+                <div className="login-auth-header">
+                  <span className="login-auth-tag">Selamat Datang</span>
+                  <h1 className="login-auth-title">Masuk ke Akun Anda</h1>
+                  <p className="login-auth-subtitle">
+                    Pilih metode masuk resmi untuk mengakses sistem pembelajaran
+                  </p>
                 </div>
 
-                {/* Divider */}
-                <div className="login-card-divider">
-                  <span>atau masuk dengan</span>
-                </div>
-
-                {/* Secondary Method: Google Login */}
-                <div className="login-method-group">
-                  <button
-                    type="button"
-                    id="google-login-btn"
-                    onClick={handleGoogleLogin}
-                    disabled={isLoading}
-                    className="login-method-card google-card"
-                    title="Login menggunakan akun Google"
+                {error && (
+                  <div
+                    className="alert alert-danger alert-dismissible fade show login-alert"
+                    role="alert"
                   >
-                    <div className="login-method-icon-box google-icon-box">
-                      {!isLoading ? (
-                        <svg
-                          className="google-svg-icon"
-                          viewBox="0 0 24 24"
-                          width="24"
-                          height="24"
-                        >
-                          <path
-                            fill="#4285F4"
-                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    <i className="fas fa-exclamation-circle me-2"></i>
+                    <span>{error}</span>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={() => setError(null)}
+                      aria-label="Close"
+                    ></button>
+                  </div>
+                )}
+
+                <div className="login-methods-wrap">
+                  {/* Primary Method: SSO Nusa DPD */}
+                  <div className="login-method-group">
+                    <a
+                      href="https://nusa.dpd.go.id?app=LMS"
+                      className="login-method-card sso-card"
+                      title="Login menggunakan akun SSO Nusa DPD"
+                    >
+                      <div className="login-method-icon-box nusa-icon-box">
+                        <picture>
+                          <source srcSet={logoNusaWebP} type="image/webp" />
+                          <img
+                            src={logoNusa}
+                            alt="Nusa Logo"
+                            width="28"
+                            height="28"
+                            loading="eager"
+                            decoding="async"
+                            className="nusa-logo-img"
                           />
-                          <path
-                            fill="#34A853"
-                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                          />
-                          <path
-                            fill="#FBBC05"
-                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                          />
-                          <path
-                            fill="#EA4335"
-                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                          />
-                        </svg>
-                      ) : (
-                        <span
-                          className="spinner-border spinner-border-sm"
-                          role="status"
-                          aria-hidden="true"
-                          style={{ width: "1.25rem", height: "1.25rem", color: "#0f766e" }}
-                        ></span>
-                      )}
-                    </div>
-                    <div className="login-method-details">
-                      <div className="login-method-title-row">
-                        <span className="login-method-name">
-                          {isLoading ? "Menghubungkan ke Google..." : "Akun Google"}
+                        </picture>
+                      </div>
+                      <div className="login-method-details">
+                        <div className="login-method-title-row">
+                          <span className="login-method-name">Login dengan SSO Nusa DPD</span>
+                          <span className="login-badge-recommended">Pegawai DPD</span>
+                        </div>
+                        <span className="login-method-desc">
+                          Otentikasi cepat untuk Pegawai Setjen DPD RI
                         </span>
                       </div>
-                      <span className="login-method-desc">
-                        Masuk menggunakan email Google terdaftar
-                      </span>
-                    </div>
-                    <div className="login-method-arrow">
-                      <i className="fas fa-arrow-right"></i>
-                    </div>
-                  </button>
-                </div>
-              </div>
+                      <div className="login-method-arrow">
+                        <i className="fas fa-arrow-right"></i>
+                      </div>
+                    </a>
+                  </div>
 
-              {/* Security note & Help */}
-              <div className="login-auth-footer">
-                <div className="login-security-notice">
-                  <i className="fas fa-shield-halved"></i>
-                  <span>Otentikasi aman terenkripsi institusi DPD RI</span>
+                  {/* Divider */}
+                  <div className="login-card-divider">
+                    <span>atau masuk dengan</span>
+                  </div>
+
+                  {/* Secondary Method: Google Login */}
+                  <div className="login-method-group">
+                    <button
+                      type="button"
+                      id="google-login-btn"
+                      onClick={handleGoogleLogin}
+                      disabled={isLoading}
+                      className="login-method-card google-card"
+                      title="Login menggunakan akun Google"
+                    >
+                      <div className="login-method-icon-box google-icon-box">
+                        {!isLoading ? (
+                          <svg
+                            className="google-svg-icon"
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                          >
+                            <path
+                              fill="#4285F4"
+                              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            />
+                            <path
+                              fill="#34A853"
+                              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            />
+                            <path
+                              fill="#FBBC05"
+                              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            />
+                            <path
+                              fill="#EA4335"
+                              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            />
+                          </svg>
+                        ) : (
+                          <span
+                            className="spinner-border spinner-border-sm"
+                            role="status"
+                            aria-hidden="true"
+                            style={{ width: "1.25rem", height: "1.25rem", color: "#0f766e" }}
+                          ></span>
+                        )}
+                      </div>
+                      <div className="login-method-details">
+                        <div className="login-method-title-row">
+                          <span className="login-method-name">
+                            {isLoading ? "Menghubungkan ke Google..." : "Akun Google"}
+                          </span>
+                        </div>
+                        <span className="login-method-desc">
+                          Masuk menggunakan email Google terdaftar
+                        </span>
+                      </div>
+                      <div className="login-method-arrow">
+                        <i className="fas fa-arrow-right"></i>
+                      </div>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="login-help-text">
-                  <span>Butuh bantuan?</span>{" "}
-                  <a href="mailto:pusdiklat@dpd.go.id" className="login-help-link">
-                    Hubungi Administrator
-                  </a>
+                {/* Security note & Help */}
+                <div className="login-auth-footer">
+                  <div className="login-security-notice">
+                    <i className="fas fa-shield-halved"></i>
+                    <span>Otentikasi aman terenkripsi institusi DPD RI</span>
+                  </div>
+
+                  <div className="login-help-text">
+                    <span>Butuh bantuan?</span>{" "}
+                    <a href="mailto:sdm@dpd.go.id" className="login-help-link">
+                      Hubungi Administrator
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
         </section>
       </main>
 

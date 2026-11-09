@@ -152,10 +152,12 @@ export const logout = () => {
         // Set a flag to indicate we're logging out to prevent auth redirects
         sessionStorage.setItem('logging_out', 'true');
         
-        // Clear cookies first - with proper error handling
+        // Clear cookies first - with proper error handling (remove both with and without path to ensure complete cleanup)
         try {
             Cookie.remove("access_token");
+            Cookie.remove("access_token", { path: '/' });
             Cookie.remove("refresh_token");
+            Cookie.remove("refresh_token", { path: '/' });
         } catch (cookieError) {
             // Silent fail
         }
@@ -257,6 +259,16 @@ export const setUser = async () => {
     const refresh_token = Cookie.get("refresh_token");
 
     if (!access_token || !refresh_token) {
+        // If either token is missing, session is invalid - clean up any orphaned cookie as well
+        try {
+            Cookie.remove("access_token");
+            Cookie.remove("access_token", { path: '/' });
+            Cookie.remove("refresh_token");
+            Cookie.remove("refresh_token", { path: '/' });
+        } catch (cookieError) {
+            // Silent fail
+        }
+
         // Preserve lastSuccessfulSyncTime from localStorage
         const lastSyncTime = localStorage.getItem('lastSuccessfulSyncTime');
         
