@@ -2111,14 +2111,43 @@ class EnrolledCourse(models.Model):
         return Review.objects.filter(course=self.course, user=self.user).first()
     
     def completion_percentage(self):
-        """Calculate completion percentage for this enrollment"""
+        """Calculate comprehensive completion percentage including lessons, regular quizzes, pre-post test, and games"""
         total_lessons = self.lectures().count()
         completed_lessons = self.completed_lesson().count()
         
-        if total_lessons == 0:
-            return 100  # No lessons means 100% complete
+        # 1. Kuis Reguler Kursus
+        quizzes = Quiz.objects.filter(course=self.course, is_active=True)
+        regular_quizzes = quizzes.filter(quiz_type='quiz')
+        total_reg_quizzes = regular_quizzes.count()
+        passed_reg_quizzes = 0
+        for q in regular_quizzes:
+            if QuizAttempt.objects.filter(user=self.user, quiz=q, is_passed=True).exists():
+                passed_reg_quizzes += 1
+                
+        # 2. Pre-Test & Post-Test (jika ada kuis pre_post_test pada kursus)
+        pre_post_quiz = quizzes.filter(quiz_type='pre_post_test').first()
+        pre_test_total = 1 if pre_post_quiz else 0
+        pre_test_completed = 1 if (pre_post_quiz and self.has_completed_pre_test()) else 0
         
-        return min(100, (completed_lessons / total_lessons) * 100)
+        post_test_total = 1 if pre_post_quiz else 0
+        post_test_completed = 1 if (pre_post_quiz and self.has_completed_post_test()) else 0
+        
+        # 3. Gamifikasi (mini-games aktif pada kursus)
+        active_games = self.course.games.filter(is_active=True)
+        total_games = active_games.count()
+        completed_games = 0
+        for g in active_games:
+            if g.attempts.filter(user=self.user).exists():
+                completed_games += 1
+                
+        # Total bobot seluruh aktivitas pembelajaran
+        total_items = total_lessons + total_reg_quizzes + pre_test_total + post_test_total + total_games
+        completed_items = completed_lessons + passed_reg_quizzes + pre_test_completed + post_test_completed + completed_games
+        
+        if total_items == 0:
+            return 100  # No items means 100% complete
+        
+        return min(100, (completed_items / total_items) * 100)
     
     def is_course_completed(self):
         """Check if all lessons are completed"""

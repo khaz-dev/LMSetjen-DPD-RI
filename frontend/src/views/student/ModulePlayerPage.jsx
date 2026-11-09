@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import useAxios from "../../utils/useAxios";
 import Toast from "../plugin/Toast";
+import Swal from "sweetalert2";
 import { getMediaUrl } from "../../utils/constants";
 
 const ModulePlayerPage = () => {
   const { moduleId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const courseIdParam = searchParams.get("course_id") || "";
+  const variantItemIdParam = searchParams.get("variant_item_id") || "";
   const [module, setModule] = useState(null);
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,6 +18,9 @@ const ModulePlayerPage = () => {
   const [lessonStatus, setLessonStatus] = useState("incomplete");
   const [score, setScore] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [resetCount, setResetCount] = useState(0);
+  const [resetLimitReached, setResetLimitReached] = useState(false);
+  const MAX_RESETS_PER_DAY = 3;
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
   const initialStatusRef = useRef(null);
@@ -22,7 +29,8 @@ const ModulePlayerPage = () => {
   const fetchModuleData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await useAxios.get(`api/v1/modules/${moduleId}/detail/`);
+      const queryStr = window.location.search || "";
+      const res = await useAxios.get(`api/v1/modules/${moduleId}/detail/${queryStr}`);
       if (res?.data?.module) {
         setModule(res.data.module);
         setProgress(res.data.progress);
@@ -31,6 +39,11 @@ const ModulePlayerPage = () => {
         setScore(res.data.progress?.score_raw || 0);
         if (initialStatusRef.current === null) {
           initialStatusRef.current = String(status).toLowerCase();
+        }
+        // Baca info reset harian dari backend
+        if (res.data.reset_info) {
+          setResetCount(res.data.reset_info.reset_count || 0);
+          setResetLimitReached(res.data.reset_info.reset_limit_reached || false);
         }
       }
     } catch (err) {
@@ -73,6 +86,8 @@ const ModulePlayerPage = () => {
       lesson_location: cmiData["cmi.core.lesson_location"],
       session_time: cmiData["cmi.core.session_time"],
       suspend_data: cmiData["cmi.suspend_data"],
+      course_id: courseIdParam || undefined,
+      variant_item_id: variantItemIdParam || undefined,
     };
 
     try {
@@ -96,6 +111,8 @@ const ModulePlayerPage = () => {
             status: updatedStatus,
             score: cmiData["cmi.core.score.raw"],
             moduleId: moduleId,
+            courseId: courseIdParam,
+            variantItemId: variantItemIdParam,
             wasAlreadyCompleted: wasAlreadyCompleted
           }, '*');
         }
@@ -103,7 +120,9 @@ const ModulePlayerPage = () => {
         // Only show celebratory toast if newly completed during this session
         if ((updatedStatus === "passed" || updatedStatus === "completed") && !wasAlreadyCompleted) {
           initialStatusRef.current = updatedStatus;
+          const targetEl = document.fullscreenElement || containerRef.current || 'body';
           Toast().fire({
+            target: targetEl,
             icon: "success",
             title: "Selamat!",
             text: `Modul telah selesai dengan status: ${updatedStatus.toUpperCase()}`,
@@ -148,10 +167,34 @@ const ModulePlayerPage = () => {
         cmi[element] = String(value);
 
         if (element === "cmi.core.lesson_status") {
-          setLessonStatus(String(value).toLowerCase());
+          const newStatus = String(value).toLowerCase();
+          setLessonStatus(newStatus);
+          // Broadcast perubahan status langsung ke parent agar kurikulum responsif instan
+          if (typeof window !== "undefined" && window.parent && window.parent !== window) {
+            window.parent.postMessage({
+              type: "SCORM_MODULE_STATUS",
+              status: newStatus,
+              score: cmi["cmi.core.score.raw"],
+              moduleId: moduleId,
+              courseId: courseIdParam,
+              variantItemId: variantItemIdParam
+            }, "*");
+          }
         }
         if (element === "cmi.core.score.raw") {
-          setScore(Number(value) || 0);
+          const newScore = Number(value) || 0;
+          setScore(newScore);
+          // Broadcast perubahan nilai langsung ke parent agar badge skor di lesson-item kurikulum otomatis terupdate
+          if (typeof window !== "undefined" && window.parent && window.parent !== window) {
+            window.parent.postMessage({
+              type: "SCORM_MODULE_STATUS",
+              status: cmi["cmi.core.lesson_status"]?.toLowerCase(),
+              score: newScore,
+              moduleId: moduleId,
+              courseId: courseIdParam,
+              variantItemId: variantItemIdParam
+            }, "*");
+          }
         }
         return "true";
       },
@@ -197,6 +240,140 @@ const ModulePlayerPage = () => {
     }
   };
 
+  // Reset module tracking to start over from the beginning
+  const handleResetModule = async () => {
+    // Cek batas reset di sisi client sebelum lanjut
+    if (resetLimitReached) {
+      const targetElement = document.fullscreenElement || containerRef.current || 'body';
+      await Swal.fire({
+        target: targetElement,
+        title: "Batas Reset Tercapai",
+        text: `Anda telah mencapai batas maksimum 3 kali reset per hari untuk materi ini. Coba lagi besok.`,
+        icon: "warning",
+        confirmButtonColor: "#0f766e",
+        confirmButtonText: "Mengerti"
+      });
+      return;
+    }
+
+    // When in fullscreen mode, target must be inside the fullscreen element (containerRef.current)
+    // so that SweetAlert2 renders within the browser's top-layer fullscreen container.
+    const targetElement = document.fullscreenElement || containerRef.current || 'body';
+
+    const result = await Swal.fire({
+      target: targetElement,
+      title: "Mulai Ulang Materi?",
+      text: `Progress dan status materi SCORM ini akan direset dari awal sehingga Anda dapat mempelajarinya kembali. (Reset ke-${resetCount + 1} dari ${MAX_RESETS_PER_DAY} hari ini)`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#0f766e",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, Mulai Ulang",
+      cancelButtonText: "Batal",
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setSyncing(true);
+      let resetResponse = null;
+
+      try {
+        const res = await useAxios.post(`api/v1/modules/${moduleId}/reset/`, {
+          course_id: courseIdParam,
+          variant_item_id: variantItemIdParam
+        });
+        resetResponse = res.data;
+      } catch (e) {
+        // Tangani 429 Too Many Requests (batas reset harian)
+        if (e.response?.status === 429) {
+          const errData = e.response.data;
+          setResetCount(errData?.reset_count || MAX_RESETS_PER_DAY);
+          setResetLimitReached(true);
+          await Swal.fire({
+            target: targetElement,
+            title: "Batas Reset Tercapai",
+            text: errData?.error || "Anda telah mencapai batas maksimum 3 kali reset per hari untuk materi ini.",
+            icon: "warning",
+            confirmButtonColor: "#0f766e",
+            confirmButtonText: "Mengerti"
+          });
+          return;
+        }
+        // Fallback ke tracking endpoint jika endpoint reset belum ada respon lain
+        await useAxios.post(`api/v1/modules/${moduleId}/tracking/`, {
+          lesson_status: "incomplete",
+          score_raw: 0,
+          lesson_location: "",
+          session_time: "00:00:00",
+          suspend_data: "",
+          course_id: courseIdParam || undefined,
+          variant_item_id: variantItemIdParam || undefined
+        });
+      }
+
+      // Update info reset count dari response backend
+      if (resetResponse?.reset_count !== undefined) {
+        setResetCount(resetResponse.reset_count);
+        setResetLimitReached(resetResponse.resets_remaining <= 0);
+      }
+
+      // Update state lokal — JANGAN reset score agar badge di sidebar tidak berubah ke 0
+      setLessonStatus("incomplete");
+      // Sengaja TIDAK setScore(0) agar badge skor di sidebar tetap menampilkan skor terakhir
+      initialStatusRef.current = "incomplete";
+      setProgress(prev => ({
+        ...(prev || {}),
+        lesson_status: "incomplete",
+        lesson_location: "",
+        session_time: "00:00:00",
+        suspend_data: ""
+        // score_raw TIDAK diubah — tetap mempertahankan nilai terakhir
+      }));
+
+      // Beritahu parent iframe dengan tipe KHUSUS SCORM_MODULE_RESET
+      // agar parent TIDAK memperbarui badge skor (hanya refresh data course)
+      if (typeof window !== "undefined" && window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: "SCORM_MODULE_RESET",
+          moduleId: moduleId,
+          courseId: courseIdParam,
+          variantItemId: variantItemIdParam,
+          action: "reset"
+        }, "*");
+      }
+
+      // Muat ulang iframe konten SCORM dari awal dengan parameter penangkal cache
+      if (iframeRef.current && module?.player_url) {
+        const baseUrl = getMediaUrl(module.player_url);
+        const sep = baseUrl.includes("?") ? "&" : "?";
+        iframeRef.current.src = `${baseUrl}${sep}_reset=${Date.now()}`;
+      }
+
+      const resetsLeft = resetResponse?.resets_remaining ?? (MAX_RESETS_PER_DAY - (resetResponse?.reset_count || resetCount + 1));
+      Toast().fire({
+        target: targetElement,
+        icon: "success",
+        title: "Modul Direset",
+        text: resetsLeft > 0
+          ? `Materi SCORM telah dimulai kembali dari awal. Sisa reset hari ini: ${resetsLeft} kali.`
+          : "Materi SCORM telah dimulai kembali dari awal. Anda telah mencapai batas reset harian.",
+        timer: 4000
+      });
+    } catch (err) {
+      console.error("[ModulePlayerPage] Error resetting module:", err);
+      Toast().fire({
+        target: targetElement,
+        icon: "error",
+        title: "Gagal Mereset Modul",
+        text: "Terjadi kesalahan saat memulai ulang materi."
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
 
   const getStatusBadgeClass = () => {
@@ -218,7 +395,7 @@ const ModulePlayerPage = () => {
   return (
     <div 
       ref={containerRef}
-      className="module-player-page-container d-flex flex-column vh-100 bg-white text-dark overflow-hidden"
+      className="module-player-page-container position-relative d-flex flex-column vh-100 bg-white text-dark overflow-hidden"
     >
       {/* Top Navbar */}
       <header 
@@ -226,24 +403,26 @@ const ModulePlayerPage = () => {
         style={{ backgroundColor: "#ffffff", borderColor: "#e2e8f0", minHeight: "52px", zIndex: 100 }}
       >
         <div className="d-flex align-items-center gap-2 overflow-hidden">
-          {!isEmbedded && (
-            <button
-              type="button"
-              className="btn btn-sm btn-light border text-slate-700 d-flex align-items-center gap-1 py-1 px-2.5 me-1"
-              style={{ backgroundColor: "#ffffff", borderColor: "#cbd5e1", color: "#334155" }}
-              onClick={() => {
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate("/student/courses/");
+          <button
+            type="button"
+            className="btn btn-sm btn-light border text-slate-700 d-flex align-items-center gap-1 py-1 px-2.5 me-1"
+            style={{ backgroundColor: "#ffffff", borderColor: "#cbd5e1", color: "#334155" }}
+            onClick={() => {
+              if (isEmbedded) {
+                if (typeof window !== "undefined" && window.parent && window.parent !== window) {
+                  window.parent.postMessage({ type: "SCORM_CLOSE_PLAYER" }, "*");
                 }
-              }}
-              title="Kembali"
-            >
-              <i className="fas fa-arrow-left"></i>
-              <span className="d-none d-sm-inline">Kembali</span>
-            </button>
-          )}
+              } else if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate("/student/courses/");
+              }
+            }}
+            title="Kembali"
+          >
+            <i className="fas fa-arrow-left"></i>
+            <span className="d-none d-sm-inline">Kembali</span>
+          </button>
 
           <span 
             className="badge px-2 py-1 text-uppercase text-white"
@@ -279,6 +458,50 @@ const ModulePlayerPage = () => {
               Menyimpan...
             </span>
           )}
+
+          {/* Tombol Reset Modul */}
+          <button
+            type="button"
+            className={`btn btn-sm ${
+              resetLimitReached
+                ? "btn-secondary"
+                : lessonStatus === "failed" 
+                  ? "btn-danger text-white shadow-sm" 
+                  : "btn-light border"
+            } py-1 px-2.5 d-flex align-items-center gap-1`}
+            style={
+              resetLimitReached
+                ? { backgroundColor: "#94a3b8", borderColor: "#64748b", color: "#ffffff", cursor: "not-allowed", opacity: 0.65 }
+                : lessonStatus === "failed"
+                  ? { backgroundColor: "#dc2626", borderColor: "#b91c1c", fontWeight: 600 }
+                  : { backgroundColor: "#ffffff", borderColor: "#cbd5e1", color: "#334155" }
+            }
+            onClick={handleResetModule}
+            disabled={resetLimitReached || syncing}
+            title={
+              resetLimitReached
+                ? `Batas reset harian tercapai (${MAX_RESETS_PER_DAY}/${MAX_RESETS_PER_DAY}). Coba lagi besok.`
+                : `Reset & Mulai Kembali Materi SCORM dari Awal (${resetCount}/${MAX_RESETS_PER_DAY} reset hari ini)`
+            }
+          >
+            <i className="fas fa-undo"></i>
+            <span>Reset</span>
+            {!resetLimitReached && (
+              <span
+                className="badge rounded-pill ms-1"
+                style={{ 
+                  backgroundColor: resetCount >= 2 ? "#fef2f2" : "#f0fdf4",
+                  color: resetCount >= 2 ? "#dc2626" : "#15803d",
+                  border: `1px solid ${resetCount >= 2 ? "#fecaca" : "#bbf7d0"}`,
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  padding: "2px 6px"
+                }}
+              >
+                {MAX_RESETS_PER_DAY - resetCount}x
+              </span>
+            )}
+          </button>
 
           <button
             type="button"

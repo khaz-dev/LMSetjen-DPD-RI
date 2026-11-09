@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 
 import { useParams, Link } from "react-router-dom";
 
@@ -76,6 +77,7 @@ import NoteModal from "../../components/CourseDetail/NoteModal";
 
 
 function CourseDetail() {
+    const param = useParams();
 
     // Course data and progress
 
@@ -163,6 +165,16 @@ function CourseDetail() {
 
     const [selectedQuiz, setSelectedQuiz] = useState(null);
 
+    // ✨ Auto-Next Progression State & Refs
+    const [autoNextPrompt, setAutoNextPrompt] = useState(null);
+    const autoNextTimerRef = useRef(null);
+    const lastTriggeredAutoNextRef = useRef(null);
+
+    // ✨ Intelligent Auto-Focus & Auto-Resume State (6-tier priority on page load/refresh)
+    const [certificateCheckCompleted, setCertificateCheckCompleted] = useState(false);
+    const [quizzesLoaded, setQuizzesLoaded] = useState(false);
+    const initialFocusHandledRef = useRef(false);
+
     // Gamification Selected Game for GamePlayer Arena
     const [selectedGame, setSelectedGame] = useState(null);
     const [gamificationRefreshKey, setGamificationRefreshKey] = useState(0);
@@ -235,7 +247,7 @@ function CourseDetail() {
     const courseGames = course?.course?.games || course?.games || [];
     const allGamesCompleted = courseGames.length === 0 || courseGames.every(g => (g.user_is_passed || (g.user_attempts_count || 0) > 0));
 
-    const canTakePostTest = hasPrePostTest && allLessonsCompleted && allRegularQuizzesPassed && allGamesCompleted;
+    const canTakePostTest = hasPrePostTest && allLessonsCompleted && allRegularQuizzesPassed;
 
     const postTestLockReason = !hasPrePostTest
         ? null
@@ -243,9 +255,7 @@ function CourseDetail() {
             ? 'Selesaikan seluruh materi kurikulum kursus terlebih dahulu untuk membuka Post-test.'
             : !allRegularQuizzesPassed
                 ? 'Selesaikan dan luluskan semua kuis materi terlebih dahulu untuk membuka Post-test.'
-                : !allGamesCompleted
-                    ? 'Selesaikan seluruh mini-game pada tab Gamifikasi terlebih dahulu untuk membuka Post-test.'
-                    : null;
+                : null;
 
 
 
@@ -1289,6 +1299,64 @@ function CourseDetail() {
 
     }, [course]);  // Include course in deps so courseId updates are captured
 
+    // Sinkronisasi otomatis skor & status materi SCORM 1.2 / H5P secara live ke kurikulum
+    const handleScormScoreUpdate = useCallback((targetVariantItemId, newScore, newStatus) => {
+        const targetVIdStr = String(targetVariantItemId || "");
+
+        // 1. Update variantItem state agar viewer aktif langsung sinkron
+        setVariantItem(prev => {
+            if (!prev) return prev;
+            const currentVIdStr = String(prev.variant_item_id || prev.id || "");
+            const currentIdStr = String(prev.id || "");
+            if (targetVIdStr && (currentVIdStr !== targetVIdStr && currentIdStr !== targetVIdStr)) {
+                return prev;
+            }
+            return {
+                ...prev,
+                is_completed: (newStatus === "passed" || newStatus === "completed") ? true : prev.is_completed,
+                learning_module_info: {
+                    ...(prev.learning_module_info || {}),
+                    score_raw: newScore !== undefined && newScore !== null ? Number(newScore) : prev.learning_module_info?.score_raw,
+                    lesson_status: newStatus || prev.learning_module_info?.lesson_status
+                }
+            };
+        });
+
+        // 2. Update course.curriculum agar badge skor di LecturesTab (.lesson-item) langsung terupdate reaktif
+        setCourse(prevCourse => {
+            if (!prevCourse || !prevCourse.curriculum) return prevCourse;
+            let updated = false;
+
+            const newCurriculum = prevCourse.curriculum.map(section => {
+                if (!section.variant_items) return section;
+                const newItems = section.variant_items.map(item => {
+                    const itemIdStr = String(item.variant_item_id || item.id || "");
+                    const numIdStr = String(item.id || "");
+                    if (targetVIdStr && (itemIdStr === targetVIdStr || numIdStr === targetVIdStr)) {
+                        updated = true;
+                        return {
+                            ...item,
+                            is_completed: (newStatus === "passed" || newStatus === "completed") ? true : item.is_completed,
+                            learning_module_info: {
+                                ...(item.learning_module_info || {}),
+                                score_raw: newScore !== undefined && newScore !== null ? Number(newScore) : item.learning_module_info?.score_raw,
+                                lesson_status: newStatus || item.learning_module_info?.lesson_status
+                            }
+                        };
+                    }
+                    return item;
+                });
+                return { ...section, variant_items: newItems };
+            });
+
+            if (!updated) return prevCourse;
+            return {
+                ...prevCourse,
+                curriculum: newCurriculum
+            };
+        });
+    }, []);
+
 
 
     // ✨ PHASE 4.143+: Memoize lesson completion registration to prevent LecturesTab effect re-runs
@@ -1757,15 +1825,19 @@ function CourseDetail() {
 
     // ✨ PHASE 16: FIXED - Auto-play should be TRUE when user clicks a fresh lesson
 
-    const handlePlayLessonWithAutoplay = (lesson) => {
+    const handlePlayLessonWithAutoplay = (lesson, shouldAutoplay = false) => {
+        // Batalkan timer auto-next yang sedang aktif jika user beralih materi
+        if (autoNextTimerRef.current) {
+            clearInterval(autoNextTimerRef.current);
+            autoNextTimerRef.current = null;
+        }
+        setAutoNextPrompt(null);
+
         ensurePlayerVisible();
         setVariantItem(lesson);
 
-        // ✨ PHASE 16: FIX - Set autoplay to TRUE for fresh lesson loads
-
-        // This allows iframe to auto-play when page loads. Resume will override this to false.
-
-        setAutoplayVideo(false);
+        // ✨ PHASE 16: FIX - Set autoplay sesuai parameter (true jika dari auto-next)
+        setAutoplayVideo(shouldAutoplay);
 
         localStorage.setItem("lms_current_lesson", JSON.stringify({
 
@@ -2337,144 +2409,38 @@ function CourseDetail() {
 
 
 
-    // ✨ PHASE 4.116+: Restore lesson from localStorage on page load (hard refresh recovery)
-
-    // ✨ PHASE 4.146: Don't restore lessons if certificate exists
-
+    // Reset initial auto-focus flag when enrollment ID changes
     useEffect(() => {
-
-        if (!course?.course?.id) {
-
-            return;
-
-        }
-
-
-
-        // ✨ PHASE 4.146: Don't restore lesson if certificate exists
-
-        if (existingCertificate) {
-
-            return;
-
-        }
-
-
-
-        try {
-
-            const savedData = localStorage.getItem("lms_current_lesson");
-
-            if (!savedData) {
-
-                return;
-
-            }
-
-
-
-            const parsed = JSON.parse(savedData);
-
-            const savedCourseId = parsed.courseId;
-
-            const currentCourseId = course?.course?.id;
-
-
-
-
-
-            // Only restore if we're viewing the same course
-
-            if (savedCourseId !== currentCourseId) {
-
-                return;
-
-            }
-
-
-
-            // If lesson already loaded, skip restoration
-
-            if (variantItem) {
-
-                return;
-
-            }
-
-
-
-            // Restore the lesson only if it actually exists in current curriculum
-            const lessonData = parsed.lessonData;
-            const targetItemId = lessonData?.variant_item_id || parsed.lessonId;
-            const itemExists = course?.curriculum?.some(variant =>
-                (variant.variant_items || []).some(item => String(item.variant_item_id) === String(targetItemId))
-            );
-
-            if (!itemExists) {
-                console.warn('[CourseDetail] Saved lesson not in current curriculum, clearing cache:', targetItemId);
-                localStorage.removeItem("lms_current_lesson");
-                return;
-            }
-
-            if (lessonData && lessonData.variant_item_id) {
-                setVariantItem(lessonData);
-
-                setAutoplayVideo(false);  // ✨ PHASE 12.15: Enable autoplay on hard refresh restoration
-
-            }
-
-        } catch (error) {
-
-            localStorage.removeItem("lms_current_lesson"); // Clear corrupted data
-
-        }
-
-    }, [course?.course?.id]);
-
-
+        initialFocusHandledRef.current = false;
+        setQuizzesLoaded(false);
+        setCertificateCheckCompleted(false);
+    }, [param.enrollment_id]);
 
     // ✨ PHASE 4.146: Check if certificate exists and hide video player accordingly
-
     const checkCertificateExists = async () => {
-
-        if (!course?.course?.course_id || !UserData()?.user_id) return;
-
-
-
-        setCertificateCheckLoading(true);
-
-        try {
-
-            const response = await apiInstance.get(
-
-                `student/certificate-eligibility/${UserData()?.user_id}/${course?.course?.course_id}/`
-
-            );
-
-
-
-            if (response.data.certificate) {
-
-                setExistingCertificate(response.data.certificate);
-
-            } else {
-
-                setExistingCertificate(null);
-
-            }
-
-        } catch (error) {
-
-            // Silently fail - certificate not found or error getting eligibility
-
-            setExistingCertificate(null);
-
-        } finally {
-
-            setCertificateCheckLoading(false);
-
+        if (!course?.course?.course_id || !UserData()?.user_id) {
+            setCertificateCheckCompleted(true);
+            return;
         }
 
+        setCertificateCheckLoading(true);
+        try {
+            const response = await apiInstance.get(
+                `student/certificate-eligibility/${UserData()?.user_id}/${course?.course?.course_id}/`
+            );
+
+            if (response.data.certificate) {
+                setExistingCertificate(response.data.certificate);
+            } else {
+                setExistingCertificate(null);
+            }
+        } catch (error) {
+            // Silently fail - certificate not found or error getting eligibility
+            setExistingCertificate(null);
+        } finally {
+            setCertificateCheckLoading(false);
+            setCertificateCheckCompleted(true);
+        }
     };
 
 
@@ -2573,8 +2539,6 @@ function CourseDetail() {
     const [courseId, setCourseId] = useState(null);
 
 
-
-    const param = useParams();
 
     const lastElementRef = useRef();
 
@@ -3726,6 +3690,12 @@ function CourseDetail() {
 
 
     const handleQuizShow = async (quiz) => {
+        // Batalkan timer auto-next yang sedang aktif jika user beralih kuis/materi
+        if (autoNextTimerRef.current) {
+            clearInterval(autoNextTimerRef.current);
+            autoNextTimerRef.current = null;
+        }
+        setAutoNextPrompt(null);
 
         try {
 
@@ -3801,6 +3771,537 @@ function CourseDetail() {
 
         }
 
+    };
+
+    // =========================================================================
+    // ✨ AUTO-NEXT LOGIC (Player Column & Sidebar Focus)
+    // Otomatis menanyakan & melanjutkan ke pelajaran / kuis / post-test berikutnya setelah selesai
+    // =========================================================================
+
+    // Temukan item berikutnya di urutan kurikulum (lessons, quizzes, pre-test, post-test)
+    const findNextCurriculumItem = useCallback((currentVariantItemId = null, currentQuizId = null, isCurrentPreTest = false) => {
+        const flatItems = [];
+        if (course?.curriculum && Array.isArray(course.curriculum)) {
+            course.curriculum.forEach((sec, sIdx) => {
+                const items = sec.variant_items || sec.items || [];
+                items.forEach((it, lIdx) => {
+                    const isQuizItem = it.item_type === 'quiz' || Boolean(it.quiz_id) || Boolean(it.quiz);
+                    flatItems.push({
+                        variant_item_id: it.variant_item_id,
+                        id: it.id,
+                        isQuiz: isQuizItem,
+                        quiz_id: it.quiz_id || (it.quiz && typeof it.quiz === 'object' ? it.quiz.quiz_id : (typeof it.quiz === 'string' ? it.quiz : null)),
+                        sectionIndex: sIdx,
+                        lessonIndex: lIdx,
+                        title: it.title,
+                        sectionTitle: sec.title,
+                        file_type: it.file_type,
+                        raw: it
+                    });
+                });
+            });
+        }
+
+        // KASUS 1: Jika yang selesai adalah PRE-TEST -> Arahkan ke Pelajaran Pertama di Kurikulum!
+        if (isCurrentPreTest) {
+            if (flatItems.length > 0) {
+                return flatItems[0];
+            }
+            return null;
+        }
+
+        if (flatItems.length === 0) return null;
+
+        let currentIndex = -1;
+        const currentVIdStr = currentVariantItemId ? String(currentVariantItemId) : null;
+        const currentQIdStr = currentQuizId ? String(currentQuizId) : null;
+
+        currentIndex = flatItems.findIndex(it => {
+            if (currentQIdStr && it.isQuiz) {
+                return String(it.quiz_id) === currentQIdStr;
+            }
+            if (currentVIdStr) {
+                return String(it.variant_item_id) === currentVIdStr || String(it.id) === currentVIdStr;
+            }
+            return false;
+        });
+
+        // KASUS 2: Masih ada materi berikutnya di dalam kurikulum
+        if (currentIndex >= 0 && currentIndex < flatItems.length - 1) {
+            return flatItems[currentIndex + 1];
+        }
+
+        // KASUS 3: Berada di MATERI TERAKHIR kurikulum -> Arahkan ke Post-Test Evaluasi Akhir!
+        if (currentIndex === flatItems.length - 1) {
+            if (hasPrePostTest && !hasCompletedPosttest && prePostQuiz) {
+                return {
+                    isPostTest: true,
+                    isQuiz: true,
+                    quiz_id: prePostQuiz.quiz_id,
+                    title: "Post-Test Evaluasi Akhir",
+                    sectionTitle: "Uji Pemahaman & Kelulusan Akhir Kursus",
+                    file_type: "quiz",
+                    raw: { ...prePostQuiz, current_mode: 'post_test' }
+                };
+            }
+        }
+
+        return null;
+    }, [course, hasPrePostTest, hasCompletedPosttest, prePostQuiz]);
+
+    // Batalkan countdown auto-next (siswa memilih tetap di materi saat ini)
+    const cancelAutoNext = useCallback(() => {
+        if (autoNextTimerRef.current) {
+            clearInterval(autoNextTimerRef.current);
+            autoNextTimerRef.current = null;
+        }
+        setAutoNextPrompt(null);
+        Toast().fire({
+            target: document.fullscreenElement || document.body,
+            icon: "info",
+            title: "Auto-Next Dibatalkan",
+            text: "Anda tetap berada di materi saat ini.",
+            timer: 2500
+        });
+    }, []);
+
+    // Konfirmasi & eksekusi auto-next (baik lewat countdown habis atau klik 'Lanjut Sekarang')
+    const confirmAutoNext = useCallback((targetItemParam = null) => {
+        if (autoNextTimerRef.current) {
+            clearInterval(autoNextTimerRef.current);
+            autoNextTimerRef.current = null;
+        }
+
+        const itemToPlay = targetItemParam || autoNextPrompt?.nextItem;
+        setAutoNextPrompt(null);
+
+        if (!itemToPlay) return;
+
+        // Pastikan player kolom terlihat di viewport
+        ensurePlayerVisible();
+
+        // 1. Jika lanjut ke Sertifikat Kelulusan
+        if (itemToPlay.isCertificate) {
+            setActiveTab('certificate');
+            return;
+        }
+
+        // 2. Jika lanjut ke Post-Test
+        if (itemToPlay.isPostTest) {
+            handleStartPosttest();
+            return;
+        }
+
+        // 3. Jika lanjut ke Kuis Reguler Kurikulum
+        if (itemToPlay.isQuiz || itemToPlay.quiz_id) {
+            const targetQuizId = String(itemToPlay.quiz_id || '');
+            const matchedQuiz = (quizzes || []).find(q =>
+                String(q.quiz_id || q.id) === targetQuizId
+            ) || { quiz_id: itemToPlay.quiz_id, title: itemToPlay.title };
+
+            handleQuizShow(matchedQuiz);
+        } else {
+            // 4. Jika lanjut ke Pelajaran Biasa (Video / SCORM / File)
+            if (activeTab === 'quiz') {
+                setActiveTab('lectures');
+                setShowQuizResult(false);
+                setSelectedQuiz(null);
+            }
+            handlePlayLessonWithAutoplay(itemToPlay.raw || itemToPlay, true);
+        }
+    }, [autoNextPrompt, ensurePlayerVisible, quizzes, activeTab, handleQuizShow, handleStartPosttest]);
+
+    // Memulai hitungan mundur jeda auto-next
+    const startAutoNextCountdown = useCallback((currentTitle, nextItem, itemType = 'lesson') => {
+        if (!nextItem) return;
+
+        if (autoNextTimerRef.current) {
+            clearInterval(autoNextTimerRef.current);
+            autoNextTimerRef.current = null;
+        }
+
+        const TOTAL_SECONDS = 8;
+        setAutoNextPrompt({
+            currentItemTitle: currentTitle || "Materi Pelajaran",
+            nextItem: nextItem,
+            secondsRemaining: TOTAL_SECONDS,
+            totalSeconds: TOTAL_SECONDS,
+            type: itemType
+        });
+
+        let remaining = TOTAL_SECONDS;
+        autoNextTimerRef.current = setInterval(() => {
+            remaining -= 1;
+            if (remaining <= 0) {
+                if (autoNextTimerRef.current) {
+                    clearInterval(autoNextTimerRef.current);
+                    autoNextTimerRef.current = null;
+                }
+                confirmAutoNext(nextItem);
+            } else {
+                setAutoNextPrompt(prev => prev ? { ...prev, secondsRemaining: remaining } : null);
+            }
+        }, 1000);
+    }, [confirmAutoNext]);
+
+    // Pemicu auto-next dari Pre-Test ke Pelajaran Pertama
+    const triggerAutoNextForPreTest = useCallback(() => {
+        const nextItem = findNextCurriculumItem(null, null, true);
+        if (!nextItem) return;
+        startAutoNextCountdown("Pre-Test Diagnostik Wajib", nextItem, 'pre_test');
+    }, [findNextCurriculumItem, startAutoNextCountdown]);
+
+    // Pemicu auto-next dari Post-Test ke Sertifikat
+    const triggerAutoNextForPostTest = useCallback(() => {
+        startAutoNextCountdown("Post-Test Evaluasi Akhir", {
+            isCertificate: true,
+            title: "Penerbitan Sertifikat Kelulusan Resmi",
+            sectionTitle: "Sertifikat Kelulusan & Ulasan Kursus",
+            file_type: "certificate"
+        }, 'post_test');
+    }, [startAutoNextCountdown]);
+
+    // Pemicu auto-next untuk materi pelajaran yang baru selesai
+    const triggerAutoNextForLesson = useCallback((variantItemId) => {
+        if (!variantItemId) return;
+        const now = Date.now();
+        if (lastTriggeredAutoNextRef.current &&
+            lastTriggeredAutoNextRef.current.id === String(variantItemId) &&
+            now - lastTriggeredAutoNextRef.current.time < 5000) {
+            return;
+        }
+        lastTriggeredAutoNextRef.current = { id: String(variantItemId), time: now };
+
+        const nextItem = findNextCurriculumItem(variantItemId, null, false);
+        if (!nextItem) return;
+
+        let currentTitle = "Pelajaran Selesai";
+        if (course?.curriculum) {
+            for (const sec of course.curriculum) {
+                const found = (sec.variant_items || []).find(it =>
+                    String(it.variant_item_id) === String(variantItemId) || String(it.id) === String(variantItemId)
+                );
+                if (found) {
+                    currentTitle = found.title;
+                    break;
+                }
+            }
+        }
+
+        startAutoNextCountdown(currentTitle, nextItem, 'lesson');
+    }, [course, findNextCurriculumItem, startAutoNextCountdown]);
+
+    // Pemicu auto-next untuk kuis reguler yang baru selesai
+    const triggerAutoNextForQuiz = useCallback((quizId) => {
+        if (!quizId) return;
+        const now = Date.now();
+        if (lastTriggeredAutoNextRef.current &&
+            lastTriggeredAutoNextRef.current.id === `quiz_${quizId}` &&
+            now - lastTriggeredAutoNextRef.current.time < 5000) {
+            return;
+        }
+        lastTriggeredAutoNextRef.current = { id: `quiz_${quizId}`, time: now };
+
+        const nextItem = findNextCurriculumItem(null, quizId, false);
+        if (!nextItem) return;
+
+        startAutoNextCountdown(selectedQuiz?.title || "Kuis Pembelajaran", nextItem, 'quiz');
+    }, [selectedQuiz, findNextCurriculumItem, startAutoNextCountdown]);
+
+    // Listen event lessonCompletedSuccess & lessonAnsweredCorrectly
+    useEffect(() => {
+        const handleLessonCompletedSuccess = (e) => {
+            const vId = e.detail?.variantItemId;
+            if (vId) {
+                triggerAutoNextForLesson(vId);
+            }
+        };
+
+        const handleLessonAnsweredCorrectly = (e) => {
+            const vId = e.detail?.variantItemId;
+            if (vId) {
+                triggerAutoNextForLesson(vId);
+            }
+        };
+
+        window.addEventListener('lessonCompletedSuccess', handleLessonCompletedSuccess);
+        window.addEventListener('lessonAnsweredCorrectly', handleLessonAnsweredCorrectly);
+
+        return () => {
+            window.removeEventListener('lessonCompletedSuccess', handleLessonCompletedSuccess);
+            window.removeEventListener('lessonAnsweredCorrectly', handleLessonAnsweredCorrectly);
+        };
+    }, [triggerAutoNextForLesson]);
+
+    // Cleanup interval on unmount
+    useEffect(() => {
+        return () => {
+            if (autoNextTimerRef.current) {
+                clearInterval(autoNextTimerRef.current);
+            }
+        };
+    }, []);
+
+    // =========================================================================
+    // ✨ INTELLIGENT AUTO-FOCUS & AUTO-RESUME ON REFRESH / PAGE LOAD
+    // Mengatur fokus otomatis saat halaman pertama kali dimuat atau di-refresh (F5):
+    // Prioritas 1: Pre-test (jika ada dan belum dikerjakan)
+    // Prioritas 2: Materi / Kuis Kurikulum Pertama yang belum diselesaikan
+    // Prioritas 3: Post-test (jika kurikulum selesai tapi post-test belum dikerjakan)
+    // Prioritas 4: Gamifikasi (jika ada mini-game dan belum semuanya lengkap)
+    // Prioritas 5: Penerbitan Sertifikat (semua tuntas tapi sertifikat belum terbit)
+    // Prioritas 6: Full Complete Review Mode (semua 100% tuntas & sertifikat terbit -> buka pelajaran pertama)
+    // =========================================================================
+    useEffect(() => {
+        if (initialFocusHandledRef.current) return;
+        if (!course?.course?.id || !course?.curriculum || !quizzesLoaded || !certificateCheckCompleted) return;
+
+        // Kunci agar hanya berjalan sekali pada saat initial page load / refresh
+        initialFocusHandledRef.current = true;
+
+        // 1. PRIORITAS 1: Pre-test (jika kursus memiliki Pre-test dan belum dikerjakan)
+        if (hasPrePostTest && !hasCompletedPretest && prePostQuiz) {
+            console.log('[InitialAutoFocus] Priority 1: Opening Pre-Test');
+            handleStartPretest();
+            return;
+        }
+
+        // 2. PRIORITAS 2: Materi Pelajaran atau Kuis pertama dalam kurikulum yang belum diselesaikan
+        let firstIncomplete = null;
+        if (Array.isArray(course.curriculum)) {
+            for (const section of course.curriculum) {
+                const items = section.variant_items || section.items || [];
+                for (const item of items) {
+                    const isQuizItem = item.item_type === 'quiz' || Boolean(item.quiz_id) || Boolean(item.quiz);
+                    if (isQuizItem) {
+                        const targetQuizId = item.quiz_id || (item.quiz && typeof item.quiz === 'object' ? item.quiz.quiz_id : (typeof item.quiz === 'string' ? item.quiz : null));
+                        const matchedQuiz = (quizzes || []).find(q =>
+                            (targetQuizId && (String(q.quiz_id) === String(targetQuizId) || String(q.id) === String(targetQuizId))) ||
+                            String(q.quiz_id) === String(item.id) ||
+                            String(q.id) === String(item.variant_item_id)
+                        );
+                        const isPassed = Boolean(matchedQuiz?.is_passed || item.is_passed);
+                        if (!isPassed) {
+                            firstIncomplete = { type: 'quiz', quiz: matchedQuiz || item, raw: item };
+                            break;
+                        }
+                    } else {
+                        const scormStatus = item.learning_module_info?.lesson_status?.toLowerCase();
+                        const isScormDone = scormStatus === 'passed' || scormStatus === 'completed';
+                        const isCompleted = (item.is_completed === true) || isScormDone ||
+                            (course.completed_lesson || []).some(cl => {
+                                const targetVId = String(item.variant_item_id || item.id || "");
+                                const targetId = String(item.id || "");
+                                const clVId = String(cl.variant_item?.variant_item_id || cl.variant_item?.id || "");
+                                const clId = String(cl.variant_item?.id || "");
+                                return (targetVId && (clVId === targetVId || clId === targetVId)) ||
+                                    (targetId && (clId === targetId || clVId === targetId));
+                            });
+                        if (!isCompleted) {
+                            firstIncomplete = { type: 'lesson', lesson: item, raw: item };
+                            break;
+                        }
+                    }
+                }
+                if (firstIncomplete) break;
+            }
+        }
+
+        if (firstIncomplete) {
+            if (firstIncomplete.type === 'quiz') {
+                console.log('[InitialAutoFocus] Priority 2: Focusing on first incomplete quiz:', firstIncomplete.quiz?.title);
+                setActiveTab('quiz');
+                handleQuizShow(firstIncomplete.quiz);
+            } else {
+                console.log('[InitialAutoFocus] Priority 2: Focusing on first incomplete lesson:', firstIncomplete.lesson?.title);
+                ensurePlayerVisible();
+                setActiveTab('lectures');
+                handlePlayLessonWithAutoplay(firstIncomplete.lesson, false);
+            }
+            return;
+        }
+
+        // 3. PRIORITAS 3: Post-test (jika kurikulum selesai tapi post-test belum dikerjakan)
+        if (hasPrePostTest && !hasCompletedPosttest && prePostQuiz) {
+            console.log('[InitialAutoFocus] Priority 3: Opening Post-Test');
+            handleStartPosttest();
+            return;
+        }
+
+        // 4. PRIORITAS 4: Gamifikasi (jika ada mini-game dan belum semuanya selesai)
+        const currentGames = course?.course?.games || course?.games || [];
+        if (currentGames.length > 0) {
+            const pendingGame = currentGames.find(g => !(g.user_is_passed || (g.user_attempts_count || 0) > 0));
+            if (pendingGame) {
+                console.log('[InitialAutoFocus] Priority 4: Focusing on Gamification tab & game:', pendingGame.title);
+                setActiveTab('gamification');
+                const gamificationTabBtn = document.querySelector('#gamification-tab');
+                if (gamificationTabBtn && window.bootstrap?.Tab) {
+                    window.bootstrap.Tab.getOrCreateInstance(gamificationTabBtn).show();
+                }
+                handleSelectGame(pendingGame);
+                return;
+            }
+        }
+
+        // 5. PRIORITAS 5: Penerbitan Sertifikat (semua pembelajaran selesai tapi sertifikat belum terbit)
+        if (!existingCertificate) {
+            console.log('[InitialAutoFocus] Priority 5: Focusing on Certificate tab');
+            setActiveTab('certificate');
+            const certTabBtn = document.querySelector('#certificate-tab');
+            if (certTabBtn && window.bootstrap?.Tab) {
+                window.bootstrap.Tab.getOrCreateInstance(certTabBtn).show();
+            }
+            setTimeout(() => {
+                const certSec = document.querySelector('#certificate');
+                if (certSec) certSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
+            return;
+        }
+
+        // 6. PRIORITAS 6: Full Completion & Review Mode
+        // Semua tuntas (pre-test, kurikulum, post-test, gamifikasi) & sertifikat sudah diterbitkan
+        // -> Otomatis buka pelajaran pertama materi (bukan pre-test, bukan kuis, bukan post-test)
+        let firstLessonInCourse = null;
+        if (Array.isArray(course.curriculum)) {
+            for (const section of course.curriculum) {
+                const items = section.variant_items || section.items || [];
+                for (const item of items) {
+                    const isQuiz = item.item_type === 'quiz' || Boolean(item.quiz_id) || Boolean(item.quiz);
+                    if (!isQuiz) {
+                        firstLessonInCourse = item;
+                        break;
+                    }
+                }
+                if (firstLessonInCourse) break;
+            }
+        }
+
+        if (firstLessonInCourse) {
+            console.log('[InitialAutoFocus] Priority 6: Full completion mode, opening first lesson for review:', firstLessonInCourse.title);
+            ensurePlayerVisible();
+            setActiveTab('lectures');
+            handlePlayLessonWithAutoplay(firstLessonInCourse, false);
+        }
+    }, [
+        course?.course?.id,
+        course?.curriculum,
+        quizzesLoaded,
+        certificateCheckCompleted,
+        hasPrePostTest,
+        hasCompletedPretest,
+        hasCompletedPosttest,
+        prePostQuiz,
+        quizzes,
+        existingCertificate,
+        handleStartPretest,
+        handleStartPosttest,
+        handleQuizShow,
+        handlePlayLessonWithAutoplay,
+        handleSelectGame,
+        ensurePlayerVisible
+    ]);
+
+    // Render Auto-Next Centered Modal Component (Tampil tepat di tengah layar & terlihat saat fullscreen)
+    const renderAutoNextCard = () => {
+        if (!autoNextPrompt || !autoNextPrompt.nextItem) return null;
+
+        const portalTarget = document.fullscreenElement || document.body;
+
+        const modalContent = (
+            <div className="course-auto-next-modal-backdrop">
+                <div className="course-auto-next-center-dialog animate__animated animate__zoomIn">
+                    <div className="auto-next-center-badge">
+                        <i className="fas fa-check-circle"></i>
+                    </div>
+
+                    <h4 className="auto-next-center-title">
+                        {autoNextPrompt.type === 'pre_test'
+                            ? 'Pre-Test Selesai Dikerjakan!'
+                            : autoNextPrompt.type === 'post_test'
+                                ? 'Post-Test Berhasil Diselesaikan!'
+                                : autoNextPrompt.type === 'quiz'
+                                    ? 'Kuis Berhasil Diselesaikan!'
+                                    : 'Pelajaran Selesai!'}
+                    </h4>
+                    <p className="auto-next-center-subtitle text-truncate px-2">
+                        {autoNextPrompt.currentItemTitle}
+                    </p>
+
+                    <div className="auto-next-center-timer-wrap">
+                        <span className="auto-next-center-timer-num">{autoNextPrompt.secondsRemaining}</span>
+                        <span className="auto-next-center-timer-label">detik melanjutkan otomatis...</span>
+                    </div>
+
+                    {/* Next Item Card */}
+                    <div className="auto-next-center-preview">
+                        <div className="auto-next-preview-icon">
+                            {autoNextPrompt.nextItem.isCertificate ? (
+                                <i className="fas fa-award text-teal" style={{ fontSize: '1.4rem' }}></i>
+                            ) : autoNextPrompt.nextItem.isPostTest ? (
+                                <i className="fas fa-graduation-cap text-success" style={{ fontSize: '1.4rem' }}></i>
+                            ) : autoNextPrompt.nextItem.isQuiz ? (
+                                <i className="fas fa-clipboard-check text-warning" style={{ fontSize: '1.4rem' }}></i>
+                            ) : autoNextPrompt.nextItem.file_type === 'scorm' || autoNextPrompt.nextItem.file_type === 'h5p' ? (
+                                <i className="fas fa-cubes text-info" style={{ fontSize: '1.4rem' }}></i>
+                            ) : (
+                                <i className="fas fa-play-circle text-teal" style={{ fontSize: '1.4rem' }}></i>
+                            )}
+                        </div>
+                        <div className="auto-next-preview-info text-start">
+                            <div className="auto-next-preview-label">
+                                {autoNextPrompt.nextItem.isCertificate ? 'Langkah Selanjutnya' : autoNextPrompt.nextItem.isPostTest ? 'Ujian Kelulusan' : 'Materi Selanjutnya'}
+                            </div>
+                            <div className="auto-next-preview-title fw-bold" title={autoNextPrompt.nextItem.title}>
+                                {autoNextPrompt.nextItem.title}
+                            </div>
+                            {autoNextPrompt.nextItem.sectionTitle && (
+                                <div className="auto-next-preview-section text-muted small" title={autoNextPrompt.nextItem.sectionTitle}>
+                                    <i className="fas fa-folder-open me-1 opacity-75"></i>
+                                    {autoNextPrompt.nextItem.sectionTitle}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Progress track */}
+                    <div className="auto-next-progress-track mb-3">
+                        <div
+                            className="auto-next-progress-bar"
+                            style={{
+                                width: `${(autoNextPrompt.secondsRemaining / autoNextPrompt.totalSeconds) * 100}%`,
+                                transition: 'width 1s linear'
+                            }}
+                        />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+                        <button
+                            type="button"
+                            className="btn btn-light border px-3 py-2 fw-semibold auto-next-center-btn-stay"
+                            onClick={cancelAutoNext}
+                            title="Batalkan perpindahan otomatis dan tetap berada di materi saat ini"
+                        >
+                            <i className="fas fa-pause me-1"></i>
+                            Tetap di Pelajaran Ini
+                        </button>
+
+                        <button
+                            type="button"
+                            className="btn btn-teal px-4 py-2 fw-bold text-white shadow-sm auto-next-center-btn-go"
+                            onClick={() => confirmAutoNext()}
+                            title="Langsung mulai materi selanjutnya sekarang"
+                        >
+                            <i className="fas fa-forward me-1"></i>
+                            Lanjut Sekarang ({autoNextPrompt.secondsRemaining}s)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        return createPortal(modalContent, portalTarget);
     };
 
 
@@ -4241,6 +4742,20 @@ function CourseDetail() {
                 }
                 await fetchCourseDetail(true); // true = prevent loading state
 
+                // ✨ Trigger Auto-Next sesuai tipe kuis yang selesai dikerjakan
+                if (finalAttemptType === 'pre_test') {
+                    // Pre-Test selesai -> Lanjut ke Pelajaran Pertama!
+                    triggerAutoNextForPreTest();
+                } else if (finalAttemptType === 'post_test') {
+                    // Post-Test selesai -> Lanjut ke Sertifikat Kelulusan!
+                    triggerAutoNextForPostTest();
+                } else if (response.data.passed) {
+                    // Kuis reguler kurikulum lulus -> Lanjut ke materi berikutnya!
+                    if (selectedQuiz?.quiz_id) {
+                        triggerAutoNextForQuiz(selectedQuiz.quiz_id);
+                    }
+                }
+
             }
 
         } catch (error) {
@@ -4386,6 +4901,20 @@ function CourseDetail() {
                 }
                 await fetchCourseDetail(true); // true = prevent loading state
 
+                // ✨ Trigger Auto-Next sesuai tipe kuis yang selesai dikerjakan
+                if (finalAttemptType === 'pre_test') {
+                    // Pre-Test selesai -> Lanjut ke Pelajaran Pertama!
+                    triggerAutoNextForPreTest();
+                } else if (finalAttemptType === 'post_test') {
+                    // Post-Test selesai -> Lanjut ke Sertifikat Kelulusan!
+                    triggerAutoNextForPostTest();
+                } else if (response.data.passed) {
+                    // Kuis reguler kurikulum lulus -> Lanjut ke materi berikutnya!
+                    if (selectedQuiz?.quiz_id) {
+                        triggerAutoNextForQuiz(selectedQuiz.quiz_id);
+                    }
+                }
+
 
 
                 // Tampilkan pesan sukses untuk pengiriman otomatis
@@ -4424,55 +4953,70 @@ function CourseDetail() {
 
 
 
-    // Helper function to calculate overall completion percentage including lessons and quizzes
+    // Helper function to calculate comprehensive completion percentage including lessons, quizzes, pre-post test, and games
+    const calculateCompletionPercentage = useCallback((customTotalLessons = null, customCompletedLessons = null, customTotalQuizzes = null, customPassedQuizzes = null) => {
+        // 1. Lessons
+        const totalLessons = customTotalLessons !== null ? customTotalLessons : (
+            course?.curriculum?.reduce((total, section) => {
+                const items = section.variant_items || section.items || [];
+                const actualLessonItems = items.filter(it => it.item_type !== 'quiz' && !it.quiz_id && !it.quiz);
+                return total + actualLessonItems.length;
+            }, 0) || (course?.lectures?.length || 0)
+        );
 
-    const calculateCompletionPercentage = (totalLessons, completedLessons, totalQuizzes = 0, passedQuizzes = 0) => {
+        const completedLessons = customCompletedLessons !== null ? customCompletedLessons : (
+            new Set(course?.completed_lesson?.map(cl => cl.variant_item?.variant_item_id)).size
+        );
 
-        // Calculate total items (lessons + quizzes)
+        // 2. Regular Quizzes
+        const regQuizzes = (quizzes || []).filter(q => q.quiz_type === 'quiz');
+        const totalQuizzes = customTotalQuizzes !== null ? customTotalQuizzes : regQuizzes.length;
+        const passedQuizzes = customPassedQuizzes !== null ? customPassedQuizzes : regQuizzes.filter(q => q.is_passed).length;
 
-        const totalItems = totalLessons + totalQuizzes;
+        // 3. Pre-Test & Post-Test
+        const prePostQuizItem = (quizzes || []).find(q => q.quiz_type === 'pre_post_test') || null;
+        const hasPrePost = Boolean(prePostQuizItem);
+        const preTestTotal = hasPrePost ? 1 : 0;
+        const preTestCompleted = (hasPrePost && prePostQuizItem.has_pre_test) ? 1 : 0;
 
-        const completedItems = completedLessons + passedQuizzes;
+        const postTestTotal = hasPrePost ? 1 : 0;
+        const postTestCompleted = (hasPrePost && prePostQuizItem.has_post_test) ? 1 : 0;
 
+        // 4. Gamifikasi / Course Games
+        const gamesList = course?.course?.games || course?.games || [];
+        const totalGames = gamesList.length;
+        const completedGames = gamesList.filter(g => Boolean(g.user_is_passed || (g.user_attempts_count || 0) > 0)).length;
 
-
-        // Calculate percentage with safety checks
+        // Total akumulasi seluruh aktivitas kursus
+        const totalItems = totalLessons + totalQuizzes + preTestTotal + postTestTotal + totalGames;
+        const completedItems = completedLessons + passedQuizzes + preTestCompleted + postTestCompleted + completedGames;
 
         let percentageCompleted = 0;
-
         if (totalItems > 0) {
-
             percentageCompleted = Math.min(100, Math.max(0, (completedItems / totalItems) * 100));
-
         }
 
-
-
-        setCompletionPercentage(Math.round(percentageCompleted));
+        const roundedPct = Math.round(percentageCompleted);
+        setCompletionPercentage(roundedPct);
 
         setCompletionStats({
-
             totalLessons,
-
             completedLessons,
-
             totalQuizzes,
-
-            passedQuizzes
-
+            passedQuizzes,
+            hasPreTest: hasPrePost,
+            preTestCompleted: Boolean(preTestCompleted),
+            hasPostTest: hasPrePost,
+            postTestCompleted: Boolean(postTestCompleted),
+            totalGames,
+            completedGames,
+            totalItems,
+            completedItems
         });
 
-
-
-        // Mark progress card as loaded
-
         setIsProgressCardLoading(false);
-
-
-
-        return Math.round(percentageCompleted);
-
-    };
+        return roundedPct;
+    }, [course, quizzes]);
 
 
 
@@ -4646,19 +5190,15 @@ function CourseDetail() {
             // Fetch quizzes and calculate completion percentage after quizzes are loaded
 
             if (currentCourseId) {
-
                 fetchQuizzes(currentCourseId, totalLessons, completedLessons);
-
             } else {
-
                 // No quizzes, just calculate based on lessons
-
+                setQuizzesLoaded(true);
                 calculateCompletionPercentage(totalLessons, completedLessons, 0, 0);
-
             }
-
         }).catch((error) => {
-
+            setQuizzesLoaded(true);
+            setCertificateCheckCompleted(true);
             Toast().fire({
 
                 icon: "error",
@@ -5156,55 +5696,32 @@ function CourseDetail() {
 
 
     const fetchQuizzes = async (courseId, totalLessons = 0, completedLessons = 0) => {
-
         if (!courseId) {
-
+            setQuizzesLoaded(true);
             return;
-
         }
-
-
 
         const apiUrl = `student/quiz-list/${UserData()?.user_id}/${courseId}/`;
 
-
-
         useAxios.get(apiUrl).then((res) => {
-
             setQuizzes(res.data);
-
-
+            setQuizzesLoaded(true);
 
             // Count total quizzes and passed quizzes
-
             const totalQuizzes = res.data?.length || 0;
-
             const passedQuizzes = res.data?.filter(quiz => quiz.is_passed)?.length || 0;
 
-
-
             // Recalculate completion percentage including quizzes
-
             if (totalLessons > 0 || totalQuizzes > 0) {
-
                 calculateCompletionPercentage(totalLessons, completedLessons, totalQuizzes, passedQuizzes);
-
             }
-
-
-
         }).catch((error) => {
-
+            setQuizzesLoaded(true);
             // Still calculate completion with lessons only if quiz fetch fails
-
             if (totalLessons > 0) {
-
                 calculateCompletionPercentage(totalLessons, completedLessons, 0, 0);
-
             }
-
         });
-
     };
 
 
@@ -5349,85 +5866,7 @@ function CourseDetail() {
 
 
 
-    // ✨ PHASE 48 FIX: Auto-select first lesson from Bagian 1 on page load if no lesson selected
-
-    // When course data loads and user hasn't selected or resumed a lesson, automatically load the first lesson
-
-    useEffect(() => {
-
-        // ✨ PHASE 48: Only auto-select if:
-
-        // 1. Course data has loaded
-
-        // 2. No lesson is currently selected (variantItem is null)
-
-        // 3. No saved lesson in localStorage (not a resumed session)
-
-        if (!course || variantItem) {
-
-            return;  // Skip if no course data or lesson already selected
-
-        }
-
-
-
-        try {
-
-            const savedData = localStorage.getItem("lms_current_lesson");
-
-            if (savedData) {
-
-                return;  // Skip if there's a saved lesson (user is resuming)
-
-            }
-
-
-
-            // Get first section (Bagian 1) from curriculum
-
-            if (!course.curriculum || !Array.isArray(course.curriculum) || course.curriculum.length === 0) {
-
-                return;  // No curriculum available
-
-            }
-
-
-
-            const firstSection = course.curriculum[0];
-
-            const sectionItems = firstSection.variant_items || firstSection.items || [];
-
-
-
-            if (sectionItems.length === 0) {
-
-                return;  // No lessons in first section
-
-            }
-
-
-
-            const firstLesson = sectionItems[0];
-
-
-
-            if (firstLesson && firstLesson.variant_item_id) {
-
-                console.log(`[CourseDetail.PHASE_48] 🎬 Auto-selecting first lesson: ${firstLesson.title}`);
-
-                handlePlayLessonWithAutoplay(firstLesson);
-
-            }
-
-        } catch (error) {
-
-            console.warn('[CourseDetail.PHASE_48] Error auto-selecting first lesson:', error);
-
-            // Silently continue - this is not critical functionality
-
-        }
-
-    }, [course]);  // Only re-run when course data arrives
+    // Legacy auto-select replaced by intelligent 6-tier auto-focus hook
 
 
 
@@ -9659,6 +10098,10 @@ function CourseDetail() {
 
                                                                 handleMarkLessonAsCompleted={handleMarkLessonAsCompletedCallback}
 
+                                                                onScoreUpdate={handleScormScoreUpdate}
+
+                                                                fetchCourseDetail={fetchCourseDetail}
+
                                                             />
 
                                                         ) : (
@@ -10412,6 +10855,9 @@ function CourseDetail() {
             />
 
 
+
+            {/* ✨ Centered Auto-Next Countdown Modal (Fullscreen Compatible via Portal) */}
+            {renderAutoNextCard()}
 
             {/* Video Resume Dialog */}
 

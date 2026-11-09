@@ -255,13 +255,26 @@ class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
 
             # Validate that course_id is handled whether numeric or ShortUUID
             print(f"\n[StudentCourseCompletedCreateAPIView] 🔍 Validating IDs")
+            course = None
             if str(course_id).isdigit():
-                course = api_models.Course.objects.get(id=course_id)
-            else:
-                course = api_models.Course.objects.get(course_id=course_id)
+                course = api_models.Course.objects.filter(id=int(course_id)).first()
+            if not course:
+                course = api_models.Course.objects.filter(course_id=course_id).first()
+            if not course:
+                ec = api_models.EnrolledCourse.objects.filter(enrollment_id=course_id).first()
+                if ec:
+                    course = ec.course
+            if not course:
+                return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
             print(f"   ✅ Found course: {course.title}")
             
-            variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
+            variant_item = None
+            if str(variant_item_id).isdigit():
+                variant_item = api_models.VariantItem.objects.filter(id=int(variant_item_id)).first()
+            if not variant_item:
+                variant_item = api_models.VariantItem.objects.filter(variant_item_id=variant_item_id).first()
+            if not variant_item:
+                return Response({"error": "VariantItem not found"}, status=status.HTTP_404_NOT_FOUND)
             print(f"   ✅ Found variant_item: {variant_item.title}")
 
             # Check if course has a pre_post_test quiz and if student has completed pre-test

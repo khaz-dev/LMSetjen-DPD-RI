@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.utils import timezone
 from django.conf import settings
+from django.core.cache import cache
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -176,8 +177,8 @@ class SCORMTrackingAPIView(APIView):
         lesson_location = data.get('lesson_location')
         session_time = data.get('session_time')
         suspend_data = data.get('suspend_data')
-        course_id = data.get('course_id') or (learning_module.course_id if learning_module.course else None)
-        variant_item_id = data.get('variant_item_id')
+        course_id = data.get('course_id') or request.query_params.get('course_id') or (learning_module.course_id if learning_module.course else None)
+        variant_item_id = data.get('variant_item_id') or request.query_params.get('variant_item_id')
 
         # Dapatkan record progress user
         progress, created = api_models.UserProgress.objects.get_or_create(
@@ -186,19 +187,36 @@ class SCORMTrackingAPIView(APIView):
             defaults={'lesson_status': 'incomplete'}
         )
 
-        if course_id and not progress.course_id:
-            course = api_models.Course.objects.filter(id=course_id).first()
+        if course_id:
+            course = None
+            if str(course_id).isdigit():
+                course = api_models.Course.objects.filter(id=int(course_id)).first()
             if not course:
                 course = api_models.Course.objects.filter(course_id=course_id).first()
+            if not course:
+                ec = api_models.EnrolledCourse.objects.filter(enrollment_id=course_id).first()
+                if ec:
+                    course = ec.course
             if course:
                 progress.course = course
 
-        if variant_item_id and not progress.variant_item_id:
-            variant_item = api_models.VariantItem.objects.filter(id=variant_item_id).first()
+        if variant_item_id:
+            variant_item = None
+            if str(variant_item_id).isdigit():
+                variant_item = api_models.VariantItem.objects.filter(id=int(variant_item_id)).first()
             if not variant_item:
                 variant_item = api_models.VariantItem.objects.filter(variant_item_id=variant_item_id).first()
             if variant_item:
                 progress.variant_item = variant_item
+                if not progress.course and variant_item.variant and variant_item.variant.course:
+                    progress.course = variant_item.variant.course
+
+        if not progress.course:
+            first_vi = api_models.VariantItem.objects.filter(learning_module=learning_module).first()
+            if first_vi and first_vi.variant and first_vi.variant.course:
+                progress.course = first_vi.variant.course
+                if not progress.variant_item:
+                    progress.variant_item = first_vi
 
         # Update field jika dikirim
         previously_completed = progress.lesson_status in ['passed', 'completed']
@@ -234,8 +252,13 @@ class SCORMTrackingAPIView(APIView):
 
         # Seamless LMS Integration: jika status passed/completed dan terhubung dengan course & variant_item,
         # otomatis buatkan CompletedLesson agar persentase kursus dan sertifikat ASN terupdate!
-        if is_completed_now and progress.course:
+        if (is_completed_now or progress.lesson_status in ['passed', 'completed']) and progress.course:
             target_variant_item = progress.variant_item
+            if not target_variant_item:
+                target_variant_item = api_models.VariantItem.objects.filter(
+                    learning_module=learning_module,
+                    variant__course=progress.course
+                ).first()
             if not target_variant_item:
                 target_variant_item = api_models.VariantItem.objects.filter(
                     learning_module=learning_module
@@ -257,6 +280,75 @@ class SCORMTrackingAPIView(APIView):
             "lesson_location": progress.lesson_location,
             "completed": progress.lesson_status in ['passed', 'completed'],
             "is_newly_completed": is_newly_completed
+        }, status=status.HTTP_200_OK)
+
+
+class SCORMResetAPIView(APIView):
+    """
+    API endpoint untuk mereset progress belajar modul SCORM 1.2 / H5P.
+    Memungkinkan ASN / Siswa mengulang materi dari awal ketika failed atau ingin re-attempt.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request, module_id):
+        learning_module = get_object_or_404(api_models.LearningModule, pk=module_id)
+
+        # --- Rate limiting: maks 3 kali reset per hari per user per modul ---
+        MAX_RESETS_PER_DAY = 3
+        today = timezone.now().date().isoformat()
+        cache_key = f"scorm_reset_{request.user.id}_{module_id}_{today}"
+        reset_count = cache.get(cache_key, 0)
+
+        if reset_count >= MAX_RESETS_PER_DAY:
+            return Response({
+                "error": "Batas reset harian tercapai. Anda hanya dapat mereset materi ini 3 kali dalam sehari.",
+                "reset_limit_reached": True,
+                "reset_count": reset_count,
+                "max_resets": MAX_RESETS_PER_DAY,
+                "resets_remaining": 0
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        progress = api_models.UserProgress.objects.filter(
+            user=request.user,
+            learning_module=learning_module
+        ).first()
+
+        if progress:
+            progress.lesson_status = 'incomplete'
+            progress.score_raw = 0.0
+            progress.lesson_location = ''
+            progress.session_time = '00:00:00'
+            progress.suspend_data = ''
+            progress.completed_at = None
+            progress.save()
+
+            # Hapus CompletedLesson terkait agar siswa bisa mengulang materi dan mendapatkan status selesai fresh
+            cl_filter = {'user': request.user}
+            if progress.variant_item:
+                cl_filter['variant_item'] = progress.variant_item
+            else:
+                cl_filter['variant_item__learning_module'] = learning_module
+            api_models.CompletedLesson.objects.filter(**cl_filter).delete()
+
+        # Catat reset ke cache (TTL = sisa waktu sampai tengah malam + buffer 1 jam)
+        new_count = reset_count + 1
+        seconds_until_midnight = (
+            86400 - (timezone.now().hour * 3600 + timezone.now().minute * 60 + timezone.now().second)
+        ) + 3600  # tambah 1 jam buffer
+        cache.set(cache_key, new_count, timeout=seconds_until_midnight)
+
+        return Response({
+            "status": "success",
+            "message": "Progress materi modul berhasil direset.",
+            "module_id": learning_module.id,
+            "lesson_status": "incomplete",
+            "score_raw": 0.0,
+            "lesson_location": "",
+            "suspend_data": "",
+            "reset_count": new_count,
+            "max_resets": MAX_RESETS_PER_DAY,
+            "resets_remaining": MAX_RESETS_PER_DAY - new_count
         }, status=status.HTTP_200_OK)
 
 
@@ -283,9 +375,21 @@ class ModuleDetailAPIView(APIView):
             "suspend_data": ""
         }
 
+        # Sertakan info reset harian agar frontend bisa disable tombol Reset jika batas tercapai
+        MAX_RESETS_PER_DAY = 3
+        today = timezone.now().date().isoformat()
+        cache_key = f"scorm_reset_{request.user.id}_{module_id}_{today}"
+        reset_count = cache.get(cache_key, 0)
+
         return Response({
             "module": module_data,
-            "progress": progress_data
+            "progress": progress_data,
+            "reset_info": {
+                "reset_count": reset_count,
+                "max_resets": MAX_RESETS_PER_DAY,
+                "resets_remaining": max(0, MAX_RESETS_PER_DAY - reset_count),
+                "reset_limit_reached": reset_count >= MAX_RESETS_PER_DAY
+            }
         }, status=status.HTTP_200_OK)
 
     def delete(self, request, module_id):

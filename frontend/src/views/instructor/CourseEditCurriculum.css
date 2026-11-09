@@ -502,9 +502,37 @@
     margin-bottom: 6px !important;
 }
 
-/* Ensure icons have generous spacing in form labels */
-.curriculum-item-content-enhanced label i {
+/* Ensure icons have generous spacing in form labels (exclude button labels) */
+.curriculum-item-content-enhanced label:not(.btn) i {
     margin-right: 6px;
+}
+
+/* Precise vertical centering for action buttons and button-labels */
+.curriculum-item-content-enhanced .btn-xs,
+.curriculum-item-content-enhanced label.btn-xs {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+}
+
+.curriculum-item-content-enhanced .btn-xs i,
+.curriculum-item-content-enhanced label.btn-xs i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    margin-right: 4px !important;
+    vertical-align: middle !important;
+}
+
+.curriculum-item-content-enhanced .btn-xs span,
+.curriculum-item-content-enhanced label.btn-xs span {
+    display: inline-flex !important;
+    align-items: center !important;
+    line-height: 1 !important;
 }
 
 /* Badge SCORM 1.2 in header */

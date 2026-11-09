@@ -876,6 +876,16 @@ class VariantItemSerializer(serializers.ModelSerializer):
             ).first()
             
             if not completed_lesson:
+                # Juga periksa jika modul SCORM / H5P telah diselesaikan dengan status passed atau completed
+                if obj.learning_module and user:
+                    scorm_done = api_models.UserProgress.objects.filter(
+                        user=user,
+                        learning_module=obj.learning_module,
+                        lesson_status__in=['passed', 'completed']
+                    ).exists()
+                    if scorm_done:
+                        return True
+
                 # No completion record exists = not completed
                 # Log for target lesson to help debugging
                 if variant_item_id == 254517:
@@ -929,8 +939,20 @@ class VariantItemSerializer(serializers.ModelSerializer):
             if user:
                 user_progress = api_models.UserProgress.objects.filter(
                     user=user,
-                    learning_module=obj.learning_module
+                    learning_module=obj.learning_module,
+                    variant_item=obj
                 ).first()
+                if not user_progress and obj.variant and obj.variant.course:
+                    user_progress = api_models.UserProgress.objects.filter(
+                        user=user,
+                        learning_module=obj.learning_module,
+                        course=obj.variant.course
+                    ).first()
+                if not user_progress:
+                    user_progress = api_models.UserProgress.objects.filter(
+                        user=user,
+                        learning_module=obj.learning_module
+                    ).first()
             return {
                 "id": obj.learning_module.id,
                 "judul": obj.learning_module.judul,

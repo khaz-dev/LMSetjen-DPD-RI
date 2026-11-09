@@ -62,12 +62,32 @@ const LecturesTab = ({
     const [isClickingLessonUI, setIsClickingLessonUI] = useState(false);  // ✨ PHASE 4.111: State for visual feedback
 
     // Helper function to check if a lesson is completed
-    const isLessonCompleted = (variantItem) => {
+    const isLessonCompleted = (variantItemToCheck) => {
+        if (!variantItemToCheck) return false;
+
+        // Jika variantItem menandakan selesai secara eksplisit
+        if (variantItemToCheck.is_completed === true) return true;
+
+        // Cek status modul interaktif SCORM 1.2 / H5P
+        const scormStatus = variantItemToCheck.learning_module_info?.lesson_status?.toLowerCase();
+        if (scormStatus === "passed" || scormStatus === "completed") return true;
+
+        // Cek jika ini adalah variantItem yang sedang aktif dan sudah passed/completed
+        if (variantItem && (
+            String(variantItem.variant_item_id || variantItem.id) === String(variantItemToCheck.variant_item_id || variantItemToCheck.id) ||
+            String(variantItem.id) === String(variantItemToCheck.id)
+        )) {
+            const activeStatus = variantItem.learning_module_info?.lesson_status?.toLowerCase();
+            if (activeStatus === "passed" || activeStatus === "completed" || variantItem.is_completed) {
+                return true;
+            }
+        }
+
         // Guard against null course data (may not be loaded yet)
-        if (!course || !course.completed_lesson || !variantItem) return false;
+        if (!course || !course.completed_lesson) return false;
         
-        const targetVId = String(variantItem.variant_item_id || variantItem.id || "");
-        const targetId = String(variantItem.id || "");
+        const targetVId = String(variantItemToCheck.variant_item_id || variantItemToCheck.id || "");
+        const targetId = String(variantItemToCheck.id || "");
 
         return course.completed_lesson.some(cl => {
             const clVId = String(cl.variant_item?.variant_item_id || cl.variant_item?.id || "");
@@ -419,6 +439,29 @@ const LecturesTab = ({
             return () => clearTimeout(failsafeTimer);
         }
     }, [isClickingLessonUI]);
+
+    // ✨ Auto-scroll & focus kurikulum di sidebar ke materi / kuis yang sedang aktif
+    useEffect(() => {
+        const targetVariantId = variantItem?.variant_item_id || variantItem?.id;
+        const targetQuizId = selectedQuiz?.quiz_id || selectedQuiz?.id;
+
+        if (!targetVariantId && !targetQuizId) return;
+
+        const timer = setTimeout(() => {
+            const activeElem = document.querySelector('.course-sidebar-right-column .lesson-item.active');
+            if (activeElem) {
+                // Pastikan section accordion pembungkus dalam keadaan terbuka (show)
+                const collapseParent = activeElem.closest('.collapse');
+                if (collapseParent && !collapseParent.classList.contains('show')) {
+                    collapseParent.classList.add('show');
+                }
+                // Fokus visual dan scroll dengan mulus ke item aktif
+                activeElem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }, 150);
+
+        return () => clearTimeout(timer);
+    }, [variantItem?.variant_item_id, variantItem?.id, selectedQuiz?.quiz_id, selectedQuiz?.id]);
     
 	// Video Progress Tracking Functions
 	const saveVideoProgress = async (variantItemId, position, duration, isCompleted = false) => {
@@ -701,6 +744,17 @@ const LecturesTab = ({
                     });
                 }
                 // Removed auto-completion notification - no Toast shown for isAutoComplete
+
+                // ✨ Trigger Auto-Next event ke CourseDetail jika materi baru saja diselesaikan
+                if (!isAlreadyCompleted) {
+                    window.dispatchEvent(new CustomEvent('lessonCompletedSuccess', {
+                        detail: {
+                            variantItemId: variantItemId,
+                            courseId: courseId,
+                            isAutoComplete: isAutoComplete
+                        }
+                    }));
+                }
             } else {
                 // ✨ PHASE 12.3: API rejected completion - show informative message
                 Toast().fire({
@@ -1542,9 +1596,7 @@ const LecturesTab = ({
                                                 }}
                                             >
                                                 <div className={`lesson-progress-indicator ${lessonLockStatus.locked ? "locked" : isQuizPassed ? "completed" : ""}`}>
-                                                    {isQuizPassed ? (
-                                                        <i className="fas fa-check text-success" style={{ fontSize: "11px" }}></i>
-                                                    ) : lessonLockStatus.locked ? null : (
+                                                    {lessonLockStatus.locked || isQuizPassed ? null : (
                                                         <i className="fas fa-clipboard-check text-warning" style={{ fontSize: "12px" }}></i>
                                                     )}
                                                 </div>
@@ -1725,8 +1777,15 @@ const LecturesTab = ({
                                                                     </small>
                                                                     {(() => {
                                                                         const hasScorm = Boolean(l.learning_module_info || l.learning_module || l.file_type === 'scorm');
-                                                                        const scormScore = l.learning_module_info?.score_raw;
-                                                                        if (hasScorm && scormScore !== undefined && scormScore !== null && Number(scormScore) > 0) {
+                                                                        const isActive = Boolean(variantItem && (
+                                                                            String(variantItem.variant_item_id || variantItem.id) === String(l.variant_item_id || l.id) ||
+                                                                            String(variantItem.id) === String(l.id)
+                                                                        ));
+                                                                        const scormScore = (isActive && variantItem?.learning_module_info?.score_raw !== undefined && variantItem?.learning_module_info?.score_raw !== null)
+                                                                            ? variantItem.learning_module_info.score_raw
+                                                                            : l.learning_module_info?.score_raw;
+
+                                                                        if (hasScorm && scormScore !== undefined && scormScore !== null && Number(scormScore) >= 0) {
                                                                             return (
                                                                                 <span 
                                                                                     className="badge px-3 py-1.5 rounded-pill fw-bold border shadow-xs d-inline-flex align-items-center gap-1.5 ms-1"
@@ -1734,7 +1793,7 @@ const LecturesTab = ({
                                                                                     title={`Nilai Modul SCORM: ${scormScore}`}
                                                                                 >
                                                                                     <i className="fas fa-award text-success"></i>
-                                                                                    <span>Skor: {scormScore}</span>
+                                                                                    <span>Skor: {Math.round(Number(scormScore))}</span>
                                                                                 </span>
                                                                             );
                                                                         }

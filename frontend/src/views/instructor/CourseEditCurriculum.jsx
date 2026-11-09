@@ -1460,17 +1460,22 @@ function SortableLessonItem({
                                             <div className="d-flex align-items-center justify-content-between mt-2 pt-1 border-top">
                                                 <button
                                                     type="button"
-                                                    className="btn btn-xs btn-outline-teal d-inline-flex align-items-center gap-1 py-1 px-2 shadow-xs"
+                                                    className="btn btn-xs btn-outline-teal d-inline-flex align-items-center justify-content-center gap-1 py-1 px-2 shadow-xs"
                                                     onClick={() => onPreviewScorm && onPreviewScorm(item)}
                                                     title="Uji coba pemutar SCORM interaktif"
-                                                    style={{ fontSize: "0.75rem" }}
+                                                    style={{ fontSize: "0.75rem", lineHeight: 1, verticalAlign: "middle" }}
                                                 >
-                                                    <i className="fas fa-play text-teal" style={{ fontSize: "10px" }}></i>
-                                                    <span className="fw-semibold">Uji Coba SCORM</span>
+                                                    <i className="fas fa-play text-teal" style={{ fontSize: "10px", lineHeight: 1 }}></i>
+                                                    <span className="fw-semibold" style={{ lineHeight: 1 }}>Uji Coba SCORM</span>
                                                 </button>
                                                 <div className="d-flex align-items-center gap-1">
-                                                    <label className="btn btn-xs btn-outline-secondary py-1 px-2 mb-0 shadow-xs" title="Ganti paket SCORM" style={{ fontSize: "0.725rem", cursor: "pointer" }}>
-                                                        <i className="fas fa-sync-alt me-1"></i>Ganti
+                                                    <label
+                                                        className="btn btn-xs btn-outline-secondary d-inline-flex align-items-center justify-content-center py-1 px-2 mb-0 shadow-xs"
+                                                        title="Ganti paket SCORM"
+                                                        style={{ fontSize: "0.725rem", cursor: "pointer", lineHeight: 1, verticalAlign: "middle" }}
+                                                    >
+                                                        <i className="fas fa-sync-alt me-1" style={{ fontSize: "0.7rem", lineHeight: 1 }}></i>
+                                                        <span style={{ lineHeight: 1 }}>Ganti</span>
                                                         <input
                                                             type="file"
                                                             accept=".zip,.h5p"
@@ -1480,12 +1485,13 @@ function SortableLessonItem({
                                                     </label>
                                                     <button
                                                         type="button"
-                                                        className="btn btn-xs btn-outline-danger py-1 px-2 shadow-xs"
+                                                        className="btn btn-xs btn-outline-danger d-inline-flex align-items-center justify-content-center py-1 px-2 shadow-xs"
                                                         title="Lepaskan modul SCORM dari materi ini"
                                                         onClick={handleDetachScorm}
-                                                        style={{ fontSize: "0.725rem" }}
+                                                        style={{ fontSize: "0.725rem", lineHeight: 1, verticalAlign: "middle" }}
                                                     >
-                                                        <i className="fas fa-unlink me-1"></i>Lepas
+                                                        <i className="fas fa-unlink me-1" style={{ fontSize: "0.7rem", lineHeight: 1 }}></i>
+                                                        <span style={{ lineHeight: 1 }}>Lepas</span>
                                                     </button>
                                                 </div>
                                             </div>

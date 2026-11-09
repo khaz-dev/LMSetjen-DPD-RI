@@ -18,6 +18,21 @@
     z-index: 99999 !important;
 }
 
+/* Ensure SweetAlert2 renders properly inside custom containers / Fullscreen elements */
+.module-player-page-container {
+    position: relative !important;
+}
+
+.module-player-page-container .swal2-container,
+:fullscreen .swal2-container,
+:-webkit-full-screen .swal2-container {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 99999 !important;
+}
+
 /* Ensure toast container is ALWAYS completely transparent with NO backdrop blur */
 body.swal2-toast-shown .swal2-container,
 .swal2-container:has(.swal2-toast),
@@ -296,24 +311,50 @@ body.swal2-toast-shown .swal2-container,
     color: #f43f5e !important;
     background: linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(251, 113, 133, 0.16) 100%) !important;
     box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12), 0 4px 12px rgba(244, 63, 94, 0.15) !important;
+    overflow: hidden !important;
 }
 
+/* swal2-x-mark wrapper: harus memenuhi seluruh area ikon dan flex-center */
+.swal2-popup.swal2-modal .swal2-icon.swal2-error .swal2-x-mark,
+.swal2-popup.swal2-modal .swal2-icon.swal2-icon-error .swal2-x-mark {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Kedua garis X: posisi absolut dari tengah menggunakan translate sehingga selalu terpusat */
 .swal2-popup.swal2-modal .swal2-icon.swal2-error [class^='swal2-x-mark-line'],
 .swal2-popup.swal2-modal .swal2-icon.swal2-icon-error [class^='swal2-x-mark-line'] {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
     height: 3px !important;
     width: 22px !important;
     background-color: #f43f5e !important;
-    top: 22px !important;
+    border-radius: 2px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 2 !important;
+    display: block !important;
 }
 
 .swal2-popup.swal2-modal .swal2-icon.swal2-error .swal2-x-mark-line-left,
 .swal2-popup.swal2-modal .swal2-icon.swal2-icon-error .swal2-x-mark-line-left {
-    left: 11px !important;
+    transform: translate(-50%, -50%) rotate(45deg) !important;
 }
 
 .swal2-popup.swal2-modal .swal2-icon.swal2-error .swal2-x-mark-line-right,
 .swal2-popup.swal2-modal .swal2-icon.swal2-icon-error .swal2-x-mark-line-right {
-    right: 11px !important;
+    transform: translate(-50%, -50%) rotate(-45deg) !important;
 }
 
 /* --- INFO ICON (swal2-icon-info) --- */

@@ -83,10 +83,13 @@ const LessonCompletionQuestionModal = ({
 
             const response = await API.post('/lesson-completion-question/answer/', payload);
 
+            const targetElement = document.fullscreenElement || document.querySelector('.video-player-container') || 'body';
+
             if (response.data.is_correct) {
                 // Answer is correct - show success and call callback
-                // ✨ PHASE 42.1: Fixed SweetAlert2 parameter - use customClass instead of confirmButtonClass
+                // ✨ Target fullscreenElement agar popup terlihat dalam mode fullscreen
                 Swal.fire({
+                    target: targetElement,
                     icon: 'success',
                     title: 'Jawaban Benar!',
                     text: 'Selamat! Anda berhasil menjawab pertanyaan. Pelajaran telah ditandai sebagai selesai.',
@@ -117,8 +120,9 @@ const LessonCompletionQuestionModal = ({
                     onAnswerWrong();
                 }
                 
-                // ✨ PHASE 42.1: Fixed SweetAlert2 parameter - use customClass instead of confirmButtonClass
+                // ✨ Target fullscreenElement agar popup terlihat dalam mode fullscreen
                 Swal.fire({
+                    target: targetElement,
                     icon: 'error',
                     title: 'Jawaban Salah',
                     text: 'Silakan coba lagi. Anda sekarang dapat mengakses video kembali untuk mempelajari ulang sebelum menjawab.',

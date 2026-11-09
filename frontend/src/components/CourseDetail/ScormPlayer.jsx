@@ -9,6 +9,8 @@ const ScormPlayer = ({
   handleMarkLessonAsCompleted,
   courseId,
   course,
+  onScoreUpdate,
+  fetchCourseDetail
 }) => {
   const [loading, setLoading] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
@@ -24,13 +26,18 @@ const ScormPlayer = ({
                    course?.course?.learning_module?.id ||
                    course?.learning_module?.id;
 
+  const targetCourseId = courseId || course?.course?.id || course?.id;
+  const targetVariantItemId = variantItem?.variant_item_id || variantItem?.id;
+
   const playerSrc = moduleId 
-    ? `/modules/${moduleId}/player/`
+    ? `/modules/${moduleId}/player/?course_id=${targetCourseId || ''}&variant_item_id=${targetVariantItemId || ''}`
     : (variantItem?.learning_module_info?.player_url || variantItem?.file);
 
   // Check if current lesson is already completed
   const isLessonAlreadyCompleted = useCallback(() => {
     if (variantItem?.is_completed) return true;
+    const scormStatus = variantItem?.learning_module_info?.lesson_status?.toLowerCase();
+    if (scormStatus === "passed" || scormStatus === "completed") return true;
     if (!course || !course.completed_lesson) return false;
     const targetVId = String(variantItem?.variant_item_id || variantItem?.id || "");
     const targetId = String(variantItem?.id || "");
@@ -168,16 +175,40 @@ const ScormPlayer = ({
     const handleMessage = (event) => {
       if (event.data?.type === 'SCORM_MODULE_STATUS') {
         const status = event.data.status?.toLowerCase();
+        const scoreVal = event.data?.score;
         if (status) setLessonStatus(status);
-        const wasAlreadyCompleted = event.data?.wasAlreadyCompleted || isLessonAlreadyCompleted();
-        if ((status === 'completed' || status === 'passed') && !wasAlreadyCompleted && handleMarkLessonAsCompleted) {
-          handleMarkLessonAsCompleted(variantItem?.variant_item_id || variantItem?.id, true);
+        if (scoreVal !== undefined && scoreVal !== null) {
+          setScore(Number(scoreVal) || 0);
         }
+
+        // Live update the parent CourseDetail curriculum & active variantItem
+        // Hanya update skor jika bukan aksi reset (untuk mencegah skor di sidebar jadi 0)
+        if (onScoreUpdate && event.data?.action !== 'reset') {
+          onScoreUpdate(targetVariantItemId, scoreVal, status);
+        }
+
+        if (status === 'completed' || status === 'passed') {
+          if (variantItem) variantItem.is_completed = true;
+          const alreadyDone = isLessonAlreadyCompleted();
+          if (!alreadyDone && handleMarkLessonAsCompleted) {
+            handleMarkLessonAsCompleted(targetVariantItemId, true, targetCourseId);
+          } else if (fetchCourseDetail) {
+            fetchCourseDetail(true);
+          }
+        }
+      } else if (event.data?.type === 'SCORM_MODULE_RESET') {
+        // Reset modul — JANGAN update skor di sidebar, hanya refresh data course di background
+        // agar is_completed / completed_lesson tetap sinkron dengan backend tanpa mengubah badge skor
+        if (fetchCourseDetail) {
+          fetchCourseDetail(true);
+        }
+      } else if (event.data?.type === 'SCORM_CLOSE_PLAYER' && onClose) {
+        onClose();
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [variantItem, course, handleMarkLessonAsCompleted, isLessonAlreadyCompleted]);
+  }, [variantItem, course, targetVariantItemId, targetCourseId, handleMarkLessonAsCompleted, isLessonAlreadyCompleted, onClose, onScoreUpdate, fetchCourseDetail]);
 
   return (
     <div 

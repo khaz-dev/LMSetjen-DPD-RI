@@ -14,17 +14,18 @@ import mantaHappyWebp from '../../assets/avatar/manta-happy.webp';
 const WORD_BANK = {
     // Wave 1: Kata-kata pendek & bersahabat (3 - 4 huruf)
     easy: [
-        'DPD', 'BAP', 'PURT', 'RUU', 'ASN', 'SENAT', 'DEWAN', 'KUIS', 'MODUL',
-        'LAUT', 'IKAN', 'PARI', 'AIR', 'DIVE', 'FAST', 'SWIM', 'WAVE', 'DEEP',
-        'RADAR', 'SONAR', 'SHARK', 'SPEED', 'KELAS', 'NILAI', 'TUTOR', 'COACH'
+        'DPD', 'BAP', 'PURT', 'RUU', 'ASN', 'DEWAN', 'KUIS', 'MODUL',
+        'MANTA', 'ASIH', 'HAK', 'ERA', 'IBA', 'KAF', 'SAH', 'AKAL', 'AKSI',
+        'ASAS', 'BAKU', 'DATA', 'ETOS', 'KAJI', 'VISI', 'SANI', 'POLA', 'IDP',
+        'NUSA', 'SDM', 'OKK'
     ],
     // Wave 2-3: Kata-kata sedang keparlemenan & nilai ASN (5 - 7 huruf)
     medium: [
         'SENATOR', 'SIDANG', 'KOMITE', 'PLENO', 'DAERAH', 'BELAJAR', 'KURSUS',
         'MATERI', 'LENCANA', 'INOVASI', 'DIGITAL', 'PORTAL', 'SCORM', 'VIDEO',
         'HARMONIS', 'LOYAL', 'ADAPTIF', 'AMANAH', 'SINERGI', 'DISIPLIN', 'KINERJA',
-        'SAMUDRA', 'GELOMBANG', 'TERUMBU', 'KARANG', 'MUTIARA', 'TANGKAS', 'REFLEKS',
-        'JUARA', 'PACIFIC', 'ATLANTIC', 'DEFENSE', 'ATTACK', 'VICTORY'
+        'MAGER', 'GABUT', 'SOLID!!', 'LOGIS', 'NALAR', 'OPINI', 'SAHIH',
+        'JUARA', 'DIKSI', 'FASID', 'ANOMALI', 'INOVASI', 'EMPIRIS', 'SENATOR'
     ],
     // Wave 4+: Kata-kata panjang, nilai BerAKHLAK, tata kelola & tantangan tinggi (8 - 14 huruf)
     hard: [
@@ -32,8 +33,10 @@ const WORD_BANK = {
         'LEGISLASI', 'ASPIRASI', 'PARLEMEN', 'SEKRETARIAT', 'PROTOKOL', 'REGULASI',
         'KEBIJAKAN', 'DEMOKRASI', 'KONSTITUSI', 'PROFESIONAL', 'REFORMASI',
         'BIROKRASI', 'PELAYANAN', 'SERTIFIKAT', 'KOMPETENSI', 'KNOWLEDGE',
-        'PRESTASI', 'KEDALAMAN', 'KAPALSELAM', 'BIOSONAR', 'EKOSISTEM',
-        'KONTRIBUTIF', 'LEGISLATIF', 'AKUNTABILITAS'
+        'PRESTASI', 'SAYAAKANLAWAN', 'ANTEKANTEKASING', 'JANGANYADEKYA', 'ILOVEYOU',
+        'KONTRIBUTIF', 'LEGISLATIF', 'AKUNTABILITAS', 'KAPALLAUT', 'MENYALAABANGKU', 'SIMANTAP',
+        'SEKRETARIAT', 'PERWAKILAN'
+
     ]
 };
 
@@ -84,7 +87,7 @@ class ArcadeAudioEngine {
             }
         }
         if (this.ctx && this.ctx.state === 'suspended') {
-            this.ctx.resume().catch(() => {});
+            this.ctx.resume().catch(() => { });
         }
     }
 
@@ -121,7 +124,7 @@ class ArcadeAudioEngine {
 
             // Tangga Nada Pentatonik Aquatik
             const notes = [
-                130.81, 155.56, 174.61, 196.00, 233.08, 
+                130.81, 155.56, 174.61, 196.00, 233.08,
                 261.63, 311.13, 349.23, 392.00, 466.16, 523.25
             ];
 
@@ -180,7 +183,7 @@ class ArcadeAudioEngine {
             };
 
             scheduleBGM();
-        } catch (_) {}
+        } catch (_) { }
     }
 
     stopBGM() {
@@ -190,13 +193,13 @@ class ArcadeAudioEngine {
             this.bgmTimer = null;
         }
         if (this.droneOsc) {
-            try { this.droneOsc.stop(); } catch (_) {}
+            try { this.droneOsc.stop(); } catch (_) { }
             this.droneOsc = null;
         }
         if (this.bgmGain && this.ctx) {
             try {
                 this.bgmGain.gain.setValueAtTime(0, this.ctx.currentTime);
-            } catch (_) {}
+            } catch (_) { }
         }
     }
 
@@ -219,7 +222,7 @@ class ArcadeAudioEngine {
             gain.connect(this.ctx.destination);
             osc.start();
             osc.stop(this.ctx.currentTime + 0.06);
-        } catch (_) {}
+        } catch (_) { }
     }
 
     playWordExplode() {
@@ -243,7 +246,7 @@ class ArcadeAudioEngine {
                 osc.start(this.ctx.currentTime + i * 0.03);
                 osc.stop(this.ctx.currentTime + i * 0.03 + 0.15);
             });
-        } catch (_) {}
+        } catch (_) { }
     }
 
     playWrongKey() {
@@ -264,7 +267,7 @@ class ArcadeAudioEngine {
             gain.connect(this.ctx.destination);
             osc.start();
             osc.stop(this.ctx.currentTime + 0.09);
-        } catch (_) {}
+        } catch (_) { }
     }
 
     playLifeLost() {
@@ -285,7 +288,7 @@ class ArcadeAudioEngine {
             gain.connect(this.ctx.destination);
             osc.start();
             osc.stop(this.ctx.currentTime + 0.28);
-        } catch (_) {}
+        } catch (_) { }
     }
 
     playGameOver() {
@@ -308,7 +311,7 @@ class ArcadeAudioEngine {
                 osc.start(this.ctx.currentTime + idx * 0.12);
                 osc.stop(this.ctx.currentTime + idx * 0.12 + 0.2);
             });
-        } catch (_) {}
+        } catch (_) { }
     }
 }
 
@@ -864,7 +867,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                 setLeaderboard(res.data.leaderboard);
                 try {
                     localStorage.setItem('mantatype_local_leaderboard', JSON.stringify(res.data.leaderboard));
-                } catch (_) {}
+                } catch (_) { }
             }
         } catch (err) {
             console.warn('Leaderboard fallback ke localStorage:', err);
@@ -873,7 +876,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                 if (localData) {
                     setLeaderboard(JSON.parse(localData));
                 }
-            } catch (_) {}
+            } catch (_) { }
         } finally {
             setIsLoadingLeaderboard(false);
         }
@@ -930,7 +933,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
             setLeaderboard(updated);
             try {
                 localStorage.setItem('mantatype_local_leaderboard', JSON.stringify(updated));
-            } catch (_) {}
+            } catch (_) { }
             setScoreSubmitted(true);
             setPlayerRankInfo({ rank: 1, is_top_10: true });
         } finally {
@@ -941,10 +944,10 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
     const handleToggleFullscreen = () => {
         if (!containerRef.current) return;
         if (!document.fullscreenElement) {
-            containerRef.current.requestFullscreen().catch(() => {});
+            containerRef.current.requestFullscreen().catch(() => { });
             setIsFullscreen(true);
         } else {
-            document.exitFullscreen().catch(() => {});
+            document.exitFullscreen().catch(() => { });
             setIsFullscreen(false);
         }
     };
@@ -1464,15 +1467,15 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
     const accuracyVal = totalKeystrokes > 0 ? ((correctKeystrokes / totalKeystrokes) * 100).toFixed(1) : '100.0';
 
     return (
-        <div 
-            className="mantatype-overlay" 
-            role="dialog" 
-            aria-modal="true" 
+        <div
+            className="mantatype-overlay"
+            role="dialog"
+            aria-modal="true"
             aria-label="MantaType Arcade Game"
             onClick={() => audio.init()}
         >
-            <div 
-                ref={containerRef} 
+            <div
+                ref={containerRef}
                 tabIndex={0}
                 className={`mantatype-modal ${isFullscreen ? 'mantatype-fullscreen' : ''}`}
                 style={{ outline: 'none' }}
@@ -1523,7 +1526,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                     {/* TOMBOL AKSI ATAS */}
                     <div className="mantatype-header-actions">
                         {/* Audio Mute / Unmute */}
-                        <button 
+                        <button
                             className={`mantatype-btn-icon ${!isMuted ? 'active-audio' : ''}`}
                             onClick={handleToggleMute}
                             title={isMuted ? 'Nyalakan Musik & Suara Bawah Air' : 'Matikan Suara'}
@@ -1533,7 +1536,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                         </button>
 
                         {/* Fullscreen Toggle */}
-                        <button 
+                        <button
                             className="mantatype-btn-icon"
                             onClick={handleToggleFullscreen}
                             title={isFullscreen ? 'Keluar Layar Penuh' : 'Mode Layar Penuh (Fullscreen)'}
@@ -1558,7 +1561,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                         )}
 
                         {/* Tombol Tutup */}
-                        <button 
+                        <button
                             className="mantatype-btn-close"
                             onClick={() => {
                                 audio.stopBGM();
@@ -1616,8 +1619,8 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                                     <button className="mantatype-btn-primary pulse-btn" onClick={startGame}>
                                         🚀 Mulai Menyelam (Start Game)
                                     </button>
-                                    <button 
-                                        className="mantatype-btn-secondary" 
+                                    <button
+                                        className="mantatype-btn-secondary"
                                         onClick={() => {
                                             fetchLeaderboard();
                                             setGameState('RANKED');
@@ -1643,8 +1646,8 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                                     <button className="mantatype-btn-secondary" onClick={startGame}>
                                         🔄 Ulangi Dari Awal
                                     </button>
-                                    <button 
-                                        className="mantatype-btn-secondary" 
+                                    <button
+                                        className="mantatype-btn-secondary"
                                         onClick={() => {
                                             fetchLeaderboard();
                                             setGameState('RANKED');
@@ -1691,7 +1694,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                                         {currentUser ? (
                                             <div className="mantatype-auth-player-info">
                                                 <span>Pemain Terverifikasi: <strong>{currentUser.full_name || currentUser.username}</strong></span>
-                                                <button 
+                                                <button
                                                     className="mantatype-btn-primary"
                                                     onClick={handleSubmitScore}
                                                     disabled={isSubmittingScore}
@@ -1714,8 +1717,8 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                                                         onChange={(e) => setGuestPlayerName(e.target.value)}
                                                         required
                                                     />
-                                                    <button 
-                                                        type="submit" 
+                                                    <button
+                                                        type="submit"
                                                         className="mantatype-btn-primary"
                                                         disabled={isSubmittingScore}
                                                     >
