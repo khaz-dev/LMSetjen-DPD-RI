@@ -156,168 +156,180 @@ const LessonCompletionQuestionModal = ({
 
     return (
         <div className="lesson-completion-modal-overlay">
-            <div className="lesson-completion-modal">
-                <div className="modal-header">
-                    <div>
-                        <h5>
-                            <i className="fas fa-question-circle me-2"></i>
-                            Verifikasi Penyelesaian Pelajaran
-                        </h5>
-                        <small>
-                            Jawab pertanyaan di bawah untuk menyelesaikan pelajaran ini
-                        </small>
+            <div className="lesson-completion-modal lesson-completion-modal-card">
+                {/* Header */}
+                <div className="lcm-header">
+                    <div className="d-flex align-items-center gap-2">
+                        <div className="lcm-header-icon">
+                            <i className="fas fa-clipboard-check"></i>
+                        </div>
+                        <div className="flex-grow-1 min-w-0">
+                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                <span className="lcm-badge-tag">
+                                    <i className="fas fa-shield-alt me-1"></i>Verifikasi Materi
+                                </span>
+                                <h6 className="lcm-title mb-0">Verifikasi Penyelesaian Pelajaran</h6>
+                            </div>
+                            <small className="lcm-subtitle">
+                                Jawab pertanyaan berikut untuk memverifikasi pemahaman dan menyelesaikan materi ini.
+                            </small>
+                        </div>
                     </div>
-                    {/* ✨ PHASE 11.158: Close button removed - user must answer or go back to video */}
                 </div>
 
-                <div className="modal-body">
-                    {/* Question */}
-                    <div className="question-section">
-                        <h6 className="fw-bold text-dark mb-3">
-                            <span className="badge bg-info me-2">Pertanyaan</span>
-                        </h6>
-                        <p className="lead text-dark">{question.question_text}</p>
+                {/* Body */}
+                <div className="lcm-body">
+                    <div className="lcm-body-container">
+                        {/* Question Card */}
+                        <div className="lcm-question-box">
+                            <div className="lcm-question-label">
+                                <i className="fas fa-question-circle text-teal me-1"></i>
+                                Pertanyaan
+                            </div>
+                            <div className="lcm-question-text">
+                                {question.question_text}
+                            </div>
+                        </div>
+
+                        {/* Instruction hint */}
+                        <div className="lcm-instruction-bar">
+                            <span className="lcm-instruction-text">
+                                {question.question_type === 'multiple_choice' && (
+                                    <><i className="fas fa-dot-circle me-1 text-teal"></i>Pilih salah satu jawaban yang paling tepat:</>
+                                )}
+                                {question.question_type === 'multi_select' && (
+                                    <><i className="fas fa-check-square me-1 text-teal"></i>Pilih semua jawaban yang benar (dapat lebih dari satu):</>
+                                )}
+                                {['short_answer', 'fill_in_blank'].includes(question.question_type) && (
+                                    <><i className="fas fa-pen me-1 text-teal"></i>Ketikkan jawaban Anda pada kolom di bawah:</>
+                                )}
+                            </span>
+                        </div>
+
+                        {/* Multiple Choice Options */}
+                        {question.question_type === 'multiple_choice' && (
+                            <div className="lcm-choices-list">
+                                {question.choices.map((choice, index) => {
+                                    const isSelected = selectedAnswer === choice.choice_id;
+                                    const letter = String.fromCharCode(65 + index); // A, B, C, D...
+                                    return (
+                                        <label
+                                            key={choice.choice_id}
+                                            className={`lcm-choice-item ${isSelected ? 'selected' : ''}`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="lcm-multiple-choice"
+                                                value={choice.choice_id}
+                                                checked={isSelected}
+                                                onChange={(e) => setSelectedAnswer(e.target.value)}
+                                                disabled={isSubmitting}
+                                                className="lcm-hidden-input"
+                                            />
+                                            <span className="lcm-choice-letter">{letter}</span>
+                                            <span className="lcm-choice-content">{choice.choice_text}</span>
+                                            <span className="lcm-choice-radio-indicator">
+                                                <i className={`fas ${isSelected ? 'fa-check-circle text-teal' : 'fa-circle-notch text-muted opacity-50'}`}></i>
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Multi-Select Options */}
+                        {question.question_type === 'multi_select' && (
+                            <div className="lcm-choices-list">
+                                {question.choices.map((choice, index) => {
+                                    const isSelected = selectedMultiAnswers.includes(choice.choice_id);
+                                    const letter = String.fromCharCode(65 + index);
+                                    return (
+                                        <label
+                                            key={choice.choice_id}
+                                            className={`lcm-choice-item ${isSelected ? 'selected' : ''}`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedMultiAnswers([...selectedMultiAnswers, choice.choice_id]);
+                                                    } else {
+                                                        setSelectedMultiAnswers(
+                                                            selectedMultiAnswers.filter(id => id !== choice.choice_id)
+                                                        );
+                                                    }
+                                                }}
+                                                disabled={isSubmitting}
+                                                className="lcm-hidden-input"
+                                            />
+                                            <span className="lcm-choice-letter">{letter}</span>
+                                            <span className="lcm-choice-content">{choice.choice_text}</span>
+                                            <span className="lcm-choice-radio-indicator">
+                                                <i className={`fas ${isSelected ? 'fa-check-square text-teal' : 'fa-square text-muted opacity-50'}`}></i>
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Short Answer / Fill in Blank */}
+                        {['short_answer', 'fill_in_blank'].includes(question.question_type) && (
+                            <div className="lcm-text-answer-box">
+                                <textarea
+                                    className="form-control lcm-textarea"
+                                    rows="2"
+                                    value={shortAnswer}
+                                    onChange={(e) => setShortAnswer(e.target.value)}
+                                    placeholder="Ketikkan jawaban Anda di sini..."
+                                    disabled={isSubmitting}
+                                />
+                                {question.question_type === 'fill_in_blank' && (
+                                    <small className="text-muted d-block mt-1" style={{ fontSize: '0.72rem' }}>
+                                        <i className="fas fa-info-circle me-1 text-teal"></i>
+                                        Pemeriksaan {question.case_sensitive ? 'memperhatikan' : 'tidak memperhatikan'} huruf besar/kecil.
+                                    </small>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="lcm-footer">
+                    <div className="lcm-footer-hint">
+                        <i className="fas fa-info-circle text-teal me-1"></i>
+                        <span>Wajib dijawab dengan benar untuk menyelesaikan pelajaran</span>
                     </div>
 
-                    {/* Multiple Choice */}
-                    {question.question_type === 'multiple_choice' && (
-                        <div className="choices-section">
-                            <h6 className="fw-bold text-dark mb-3">
-                                <span className="badge bg-secondary me-2">
-                                    Pilih satu jawaban
-                                </span>
-                            </h6>
-                            <div className="choice-options">
-                                {question.choices.map((choice, index) => (
-                                    <label
-                                        key={choice.choice_id}
-                                        className={`choice-radio p-3 rounded mb-2 cursor-pointer ${
-                                            selectedAnswer === choice.choice_id ? 'selected' : ''
-                                        }`}
-                                        style={{
-                                            backgroundColor: selectedAnswer === choice.choice_id ? '#e7f3ff' : 'white',
-                                            border: selectedAnswer === choice.choice_id ? '2px solid #0f766e' : '1px solid #dee2e6',
-                                            cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                                            opacity: isSubmitting ? 0.6 : 1,
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="multiple-choice"
-                                            value={choice.choice_id}
-                                            checked={selectedAnswer === choice.choice_id}
-                                            onChange={(e) => setSelectedAnswer(e.target.value)}
-                                            disabled={isSubmitting}
-                                            style={{ marginRight: '0.75rem' }}
-                                        />
-                                        <span className="choice-text">{choice.choice_text}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Multi-Select */}
-                    {question.question_type === 'multi_select' && (
-                        <div className="choices-section">
-                            <h6 className="fw-bold text-dark mb-3">
-                                <span className="badge bg-secondary me-2">
-                                    Pilih semua jawaban yang benar
-                                </span>
-                            </h6>
-                            <div className="choice-options">
-                                {question.choices.map((choice, index) => (
-                                    <label
-                                        key={choice.choice_id}
-                                        className={`choice-checkbox p-3 rounded mb-2 cursor-pointer ${
-                                            selectedMultiAnswers.includes(choice.choice_id) ? 'selected' : ''
-                                        }`}
-                                        style={{
-                                            backgroundColor: selectedMultiAnswers.includes(choice.choice_id) ? '#f0f8f4' : 'white',
-                                            border: selectedMultiAnswers.includes(choice.choice_id) ? '2px solid #28a745' : '1px solid #dee2e6',
-                                            cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                                            opacity: isSubmitting ? 0.6 : 1,
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedMultiAnswers.includes(choice.choice_id)}
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setSelectedMultiAnswers([...selectedMultiAnswers, choice.choice_id]);
-                                                } else {
-                                                    setSelectedMultiAnswers(
-                                                        selectedMultiAnswers.filter(id => id !== choice.choice_id)
-                                                    );
-                                                }
-                                            }}
-                                            disabled={isSubmitting}
-                                            style={{ marginRight: '0.75rem' }}
-                                        />
-                                        <span className="choice-text">{choice.choice_text}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Short Answer / Fill in Blank */}
-                    {['short_answer', 'fill_in_blank'].includes(question.question_type) && (
-                        <div className="text-answer-section">
-                            <h6 className="fw-bold text-dark mb-3">
-                                <span className="badge bg-secondary me-2">
-                                    Masukkan jawaban
-                                </span>
-                            </h6>
-                            <textarea
-                                className="form-control form-control-lg"
-                                rows="3"
-                                value={shortAnswer}
-                                onChange={(e) => setShortAnswer(e.target.value)}
-                                placeholder="Ketikkan jawaban Anda di sini..."
+                    <div className="lcm-footer-actions">
+                        {/* "Pelajari Kembali" button appears when user answered wrong */}
+                        {hasAnsweredWrong && (
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary lcm-btn-secondary"
+                                onClick={() => {
+                                    if (onCloseModal) {
+                                        onCloseModal();
+                                    }
+                                }}
                                 disabled={isSubmitting}
-                                style={{ fontSize: '1rem' }}
-                            />
-                            {question.question_type === 'fill_in_blank' && (
-                                <small className="text-muted d-block mt-2">
-                                    <i className="fas fa-info-circle me-1"></i>
-                                    Pemeriksaan {question.case_sensitive ? 'sangat' : 'tidak'} memperhatikan huruf besar/kecil
-                                </small>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                <div className="modal-footer">
-                    {/* ✨ PHASE 11.171: "Pelajaran Kembali" button appears when user answered wrong */}
-                    {hasAnsweredWrong && (
+                            >
+                                <i className="fas fa-undo me-1"></i>
+                                Pelajari Kembali
+                            </button>
+                        )}
                         <button
                             type="button"
-                            className="btn btn-primary"
-                            onClick={() => {
-                                if (onCloseModal) {
-                                    onCloseModal();
-                                }
-                            }}
-                            disabled={isSubmitting}
+                            className="btn btn-sm lcm-btn-primary"
+                            onClick={handleSubmitAnswer}
+                            disabled={!isAnswered() || isSubmitting}
                         >
-                            <i className="fas fa-arrow-left me-2"></i>
-                            Pelajari Kembali
+                            <i className={`fas ${isSubmitting ? 'fa-spinner fa-spin' : 'fa-check'} me-1`}></i>
+                            {isSubmitting ? 'Memproses...' : 'Kirim Jawaban'}
                         </button>
-                    )}
-                    {/* ✨ PHASE 11.158: Skip button removed - user MUST answer to complete lesson */}
-                    <button
-                        type="button"
-                        className="btn btn-success btn-lg"
-                        onClick={handleSubmitAnswer}
-                        disabled={!isAnswered() || isSubmitting}
-                        style={{ marginLeft: 'auto' }}
-                    >
-                        <i className={`fas ${isSubmitting ? 'fa-spinner fa-spin' : 'fa-check'} me-1`}></i>
-                        {isSubmitting ? 'Memproses...' : 'Kirim Jawaban'}
-                    </button>
+                    </div>
                 </div>
             </div>
         </div>

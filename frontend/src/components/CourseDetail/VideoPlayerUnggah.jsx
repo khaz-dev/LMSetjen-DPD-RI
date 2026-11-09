@@ -587,27 +587,6 @@ const VideoPlayerUnggah = forwardRef(({
 
             {/* Content */}
             <div className="video-player-content">
-                {/* Thin red progress bar at top - only visible while video is restricted with overlay blocker */}
-                {!allowVideoAccess && (
-                    <div 
-                        className="video-player-top-progress-bar-container"
-                        title={`Progress Video: ${Math.min(100, Math.max(0, Math.round(
-                            (duration > 0 ? (currentTime / duration) * 100 : progressPercentage) || 0
-                        )))}%`}
-                    >
-                        <div 
-                            className="video-player-top-progress-bar"
-                            style={{ 
-                                width: `${Math.min(100, Math.max(0, (
-                                    duration > 0 
-                                        ? (currentTime / duration) * 100 
-                                        : (progressPercentage || 0)
-                                )))}%` 
-                            }}
-                        />
-                    </div>
-                )}
-
                 {loadError ? (
                     <div className="video-player-error-container">
                         <i className="fas fa-exclamation-triangle video-player-error-icon"></i>
@@ -638,6 +617,27 @@ const VideoPlayerUnggah = forwardRef(({
                             }
                         }}
                     >
+                        {/* Thin red progress bar at top of video - visible in both normal & fullscreen mode while restricted */}
+                        {!allowVideoAccess && (
+                            <div 
+                                className="video-player-top-progress-bar-container"
+                                title={`Progress Video: ${Math.min(100, Math.max(0, Math.round(
+                                    (duration > 0 ? (currentTime / duration) * 100 : progressPercentage) || 0
+                                )))}%`}
+                            >
+                                <div 
+                                    className="video-player-top-progress-bar"
+                                    style={{ 
+                                        width: `${Math.min(100, Math.max(0, (
+                                            duration > 0 
+                                                ? (currentTime / duration) * 100 
+                                                : (progressPercentage || 0)
+                                        )))}%` 
+                                    }}
+                                />
+                            </div>
+                        )}
+
                         {/* ✨ PHASE 4.142: Overlay Blocker - Blocks native video controls */}
                         {/* ✨ PHASE 11.170: Hidden when allowVideoAccess is true (user answered wrong) */}
                         {/* ✨ PHASE 11.177: Also hidden when lesson completion modal is showing (student watched 100%) */}
