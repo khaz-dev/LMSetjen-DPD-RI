@@ -1979,7 +1979,8 @@ class CourseEditSerializer(serializers.ModelSerializer):
         # ✨ PHASE 4.85: Added "features", "requirements", "learning_outcomes"
         # ✨ PHASE 7.13: Added "qa_count" to CourseEditSerializer
         # ✨ PHASE 7.5 FIX: Added "tags" to return saved tags in edit form
-        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "games", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
+        # ✨ PHASE 7.6 FIX: Added "target_audience" and "course_type" for live course review
+        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "course_type", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "games", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
         model = api_models.Course
     
     def get_quizzes(self, obj):

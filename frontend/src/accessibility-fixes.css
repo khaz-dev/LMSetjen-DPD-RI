@@ -168,8 +168,8 @@ textarea {
 }
 
 /* Checkboxes and radio buttons */
-input[type="checkbox"],
-input[type="radio"] {
+input[type="checkbox"]:not(.lcm-hidden-input),
+input[type="radio"]:not(.lcm-hidden-input) {
   min-width: 24px;
   min-height: 24px;
   margin: 12px; /* Total touch target: 48x48px */

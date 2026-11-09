@@ -1,1193 +1,828 @@
 /**
  * Admin Course Review Detail - Styling
- * ✨ PHASE 4.37+: Dedicated full course review page for comprehensive admin evaluation
- * Provides detailed view of course content, curriculum, quizzes, and approval controls
+ * Compact, High-Density, Modern Design for LMSetjen DPD RI
  */
 
-/* ========================================
-   Container & Layout
-   ======================================== */
-.admin-dashboard {
-    background: transparent !important;
-    min-height: 100vh;
+:root {
+    --acrd-teal: #0d9488;
+    --acrd-teal-dark: #0f766e;
+    --acrd-teal-light: #14b8a6;
+    --acrd-teal-subtle: #f0fdfa;
+    --acrd-teal-border: #ccfbf1;
+    --acrd-slate-dark: #0f172a;
+    --acrd-slate-text: #1e293b;
+    --acrd-slate-muted: #64748b;
+    --acrd-slate-light: #f8fafc;
+    --acrd-border: #e2e8f0;
+    --acrd-radius-sm: 6px;
+    --acrd-radius-md: 10px;
+    --acrd-radius-lg: 14px;
+    --acrd-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --acrd-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
 }
 
-
-.acrd-container {
-    width: 100%;
-    margin-bottom: 40px;
+.acrd-page-bg {
+    background-color: #f8fafc;
+    min-height: calc(100vh - 120px);
+    color: var(--acrd-slate-text);
 }
 
-.acrd-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-bottom: 20px;
-    border-bottom: 2px solid #f0f0f0;
-    gap: 20px;
-    position: relative;
+/* ==========================================================================
+   Top Navigation & Breadcrumb
+   ========================================================================== */
+.acrd-topbar {
+    background: transparent;
 }
 
-.acrd-header button {
-    position: absolute;
-    left: 0;
-    min-width: 120px;
-}
-
-.acrd-header .acrd-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0;
-    white-space: nowrap;
-    flex: 1;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.acrd-title {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 0;
-    display: flex;
-    align-items: center;
-}
-
-/* Override title styling in header context - highest specificity */
-.acrd-header .acrd-title {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-}
-
-.acrd-title i {
-    font-size: 1rem;
-    margin-right: 8px;
-    color: #0d9488;
-}
-
-/* ========================================
-   Card Styles
-   ======================================== */
-
-.acrd-card {
-    background: white;
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 1px solid #f0f0f0;
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
-
-.acrd-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    border-color: #e0e0e0;
-}
-
-/* ========================================
-   Course Header Card
-   ======================================== */
-
-.acrd-course-header {
-    background: white;
-    border: 1px solid #f0f0f0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.acrd-course-header:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    border-color: #e0e0e0;
-}
-
-.acrd-course-header .row {
-    margin: 0;
-    padding: 0;
-}
-
-.acrd-course-image {
-    width: 100%;
-    height: 250px;
-    object-fit: cover;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: transform 0.3s ease;
-}
-
-.acrd-course-image:hover {
-    transform: scale(1.02);
-}
-
-.acrd-course-info {
-    padding: 20px 0;
-}
-
-.acrd-course-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-    line-height: 1.4;
-}
-
-/* ✨ PHASE 7.5 FIX: Course tags styling */
-.acrd-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #e8eef5;
-}
-
-.acrd-tags .badge {
-    font-size: 0.85rem;
-    padding: 0.4rem 0.75rem;
+.acrd-back-btn {
+    border-radius: var(--acrd-radius-sm);
     font-weight: 500;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.acrd-meta-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.acrd-meta-item {
-    display: flex;
-    align-items: center;
-    font-size: 0.95rem;
-    color: #555;
-}
-
-.acrd-meta-item i {
-    font-size: 1.1rem;
-}
-
-.acrd-meta-item strong {
-    color: #2c3e50;
-}
-
-.acrd-meta-item span {
-    color: #0d9488;
-    font-weight: 500;
-}
-
-.acrd-course-stats {
-    display: flex;
-    gap: 20px;
-    padding: 20px 0;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-}
-
-.acrd-stat {
-    flex: 1;
-    text-align: center;
-    padding: 15px;
-    background: rgba(102, 126, 234, 0.05);
-    border-radius: 8px;
-}
-
-.acrd-stat-number {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #0d9488;
-    line-height: 1;
-}
-
-.acrd-stat-label {
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 8px;
-    font-weight: 500;
-}
-
-.acrd-ratings {
-    padding: 12px 16px;
-    background: rgba(255, 193, 7, 0.1);
-    border-radius: 8px;
-    width: fit-content;
-}
-
-/* ========================================
-   Section Styles
-   ======================================== */
-
-.acrd-section-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #0d9488;
-}
-
-.acrd-section-title i {
-    color: #0d9488;
-    margin-right: 8px;
-}
-
-.acrd-description {
-    font-size: 0.95rem;
-    line-height: 1.7;
-    color: #555;
-    margin: 0;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.02);
-    border-left: 4px solid #0d9488;
-    border-radius: 4px;
-    word-break: break-word;
-}
-
-/* Styling for HTML content within description (from rich text editor) */
-.acrd-description h1,
-.acrd-description h2,
-.acrd-description h3,
-.acrd-description h4,
-.acrd-description h5,
-.acrd-description h6 {
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-    color: #2c3e50;
-    font-weight: 700;
-    line-height: 1.3;
-}
-
-.acrd-description h1 {
-    font-size: 1.75rem;
-}
-
-.acrd-description h2 {
-    font-size: 1.5rem;
-}
-
-.acrd-description h3 {
-    font-size: 1.25rem;
-}
-
-.acrd-description h4 {
-    font-size: 1.1rem;
-}
-
-.acrd-description h5 {
-    font-size: 1rem;
-}
-
-.acrd-description h6 {
-    font-size: 0.95rem;
-}
-
-.acrd-description p {
-    margin-bottom: 1rem;
-    color: #555;
-    line-height: 1.7;
-}
-
-.acrd-description ul,
-.acrd-description ol {
-    margin-bottom: 1rem;
-    margin-left: 1.5rem;
-    padding-left: 0;
-}
-
-.acrd-description li {
-    margin-bottom: 0.5rem;
-    color: #555;
-}
-
-.acrd-description blockquote {
-    margin: 1.5rem 0;
-    padding-left: 1rem;
-    border-left: 4px solid #0d9488;
-    color: #666;
-    font-style: italic;
-}
-
-.acrd-description strong,
-.acrd-description b {
-    color: #2c3e50;
-    font-weight: 700;
-}
-
-.acrd-description em,
-.acrd-description i {
-    font-style: italic;
-}
-
-.acrd-description code {
-    background: rgba(0, 0, 0, 0.05);
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-family: 'Monaco', 'Courier New', monospace;
-    font-size: 0.9rem;
-    color: #d63384;
-}
-
-.acrd-description pre {
-    background: rgba(0, 0, 0, 0.05);
-    padding: 1rem;
-    border-radius: 4px;
-    overflow-x: auto;
-    margin-bottom: 1rem;
-}
-
-.acrd-description pre code {
-    padding: 0;
-    color: #555;
-}
-
-.acrd-description table {
-    width: 100%;
-    margin-bottom: 1rem;
-    border-collapse: collapse;
-}
-
-.acrd-description table th,
-.acrd-description table td {
-    border: 1px solid #ddd;
-    padding: 8px 12px;
-    text-align: left;
-}
-
-.acrd-description table th {
-    background: #f5f5f5;
-    color: #2c3e50;
-    font-weight: 700;
-}
-
-.acrd-description a {
-    color: #0d9488;
-    text-decoration: none;
+    font-size: 0.825rem;
+    padding: 0.35rem 0.75rem;
     transition: all 0.2s ease;
 }
 
-.acrd-description a:hover {
-    color: #0f766e;
-    text-decoration: underline;
+.acrd-back-btn:hover {
+    background-color: #e2e8f0;
+    color: #0f172a;
 }
 
-.acrd-description img {
-    max-width: 100%;
-    height: auto;
-    margin: 1rem 0;
+.acrd-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 0;
+    padding: 0;
+    font-size: 0.825rem;
+    line-height: 1;
+}
+
+.acrd-breadcrumb .breadcrumb-item {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    color: var(--acrd-slate-muted);
+}
+
+.acrd-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    color: #94a3b8;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.acrd-breadcrumb a {
+    color: var(--acrd-slate-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.acrd-breadcrumb a:hover {
+    color: var(--acrd-teal-dark);
+}
+
+.acrd-breadcrumb .breadcrumb-item.active {
+    color: var(--acrd-slate-text);
+    font-weight: 600;
+}
+
+.acrd-breadcrumb-title {
+    display: inline-block;
+    max-width: 380px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    line-height: 1.25;
+}
+
+/* Status Pill */
+.acrd-status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.775rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.acrd-status-published {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.acrd-status-review {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+.acrd-status-draft {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.acrd-status-rejected {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.acrd-status-disabled {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.acrd-status-default {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+/* ==========================================================================
+   Hero Banner Card (High-Density, Minimal Padding)
+   ========================================================================== */
+.acrd-hero-card {
+    background: #ffffff;
+    border: 1px solid var(--acrd-border);
+    border-radius: var(--acrd-radius-md);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--acrd-shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.acrd-hero-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--acrd-teal) 0%, var(--acrd-teal-dark) 100%);
+}
+
+.acrd-thumb-wrapper {
+    position: relative;
+    width: 140px;
+    height: 90px;
+    border-radius: var(--acrd-radius-sm);
+    overflow: hidden;
+    background: #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.acrd-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.acrd-thumb-wrapper:hover .acrd-thumb-img {
+    transform: scale(1.05);
+}
+
+.acrd-thumb-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(13, 148, 136, 0.9);
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: all 0.2s ease;
+}
+
+.acrd-thumb-play-btn:hover {
+    background: var(--acrd-teal-dark);
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.acrd-hero-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--acrd-slate-dark);
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+}
+
+.acrd-instructor-line {
+    font-size: 0.85rem;
+}
+
+.acrd-avatar-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--acrd-border);
+}
+
+.acrd-avatar-md {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--acrd-teal-border);
+    flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Cards General (Reduced padding, crisp borders)
+   ========================================================================== */
+.acrd-card {
+    background: #ffffff;
+    border: 1px solid var(--acrd-border);
+    border-radius: var(--acrd-radius-md);
+    padding: 1rem 1.15rem;
+    box-shadow: var(--acrd-shadow-sm);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.acrd-card:hover {
+    border-color: #cbd5e1;
+}
+
+.acrd-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--acrd-slate-dark);
+    letter-spacing: -0.01em;
+}
+
+/* Tabs Card */
+.acrd-tabs-card {
+    background: #ffffff;
+    border-radius: var(--acrd-radius-md);
+}
+
+.acrd-pills .nav-link {
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: var(--acrd-slate-muted);
+    padding: 0.45rem 0.85rem;
+    border-radius: var(--acrd-radius-sm);
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.acrd-pills .nav-link:hover {
+    color: var(--acrd-teal);
+    background: var(--acrd-teal-subtle);
+}
+
+.acrd-pills .nav-link.active {
+    color: #ffffff;
+    background: var(--acrd-teal);
+    box-shadow: 0 2px 4px rgba(13, 148, 136, 0.25);
+}
+
+.acrd-pills .nav-link .badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.45rem;
+    border-radius: 9999px;
+    background: #e2e8f0;
+    color: var(--acrd-slate-dark);
+}
+
+.acrd-pills .nav-link.active .badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+/* Buttons */
+.btn-teal {
+    background-color: var(--acrd-teal);
+    border-color: var(--acrd-teal);
+    color: #ffffff;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-teal:hover {
+    background-color: var(--acrd-teal-dark);
+    border-color: var(--acrd-teal-dark);
+    color: #ffffff;
+}
+
+.btn-outline-teal {
+    background-color: transparent;
+    border-color: var(--acrd-teal);
+    color: var(--acrd-teal);
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-outline-teal:hover {
+    background-color: var(--acrd-teal);
+    color: #ffffff;
+}
+
+.btn-purple {
+    background-color: #7e22ce;
+    border-color: #7e22ce;
+    color: #ffffff;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-purple:hover {
+    background-color: #6b21a8;
+    border-color: #6b21a8;
+    color: #ffffff;
+}
+
+.btn-outline-purple {
+    background-color: transparent;
+    border-color: #a855f7;
+    color: #7e22ce;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+.btn-outline-purple i {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.btn-outline-purple:hover {
+    background-color: #f3e8ff;
+    border-color: #7e22ce;
+    color: #6b21a8;
+}
+
+.border-purple-subtle {
+    border-color: #e9d5ff !important;
+}
+
+.acrd-scorm-preview-box {
+    border-left: 3px solid #7e22ce !important;
+}
+
+.acrd-scorm-preview-box .btn-xs {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+.acrd-scorm-preview-box .btn-xs i {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.btn-teal-action {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.65rem 1rem;
+    border-radius: var(--acrd-radius-sm);
+    border: none;
+    box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-teal-action:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.4);
+    transform: translateY(-1px);
+    color: #ffffff;
+}
+
+.btn-xs {
+    padding: 0.225rem 0.55rem;
+    font-size: 0.75rem;
     border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 1;
 }
 
-/* ========================================
-   Curriculum Section
-   ======================================== */
+.btn-xs i {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
 
-.acrd-curriculum {
+/* ==========================================================================
+   Curriculum Section Styling (Compact, Clean, High Density)
+   ========================================================================== */
+.acrd-curriculum-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
 }
 
-.acrd-section {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+.acrd-section-block {
+    border: 1px solid var(--acrd-border);
+    border-radius: var(--acrd-radius-sm);
     overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.acrd-section:hover {
-    border-color: #0d9488;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    background: #ffffff;
 }
 
 .acrd-section-header {
-    width: 100%;
-    padding: 16px 20px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #f9fbfd 100%);
-    border: none;
-    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #2c3e50;
-    transition: all 0.3s ease;
+    justify-content: space-between;
+    padding: 0.6rem 0.85rem;
+    background: #f8fafc;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid transparent;
 }
 
 .acrd-section-header:hover {
-    background: linear-gradient(135deg, #eef2f8 0%, #f3f8fc 100%);
-    color: #0d9488;
+    background: #f1f5f9;
 }
 
-.acrd-section-num {
-    background: #0d9488;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 0.75rem;
+.acrd-section-header.expanded {
+    background: var(--acrd-teal-subtle);
+    border-bottom: 1px solid var(--acrd-teal-border);
+}
+
+.acrd-sec-badge {
+    background: var(--acrd-teal);
+    color: #ffffff;
+    font-size: 0.68rem;
     font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
+    flex-shrink: 0;
 }
 
-.acrd-section-name {
-    flex: 1;
-    text-align: left;
+.acrd-sec-title {
+    font-size: 0.875rem;
+    color: var(--acrd-slate-dark);
 }
 
-.transition-icon {
-    transition: transform 0.3s ease;
-    color: #999;
+.acrd-chevron {
+    font-size: 0.75rem;
+    color: var(--acrd-slate-muted);
+    transition: transform 0.2s ease;
 }
 
-.transition-icon.expanded {
+.acrd-chevron.rotated {
     transform: rotate(180deg);
-    color: #0d9488;
+    color: var(--acrd-teal);
 }
 
-.acrd-section-content {
-    padding: 20px;
-    background: #fafbfc;
-    border-top: 1px solid #e0e0e0;
+.acrd-section-body {
+    padding: 0.5rem 0.75rem;
+    background: #ffffff;
 }
 
-.acrd-empty-message {
-    padding: 20px;
-    text-align: center;
-    color: #999;
-    font-style: italic;
-}
-
-.acrd-lectures-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.acrd-lectures-stack {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0.45rem;
 }
 
-.acrd-lecture-item {
-    padding: 14px 16px;
-    background: white;
-    border-radius: 6px;
-    border: 1px solid #e8e8e8;
-    transition: all 0.3s ease;
+.acrd-lecture-row {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #f1f5f9;
+    border-radius: var(--acrd-radius-sm);
+    background: #fafbfc;
+    transition: all 0.15s ease;
 }
 
-.acrd-lecture-item:hover {
-    border-color: #0d9488;
-    background: #f9fbfd;
+.acrd-lecture-row:hover {
+    background: #ffffff;
+    border-color: var(--acrd-teal-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.acrd-lecture-header {
+.acrd-lec-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: #e2e8f0;
+    color: var(--acrd-slate-dark);
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Checkpoint Question Box */
+.acrd-checkpoint-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+}
+
+/* ==========================================================================
+   Quizzes Section Styling
+   ========================================================================== */
+.acrd-quiz-block {
+    border: 1px solid var(--acrd-border);
+    border-radius: var(--acrd-radius-sm);
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.acrd-quiz-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.acrd-lecture-num {
-    font-weight: 600;
-    color: #2c3e50;
-    flex: 1;
-}
-
-.acrd-lecture-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.acrd-lecture-type {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    background: rgba(102, 126, 234, 0.1);
-    border-radius: 4px;
-    font-size: 0.8rem;
-    color: #0d9488;
-    font-weight: 600;
-}
-
-/* ✨ PHASE 4.142: Duration display in lecture item */
-.acrd-lecture-duration {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    background: rgba(76, 175, 80, 0.1);
-    border-radius: 4px;
-    font-size: 0.8rem;
-    color: #4CAF50;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.acrd-lecture-detail {
-    font-size: 0.9rem;
-    color: #666;
-    margin: 8px 0;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.02);
-    border-left: 3px solid #0d9488;
-    border-radius: 2px;
-}
-
-.acrd-lecture-video {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #eee;
-    display: flex;
-    flex-direction: column;
-}
-
-.acrd-video-link {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 12px;
-    background: #0d9488;
-    color: white;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.acrd-video-link:hover {
-    background: #0f766e;
-    color: white;
-    transform: translateX(2px);
-}
-
-/* ========================================
-   Lesson Completion Question
-   ======================================== */
-.acrd-completion-question {
-    font-size: 0.9rem;
-}
-
-.acrd-completion-question .badge {
-    font-size: 0.75rem;
-    padding: 0.4rem 0.6rem;
-}
-
-.acrd-completion-question ul {
-    padding-left: 1.5rem;
-    list-style-type: none;
-}
-
-.acrd-completion-question ul li {
-    position: relative;
-    padding-left: 1.5rem;
-}
-
-.acrd-completion-question ul li::before {
-    content: '○';
-    position: absolute;
-    left: 0;
-    color: #999;
-}
-
-.acrd-completion-question ul li i {
-    font-size: 0.75rem;
-}
-
-/* ========================================
-   Quizzes Section
-   ======================================== */
-
-.acrd-quizzes-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.acrd-quiz-item {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.acrd-quiz-item:hover {
-    border-color: #0d9488;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
-}
-
-.acrd-quiz-header-btn {
-    width: 100%;
-    padding: 16px 20px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #f9fbfd 100%);
-    border: none;
+    padding: 0.6rem 0.85rem;
+    background: #f8fafc;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #2c3e50;
-    transition: all 0.3s ease;
-    flex-wrap: wrap;
+    user-select: none;
+    transition: background-color 0.2s ease;
 }
 
-.acrd-quiz-header-btn:hover {
-    background: linear-gradient(135deg, #eef2f8 0%, #f3f8fc 100%);
-    color: #0d9488;
+.acrd-quiz-header:hover {
+    background: #f1f5f9;
 }
 
-.acrd-quiz-num {
-    background: #0d9488;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
+.acrd-quiz-header.expanded {
+    background: #f0fdfa;
+    border-bottom: 1px solid var(--acrd-teal-border);
 }
 
 .acrd-quiz-title {
-    flex: 1;
-    text-align: left;
+    font-size: 0.875rem;
+    color: var(--acrd-slate-dark);
 }
 
-.acrd-quiz-content {
-    padding: 20px;
-    background: #fafbfc;
-    border-top: 1px solid #e0e0e0;
+.acrd-quiz-body {
+    padding: 0.75rem;
+    background: #ffffff;
 }
 
-.acrd-quiz-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-    justify-content: flex-end;
+.acrd-question-card {
+    border-left: 3px solid var(--acrd-teal) !important;
 }
 
-/* ========================================
-   Quiz Questions and Answers
-   ======================================== */
-
-.acrd-quiz-questions {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 2px solid #e0e0e0;
+.acrd-choices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.4rem;
 }
 
-.acrd-quiz-questions h5 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 20px;
-}
-
-.acrd-question-item {
-    padding: 15px;
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.acrd-question-item:hover {
-    border-color: #0d9488;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
-}
-
-.acrd-question-header {
-    margin-bottom: 15px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 15px;
-    flex-direction: row-reverse;
-}
-
-.acrd-question-num {
-    display: inline-block;
-    background: #0d9488;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin-bottom: 0;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.acrd-question-text {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 0;
-    line-height: 1.5;
-    flex: 1;
-}
-
-.acrd-choices {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.acrd-choice-item {
-    padding: 12px;
-    background: #f9fbfd;
-    border: 1px solid #e8eaf6;
-    border-radius: 6px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    transition: all 0.3s ease;
-}
-
-.acrd-choice-item:hover {
-    background: #f3f8fc;
-    border-color: #0d9488;
-}
-
-.acrd-choice-item.correct {
-    background: rgba(76, 175, 80, 0.05);
-    border-color: #4CAF50;
-}
-
-.acrd-choice-indicator {
-    font-size: 1.2rem;
-    line-height: 1;
-    padding-top: 4px;
-    flex-shrink: 0;
-}
-
-.acrd-choice-content {
+.acrd-choice-pill {
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex: 1;
+    gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    transition: all 0.15s ease;
+}
+
+.acrd-choice-pill.correct {
+    background: #f0fdf4;
+    border-color: #86efac;
+    color: #15803d;
 }
 
 .acrd-choice-letter {
     font-weight: 700;
-    color: #0d9488;
-    min-width: 24px;
+    color: var(--acrd-teal-dark);
+    min-width: 18px;
 }
 
-.acrd-choice-text {
-    font-size: 0.9rem;
-    color: #555;
-    line-height: 1.4;
+/* ==========================================================================
+   Gamification Section Styling
+   ========================================================================== */
+.acrd-game-block {
+    border: 1px solid var(--acrd-border);
+    border-radius: var(--acrd-radius-sm);
+    overflow: hidden;
+    background: #ffffff;
 }
 
-/* ========================================
-   Intro Video Section
-   ======================================== */
-
-.acrd-intro-video {
-    padding: 20px;
-    background: #f9fbfd;
-    border-left: 4px solid #0d9488;
-    border-radius: 8px;
-}
-
-.acrd-intro-video > div:last-child {
-    display: flex;
-    justify-content: flex-end;
-}
-
-.acrd-video-container {
+.acrd-game-header {
     display: flex;
     align-items: center;
-    padding: 15px;
-    background: white;
-    border-radius: 6px;
-    border: 1px solid #e8eaf6;
-    margin-bottom: 15px;
+    justify-content: space-between;
+    padding: 0.6rem 0.85rem;
+    background: #f8fafc;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
 }
 
-.acrd-video-container i {
-    font-size: 1.5rem;
+.acrd-game-header:hover {
+    background: #f1f5f9;
 }
 
-.acrd-video-container strong {
-    color: #2c3e50;
-    margin-left: 10px;
+.acrd-game-header.expanded {
+    background: #f0fdfa;
+    border-bottom: 1px solid var(--acrd-teal-border);
 }
 
-.acrd-video-container span {
-    color: #0d9488;
-    font-weight: 500;
+.acrd-game-title {
+    font-size: 0.875rem;
+    color: var(--acrd-slate-dark);
 }
 
-/* ✨ NEW: Video Preview Styles for Intro and Lesson Videos */
-.acrd-video-preview {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #e8eef5;
-    margin-top: 1rem;
+/* ==========================================================================
+   Description & Silabus Content
+   ========================================================================== */
+.acrd-description-content {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #334155;
 }
 
-.acrd-lecture-preview {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #e8eef5;
-    margin-top: 1rem;
+.acrd-description-content h1,
+.acrd-description-content h2,
+.acrd-description-content h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-top: 0.85rem;
+    margin-bottom: 0.4rem;
+    color: var(--acrd-slate-dark);
+}
+
+.acrd-description-content p {
+    margin-bottom: 0.6rem;
+}
+
+.acrd-description-content ul,
+.acrd-description-content ol {
+    margin-bottom: 0.6rem;
+    padding-left: 1.25rem;
+}
+
+/* ==========================================================================
+   Sidebar & Real Metrics Grid
+   ========================================================================== */
+.acrd-sticky-sidebar {
+    position: sticky;
+    top: 80px;
+}
+
+.acrd-status-callout {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.acrd-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.acrd-status-dot.acrd-status-published {
+    background: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.acrd-status-dot.acrd-status-review {
+    background: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    animation: acrd-pulse 2s infinite;
+}
+
+.acrd-status-dot.acrd-status-rejected {
+    background: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.acrd-status-dot.acrd-status-draft {
+    background: #94a3b8;
+}
+
+@keyframes acrd-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+}
+
+/* Mini Stats Grid */
+.acrd-mini-stats {
+    margin: 0 -0.25rem;
+}
+
+.acrd-stat-tile {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: var(--acrd-radius-sm);
+    padding: 0.6rem 0.5rem;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.acrd-stat-tile:hover {
+    background: #ffffff;
+    border-color: var(--acrd-teal-border);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.acrd-stat-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.1;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.acrd-stat-lbl {
+    font-size: 0.7rem;
+    color: var(--acrd-slate-muted);
+    font-weight: 600;
+    margin-top: 0.2rem;
+    text-transform: capitalize;
+}
+
+/* Video Player Container Responsive */
+.acrd-video-container-responsive {
+    position: relative;
+    width: 100%;
+    border-radius: var(--acrd-radius-sm);
+    overflow: hidden;
+    background: #000000;
+}
+
+.acrd-video-container-responsive iframe {
+    width: 100%;
+    min-height: 320px;
+    border: none;
+}
+
+.acrd-video-container-responsive video {
+    display: block;
     width: 100%;
 }
 
-.acrd-video-source {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.95rem;
-}
-
-/* ========================================
-   Actions Card
-   ======================================== */
-
-.acrd-actions {
-    background: white;
-    border: 1px solid #f0f0f0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.acrd-actions:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    border-color: #e0e0e0;
-}
-
-.acrd-actions .btn {
-    min-height: 48px;
-    font-weight: 600;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    border-radius: 8px;
-    min-width: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-}
-
-.acrd-actions .btn-success:hover:not(:disabled) {
-    background: #45a049;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-}
-
-.acrd-actions .btn-danger:hover:not(:disabled) {
-    background: #c82333;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-}
-
-.acrd-actions .btn:disabled {
-    opacity: 0.6;
-}
-
-/* ========================================
-   Info Box
-   ======================================== */
-
-.acrd-info-box {
-    padding: 15px;
-    background: #f9fbfd;
-    border: 1px solid #e8eaf6;
-    border-radius: 8px;
-}
-
-.acrd-info-box strong {
-    color: #2c3e50;
-    display: block;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-}
-
-.acrd-info-box p {
-    margin: 0;
-    word-break: break-all;
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.text-monospace {
-    font-family: 'Monaco', 'Courier New', monospace;
-    background: rgba(0, 0, 0, 0.02);
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-}
-
-/* ========================================
-   Responsive Design
-   ======================================== */
-
-@media (max-width: 768px) {
-    .acrd-header {
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: flex-start;
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+@media (max-width: 991.98px) {
+    .acrd-sticky-sidebar {
         position: static;
+        margin-top: 1rem;
     }
 
-    .acrd-header button {
-        position: static;
-        margin-bottom: 10px;
+    .acrd-hero-title {
+        font-size: 1.15rem;
+    }
+
+    .acrd-thumb-wrapper {
         width: 100%;
-    }
-
-    .acrd-header .acrd-title {
-        font-size: 1.25rem;
-        margin-top: 0;
-        justify-content: flex-start;
-        text-align: left;
-        flex: auto;
-        width: 100%;
-    }
-
-    .acrd-title {
-        font-size: 1.5rem;
-    }
-
-    .acrd-title i {
-        font-size: 1.75rem;
-        margin-right: 10px;
-    }
-
-    .acrd-course-image {
-        height: 200px;
-    }
-
-    .acrd-course-title {
-        font-size: 1.4rem;
-    }
-
-    .acrd-meta-row {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .acrd-course-stats {
-        justify-content: space-around;
-        gap: 10px;
-    }
-
-    .acrd-stat {
-        padding: 12px;
-    }
-
-    .acrd-stat-number {
-        font-size: 1.4rem;
-    }
-
-    .acrd-section-header {
-        padding: 12px 15px;
-        font-size: 0.9rem;
-    }
-
-    .acrd-actions .d-grid {
-        gap: 12px;
-    }
-
-    .acrd-actions .btn {
-        min-height: 44px;
-        font-size: 0.95rem;
-    }
-
-    .acrd-section-name {
-        margin: 0;
-    }
-
-    .acrd-quiz-header {
-        gap: 8px;
-    }
-
-    .acrd-quiz-title {
-        font-size: 0.9rem;
-    }
-
-    .acrd-question-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .acrd-question-num {
-        margin-bottom: 10px;
+        max-width: 200px;
+        height: 120px;
+        margin: 0 auto;
     }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 575.98px) {
     .acrd-card {
-        padding: 20px;
-        border-radius: 8px;
+        padding: 0.85rem;
     }
 
-    .acrd-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-        position: static;
-    }
-
-    .acrd-header button {
-        position: static;
-        width: 100%;
-    }
-
-    .acrd-header .acrd-title {
-        font-size: 1rem;
-        justify-content: flex-start;
-        text-align: left;
-        width: 100%;
-    }
-
-    .acrd-title {
-        font-size: 1.25rem;
-    }
-
-    .acrd-section-title {
-        font-size: 1.1rem;
-    }
-
-    .acrd-course-header .row > * {
-        margin-bottom: 20px;
-    }
-
-    .acrd-course-image {
-        height: 180px;
-    }
-
-    .acrd-course-title {
-        font-size: 1.2rem;
-    }
-
-    .acrd-meta-item {
-        font-size: 0.85rem;
-    }
-
-    .acrd-stat-number {
-        font-size: 1.2rem;
-    }
-
-    .acrd-stat-label {
+    .acrd-pills .nav-link {
         font-size: 0.75rem;
+        padding: 0.35rem 0.6rem;
     }
 
-    .acrd-actions .d-grid {
+    .acrd-choices-grid {
         grid-template-columns: 1fr;
-    }
-
-    .acrd-actions .btn {
-        width: 100%;
-    }
-
-    .acrd-section-header {
-        padding: 12px;
-    }
-
-    .acrd-section-num {
-        padding: 3px 8px;
-        font-size: 0.7rem;
-    }
-
-    .acrd-lecture-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .acrd-lecture-type {
-        align-self: flex-end;
-    }
-}
-
-/* ========================================
-   Course Metadata Sections - ✨ PHASE 4.85
-   Features, Requirements, Learning Outcomes
-   ======================================== */
-
-.acrd-features-list,
-.acrd-requirements-list,
-.acrd-outcomes-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.acrd-feature-item,
-.acrd-outcome-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    background: #f8fbff;
-    border-radius: 8px;
-    border-left: 4px solid #0d9488;
-    transition: all 0.3s ease;
-}
-
-.acrd-feature-item:hover,
-.acrd-outcome-item:hover {
-    background: #f0f7ff;
-    transform: translateX(4px);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
-}
-
-.acrd-requirement-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 16px;
-    background: #fffbf0;
-    border-radius: 8px;
-    border-left: 4px solid #ff9800;
-    transition: all 0.3s ease;
-}
-
-.acrd-requirement-item:hover {
-    background: #fff7e6;
-    transform: translateX(4px);
-    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.15);
-}
-
-.acrd-requirement-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: #ff9800;
-    color: white;
-    border-radius: 50%;
-    font-weight: 700;
-    font-size: 0.85rem;
-    flex-shrink: 0;
-}
-
-/* ========================================
-   Print Styles
-   ======================================== */
-
-@media print {
-    .acrd-header,
-    .acrd-actions {
-        display: none;
-    }
-
-    .acrd-card {
-        page-break-inside: avoid;
-        box-shadow: none;
-        border: 1px solid #ccc;
-    }
-
-    .acrd-section-content {
-        background: white;
     }
 }

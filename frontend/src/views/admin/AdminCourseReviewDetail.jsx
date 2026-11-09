@@ -1,87 +1,223 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import apiInstance from "../../utils/axios";
 import Toast from "../plugin/Toast";
 import Swal from "sweetalert2";
 import Footer from "../partials/Footer";
 import AdminHeader from "../partials/AdminHeader";
-import { getImageUrl, getLevelText, getCourseCurriculumSummary } from "../../utils/courseUtils";
+import { getImageUrl, getLevelText } from "../../utils/courseUtils";
+import { DEFAULT_IMAGE_URL, DEFAULT_AVATAR_URL } from "../../utils/constants";
 import "./AdminCourseReviewDetail.css";
 
 /**
  * Admin Course Review Detail Page
- * ✨ PHASE 4.37+: Full course review page for comprehensive admin evaluation
+ * High-Density, Modern & Compact Design for LMSetjen DPD RI
  * 
- * Displays:
- * - Complete course information
- * - Full curriculum with all sections and lectures
- * - Course quizzes
- * - Course images and videos
- * - Approval/rejection controls
+ * Features:
+ * - 2-Column Responsive Layout (Main Content 8-col + Sticky Review Sidebar 4-col)
+ * - Drastically minimized whitespace with compact card paddings & high information density
+ * - Live/Real values dynamically calculated (curriculum, videos, SCORM, duration, quizzes, XP, ratings, etc.)
+ * - Quick Audit Tabs: "Kurikulum & Materi", "Kuis & Evaluasi", "Gamifikasi", "Deskripsi & Silabus", "Semua Konten"
+ * - Instant "Buka Semua" / "Tutup Semua" for curriculum sections & quizzes
+ * - Interactive Inline & Modal Video Players for intro video and lesson videos (supports MP4, YouTube, Google Drive)
+ * - Sticky Decision Bar with Approve / Reject workflows and previous rejection notice
  */
 
-/**
- * ✨ PHASE 4.53 FIX: Convert embed/preview URLs to viewable URLs for new tab view
- * Embed URLs (youtube-nocookie.com/embed, drive.google.com/file/d/ID/preview) 
- * are meant for iframes only - they fail when opened directly in browser tabs
- */
-const convertEmbedUrlToViewable = (fileUrl, videoSource) => {
+// Helper: detect video source and styling
+const detectVideoSource = (url) => {
+    if (!url) return { type: 'none', label: 'Tidak Ada Video', icon: 'fas fa-video-slash', color: '#64748b' };
+    const clean = String(url).toLowerCase();
+    if (clean.includes('youtube.com') || clean.includes('youtu.be')) {
+        return { type: 'youtube', label: 'YouTube Video', icon: 'fab fa-youtube', color: '#ef4444', badgeClass: 'acrd-badge-yt' };
+    }
+    if (clean.includes('drive.google.com')) {
+        return { type: 'google_drive', label: 'Google Drive', icon: 'fab fa-google-drive', color: '#2563eb', badgeClass: 'acrd-badge-gdrive' };
+    }
+    return { type: 'upload', label: 'Video Terunggah (MP4)', icon: 'fas fa-file-video', color: '#0d9488', badgeClass: 'acrd-badge-upload' };
+};
+
+// Helper: convert embed URL to a direct viewable URL for opening in a new tab
+const convertEmbedUrlToViewable = (fileUrl, videoType) => {
     if (!fileUrl) return null;
-    
-    if (videoSource === "youtube") {
-        // Extract video ID from embed URL: https://www.youtube-nocookie.com/embed/VIDEO_ID?...
-        const youtubeMatch = fileUrl.match(/embed\/([a-zA-Z0-9_-]{11})/);
+    if (videoType === "youtube" || fileUrl.includes("youtube") || fileUrl.includes("youtu.be")) {
+        const youtubeMatch = fileUrl.match(/(?:embed\/|v=|\/v\/|youtu\.be\/|\/embed\/)([a-zA-Z0-9_-]{11})/);
         if (youtubeMatch?.[1]) {
             return `https://www.youtube.com/watch?v=${youtubeMatch[1]}`;
         }
-    } else if (videoSource === "google_drive") {
-        // Extract file ID from preview URL: https://drive.google.com/file/d/FILE_ID/preview
+    } else if (videoType === "google_drive" || fileUrl.includes("drive.google.com")) {
         const driveMatch = fileUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
         if (driveMatch?.[1]) {
             return `https://drive.google.com/file/d/${driveMatch[1]}/view`;
         }
     }
-    
-    // For upload or unknown sources, use URL as-is
     return fileUrl;
 };
 
+// Helper: get standard embed URL for iframe players
+const getEmbedUrl = (url) => {
+    if (!url) return "";
+    const clean = String(url);
+    if (clean.includes("youtube.com/embed/")) return clean;
+    const ytMatch = clean.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]{11})/);
+    if (ytMatch && ytMatch[1]) {
+        return `https://www.youtube.com/embed/${ytMatch[1]}`;
+    }
+    if (clean.includes("drive.google.com")) {
+        const driveMatch = clean.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (driveMatch && driveMatch[1]) {
+            return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+        }
+    }
+    return clean;
+};
+
+// Gamification metadata mapping
 const GAME_TYPE_META = {
     crossword: {
         label: "Teka-Teki Silang (TTS)",
+        shortLabel: "TTS",
         icon: "fas fa-border-all",
-        badgeClass: "bg-info text-white"
+        color: "#0284c7",
+        bgColor: "#e0f2fe",
+        borderColor: "#bae6fd"
     },
     word_search: {
         label: "Cari Kata (Word Search)",
+        shortLabel: "Cari Kata",
         icon: "fas fa-search",
-        badgeClass: "bg-teal text-white"
+        color: "#0d9488",
+        bgColor: "#ccfbf1",
+        borderColor: "#99f6e4"
     },
     anagram: {
         label: "Susun Kata (Anagram)",
+        shortLabel: "Anagram",
         icon: "fas fa-random",
-        badgeClass: "bg-warning text-dark"
+        color: "#d97706",
+        bgColor: "#fef3c7",
+        borderColor: "#fde68a"
     },
     memory_match: {
         label: "Pencocokan Memori (Memory Match)",
+        shortLabel: "Memory Match",
         icon: "fas fa-th-large",
-        badgeClass: "bg-purple text-white"
+        color: "#7c3aed",
+        bgColor: "#ede9fe",
+        borderColor: "#ddd6fe"
+    }
+};
+
+// Format seconds into readable Indonesian duration string
+const formatDuration = (totalSeconds) => {
+    if (!totalSeconds || isNaN(totalSeconds) || totalSeconds <= 0) return "0 Menit";
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+
+    if (hours > 0) {
+        return `${hours} Jam ${minutes > 0 ? `${minutes} Mnt` : ""}`.trim();
+    }
+    if (minutes > 0) {
+        return `${minutes} Menit ${seconds > 0 ? `${seconds} dtk` : ""}`.trim();
+    }
+    return `${seconds} Detik`;
+};
+
+// Format individual lecture duration
+const formatLectureDuration = (lecture) => {
+    if (lecture.duration_seconds && lecture.duration_seconds > 0) {
+        const mins = Math.floor(lecture.duration_seconds / 60);
+        const secs = String(Math.floor(lecture.duration_seconds % 60)).padStart(2, "0");
+        return `${mins}:${secs}`;
+    }
+    if (lecture.content_duration && lecture.content_duration !== "0m 0s") {
+        return lecture.content_duration;
+    }
+    return null;
+};
+
+// Target audience text formatter
+const getTargetAudienceText = (audience) => {
+    const map = {
+        internal: "Khusus Internal Setjen DPD RI",
+        asn: "Khusus ASN",
+        umum: "Terbuka untuk Umum",
+        pegawai: "Khusus Pegawai Setjen DPD RI"
+    };
+    return map[audience] || audience || "Khusus Pegawai Setjen DPD RI";
+};
+
+// Course type text formatter
+const getCourseTypeText = (type) => {
+    const map = {
+        standard: "Standar (Video/Materi)",
+        scorm_12: "E-Learning SCORM 1.2",
+        h5p: "H5P Interaktif"
+    };
+    return map[type] || type || "Standar (Video/Materi)";
+};
+
+// Platform status badge info
+const getPlatformStatusInfo = (status) => {
+    switch (status) {
+        case "Published":
+            return {
+                label: "Dipublikasikan",
+                icon: "fas fa-check-circle",
+                className: "acrd-status-published",
+                description: "Kursus ini aktif dan dapat diakses peserta didik."
+            };
+        case "Review":
+            return {
+                label: "Menunggu Review",
+                icon: "fas fa-clock",
+                className: "acrd-status-review",
+                description: "Kursus diajukan instruktur dan menunggu keputusan Admin."
+            };
+        case "Draft":
+            return {
+                label: "Draf Instruktur",
+                icon: "fas fa-pencil-alt",
+                className: "acrd-status-draft",
+                description: "Kursus masih dalam tahap penyusunan oleh instruktur."
+            };
+        case "Rejected":
+            return {
+                label: "Ditolak",
+                icon: "fas fa-times-circle",
+                className: "acrd-status-rejected",
+                description: "Kursus ditolak dan instruktur diminta melakukan perbaikan."
+            };
+        case "Disabled":
+            return {
+                label: "Dinonaktifkan",
+                icon: "fas fa-ban",
+                className: "acrd-status-disabled",
+                description: "Kursus dinonaktifkan dari peredaran publik."
+            };
+        default:
+            return {
+                label: status || "Belum Ditentukan",
+                icon: "fas fa-info-circle",
+                className: "acrd-status-default",
+                description: "Status kursus saat ini."
+            };
     }
 };
 
 function AdminCourseReviewDetail() {
     const { course_id } = useParams();
     const navigate = useNavigate();
-    
+
     const [loading, setLoading] = useState(true);
     const [course, setCourse] = useState(null);
+    const [activeTab, setActiveTab] = useState("curriculum"); // 'curriculum' | 'quizzes' | 'games' | 'overview' | 'all'
     const [expandedSections, setExpandedSections] = useState({});
     const [expandedQuizzes, setExpandedQuizzes] = useState({});
     const [expandedGames, setExpandedGames] = useState({});
     const [approving, setApproving] = useState(false);
-    const [showIntroVideoPreview, setShowIntroVideoPreview] = useState(false);
+    const [showIntroVideoInline, setShowIntroVideoInline] = useState(false);
     const [expandedLecturePreview, setExpandedLecturePreview] = useState({});
-
 
     useEffect(() => {
         fetchCourseDetail();
@@ -91,15 +227,25 @@ function AdminCourseReviewDetail() {
         try {
             setLoading(true);
             const response = await apiInstance.get(`teacher/course-detail/${course_id}/`);
-            console.log("[AdminCourseReviewDetail] Course data:", response.data);
-            setCourse(response.data);
-            if (response.data?.games?.length > 0) {
-                const firstGameId = response.data.games[0].id || response.data.games[0].game_id;
-                if (firstGameId) {
-                    setExpandedGames({ [firstGameId]: true });
-                }
+            console.log("[AdminCourseReviewDetail] Live Course Data:", response.data);
+            const data = response.data;
+            setCourse(data);
+
+            // Auto-expand first section, first quiz, and first game for immediate visibility
+            if (data?.curriculum?.length > 0) {
+                const firstSecId = data.curriculum[0].variant_id || data.curriculum[0].id;
+                if (firstSecId) setExpandedSections({ [firstSecId]: true });
+            }
+            if (data?.quizzes?.length > 0) {
+                const firstQuizId = data.quizzes[0].quiz_id || data.quizzes[0].id;
+                if (firstQuizId) setExpandedQuizzes({ [firstQuizId]: true });
+            }
+            if (data?.games?.length > 0) {
+                const firstGameId = data.games[0].id || data.games[0].game_id;
+                if (firstGameId) setExpandedGames({ [firstGameId]: true });
             }
         } catch (error) {
+            console.error("Error fetching course detail:", error);
             Toast().fire({
                 icon: "error",
                 title: "Gagal memuat detail kursus",
@@ -111,50 +257,167 @@ function AdminCourseReviewDetail() {
         }
     };
 
+    // Calculate real live metrics dynamically from raw data
+    const liveStats = useMemo(() => {
+        if (!course) {
+            return {
+                sectionsCount: 0,
+                lessonsCount: 0,
+                videoCount: 0,
+                scormCount: 0,
+                docCount: 0,
+                totalDurationSeconds: 0,
+                totalDurationFormatted: "0 Menit",
+                quizzesCount: 0,
+                totalQuestions: 0,
+                gamesCount: 0,
+                totalGameXP: 0,
+                featuresCount: 0,
+                requirementsCount: 0,
+                outcomesCount: 0
+            };
+        }
+
+        const sections = Array.isArray(course.curriculum) ? course.curriculum : [];
+        const sectionsCount = sections.length;
+        let lessonsCount = 0;
+        let videoCount = 0;
+        let scormCount = 0;
+        let docCount = 0;
+        let totalDurationSeconds = 0;
+
+        sections.forEach((sec) => {
+            const items = sec.variant_items || sec.items || [];
+            lessonsCount += items.length;
+            items.forEach((item) => {
+                const type = (item.file_type || "").toLowerCase();
+                const file = item.file || "";
+
+                if (type === "video" || file.endsWith(".mp4") || file.includes("youtube") || file.includes("youtu.be")) {
+                    videoCount++;
+                } else if (type === "scorm") {
+                    scormCount++;
+                } else {
+                    docCount++;
+                }
+
+                if (item.duration_seconds && item.duration_seconds > 0) {
+                    totalDurationSeconds += Number(item.duration_seconds);
+                }
+            });
+        });
+
+        const quizzes = Array.isArray(course.quizzes) ? course.quizzes : [];
+        const quizzesCount = quizzes.length;
+        let totalQuestions = 0;
+        quizzes.forEach((q) => {
+            if (Array.isArray(q.questions)) {
+                totalQuestions += q.questions.length;
+            } else if (q.total_questions) {
+                totalQuestions += Number(q.total_questions);
+            }
+        });
+
+        const games = Array.isArray(course.games) ? course.games : [];
+        const gamesCount = games.length;
+        let totalGameXP = 0;
+        games.forEach((g) => {
+            if (g.points_reward) {
+                totalGameXP += Number(g.points_reward);
+            }
+        });
+
+        return {
+            sectionsCount,
+            lessonsCount,
+            videoCount,
+            scormCount,
+            docCount,
+            totalDurationSeconds,
+            totalDurationFormatted: formatDuration(totalDurationSeconds),
+            quizzesCount,
+            totalQuestions,
+            gamesCount,
+            totalGameXP,
+            featuresCount: course.features?.length || 0,
+            requirementsCount: course.requirements?.length || 0,
+            outcomesCount: course.learning_outcomes?.length || 0
+        };
+    }, [course]);
+
+    // Section collapse toggles
     const toggleSection = (sectionId) => {
-        setExpandedSections(prev => ({
+        setExpandedSections((prev) => ({
             ...prev,
             [sectionId]: !prev[sectionId]
         }));
     };
 
+    const toggleAllSections = () => {
+        if (!course?.curriculum) return;
+        const allExpanded = course.curriculum.every((s) => expandedSections[s.variant_id || s.id]);
+        const newState = {};
+        course.curriculum.forEach((s) => {
+            newState[s.variant_id || s.id] = !allExpanded;
+        });
+        setExpandedSections(newState);
+    };
+
+    // Quiz collapse toggles
     const toggleQuiz = (quizId) => {
-        setExpandedQuizzes(prev => ({
+        setExpandedQuizzes((prev) => ({
             ...prev,
             [quizId]: !prev[quizId]
         }));
     };
 
+    const toggleAllQuizzes = () => {
+        if (!course?.quizzes) return;
+        const allExpanded = course.quizzes.every((q) => expandedQuizzes[q.quiz_id || q.id]);
+        const newState = {};
+        course.quizzes.forEach((q) => {
+            newState[q.quiz_id || q.id] = !allExpanded;
+        });
+        setExpandedQuizzes(newState);
+    };
+
+    // Game collapse toggle
     const toggleGame = (gameId) => {
-        setExpandedGames(prev => ({
+        setExpandedGames((prev) => ({
             ...prev,
             [gameId]: !prev[gameId]
         }));
     };
 
+    // Lecture preview toggle
     const toggleLecturePreview = (lectureId) => {
-        setExpandedLecturePreview(prev => ({
+        setExpandedLecturePreview((prev) => ({
             ...prev,
             [lectureId]: !prev[lectureId]
         }));
     };
 
+    // Approve Course Action
     const handleApproveCourse = async () => {
         const result = await Swal.fire({
-            title: `Setujui Kursus "${course.title}"?`,
+            title: `Setujui Kursus Ini?`,
             html: `
                 <div class="text-start">
-                    <p>Instruktur: <strong>${course.teacher?.full_name || "Unknown"}</strong></p>
-                    <p>Kategori: <strong>${course.category?.title || "N/A"}</strong></p>
-                    <p class="text-muted small">Kursus ini akan dipublikasikan dan tersedia untuk siswa.</p>
+                    <p class="mb-2"><strong>Judul:</strong> ${course.title}</p>
+                    <p class="mb-2"><strong>Instruktur:</strong> ${course.teacher?.full_name || "Unknown"}</p>
+                    <p class="mb-2"><strong>Kategori:</strong> ${course.category?.title || "N/A"}</p>
+                    <div class="alert alert-success py-2 px-3 small mt-3 mb-0">
+                        <i class="fas fa-check-circle me-1"></i> Kursus ini akan dipublikasikan dan langsung dapat diakses oleh peserta di platform.
+                    </div>
                 </div>
             `,
             icon: "question",
             showCancelButton: true,
-            confirmButtonColor: "#4CAF50",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Ya, Setujui",
-            cancelButtonText: "Batal"
+            confirmButtonColor: "#0d9488",
+            cancelButtonColor: "#64748b",
+            confirmButtonText: '<i class="fas fa-check me-1"></i> Ya, Setujui Kursus',
+            cancelButtonText: "Batal",
+            reverseButtons: true
         });
 
         if (result.isConfirmed) {
@@ -163,19 +426,21 @@ function AdminCourseReviewDetail() {
                 await apiInstance.post(`/admin/course-approval/${course.course_id}/`, {
                     action: "approve"
                 });
-                
+
                 Toast().fire({
                     icon: "success",
-                    title: "Kursus Disetujui",
-                    text: `"${course.title}" telah disetujui dan dipublikasikan`
+                    title: "Kursus Berhasil Disetujui",
+                    text: `"${course.title}" telah dipublikasikan`
                 });
-                
-                setTimeout(() => navigate("/admin/content-management/?tab=courses"), 1500);
+
+                // Refresh state so admin can see immediate live status
+                fetchCourseDetail();
             } catch (error) {
+                console.error("Approve error:", error);
                 Toast().fire({
                     icon: "error",
                     title: "Gagal menyetujui kursus",
-                    text: error.response?.data?.detail || "Terjadi kesalahan"
+                    text: error.response?.data?.detail || "Terjadi kesalahan sistem saat menyetujui kursus"
                 });
             } finally {
                 setApproving(false);
@@ -183,23 +448,27 @@ function AdminCourseReviewDetail() {
         }
     };
 
+    // Reject Course Action
     const handleRejectCourse = async () => {
         const { value: reason } = await Swal.fire({
-            title: `Tolak Kursus "${course.title}"?`,
+            title: `Tolak Pengajuan Kursus`,
+            html: `<p class="text-muted small">Berikan catatan revisi atau alasan penolakan agar instruktur dapat memperbaiki konten kursus.</p>`,
             input: "textarea",
-            inputLabel: "Alasan Penolakan",
-            inputPlaceholder: "Jelaskan mengapa kursus ini ditolak dan apa yang perlu diperbaiki...",
+            inputLabel: "Catatan / Alasan Penolakan",
+            inputPlaceholder: "Jelaskan hal-hal yang perlu diperbaiki (misal: materi video bagian 2 belum lengkap, kuis belum memiliki kunci jawaban, dll)...",
             inputAttributes: {
-                "aria-label": "Alasan penolakan"
+                "aria-label": "Alasan penolakan",
+                rows: 4
             },
             showCancelButton: true,
-            confirmButtonColor: "#dc3545",
-            cancelButtonColor: "#6c757d",
-            confirmButtonText: "Ya, Tolak Kursus",
+            confirmButtonColor: "#e11d48",
+            cancelButtonColor: "#64748b",
+            confirmButtonText: '<i class="fas fa-times me-1"></i> Tolak Kursus',
             cancelButtonText: "Batal",
+            reverseButtons: true,
             inputValidator: (value) => {
-                if (!value || value.trim().length < 10) {
-                    return "Alasan penolakan harus setidaknya 10 karakter!";
+                if (!value || value.trim().length < 8) {
+                    return "Mohon tuliskan alasan penolakan minimal 8 karakter!";
                 }
             }
         });
@@ -211,19 +480,21 @@ function AdminCourseReviewDetail() {
                     action: "reject",
                     rejection_reason: reason
                 });
-                
+
                 Toast().fire({
-                    icon: "success",
-                    title: "Kursus Ditolak",
-                    text: `"${course.title}" telah ditolak dan instruktur dapat melihat alasan`
+                    icon: "info",
+                    title: "Kursus Telah Ditolak",
+                    text: `Catatan revisi telah disimpan untuk instruktur`
                 });
-                
-                setTimeout(() => navigate("/admin/content-management/?tab=courses"), 1500);
+
+                // Refresh state to show rejected status
+                fetchCourseDetail();
             } catch (error) {
+                console.error("Reject error:", error);
                 Toast().fire({
                     icon: "error",
                     title: "Gagal menolak kursus",
-                    text: error.response?.data?.detail || "Terjadi kesalahan"
+                    text: error.response?.data?.detail || "Terjadi kesalahan sistem saat memproses penolakan"
                 });
             } finally {
                 setApproving(false);
@@ -235,12 +506,13 @@ function AdminCourseReviewDetail() {
         return (
             <div className="admin-page-wrapper">
                 <AdminHeader />
-                <main className="admin-dashboard-container d-flex align-items-center justify-content-center" style={{ minHeight: "60vh" }}>
+                <main className="admin-dashboard-container d-flex align-items-center justify-content-center" style={{ minHeight: "65vh" }}>
                     <div className="text-center py-5">
-                        <div className="spinner-border text-primary" role="status">
+                        <div className="spinner-border text-teal" style={{ color: "#0d9488", width: "3rem", height: "3rem" }} role="status">
                             <span className="visually-hidden">Memuat...</span>
                         </div>
-                        <p className="mt-3 text-muted">Memuat detail kursus...</p>
+                        <h5 className="mt-3 text-secondary fw-semibold">Memuat Data Review Kursus...</h5>
+                        <p className="text-muted small">Sinkronisasi kurikulum, kuis, gamifikasi, dan status kursus saat ini.</p>
                     </div>
                 </main>
                 <Footer />
@@ -253,18 +525,19 @@ function AdminCourseReviewDetail() {
             <div className="admin-page-wrapper">
                 <AdminHeader />
                 <main className="admin-dashboard-container">
-                    <div className="container-fluid px-3 px-xl-4 footer-container py-5">
-                        <div className="alert alert-danger text-center">
-                            <i className="fas fa-exclamation-circle me-2"></i>
-                            Kursus tidak ditemukan
-                        </div>
-                        <div className="text-center">
-                            <button 
-                                className="btn btn-primary"
+                    <div className="container-fluid px-3 px-xl-4 py-5">
+                        <div className="acrd-card text-center py-5">
+                            <div className="mb-3">
+                                <i className="fas fa-exclamation-circle text-danger" style={{ fontSize: "3rem" }}></i>
+                            </div>
+                            <h4 className="fw-bold text-dark">Kursus Tidak Ditemukan</h4>
+                            <p className="text-muted mb-4">Kursus dengan ID <strong>{course_id}</strong> tidak ditemukan atau Anda tidak memiliki hak akses.</p>
+                            <button
+                                className="btn btn-teal px-4"
                                 onClick={() => navigate("/admin/content-management/?tab=courses")}
                             >
                                 <i className="fas fa-arrow-left me-2"></i>
-                                Kembali ke Review Kursus
+                                Kembali ke Daftar Review Kursus
                             </button>
                         </div>
                     </div>
@@ -274,773 +547,1235 @@ function AdminCourseReviewDetail() {
         );
     }
 
+    const introVideoInfo = detectVideoSource(course.file);
+    const statusInfo = getPlatformStatusInfo(course.platform_status);
+    const teacherName = course.teacher?.full_name || "Instruktur Tanpa Nama";
+    const teacherImage = course.teacher?.image ? getImageUrl(course.teacher.image) : DEFAULT_AVATAR_URL;
+
     return (
         <div className="admin-page-wrapper">
             <AdminHeader />
 
-            <main className="admin-dashboard-container">
-                <div className="container-fluid px-3 px-xl-4 footer-container">
-                    <div className="acrd-container">
-                        {/* Header with Back Button and Title */}
-                        <div className="acrd-header mb-4">
-                            <button 
-                                className="btn btn-outline-secondary"
-                                onClick={() => navigate("/admin/content-management/?tab=courses")}
-                                title="Kembali ke daftar review"
-                            >
-                                <i className="fas fa-arrow-left me-2"></i>
-                                Kembali
-                            </button>
-                            <h1 className="acrd-title">
-                                <i className="fas fa-eye me-2"></i>
-                                Review Detail Kursus
-                            </h1>
-                        </div>
+            <main className="admin-dashboard-container acrd-page-bg">
+                <div className="container-fluid px-3 px-xl-4 py-3">
+                    {/* Top Navigation & Breadcrumb Bar */}
+                    <div className="acrd-topbar mb-3">
+                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div className="d-flex align-items-center gap-2">
+                                <button
+                                    className="btn btn-sm btn-outline-secondary acrd-back-btn"
+                                    onClick={() => navigate("/admin/content-management/?tab=courses")}
+                                    title="Kembali ke Manajemen Konten"
+                                >
+                                    <i className="fas fa-arrow-left me-1"></i>
+                                    Kembali
+                                </button>
+                                <nav aria-label="breadcrumb" className="d-none d-md-flex align-items-center">
+                                    <ol className="breadcrumb mb-0 acrd-breadcrumb align-items-center">
+                                        <li className="breadcrumb-item d-inline-flex align-items-center">
+                                            <Link to="/admin/content-management/?tab=courses">Manajemen Konten</Link>
+                                        </li>
+                                        <li className="breadcrumb-item d-inline-flex align-items-center">
+                                            <span>Review Kursus</span>
+                                        </li>
+                                        <li className="breadcrumb-item active d-inline-flex align-items-center" aria-current="page">
+                                            <span className="acrd-breadcrumb-title" title={course.title}>
+                                                {course.title || course.course_id}
+                                            </span>
+                                        </li>
+                                    </ol>
+                                </nav>
+                            </div>
 
-                        {/* Course Header Card */}
-                        <div className="acrd-card acrd-course-header mb-4">
-                            
-                            <div className="row">
-                                <div className="col-lg-3 mb-3 mb-lg-0">
+                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                <span className={`acrd-status-pill ${statusInfo.className}`}>
+                                    <i className={`${statusInfo.icon} me-1`}></i>
+                                    {statusInfo.label}
+                                </span>
+                                {course.course_type && (
+                                    <span className="badge bg-light text-dark border">
+                                        <i className="fas fa-cube text-teal me-1"></i>
+                                        {getCourseTypeText(course.course_type)}
+                                    </span>
+                                )}
+                                <span className="badge bg-light text-secondary border font-monospace">
+                                    ID: {course.course_id}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Compact Hero Banner Card */}
+                    <div className="acrd-hero-card mb-3">
+                        <div className="row g-3 align-items-center">
+                            <div className="col-md-auto text-center">
+                                <div className="acrd-thumb-wrapper">
                                     <img
                                         src={getImageUrl(course.image)}
                                         alt={course.title}
-                                        className="acrd-course-image"
+                                        className="acrd-thumb-img"
                                         onError={(e) => {
-                                            e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+                                            e.target.src = DEFAULT_IMAGE_URL;
                                         }}
                                     />
-                                </div>
-                                <div className="col-lg-9">
-                                    <div className="acrd-course-info">
-                                        <h2 className="acrd-course-title">{course.title}</h2>
-                                        
-                                        {/* ✨ PHASE 7.5 FIX: Display course tags as badges below title */}
-                                        {course.tags && Array.isArray(course.tags) && course.tags.length > 0 && (
-                                            <div className="acrd-tags mb-3">
-                                                {course.tags.map((tag) => (
-                                                    <span key={tag.id} className="badge bg-info me-2 mb-2">
-                                                        <i className="fas fa-bookmark me-1"></i>
-                                                        {tag.title}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                        
-                                        <div className="acrd-meta-row mb-3">
-                                            <div className="acrd-meta-item">
-                                                <i className="fas fa-user me-2 text-primary"></i>
-                                                <strong>Instruktur:</strong>
-                                                <span className="ms-2">{course.teacher?.full_name || "Unknown"}</span>
-                                            </div>
-                                            <div className="acrd-meta-item">
-                                                <i className="fas fa-tag me-2 text-info"></i>
-                                                <strong>Kategori:</strong>
-                                                <span className="ms-2">{course.category?.title || "N/A"}</span>
-                                            </div>
-                                            <div className="acrd-meta-item">
-                                                <i className="fas fa-graduation-cap me-2 text-success"></i>
-                                                <strong>Tingkat:</strong>
-                                                <span className="ms-2">{getLevelText(course.level)}</span>
-                                            </div>
-                                        </div>
-
-                                        {course.review_submitted_date && (
-                                            <div className="text-muted small mb-3">
-                                                <i className="fas fa-calendar-alt me-1"></i>
-                                                Diajukan: {new Date(course.review_submitted_date).toLocaleDateString('id-ID', {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })}
-                                            </div>
-                                        )}
-
-                                        <div className="acrd-course-stats mb-3">
-                                            {(() => {
-                                                const { sectionsCount, lessonsCount, quizzesCount } = getCourseCurriculumSummary(course);
-                                                return (
-                                                    <>
-                                                        <div className="acrd-stat">
-                                                            <div className="acrd-stat-number">{sectionsCount}</div>
-                                                            <div className="acrd-stat-label">Bagian</div>
-                                                        </div>
-                                                        <div className="acrd-stat">
-                                                            <div className="acrd-stat-number">{lessonsCount}</div>
-                                                            <div className="acrd-stat-label">Pelajaran</div>
-                                                        </div>
-                                                        <div className="acrd-stat">
-                                                            <div className="acrd-stat-number">{quizzesCount}</div>
-                                                            <div className="acrd-stat-label">Kuis</div>
-                                                        </div>
-                                                    </>
-                                                );
-                                            })()}
-                                            <div className="acrd-stat">
-                                                <div className="acrd-stat-number">{course.games?.length || 0}</div>
-                                                <div className="acrd-stat-label">Gamifikasi</div>
-                                            </div>
-                                        </div>
-
-                                        {course.average_rating > 0 && (
-                                            <div className="acrd-ratings mb-3">
-                                                <i className="fas fa-star text-warning me-1"></i>
-                                                <strong>{course.average_rating.toFixed(1)}</strong>
-                                                <span className="text-muted ms-2">({course.rating_count} ulasan)</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                    {course.file && (
+                                        <button
+                                            type="button"
+                                            className="acrd-thumb-play-btn"
+                                            onClick={() => setShowIntroVideoInline(!showIntroVideoInline)}
+                                            title="Tonton Video Pengantar"
+                                        >
+                                            <i className="fas fa-play"></i>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                        </div>
+                            <div className="col">
+                                <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                    <span className="badge bg-teal-subtle text-teal fw-semibold">
+                                        <i className="fas fa-folder me-1"></i>
+                                        {course.category?.title || "Kategori Umum"}
+                                    </span>
+                                    <span className="badge bg-light text-dark border">
+                                        {getLevelText(course.level)}
+                                    </span>
+                                    <span className="badge bg-light text-muted border">
+                                        <i className="fas fa-users text-primary me-1"></i>
+                                        {getTargetAudienceText(course.target_audience)}
+                                    </span>
+                                    {course.review_submitted_date && (
+                                        <span className="badge bg-light text-secondary border">
+                                            <i className="fas fa-calendar-check text-success me-1"></i>
+                                            Diajukan: {new Date(course.review_submitted_date).toLocaleDateString("id-ID", {
+                                                day: "numeric",
+                                                month: "short",
+                                                year: "numeric"
+                                            })}
+                                        </span>
+                                    )}
+                                </div>
 
-                        {/* Video Pengantar Kursus */}
-                        {course.intro_video_source && (
-                            <div className="acrd-card mb-4">
-                                <h3 className="acrd-section-title">
-                                    <i className="fas fa-video me-2"></i>
-                                    Pratinjau Video Pengantar Kursus
-                                </h3>
-                                <div className="acrd-intro-video">
-                                    <div className="d-flex align-items-center justify-content-between mb-3">
-                                        <div className="acrd-video-source">
-                                            {course.intro_video_source === "youtube" ? (
-                                                <>
-                                                    <i className="fab fa-youtube text-danger me-2"></i>
-                                                    <strong>Sumber:</strong>
-                                                    <span className="ms-2">YouTube</span>
-                                                </>
-                                            ) : course.intro_video_source === "google_drive" ? (
-                                                <>
-                                                    <i className="fab fa-google text-info me-2"></i>
-                                                    <strong>Sumber:</strong>
-                                                    <span className="ms-2">Google Drive</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <i className="fas fa-upload text-primary me-2"></i>
-                                                    <strong>Sumber:</strong>
-                                                    <span className="ms-2">Upload</span>
-                                                </>
-                                            )}
+                                <h1 className="acrd-hero-title mb-2">{course.title}</h1>
+
+                                <div className="d-flex flex-wrap align-items-center gap-3 acrd-instructor-line">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <img
+                                            src={teacherImage}
+                                            alt={teacherName}
+                                            className="acrd-avatar-sm"
+                                            onError={(e) => {
+                                                e.target.src = DEFAULT_AVATAR_URL;
+                                            }}
+                                        />
+                                        <div>
+                                            <span className="text-muted small d-block" style={{ fontSize: "0.75rem", lineHeight: 1 }}>Instruktur</span>
+                                            <strong className="text-dark small">{teacherName}</strong>
                                         </div>
-                                        {course.file && (
-                                            <button
-                                                className="btn btn-sm btn-primary"
-                                                onClick={() => setShowIntroVideoPreview(!showIntroVideoPreview)}
-                                            >
-                                                <i className={`fas ${showIntroVideoPreview ? 'fa-eye-slash' : 'fa-eye'} me-1`}></i>
-                                                {showIntroVideoPreview ? 'Sembunyikan' : 'Tampilkan'} Pratinjau
-                                            </button>
-                                        )}
                                     </div>
-                                    {showIntroVideoPreview && course.file && (
-                                        <div className="acrd-video-preview mt-3">
-                                            {course.intro_video_source === "youtube" ? (
-                                                <iframe
-                                                    width="100%"
-                                                    height="400"
-                                                    src={course.file}
-                                                    title="Video Pengantar Kursus"
-                                                    frameBorder="0"
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                    allowFullScreen
-                                                    style={{ borderRadius: '8px' }}
-                                                ></iframe>
-                                            ) : (
-                                                <video
-                                                    width="100%"
-                                                    height="400"
-                                                    controls
-                                                    style={{ borderRadius: '8px' }}
-                                                >
-                                                    <source src={course.file} type="video/mp4" />
-                                                    Browser Anda tidak mendukung video element.
-                                                </video>
-                                            )}
+
+                                    {course.teacher?.email && (
+                                        <div className="text-muted small border-start ps-3 d-none d-sm-block">
+                                            <i className="fas fa-envelope text-secondary me-1"></i>
+                                            {course.teacher.email}
+                                        </div>
+                                    )}
+
+                                    {course.average_rating > 0 && (
+                                        <div className="d-flex align-items-center gap-1 border-start ps-3">
+                                            <i className="fas fa-star text-warning"></i>
+                                            <strong className="text-dark small">{Number(course.average_rating).toFixed(1)}</strong>
+                                            <span className="text-muted small">({course.rating_count || 0} ulasan)</span>
                                         </div>
                                     )}
                                 </div>
                             </div>
-                        )}
-
-                        {/* Additional Information - Moved here after course header */}
-                        <div className="acrd-card mb-4">
-                            <h3 className="acrd-section-title">
-                                <i className="fas fa-info-circle me-2"></i>
-                                Informasi Tambahan
-                            </h3>
-                            <div className="row">
-                                <div className="col-md-6 mb-3">
-                                    <div className="acrd-info-box">
-                                        <strong>ID Kursus:</strong>
-                                        <p className="text-monospace">{course.course_id}</p>
-                                    </div>
-                                </div>
-                                <div className="col-md-6 mb-3">
-                                    <div className="acrd-info-box">
-                                        <strong>Slug:</strong>
-                                        <p className="text-monospace">{course.slug}</p>
-                                    </div>
-                                </div>
-                                <div className="col-md-6 mb-3">
-                                    <div className="acrd-info-box">
-                                        <strong>Status Platform:</strong>
-                                        <p><span className="badge bg-warning">{course.platform_status || "N/A"}</span></p>
-                                    </div>
-                                </div>
-                                <div className="col-md-6 mb-3">
-                                    <div className="acrd-info-box">
-                                        <strong>Status Instruktur:</strong>
-                                        <p><span className="badge bg-info">{course.teacher_course_status || "N/A"}</span></p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {course.rejection_reason && (
-                                <div className="alert alert-danger mt-3">
-                                    <h6 className="alert-heading">
-                                        <i className="fas fa-exclamation-triangle me-2"></i>
-                                        Alasan Penolakan Sebelumnya
-                                    </h6>
-                                    <p className="mb-0">{course.rejection_reason}</p>
-                                </div>
-                            )}
-                        </div>
-                        <div className="acrd-card mb-4">
-                            <h3 className="acrd-section-title">
-                                <i className="fas fa-file-alt me-2"></i>
-                                Deskripsi Kursus
-                            </h3>
-                            <div 
-                                className="acrd-description"
-                                dangerouslySetInnerHTML={{ __html: course.description || "Deskripsi kursus tidak tersedia." }}
-                            />
                         </div>
 
-                        {/* Course Features - ✨ PHASE 4.85 */}
-                        {course.features && course.features.length > 0 && (
-                            <div className="acrd-card mb-4">
-                                <h3 className="acrd-section-title">
-                                    <i className="fas fa-star me-2"></i>
-                                    Kursus ini Termasuk ({course.features.length})
-                                </h3>
-                                <div className="acrd-features-list">
-                                    {course.features.map((feature, idx) => (
-                                        <div key={feature.id} className="acrd-feature-item">
-                                            {feature.icon && <i className={`${feature.icon} me-2`}></i>}
-                                            {!feature.icon && <i className="fas fa-check-circle text-success me-2"></i>}
-                                            <span>{feature.text}</span>
-                                        </div>
-                                    ))}
+                        {/* Inline Intro Video Player (Collapsible) */}
+                        {showIntroVideoInline && course.file && (
+                            <div className="acrd-intro-player-box mt-3 pt-3 border-top">
+                                <div className="d-flex align-items-center justify-content-between mb-2">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <i className={`${introVideoInfo.icon} me-1`} style={{ color: introVideoInfo.color }}></i>
+                                        <strong className="small">Video Pengantar Kursus ({introVideoInfo.label})</strong>
+                                    </div>
+                                    <div className="d-flex gap-2">
+                                        <a
+                                            href={convertEmbedUrlToViewable(course.file, introVideoInfo.type)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn btn-xs btn-outline-secondary"
+                                            style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                        >
+                                            <i className="fas fa-external-link-alt me-1"></i> Tab Baru
+                                        </a>
+                                        <button
+                                            type="button"
+                                            className="btn btn-xs btn-secondary"
+                                            style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                            onClick={() => setShowIntroVideoInline(false)}
+                                        >
+                                            <i className="fas fa-times me-1"></i> Tutup
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="acrd-video-container-responsive">
+                                    {introVideoInfo.type === "youtube" ? (
+                                        <iframe
+                                            src={getEmbedUrl(course.file)}
+                                            title="Video Pengantar Kursus"
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        ></iframe>
+                                    ) : introVideoInfo.type === "google_drive" ? (
+                                        <iframe
+                                            src={getEmbedUrl(course.file)}
+                                            title="Video Pengantar Google Drive"
+                                            frameBorder="0"
+                                            allow="autoplay"
+                                            allowFullScreen
+                                        ></iframe>
+                                    ) : (
+                                        <video controls width="100%" preload="metadata" style={{ borderRadius: "8px", maxHeight: "360px" }}>
+                                            <source src={course.file} type="video/mp4" />
+                                            Browser Anda tidak mendukung pemutar video HTML5.
+                                        </video>
+                                    )}
                                 </div>
                             </div>
                         )}
+                    </div>
 
-                        {/* Course Requirements - ✨ PHASE 4.85 */}
-                        {course.requirements && course.requirements.length > 0 && (
-                            <div className="acrd-card mb-4">
-                                <h3 className="acrd-section-title">
-                                    <i className="fas fa-tasks me-2"></i>
-                                    Persyaratan ({course.requirements.length})
-                                </h3>
-                                <div className="acrd-requirements-list">
-                                    {course.requirements.map((requirement, idx) => (
-                                        <div key={requirement.id} className="acrd-requirement-item">
-                                            <div className="acrd-requirement-number">{idx + 1}</div>
-                                            <span>{requirement.requirement}</span>
-                                        </div>
-                                    ))}
+                    {/* Rejection Alert if previously rejected */}
+                    {course.rejection_reason && (
+                        <div className="alert alert-danger acrd-alert-compact mb-3 d-flex align-items-start gap-2 shadow-sm">
+                            <i className="fas fa-exclamation-triangle text-danger mt-1 flex-shrink-0"></i>
+                            <div className="flex-grow-1">
+                                <strong className="d-block small">Catatan Penolakan Sebelumnya:</strong>
+                                <span className="small text-dark" style={{ whiteSpace: "pre-line" }}>{course.rejection_reason}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Main 2-Column High-Density Layout */}
+                    <div className="row g-3">
+                        {/* LEFT COLUMN: Main Content Explorer (Tabs, Curriculum, Quizzes, Gamification, Description) */}
+                        <div className="col-lg-8">
+                            {/* Navigation Tabs Bar */}
+                            <div className="acrd-card acrd-tabs-card mb-3 p-2">
+                                <div className="nav nav-pills acrd-pills gap-1" role="tablist">
+                                    <button
+                                        type="button"
+                                        className={`nav-link ${activeTab === "curriculum" ? "active" : ""}`}
+                                        onClick={() => setActiveTab("curriculum")}
+                                    >
+                                        <i className="fas fa-book-open me-1"></i>
+                                        Kurikulum
+                                        <span className="badge ms-1">{liveStats.lessonsCount}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`nav-link ${activeTab === "quizzes" ? "active" : ""}`}
+                                        onClick={() => setActiveTab("quizzes")}
+                                    >
+                                        <i className="fas fa-list-check me-1"></i>
+                                        Kuis
+                                        <span className="badge ms-1">{liveStats.quizzesCount}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`nav-link ${activeTab === "games" ? "active" : ""}`}
+                                        onClick={() => setActiveTab("games")}
+                                    >
+                                        <i className="fas fa-gamepad me-1"></i>
+                                        Gamifikasi
+                                        <span className="badge ms-1">{liveStats.gamesCount}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`nav-link ${activeTab === "overview" ? "active" : ""}`}
+                                        onClick={() => setActiveTab("overview")}
+                                    >
+                                        <i className="fas fa-info-circle me-1"></i>
+                                        Deskripsi & Silabus
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`nav-link ms-auto text-secondary ${activeTab === "all" ? "active" : ""}`}
+                                        onClick={() => setActiveTab("all")}
+                                        title="Tampilkan seluruh konten sekaligus"
+                                    >
+                                        <i className="fas fa-layer-group me-1"></i>
+                                        Semua
+                                    </button>
                                 </div>
                             </div>
-                        )}
 
-                        {/* Learning Outcomes - ✨ PHASE 4.85 */}
-                        {course.learning_outcomes && course.learning_outcomes.length > 0 && (
-                            <div className="acrd-card mb-4">
-                                <h3 className="acrd-section-title">
-                                    <i className="fas fa-graduation-cap me-2"></i>
-                                    Hasil Pembelajaran ({course.learning_outcomes.length})
-                                </h3>
-                                <div className="acrd-outcomes-list">
-                                    {course.learning_outcomes.map((outcome, idx) => (
-                                        <div key={outcome.id} className="acrd-outcome-item">
-                                            <i className="fas fa-bullseye text-info me-2"></i>
-                                            <span>{outcome.outcome}</span>
+                            {/* TAB 1: CURRICULUM & LECTURES */}
+                            {(activeTab === "curriculum" || activeTab === "all") && (
+                                <div className="acrd-card mb-3">
+                                    <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <i className="fas fa-graduation-cap text-teal"></i>
+                                            <h3 className="acrd-card-title mb-0">Kurikulum & Materi Pembelajaran</h3>
+                                            <span className="badge bg-teal-subtle text-teal">
+                                                {liveStats.sectionsCount} Bagian • {liveStats.lessonsCount} Pelajaran
+                                            </span>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                                        <button
+                                            type="button"
+                                            className="btn btn-xs btn-outline-teal"
+                                            onClick={toggleAllSections}
+                                            style={{ fontSize: "0.75rem", padding: "3px 8px" }}
+                                        >
+                                            <i className="fas fa-expand-alt me-1"></i> Buka/Tutup Semua
+                                        </button>
+                                    </div>
 
-                        {/* Curriculum & Lectures */}
-                        {course.curriculum && course.curriculum.length > 0 && (
-                            <div className="acrd-card mb-4">
-                                <h3 className="acrd-section-title">
-                                    <i className="fas fa-book me-2"></i>
-                                    Kurikulum ({course.curriculum.length} Bagian)
-                                </h3>
-                                <div className="acrd-curriculum">
-                                    {course.curriculum.map((section, idx) => (
-                                        <div key={section.variant_id} className="acrd-section mb-3">
-                                            <button
-                                                className="acrd-section-header"
-                                                onClick={() => toggleSection(section.variant_id)}
-                                            >
-                                                <span className="acrd-section-num">Bagian {idx + 1}</span>
-                                                <span className="acrd-section-name">{section.title}</span>
-                                                <i className={`fas fa-chevron-down ms-auto transition-icon ${expandedSections[section.variant_id] ? 'expanded' : ''}`}></i>
-                                            </button>
-                                            
-                                            {expandedSections[section.variant_id] && section.variant_items && (
-                                                <div className="acrd-section-content">
-                                                    {section.variant_items.length === 0 ? (
-                                                        <div className="acrd-empty-message">
-                                                            <i className="fas fa-inbox me-2"></i>
-                                                            Tidak ada pelajaran dalam bagian ini
+                                    {course.curriculum && course.curriculum.length > 0 ? (
+                                        <div className="acrd-curriculum-list">
+                                            {course.curriculum.map((section, sIdx) => {
+                                                const sectionId = section.variant_id || section.id || `sec-${sIdx}`;
+                                                const isExpanded = !!expandedSections[sectionId];
+                                                const items = section.variant_items || section.items || [];
+                                                let secDuration = 0;
+                                                items.forEach((it) => {
+                                                    if (it.duration_seconds) secDuration += Number(it.duration_seconds);
+                                                });
+
+                                                return (
+                                                    <div key={sectionId} className="acrd-section-block mb-2">
+                                                        <div
+                                                            className={`acrd-section-header ${isExpanded ? "expanded" : ""}`}
+                                                            onClick={() => toggleSection(sectionId)}
+                                                            role="button"
+                                                            tabIndex={0}
+                                                        >
+                                                            <div className="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
+                                                                <span className="acrd-sec-badge">
+                                                                    Bagian {sIdx + 1}
+                                                                </span>
+                                                                <strong className="acrd-sec-title text-truncate">
+                                                                    {section.title}
+                                                                </strong>
+                                                            </div>
+                                                            <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                                                <span className="text-muted small" style={{ fontSize: "0.75rem" }}>
+                                                                    {items.length} Pelajaran {secDuration > 0 && `• ${formatDuration(secDuration)}`}
+                                                                </span>
+                                                                <i className={`fas fa-chevron-down acrd-chevron ${isExpanded ? "rotated" : ""}`}></i>
+                                                            </div>
                                                         </div>
-                                                    ) : (
-                                                        <ul className="acrd-lectures-list">
-                                                            {section.variant_items.map((lecture, lectureIdx) => (
-                                                                <li key={lecture.variant_item_id} className="acrd-lecture-item">
-                                                                    <div className="acrd-lecture-header">
-                                                                        <span className="acrd-lecture-num">
-                                                                            {lectureIdx + 1}. {lecture.title}
-                                                                        </span>
-                                                                        <div className="acrd-lecture-meta">
-                                                                            <span className="acrd-lecture-type">
-                                                                                {lecture.file_type === "video" || lecture.file_type?.includes('video') ? (
-                                                                                    <>
-                                                                                        <i className="fas fa-video me-1"></i>
-                                                                                        Video
-                                                                                    </>
-                                                                                ) : (
-                                                                                    <>
-                                                                                        <i className={`${lecture.file_icon || 'fas fa-file'} me-1`}></i>
-                                                                                        {lecture.file_type ? lecture.file_type.charAt(0).toUpperCase() + lecture.file_type.slice(1) : 'Dokumen'}
-                                                                                    </>
-                                                                                )}
-                                                                            </span>
-                                                                            {/* ✨ PHASE 4.142: Display content duration */}
-                                                                            {lecture.duration_seconds && lecture.duration_seconds > 0 && (
-                                                                                <span className="acrd-lecture-duration">
-                                                                                    <i className="fas fa-hourglass-half me-1"></i>
-                                                                                    {Math.floor(lecture.duration_seconds / 60)}:{String(Math.floor(lecture.duration_seconds % 60)).padStart(2, '0')}
-                                                                                </span>
-                                                                            )}
-                                                                            {lecture.content_duration && !lecture.duration_seconds && (
-                                                                                <span className="acrd-lecture-duration">
-                                                                                    <i className="fas fa-hourglass-half me-1"></i>
-                                                                                    {lecture.content_duration}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
+
+                                                        {isExpanded && (
+                                                            <div className="acrd-section-body">
+                                                                {items.length === 0 ? (
+                                                                    <div className="text-center py-3 text-muted small fst-italic">
+                                                                        <i className="fas fa-inbox me-1"></i> Belum ada materi di bagian ini.
                                                                     </div>
-                                                                    {lecture.description && (
-                                                                        <p className="acrd-lecture-detail">{lecture.description}</p>
-                                                                    )}
-                                                                    {lecture.file && (
-                                                                        <div className="acrd-lecture-video">
-                                                                            {lecture.file_type === "video" || lecture.file_type?.includes('video') || lecture.file.includes('youtube') || lecture.file.includes('youtu.be') || lecture.file.includes('drive.google') || lecture.file.includes('/d/') ? (
-                                                                                <>
-                                                                                    <div className="d-flex justify-content-end">
-                                                                                        <button
-                                                                                            className="btn btn-sm btn-primary"
-                                                                                            onClick={() => toggleLecturePreview(lecture.variant_item_id)}
-                                                                                        >
-                                                                                            <i className={`fas ${expandedLecturePreview[lecture.variant_item_id] ? 'fa-eye-slash' : 'fa-eye'} me-1`}></i>
-                                                                                            {expandedLecturePreview[lecture.variant_item_id] ? 'Sembunyikan' : 'Tampilkan'} Pratinjau Video Pelajaran
-                                                                                        </button>
+                                                                ) : (
+                                                                    <div className="acrd-lectures-stack">
+                                                                        {items.map((lecture, lIdx) => {
+                                                                            const lectureId = lecture.variant_item_id || lecture.id || `lec-${lIdx}`;
+                                                                            const isPreviewOpen = !!expandedLecturePreview[lectureId];
+                                                                            const fileType = (lecture.file_type || "").toLowerCase();
+                                                                            const isVideo = fileType === "video" || lecture.file?.endsWith(".mp4") || lecture.file?.includes("youtube") || lecture.file?.includes("drive.google");
+                                                                            const scormModuleId = lecture.learning_module_info?.id ||
+                                                                                lecture.learning_module?.id ||
+                                                                                (typeof lecture.learning_module === "number" ? lecture.learning_module : null) ||
+                                                                                lecture.learning_module_id;
+                                                                            const isScorm = fileType === "scorm" || Boolean(scormModuleId) || Boolean(lecture.learning_module_info);
+                                                                            const scormTitle = lecture.learning_module_info?.judul || lecture.title;
+                                                                            const scormPlayerUrl = scormModuleId
+                                                                                ? `/modules/${scormModuleId}/player/`
+                                                                                : (lecture.learning_module_info?.player_url ? getImageUrl(lecture.learning_module_info.player_url) : null);
+                                                                            const durText = formatLectureDuration(lecture);
+
+                                                                            return (
+                                                                                <div key={lectureId} className="acrd-lecture-row">
+                                                                                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                                                        <div className="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
+                                                                                            <span className="acrd-lec-num">{lIdx + 1}</span>
+                                                                                            <div className="text-truncate">
+                                                                                                <div className="fw-semibold small text-dark text-truncate">
+                                                                                                    {lecture.title}
+                                                                                                </div>
+                                                                                                {lecture.description && (
+                                                                                                    <div className="text-muted text-truncate" style={{ fontSize: "0.75rem" }}>
+                                                                                                        {lecture.description}
+                                                                                                    </div>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                                                                            {/* Media Type Badge */}
+                                                                                            {isVideo ? (
+                                                                                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle small py-1">
+                                                                                                    <i className="fas fa-play-circle me-1"></i> Video
+                                                                                                </span>
+                                                                                            ) : isScorm ? (
+                                                                                                <span className="badge bg-purple-subtle text-purple border border-purple-subtle small py-1" style={{ backgroundColor: "#f3e8ff", color: "#7e22ce" }}>
+                                                                                                    <i className="fas fa-cube me-1"></i> SCORM 1.2
+                                                                                                </span>
+                                                                                            ) : (
+                                                                                                <span className="badge bg-light text-secondary border small py-1">
+                                                                                                    <i className="fas fa-file-alt me-1"></i> {lecture.file_type ? lecture.file_type.toUpperCase() : "Dokumen"}
+                                                                                                </span>
+                                                                                            )}
+
+                                                                                            {durText && (
+                                                                                                <span className="badge bg-light text-dark border small py-1 font-monospace">
+                                                                                                    <i className="fas fa-clock text-muted me-1"></i> {durText}
+                                                                                                </span>
+                                                                                            )}
+
+                                                                                            {lecture.completion_question && (
+                                                                                                <span className="badge bg-success-subtle text-success border border-success-subtle small py-1" title="Terdapat Pertanyaan Penyelesaian">
+                                                                                                    <i className="fas fa-question-circle me-1"></i> Checkpoint
+                                                                                                </span>
+                                                                                            )}
+
+                                                                                            {/* Action buttons (Video preview, SCORM preview, or download) */}
+                                                                                            {isVideo && lecture.file && (
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-teal" : "btn-outline-teal"}`}
+                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                >
+                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-eye"} me-1`}></i>
+                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau"}
+                                                                                                </button>
+                                                                                            )}
+
+                                                                                            {isScorm && (
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-purple" : "btn-outline-purple"}`}
+                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                    title="Lihat Pratinjau Modul SCORM"
+                                                                                                >
+                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-play-circle"} me-1`}></i>
+                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau SCORM"}
+                                                                                                </button>
+                                                                                            )}
+
+                                                                                            {!isVideo && !isScorm && lecture.file && (
+                                                                                                <a
+                                                                                                    href={lecture.file}
+                                                                                                    target="_blank"
+                                                                                                    rel="noopener noreferrer"
+                                                                                                    className="btn btn-xs btn-outline-secondary"
+                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                >
+                                                                                                    <i className="fas fa-download me-1"></i> Unduh
+                                                                                                </a>
+                                                                                            )}
+                                                                                        </div>
                                                                                     </div>
-                                                                                    {expandedLecturePreview[lecture.variant_item_id] && (
-                                                                                        <div className="acrd-lecture-preview mt-3">
-                                                                                            {lecture.file && (lecture.file.includes('youtube') || lecture.file.includes('youtu.be')) ? (
+
+                                                                                    {/* Inline Video Player Preview */}
+                                                                                    {isPreviewOpen && isVideo && lecture.file && (
+                                                                                        <div className="acrd-lecture-preview-box mt-2 p-2 rounded bg-light border">
+                                                                                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                                                <span className="small text-muted fw-semibold">
+                                                                                                    <i className="fas fa-video me-1 text-teal"></i> Pratinjau Video Materi
+                                                                                                </span>
+                                                                                                <a
+                                                                                                    href={convertEmbedUrlToViewable(lecture.file)}
+                                                                                                    target="_blank"
+                                                                                                    rel="noopener noreferrer"
+                                                                                                    className="small text-teal text-decoration-none"
+                                                                                                >
+                                                                                                    <i className="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
+                                                                                                </a>
+                                                                                            </div>
+                                                                                            {lecture.file.includes("youtube") || lecture.file.includes("youtu.be") ? (
                                                                                                 <iframe
                                                                                                     width="100%"
-                                                                                                    height="300"
-                                                                                                    src={lecture.file.includes('youtube.com/embed') ? lecture.file : `https://www.youtube.com/embed/${lecture.file.split('v=')[1]?.split('&')[0] || ''}`}
+                                                                                                    height="260"
+                                                                                                    src={getEmbedUrl(lecture.file)}
                                                                                                     title={lecture.title}
                                                                                                     frameBorder="0"
-                                                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                                                                     allowFullScreen
-                                                                                                    style={{ borderRadius: '8px' }}
+                                                                                                    style={{ borderRadius: "6px" }}
+                                                                                                ></iframe>
+                                                                                            ) : lecture.file.includes("drive.google") ? (
+                                                                                                <iframe
+                                                                                                    width="100%"
+                                                                                                    height="260"
+                                                                                                    src={getEmbedUrl(lecture.file)}
+                                                                                                    title={lecture.title}
+                                                                                                    frameBorder="0"
+                                                                                                    allowFullScreen
+                                                                                                    style={{ borderRadius: "6px" }}
                                                                                                 ></iframe>
                                                                                             ) : (
-                                                                                                <video
-                                                                                                    width="100%"
-                                                                                                    height="300"
-                                                                                                    controls
-                                                                                                    style={{ borderRadius: '8px' }}
-                                                                                                >
+                                                                                                <video controls width="100%" preload="metadata" style={{ borderRadius: "6px", maxHeight: "280px" }}>
                                                                                                     <source src={lecture.file} type="video/mp4" />
-                                                                                                    Browser Anda tidak mendukung video element.
+                                                                                                    Browser tidak mendukung pemutar video.
                                                                                                 </video>
                                                                                             )}
                                                                                         </div>
                                                                                     )}
-                                                                                </>
-                                                                            ) : (
-                                                                                <a 
-                                                                                    href={lecture.file} 
-                                                                                    target="_blank" 
-                                                                                    rel="noopener noreferrer"
-                                                                                    className="acrd-video-link"
-                                                                                >
-                                                                                    <i className="fas fa-download me-1"></i>
-                                                                                    Download
-                                                                                </a>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                    {/* ✨ PHASE 4.143: Display lesson completion question */}
-                                                                    {lecture.completion_question && (
-                                                                        <div className="acrd-completion-question mt-3 p-2 bg-light rounded border-start border-success">
-                                                                            <div className="d-flex align-items-center gap-2 mb-2">
-                                                                                <i className="fas fa-question-circle text-success"></i>
-                                                                                <span className="fw-bold">Pertanyaan Penyelesaian Pelajaran</span>
-                                                                                <span className="badge bg-success ms-auto">{lecture.completion_question.question_type_display}</span>
-                                                                            </div>
-                                                                            <p className="mb-2"><strong>Q:</strong> {lecture.completion_question.question_text}</p>
-                                                                            {lecture.completion_question.choices && lecture.completion_question.choices.length > 0 && (
-                                                                                <div className="ms-3">
-                                                                                    <small className="text-muted">Pilihan:</small>
-                                                                                    <ul className="mb-0 mt-1" style={{ fontSize: '0.9rem' }}>
-                                                                                        {lecture.completion_question.choices.map((choice, idx) => (
-                                                                                            <li key={idx}>
-                                                                                                {choice.choice_text}
-                                                                                                {choice.is_correct && <i className="fas fa-check text-success ms-2"></i>}
-                                                                                            </li>
-                                                                                        ))}
-                                                                                    </ul>
-                                                                                </div>
-                                                                            )}
-                                                                            {lecture.completion_question.correct_answer_text && (
-                                                                                <p className="mb-0 mt-2">
-                                                                                    <small><strong>A:</strong> {lecture.completion_question.correct_answer_text}</small>
-                                                                                </p>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
-                        {/* Quizzes */}
-                        {course.quizzes && course.quizzes.length > 0 && (
-                            <div className="acrd-card mb-4">
-                                <h3 className="acrd-section-title">
-                                    <i className="fas fa-list-check me-2"></i>
-                                    Kuis ({course.quizzes.length})
-                                </h3>
-                                <div className="acrd-quizzes-list">
-                                    {course.quizzes.map((quiz, idx) => (
-                                        <div key={quiz.quiz_id} className="acrd-quiz-item">
-                                            <button
-                                                className="acrd-quiz-header-btn"
-                                                onClick={() => toggleQuiz(quiz.quiz_id)}
-                                            >
-                                                <span className="acrd-quiz-num">Kuis {idx + 1}</span>
-                                                <span className="acrd-quiz-title">{quiz.title || "Kuis Tanpa Judul"}</span>
-                                                {quiz.is_active !== undefined && (
-                                                    <span className={`badge ${quiz.is_active ? 'bg-success' : 'bg-secondary'}`}>
-                                                        {quiz.is_active ? 'Aktif' : 'Nonaktif'}
-                                                    </span>
-                                                )}
-                                                <i className={`fas fa-chevron-down transition-icon ${expandedQuizzes[quiz.quiz_id] ? 'expanded' : ''}`}></i>
-                                            </button>
-                                            
-                                            {expandedQuizzes[quiz.quiz_id] && (
-                                                <div className="acrd-quiz-content">
-                                                    {quiz.description && (
-                                                        <div className="alert alert-info mb-3">
-                                                            <strong>Deskripsi:</strong> {quiz.description}
-                                                        </div>
-                                                    )}
-                                                    <div className="acrd-quiz-stats mb-4">
-                                                        <span className="badge bg-primary">
-                                                            <i className="fas fa-question-circle me-1"></i>
-                                                            Jumlah Pertanyaan: {quiz.total_questions || 0}
-                                                        </span>
-                                                    </div>
+                                                                                    {/* Inline SCORM Player Preview */}
+                                                                                    {isPreviewOpen && isScorm && (
+                                                                                        <div className="acrd-lecture-preview-box acrd-scorm-preview-box mt-2 p-2 rounded bg-white border border-purple-subtle shadow-sm">
+                                                                                            <div className="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                                    <span className="badge" style={{ backgroundColor: "#f3e8ff", color: "#7e22ce", fontSize: "0.725rem" }}>
+                                                                                                        <i className="fas fa-cube me-1"></i> SCORM 1.2
+                                                                                                    </span>
+                                                                                                    <strong className="small text-dark text-truncate" style={{ maxWidth: "320px" }}>
+                                                                                                        {scormTitle}
+                                                                                                    </strong>
+                                                                                                </div>
+                                                                                                <div className="d-flex align-items-center gap-1">
+                                                                                                    {scormPlayerUrl && (
+                                                                                                        <a
+                                                                                                            href={scormPlayerUrl}
+                                                                                                            target="_blank"
+                                                                                                            rel="noopener noreferrer"
+                                                                                                            className="btn btn-xs btn-outline-purple d-inline-flex align-items-center"
+                                                                                                            style={{ fontSize: "0.725rem", padding: "3px 8px", lineHeight: 1 }}
+                                                                                                            title="Buka player SCORM di tab baru"
+                                                                                                        >
+                                                                                                            <i className="fas fa-external-link-alt me-1"></i>
+                                                                                                            <span>Tab Baru</span>
+                                                                                                        </a>
+                                                                                                    )}
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        className="btn btn-xs btn-secondary d-inline-flex align-items-center"
+                                                                                                        style={{ fontSize: "0.725rem", padding: "3px 8px", lineHeight: 1 }}
+                                                                                                        onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    >
+                                                                                                        <i className="fas fa-times me-1"></i>
+                                                                                                        <span>Tutup</span>
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            </div>
 
-                                                    {/* Questions and Answers */}
-                                                    {quiz.questions && quiz.questions.length > 0 ? (
-                                                        <div className="acrd-quiz-questions">
-                                                            <h5 className="mb-3"><i className="fas fa-list me-2"></i>Detail Pertanyaan & Jawaban</h5>
-                                                            {quiz.questions.map((question, qIdx) => (
-                                                                <div key={question.question_id} className="acrd-question-item mb-4">
-                                                                    <div className="acrd-question-header">
-                                                                        <span className="acrd-question-num">Pertanyaan {qIdx + 1}</span>
-                                                                        <p className="acrd-question-text">{question.question_text}</p>
-                                                                    </div>
-                                                                    <div className="acrd-choices">
-                                                                        {question.choices && question.choices.length > 0 ? (
-                                                                            question.choices.map((choice, cIdx) => (
-                                                                                <div
-                                                                                    key={choice.choice_id}
-                                                                                    className={`acrd-choice-item ${choice.is_correct ? 'correct' : ''}`}
-                                                                                >
-                                                                                    <div className="acrd-choice-indicator">
-                                                                                        {choice.is_correct ? (
-                                                                                            <i className="fas fa-check-circle text-success"></i>
-                                                                                        ) : (
-                                                                                            <i className="fas fa-circle text-muted"></i>
-                                                                                        )}
-                                                                                    </div>
-                                                                                    <div className="acrd-choice-content">
-                                                                                        <div className="acrd-choice-letter">{String.fromCharCode(65 + cIdx)}.</div>
-                                                                                        <div className="acrd-choice-text">{choice.choice_text}</div>
-                                                                                        {choice.is_correct && (
-                                                                                            <span className="badge bg-success ms-2">Jawaban Benar</span>
-                                                                                        )}
-                                                                                    </div>
-                                                                                </div>
-                                                                            ))
-                                                                        ) : (
-                                                                            <p className="text-muted text-center py-2">
-                                                                                <i className="fas fa-inbox me-2"></i>
-                                                                                Tidak ada pilihan jawaban
-                                                                            </p>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <div className="alert alert-warning">
-                                                            <i className="fas fa-exclamation-triangle me-2"></i>
-                                                            Tidak ada pertanyaan dalam kuis ini
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                                                                                            <div className="acrd-scorm-frame-wrapper position-relative rounded overflow-hidden" style={{ minHeight: "480px", background: "#f8fafc" }}>
+                                                                                                {scormPlayerUrl ? (
+                                                                                                    <iframe
+                                                                                                        src={scormPlayerUrl}
+                                                                                                        title={lecture.title || "SCORM Preview"}
+                                                                                                        className="w-100 border-0"
+                                                                                                        style={{ width: "100%", height: "500px", display: "block" }}
+                                                                                                        allow="fullscreen; autoplay"
+                                                                                                        allowFullScreen
+                                                                                                    />
+                                                                                                ) : (
+                                                                                                    <div className="text-center py-5 text-muted">
+                                                                                                        <i className="fas fa-exclamation-triangle text-warning fa-2x mb-2"></i>
+                                                                                                        <p className="small mb-0">Paket modul SCORM tidak ditemukan atau belum diekstrak.</p>
+                                                                                                    </div>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )}
 
-                        {/* Gamifikasi Pembelajaran */}
-                        {course.games && course.games.length > 0 ? (
-                            <div className="acrd-card mb-4">
-                                <h3 className="acrd-section-title">
-                                    <i className="fas fa-gamepad me-2 text-teal"></i>
-                                    Gamifikasi Pembelajaran ({course.games.length} Game)
-                                </h3>
-                                <div className="acrd-quizzes-list">
-                                    {course.games.map((game, idx) => {
-                                        const gameId = game.id || game.game_id || `game-${idx}`;
-                                        const isExpanded = !!expandedGames[gameId];
-                                        const meta = GAME_TYPE_META[game.game_type] || {
-                                            label: game.game_type,
-                                            icon: "fas fa-gamepad",
-                                            badgeClass: "bg-teal text-white"
-                                        };
-                                        const gameData = game.game_data || {};
-                                        let itemCount = 0;
-                                        if (game.game_type === "crossword") itemCount = gameData.items?.length || 0;
-                                        else if (game.game_type === "word_search") itemCount = gameData.words?.length || 0;
-                                        else if (game.game_type === "anagram") itemCount = gameData.items?.length || 0;
-                                        else if (game.game_type === "memory_match") itemCount = gameData.pairs?.length || 0;
-
-                                        return (
-                                            <div key={gameId} className="acrd-quiz-item">
-                                                <button
-                                                    type="button"
-                                                    className="acrd-quiz-header-btn"
-                                                    onClick={() => toggleGame(gameId)}
-                                                >
-                                                    <span className="badge px-2.5 py-1 text-white flex-shrink-0" style={{ backgroundColor: "#0d9488", fontSize: "0.75rem", borderRadius: "6px" }}>
-                                                        <i className={`${meta.icon} me-1`}></i>
-                                                        {meta.label}
-                                                    </span>
-                                                    <span className="acrd-quiz-title ms-2 text-truncate">{game.title || "Game Tanpa Judul"}</span>
-                                                    {game.is_active !== undefined && (
-                                                        <span className={`badge ${game.is_active ? 'bg-success' : 'bg-secondary'} ms-auto me-2`}>
-                                                            {game.is_active ? 'Aktif' : 'Nonaktif'}
-                                                        </span>
-                                                    )}
-                                                    <i className={`fas fa-chevron-down transition-icon ${isExpanded ? 'expanded' : ''}`}></i>
-                                                </button>
-
-                                                {isExpanded && (
-                                                    <div className="acrd-quiz-content">
-                                                        {/* Description */}
-                                                        {game.description && (
-                                                            <div className="alert alert-info mb-3" style={{ whiteSpace: "pre-line" }}>
-                                                                <strong><i className="fas fa-info-circle me-1"></i>Petunjuk Pengerjaan:</strong>
-                                                                <div className="mt-1">{game.description}</div>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Game Stats & Parameters */}
-                                                        <div className="d-flex align-items-center gap-2 flex-wrap mb-3 p-2 bg-light rounded border">
-                                                            <span className="badge bg-white text-dark border">
-                                                                <i className="fas fa-redo text-teal me-1"></i>
-                                                                Maksimal Coba: <strong>{game.max_attempts}x</strong>
-                                                            </span>
-                                                            <span className="badge bg-white text-dark border">
-                                                                <i className="fas fa-trophy text-warning me-1"></i>
-                                                                Reward: <strong>+{game.points_reward} XP</strong>
-                                                            </span>
-                                                            <span className="badge bg-white text-dark border">
-                                                                <i className="fas fa-clock text-info me-1"></i>
-                                                                Waktu: <strong>{game.time_limit_seconds > 0 ? `${game.time_limit_seconds} Detik` : "Tanpa Batas"}</strong>
-                                                            </span>
-                                                            <span className="badge bg-white text-dark border">
-                                                                <i className="fas fa-layer-group text-primary me-1"></i>
-                                                                Jumlah: <strong>{itemCount} {game.game_type === 'memory_match' ? 'Pasangan' : 'Item'}</strong>
-                                                            </span>
-                                                        </div>
-
-                                                        {/* Content Items Review */}
-                                                        <div className="acrd-game-items-review">
-                                                            {/* Crossword Review */}
-                                                            {game.game_type === "crossword" && (
-                                                                <div className="row g-2">
-                                                                    {(gameData.items || []).map((item, qIdx) => (
-                                                                        <div key={qIdx} className="col-md-6">
-                                                                            <div className="p-2.5 bg-white border rounded h-100 shadow-sm">
-                                                                                <div className="d-flex justify-content-between align-items-center mb-1">
-                                                                                    <span className="badge bg-info-subtle text-info fw-bold" style={{ fontSize: "0.75rem" }}>
-                                                                                        Soal {qIdx + 1}
-                                                                                    </span>
-                                                                                    <span className="badge bg-dark font-monospace">
-                                                                                        {item.answer || "____"}
-                                                                                    </span>
-                                                                                </div>
-                                                                                <div className="small text-secondary mt-1">
-                                                                                    {item.clue || "Petunjuk belum diisi"}
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-
-                                                            {/* Word Search Review */}
-                                                            {game.game_type === "word_search" && (
-                                                                <div>
-                                                                    <div className="small text-muted mb-2">
-                                                                        Matriks Kotak: <strong>{gameData.gridSize || 10}x{gameData.gridSize || 10}</strong> • Daftar kata tersembunyi:
-                                                                    </div>
-                                                                    <div className="d-flex flex-wrap gap-2">
-                                                                        {(gameData.words || []).map((w, wIdx) => {
-                                                                            const wordText = typeof w === "object" ? w.word : w;
-                                                                            const hintText = typeof w === "object" ? w.hint : "";
-                                                                            return (
-                                                                                <div key={wIdx} className="badge bg-white text-dark border p-2 text-start">
-                                                                                    <div className="font-monospace fw-bold text-teal" style={{ fontSize: "0.85rem" }}>{wordText}</div>
-                                                                                    {hintText && <div className="text-muted small fw-normal">{hintText}</div>}
+                                                                                    {/* Lesson Completion Question */}
+                                                                                    {lecture.completion_question && (
+                                                                                        <div className="acrd-checkpoint-box mt-2 p-2 rounded">
+                                                                                            <div className="d-flex align-items-center justify-content-between mb-1">
+                                                                                                <span className="small fw-bold text-success d-flex align-items-center gap-1">
+                                                                                                    <i className="fas fa-check-circle"></i> Pertanyaan Penyelesaian Pelajaran
+                                                                                                </span>
+                                                                                                <span className="badge bg-success-subtle text-success border border-success" style={{ fontSize: "0.7rem" }}>
+                                                                                                    {lecture.completion_question.question_type_display || "Pilihan Ganda"}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <p className="mb-1 text-dark small">
+                                                                                                <strong>Soal:</strong> {lecture.completion_question.question_text}
+                                                                                            </p>
+                                                                                            {lecture.completion_question.choices && lecture.completion_question.choices.length > 0 && (
+                                                                                                <div className="acrd-checkpoint-choices ps-2">
+                                                                                                    {lecture.completion_question.choices.map((ch, chIdx) => (
+                                                                                                        <div key={chIdx} className={`small py-0 d-flex align-items-center gap-1 ${ch.is_correct ? "text-success fw-bold" : "text-muted"}`}>
+                                                                                                            <i className={`fas ${ch.is_correct ? "fa-check-circle text-success" : "fa-circle text-black-50"}`} style={{ fontSize: "0.65rem" }}></i>
+                                                                                                            <span>{ch.choice_text}</span>
+                                                                                                            {ch.is_correct && <span className="badge bg-success text-white py-0 px-1 ms-1" style={{ fontSize: "0.65rem" }}>Jawaban Benar</span>}
+                                                                                                        </div>
+                                                                                                    ))}
+                                                                                                </div>
+                                                                                            )}
+                                                                                            {lecture.completion_question.correct_answer_text && (
+                                                                                                <div className="small text-success mt-1 pt-1 border-top">
+                                                                                                    <strong>Jawaban:</strong> {lecture.completion_question.correct_answer_text}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
                                                                                 </div>
                                                                             );
                                                                         })}
                                                                     </div>
-                                                                </div>
-                                                            )}
-
-                                                            {/* Anagram Review */}
-                                                            {game.game_type === "anagram" && (
-                                                                <div className="row g-2">
-                                                                    {(gameData.items || []).map((item, aIdx) => (
-                                                                        <div key={aIdx} className="col-md-6">
-                                                                            <div className="p-2.5 bg-white border rounded h-100 shadow-sm">
-                                                                                <div className="d-flex justify-content-between align-items-center mb-1">
-                                                                                    <span className="badge bg-warning-subtle text-dark fw-bold" style={{ fontSize: "0.75rem" }}>
-                                                                                        Kata {aIdx + 1}
-                                                                                    </span>
-                                                                                    <span className="font-monospace fw-bold text-teal">
-                                                                                        {item.word}
-                                                                                    </span>
-                                                                                </div>
-                                                                                <div className="small text-secondary mt-1">
-                                                                                    {item.clue || "Petunjuk belum diatur"}
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-
-                                                            {/* Memory Match Review */}
-                                                            {game.game_type === "memory_match" && (
-                                                                <div className="row g-2">
-                                                                    {(gameData.pairs || []).map((pair, pIdx) => (
-                                                                        <div key={pIdx} className="col-md-6">
-                                                                            <div className="p-2.5 bg-white border rounded h-100 shadow-sm">
-                                                                                <div className="d-flex align-items-center gap-2 mb-1.5">
-                                                                                    <span className="badge" style={{ backgroundColor: "#f3e8ff", color: "#7e22ce", fontSize: "0.75rem" }}>
-                                                                                        Pasangan {pIdx + 1}
-                                                                                    </span>
-                                                                                    <strong className="text-dark font-monospace">{pair.term}</strong>
-                                                                                </div>
-                                                                                <div className="small text-secondary p-1.5 bg-light rounded border">
-                                                                                    {pair.definition}
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4 text-muted">
+                                            <i className="fas fa-folder-open mb-2" style={{ fontSize: "2rem" }}></i>
+                                            <p className="small mb-0">Belum ada kurikulum yang ditambahkan pada kursus ini.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* TAB 2: QUIZZES */}
+                            {(activeTab === "quizzes" || activeTab === "all") && (
+                                <div className="acrd-card mb-3">
+                                    <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <i className="fas fa-list-check text-teal"></i>
+                                            <h3 className="acrd-card-title mb-0">Daftar Kuis & Evaluasi</h3>
+                                            <span className="badge bg-teal-subtle text-teal">
+                                                {liveStats.quizzesCount} Kuis • {liveStats.totalQuestions} Total Soal
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn btn-xs btn-outline-teal"
+                                            onClick={toggleAllQuizzes}
+                                            style={{ fontSize: "0.75rem", padding: "3px 8px" }}
+                                        >
+                                            <i className="fas fa-expand-alt me-1"></i> Buka/Tutup Semua
+                                        </button>
+                                    </div>
+
+                                    {course.quizzes && course.quizzes.length > 0 ? (
+                                        <div className="acrd-quiz-stack">
+                                            {course.quizzes.map((quiz, qIdx) => {
+                                                const quizId = quiz.quiz_id || quiz.id || `quiz-${qIdx}`;
+                                                const isExpanded = !!expandedQuizzes[quizId];
+                                                const qCount = quiz.questions?.length || quiz.total_questions || 0;
+
+                                                return (
+                                                    <div key={quizId} className="acrd-quiz-block mb-2">
+                                                        <div
+                                                            className={`acrd-quiz-header ${isExpanded ? "expanded" : ""}`}
+                                                            onClick={() => toggleQuiz(quizId)}
+                                                            role="button"
+                                                            tabIndex={0}
+                                                        >
+                                                            <div className="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
+                                                                <span className="badge bg-teal text-white fw-bold" style={{ fontSize: "0.7rem" }}>
+                                                                    Kuis {qIdx + 1}
+                                                                </span>
+                                                                <strong className="acrd-quiz-title text-truncate">
+                                                                    {quiz.title || "Kuis Tanpa Judul"}
+                                                                </strong>
+                                                            </div>
+                                                            <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                                                <span className="badge bg-light text-dark border small">
+                                                                    <i className="fas fa-question-circle text-teal me-1"></i> {qCount} Soal
+                                                                </span>
+                                                                {quiz.is_active !== undefined && (
+                                                                    <span className={`badge ${quiz.is_active ? "bg-success-subtle text-success border border-success-subtle" : "bg-light text-muted border"} small`}>
+                                                                        {quiz.is_active ? "Aktif" : "Nonaktif"}
+                                                                    </span>
+                                                                )}
+                                                                <i className={`fas fa-chevron-down acrd-chevron ${isExpanded ? "rotated" : ""}`}></i>
+                                                            </div>
+                                                        </div>
+
+                                                        {isExpanded && (
+                                                            <div className="acrd-quiz-body">
+                                                                {quiz.description && (
+                                                                    <div className="small text-muted p-2 rounded bg-light mb-2 border">
+                                                                        <i className="fas fa-info-circle text-teal me-1"></i>
+                                                                        <strong>Petunjuk Kuis:</strong> {quiz.description}
+                                                                    </div>
+                                                                )}
+
+                                                                {quiz.questions && quiz.questions.length > 0 ? (
+                                                                    <div className="acrd-questions-list">
+                                                                        {quiz.questions.map((question, quIdx) => (
+                                                                            <div key={question.question_id || quIdx} className="acrd-question-card mb-2 p-2 rounded border bg-white">
+                                                                                <div className="d-flex align-items-start gap-2 mb-2">
+                                                                                    <span className="badge bg-dark text-white flex-shrink-0" style={{ fontSize: "0.7rem", marginTop: "2px" }}>
+                                                                                        Soal {quIdx + 1}
+                                                                                    </span>
+                                                                                    <div className="fw-semibold small text-dark flex-grow-1">
+                                                                                        {question.question_text}
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                {/* Choices list */}
+                                                                                {question.choices && question.choices.length > 0 ? (
+                                                                                    <div className="acrd-choices-grid">
+                                                                                        {question.choices.map((choice, cIdx) => (
+                                                                                            <div
+                                                                                                key={choice.choice_id || cIdx}
+                                                                                                className={`acrd-choice-pill ${choice.is_correct ? "correct" : ""}`}
+                                                                                            >
+                                                                                                <span className="acrd-choice-letter">
+                                                                                                    {String.fromCharCode(65 + cIdx)}.
+                                                                                                </span>
+                                                                                                <span className="acrd-choice-text flex-grow-1">
+                                                                                                    {choice.choice_text}
+                                                                                                </span>
+                                                                                                {choice.is_correct && (
+                                                                                                    <span className="badge bg-success text-white py-0 px-1 ms-1" style={{ fontSize: "0.65rem" }}>
+                                                                                                        <i className="fas fa-check me-0"></i> Kunci
+                                                                                                    </span>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="text-muted small fst-italic ps-4">
+                                                                                        Belum ada pilihan jawaban untuk pertanyaan ini.
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="text-center py-3 text-muted small fst-italic">
+                                                                        <i className="fas fa-exclamation-triangle me-1 text-warning"></i> Belum ada detail soal dalam kuis ini.
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4 text-muted">
+                                            <i className="fas fa-clipboard-check mb-2" style={{ fontSize: "2rem" }}></i>
+                                            <p className="small mb-0">Belum ada kuis yang dibuat untuk kursus ini.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* TAB 3: GAMIFICATION */}
+                            {(activeTab === "games" || activeTab === "all") && (
+                                <div className="acrd-card mb-3">
+                                    <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <i className="fas fa-gamepad text-teal"></i>
+                                            <h3 className="acrd-card-title mb-0">Gamifikasi Pembelajaran</h3>
+                                            <span className="badge bg-teal-subtle text-teal">
+                                                {liveStats.gamesCount} Game • +{liveStats.totalGameXP} Total XP
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {course.games && course.games.length > 0 ? (
+                                        <div className="acrd-games-stack">
+                                            {course.games.map((game, gIdx) => {
+                                                const gameId = game.id || game.game_id || `game-${gIdx}`;
+                                                const isExpanded = !!expandedGames[gameId];
+                                                const meta = GAME_TYPE_META[game.game_type] || {
+                                                    label: game.game_type,
+                                                    shortLabel: "Game",
+                                                    icon: "fas fa-gamepad",
+                                                    color: "#0d9488",
+                                                    bgColor: "#ccfbf1",
+                                                    borderColor: "#99f6e4"
+                                                };
+                                                const gameData = game.game_data || {};
+                                                let itemCount = 0;
+                                                if (game.game_type === "crossword") itemCount = gameData.items?.length || 0;
+                                                else if (game.game_type === "word_search") itemCount = gameData.words?.length || 0;
+                                                else if (game.game_type === "anagram") itemCount = gameData.items?.length || 0;
+                                                else if (game.game_type === "memory_match") itemCount = gameData.pairs?.length || 0;
+
+                                                return (
+                                                    <div key={gameId} className="acrd-game-block mb-2">
+                                                        <div
+                                                            className={`acrd-game-header ${isExpanded ? "expanded" : ""}`}
+                                                            onClick={() => toggleGame(gameId)}
+                                                            role="button"
+                                                            tabIndex={0}
+                                                        >
+                                                            <div className="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
+                                                                <span
+                                                                    className="badge text-white px-2 py-1 flex-shrink-0"
+                                                                    style={{ backgroundColor: meta.color, fontSize: "0.7rem", borderRadius: "4px" }}
+                                                                >
+                                                                    <i className={`${meta.icon} me-1`}></i>
+                                                                    {meta.shortLabel}
+                                                                </span>
+                                                                <strong className="acrd-game-title text-truncate">
+                                                                    {game.title || "Game Tanpa Judul"}
+                                                                </strong>
+                                                            </div>
+                                                            <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                                                <span className="badge bg-light text-dark border small">
+                                                                    <i className="fas fa-trophy text-warning me-1"></i> +{game.points_reward || 0} XP
+                                                                </span>
+                                                                <span className="badge bg-light text-muted border small">
+                                                                    {itemCount} {game.game_type === "memory_match" ? "Pasangan" : "Item"}
+                                                                </span>
+                                                                {game.is_active !== undefined && (
+                                                                    <span className={`badge ${game.is_active ? "bg-success-subtle text-success border border-success-subtle" : "bg-light text-muted border"} small`}>
+                                                                        {game.is_active ? "Aktif" : "Nonaktif"}
+                                                                    </span>
+                                                                )}
+                                                                <i className={`fas fa-chevron-down acrd-chevron ${isExpanded ? "rotated" : ""}`}></i>
+                                                            </div>
+                                                        </div>
+
+                                                        {isExpanded && (
+                                                            <div className="acrd-game-body p-2 bg-light border-top">
+                                                                {/* Game Parameters row */}
+                                                                <div className="d-flex align-items-center gap-2 flex-wrap mb-2 p-2 bg-white rounded border">
+                                                                    <span className="badge bg-light text-dark border small">
+                                                                        <i className="fas fa-redo text-teal me-1"></i> Maks: <strong>{game.max_attempts}x Coba</strong>
+                                                                    </span>
+                                                                    <span className="badge bg-light text-dark border small">
+                                                                        <i className="fas fa-clock text-info me-1"></i> Waktu: <strong>{game.time_limit_seconds > 0 ? `${game.time_limit_seconds} Detik` : "Tanpa Batas"}</strong>
+                                                                    </span>
+                                                                    <span className="badge bg-light text-dark border small">
+                                                                        <i className="fas fa-layer-group text-primary me-1"></i> Jenis: <strong>{meta.label}</strong>
+                                                                    </span>
+                                                                </div>
+
+                                                                {game.description && (
+                                                                    <div className="small text-secondary mb-2 p-2 bg-white rounded border">
+                                                                        <strong><i className="fas fa-info-circle text-teal me-1"></i>Petunjuk:</strong> {game.description}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Crossword items */}
+                                                                {game.game_type === "crossword" && (
+                                                                    <div className="row g-2">
+                                                                        {(gameData.items || []).map((item, qIdx) => (
+                                                                            <div key={qIdx} className="col-md-6">
+                                                                                <div className="p-2 bg-white border rounded h-100">
+                                                                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                                        <span className="badge bg-info-subtle text-info fw-bold" style={{ fontSize: "0.7rem" }}>
+                                                                                            Petunjuk {qIdx + 1}
+                                                                                        </span>
+                                                                                        <span className="badge bg-dark font-monospace" style={{ fontSize: "0.75rem" }}>
+                                                                                            {item.answer || "____"}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div className="small text-secondary">{item.clue || "Petunjuk belum diisi"}</div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Word Search items */}
+                                                                {game.game_type === "word_search" && (
+                                                                    <div className="bg-white p-2 rounded border">
+                                                                        <div className="small text-muted mb-1">
+                                                                            Matriks Grid: <strong>{gameData.gridSize || 10}x{gameData.gridSize || 10}</strong> • Daftar Kata:
+                                                                        </div>
+                                                                        <div className="d-flex flex-wrap gap-1">
+                                                                            {(gameData.words || []).map((w, wIdx) => {
+                                                                                const wordText = typeof w === "object" ? w.word : w;
+                                                                                const hintText = typeof w === "object" ? w.hint : "";
+                                                                                return (
+                                                                                    <div key={wIdx} className="badge bg-light text-dark border p-1 text-start">
+                                                                                        <span className="font-monospace fw-bold text-teal">{wordText}</span>
+                                                                                        {hintText && <div className="text-muted fw-normal" style={{ fontSize: "0.7rem" }}>{hintText}</div>}
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Anagram items */}
+                                                                {game.game_type === "anagram" && (
+                                                                    <div className="row g-2">
+                                                                        {(gameData.items || []).map((item, aIdx) => (
+                                                                            <div key={aIdx} className="col-md-6">
+                                                                                <div className="p-2 bg-white border rounded h-100">
+                                                                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                                        <span className="badge bg-warning-subtle text-dark fw-bold" style={{ fontSize: "0.7rem" }}>
+                                                                                            Kata {aIdx + 1}
+                                                                                        </span>
+                                                                                        <span className="font-monospace fw-bold text-teal" style={{ fontSize: "0.85rem" }}>
+                                                                                            {item.word}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div className="small text-secondary">{item.clue || "Petunjuk belum diatur"}</div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Memory Match pairs */}
+                                                                {game.game_type === "memory_match" && (
+                                                                    <div className="row g-2">
+                                                                        {(gameData.pairs || []).map((pair, pIdx) => (
+                                                                            <div key={pIdx} className="col-md-6">
+                                                                                <div className="p-2 bg-white border rounded h-100">
+                                                                                    <div className="d-flex align-items-center gap-1 mb-1">
+                                                                                        <span className="badge" style={{ backgroundColor: "#f3e8ff", color: "#7e22ce", fontSize: "0.7rem" }}>
+                                                                                            Pasangan {pIdx + 1}
+                                                                                        </span>
+                                                                                        <strong className="text-dark small font-monospace">{pair.term}</strong>
+                                                                                    </div>
+                                                                                    <div className="small text-secondary p-1 bg-light rounded border" style={{ fontSize: "0.8rem" }}>
+                                                                                        {pair.definition}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4 text-muted">
+                                            <i className="fas fa-dice mb-2" style={{ fontSize: "2rem" }}></i>
+                                            <p className="small mb-0">Belum ada modul gamifikasi pada kursus ini.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* TAB 4: OVERVIEW, FEATURES, REQUIREMENTS, OUTCOMES */}
+                            {(activeTab === "overview" || activeTab === "all") && (
+                                <>
+                                    {/* Description Card */}
+                                    <div className="acrd-card mb-3">
+                                        <div className="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom">
+                                            <i className="fas fa-file-alt text-teal"></i>
+                                            <h3 className="acrd-card-title mb-0">Deskripsi Kursus</h3>
+                                        </div>
+                                        <div
+                                            className="acrd-description-content"
+                                            dangerouslySetInnerHTML={{
+                                                __html: course.description || "<p class='text-muted fst-italic'>Tidak ada deskripsi kursus.</p>"
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Features, Requirements & Learning Outcomes in a Compact 3-Column or Grid */}
+                                    <div className="row g-3 mb-3">
+                                        {/* What's Included */}
+                                        <div className="col-md-4">
+                                            <div className="acrd-card h-100">
+                                                <div className="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom">
+                                                    <i className="fas fa-check-circle text-teal"></i>
+                                                    <strong className="small text-dark">Kursus Ini Termasuk</strong>
+                                                    <span className="badge bg-light text-muted ms-auto">{liveStats.featuresCount}</span>
+                                                </div>
+                                                {course.features && course.features.length > 0 ? (
+                                                    <ul className="list-unstyled mb-0 small">
+                                                        {course.features.map((f, idx) => (
+                                                            <li key={f.id || idx} className="d-flex align-items-start gap-1 mb-1 text-secondary">
+                                                                <i className={`${f.icon || "fas fa-check"} text-teal mt-1 flex-shrink-0`} style={{ fontSize: "0.75rem" }}></i>
+                                                                <span>{f.text}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <span className="text-muted small fst-italic">Tidak ditentukan</span>
                                                 )}
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ) : null}
+                                        </div>
 
-                        {/* Action Buttons */}
-                        <div className="acrd-card acrd-actions mb-4">
-                            <h3 className="acrd-section-title mb-4">
-                                <i className="fas fa-check-square me-2"></i>
-                                Tindakan Review
-                            </h3>
-                            <div className="d-grid gap-3 d-md-flex justify-content-center">
-                                <button
-                                    className="btn btn-success btn-lg"
-                                    onClick={handleApproveCourse}
-                                    disabled={approving}
-                                >
-                                    {approving ? (
-                                        <>
-                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                            Memproses...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i className="fas fa-check me-2"></i>
-                                            Setujui Kursus
-                                        </>
+                                        {/* Requirements */}
+                                        <div className="col-md-4">
+                                            <div className="acrd-card h-100">
+                                                <div className="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom">
+                                                    <i className="fas fa-tasks text-warning"></i>
+                                                    <strong className="small text-dark">Persyaratan</strong>
+                                                    <span className="badge bg-light text-muted ms-auto">{liveStats.requirementsCount}</span>
+                                                </div>
+                                                {course.requirements && course.requirements.length > 0 ? (
+                                                    <ul className="list-unstyled mb-0 small">
+                                                        {course.requirements.map((r, idx) => (
+                                                            <li key={r.id || idx} className="d-flex align-items-start gap-1 mb-1 text-secondary">
+                                                                <span className="badge bg-warning-subtle text-dark border border-warning-subtle mt-0 flex-shrink-0" style={{ fontSize: "0.65rem", padding: "1px 4px" }}>
+                                                                    {idx + 1}
+                                                                </span>
+                                                                <span>{r.requirement}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <span className="text-muted small fst-italic">Tidak ada prasyarat khusus</span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Learning Outcomes */}
+                                        <div className="col-md-4">
+                                            <div className="acrd-card h-100">
+                                                <div className="d-flex align-items-center gap-2 mb-2 pb-1 border-bottom">
+                                                    <i className="fas fa-bullseye text-info"></i>
+                                                    <strong className="small text-dark">Hasil Pembelajaran</strong>
+                                                    <span className="badge bg-light text-muted ms-auto">{liveStats.outcomesCount}</span>
+                                                </div>
+                                                {course.learning_outcomes && course.learning_outcomes.length > 0 ? (
+                                                    <ul className="list-unstyled mb-0 small">
+                                                        {course.learning_outcomes.map((o, idx) => (
+                                                            <li key={o.id || idx} className="d-flex align-items-start gap-1 mb-1 text-secondary">
+                                                                <i className="fas fa-caret-right text-info mt-1 flex-shrink-0"></i>
+                                                                <span>{o.outcome}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <span className="text-muted small fst-italic">Tidak ditentukan</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* RIGHT COLUMN: Sticky Review Action Bar, Real Live Metrics, Instructor Info & Specs */}
+                        <div className="col-lg-4">
+                            <div className="acrd-sticky-sidebar">
+                                {/* 1. Quick Decision / Action Card */}
+                                <div className="acrd-card acrd-action-card mb-3 shadow-sm border-teal-subtle">
+                                    <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                                        <strong className="small text-dark d-flex align-items-center gap-1">
+                                            <i className="fas fa-stamp text-teal"></i>
+                                            Tindakan Review Admin
+                                        </strong>
+                                        <span className={`acrd-status-dot ${statusInfo.className}`} title={statusInfo.description}></span>
+                                    </div>
+
+                                    <div className="acrd-status-callout mb-3 p-2 rounded">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <i className={`${statusInfo.icon} fs-5`}></i>
+                                            <div>
+                                                <div className="fw-bold small">{statusInfo.label}</div>
+                                                <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                                    {statusInfo.description}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="d-grid gap-2">
+                                        <button
+                                            type="button"
+                                            className="btn btn-teal-action"
+                                            onClick={handleApproveCourse}
+                                            disabled={approving || course.platform_status === "Published"}
+                                        >
+                                            {approving ? (
+                                                <>
+                                                    <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                                    Memproses...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-check-circle me-1"></i>
+                                                    Setujui & Publikasikan Kursus
+                                                </>
+                                            )}
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-danger"
+                                            onClick={handleRejectCourse}
+                                            disabled={approving}
+                                            style={{ fontSize: "0.85rem", padding: "8px 12px" }}
+                                        >
+                                            <i className="fas fa-times-circle me-1"></i>
+                                            Tolak / Minta Revisi
+                                        </button>
+                                    </div>
+
+                                    <div className="acrd-action-meta mt-3 pt-2 border-top text-muted small">
+                                        <div className="d-flex justify-content-between py-0">
+                                            <span>Status Platform:</span>
+                                            <strong className="text-dark">{course.platform_status || "N/A"}</strong>
+                                        </div>
+                                        <div className="d-flex justify-content-between py-0">
+                                            <span>Status Instruktur:</span>
+                                            <strong className="text-dark">{course.teacher_course_status || "Draft"}</strong>
+                                        </div>
+                                        {course.approved_by_name && (
+                                            <div className="d-flex justify-content-between py-0">
+                                                <span>Disetujui Oleh:</span>
+                                                <strong className="text-dark">{course.approved_by_name}</strong>
+                                            </div>
+                                        )}
+                                        {course.approval_date && (
+                                            <div className="d-flex justify-content-between py-0">
+                                                <span>Tanggal Disetujui:</span>
+                                                <span className="text-dark">
+                                                    {new Date(course.approval_date).toLocaleDateString("id-ID")}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* 2. Real Live Curriculum Metrics Grid */}
+                                <div className="acrd-card mb-3">
+                                    <div className="d-flex align-items-center gap-1 mb-2 pb-1 border-bottom">
+                                        <i className="fas fa-chart-pie text-teal"></i>
+                                        <strong className="small text-dark">Ringkasan Metrik Kursus (Live)</strong>
+                                    </div>
+
+                                    <div className="row g-2 acrd-mini-stats">
+                                        <div className="col-6">
+                                            <div className="acrd-stat-tile">
+                                                <div className="acrd-stat-val text-teal">{liveStats.sectionsCount}</div>
+                                                <div className="acrd-stat-lbl">Total Bagian</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-6">
+                                            <div className="acrd-stat-tile">
+                                                <div className="acrd-stat-val text-teal">{liveStats.lessonsCount}</div>
+                                                <div className="acrd-stat-lbl">Pelajaran ({liveStats.videoCount} Video)</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-6">
+                                            <div className="acrd-stat-tile">
+                                                <div className="acrd-stat-val text-dark">{liveStats.totalDurationFormatted}</div>
+                                                <div className="acrd-stat-lbl">Total Durasi</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-6">
+                                            <div className="acrd-stat-tile">
+                                                <div className="acrd-stat-val text-primary">{liveStats.quizzesCount}</div>
+                                                <div className="acrd-stat-lbl">Kuis ({liveStats.totalQuestions} Soal)</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-6">
+                                            <div className="acrd-stat-tile">
+                                                <div className="acrd-stat-val text-warning">{liveStats.gamesCount}</div>
+                                                <div className="acrd-stat-lbl">Gamifikasi</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-6">
+                                            <div className="acrd-stat-tile">
+                                                <div className="acrd-stat-val text-success">+{liveStats.totalGameXP}</div>
+                                                <div className="acrd-stat-lbl">Total XP Reward</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 3. Instructor Profile Box */}
+                                <div className="acrd-card mb-3">
+                                    <div className="d-flex align-items-center gap-1 mb-2 pb-1 border-bottom">
+                                        <i className="fas fa-id-badge text-teal"></i>
+                                        <strong className="small text-dark">Profil Pengajar</strong>
+                                    </div>
+
+                                    <div className="d-flex align-items-center gap-2 mb-2">
+                                        <img
+                                            src={teacherImage}
+                                            alt={teacherName}
+                                            className="acrd-avatar-md"
+                                            onError={(e) => {
+                                                e.target.src = DEFAULT_AVATAR_URL;
+                                            }}
+                                        />
+                                        <div className="overflow-hidden">
+                                            <strong className="text-dark d-block text-truncate small">{teacherName}</strong>
+                                            <span className="text-muted d-block" style={{ fontSize: "0.75rem" }}>
+                                                {course.teacher?.user_type || "Instruktur LMS DPD RI"}
+                                            </span>
+                                            {course.teacher?.email && (
+                                                <span className="text-secondary d-block text-truncate" style={{ fontSize: "0.75rem" }}>
+                                                    {course.teacher.email}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {course.teacher?.bio && (
+                                        <div className="small text-muted p-2 rounded bg-light border fst-italic" style={{ fontSize: "0.75rem" }}>
+                                            "{course.teacher.bio}"
+                                        </div>
                                     )}
-                                </button>
-                                <button
-                                    className="btn btn-danger btn-lg"
-                                    onClick={handleRejectCourse}
-                                    disabled={approving}
-                                >
-                                    {approving ? (
-                                        <>
-                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                            Memproses...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i className="fas fa-times me-2"></i>
-                                            Tolak Kursus
-                                        </>
+
+                                    {course.teacher?.last_login && (
+                                        <div className="text-muted small mt-2 pt-1 border-top" style={{ fontSize: "0.7rem" }}>
+                                            <i className="fas fa-history me-1"></i>
+                                            Login terakhir: {new Date(course.teacher.last_login).toLocaleDateString("id-ID", {
+                                                day: "numeric",
+                                                month: "short",
+                                                year: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit"
+                                            })}
+                                        </div>
                                     )}
-                                </button>
+                                </div>
+
+                                {/* 4. Course Metadata & Technical Specs */}
+                                <div className="acrd-card mb-3">
+                                    <div className="d-flex align-items-center gap-1 mb-2 pb-1 border-bottom">
+                                        <i className="fas fa-cogs text-teal"></i>
+                                        <strong className="small text-dark">Spesifikasi Kursus</strong>
+                                    </div>
+
+                                    <div className="acrd-specs-list small">
+                                        <div className="d-flex justify-content-between py-1 border-bottom">
+                                            <span className="text-muted">ID Kursus:</span>
+                                            <span className="font-monospace fw-bold text-dark">{course.course_id}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between py-1 border-bottom">
+                                            <span className="text-muted">Slug URL:</span>
+                                            <span className="font-monospace text-truncate ms-2 text-dark" style={{ maxWidth: "160px" }}>
+                                                {course.slug}
+                                            </span>
+                                        </div>
+                                        <div className="d-flex justify-content-between py-1 border-bottom">
+                                            <span className="text-muted">Kategori:</span>
+                                            <span className="fw-semibold text-teal">{course.category?.title || "Umum"}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between py-1 border-bottom">
+                                            <span className="text-muted">Tingkat Kesulitan:</span>
+                                            <span>{getLevelText(course.level)}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between py-1 border-bottom">
+                                            <span className="text-muted">Tipe Modul:</span>
+                                            <span className="fw-semibold">{getCourseTypeText(course.course_type)}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between py-1 border-bottom">
+                                            <span className="text-muted">Target Peserta:</span>
+                                            <span className="fw-semibold">{getTargetAudienceText(course.target_audience)}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between py-1">
+                                            <span className="text-muted">Tanggal Dibuat:</span>
+                                            <span>{course.date ? new Date(course.date).toLocaleDateString("id-ID") : "-"}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Tags */}
+                                    {course.tags && Array.isArray(course.tags) && course.tags.length > 0 && (
+                                        <div className="mt-2 pt-2 border-top">
+                                            <span className="text-muted small d-block mb-1">Tagar Kursus:</span>
+                                            <div className="d-flex flex-wrap gap-1">
+                                                {course.tags.map((t) => (
+                                                    <span key={t.id || t} className="badge bg-light text-secondary border" style={{ fontSize: "0.7rem" }}>
+                                                        #{typeof t === "object" ? t.title : t}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

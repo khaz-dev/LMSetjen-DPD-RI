@@ -431,12 +431,12 @@ input[type="color"]:hover:not(:disabled) {
    ENSURE PROPER Z-INDEX STACKING
    ============================================ */
 
-input:hover:not(:focus) {
+input:not([type="hidden"]):not(.lcm-hidden-input):hover:not(:focus) {
     position: relative;
     z-index: 1;
 }
 
-input:focus {
+input:not([type="hidden"]):not(.lcm-hidden-input):focus {
     position: relative;
     z-index: 2;
 }
