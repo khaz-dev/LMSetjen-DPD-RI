@@ -262,7 +262,7 @@ body.admin-theme {
 
 /* ✨ PHASE 4+ FIX: Make student-theme pages fill full screen width like landing-fixed-header */
 /* Ensure student theme sections stretch to full viewport width */
-body.student-theme section,
+body.student-theme section:not(.simanta-chat-window),
 body.student-theme main,
 body.student-theme .modern-course-page,
 body.student-theme .modern-wishlist-page,
@@ -297,7 +297,7 @@ body.student-theme .qa-bg-section {
    CRITICAL: Match student-theme rules for instructor pages to prevent style cascade
    When navigating from student dashboard to instructor dashboard,
    instructor pages need their own positioning rules */
-body.instructor-theme section,
+body.instructor-theme section:not(.simanta-chat-window),
 body.instructor-theme main,
 body.instructor-theme .modern-course-page,
 body.instructor-theme .modern-wishlist-page,
@@ -329,7 +329,7 @@ body.instructor-theme .qa-bg-section {
 }
 
 /* ✨ PHASE 11.X: Admin theme page styling override - match other role themes */
-body.admin-theme section,
+body.admin-theme section:not(.simanta-chat-window),
 body.admin-theme main,
 body.admin-theme .modern-course-page,
 body.admin-theme .modern-wishlist-page,

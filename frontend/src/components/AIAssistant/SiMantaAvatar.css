@@ -35,8 +35,8 @@ body:has(.inline-quiz-fullscreen) .simanta-container {
     cursor: pointer;
     display: inline-block;
     filter: drop-shadow(0 8px 18px rgba(15, 30, 65, 0.24));
-    transition: filter 0.3s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    will-change: transform, filter;
+    transition: filter 0.3s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), bottom 0.32s cubic-bezier(0.16, 1, 0.3, 1), left 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, filter, bottom, left;
 }
 
 .simanta-avatar-wrapper:hover {
@@ -463,28 +463,71 @@ body:has(.inline-quiz-fullscreen) .simanta-container {
 
 /* ==========================================================================
    AI ASSISTANT CHAT WINDOW MODAL / DRAWER
-   POSISI ASLI: bottom: 20px; left: 0;
-   Mengembang anggun dari pojok kiri bawah
+   Ukuran Default: 580px (Ukuran Luas yang sebelumnya expanded menjadi default)
    ========================================================================== */
+.simanta-container .simanta-chat-window,
+aside.simanta-container section.simanta-chat-window,
 .simanta-chat-window {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    width: 440px !important;
-    min-width: 360px;
-    max-width: min(480px, calc(100vw - 32px)) !important;
-    height: 560px;
-    max-height: calc(100vh - 110px);
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 18px 46px rgba(15, 23, 42, 0.26), 0 0 0 1px rgba(0, 0, 0, 0.08);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    animation: simantaModalSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 1050;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 580px !important;
+    min-width: 440px !important;
+    max-width: min(600px, calc(100vw - 32px)) !important;
+    height: 560px !important;
+    max-height: calc(100vh - 100px) !important;
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    box-shadow: 0 18px 46px rgba(15, 23, 42, 0.26), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    animation: simantaModalSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    z-index: 1050 !important;
     box-sizing: border-box !important;
-    transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* ==========================================================================
+   STATE KONSISTEN: KETIKA CHAT TERBUKA (.simanta-chat-open)
+   Maskot Manta (.simanta-avatar-wrapper) dipindahkan ke ATAS KIRI jendela chat
+   dalam UKURAN PENUH ASLINYA (tidak mengecil) seperti yang diinginkan.
+   ========================================================================== */
+.simanta-container.simanta-chat-open {
+    z-index: 1055;
+}
+
+.simanta-container.simanta-chat-open .simanta-chat-window {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    z-index: 1050 !important;
+}
+
+.simanta-container.simanta-chat-open .simanta-avatar-wrapper {
+    position: absolute !important;
+    bottom: calc(560px - 22px) !important; /* Dipindahkan ke atas kirinya jendela chat */
+    left: 8px !important;
+    z-index: 1060 !important;
+    transform: none !important; /* UKURAN ASLI, TIDAK MENGEJIL */
+    margin: 0 !important;
+    transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    filter: drop-shadow(0 12px 26px rgba(15, 30, 65, 0.3));
+    pointer-events: auto;
+}
+
+.simanta-container.simanta-chat-open .simanta-shadow {
+    opacity: 0.35;
+    transform: translateX(-50%) scale(0.7);
+}
+
+.simanta-container.simanta-chat-open .simanta-action-toggle {
+    display: none !important;
+}
+
+.simanta-container.simanta-chat-open .simanta-status-badge {
+    bottom: 4px;
+    right: 6px;
 }
 
 .simanta-chat-window,
@@ -492,10 +535,13 @@ body:has(.inline-quiz-fullscreen) .simanta-container {
     box-sizing: border-box;
 }
 
-/* Mode Luas (Expanded Wide Mode) untuk membaca jawaban & panduan admin secara lega */
+/* Mode Luas (Expanded Wide Mode): Tambah lebarnya menjadi hampir setengah halaman (~48vw) */
+.simanta-container .simanta-chat-window.simanta-chat-expanded,
+aside.simanta-container section.simanta-chat-window.simanta-chat-expanded,
 .simanta-chat-window.simanta-chat-expanded {
-    width: 580px !important;
-    max-width: min(600px, calc(100vw - 32px)) !important;
+    width: 48vw !important;
+    min-width: 640px !important;
+    max-width: min(960px, calc(100vw - 32px)) !important;
 }
 
 @keyframes simantaModalSlideUp {
@@ -1299,8 +1345,19 @@ body:has(.inline-quiz-fullscreen) .simanta-container {
         max-width: calc(100vw - 32px) !important;
         min-width: 0 !important;
         height: 500px !important;
-        bottom: 10px !important;
+        bottom: 0 !important;
         left: 0 !important;
+    }
+    .simanta-chat-window.simanta-chat-expanded {
+        width: calc(100vw - 32px) !important;
+        min-width: 0 !important;
+        max-width: calc(100vw - 32px) !important;
+    }
+    .simanta-container.simanta-chat-open .simanta-avatar-wrapper {
+        bottom: calc(500px - 20px) !important;
+        left: 4px !important;
+        transform: scale(0.72) !important;
+        transform-origin: bottom left;
     }
 }
 

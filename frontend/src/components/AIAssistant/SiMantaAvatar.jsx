@@ -1242,7 +1242,7 @@ const SiMantaAvatar = () => {
 
     return (
         <aside 
-            className="simanta-container"
+            className={`simanta-container ${isChatOpen && !isMinimized ? 'simanta-chat-open' : ''}`}
             aria-label="Asisten AI LMS Setjen DPD RI"
         >
             {/* JIKA DALAM MODE MINIMIZED (Lencana Kecil) */}
