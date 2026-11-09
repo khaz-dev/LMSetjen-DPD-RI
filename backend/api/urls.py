@@ -209,6 +209,7 @@ urlpatterns = [
     path("admin/user-bulk-actions/", api_views.AdminUserBulkActionsAPIView.as_view()),
     path("admin/course-management/", api_views.AdminCourseManagementAPIView.as_view()),
     path("admin/enrollment-analytics/", api_views.AdminEnrollmentAnalyticsAPIView.as_view()),
+    path("admin/visitor-traffic-analytics/", api_views.AdminVisitorTrafficAnalyticsAPIView.as_view()),
     path("admin/system-health/", api_views.AdminSystemHealthAPIView.as_view()),
     path("system/version/", api_views.SystemVersionPublicAPIView.as_view()),
     path("system/releases/", api_views.SystemReleaseListCreateAPIView.as_view()),

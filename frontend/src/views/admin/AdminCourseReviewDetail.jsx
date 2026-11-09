@@ -5,7 +5,7 @@ import Toast from "../plugin/Toast";
 import Swal from "sweetalert2";
 import Footer from "../partials/Footer";
 import AdminHeader from "../partials/AdminHeader";
-import { getImageUrl, getLevelText } from "../../utils/courseUtils";
+import { getImageUrl, getLevelText, getCourseCurriculumSummary } from "../../utils/courseUtils";
 import "./AdminCourseReviewDetail.css";
 
 /**
@@ -357,18 +357,25 @@ function AdminCourseReviewDetail() {
                                         )}
 
                                         <div className="acrd-course-stats mb-3">
-                                            <div className="acrd-stat">
-                                                <div className="acrd-stat-number">{course.curriculum?.length || 0}</div>
-                                                <div className="acrd-stat-label">Bagian</div>
-                                            </div>
-                                            <div className="acrd-stat">
-                                                <div className="acrd-stat-number">{course.lectures?.length || 0}</div>
-                                                <div className="acrd-stat-label">Pelajaran</div>
-                                            </div>
-                                            <div className="acrd-stat">
-                                                <div className="acrd-stat-number">{course.quizzes?.length || 0}</div>
-                                                <div className="acrd-stat-label">Kuis</div>
-                                            </div>
+                                            {(() => {
+                                                const { sectionsCount, lessonsCount, quizzesCount } = getCourseCurriculumSummary(course);
+                                                return (
+                                                    <>
+                                                        <div className="acrd-stat">
+                                                            <div className="acrd-stat-number">{sectionsCount}</div>
+                                                            <div className="acrd-stat-label">Bagian</div>
+                                                        </div>
+                                                        <div className="acrd-stat">
+                                                            <div className="acrd-stat-number">{lessonsCount}</div>
+                                                            <div className="acrd-stat-label">Pelajaran</div>
+                                                        </div>
+                                                        <div className="acrd-stat">
+                                                            <div className="acrd-stat-number">{quizzesCount}</div>
+                                                            <div className="acrd-stat-label">Kuis</div>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
                                             <div className="acrd-stat">
                                                 <div className="acrd-stat-number">{course.games?.length || 0}</div>
                                                 <div className="acrd-stat-label">Gamifikasi</div>

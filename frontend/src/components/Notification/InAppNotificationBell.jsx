@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useContext, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAxios from '../../utils/useAxios';
+import apiInstance from '../../utils/axios';
 import UserData from '../../views/plugin/UserData';
 import { RolesContext } from '../../views/plugin/Context';
 import { moment } from '../../utils/dayjs';
@@ -10,10 +11,11 @@ import './InAppNotificationBell.css';
  * 🔔 InAppNotificationBell Component (Pusat Notifikasi LMSetjen DPD RI)
  * - Tampilan Bersih & Terang (Clean Light Theme) selaras dengan tema portal.
  * - Pemisahan Total Berdasarkan Peran Aktif:
+ *   - Jika sedang dalam peran Admin: HANYA menampilkan notifikasi Admin (review kursus, laporan pelanggaran, masukan).
  *   - Jika sedang dalam peran Siswa: HANYA menampilkan notifikasi Siswa (ujian, materi, kelulusan).
  *   - Jika sedang dalam peran Pengajar: HANYA menampilkan notifikasi Pengajar (verifikasi integritas, pendaftaran peserta).
  *   - Tidak mencampur notifikasi antar-peran agar tidak membingungkan pengguna.
- * - Deep Linking langsung ke halaman aksi/evaluasi.
+ * - Deep Linking langsung ke halaman aksi/evaluasi/moderasi.
  */
 function InAppNotificationBell() {
     const { currentRole } = useContext(RolesContext) || {};
@@ -27,20 +29,85 @@ function InAppNotificationBell() {
 
     // Tentukan secara tegas peran aktif saat ini tanpa pencampuran
     const activeRole = useMemo(() => {
+        // 1. URL Path check jika berada di area khusus peran
+        if (location.pathname.startsWith('/admin')) return 'admin';
         if (location.pathname.startsWith('/instructor')) return 'instructor';
         if (location.pathname.startsWith('/student')) return 'student';
-        const norm = currentRole?.toLowerCase()?.trim();
-        if ((norm === 'instructor' || norm === 'teacher') && teacherId) return 'instructor';
-        return 'student';
-    }, [location.pathname, currentRole, teacherId]);
 
+        // 2. RolesContext / UserData active role check (khususnya di portal http://localhost:5174/)
+        const norm = (currentRole || userData?.current_role || userData?.role || '')
+            ?.toLowerCase()
+            ?.trim();
+
+        if (norm === 'admin') return 'admin';
+        if ((norm === 'instructor' || norm === 'teacher') && teacherId) return 'instructor';
+        if (norm === 'student') return 'student';
+
+        // 3. Fallback jika user memiliki atribut peran admin
+        if (userData?.role === 'admin' || userData?.is_admin || userData?.is_super_admin) return 'admin';
+
+        return 'student';
+    }, [location.pathname, currentRole, userData, teacherId]);
+
+    const isAdminMode = activeRole === 'admin';
     const isInstructorMode = activeRole === 'instructor';
+    const isStudentMode = activeRole === 'student';
 
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'unread'
+    const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'unread' | 'actionable'
     const [isOpen, setIsOpen] = useState(false);
     const [markingAll, setMarkingAll] = useState(false);
+
+    // Helper ikon dan label metadata notifikasi admin
+    const getAdminNotiMeta = useCallback((item) => {
+        const cat = item?.category || '';
+        const bType = item?.badge_type || '';
+        if (cat === 'course' || bType === 'warning') {
+            return {
+                icon: 'fas fa-book-reader',
+                badgeClass: 'badge-amber',
+                label: item?.badge || 'Review Kursus',
+                dotColor: '#d97706',
+                isActionable: true
+            };
+        }
+        if (cat === 'abuse' || bType === 'danger') {
+            return {
+                icon: 'fas fa-triangle-exclamation',
+                badgeClass: 'badge-rose',
+                label: item?.badge || 'Laporan Ulasan',
+                dotColor: '#e11d48',
+                isActionable: true
+            };
+        }
+        if (cat === 'testimonial' || bType === 'info') {
+            return {
+                icon: 'fas fa-quote-right',
+                badgeClass: 'badge-sky',
+                label: item?.badge || 'Kurasi Testimoni',
+                dotColor: '#0284c7',
+                isActionable: true
+            };
+        }
+        if (cat === 'feedback' || bType === 'purple') {
+            const isBug = (item?.badge || '').toLowerCase().includes('bug');
+            return {
+                icon: isBug ? 'fas fa-bug' : 'fas fa-lightbulb',
+                badgeClass: isBug ? 'badge-rose' : 'badge-purple',
+                label: item?.badge || 'Masukan Pengguna',
+                dotColor: isBug ? '#e11d48' : '#9333ea',
+                isActionable: true
+            };
+        }
+        return {
+            icon: 'fas fa-shield-halved',
+            badgeClass: 'badge-teal',
+            label: item?.badge || 'Sistem Admin',
+            dotColor: '#0f766e',
+            isActionable: false
+        };
+    }, []);
 
     // Ambil data notifikasi murni sesuai peran aktif
     const fetchNotifications = useCallback(async () => {
@@ -48,21 +115,53 @@ function InAppNotificationBell() {
 
         try {
             let res;
-            if (isInstructorMode && teacherId) {
+            if (isAdminMode) {
+                // Notifikasi murni Admin dari header-stats
+                res = await apiInstance.get('admin/header-stats/');
+                const rawNotifs = Array.isArray(res.data?.notifications) ? res.data.notifications : [];
+
+                // Filter ketat: pastikan pengingat target 20 JP ASN atau notifikasi belajar personal tidak pernah muncul di Admin
+                const safeAdminList = rawNotifs.filter(item => {
+                    const title = (item?.title || '').toLowerCase();
+                    const msg = (item?.message || '').toLowerCase();
+                    const badge = (item?.badge || '').toLowerCase();
+                    const type = (item?.type || '').toLowerCase();
+                    return !(
+                        title.includes('target 20 jp') ||
+                        msg.includes('target 20 jp') ||
+                        title.includes('20 jp') ||
+                        msg.includes('20 jp') ||
+                        badge.includes('20 jp') ||
+                        type.includes('target reminder') ||
+                        title.includes('learning nudge') ||
+                        title.includes('microlearning') ||
+                        title.includes('flashcard') ||
+                        item?.category === 'personal'
+                    );
+                });
+
+                setNotifications(safeAdminList);
+
+                // Hitung notifikasi yang memerlukan aksi verifikasi/moderasi admin
+                const actionableCount = safeAdminList.filter(item => getAdminNotiMeta(item).isActionable).length;
+                setUnreadCount(actionableCount);
+            } else if (isInstructorMode && teacherId) {
                 // Notifikasi murni Pengajar
                 res = await useAxios.get(`teacher/noti-list/${teacherId}/`);
+                const data = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+                setNotifications(data);
+                setUnreadCount(data.filter(n => !n.seen).length);
             } else {
                 // Notifikasi murni Siswa
                 res = await useAxios.get(`student/noti-list/${userId}/`);
+                const data = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+                setNotifications(data);
+                setUnreadCount(data.filter(n => !n.seen).length);
             }
-
-            const data = Array.isArray(res.data) ? res.data : (res.data?.results || []);
-            setNotifications(data);
-            setUnreadCount(data.filter(n => !n.seen).length);
         } catch (err) {
             console.debug('Failed to fetch notifications for active role:', err);
         }
-    }, [userId, teacherId, isInstructorMode]);
+    }, [userId, teacherId, isAdminMode, isInstructorMode, getAdminNotiMeta]);
 
     // Fetch ulang saat peran aktif berubah atau ada sinyal refresh
     useEffect(() => {
@@ -102,16 +201,33 @@ function InAppNotificationBell() {
         };
     }, [isOpen]);
 
-    // Saring notifikasi berdasarkan filter 'all' vs 'unread'
+    // Saring notifikasi berdasarkan filter 'all' vs 'unread' / 'actionable'
     const displayedNotifs = useMemo(() => {
+        if (isAdminMode) {
+            if (filterStatus === 'unread' || filterStatus === 'actionable') {
+                return notifications.filter(item => getAdminNotiMeta(item).isActionable);
+            }
+            return notifications;
+        }
         if (filterStatus === 'unread') {
             return notifications.filter(n => !n.seen);
         }
         return notifications;
-    }, [notifications, filterStatus]);
+    }, [notifications, filterStatus, isAdminMode, getAdminNotiMeta]);
 
     // Klik notifikasi: tandai dibaca & arahkan langsung ke halaman terkait
     const handleNotificationClick = async (noti) => {
+        setIsOpen(false);
+
+        if (isAdminMode) {
+            if (noti.link) {
+                navigate(noti.link);
+            } else {
+                navigate('/admin/dashboard/');
+            }
+            return;
+        }
+
         if (!noti.seen) {
             try {
                 if (isInstructorMode && teacherId) {
@@ -128,14 +244,11 @@ function InAppNotificationBell() {
             }
         }
 
-        setIsOpen(false);
-
         const courseId = noti.course_data?.course_id || noti.course_data?.id || noti.course;
         const enrollmentId = noti.course_data?.enrollment_id;
 
         if (isInstructorMode) {
             // Navigasi Pengajar
-            // Notifikasi ujian (peninjauan, pengesahan, penolakan, reset) atau pendaftaran siswa baru diarahkan ke halaman evaluasi kursus
             if (['Exam Review Needed', 'Course Enrollment Completed', 'Exam Verified', 'Exam Rejected', 'Exam Reset'].includes(noti.type) && courseId) {
                 navigate(`/instructor/courses/${courseId}/evaluation/`);
             } else if (courseId) {
@@ -191,6 +304,10 @@ function InAppNotificationBell() {
 
         try {
             setMarkingAll(true);
+            if (isAdminMode) {
+                setUnreadCount(0);
+                return;
+            }
             if (isInstructorMode && teacherId) {
                 await useAxios.post(`teacher/noti-mark-all-read/${teacherId}/`);
             } else {
@@ -206,7 +323,7 @@ function InAppNotificationBell() {
         }
     };
 
-    // Helper ikon dan label metadata
+    // Helper ikon dan label metadata notifikasi siswa & pengajar
     const getNotificationMeta = (type) => {
         switch (type) {
             case 'AI Learning Nudge':
@@ -317,6 +434,8 @@ function InAppNotificationBell() {
 
     if (!userId) return null;
 
+    const roleName = isAdminMode ? 'Admin' : isInstructorMode ? 'Pengajar' : 'Siswa';
+
     return (
         <div className="in-app-noti-wrapper" ref={dropdownRef}>
             {/* Tombol Lonceng Navbar */}
@@ -324,14 +443,14 @@ function InAppNotificationBell() {
                 type="button"
                 className={`in-app-noti-btn ${isOpen ? 'active' : ''}`}
                 onClick={() => setIsOpen(!isOpen)}
-                aria-label={`Notifikasi ${isInstructorMode ? 'Pengajar' : 'Siswa'}`}
-                title={`Notifikasi ${isInstructorMode ? 'Pengajar' : 'Siswa'}`}
+                aria-label={`Notifikasi ${roleName}`}
+                title={`Notifikasi ${roleName}`}
             >
                 <i className="fas fa-bell in-app-noti-icon"></i>
                 {unreadCount > 0 && (
                     <span
                         className="in-app-noti-badge animate-pulse"
-                        title={`${unreadCount} notifikasi ${isInstructorMode ? 'pengajar' : 'siswa'} belum dibaca`}
+                        title={`${unreadCount} notifikasi ${roleName.toLowerCase()} ${isAdminMode ? 'perlu tindakan' : 'belum dibaca'}`}
                     >
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
@@ -346,16 +465,16 @@ function InAppNotificationBell() {
                         <div className="d-flex align-items-center justify-content-between w-100 mb-2">
                             <div className="d-flex align-items-center gap-2">
                                 <h6 className="in-app-noti-title mb-0">
-                                    {isInstructorMode ? 'Notifikasi Pengajar' : 'Notifikasi Siswa'}
+                                    {isAdminMode ? 'Notifikasi Admin' : isInstructorMode ? 'Notifikasi Pengajar' : 'Notifikasi Siswa'}
                                 </h6>
                                 {unreadCount > 0 && (
                                     <span className="in-app-noti-unread-count">
-                                        {unreadCount} baru
+                                        {unreadCount} {isAdminMode ? 'perlu tindakan' : 'baru'}
                                     </span>
                                 )}
                             </div>
 
-                            {unreadCount > 0 && (
+                            {unreadCount > 0 && !isAdminMode && (
                                 <button
                                     type="button"
                                     className="in-app-noti-mark-all"
@@ -368,7 +487,7 @@ function InAppNotificationBell() {
                             )}
                         </div>
 
-                        {/* Filter Bar (Semua / Belum Dibaca) */}
+                        {/* Filter Bar */}
                         <div className="in-app-noti-filter-bar">
                             <div className="filter-pill-group">
                                 <button
@@ -380,14 +499,14 @@ function InAppNotificationBell() {
                                 </button>
                                 <button
                                     type="button"
-                                    className={`filter-pill-btn ${filterStatus === 'unread' ? 'active' : ''}`}
-                                    onClick={() => setFilterStatus('unread')}
+                                    className={`filter-pill-btn ${filterStatus === 'unread' || filterStatus === 'actionable' ? 'active' : ''}`}
+                                    onClick={() => setFilterStatus(isAdminMode ? 'actionable' : 'unread')}
                                 >
-                                    Belum Dibaca ({unreadCount})
+                                    {isAdminMode ? 'Perlu Tindakan' : 'Belum Dibaca'} ({unreadCount})
                                 </button>
                             </div>
                             <span className="noti-role-context-hint">
-                                {isInstructorMode ? 'Fokus: Pengajaran' : 'Fokus: Pembelajaran'}
+                                {isAdminMode ? 'Fokus: Tata Kelola Platform' : isInstructorMode ? 'Fokus: Pengajaran' : 'Fokus: Pembelajaran'}
                             </span>
                         </div>
                     </div>
@@ -397,25 +516,72 @@ function InAppNotificationBell() {
                         {displayedNotifs.length === 0 ? (
                             <div className="in-app-noti-empty">
                                 <div className="in-app-noti-empty-icon">
-                                    <i className={filterStatus === 'unread' ? 'fas fa-envelope-open-text' : 'fas fa-bell-slash'}></i>
+                                    <i className={filterStatus === 'unread' || filterStatus === 'actionable' ? 'fas fa-shield-check' : 'fas fa-bell-slash'}></i>
                                 </div>
                                 <div className="in-app-noti-empty-text">
-                                    {filterStatus === 'unread'
-                                        ? 'Semua notifikasi sudah Anda baca'
-                                        : `Belum ada notifikasi baru sebagai ${isInstructorMode ? 'Pengajar' : 'Siswa'}`}
+                                    {isAdminMode
+                                        ? (filterStatus === 'actionable'
+                                            ? 'Tidak ada item yang membutuhkan tindakan saat ini'
+                                            : 'Belum ada notifikasi tata kelola baru')
+                                        : (filterStatus === 'unread'
+                                            ? 'Semua notifikasi sudah Anda baca'
+                                            : `Belum ada notifikasi baru sebagai ${roleName}`)}
                                 </div>
                                 <div className="in-app-noti-empty-sub">
-                                    {isInstructorMode
-                                        ? 'Pemberitahuan verifikasi integritas ujian siswa, pendaftaran kursus, dan ulasan akan tampil di sini.'
-                                        : 'Pemberitahuan kelulusan ujian, reset kuis, dan penerbitan sertifikat akan tampil di sini.'}
+                                    {isAdminMode
+                                        ? 'Pengajuan review kursus, laporan pelanggaran konten, dan masukan pengguna akan muncul di sini.'
+                                        : isInstructorMode
+                                            ? 'Pemberitahuan verifikasi integritas ujian siswa, pendaftaran kursus, dan ulasan akan tampil di sini.'
+                                            : 'Pemberitahuan kelulusan ujian, reset kuis, dan penerbitan sertifikat akan tampil di sini.'}
                                 </div>
                             </div>
                         ) : (
-                            displayedNotifs.slice(0, 10).map((noti) => {
+                            displayedNotifs.slice(0, 10).map((noti, idx) => {
+                                if (isAdminMode) {
+                                    // Mode Admin
+                                    const meta = getAdminNotiMeta(noti);
+                                    return (
+                                        <div
+                                            key={noti.id || idx}
+                                            className="in-app-noti-item unread noti-admin-item"
+                                            onClick={() => handleNotificationClick(noti)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <div className={`in-app-noti-item-icon ${meta.badgeClass}`}>
+                                                <i className={meta.icon}></i>
+                                            </div>
+
+                                            <div className="in-app-noti-item-content">
+                                                <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                                    <span className={`in-app-noti-type-tag ${meta.badgeClass}`}>
+                                                        {meta.label}
+                                                    </span>
+                                                    <span className="in-app-noti-time">{noti.time || 'Baru'}</span>
+                                                </div>
+
+                                                <div className="in-app-noti-heading" title={noti.title}>
+                                                    {noti.title}
+                                                </div>
+
+                                                {noti.message && (
+                                                    <div className="in-app-noti-msg" title={noti.message}>
+                                                        {noti.message}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {meta.isActionable && (
+                                                <div className="in-app-noti-dot" style={{ backgroundColor: meta.dotColor }} title="Perlu tindakan admin"></div>
+                                            )}
+                                        </div>
+                                    );
+                                }
+
+                                // Mode Siswa & Pengajar
                                 const meta = getNotificationMeta(noti.type);
                                 return (
                                     <div
-                                        key={noti.id}
+                                        key={noti.id || idx}
                                         className={`in-app-noti-item ${!noti.seen ? 'unread' : 'read'}`}
                                         onClick={() => handleNotificationClick(noti)}
                                     >
@@ -454,8 +620,8 @@ function InAppNotificationBell() {
                                                         type="button"
                                                         className="in-app-noti-manta-btn"
                                                         onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleOpenMantaChat(noti);
+                                                             e.stopPropagation();
+                                                             handleOpenMantaChat(noti);
                                                         }}
                                                         title="Buka Manta AI dan diskusikan topik ini"
                                                     >
@@ -483,8 +649,8 @@ function InAppNotificationBell() {
                     <div className="in-app-noti-footer">
                         <div className="d-flex align-items-center justify-content-between w-100">
                             <span className="in-app-noti-footer-tip">
-                                <i className="fas fa-info-circle me-1 text-teal"></i>
-                                Klik untuk melihat materi
+                                <i className={`fas ${isAdminMode ? 'fa-shield-alt text-amber' : 'fa-info-circle text-teal'} me-1`}></i>
+                                {isAdminMode ? 'Tata kelola & moderasi platform' : 'Klik untuk melihat materi'}
                             </span>
 
                             <button
@@ -492,14 +658,16 @@ function InAppNotificationBell() {
                                 className="in-app-noti-view-activities-btn"
                                 onClick={() => {
                                     setIsOpen(false);
-                                    if (isInstructorMode) {
+                                    if (isAdminMode) {
+                                        navigate('/admin/reports/');
+                                    } else if (isInstructorMode) {
                                         navigate('/instructor/notifications/');
                                     } else {
                                         navigate('/student/activities/');
                                     }
                                 }}
                             >
-                                <span>{isInstructorMode ? 'Log Pengajaran' : 'Log Belajar'}</span>
+                                <span>{isAdminMode ? 'Buka Laporan & Masukan' : isInstructorMode ? 'Log Pengajaran' : 'Log Belajar'}</span>
                                 <i className="fas fa-arrow-right ms-1"></i>
                             </button>
                         </div>

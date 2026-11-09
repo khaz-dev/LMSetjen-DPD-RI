@@ -6,6 +6,7 @@ import apiInstance from "../../utils/axios";
 import UserData from "../../views/plugin/UserData";
 import Toast from "../../views/plugin/Toast";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
+import { getCourseCurriculumSummary } from "../../utils/courseUtils";
 import "./LecturesTab.css";
 
 const LecturesTab = ({
@@ -1292,17 +1293,17 @@ const LecturesTab = ({
                         <i className="fas fa-list-check me-2 text-teal"></i>Kurikulum Kursus
                     </h5>
                     {course?.curriculum?.length > 0 && (() => {
-                        const totalSections = course.curriculum.length;
-                        const totalLessons = course.curriculum.reduce((acc, c) => acc + (c.variant_items?.length || 0), 0);
+                        const { sectionsCount, lessonsCount, quizzesCount } = getCourseCurriculumSummary(course);
                         return (
                             <span className="badge curriculum-count-badge">
-                                {totalSections} Bagian • {totalLessons} Materi
+                                {sectionsCount} Bagian • {lessonsCount} Pelajaran{quizzesCount > 0 ? ` • ${quizzesCount} Kuis` : ''}
                             </span>
                         );
                     })()}
                 </div>
                 {course?.curriculum?.length > 0 && (() => {
-                    const totalLessons = course.curriculum.reduce((acc, c) => acc + (c.variant_items?.length || 0), 0);
+                    const { lessonsCount } = getCourseCurriculumSummary(course);
+                    const totalLessons = lessonsCount;
                     const completedLessons = getCompletedLessonsCount() || 0;
                     const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
                     
@@ -1457,7 +1458,14 @@ const LecturesTab = ({
                                                 )}
                                             </h5>
                                             <small className="opacity-90">
-                                                {c.variant_items?.length || 0} Pelajaran{(c.variant_items?.length || 0) !== 1 ? "" : ""}
+                                                {(() => {
+                                                    const secLessons = (c.variant_items || []).filter(it => it.item_type !== 'quiz' && !it.quiz_id && !it.quiz).length;
+                                                    const secQuizzes = (c.variant_items || []).filter(it => it.item_type === 'quiz' || it.quiz_id || it.quiz).length;
+                                                    const parts = [];
+                                                    if (secLessons > 0) parts.push(`${secLessons} Pelajaran`);
+                                                    if (secQuizzes > 0) parts.push(`${secQuizzes} Kuis`);
+                                                    return parts.join(' • ') || '0 Materi';
+                                                })()}
                                             </small>
                                         </div>
                                     </div>

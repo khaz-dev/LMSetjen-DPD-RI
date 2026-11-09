@@ -342,7 +342,7 @@ class Course(models.Model):
         return Variant.objects.filter(course=self)
     
     def lectures(self):
-        return VariantItem.objects.filter(variant__course=self)
+        return VariantItem.objects.filter(variant__course=self).exclude(item_type='quiz')
     
     def average_rating(self):
         related_ids = self.get_related_course_ids()

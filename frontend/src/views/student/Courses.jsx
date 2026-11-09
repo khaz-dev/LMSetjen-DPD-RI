@@ -9,7 +9,7 @@ import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
-import { getImageUrl } from "../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary } from "../../utils/courseUtils";
 import { calculateTotalDuration, parseDurationToSeconds } from "../../utils/durationUtils";
 import { usePageCache } from "../../utils/usePageCache";
 import "./Courses.css";
@@ -72,7 +72,8 @@ function Courses() {
 
     // Calculate combined progress metrics for a course item
     const getCourseMetrics = useCallback((course) => {
-        const totalLectures = course.lectures?.length || 0;
+        const { lessonsCount } = getCourseCurriculumSummary(course);
+        const totalLectures = lessonsCount || (course.lectures?.length || 0);
         const completedLessons = course.completed_lesson?.length || 0;
 
         const quizResults = course.quiz_results || [];

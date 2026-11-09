@@ -1743,9 +1743,10 @@ class CourseSerializer(serializers.ModelSerializer):
     # ✨ PHASE 4.228: Add total_jam_pelatihan (JP) calculated from course lectures
     total_jam_pelatihan = serializers.SerializerMethodField()
     learning_module = LearningModuleSerializer(read_only=True)
+    curriculum_summary = serializers.SerializerMethodField()  # ✨ Accurate sections, lessons, and curriculum quizzes summary
     
     class Meta:
-        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan", "course_type", "learning_module", "games"]
+        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan", "course_type", "learning_module", "games", "curriculum_summary"]
         model = api_models.Course
 
     
@@ -1780,6 +1781,20 @@ class CourseSerializer(serializers.ModelSerializer):
         from . import serializer as ser  # Lazy import to avoid circular reference
         quizzes = obj.quizzes.all()
         return ser.QuizSerializer(quizzes, many=True).data if quizzes.exists() else []
+
+    def get_curriculum_summary(self, obj):
+        """✨ Accurate summary of sections, lessons (non-quiz), and curriculum quizzes"""
+        sections_count = obj.curriculum.count()
+        lessons_count = api_models.VariantItem.objects.filter(variant__course=obj).exclude(item_type='quiz').count()
+        curriculum_quizzes_count = api_models.VariantItem.objects.filter(variant__course=obj, item_type='quiz').count()
+        if curriculum_quizzes_count == 0:
+            curriculum_quizzes_count = obj.quizzes.filter(quiz_type='quiz').count()
+
+        return {
+            'sections_count': sections_count,
+            'lessons_count': lessons_count,
+            'quizzes_count': curriculum_quizzes_count,
+        }
 
     def get_games(self, obj):
         """Return array of course game objects for instructor & student view"""

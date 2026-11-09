@@ -325,6 +325,13 @@ const SiMantaAvatar = () => {
     const [showBubble, setShowBubble] = useState(false);
     const [bubbleDismissed, setBubbleDismissed] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [isChatExpanded, setIsChatExpanded] = useState(() => {
+        try {
+            return localStorage.getItem('manta_chat_expanded') === 'true';
+        } catch {
+            return false;
+        }
+    });
     const [isGameOpen, setIsGameOpen] = useState(false); // Mini Game Arcade MantaType
     const [isActionMenuOpen, setIsActionMenuOpen] = useState(false); // Balon Menu Aksi Cepat (Chat vs Game)
     const [isMinimized, setIsMinimized] = useState(() => {
@@ -334,6 +341,18 @@ const SiMantaAvatar = () => {
             return false;
         }
     });
+
+    const handleToggleExpand = useCallback(() => {
+        setIsChatExpanded(prev => {
+            const next = !prev;
+            try {
+                localStorage.setItem('manta_chat_expanded', String(next));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    }, []);
 
     // Smart Learning Nudge & Proactive Reminder State
     const [learningNudge, setLearningNudge] = useState(null);
@@ -1356,7 +1375,7 @@ const SiMantaAvatar = () => {
             {/* POSISI ASLI: MENGEMBANG DARI POJOK KIRI BAWAH */}
             {isChatOpen && !isMinimized && (
                 <section 
-                    className="simanta-chat-window"
+                    className={`simanta-chat-window ${isChatExpanded ? 'simanta-chat-expanded' : ''}`}
                     aria-labelledby="simanta-dialog-title"
                 >
                     {/* Partikel Konfeti Perayaan Prestasi Belajar (Confetti Particle Burst) */}
@@ -1394,6 +1413,15 @@ const SiMantaAvatar = () => {
                         </div>
 
                         <div className="simanta-chat-header-actions">
+                            {/* Tombol Perlebar/Kembalikan Ukuran Chat (Mode Luas) */}
+                            <button
+                                className="simanta-chat-header-btn simanta-expand-toggle-btn"
+                                onClick={handleToggleExpand}
+                                title={isChatExpanded ? "Kecilkan lebar jendela chat" : "Perlebar jendela chat (Mode Luas)"}
+                                aria-label={isChatExpanded ? "Kecilkan lebar jendela chat" : "Perlebar jendela chat"}
+                            >
+                                {isChatExpanded ? '🗗' : '⛶'}
+                            </button>
                             {/* Tombol Pintasan Mini Game MantaType Arcade */}
                             <button
                                 className="simanta-chat-header-btn simanta-game-shortcut-btn"

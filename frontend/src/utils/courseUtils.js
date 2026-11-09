@@ -338,3 +338,83 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
         console.error('Error in delete confirmation:', error);
     }
 };
+
+/**
+ * ✨ Accurately calculates course curriculum statistics:
+ * - sectionsCount: Total sections/variants in the course curriculum
+ * - lessonsCount: Total actual lessons (excluding quiz items)
+ * - quizzesCount: Total curriculum quizzes (excluding pre/post-tests)
+ * 
+ * Prioritizes backend-computed `course.curriculum_summary` if present,
+ * or inspects nested `course.curriculum` items, with fallback to `lectures` & `quizzes`.
+ */
+export const getCourseCurriculumSummary = (course) => {
+    if (!course) {
+        return { sectionsCount: 0, lessonsCount: 0, quizzesCount: 0 };
+    }
+
+    // 1. If backend already computed curriculum_summary, prioritize it
+    if (course.curriculum_summary) {
+        return {
+            sectionsCount: Number(course.curriculum_summary.sections_count) || 0,
+            lessonsCount: Number(course.curriculum_summary.lessons_count) || 0,
+            quizzesCount: Number(course.curriculum_summary.quizzes_count) || 0
+        };
+    }
+
+    // 2. Sections / Bagian
+    const sectionsCount = Array.isArray(course.curriculum) ? course.curriculum.length : 0;
+
+    // 3. Scan directly from nested curriculum if variants & items exist
+    let curriculumLessons = 0;
+    let curriculumQuizzes = 0;
+    let hasNestedItems = false;
+
+    if (Array.isArray(course.curriculum) && course.curriculum.length > 0) {
+        course.curriculum.forEach((section) => {
+            const items = section.variant_items || section.items || [];
+            if (Array.isArray(items) && items.length > 0) {
+                hasNestedItems = true;
+                items.forEach((item) => {
+                    const isQuiz = item.item_type === 'quiz' || Boolean(item.quiz_id) || Boolean(item.quiz);
+                    if (isQuiz) {
+                        curriculumQuizzes++;
+                    } else {
+                        curriculumLessons++;
+                    }
+                });
+            }
+        });
+    }
+
+    // 4. Lessons calculation
+    let lessonsCount = 0;
+    if (hasNestedItems) {
+        lessonsCount = curriculumLessons;
+    } else if (Array.isArray(course.lectures)) {
+        // Exclude quiz items if any exist in lectures
+        lessonsCount = course.lectures.filter((l) => l.item_type !== 'quiz' && !l.quiz_id && !l.quiz).length;
+    }
+
+    // 5. Quizzes calculation
+    let quizzesCount = 0;
+    if (hasNestedItems && curriculumQuizzes > 0) {
+        // Preferred: count of quizzes actually inserted into curriculum sections
+        quizzesCount = curriculumQuizzes;
+    } else if (Array.isArray(course.quizzes)) {
+        // Filter regular learning quizzes (exclude pre/post-tests)
+        const regularQuizzes = course.quizzes.filter((q) => {
+            const type = q.quiz_type || '';
+            return type !== 'pre_post_test' && !q.has_pre_test && !q.has_post_test;
+        });
+        quizzesCount = regularQuizzes.length > 0 ? regularQuizzes.length : (course.quizzes.length > 0 ? course.quizzes.length : 0);
+    } else if (typeof course.quizzes === 'number') {
+        quizzesCount = course.quizzes;
+    }
+
+    return {
+        sectionsCount,
+        lessonsCount,
+        quizzesCount
+    };
+};

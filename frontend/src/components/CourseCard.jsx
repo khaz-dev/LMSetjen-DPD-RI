@@ -5,7 +5,8 @@ import {
     getImageUrl,
     getLevelBadgeStyle,
     getLevelText,
-    getActualCourseStatus
+    getActualCourseStatus,
+    getCourseCurriculumSummary
 } from "../utils/courseUtils.js";
 import { calculateTotalDuration, parseDurationToSeconds } from "../utils/durationUtils";
 import useAxios from "../utils/useAxios";
@@ -17,25 +18,11 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
     const navigate = useNavigate();
     const [editingCourse, setEditingCourse] = useState(false);
 
-    // Calculate course completion
-    const hasCurriculum = course.curriculum?.length > 0;
-    const hasLessons = course.curriculum?.some(variant => variant.items?.length > 0);
-
-    // Quizzes check
-    const hasQuiz = (() => {
-        if (!course.quizzes) return false;
-        if (typeof course.quizzes === "number") {
-            return course.quizzes > 0;
-        }
-        if (Array.isArray(course.quizzes)) {
-            return course.quizzes.length > 0;
-        }
-        if (typeof course.quizzes === "object") {
-            const quizList = Object.values(course.quizzes);
-            return quizList.length > 0;
-        }
-        return false;
-    })();
+    // Calculate course curriculum completion with accurate helper
+    const { sectionsCount, lessonsCount, quizzesCount } = getCourseCurriculumSummary(course);
+    const hasCurriculum = sectionsCount > 0;
+    const hasLessons = lessonsCount > 0;
+    const hasQuiz = quizzesCount > 0;
 
     // Calculate progress percentage
     const calculateProgress = () => {
@@ -156,7 +143,7 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
     const studentsCount = Array.isArray(course.students)
         ? course.students.length
         : (typeof course.students === "number" ? course.students : (course.students_count || 0));
-    const lecturesCount = course.lectures?.length || 0;
+    const lecturesCount = lessonsCount || (course.lectures?.length || 0);
     const durationInfo = lecturesCount > 0 ? calculateTotalDuration(course.lectures) : null;
     const totalJP = lecturesCount > 0 ? calculateTotalJP(course.lectures) : 0;
 

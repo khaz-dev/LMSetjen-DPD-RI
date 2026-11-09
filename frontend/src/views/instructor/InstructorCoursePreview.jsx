@@ -4,7 +4,7 @@ import useAxios from "../../utils/useAxios";
 import Toast from "../plugin/Toast";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
-import { getImageUrl, getLevelText } from "../../utils/courseUtils";
+import { getImageUrl, getLevelText, getCourseCurriculumSummary } from "../../utils/courseUtils";
 import "./InstructorCoursePreview.css";
 
 /**
@@ -209,26 +209,11 @@ function InstructorCoursePreview() {
 
     // Derived statistics
     const stats = useMemo(() => {
-        if (!course) return { sections: 0, lectures: 0, quizzes: 0, questions: 0, curriculumQuizzes: 0 };
-        const sections = course.curriculum?.length || 0;
-        let lectures = 0;
-        let curriculumQuizzes = 0;
-        if (course.curriculum) {
-            course.curriculum.forEach(sec => {
-                const items = sec.items || sec.variant_items || [];
-                items.forEach(it => {
-                    if (it.item_type === 'quiz' || it.quiz_id || it.quiz) {
-                        curriculumQuizzes++;
-                    } else {
-                        lectures++;
-                    }
-                });
-            });
-        }
-        if (!lectures && course.lectures) {
-            lectures = course.lectures.length;
-        }
-        const quizzes = course.quizzes?.length || 0;
+        if (!course) return { sections: 0, lectures: 0, quizzes: 0, questions: 0, curriculumQuizzes: 0, games: 0 };
+        const { sectionsCount, lessonsCount, quizzesCount } = getCourseCurriculumSummary(course);
+        const sections = sectionsCount;
+        const lectures = lessonsCount;
+        const quizzes = quizzesCount;
         let questions = 0;
         if (course.quizzes) {
             course.quizzes.forEach(q => {
@@ -236,7 +221,7 @@ function InstructorCoursePreview() {
             });
         }
         const games = course.games?.length || 0;
-        return { sections, lectures, quizzes, questions, curriculumQuizzes, games };
+        return { sections, lectures, quizzes, questions, curriculumQuizzes: quizzesCount, games };
     }, [course]);
 
     // ✨ Pre/Post-Test detection

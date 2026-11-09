@@ -13,6 +13,7 @@ import AtRiskStudentsWidget from "../../components/Analytics/AtRiskStudentsWidge
 import RecommendationMetricsWidget from "../../components/Analytics/RecommendationMetricsWidget";
 import SearchQualityWidget from "../../components/Analytics/SearchQualityWidget";
 import QueryTaxonomyWidget from "../../components/Analytics/QueryTaxonomyWidget";
+import VisitorTrafficWidget from "../../components/Analytics/VisitorTrafficWidget";
 
 // Lazy load Chart.js components
 const Line = lazy(() => import("react-chartjs-2").then(m => ({ default: m.Line })));
@@ -598,6 +599,11 @@ function DashboardAdmin() {
                                     {/* Left Column (8 cols): Visual Charts & Top Courses */}
                                     <div className="col-lg-8">
                                         
+                                        {/* Widget Analisis Tren Pengunjung LMSetjen DPD RI (Jam, Hari, Tanggal, Bulan, Tahun) */}
+                                        <div className="mb-3">
+                                            <VisitorTrafficWidget mode="compact" defaultGranularity="hourly" />
+                                        </div>
+
                                         {/* Quick Analytics Visual Showcase */}
                                         <div className="admin-card mb-3">
                                             <div className="admin-card-header d-flex justify-content-between align-items-center">
@@ -926,6 +932,11 @@ function DashboardAdmin() {
                                     </div>
                                 }>
                                     <div className="row g-3">
+                                        {/* Widget Analisis Tren Pengguna Mengunjungi LMSetjen DPD RI (Full Detail) */}
+                                        <div className="col-12">
+                                            <VisitorTrafficWidget mode="full" defaultGranularity="date" />
+                                        </div>
+
                                         {/* Line Chart: 12-Month Enrollment */}
                                         <div className="col-lg-8">
                                             <div className="admin-card h-100">

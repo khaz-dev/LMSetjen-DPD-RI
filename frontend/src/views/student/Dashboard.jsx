@@ -9,7 +9,7 @@ import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { calculateTotalDuration, parseDurationToSeconds, formatDurationWithJP, formatDuration } from "../../utils/durationUtils";
-import { getImageUrl } from "../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary } from "../../utils/courseUtils";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import { usePageCache } from "../../utils/usePageCache";
 import ActivityDisplay from "../../components/StudentDashboard/ActivityDisplay";
@@ -47,7 +47,8 @@ function Dashboard() {
 
         // Synchronously compute progress before state updates to avoid race conditions
         const progressStats = courseData.map((course) => {
-            const totalLessons = course.lectures?.length || 0;
+            const { lessonsCount } = getCourseCurriculumSummary(course);
+            const totalLessons = lessonsCount || (course.lectures?.length || 0);
             const completedLessons = course.completed_lesson?.length || 0;
 
             const quizResults = course.quiz_results || [];

@@ -5,7 +5,7 @@ import apiInstance from "../../utils/axios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import Swal from "sweetalert2";
-import { getImageUrl } from "../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary } from "../../utils/courseUtils";
 import "./CourseReviewAdmin.css";
 
 function CourseReviewAdmin() {
@@ -222,26 +222,31 @@ function CourseReviewAdmin() {
                                                 </div>
 
                                                 <div className="course-stats mb-3 pb-3 border-bottom">
-                                                    <div className="row text-center">
-                                                        <div className="col">
-                                                            <div className="stat-number">
-                                                                {course.curriculum?.length || 0}
+                                                    {(() => {
+                                                        const { sectionsCount, lessonsCount, quizzesCount } = getCourseCurriculumSummary(course);
+                                                        return (
+                                                            <div className="row text-center">
+                                                                <div className="col">
+                                                                    <div className="stat-number">
+                                                                        {sectionsCount}
+                                                                    </div>
+                                                                    <div className="stat-label">Bagian</div>
+                                                                </div>
+                                                                <div className="col">
+                                                                    <div className="stat-number">
+                                                                        {lessonsCount}
+                                                                    </div>
+                                                                    <div className="stat-label">Pelajaran</div>
+                                                                </div>
+                                                                <div className="col">
+                                                                    <div className="stat-number">
+                                                                        {quizzesCount}
+                                                                    </div>
+                                                                    <div className="stat-label">Kuis</div>
+                                                                </div>
                                                             </div>
-                                                            <div className="stat-label">Bagian</div>
-                                                        </div>
-                                                        <div className="col">
-                                                            <div className="stat-number">
-                                                                {course.lectures?.length || 0}
-                                                            </div>
-                                                            <div className="stat-label">Pelajaran</div>
-                                                        </div>
-                                                        <div className="col">
-                                                            <div className="stat-number">
-                                                                {course.question_answer?.length || 0}
-                                                            </div>
-                                                            <div className="stat-label">Kuis</div>
-                                                        </div>
-                                                    </div>
+                                                        );
+                                                    })()}
                                                 </div>
 
                                                 <div className="submission-info text-muted small mb-3">

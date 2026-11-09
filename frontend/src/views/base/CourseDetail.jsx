@@ -17,7 +17,7 @@ import CourseDetailLoading from "./components/CourseDetailLoading";
 // Import hooks and utilities
 import { useCourse } from "./hooks/useCourse";
 import { calculateTotalDuration, formatDuration, parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Duration formatting
-import { getImageUrl } from "../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary } from "../../utils/courseUtils";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
@@ -583,8 +583,7 @@ function CourseDetail() {
                     </div>
                 );
             case "curriculum": {
-                const totalModules = course?.curriculum?.length || (course?.file_type === 'scorm' ? 1 : 0);
-                const totalLessons = course?.curriculum?.reduce((sum, sec) => sum + (sec.variant_items?.length || sec.items?.length || 0), 0) || course?.lectures?.length || 1;
+                const { sectionsCount: totalModules, lessonsCount: totalLessons, quizzesCount } = getCourseCurriculumSummary(course);
                 return (
                     <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden">
                         <div className="card-body p-3 p-md-4">
@@ -608,6 +607,11 @@ function CourseDetail() {
                                     <span className="badge bg-light text-secondary border px-2 py-1" style={{ fontSize: "0.75rem" }}>
                                         <i className="fas fa-file-lines me-1 text-teal"></i>{totalLessons} Materi
                                     </span>
+                                    {quizzesCount > 0 && (
+                                        <span className="badge bg-light text-secondary border px-2 py-1" style={{ fontSize: "0.75rem" }}>
+                                            <i className="fas fa-clipboard-question me-1 text-teal"></i>{quizzesCount} Kuis
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 

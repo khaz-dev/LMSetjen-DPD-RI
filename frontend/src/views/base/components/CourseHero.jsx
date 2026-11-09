@@ -3,7 +3,7 @@ import dayjs from "../../../utils/dayjs";
 import { Rating } from "react-simple-star-rating";
 import "./CourseHero.css";
 import { Link } from "react-router-dom";
-import { getImageUrl } from "../../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary } from "../../../utils/courseUtils";
 
 const CourseHero = ({ course }) => {
     if (!course) return null;
@@ -248,10 +248,17 @@ const CourseHero = ({ course }) => {
 
                                 {/* Total Curriculum / Lessons */}
                                 <div className="d-flex align-items-center small">
-                                    <i className="fas fa-book-open me-1 text-white-50"></i>
-                                    <span>{course.curriculum?.length || 0} Modul</span>
-                                    <span className="mx-1 opacity-50">•</span>
-                                    <span>{course.lectures?.length || 0} Materi</span>
+                                    {(() => {
+                                        const { sectionsCount, lessonsCount } = getCourseCurriculumSummary(course);
+                                        return (
+                                            <>
+                                                <i className="fas fa-book-open me-1 text-white-50"></i>
+                                                <span>{sectionsCount} Modul</span>
+                                                <span className="mx-1 opacity-50">•</span>
+                                                <span>{lessonsCount} Materi</span>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
 
                                 {/* Date */}

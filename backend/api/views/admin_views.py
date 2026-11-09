@@ -2502,23 +2502,45 @@ class AdminHeaderStatsAPIView(generics.GenericAPIView):
             except Exception:
                 pending_feedback = 0
 
-            # 3e. Check personal user unread notifications in DB
+            # 3e. Administrative system notifications (strictly exclude student learning nudges / JP target reminders)
+            admin_excluded_types = [
+                'AI JP Target Reminder',
+                'AI Learning Nudge',
+                'AI Microlearning Digest',
+                'AI Flashcard Challenge',
+                'Course Enrollment Completed',
+                'Course Published',
+                'Exam Verified',
+                'Exam Reset',
+                'Exam Rejected',
+                'New Order',
+                'New Course Question',
+                'New Review',
+            ]
             user_notifs = api_models.Notification.objects.filter(
                 user=request.user,
                 seen=False
+            ).exclude(
+                type__in=admin_excluded_types
+            ).exclude(
+                title__icontains='Target 20 JP'
+            ).exclude(
+                message__icontains='Target 20 JP'
+            ).exclude(
+                title__icontains='20 JP'
             ).order_by('-date')[:10]
 
             for notif in user_notifs:
                 notifications_list.append({
                     'id': f'db_{notif.id}',
-                    'category': 'personal',
-                    'icon': 'fas fa-bell',
-                    'color': '#10b981',
-                    'title': notif.title or notif.type or 'Notifikasi Akun',
-                    'message': notif.message or 'Pemberitahuan sistem baru untuk Anda.',
-                    'link': '#',
-                    'badge': 'Notifikasi',
-                    'badge_type': 'success',
+                    'category': 'admin_notice',
+                    'icon': 'fas fa-shield-alt',
+                    'color': '#0f766e',
+                    'title': notif.title or notif.type or 'Pemberitahuan Sistem Admin',
+                    'message': notif.message or 'Pemberitahuan sistem baru untuk Administrator.',
+                    'link': '/admin/reports/',
+                    'badge': 'Sistem Admin',
+                    'badge_type': 'teal',
                     'time': notif.date.strftime('%H:%M WIB') if notif.date else 'Baru saja'
                 })
 
@@ -2553,6 +2575,292 @@ class AdminHeaderStatsAPIView(generics.GenericAPIView):
 
             return Response(response_data, status=status.HTTP_200_OK)
         except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminVisitorTrafficAnalyticsAPIView(APIView):
+    """
+    Analisis Tren Pengunjung & Pengguna LMSetjen DPD RI (100% Real Live Database):
+    Menyajikan data multi-granularitas murni dari database aktivitas dan kehadiran aktual:
+    - Jam (Hourly 00:00 - 23:00 WIB)
+    - Hari (Daily: Senin - Minggu)
+    - Tanggal (30 Hari Terakhir)
+    - Bulan (Monthly: 12 Bulan Terakhir)
+    - Tahun (Yearly: Multi-tahun)
+    
+    Lengkap dengan deteksi otomatis status tren (Peningkatan, Penurunan, Stagnan),
+    persentase fluktuasi riil, jam/hari puncak operasional, dan transparansi sumber log.
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request):
+        try:
+            from datetime import timedelta
+            import calendar
+            now = timezone.now()
+            today_local = timezone.localtime(now).date()
+
+            # Helper penentu status tren objektif murni perbandingan nilai
+            def calculate_trend_status(current_val, prev_val):
+                if prev_val is None or prev_val == 0:
+                    if current_val > 0:
+                        return "Peningkatan", 100.0, current_val
+                    return "Stagnan", 0.0, 0
+                diff = current_val - prev_val
+                pct = round((diff / prev_val) * 100, 1)
+                if diff > 0:
+                    return "Peningkatan", pct, diff
+                elif diff < 0:
+                    return "Penurunan", pct, diff
+                return "Stagnan", 0.0, 0
+
+            # ------------------------------------------------------------------
+            # Pengumpulan Seluruh Timestamp Riil dari Database Platform
+            # ------------------------------------------------------------------
+            all_timestamps = []
+
+            # 1. Log Aktivitas Platform Terpusat (ActivityLog)
+            act_logs = list(api_models.ActivityLog.objects.values_list('activity_date', flat=True))
+            all_timestamps.extend([t for t in act_logs if t])
+
+            # 2. Riwayat Login Terakhir Pengguna (User.last_login)
+            user_logins = list(User.objects.filter(last_login__isnull=False).values_list('last_login', flat=True))
+            all_timestamps.extend([t for t in user_logins if t])
+
+            # 3. Pendaftaran Kursus ASN (EnrolledCourse.date)
+            enroll_dates = list(api_models.EnrolledCourse.objects.values_list('date', flat=True))
+            all_timestamps.extend([t for t in enroll_dates if t])
+
+            # 4. Evaluasi & Pengerjaan Kuis (QuizAttempt.date_attempted)
+            quiz_dates = list(api_models.QuizAttempt.objects.values_list('date_attempted', flat=True))
+            all_timestamps.extend([t for t in quiz_dates if t])
+
+            # 5. Penyelesaian Materi/Modul Pembelajaran (CompletedLesson.date)
+            lesson_dates = list(api_models.CompletedLesson.objects.values_list('date', flat=True))
+            all_timestamps.extend([t for t in lesson_dates if t])
+
+            # 6. Audit Poin Penghargaan (PointsAuditLog.awarded_at)
+            points_dates = list(api_models.PointsAuditLog.objects.values_list('awarded_at', flat=True))
+            all_timestamps.extend([t for t in points_dates if t])
+
+            # Konversi semua ke timezone lokal WIB
+            local_timestamps = [timezone.localtime(t) for t in all_timestamps]
+
+            # ------------------------------------------------------------------
+            # 1. Tren Per Jam (24 Jam: 00:00 - 23:00 WIB)
+            # ------------------------------------------------------------------
+            hourly_counts = {h: 0 for h in range(24)}
+            for lt in local_timestamps:
+                hourly_counts[lt.hour] += 1
+
+            hourly_data = []
+            prev_hourly = None
+            peak_hour_val = -1
+            peak_hour_str = "-"
+
+            for h in range(24):
+                val = hourly_counts[h]
+                status_str, pct, diff = calculate_trend_status(val, prev_hourly)
+                prev_hourly = val
+
+                if val > peak_hour_val:
+                    peak_hour_val = val
+                    peak_hour_str = f"{h:02d}:00 WIB"
+
+                hourly_data.append({
+                    'hour': h,
+                    'label': f"{h:02d}:00",
+                    'visits': val,
+                    'status': status_str,
+                    'change_pct': pct,
+                    'diff': diff
+                })
+
+            if peak_hour_val <= 0:
+                peak_hour_str = "Belum Ada Aktivitas"
+
+            # ------------------------------------------------------------------
+            # 2. Tren Per Hari dalam Seminggu (Senin - Minggu)
+            # ------------------------------------------------------------------
+            day_names_id = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+            daily_weekday_counts = {i: 0 for i in range(7)}
+            for lt in local_timestamps:
+                daily_weekday_counts[lt.weekday()] += 1
+
+            daily_data = []
+            prev_daily = None
+            peak_day_val = -1
+            peak_day_str = "-"
+
+            for idx, name in enumerate(day_names_id):
+                val = daily_weekday_counts[idx]
+                status_str, pct, diff = calculate_trend_status(val, prev_daily)
+                prev_daily = val
+
+                if val > peak_day_val:
+                    peak_day_val = val
+                    peak_day_str = name
+
+                daily_data.append({
+                    'day_index': idx,
+                    'label': name,
+                    'visits': val,
+                    'status': status_str,
+                    'change_pct': pct,
+                    'diff': diff
+                })
+
+            if peak_day_val <= 0:
+                peak_day_str = "Belum Ada Aktivitas"
+
+            # ------------------------------------------------------------------
+            # 3. Tren Per Tanggal (30 Hari Terakhir)
+            # ------------------------------------------------------------------
+            date_counts = {}
+            for i in range(29, -1, -1):
+                d = today_local - timedelta(days=i)
+                date_counts[d.strftime('%Y-%m-%d')] = 0
+
+            for lt in local_timestamps:
+                d_str = lt.date().strftime('%Y-%m-%d')
+                if d_str in date_counts:
+                    date_counts[d_str] += 1
+
+            date_data = []
+            prev_date_val = None
+            for i in range(29, -1, -1):
+                target_date = today_local - timedelta(days=i)
+                d_str = target_date.strftime('%Y-%m-%d')
+                val = date_counts.get(d_str, 0)
+                status_str, pct, diff = calculate_trend_status(val, prev_date_val)
+                prev_date_val = val
+
+                date_data.append({
+                    'date': d_str,
+                    'label': target_date.strftime('%d %b'),
+                    'visits': val,
+                    'status': status_str,
+                    'change_pct': pct,
+                    'diff': diff
+                })
+
+            # ------------------------------------------------------------------
+            # 4. Tren Per Bulan (12 Bulan Terakhir)
+            # ------------------------------------------------------------------
+            month_names_id = [
+                "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ]
+            monthly_keys = []
+            monthly_counts = {}
+            for i in range(11, -1, -1):
+                m_date = (today_local.replace(day=1) - timedelta(days=30 * i)).replace(day=1)
+                k = f"{m_date.year}-{m_date.month:02d}"
+                if k not in monthly_counts:
+                    monthly_counts[k] = 0
+                    monthly_keys.append((m_date.year, m_date.month, k))
+
+            for lt in local_timestamps:
+                k = f"{lt.year}-{lt.month:02d}"
+                if k in monthly_counts:
+                    monthly_counts[k] += 1
+
+            monthly_data = []
+            prev_month_val = None
+            peak_month_val = -1
+            peak_month_str = "-"
+
+            for yr, m_num, k in monthly_keys:
+                val = monthly_counts.get(k, 0)
+                m_name = month_names_id[m_num]
+                status_str, pct, diff = calculate_trend_status(val, prev_month_val)
+                prev_month_val = val
+
+                if val > peak_month_val:
+                    peak_month_val = val
+                    peak_month_str = f"{m_name} {yr}"
+
+                monthly_data.append({
+                    'month': m_num,
+                    'year': yr,
+                    'label': f"{m_name[:3]} {yr}",
+                    'full_label': f"{m_name} {yr}",
+                    'visits': val,
+                    'status': status_str,
+                    'change_pct': pct,
+                    'diff': diff
+                })
+
+            if peak_month_val <= 0:
+                peak_month_str = "Belum Ada Aktivitas"
+
+            # ------------------------------------------------------------------
+            # 5. Tren Per Tahun (Multi-Tahun Nyata)
+            # ------------------------------------------------------------------
+            cur_year = today_local.year
+            yearly_years = [cur_year - 2, cur_year - 1, cur_year]
+            yearly_counts = {y: 0 for y in yearly_years}
+
+            for lt in local_timestamps:
+                if lt.year in yearly_counts:
+                    yearly_counts[lt.year] += 1
+
+            yearly_data = []
+            prev_year_val = None
+
+            for yr in yearly_years:
+                val = yearly_counts[yr]
+                status_str, pct, diff = calculate_trend_status(val, prev_year_val)
+                prev_year_val = val
+
+                yearly_data.append({
+                    'year': yr,
+                    'label': str(yr),
+                    'visits': val,
+                    'status': status_str,
+                    'change_pct': pct,
+                    'diff': diff
+                })
+
+            # ------------------------------------------------------------------
+            # Ringkasan Eksekutif & Metadata Riil
+            # ------------------------------------------------------------------
+            today_str = today_local.strftime('%Y-%m-%d')
+            yesterday_str = (today_local - timedelta(days=1)).strftime('%Y-%m-%d')
+            today_visits = date_counts.get(today_str, 0)
+            yesterday_visits = date_counts.get(yesterday_str, 0)
+            day_status, day_pct, day_diff = calculate_trend_status(today_visits, yesterday_visits)
+
+            result = {
+                'status': 'success',
+                'is_live_data': True,
+                'data_source': 'Real LMS Database (ActivityLog, User Logins, Enrollments, Quizzes, Lessons, Points)',
+                'summary': {
+                    'total_visits_today': today_visits,
+                    'yesterday_visits': yesterday_visits,
+                    'current_trend_status': day_status,
+                    'current_trend_pct': day_pct,
+                    'current_trend_diff': day_diff,
+                    'peak_hour': peak_hour_str,
+                    'peak_day': peak_day_str,
+                    'peak_month': peak_month_str,
+                    'total_real_events': len(local_timestamps),
+                    'total_active_users': User.objects.filter(is_active=True).count(),
+                    'total_registered_users': User.objects.count(),
+                    'last_updated': timezone.localtime(now).strftime('%d %B %Y %H:%M:%S WIB'),
+                },
+                'hourly': hourly_data,
+                'daily': daily_data,
+                'date': date_data,
+                'monthly': monthly_data,
+                'yearly': yearly_data,
+            }
+
+            return Response(result, status=status.HTTP_200_OK)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

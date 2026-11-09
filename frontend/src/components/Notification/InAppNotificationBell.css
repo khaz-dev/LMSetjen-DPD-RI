@@ -262,6 +262,15 @@
     border-left: 3px solid #0f766e;
 }
 
+.in-app-noti-item.noti-admin-item {
+    background: rgba(245, 158, 11, 0.03);
+    border-left: 3px solid #f59e0b;
+}
+
+.in-app-noti-item.noti-admin-item:hover {
+    background: rgba(245, 158, 11, 0.07);
+}
+
 .in-app-noti-item.unread:hover {
     background: rgba(15, 118, 110, 0.07);
 }

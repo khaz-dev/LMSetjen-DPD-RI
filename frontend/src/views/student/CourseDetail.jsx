@@ -216,19 +216,15 @@ function CourseDetail() {
 
 
     const allLessonsCompleted = (() => {
-
         const totalLessons = course?.curriculum?.reduce((total, section) => {
-
             const items = section.variant_items || section.items || [];
-
-            return total + items.length;
-
-        }, 0) || 0;
+            const actualLessonItems = items.filter(it => it.item_type !== 'quiz' && !it.quiz_id && !it.quiz);
+            return total + actualLessonItems.length;
+        }, 0) || (course?.lectures?.length || 0);
 
         const completedCount = new Set(course?.completed_lesson?.map(cl => cl.variant_item?.variant_item_id)).size;
 
         return totalLessons > 0 && completedCount >= totalLessons;
-
     })();
 
 
@@ -4610,15 +4606,12 @@ function CourseDetail() {
 
 
 
-            // Calculate total lessons from curriculum more accurately
-
+            // Calculate total lessons from curriculum more accurately (excluding quiz items)
             const totalLessons = res.data.curriculum?.reduce((total, section) => {
-
                 const sectionItems = section.variant_items || section.items || [];
-
-                return total + sectionItems.length;
-
-            }, 0) || 0;
+                const actualLessonItems = sectionItems.filter(it => it.item_type !== 'quiz' && !it.quiz_id && !it.quiz);
+                return total + actualLessonItems.length;
+            }, 0) || (res.data.lectures?.length || 0);
 
 
 

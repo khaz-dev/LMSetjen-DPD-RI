@@ -1,15 +1,17 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth';
 import UserData from '../plugin/UserData';
 import RoleIndicator from '../../components/RoleIndicator';
 import { ProfileContext } from '../plugin/Context';
 import apiInstance from '../../utils/axios';
+import '../../components/Notification/InAppNotificationBell.css';
 import './AdminHeader.css';
 
 function AdminHeader() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [notiOpen, setNotiOpen] = useState(false);
+    const [notiFilterStatus, setNotiFilterStatus] = useState('all'); // 'all' | 'actionable'
     const [hoverTimeout, setHoverTimeout] = useState(null);
     const [loadingStats, setLoadingStats] = useState(false);
 
@@ -146,6 +148,95 @@ function AdminHeader() {
         }
     };
 
+    // Helper ikon dan label metadata notifikasi admin selaras dengan style InAppNotificationBell
+    const getAdminNotiMeta = useCallback((item) => {
+        const cat = item?.category || '';
+        const bType = item?.badge_type || '';
+        if (cat === 'course' || bType === 'warning') {
+            return {
+                icon: 'fas fa-book-reader',
+                badgeClass: 'badge-amber',
+                label: item?.badge || 'Review Kursus',
+                dotColor: '#d97706',
+                isActionable: true
+            };
+        }
+        if (cat === 'abuse' || bType === 'danger') {
+            return {
+                icon: 'fas fa-triangle-exclamation',
+                badgeClass: 'badge-rose',
+                label: item?.badge || 'Laporan Ulasan',
+                dotColor: '#e11d48',
+                isActionable: true
+            };
+        }
+        if (cat === 'testimonial' || bType === 'info') {
+            return {
+                icon: 'fas fa-quote-right',
+                badgeClass: 'badge-sky',
+                label: item?.badge || 'Kurasi Testimoni',
+                dotColor: '#0284c7',
+                isActionable: true
+            };
+        }
+        if (cat === 'feedback' || bType === 'purple') {
+            const isBug = (item?.badge || '').toLowerCase().includes('bug');
+            return {
+                icon: isBug ? 'fas fa-bug' : 'fas fa-lightbulb',
+                badgeClass: isBug ? 'badge-rose' : 'badge-purple',
+                label: item?.badge || 'Masukan Pengguna',
+                dotColor: isBug ? '#e11d48' : '#9333ea',
+                isActionable: true
+            };
+        }
+        return {
+            icon: 'fas fa-shield-halved',
+            badgeClass: 'badge-teal',
+            label: item?.badge || 'Sistem Admin',
+            dotColor: '#0f766e',
+            isActionable: false
+        };
+    }, []);
+
+    // Filter ketat: pastikan pengingat target 20 JP ASN atau notifikasi belajar personal tidak pernah muncul di Admin
+    const safeAdminNotifications = useMemo(() => {
+        const rawList = Array.isArray(headerStats?.notifications) ? headerStats.notifications : [];
+        return rawList.filter(item => {
+            const title = (item?.title || '').toLowerCase();
+            const msg = (item?.message || '').toLowerCase();
+            const badge = (item?.badge || '').toLowerCase();
+            const type = (item?.type || '').toLowerCase();
+            if (
+                title.includes('target 20 jp') ||
+                msg.includes('target 20 jp') ||
+                title.includes('20 jp') ||
+                msg.includes('20 jp') ||
+                badge.includes('20 jp') ||
+                type.includes('target reminder') ||
+                title.includes('learning nudge') ||
+                title.includes('microlearning') ||
+                title.includes('flashcard') ||
+                item?.category === 'personal'
+            ) {
+                return false;
+            }
+            return true;
+        });
+    }, [headerStats?.notifications]);
+
+    // Hitung item yang perlu tindakan admin
+    const actionableAlertsCount = useMemo(() => {
+        return safeAdminNotifications.filter(item => getAdminNotiMeta(item).isActionable).length;
+    }, [safeAdminNotifications, getAdminNotiMeta]);
+
+    // Tampilkan notifikasi sesuai tab filter 'all' vs 'actionable'
+    const displayedAdminNotifs = useMemo(() => {
+        if (notiFilterStatus === 'actionable') {
+            return safeAdminNotifications.filter(item => getAdminNotiMeta(item).isActionable);
+        }
+        return safeAdminNotifications;
+    }, [safeAdminNotifications, notiFilterStatus, getAdminNotiMeta]);
+
     // Admin menu items
     const adminMenuItems = [
         { to: "/admin/dashboard/", icon: "bi bi-grid-fill", text: "Dashboard", requiresSuperAdmin: false },
@@ -242,78 +333,150 @@ function AdminHeader() {
                         {/* Live Notifications Dropdown */}
                         <div className="nav-item dropdown admin-notifications" ref={notiRef}>
                             <button 
-                                className="nav-link notification-btn"
+                                className={`nav-link notification-btn ${notiOpen ? 'active' : ''}`}
                                 type="button"
                                 onClick={() => {
                                     setNotiOpen(!notiOpen);
                                     setDropdownOpen(false);
                                 }}
-                                title="Pusat Notifikasi & Tindakan Tertunda"
+                                title="Pusat Notifikasi & Tindakan Tertunda Admin"
                                 aria-expanded={notiOpen}
+                                aria-label="Notifikasi Administrator"
                             >
                                 <i className="fas fa-bell"></i>
-                                {headerStats.total_alerts > 0 && (
-                                    <span className="notification-badge pulse-badge">
-                                        {headerStats.total_alerts > 99 ? '99+' : headerStats.total_alerts}
+                                {actionableAlertsCount > 0 && (
+                                    <span className="notification-badge pulse-badge" title={`${actionableAlertsCount} tindakan tertunda`}>
+                                        <span className="notification-badge-number">{actionableAlertsCount > 99 ? '99+' : actionableAlertsCount}</span>
                                     </span>
                                 )}
                             </button>
                             {notiOpen && (
-                                <ul className="dropdown-menu notification-dropdown show shadow-lg">
-                                    <li className="dropdown-header d-flex justify-content-between align-items-center">
-                                        <div className="d-flex align-items-center">
-                                            <i className="fas fa-bell me-2 text-warning"></i>
-                                            <span>Notifikasi & Tindakan</span>
+                                <div className="in-app-noti-dropdown shadow-lg">
+                                    {/* Header Panel */}
+                                    <div className="in-app-noti-header">
+                                        <div className="d-flex align-items-center justify-content-between w-100 mb-2">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <h6 className="in-app-noti-title mb-0">
+                                                    Notifikasi Admin
+                                                </h6>
+                                                {actionableAlertsCount > 0 ? (
+                                                    <span className="in-app-noti-unread-count">
+                                                        {actionableAlertsCount} baru
+                                                    </span>
+                                                ) : (
+                                                    <span className="badge bg-success-subtle text-success border border-success-subtle py-1 px-2" style={{ fontSize: '0.68rem', borderRadius: '6px' }}>
+                                                        <i className="fas fa-check-circle me-1"></i> Terpantau
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className="in-app-noti-mark-all"
+                                                onClick={() => fetchHeaderStats()}
+                                                disabled={loadingStats}
+                                                title="Segarkan notifikasi dan tindakan tertunda"
+                                            >
+                                                <i className={`fas fa-sync-alt me-1 ${loadingStats ? 'fa-spin' : ''}`}></i>
+                                                {loadingStats ? 'Memuat...' : 'Segarkan'}
+                                            </button>
                                         </div>
-                                        {headerStats.total_alerts > 0 ? (
-                                            <span className="badge bg-warning text-dark font-weight-bold">
-                                                {headerStats.total_alerts} Perlu Ditindak
+
+                                        {/* Filter Bar (Semua / Belum Ditindak) */}
+                                        <div className="in-app-noti-filter-bar">
+                                            <div className="filter-pill-group">
+                                                <button
+                                                    type="button"
+                                                    className={`filter-pill-btn ${notiFilterStatus === 'all' ? 'active' : ''}`}
+                                                    onClick={() => setNotiFilterStatus('all')}
+                                                >
+                                                    Semua ({safeAdminNotifications.length})
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`filter-pill-btn ${notiFilterStatus === 'actionable' ? 'active' : ''}`}
+                                                    onClick={() => setNotiFilterStatus('actionable')}
+                                                >
+                                                    Perlu Ditindak ({actionableAlertsCount})
+                                                </button>
+                                            </div>
+                                            <span className="noti-role-context-hint">
+                                                Fokus: Tata Kelola
                                             </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Notification List Body */}
+                                    <div className="in-app-noti-list">
+                                        {displayedAdminNotifs.length === 0 ? (
+                                            <div className="in-app-noti-empty">
+                                                <div className="in-app-noti-empty-icon">
+                                                    <i className={notiFilterStatus === 'actionable' ? 'fas fa-check-circle text-success' : 'fas fa-bell-slash'}></i>
+                                                </div>
+                                                <div className="in-app-noti-empty-text">
+                                                    {notiFilterStatus === 'actionable'
+                                                        ? 'Semua tindakan operasional telah selesai'
+                                                        : 'Belum ada notifikasi baru untuk Admin'}
+                                                </div>
+                                                <div className="in-app-noti-empty-sub">
+                                                    Pemberitahuan verifikasi kursus baru, laporan ulasan pengguna, testimoni, dan masukan akan tampil di sini.
+                                                </div>
+                                            </div>
                                         ) : (
-                                            <span className="badge bg-success">Terpantau</span>
-                                        )}
-                                    </li>
-                                    <li><hr className="dropdown-divider m-0" /></li>
-                                    
-                                    <div className="notification-list-body" style={{ maxHeight: '280px', overflowY: 'auto' }}>
-                                        {headerStats.notifications && headerStats.notifications.length > 0 ? (
-                                            headerStats.notifications.map((item, idx) => (
-                                                <li key={item.id || idx}>
+                                            displayedAdminNotifs.slice(0, 15).map((item, idx) => {
+                                                const meta = getAdminNotiMeta(item);
+                                                return (
                                                     <div 
-                                                        className="dropdown-item noti-item-row"
+                                                        key={item.id || idx}
+                                                        className={`in-app-noti-item ${meta.isActionable ? 'unread' : 'read'}`}
                                                         onClick={() => handleNotificationClick(item)}
-                                                        style={{ cursor: 'pointer', whiteSpace: 'normal', padding: '10px 14px', borderBottom: '1px solid #f1f5f9' }}
                                                     >
-                                                        <div className="d-flex align-items-start gap-2">
-                                                            <i className={`fas ${item.icon || 'fa-bell'} mt-1 ${item.badge_type === 'warning' ? 'text-warning' : item.badge_type === 'danger' ? 'text-danger' : 'text-primary'}`}></i>
-                                                            <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                                                                <div className="fw-bold small">{item.title}</div>
-                                                                <div className="text-muted" style={{ fontSize: '0.78rem' }}>{item.message}</div>
-                                                                {item.time && <div className="text-muted" style={{ fontSize: '0.7rem' }}>{item.time}</div>}
-                                                            </div>
+                                                        <div className={`in-app-noti-item-icon ${meta.badgeClass}`}>
+                                                            <i className={meta.icon}></i>
                                                         </div>
+
+                                                        <div className="in-app-noti-item-content">
+                                                            <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                                                <span className={`in-app-noti-type-tag ${meta.badgeClass}`}>
+                                                                    {meta.label}
+                                                                </span>
+                                                                <span className="in-app-noti-time">{item.time || 'Baru'}</span>
+                                                            </div>
+
+                                                            <div className="in-app-noti-heading" title={item.title}>
+                                                                {item.title}
+                                                            </div>
+
+                                                            {item.message && (
+                                                                <div className="in-app-noti-msg" title={item.message}>
+                                                                    {item.message}
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {meta.isActionable && (
+                                                            <div className="in-app-noti-dot" style={{ backgroundColor: meta.dotColor }}></div>
+                                                        )}
                                                     </div>
-                                                </li>
-                                            ))
-                                        ) : (
-                                            <li className="p-3 text-center text-muted small">
-                                                <i className="fas fa-check-circle text-success mb-1 d-block" style={{ fontSize: '20px' }}></i>
-                                                Semua operasional sistem berjalan normal.
-                                            </li>
+                                                );
+                                            })
                                         )}
                                     </div>
-                                    
-                                    <li><hr className="dropdown-divider m-0" /></li>
-                                    <li>
+
+                                    {/* Footer Section */}
+                                    <div className="in-app-noti-footer d-flex align-items-center justify-content-between">
+                                        <span className="in-app-noti-footer-tip">
+                                            Tata kelola & moderasi platform
+                                        </span>
                                         <Link 
                                             to="/admin/reports/" 
-                                            className="dropdown-item text-center small text-primary fw-semibold py-2"
+                                            className="in-app-noti-view-activities-btn"
                                             onClick={() => setNotiOpen(false)}
                                         >
-                                            Buka Laporan & Diagnostik <i className="fas fa-arrow-right ms-1"></i>
+                                            Buka Laporan & Masukan <i className="fas fa-arrow-right ms-1"></i>
                                         </Link>
-                                    </li>
-                                </ul>
+                                    </div>
+                                </div>
                             )}
                         </div>
 

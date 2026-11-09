@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import useAxios from "../../../utils/useAxios";
 import UserData from "../../plugin/UserData";
-import { getImageUrl } from "../../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary } from "../../../utils/courseUtils";
 import { getMediaUrl } from "../../../utils/constants";
 import { calculateTotalDuration } from "../../../utils/durationUtils";
 
@@ -229,12 +229,13 @@ const CourseSidebar = ({
 
     // Derive smart features if course.features is empty
     const durationData = calculateTotalDuration(course?.lectures || []);
+    const { sectionsCount, lessonsCount } = getCourseCurriculumSummary(course);
     const smartFeatures = (course?.features && course.features.length > 0)
         ? course.features
         : [
-            { id: 'f1', icon: 'fas fa-video', text: `${course?.lectures?.length || 1} Materi Pembelajaran`, highlight: true },
+            { id: 'f1', icon: 'fas fa-video', text: `${lessonsCount || 1} Materi Pembelajaran`, highlight: true },
             { id: 'f2', icon: 'fas fa-clock', text: durationData?.withJP || 'Waktu Fleksibel', highlight: false },
-            { id: 'f3', icon: 'fas fa-layer-group', text: `${course?.curriculum?.length || 1} Modul Terstruktur`, highlight: false },
+            { id: 'f3', icon: 'fas fa-layer-group', text: `${sectionsCount || 1} Modul Terstruktur`, highlight: false },
             { id: 'f4', icon: 'fas fa-certificate', text: 'Sertifikat Kelulusan Resmi', highlight: true },
             { id: 'f5', icon: 'fas fa-laptop-code', text: 'Modul Interaktif & SCORM', highlight: false },
             { id: 'f6', icon: 'fas fa-infinity', text: 'Akses Penuh Fleksibel', highlight: false }

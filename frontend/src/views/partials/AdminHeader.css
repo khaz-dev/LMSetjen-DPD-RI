@@ -223,63 +223,108 @@
 }
 
 .notification-btn {
-    background: none !important;
-    border: none !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     color: #ffffff !important;
-    font-size: 1.2rem;
-    padding: 0.75rem !important;
-    border-radius: 50%;
-    transition: all 0.3s ease;
+    font-size: 1.05rem;
+    width: 38px;
+    height: 38px;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
+    cursor: pointer;
 }
 
-.notification-btn:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
-    transform: scale(1.05);
+.notification-btn:hover,
+.notification-btn.active {
+    background: rgba(245, 158, 11, 0.2) !important;
+    border-color: #f59e0b !important;
+    color: #fbbf24 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
 }
 
 .notification-badge {
     position: absolute;
-    top: 0.25rem;
-    right: 0.25rem;
-    background: #e74c3c;
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 0.15rem 0.4rem;
-    border-radius: 10px;
-    min-width: 1.2rem;
-    text-align: center;
+    top: -5px;
+    right: -5px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff !important;
+    font-size: 0.65rem;
+    font-weight: 700;
     line-height: 1;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    border: 2px solid #1a1a2e;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.45);
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 10;
 }
 
-.notification-dropdown {
-    width: 280px;
-    max-width: calc(100vw - 32px) !important;
-    border: none;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    border-radius: 12px;
+.notification-badge-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    margin: 0;
     padding: 0;
-    background: white;
-    margin: 0 !important;
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+@keyframes pulseBadgeGlow {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.12);
+    }
+}
+
+.pulse-badge {
+    animation: pulseBadgeGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    transform-origin: center center;
+}
+
+/* In-App Notification Dropdown inside Admin Header */
+.admin-notifications .in-app-noti-dropdown {
     position: absolute !important;
-    top: calc(100% + 8px) !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    z-index: 1050;
-    max-height: 70vh;
-    overflow-y: auto;
-    overflow-x: hidden !important;
+    top: calc(100% + 10px) !important;
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+    width: 420px;
+    max-width: calc(100vw - 32px) !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 118, 110, 0.08) !important;
+    z-index: 1080 !important;
+    overflow: hidden !important;
+    text-align: left;
 }
 
-.notification-dropdown .dropdown-item {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #f8f9fa;
-    transition: all 0.3s ease;
-}
-
-.notification-dropdown .dropdown-item:hover {
-    background: #f8f9fa;
+@media (max-width: 576px) {
+    .admin-notifications .in-app-noti-dropdown {
+        position: fixed !important;
+        top: 64px !important;
+        left: 12px !important;
+        right: 12px !important;
+        width: auto !important;
+        max-width: calc(100vw - 24px) !important;
+    }
 }
 
 /* CRITICAL: Admin Header Dropdown Menu - Prevent all global overrides */
@@ -1064,19 +1109,7 @@ body .admin-header .admin-profile-dropdown .dropdown-item.active-item {
         padding: 0.4rem 0.6rem !important;
     }
     
-    .notification-dropdown {
-        position: absolute !important;
-        top: calc(100% + 8px) !important;
-        left: 50% !important;
-        right: auto !important;
-        transform: translateX(-50%) !important;
-        width: 260px;
-        max-width: calc(100vw - 32px) !important;
-        max-height: 70vh;
-        overflow-y: auto;
-        overflow-x: hidden !important;
-        margin: 0 !important;
-    }
+
 
     .admin-profile-dropdown {
         position: absolute !important;
@@ -1115,20 +1148,7 @@ body .admin-header .admin-profile-dropdown .dropdown-item.active-item {
         font-size: 1.5rem;
     }
     
-    .notification-dropdown {
-        position: absolute !important;
-        top: calc(100% + 8px) !important;
-        left: 50% !important;
-        right: auto !important;
-        transform: translateX(-50%) !important;
-        width: 250px;
-        max-width: calc(100vw - 24px) !important;
-        max-height: 75vh;
-        overflow-y: auto;
-        overflow-x: hidden !important;
-        margin: 0 !important;
-        border-radius: 8px;
-    }
+
 
     .admin-profile-dropdown {
         position: absolute !important;
@@ -1183,10 +1203,7 @@ body .admin-header .admin-profile-dropdown .dropdown-item.active-item {
     }
 }
 
-.notification-dropdown {
-    width: 320px !important;
-    max-width: calc(100vw - 32px) !important;
-}
+
 
 .noti-item-row:hover {
     background-color: #f8fafc !important;

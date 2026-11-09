@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import apiInstance from "../../../utils/axios";
 import Toast from "../../plugin/Toast";
-import { getImageUrl } from "../../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary } from "../../../utils/courseUtils";
 
 /**
  * Course Review Tab Component (Redesigned Compact & Live)
@@ -452,11 +452,7 @@ function CourseReviewTab({ onCountsUpdated }) {
                 /* Compact Grid View (3 Columns on Large Screens) */
                 <div className="row g-3">
                     {filteredCourses.map((course) => {
-                        const curriculumCount = course.curriculum?.length || 0;
-                        const lecturesCount = course.lectures?.length || 0;
-                        const quizzesCount = Array.isArray(course.quizzes)
-                            ? course.quizzes.length
-                            : (typeof course.quizzes === "number" ? course.quizzes : 0);
+                        const { sectionsCount, lessonsCount, quizzesCount } = getCourseCurriculumSummary(course);
                         const teacherName = course.teacher?.full_name || course.user?.full_name || "Instruktur";
                         const teacherInitial = teacherName.charAt(0).toUpperCase();
 
@@ -522,14 +518,14 @@ function CourseReviewTab({ onCountsUpdated }) {
                                         <div className="course-card-metrics">
                                             <div className="course-card-metric-item" title="Jumlah Bagian Kurikulum">
                                                 <i className="fas fa-layer-group"></i>
-                                                <span>{curriculumCount} Bagian</span>
+                                                <span>{sectionsCount} Bagian</span>
                                             </div>
-                                            <div className="course-card-metric-item" title="Jumlah Pelajaran / Video">
+                                            <div className="course-card-metric-item" title="Jumlah Pelajaran">
                                                 <i className="fas fa-play-circle"></i>
-                                                <span>{lecturesCount} Pelajaran</span>
+                                                <span>{lessonsCount} Pelajaran</span>
                                             </div>
-                                            <div className="course-card-metric-item" title="Jumlah Kuis / Evaluasi">
-                                                <i className="fas fa-question-circle"></i>
+                                            <div className="course-card-metric-item" title="Jumlah Kuis Evaluasi">
+                                                <i className="fas fa-clipboard-question"></i>
                                                 <span>{quizzesCount} Kuis</span>
                                             </div>
                                         </div>
@@ -591,11 +587,7 @@ function CourseReviewTab({ onCountsUpdated }) {
                         </thead>
                         <tbody>
                             {filteredCourses.map((course, idx) => {
-                                const curriculumCount = course.curriculum?.length || 0;
-                                const lecturesCount = course.lectures?.length || 0;
-                                const quizzesCount = Array.isArray(course.quizzes)
-                                    ? course.quizzes.length
-                                    : (typeof course.quizzes === "number" ? course.quizzes : 0);
+                                const { sectionsCount, lessonsCount, quizzesCount } = getCourseCurriculumSummary(course);
                                 const teacherName = course.teacher?.full_name || course.user?.full_name || "Instruktur";
 
                                 return (
@@ -639,7 +631,7 @@ function CourseReviewTab({ onCountsUpdated }) {
                                         </td>
                                         <td>
                                             <span className="small text-muted">
-                                                <strong>{curriculumCount}</strong> bag · <strong>{lecturesCount}</strong> mat · <strong>{quizzesCount}</strong> kuis
+                                                <strong>{sectionsCount}</strong> bag · <strong>{lessonsCount}</strong> pel · <strong>{quizzesCount}</strong> kuis
                                             </span>
                                         </td>
                                         <td>
