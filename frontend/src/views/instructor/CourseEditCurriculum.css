@@ -377,101 +377,146 @@
 }
 
 /* ============================================
-   LESSON CARD STYLING - Compact & Modern
+   LESSON CARD STYLING - Compact, Balanced & Eye-Catching (LMSetjen DPD RI)
    ============================================ */
 
 .curriculum-item-card-enhanced {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 7px;
-    margin-bottom: 8px;
-    overflow: visible;
-    transition: all 0.2s ease;
+    border-left: 3.5px solid #0f766e;
+    border-radius: 8px;
+    margin-bottom: 8px !important;
+    overflow: hidden;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.curriculum-item-card-enhanced.is-scorm {
+    border-left: 3.5px solid #0d9488 !important;
+}
+
+.curriculum-item-card-enhanced.is-quiz {
+    border-left: 3.5px solid #f59e0b !important;
 }
 
 .curriculum-item-card-enhanced:hover {
-    border-color: #0f766e;
-    box-shadow: 0 3px 10px rgba(15, 118, 110, 0.1);
+    border-color: #cbd5e1;
+    border-left-color: #0f766e;
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.08);
+}
+
+.curriculum-item-card-enhanced.is-quiz:hover {
+    border-left-color: #f59e0b;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
 }
 
 .curriculum-item-card-enhanced:last-child {
-    margin-bottom: 0;
+    margin-bottom: 0 !important;
 }
 
-/* Lesson Header - Compact */
+/* Lesson Header - Compact & Elegant Gradient */
 .curriculum-item-header-enhanced {
-    background: linear-gradient(135deg, #115e59 0%, #0f766e 100%);
-    padding: 6px 10px;
-    border-bottom: 1px solid #0f766e;
-    border-radius: 6px 6px 0 0;
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    padding: 5px 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.curriculum-item-header-enhanced.quiz-header {
+    background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
+}
+
+.curriculum-item-header-enhanced.scorm-header {
+    background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%) !important;
 }
 
 .curriculum-item-header-enhanced h6 {
     color: #ffffff !important;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     margin-bottom: 0;
 }
 
 .lesson-number-badge {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     color: #ffffff;
-    padding: 2px 7px;
-    border-radius: 10px;
+    padding: 1.5px 7px;
+    border-radius: 8px;
     font-weight: 600;
-    font-size: 0.725rem;
+    font-size: 0.72rem;
     display: inline-flex;
     align-items: center;
     gap: 3px;
+    letter-spacing: 0.2px;
 }
 
 .lesson-title-preview {
     color: #ffffff !important;
     font-weight: 500;
-    font-size: 0.825rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-size: 0.8rem;
     margin-bottom: 0;
+    opacity: 0.95;
 }
 
-/* Lesson Body - Compact Padding with Generous Left & Right Padding */
+.btn-micro {
+    padding: 0px 5px !important;
+    font-size: 0.65rem !important;
+    line-height: 1.4 !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+}
+
+.btn-micro:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    color: #ffffff !important;
+}
+
+/* Lesson Body - Dense & Clean Spacing */
 .curriculum-item-content-enhanced,
 .curriculum-item-body-enhanced {
-    padding: 14px 20px !important;
+    padding: 10px 12px !important;
     background: #ffffff;
 }
 
 .curriculum-item-content-enhanced .row,
 .curriculum-item-body-enhanced .row {
-    margin-left: -8px;
-    margin-right: -8px;
+    margin-left: -4px;
+    margin-right: -4px;
 }
 
 .curriculum-item-content-enhanced .col-md-6,
+.curriculum-item-content-enhanced .col-md-8,
+.curriculum-item-content-enhanced .col-md-4,
 .curriculum-item-body-enhanced .col-md-6 {
-    padding-left: 8px;
-    padding-right: 8px;
+    padding-left: 4px;
+    padding-right: 4px;
 }
 
 .curriculum-item-content-enhanced .mb-3,
 .curriculum-item-body-enhanced .mb-3 {
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
 }
 
 /* Ensure icons have generous spacing in form labels */
 .curriculum-item-content-enhanced label i {
-    margin-right: 8px;
+    margin-right: 6px;
 }
 
 /* Badge SCORM 1.2 in header */
 .curriculum-item-header-enhanced .badge-scorm-pill {
     background: #ffffff !important;
-    color: #0f172a !important;
+    color: #0f766e !important;
     border: 1px solid rgba(255, 255, 255, 0.9) !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
     font-weight: 700 !important;
-    font-size: 11px !important;
+    font-size: 10.5px !important;
+    padding: 1.5px 7px !important;
+    border-radius: 6px !important;
 }
 
 .curriculum-submit-bar {
@@ -1389,9 +1434,9 @@
 .scorm-module-card {
     background: #ffffff;
     border: 1px solid #e2e8f0 !important;
-    border-left: 4px solid #0f766e !important;
-    border-radius: 12px;
-    padding: 1.5rem 1.65rem !important;
+    border-left: 3.5px solid #0f766e !important;
+    border-radius: 8px;
+    padding: 0.85rem 1rem !important;
     transition: all 0.25s ease;
 }
 

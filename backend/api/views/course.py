@@ -980,11 +980,13 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                         
                         # ✨ Support SCORM learning_module_id
                         item_lm_id = item_data.get("learning_module_id")
-                        if item_lm_id and str(item_lm_id) not in ["null", "undefined", ""]:
+                        if item_lm_id and str(item_lm_id) not in ["null", "undefined", "", "none", "0"]:
                             try:
                                 variant_item.learning_module_id = int(item_lm_id)
                             except (ValueError, TypeError):
                                 pass
+                        elif str(item_lm_id).lower() in ["null", "undefined", "", "none", "0"] and course.course_type == 'standard':
+                            variant_item.learning_module_id = None
                         elif not variant_item.learning_module_id and course.learning_module_id and course.course_type != 'standard':
                             variant_item.learning_module = course.learning_module
 

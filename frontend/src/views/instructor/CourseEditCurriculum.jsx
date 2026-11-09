@@ -541,6 +541,7 @@ function SortableSection({
     collapsedSections,
     toggleSectionCollapse,
     addLesson,
+    addScormLesson,
     addQuiz,
     children
 }) {
@@ -694,7 +695,7 @@ function SortableSection({
                     {/* Lessons Container */}
                     {children}
 
-                    <div className="text-start mt-4 pt-2">
+                    <div className="text-start mt-4 pt-2 d-flex align-items-center flex-wrap gap-2">
                         <button
                             type="button"
                             className="btn btn-teal btn-sm px-3 py-1 fw-semibold d-inline-flex align-items-center shadow-sm"
@@ -707,7 +708,18 @@ function SortableSection({
                         </button>
                         <button
                             type="button"
-                            className="btn btn-outline-warning btn-sm px-3 py-1 fw-semibold d-inline-flex align-items-center shadow-sm ms-2"
+                            className="btn btn-outline-teal btn-sm px-3 py-1 fw-semibold d-inline-flex align-items-center shadow-sm"
+                            style={{ gap: "8px" }}
+                            onClick={() => addScormLesson && addScormLesson(variantIndex)}
+                            disabled={uiState.isSubmitting}
+                            title="Tambah materi pembelajaran interaktif SCORM 1.2"
+                        >
+                            <i className="fas fa-cube text-teal small"></i>
+                            <span>Tambah Modul SCORM</span>
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-outline-warning btn-sm px-3 py-1 fw-semibold d-inline-flex align-items-center shadow-sm"
                             style={{ gap: "8px" }}
                             onClick={() => addQuiz && addQuiz(variantIndex)}
                             disabled={uiState.isSubmitting}
@@ -768,10 +780,19 @@ function SortableLessonItem({
     setExtractedDuration, // ✨ PHASE 4.204: Setter for extracted duration state
     isElearningScorm,
     onPreviewScorm,
-    courseQuizzes = []
+    courseQuizzes = [],
+    availableScormModules = [],
+    setAvailableScormModules
 }) {
-    const isItemScorm = isElearningScorm || Boolean(item?.learning_module_id) || Boolean(item?.learning_module_info) || item?.file_type === 'scorm';
     const isItemQuiz = item?.item_type === 'quiz' || Boolean(item?.quiz_id);
+    const isItemScorm = !isItemQuiz && (
+        Boolean(item?.learning_module_id) ||
+        Boolean(item?.learning_module_info) ||
+        item?.file_type === 'scorm' ||
+        item?.media_source === 'scorm' ||
+        isElearningScorm
+    );
+
     const regularQuizzes = (courseQuizzes || []).filter(q => q.quiz_type !== 'pre_post_test' && !q.has_pre_test && !q.has_post_test);
     const selectedQuiz = isItemQuiz ? ((courseQuizzes || []).find(q => String(q.quiz_id) === String(item?.quiz_id)) || item?.quiz_detail) : null;
 
@@ -788,8 +809,17 @@ function SortableLessonItem({
             });
         });
     }
+
     const currentSeconds = Number(item?.duration_seconds) || 0;
     const currentJP = currentSeconds > 0 ? Math.ceil(currentSeconds / 2700) : 0;
+
+    // SCORM Linked Metadata
+    const lm = item?.learning_module_info || (item?.learning_module && typeof item.learning_module === 'object' ? item.learning_module : (isElearningScorm ? course?.learning_module : null));
+    const isScormLinked = Boolean(item?.learning_module_id || lm);
+    const scormTitle = lm?.judul || item?.title || "Paket SCORM 1.2";
+    const scormEntry = lm?.entry_file || "index.html";
+
+    const [scormUploadState, setScormUploadState] = useState({ isUploading: false, progress: 0 });
 
     const {
         attributes,
@@ -804,10 +834,8 @@ function SortableLessonItem({
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0 : 1,
-        marginBottom: '1rem',
+        marginBottom: '8px',
     };
-
-    const uploadState = fileUploadStates[`${variantIndex}_${itemIndex}`] || {};
 
     // ✨ Multi-Format Media State (Video, Presentation PPTX, Document PDF, Audio MP3, Links)
     const activeMediaUrl = item?.uploadedFile || item?.file || item?.youtubeLink || item?.gdriveLink || '';
@@ -828,158 +856,305 @@ function SortableLessonItem({
         }
     }, [item?.youtubeLink, item?.gdriveLink, activeMediaUrl]);
 
+    // Format switch handler (Media vs SCORM)
+    const handleFormatSwitch = (format) => {
+        if (format === 'scorm') {
+            handleLessonChange(variantIndex, itemIndex, "file_type", "scorm");
+            handleLessonChange(variantIndex, itemIndex, "media_source", "scorm");
+            if (!item?.learning_module_id && course?.learning_module_id) {
+                handleLessonChange(variantIndex, itemIndex, "learning_module_id", course.learning_module_id);
+                handleLessonChange(variantIndex, itemIndex, "learning_module_info", course.learning_module);
+            } else if (!item?.learning_module_id && availableScormModules?.length === 1) {
+                handleLessonChange(variantIndex, itemIndex, "learning_module_id", availableScormModules[0].id);
+                handleLessonChange(variantIndex, itemIndex, "learning_module_info", availableScormModules[0]);
+            }
+            if (!item?.duration_seconds) {
+                handleDurationInput(variantIndex, itemIndex, "2700"); // 1 JP default
+            }
+        } else {
+            handleLessonChange(variantIndex, itemIndex, "file_type", item?.uploadedFile ? "video" : null);
+            handleLessonChange(variantIndex, itemIndex, "media_source", item?.uploadedFile ? "upload" : (item?.youtubeLink ? "youtube" : "upload"));
+            handleLessonChange(variantIndex, itemIndex, "learning_module_id", null);
+            handleLessonChange(variantIndex, itemIndex, "learning_module_info", null);
+        }
+        setTimeout(() => autoSaveCurriculum(), 150);
+    };
+
+    // SCORM ZIP Upload Handler
+    const handleScormZipUpload = async (file) => {
+        if (!file) return;
+        const fileName = (file.name || '').toLowerCase();
+        if (!fileName.endsWith('.zip') && !fileName.endsWith('.h5p')) {
+            Toast().fire({
+                icon: "error",
+                title: "Format Berkas Tidak Valid",
+                text: "Harap unggah paket SCORM dalam format berkas ZIP (.zip) atau H5P (.h5p)."
+            });
+            return;
+        }
+        if (file.size > 500 * 1024 * 1024) {
+            Toast().fire({
+                icon: "error",
+                title: "Berkas Terlalu Besar",
+                text: "Ukuran maksimal paket e-learning adalah 500MB."
+            });
+            return;
+        }
+
+        setScormUploadState({ isUploading: true, progress: 0 });
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("course_id", course?.course_id || course?.id || "");
+        if (item?.title) formData.append("title", item.title);
+
+        try {
+            const res = await useAxios.post("teacher/upload-elearning-module/", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setScormUploadState({ isUploading: true, progress: percentCompleted });
+                }
+            });
+
+            if (res.data?.module_id) {
+                handleLessonChange(variantIndex, itemIndex, "learning_module_id", res.data.module_id);
+                handleLessonChange(variantIndex, itemIndex, "learning_module_info", res.data.module);
+                handleLessonChange(variantIndex, itemIndex, "file_type", "scorm");
+                handleLessonChange(variantIndex, itemIndex, "media_source", "scorm");
+                handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
+                handleLessonChange(variantIndex, itemIndex, "file", "");
+                handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
+                handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
+                if (!item?.title || item.title === "Pelajaran Tanpa Judul" || item.title === "Modul Pembelajaran SCORM") {
+                    handleLessonChange(variantIndex, itemIndex, "title", res.data.module?.judul || file.name.replace(/\.[^/.]+$/, ""));
+                }
+                if (!item?.duration_seconds) {
+                    handleDurationInput(variantIndex, itemIndex, "2700"); // 1 JP
+                }
+                if (setAvailableScormModules && res.data.module) {
+                    setAvailableScormModules(prev => [res.data.module, ...(prev || []).filter(m => m.id !== res.data.module_id)]);
+                }
+
+                Toast().fire({
+                    icon: "success",
+                    title: "Paket SCORM Berhasil Diunggah!",
+                    text: `Modul "${res.data.module?.judul || 'SCORM'}" telah diekstrak dan siap digunakan.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                setTimeout(() => autoSaveCurriculum(), 150);
+            }
+        } catch (err) {
+            console.error("Error uploading SCORM package:", err);
+            Toast().fire({
+                icon: "error",
+                title: "Unggahan SCORM Gagal",
+                text: err.response?.data?.error || err.response?.data?.message || "Gagal mengunggah dan mengekstrak paket SCORM."
+            });
+        } finally {
+            setScormUploadState({ isUploading: false, progress: 0 });
+        }
+    };
+
+    // Link existing SCORM module from library
+    const handleSelectExistingModule = (moduleId) => {
+        if (!moduleId) return;
+        const chosen = (availableScormModules || []).find(m => String(m.id) === String(moduleId));
+        if (chosen) {
+            handleLessonChange(variantIndex, itemIndex, "learning_module_id", chosen.id);
+            handleLessonChange(variantIndex, itemIndex, "learning_module_info", chosen);
+            handleLessonChange(variantIndex, itemIndex, "file_type", "scorm");
+            handleLessonChange(variantIndex, itemIndex, "media_source", "scorm");
+            if (!item?.title || item.title === "Pelajaran Tanpa Judul" || item.title === "Modul Pembelajaran SCORM") {
+                handleLessonChange(variantIndex, itemIndex, "title", chosen.judul);
+            }
+            if (!item?.duration_seconds) {
+                handleDurationInput(variantIndex, itemIndex, "2700");
+            }
+            Toast().fire({
+                icon: "success",
+                title: "Modul SCORM Dihubungkan",
+                text: `Materi "${chosen.judul}" berhasil dihubungkan.`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+            setTimeout(() => autoSaveCurriculum(), 150);
+        }
+    };
+
+    // Detach SCORM module
+    const handleDetachScorm = () => {
+        if (window.confirm("Lepaskan paket SCORM dari materi pelajaran ini?")) {
+            handleLessonChange(variantIndex, itemIndex, "learning_module_id", null);
+            handleLessonChange(variantIndex, itemIndex, "learning_module_info", null);
+            handleLessonChange(variantIndex, itemIndex, "file_type", null);
+            handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
+            Toast().fire({
+                icon: "info",
+                title: "Modul SCORM Dilepaskan",
+                text: "Materi ini dapat diisi kembali dengan video/berkas atau paket modul lainnya.",
+                timer: 1500,
+                showConfirmButton: false
+            });
+            setTimeout(() => autoSaveCurriculum(), 150);
+        }
+    };
+
+    // Determine media type for standard lessons
+    const rawMedia = item?.uploadedFile || item?.file || item?.youtubeLink || item?.gdriveLink || '';
+    const mediaExt = rawMedia.toLowerCase().split('.').pop().split('?')[0];
+    const isItemAudio = ['mp3', 'wav', 'ogg', 'm4a', 'aac'].includes(mediaExt);
+    const isItemPdf = mediaExt === 'pdf';
+    const isItemPpt = ['ppt', 'pptx'].includes(mediaExt) || rawMedia.includes('docs.google.com/presentation');
+    const isItemWord = ['doc', 'docx', 'txt'].includes(mediaExt);
+    const isItemVideo = ['mp4', 'webm', 'ogv', 'mov', 'avi', 'mkv'].includes(mediaExt) || rawMedia.includes('youtube.com') || rawMedia.includes('youtu.be') || Boolean(item?.youtubeLink);
+    const isItemWebLink = Boolean(rawMedia && rawMedia.startsWith('http') && !isItemAudio && !isItemPdf && !isItemPpt && !isItemWord && !isItemVideo);
+
+    const isPreviewOpen = previewVisibility[`${variantIndex}_${itemIndex}`] === true;
+
     return (
         <div
             ref={setNodeRef}
             style={style}
-            className={`curriculum-item-card-enhanced ${isDragging ? 'dragging' : ''}`}
+            className={`curriculum-item-card-enhanced ${isItemQuiz ? 'is-quiz' : isItemScorm ? 'is-scorm' : 'is-media'} ${isDragging ? 'dragging' : ''}`}
         >
-            <div className="curriculum-item-header-enhanced">
+            {/* Header: Compact, Sleek, Eye-Catching */}
+            <div className={`curriculum-item-header-enhanced ${isItemQuiz ? 'quiz-header' : isItemScorm ? 'scorm-header' : ''}`}>
                 <div className="d-flex align-items-center justify-content-between">
-                    <div className="d-flex align-items-center gap-2">
-                        {/* Drag Handle for Lesson */}
+                    <div className="d-flex align-items-center gap-1 flex-wrap flex-grow-1 overflow-hidden me-2">
+                        {/* Drag Handle */}
                         <div
                             {...listeners}
                             {...attributes}
                             className="drag-handle drag-handle-lesson"
-                            title="Seret untuk menata ulang pelajaran"
+                            title="Seret untuk menata urutan pelajaran"
                             style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
                         >
                             <i className="fas fa-grip-vertical"></i>
                         </div>
 
-                        {/* UP/DOWN Buttons for Lessons */}
-                        <div className="btn-group btn-group-sm" role="group">
+                        {/* UP/DOWN Micro Buttons */}
+                        <div className="btn-group btn-group-sm me-1" role="group">
                             <button
                                 type="button"
-                                className="btn btn-outline-secondary"
+                                className="btn btn-outline-light btn-micro"
                                 onClick={() => moveLessonUp(variantIndex, itemIndex)}
                                 disabled={itemIndex === 0 || uiState.isSubmitting}
                                 title="Pindahkan pelajaran ke atas"
-                                style={{
-                                    fontSize: '0.7rem',
-                                    padding: '1px 6px',
-                                    opacity: itemIndex === 0 ? 0.3 : 1
-                                }}
                             >
                                 <i className="fas fa-arrow-up"></i>
                             </button>
                             <button
                                 type="button"
-                                className="btn btn-outline-secondary"
+                                className="btn btn-outline-light btn-micro"
                                 onClick={() => moveLessonDown(variantIndex, itemIndex)}
                                 disabled={itemIndex === variant.items.length - 1 || uiState.isSubmitting}
                                 title="Pindahkan pelajaran ke bawah"
-                                style={{
-                                    fontSize: '0.7rem',
-                                    padding: '1px 6px',
-                                    opacity: itemIndex === variant.items.length - 1 ? 0.3 : 1
-                                }}
                             >
                                 <i className="fas fa-arrow-down"></i>
                             </button>
                         </div>
 
-                        {(() => {
-                            const rawMedia = item?.uploadedFile || item?.file || item?.youtubeLink || item?.gdriveLink || '';
-                            const mediaExt = rawMedia.toLowerCase().split('.').pop().split('?')[0];
-                            const isItemAudio = ['mp3', 'wav', 'ogg', 'm4a', 'aac'].includes(mediaExt);
-                            const isItemPdf = mediaExt === 'pdf';
-                            const isItemPpt = ['ppt', 'pptx'].includes(mediaExt) || rawMedia.includes('docs.google.com/presentation');
-                            const isItemWord = ['doc', 'docx', 'txt'].includes(mediaExt);
-                            const isItemVideo = ['mp4', 'webm', 'ogv', 'mov', 'avi', 'mkv'].includes(mediaExt) || rawMedia.includes('youtube.com') || rawMedia.includes('youtu.be') || Boolean(item?.youtubeLink);
-                            const isItemWebLink = Boolean(rawMedia && rawMedia.startsWith('http') && !isItemAudio && !isItemPdf && !isItemPpt && !isItemWord && !isItemVideo);
-
-                            return (
-                                <div className="d-flex align-items-center gap-1 flex-wrap">
-                                    <span className={`lesson-number-badge ${isItemQuiz ? 'bg-warning-subtle text-dark border border-warning' : ''}`}>
-                                        <i className={`fas ${
-                                            isItemQuiz ? 'fa-clipboard-check text-warning' : 
-                                            isItemScorm ? 'fa-cubes' : 
-                                            isItemAudio ? 'fa-headphones text-info' :
+                        {/* Number Badge */}
+                        <span className={`lesson-number-badge ${isItemQuiz ? 'bg-warning-subtle text-dark border-warning' : ''}`}>
+                            <i className={`fas ${isItemQuiz ? 'fa-clipboard-check text-warning' :
+                                    isItemScorm ? 'fa-cube text-teal' :
+                                        isItemAudio ? 'fa-headphones text-info' :
                                             isItemPpt ? 'fa-file-powerpoint text-warning' :
-                                            isItemPdf ? 'fa-file-pdf text-danger' :
-                                            isItemWord ? 'fa-file-word text-primary' :
-                                            isItemWebLink ? 'fa-link text-secondary' :
-                                            'fa-play-circle text-teal'
-                                        } me-1`}></i>
-                                        {isItemQuiz ? `Kuis ${itemIndex + 1}` : `Pelajaran ${itemIndex + 1}`}
-                                    </span>
-                                    {isItemVideo && !isItemScorm && !isItemQuiz && (
-                                        <span className="badge bg-teal-subtle text-teal border border-teal-subtle ms-1" style={{ fontSize: "11px" }}>
-                                            <i className="fas fa-video me-1"></i>Video
-                                        </span>
-                                    )}
-                                    {isItemPpt && (
-                                        <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1" style={{ fontSize: "11px" }}>
-                                            <i className="fas fa-file-powerpoint me-1"></i>Presentasi
-                                        </span>
-                                    )}
-                                    {isItemPdf && (
-                                        <span className="badge bg-danger-subtle text-danger border border-danger-subtle ms-1" style={{ fontSize: "11px" }}>
-                                            <i className="fas fa-file-pdf me-1"></i>PDF
-                                        </span>
-                                    )}
-                                    {isItemAudio && (
-                                        <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle ms-1" style={{ fontSize: "11px" }}>
-                                            <i className="fas fa-headphones me-1"></i>Audio
-                                        </span>
-                                    )}
-                                    {isItemWord && (
-                                        <span className="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" style={{ fontSize: "11px" }}>
-                                            <i className="fas fa-file-word me-1"></i>Dokumen
-                                        </span>
-                                    )}
-                                    {isItemWebLink && (
-                                        <span className="badge bg-secondary-subtle text-dark border ms-1" style={{ fontSize: "11px" }}>
-                                            <i className="fas fa-link me-1"></i>Tautan Web
-                                        </span>
-                                    )}
-                                </div>
-                            );
-                        })()}
+                                                isItemPdf ? 'fa-file-pdf text-danger' :
+                                                    isItemWord ? 'fa-file-word text-primary' :
+                                                        isItemWebLink ? 'fa-link text-secondary' :
+                                                            'fa-play-circle text-teal'
+                                } me-1`}></i>
+                            {isItemQuiz ? `Kuis ${itemIndex + 1}` : `Pelajaran ${itemIndex + 1}`}
+                        </span>
+
+                        {/* Format Badges */}
                         {isItemScorm && (
                             <>
-                                <span className="badge badge-scorm-pill bg-white text-dark border shadow-sm ms-1 fw-bold d-inline-flex align-items-center" style={{ fontSize: "11px", padding: "3px 8px", gap: "6px" }}>
-                                    <i className="fas fa-cube text-teal"></i>
-                                    <span>SCORM 1.2</span>
+                                <span className="badge badge-scorm-pill shadow-xs d-inline-flex align-items-center">
+                                    <i className="fas fa-cube text-teal me-1"></i>SCORM 1.2
                                 </span>
-                                <span className={`badge ${currentJP > 0 ? "bg-white text-teal fw-bold border shadow-sm" : "bg-warning text-dark fw-bold border"} ms-1 d-inline-flex align-items-center`} style={{ fontSize: "11px", padding: "3px 8px", gap: "6px" }}>
-                                    <i className="fas fa-graduation-cap"></i>
-                                    <span>{currentJP > 0 ? `${currentJP} JP` : "0 JP"}</span>
+                                <span className={`badge ${currentJP > 0 ? "bg-white text-teal border shadow-xs" : "bg-warning text-dark"} d-inline-flex align-items-center`}>
+                                    <i className="fas fa-graduation-cap me-1"></i>{currentJP > 0 ? `${currentJP} JP` : "0 JP"}
                                 </span>
                             </>
                         )}
-                        <h6 className="mb-0 lesson-title-preview">
+                        {!isItemScorm && !isItemQuiz && (
+                            <>
+                                {isItemVideo && (
+                                    <span className="badge bg-teal-subtle text-teal border border-teal-subtle">
+                                        <i className="fas fa-video me-1"></i>Video
+                                    </span>
+                                )}
+                                {isItemPpt && (
+                                    <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                        <i className="fas fa-file-powerpoint me-1"></i>Slide
+                                    </span>
+                                )}
+                                {isItemPdf && (
+                                    <span className="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                        <i className="fas fa-file-pdf me-1"></i>PDF
+                                    </span>
+                                )}
+                                {isItemAudio && (
+                                    <span className="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                                        <i className="fas fa-headphones me-1"></i>Audio
+                                    </span>
+                                )}
+                                {isItemWord && (
+                                    <span className="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                        <i className="fas fa-file-word me-1"></i>Dokumen
+                                    </span>
+                                )}
+                                {isItemWebLink && (
+                                    <span className="badge bg-secondary-subtle text-dark border">
+                                        <i className="fas fa-link me-1"></i>Tautan
+                                    </span>
+                                )}
+                                {item?.duration_formatted && (
+                                    <span className="badge bg-white text-dark border shadow-xs d-inline-flex align-items-center">
+                                        <i className="fas fa-clock text-info me-1"></i>{item.duration_formatted}
+                                    </span>
+                                )}
+                            </>
+                        )}
+
+                        {/* Title Preview in Header */}
+                        <span className="lesson-title-preview text-truncate" title={item?.title || "Pelajaran Tanpa Judul"}>
                             {item?.title || "Pelajaran Tanpa Judul"}
-                        </h6>
+                        </span>
                     </div>
+
+                    {/* Delete Action Button */}
                     {variant.items.length > 1 && (
                         <button
                             type="button"
-                            className="btn btn-danger btn-sm"
+                            className="btn btn-danger btn-sm py-0 px-2"
+                            style={{ fontSize: "0.72rem" }}
                             onClick={() => removeLesson(variantIndex, itemIndex, variant?.variant_id, item?.variant_item_id)}
                             disabled={uiState.isSubmitting}
+                            title="Hapus materi pelajaran ini"
                         >
-                            <i className="fas fa-times me-1"></i>
-                            Hapus
+                            <i className="fas fa-times me-1"></i>Hapus
                         </button>
                     )}
                 </div>
             </div>
 
+            {/* Content Body: Compact & Zero Dead White Space */}
             <div className="curriculum-item-content-enhanced">
                 {isItemQuiz ? (
-                    <div className="p-3 bg-light rounded-3 border" style={{ borderLeft: '4px solid #f59e0b' }}>
-                        <div className="row g-3 align-items-center">
+                    <div className="p-2 bg-light rounded-3 border" style={{ borderLeft: '4px solid #f59e0b' }}>
+                        <div className="row g-2 align-items-center">
                             <div className="col-md-6">
-                                <label className="form-label fw-bold text-dark d-flex align-items-center gap-2 mb-1">
+                                <label className="form-label fw-bold small text-dark d-flex align-items-center gap-1 mb-1">
                                     <i className="fas fa-clipboard-question text-warning"></i>
                                     <span>Pilih Kuis Kursus</span>
                                     <span className="text-danger">*</span>
                                 </label>
                                 <select
-                                    className={`form-select curriculum-form-control ${getValidationClass(
+                                    className={`form-select form-select-sm curriculum-form-control ${getValidationClass(
                                         validationState.errors[`item_${variantIndex}_${itemIndex}_quiz_id`]
                                     )}`}
                                     value={item?.quiz_id || ''}
@@ -1023,762 +1198,645 @@ function SortableLessonItem({
                             </div>
                             <div className="col-md-6">
                                 {selectedQuiz ? (
-                                    <div className="p-2 rounded bg-white border border-warning-subtle shadow-sm">
-                                        <div className="d-flex align-items-center justify-content-between mb-1">
-                                            <span className="badge bg-warning text-dark fw-bold">
+                                    <div className="p-2 rounded bg-white border border-warning-subtle shadow-xs">
+                                        <div className="d-flex align-items-center justify-content-between mb-0">
+                                            <span className="badge bg-warning text-dark fw-bold" style={{ fontSize: "10px" }}>
                                                 <i className="fas fa-award me-1"></i>Passing Grade: 70%
                                             </span>
-                                            <small className="text-muted">
+                                            <small className="text-muted" style={{ fontSize: "11px" }}>
                                                 <i className="fas fa-clock me-1"></i>
                                                 {selectedQuiz.duration_minutes ? `${selectedQuiz.duration_minutes} Menit` : 'Tanpa Batas'}
                                             </small>
                                         </div>
-                                        <h6 className="mb-1 text-truncate fw-bold">{selectedQuiz.title}</h6>
-                                        <p className="mb-0 text-muted small text-truncate">
-                                            {selectedQuiz.total_questions || selectedQuiz.questions?.length || 0} Soal Pertanyaan &bull; {selectedQuiz.passing_score || 70}% Nilai Minimum
+                                        <div className="fw-bold text-dark text-truncate small">{selectedQuiz.title}</div>
+                                        <p className="mb-0 text-muted small text-truncate" style={{ fontSize: "11px" }}>
+                                            {selectedQuiz.total_questions || selectedQuiz.questions?.length || 0} Soal &bull; Min. 70%
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="alert alert-warning py-2 px-3 mb-0 small">
+                                    <div className="alert alert-warning py-1 px-2 mb-0 small" style={{ fontSize: "11px" }}>
                                         <i className="fas fa-exclamation-triangle me-1"></i>
-                                        Silakan pilih kuis yang akan disisipkan di posisi urutan ini.
+                                        Pilih kuis yang akan disisipkan di posisi urutan ini.
                                     </div>
                                 )}
                             </div>
                         </div>
-                        <div className="d-flex align-items-center justify-content-between mt-3 pt-2 border-top">
-                            <small className="text-muted">
-                                <i className="fas fa-info-circle me-1 text-warning"></i>
-                                Siswa harus lulus kuis ini (skor &ge; 70%) untuk dapat melanjutkan ke materi berikutnya.
-                            </small>
-                        </div>
                     </div>
                 ) : (
                     <>
-                {/* Lesson Title - Full Width */}
-                <div className="mb-2">
-                    <label className="form-label fw-semibold small text-dark d-flex align-items-center mb-1" style={{ gap: "8px" }}>
-                        <i className="fas fa-heading text-teal small"></i>
-                        <span>Judul Pelajaran</span>
-                        <span className="text-danger ms-1">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        className={`curriculum-form-control ${getValidationClass(
-                            validationState.errors[`item_${variantIndex}_${itemIndex}_title`],
-                            validationState.warnings[`item_${variantIndex}_${itemIndex}_title`]
-                        )}`}
-                        value={item?.title || ""}
-                        onChange={(e) => handleLessonChange(variantIndex, itemIndex, "title", e.target.value)}
-                        placeholder="Misalnya: Pengenalan dan Gambaran Umum Materi"
-                    />
-                    {validationState.errors[`item_${variantIndex}_${itemIndex}_title`] && (
-                        <div className="curriculum-invalid-feedback">
-                            {validationState.errors[`item_${variantIndex}_${itemIndex}_title`]}
-                        </div>
-                    )}
-                </div>
-
-                {/* Two Column Layout: Description/Preview on Left, File Upload on Right */}
-                <div className="row">
-                    {/* Left Column: Description and Preview Checkbox */}
-                    <div className="col-md-6">
-                        <div className="mb-2">
-                            <label className="form-label fw-semibold small text-dark d-flex align-items-center mb-1" style={{ gap: "8px" }}>
-                                <i className="fas fa-align-left text-teal small"></i>
-                                <span>Deskripsi Pelajaran</span>
-                                <small className="text-muted fw-normal ms-1">(Opsional)</small>
-                            </label>
-                            <textarea
-                                className={`curriculum-form-control ${getValidationClass(
-                                    validationState.errors[`item_${variantIndex}_${itemIndex}_description`],
-                                    validationState.warnings[`item_${variantIndex}_${itemIndex}_description`]
-                                )}`}
-                                value={item?.description || ""}
-                                onChange={(e) => handleLessonChange(variantIndex, itemIndex, "description", e.target.value)}
-                                rows="2"
-                                placeholder="Jelaskan ringkasan atau sasaran materi pelajaran ini..."
-                            />
-                            {validationState.errors[`item_${variantIndex}_${itemIndex}_description`] && (
-                                <div className="curriculum-invalid-feedback">
-                                    {validationState.errors[`item_${variantIndex}_${itemIndex}_description`]}
+                        {/* Row 1: Title Input + Content Format Switcher */}
+                        <div className="row g-2 align-items-center mb-2">
+                            <div className="col-md-8">
+                                <div className="input-group input-group-sm">
+                                    <span className="input-group-text bg-white border-end-0 py-0 px-2 text-teal">
+                                        <i className="fas fa-heading small"></i>
+                                    </span>
+                                    <input
+                                        type="text"
+                                        className={`form-control form-control-sm border-start-0 py-1 fw-semibold ${getValidationClass(
+                                            validationState.errors[`item_${variantIndex}_${itemIndex}_title`],
+                                            validationState.warnings[`item_${variantIndex}_${itemIndex}_title`]
+                                        )}`}
+                                        value={item?.title || ""}
+                                        onChange={(e) => handleLessonChange(variantIndex, itemIndex, "title", e.target.value)}
+                                        placeholder="Judul Pelajaran (misal: Pengenalan & Konsep Dasar Materi)"
+                                    />
                                 </div>
-                            )}
+                                {validationState.errors[`item_${variantIndex}_${itemIndex}_title`] && (
+                                    <div className="curriculum-invalid-feedback">
+                                        {validationState.errors[`item_${variantIndex}_${itemIndex}_title`]}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                {/* Segmented Format Switcher: Video/Media vs SCORM 1.2 */}
+                                <div className="btn-group btn-group-sm w-100 shadow-xs" role="group">
+                                    <button
+                                        type="button"
+                                        className={`btn py-1 px-2 ${!isItemScorm ? 'btn-teal text-white fw-bold shadow-xs' : 'btn-outline-secondary bg-white text-muted'}`}
+                                        style={{ fontSize: "0.75rem", transition: "all 0.15s ease" }}
+                                        onClick={() => handleFormatSwitch('media')}
+                                        title="Format Video, Dokumen PDF, Slide PPTX, atau Audio"
+                                    >
+                                        <i className="fas fa-photo-video me-1"></i>Video / Berkas
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`btn py-1 px-2 ${isItemScorm ? 'btn-teal text-white fw-bold shadow-xs' : 'btn-outline-secondary bg-white text-muted'}`}
+                                        style={{ fontSize: "0.75rem", transition: "all 0.15s ease" }}
+                                        onClick={() => handleFormatSwitch('scorm')}
+                                        title="Format Paket Interaktif SCORM 1.2"
+                                    >
+                                        <i className="fas fa-cube me-1"></i>Modul SCORM
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* ✨ Duration Display and Edit Section - Standard Video Only */}
-                        {!isItemScorm && (item?.gdriveLink || item?.youtubeLink || item?.uploadedFile) && (
-                            <div className="mb-3 mt-3">
-                                <div className="duration-display-section p-3 bg-light border rounded" style={{ borderLeft: '4px solid #0f766e' }}>
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <label className="form-label mb-0 fw-bold">
-                                                <i className="fas fa-clock me-2 text-info"></i>
-                                                Durasi Video
-                                            </label>
-                                            <div className="mt-2">
-                                                {item?.duration_formatted ? (
-                                                    <div className="duration-badge d-inline-block">
-                                                        <span className="badge bg-success" style={{ fontSize: '0.95rem', padding: '0rem 0.75rem' }}>
-                                                            <i className="fas fa-check-circle me-1"></i>
-                                                            {item.duration_formatted}
-                                                        </span>
-                                                        {/* ✨ PHASE 4.205: Only show extracted duration text after extraction attempt */}
-                                                        {extractedDuration[`${variantIndex}_${itemIndex}`] !== undefined && (
-                                                            <small className="text-muted d-block mt-1">
-                                                                Durasi terekstrak: {extractedDuration[`${variantIndex}_${itemIndex}`] ? formatSecondsToHMS(extractedDuration[`${variantIndex}_${itemIndex}`]) : '0:00:00'}
-                                                            </small>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <div className="duration-empty">
-                                                        <span className="badge bg-secondary" style={{ fontSize: '0.95rem', padding: '0rem 0.75rem' }}>
-                                                            <i className="fas fa-clock me-1"></i>
-                                                            00:00
-                                                        </span>
-                                                        <small className="text-muted d-block mt-1">
-                                                            {/* ✨ PHASE 4.205: Show extracted duration only after extraction attempt, else show info text */}
-                                                            {extractedDuration[`${variantIndex}_${itemIndex}`] !== undefined ? (
-                                                                <>Durasi terekstrak: {formatSecondsToHMS(extractedDuration[`${variantIndex}_${itemIndex}`])}</>
-                                                            ) : (
-                                                                <><i className="fas fa-info-circle me-1"></i>Klik "Edit" untuk memasukkan durasi secara manual</>
-                                                            )}
-                                                        </small>
-                                                    </div>
-                                                )}
+                        {/* Row 2: Balanced 2-Column Grid (Information on Left, Media/SCORM on Right) */}
+                        <div className="row g-2 align-items-stretch">
+                            {/* Left Column: Description & Compact Duration/JP Setting */}
+                            <div className="col-md-6 d-flex flex-column justify-content-between">
+                                <div>
+                                    <textarea
+                                        className={`form-control form-control-sm mb-1 ${getValidationClass(
+                                            validationState.errors[`item_${variantIndex}_${itemIndex}_description`],
+                                            validationState.warnings[`item_${variantIndex}_${itemIndex}_description`]
+                                        )}`}
+                                        value={item?.description || ""}
+                                        onChange={(e) => handleLessonChange(variantIndex, itemIndex, "description", e.target.value)}
+                                        rows="2"
+                                        style={{ fontSize: "0.8rem", resize: "none" }}
+                                        placeholder="Deskripsi ringkas materi pelajaran ini (opsional)..."
+                                    />
+                                </div>
+
+                                {/* Compact Duration / JP and Preview Bar */}
+                                <div className="mt-auto">
+                                    {isItemScorm ? (
+                                        <div className="d-flex align-items-center justify-content-between p-1 px-2 bg-light rounded border">
+                                            <div className="d-flex align-items-center gap-1">
+                                                <i className="fas fa-graduation-cap text-teal small"></i>
+                                                <span className="small fw-bold text-dark me-1" style={{ fontSize: "0.78rem" }}>
+                                                    Beban Belajar:
+                                                </span>
+                                                <div className="input-group input-group-sm" style={{ width: "88px" }}>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        max="100"
+                                                        className="form-control form-control-sm py-0 px-1 text-center fw-bold"
+                                                        style={{ fontSize: "0.8rem", height: "26px" }}
+                                                        placeholder="0"
+                                                        value={currentJP > 0 ? currentJP : ""}
+                                                        onChange={(e) => {
+                                                            const val = parseInt(e.target.value) || 0;
+                                                            handleDurationInput(variantIndex, itemIndex, (val * 2700).toString());
+                                                        }}
+                                                        disabled={uiState.isSubmitting}
+                                                    />
+                                                    <span className="input-group-text py-0 px-1 small fw-bold text-teal" style={{ fontSize: "0.75rem", height: "26px" }}>JP</span>
+                                                </div>
+                                                <small className="text-muted ms-1" style={{ fontSize: "0.75rem" }}>
+                                                    {currentJP > 0 ? `(${currentJP * 45} m)` : '(0 m)'}
+                                                </small>
+                                            </div>
+                                            <div className="form-check form-switch mb-0 ms-auto">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id={`preview-${variantIndex}-${itemIndex}`}
+                                                    checked={item?.preview || false}
+                                                    onChange={(e) => handleLessonChange(variantIndex, itemIndex, "preview", e.target.checked)}
+                                                    style={{ cursor: "pointer", transform: "scale(0.85)" }}
+                                                />
+                                                <label className="form-check-label small text-muted text-nowrap" htmlFor={`preview-${variantIndex}-${itemIndex}`} style={{ fontSize: "0.75rem", cursor: "pointer" }}>
+                                                    Pratinjau
+                                                </label>
                                             </div>
                                         </div>
-                                        <button
-                                            type="button"
-                                            className={`btn ${durationEditingMode[`${variantIndex}_${itemIndex}`] ? 'btn-success duration-selesai-btn' : 'btn-primary'}`}
-                                            onClick={() => toggleDurationEditMode(variantIndex, itemIndex)}
-                                            disabled={uiState.isSubmitting}
-                                        >
-                                            <i className={`fas fa-${durationEditingMode[`${variantIndex}_${itemIndex}`] ? 'times' : 'edit'} me-2`}></i>
-                                            {durationEditingMode[`${variantIndex}_${itemIndex}`] ? '✓ Selesai' : 'Edit'}
-                                        </button>
-                                    </div>
+                                    ) : (
+                                        <div className="p-1 px-2 bg-light rounded border">
+                                            <div className="d-flex align-items-center justify-content-between">
+                                                <div className="d-flex align-items-center gap-1">
+                                                    <i className="fas fa-clock text-info small"></i>
+                                                    <span className="small fw-bold text-dark me-1" style={{ fontSize: "0.78rem" }}>Durasi:</span>
+                                                    <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-2" style={{ fontSize: "11px" }}>
+                                                        {item?.duration_formatted || "00:00"}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-xs btn-outline-secondary py-0 px-1 ms-1"
+                                                        style={{ fontSize: "0.7rem", height: "22px" }}
+                                                        onClick={() => toggleDurationEditMode(variantIndex, itemIndex)}
+                                                        disabled={uiState.isSubmitting}
+                                                        title="Atur durasi video secara manual"
+                                                    >
+                                                        <i className={`fas fa-${durationEditingMode[`${variantIndex}_${itemIndex}`] ? 'check text-success' : 'pencil-alt'} me-1`}></i>
+                                                        {durationEditingMode[`${variantIndex}_${itemIndex}`] ? 'Selesai' : 'Edit'}
+                                                    </button>
+                                                </div>
+                                                <div className="form-check form-switch mb-0 ms-auto">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id={`preview-${variantIndex}-${itemIndex}`}
+                                                        checked={item?.preview || false}
+                                                        onChange={(e) => handleLessonChange(variantIndex, itemIndex, "preview", e.target.checked)}
+                                                        style={{ cursor: "pointer", transform: "scale(0.85)" }}
+                                                    />
+                                                    <label className="form-check-label small text-muted text-nowrap" htmlFor={`preview-${variantIndex}-${itemIndex}`} style={{ fontSize: "0.75rem", cursor: "pointer" }}>
+                                                        Pratinjau
+                                                    </label>
+                                                </div>
+                                            </div>
 
-                                    {/* Duration Edit Form - ✨ PHASE 4.61: Enhanced with Hour/Minute/Second inputs */}
-                                    {durationEditingMode[`${variantIndex}_${itemIndex}`] && (
-                                        <div className="mt-3 pt-3" style={{ borderTop: '1px solid #dee2e6' }}>
-                                            <label className="form-label small fw-bold">
-                                                Masukkan durasi video:
-                                            </label>
-                                            <div className="row g-2">
-                                                {/* Hours Input */}
-                                                <div className="col-4">
-                                                    <div className="input-group input-group-sm">
+                                            {/* Collapsible Micro Duration Input */}
+                                            {durationEditingMode[`${variantIndex}_${itemIndex}`] && (
+                                                <div className="mt-1 pt-1 border-top d-flex align-items-center gap-1">
+                                                    <div className="input-group input-group-sm" style={{ width: "70px" }}>
                                                         <input
                                                             type="number"
-                                                            className="form-control"
+                                                            className="form-control form-control-sm py-0 px-1 text-center"
+                                                            style={{ fontSize: "0.75rem", height: "24px" }}
                                                             placeholder="0"
                                                             value={item?.duration_seconds ? Math.floor(item.duration_seconds / 3600) : ''}
                                                             onChange={(e) => {
-                                                                const hours = parseInt(e.target.value) || 0;
-                                                                const currentMins = item?.duration_seconds ? Math.floor((item.duration_seconds % 3600) / 60) : 0;
-                                                                const currentSecs = item?.duration_seconds ? Math.floor(item.duration_seconds % 60) : 0;
-                                                                const totalSeconds = (hours * 3600) + (currentMins * 60) + currentSecs;
-                                                                handleDurationInput(variantIndex, itemIndex, totalSeconds.toString());
+                                                                const h = parseInt(e.target.value) || 0;
+                                                                const m = item?.duration_seconds ? Math.floor((item.duration_seconds % 3600) / 60) : 0;
+                                                                const s = item?.duration_seconds ? Math.floor(item.duration_seconds % 60) : 0;
+                                                                handleDurationInput(variantIndex, itemIndex, ((h * 3600) + (m * 60) + s).toString());
                                                             }}
-                                                            min="0"
-                                                            max="23"
-                                                            disabled={uiState.isSubmitting}
+                                                            min="0" max="23"
                                                         />
-                                                        <span className="input-group-text text-muted small">jam</span>
+                                                        <span className="input-group-text py-0 px-1 text-muted" style={{ fontSize: "0.7rem", height: "24px" }}>j</span>
                                                     </div>
-                                                </div>
-                                                {/* Minutes Input */}
-                                                <div className="col-4">
-                                                    <div className="input-group input-group-sm">
+                                                    <div className="input-group input-group-sm" style={{ width: "70px" }}>
                                                         <input
                                                             type="number"
-                                                            className="form-control"
+                                                            className="form-control form-control-sm py-0 px-1 text-center"
+                                                            style={{ fontSize: "0.75rem", height: "24px" }}
                                                             placeholder="0"
                                                             value={item?.duration_seconds ? Math.floor((item.duration_seconds % 3600) / 60) : ''}
                                                             onChange={(e) => {
-                                                                const minutes = parseInt(e.target.value) || 0;
-                                                                const currentHours = item?.duration_seconds ? Math.floor(item.duration_seconds / 3600) : 0;
-                                                                const currentSecs = item?.duration_seconds ? Math.floor(item.duration_seconds % 60) : 0;
-                                                                const totalSeconds = (currentHours * 3600) + (minutes * 60) + currentSecs;
-                                                                handleDurationInput(variantIndex, itemIndex, totalSeconds.toString());
+                                                                const m = parseInt(e.target.value) || 0;
+                                                                const h = item?.duration_seconds ? Math.floor(item.duration_seconds / 3600) : 0;
+                                                                const s = item?.duration_seconds ? Math.floor(item.duration_seconds % 60) : 0;
+                                                                handleDurationInput(variantIndex, itemIndex, ((h * 3600) + (m * 60) + s).toString());
                                                             }}
-                                                            min="0"
-                                                            max="59"
-                                                            disabled={uiState.isSubmitting}
+                                                            min="0" max="59"
                                                         />
-                                                        <span className="input-group-text text-muted small">menit</span>
+                                                        <span className="input-group-text py-0 px-1 text-muted" style={{ fontSize: "0.7rem", height: "24px" }}>m</span>
                                                     </div>
-                                                </div>
-                                                {/* Seconds Input */}
-                                                <div className="col-4">
-                                                    <div className="input-group input-group-sm">
+                                                    <div className="input-group input-group-sm" style={{ width: "70px" }}>
                                                         <input
                                                             type="number"
-                                                            className="form-control"
+                                                            className="form-control form-control-sm py-0 px-1 text-center"
+                                                            style={{ fontSize: "0.75rem", height: "24px" }}
                                                             placeholder="0"
                                                             value={item?.duration_seconds ? Math.floor(item.duration_seconds % 60) : ''}
                                                             onChange={(e) => {
-                                                                const seconds = parseInt(e.target.value) || 0;
-                                                                const currentHours = item?.duration_seconds ? Math.floor(item.duration_seconds / 3600) : 0;
-                                                                const currentMins = item?.duration_seconds ? Math.floor((item.duration_seconds % 3600) / 60) : 0;
-                                                                const totalSeconds = (currentHours * 3600) + (currentMins * 60) + seconds;
-                                                                handleDurationInput(variantIndex, itemIndex, totalSeconds.toString());
+                                                                const s = parseInt(e.target.value) || 0;
+                                                                const h = item?.duration_seconds ? Math.floor(item.duration_seconds / 3600) : 0;
+                                                                const m = item?.duration_seconds ? Math.floor((item.duration_seconds % 3600) / 60) : 0;
+                                                                handleDurationInput(variantIndex, itemIndex, ((h * 3600) + (m * 60) + s).toString());
                                                             }}
-                                                            min="0"
-                                                            max="59"
-                                                            disabled={uiState.isSubmitting}
+                                                            min="0" max="59"
                                                         />
-                                                        <span className="input-group-text text-muted small">detik</span>
+                                                        <span className="input-group-text py-0 px-1 text-muted" style={{ fontSize: "0.7rem", height: "24px" }}>s</span>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <small className="text-muted d-block mt-2">
-                                                <i className="fas fa-lightbulb me-1 text-warning"></i>
-                                                Masukkan durasi video menggunakan jam, menit, dan detik. Sistem akan otomatis menghitung total durasi dan menampilkannya dalam format yang mudah dibaca.
-                                            </small>
+                                            )}
                                         </div>
                                     )}
                                 </div>
                             </div>
-                        )}
 
-                        {/* ✨ Display duration validation error if present (standard video only) */}
-                        {!isItemScorm && validationState.errors[`item_${variantIndex}_${itemIndex}_duration`] && (
-                            <div className="curriculum-invalid-feedback mt-2">
-                                <i className="fas fa-exclamation-circle me-1"></i>
-                                {validationState.errors[`item_${variantIndex}_${itemIndex}_duration`]}
-                            </div>
-                        )}
-
-                        {/* ✨ SCORM Jam Pelajaran (JP) Configuration */}
-                        {isItemScorm && (
-                            <div className="scorm-jp-section p-3 mb-2 bg-light border rounded-3" style={{ borderLeft: '4px solid #0f766e' }}>
-                                <div className="d-flex align-items-center justify-content-between mb-2">
-                                    <label className="form-label mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                                        <i className="fas fa-graduation-cap text-teal"></i>
-                                        <span>Alokasi Jam Pelajaran (JP)</span>
-                                    </label>
-                                    <span className={`badge ${currentJP > 0 ? 'bg-teal text-white' : 'bg-secondary text-white'}`} style={{ fontSize: '0.85rem', padding: '0.4rem 0.65rem' }}>
-                                        <i className="fas fa-award me-1"></i>
-                                        {currentJP > 0 ? `${currentJP} JP (${Math.floor(currentSeconds / 3600)}j ${Math.floor((currentSeconds % 3600) / 60)}m)` : 'Belum Diatur (0 JP)'}
-                                    </span>
-                                </div>
-
-                                <p className="text-muted small mb-2">
-                                    Tentukan bobot Jam Pelajaran untuk modul SCORM ini (standar <strong>1 JP = 45 menit</strong>). Alokasi ini akan otomatis diakumulasikan ke total JP kursus.
-                                </p>
-
-                                {/* Custom JP or Hour/Minute Input */}
-                                <div className="row g-3 align-items-end pt-1">
-                                    <div className="col-sm-5">
-                                        <label className="form-label small fw-semibold text-dark mb-1 d-flex align-items-center gap-1">
-                                            <i className="fas fa-edit text-teal small"></i>
-                                            <span>Set Jumlah JP:</span>
-                                        </label>
-                                        <div className="input-group input-group-sm">
-                                            <input
-                                                type="number"
-                                                className="form-control scorm-jp-input"
-                                                min="0"
-                                                max="100"
-                                                placeholder="Contoh: 2"
-                                                value={currentJP > 0 ? currentJP : ''}
-                                                onChange={(e) => {
-                                                    const val = parseInt(e.target.value) || 0;
-                                                    const secs = val * 2700;
-                                                    handleDurationInput(variantIndex, itemIndex, secs.toString());
-                                                }}
-                                                disabled={uiState.isSubmitting}
-                                            />
-                                            <span className="input-group-text fw-bold text-teal">JP</span>
-                                        </div>
-                                    </div>
-                                    <div className="col-sm-7">
-                                        <label className="form-label small fw-semibold text-dark mb-1 d-flex align-items-center gap-1">
-                                            <i className="fas fa-clock text-teal small"></i>
-                                            <span>Atau Durasi (Jam & Menit):</span>
-                                        </label>
-                                        <div className="d-flex gap-1">
-                                            <div className="input-group input-group-sm">
-                                                <input
-                                                    type="number"
-                                                    className="form-control scorm-jp-input"
-                                                    min="0"
-                                                    max="99"
-                                                    placeholder="0"
-                                                    value={currentSeconds ? Math.floor(currentSeconds / 3600) : ''}
-                                                    onChange={(e) => {
-                                                        const hours = parseInt(e.target.value) || 0;
-                                                        const currentMins = currentSeconds ? Math.floor((currentSeconds % 3600) / 60) : 0;
-                                                        const total = (hours * 3600) + (currentMins * 60);
-                                                        handleDurationInput(variantIndex, itemIndex, total.toString());
-                                                    }}
-                                                    disabled={uiState.isSubmitting}
-                                                />
-                                                <span className="input-group-text text-muted">jam</span>
-                                            </div>
-                                            <div className="input-group input-group-sm">
-                                                <input
-                                                    type="number"
-                                                    className="form-control scorm-jp-input"
-                                                    min="0"
-                                                    max="59"
-                                                    placeholder="0"
-                                                    value={currentSeconds ? Math.floor((currentSeconds % 3600) / 60) : ''}
-                                                    onChange={(e) => {
-                                                        const minutes = parseInt(e.target.value) || 0;
-                                                        const currentHours = currentSeconds ? Math.floor(currentSeconds / 3600) : 0;
-                                                        const total = (currentHours * 3600) + (minutes * 60);
-                                                        handleDurationInput(variantIndex, itemIndex, total.toString());
-                                                    }}
-                                                    disabled={uiState.isSubmitting}
-                                                />
-                                                <span className="input-group-text text-muted">menit</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="form-check curriculum-preview-check">
-                            <input
-                                type="checkbox"
-                                className="form-check-input"
-                                id={`preview-${variantIndex}-${itemIndex}`}
-                                checked={item?.preview || false}
-                                onChange={(e) => handleLessonChange(variantIndex, itemIndex, "preview", e.target.checked)}
-                            />
-                            <label className="form-check-label" htmlFor={`preview-${variantIndex}-${itemIndex}`}>
-                                Izinkan Pratinjau (Siswa dapat melihat pelajaran ini sebelum mendaftar)
-                            </label>
-                        </div>
-
-                    </div>
-
-                    {/* Right Column: SCORM Module Card OR File Upload and Preview */}
-                    <div className="col-md-6">
-                        {isItemScorm ? (
-                            <div className="scorm-module-card bg-white shadow-sm h-100 d-flex flex-column justify-content-between p-4">
-                                <div className="px-1">
-                                    <div className="d-flex align-items-center justify-content-between mb-3">
-                                        <span className="badge px-3 py-1 text-white fw-semibold bg-teal d-inline-flex align-items-center" style={{ gap: "8px" }}>
-                                            <i className="fas fa-cubes"></i>
-                                            <span>Paket Modul {item?.learning_module_info?.module_type?.toUpperCase() || course?.course_type?.toUpperCase() || "SCORM 1.2"}</span>
-                                        </span>
-                                        <span className="badge bg-light text-secondary border px-2 py-1 d-inline-flex align-items-center" style={{ gap: "6px" }}>
-                                            <i className="fas fa-check-circle text-success"></i>
-                                            <span>Terhubung</span>
-                                        </span>
-                                    </div>
-
-                                    <h6 className="fw-bold text-dark mb-2">
-                                        {item?.learning_module_info?.judul || course?.learning_module?.judul || course?.title || "Paket Modul SCORM"}
-                                    </h6>
-                                    <p className="text-secondary small mb-3">
-                                        Pelajaran ini dijalankan secara interaktif melalui player web SCORM dengan pelacakan data CMI (status penyelesaian, waktu sesi, dan nilai evaluasi).
-                                    </p>
-
-                                    <div className="px-3 py-2 rounded-3 bg-light border mb-3 small">
-                                        <div className="d-flex justify-content-between py-2 border-bottom align-items-center">
-                                            <span className="text-muted"><i className="fas fa-file-code me-1 text-primary"></i> Berkas Utama:</span>
-                                            <code className="text-dark fw-bold px-2 py-0 bg-white rounded border">{item?.learning_module_info?.entry_file || course?.learning_module?.entry_file || "index.html"}</code>
-                                        </div>
-                                        <div className="d-flex justify-content-between py-2 border-bottom align-items-center">
-                                            <span className="text-muted"><i className="fas fa-sliders-h me-1 text-info"></i> Model Pelacakan:</span>
-                                            <span className="fw-semibold text-secondary">SCORM 1.2 RTE (cmi.core)</span>
-                                        </div>
-                                        <div className="d-flex justify-content-between py-2 border-bottom align-items-center">
-                                            <span className="text-muted"><i className="fas fa-graduation-cap me-1 text-teal"></i> Alokasi Beban Belajar:</span>
-                                            <span className="fw-bold text-teal">
-                                                {currentJP > 0 ? `${currentJP} JP (${Math.floor(currentSeconds / 3600)}j ${Math.floor((currentSeconds % 3600) / 60)}m)` : '0 JP (Belum Diatur)'}
-                                            </span>
-                                        </div>
-                                        <div className="d-flex justify-content-between py-2 align-items-center">
-                                            <span className="text-muted"><i className="fas fa-tachometer-alt me-1 text-teal"></i> Status Sesi:</span>
-                                            <span className="text-success fw-semibold">Otomatis via Sesi Siswa</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="d-flex align-items-center justify-content-between pt-3 mt-2 border-top px-1">
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-2 px-3 py-1"
-                                        onClick={() => onPreviewScorm && onPreviewScorm(item)}
-                                        title="Uji coba pemutar SCORM langsung di halaman ini"
-                                    >
-                                        <i className="fas fa-play text-teal" style={{ fontSize: "11px" }}></i>
-                                        <span>Pratinjau Modul SCORM</span>
-                                    </button>
-                                    <small className="text-muted fst-italic">
-                                        <i className="fas fa-shield-alt text-success me-1"></i>
-                                        RTE Bridge Aktif
-                                    </small>
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                {(() => {
-                                    const mediaUrl = activeMediaUrl || '';
-                                    const isYouTube = Boolean(item?.youtubeLink || (typeof mediaUrl === 'string' && (mediaUrl.includes('youtube.com') || mediaUrl.includes('youtu.be'))));
-                                    const isGDrive = Boolean(item?.gdriveLink || (typeof mediaUrl === 'string' && mediaUrl.includes('drive.google.com')));
-                                    const isAudio = /\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i.test(mediaUrl) || item?.file_type === 'audio';
-                                    const isPdf = /\.pdf(\?.*)?$/i.test(mediaUrl) || item?.file_type === 'pdf';
-                                    const isPresentation = /\.(ppt|pptx)(\?.*)?$/i.test(mediaUrl) || (typeof mediaUrl === 'string' && mediaUrl.includes('docs.google.com/presentation')) || item?.file_type === 'presentation';
-                                    const isDoc = /\.(doc|docx|txt)(\?.*)?$/i.test(mediaUrl) || (typeof mediaUrl === 'string' && mediaUrl.includes('docs.google.com/document')) || item?.file_type === 'document';
-
-                                    return (
-                                        <>
-                                            {/* Media Preview Section */}
-                                            {Boolean(mediaUrl) && (
-                                                <div className="mb-4">
-                                                    <div className="card border-primary shadow-sm">
-                                                        <div
-                                                            className="card-header bg-light d-flex align-items-center justify-content-between py-2"
-                                                            style={{ cursor: 'pointer' }}
-                                                            onClick={() => togglePreviewVisibility(variantIndex, itemIndex)}
-                                                        >
-                                                            <div className="d-flex align-items-center gap-2">
-                                                                <span className="badge bg-primary">
-                                                                    <i className={
-                                                                        isAudio ? "fas fa-headphones me-1" :
-                                                                        isPdf ? "fas fa-file-pdf me-1" :
-                                                                        isPresentation ? "fas fa-file-powerpoint me-1" :
-                                                                        isDoc ? "fas fa-file-word me-1" :
-                                                                        "fas fa-play-circle me-1"
-                                                                    }></i>
-                                                                    {isAudio ? "Audio Materi" :
-                                                                     isPdf ? "Dokumen PDF" :
-                                                                     isPresentation ? "Slide Presentasi" :
-                                                                     isDoc ? "Dokumen Teks" :
-                                                                     "Video Pelajaran"}
-                                                                </span>
-                                                                <strong className="text-dark small text-truncate" style={{ maxWidth: '300px' }}>
-                                                                    {mediaUrl.split('/').pop().split('?')[0] || "Media Terpasang"}
-                                                                </strong>
-                                                            </div>
-                                                            <div className="d-flex align-items-center gap-2">
-                                                                <button
-                                                                    type="button"
-                                                                    className="btn btn-sm btn-outline-danger py-0 px-2"
-                                                                    title="Hapus media dari pelajaran ini"
-                                                                    onClick={async (e) => {
-                                                                        e.stopPropagation();
-                                                                        if (window.confirm("Hapus media ini dari materi pembelajaran?")) {
-                                                                            if (item?.uploadedFile && item.uploadedFile.includes('/media/')) {
-                                                                                await handleDeleteLessonFile(variantIndex, itemIndex, item.uploadedFile);
-                                                                            } else {
-                                                                                handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
-                                                                                handleLessonChange(variantIndex, itemIndex, "file", "");
-                                                                                handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
-                                                                                handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
-                                                                                handleLessonChange(variantIndex, itemIndex, "media_source", "");
-                                                                                setTimeout(() => autoSaveCurriculum(), 100);
-                                                                            }
-                                                                            setMediaUrlInput('');
-                                                                            Toast().fire({
-                                                                                icon: "success",
-                                                                                title: "Media Dihapus",
-                                                                                text: "Media pelajaran berhasil dilepas.",
-                                                                                timer: 1500,
-                                                                                showConfirmButton: false
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <i className="fas fa-trash-alt me-1"></i> Hapus Media
-                                                                </button>
-                                                                <i className={`fas fa-chevron-${previewVisibility[`${variantIndex}_${itemIndex}`] ? 'up' : 'down'} text-muted`}></i>
-                                                            </div>
-                                                        </div>
-                                                        {previewVisibility[`${variantIndex}_${itemIndex}`] !== false && (
-                                                            <div className="card-body p-3">
-                                                                {isYouTube && (
-                                                                    <div className="ratio ratio-16x9 rounded overflow-hidden shadow-sm">
-                                                                        <iframe
-                                                                            src={`https://www.youtube-nocookie.com/embed/${extractYoutubeIdLesson(item.youtubeLink || mediaUrl) || ''}`}
-                                                                            title="YouTube video player"
-                                                                            frameBorder="0"
-                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                                            allowFullScreen
-                                                                        ></iframe>
-                                                                    </div>
-                                                                )}
-
-                                                                {isGDrive && !isYouTube && (
-                                                                    <div className="ratio ratio-16x9 rounded overflow-hidden shadow-sm">
-                                                                        <iframe
-                                                                            src={mediaUrl.includes('/preview') ? mediaUrl : mediaUrl.replace(/\/view(\?.*)?$/, '/preview')}
-                                                                            title="Google Drive Media"
-                                                                            allow="autoplay"
-                                                                        ></iframe>
-                                                                    </div>
-                                                                )}
-
-                                                                {isAudio && !isYouTube && !isGDrive && (
-                                                                    <div className="p-3 bg-light rounded text-center border">
-                                                                        <div className="mb-2 text-primary">
-                                                                            <i className="fas fa-music fa-2x"></i>
-                                                                        </div>
-                                                                        <audio controls className="w-100" style={{ maxWidth: '600px' }}>
-                                                                            <source src={mediaUrl} />
-                                                                            Browser Anda tidak mendukung pemutar audio HTML5.
-                                                                        </audio>
-                                                                    </div>
-                                                                )}
-
-                                                                {isPdf && !isYouTube && !isGDrive && (
-                                                                    <div className="border rounded overflow-hidden" style={{ height: '350px' }}>
-                                                                        <iframe
-                                                                            src={mediaUrl}
-                                                                            title="Pratinjau PDF"
-                                                                            className="w-100 h-100 border-0"
-                                                                        ></iframe>
-                                                                    </div>
-                                                                )}
-
-                                                                {isPresentation && !isYouTube && !isGDrive && (
-                                                                    <div className="p-3 bg-light rounded border text-center">
-                                                                        <i className="fas fa-file-powerpoint text-warning fa-3x mb-2"></i>
-                                                                        <h6 className="fw-bold mb-1">Materi Presentasi Slide</h6>
-                                                                        <p className="text-muted small mb-2">
-                                                                            Slide presentasi siap dipelajari oleh peserta.
-                                                                        </p>
-                                                                        <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
-                                                                            <i className="fas fa-external-link-alt me-1"></i> Buka / Unduh Slide
-                                                                        </a>
-                                                                    </div>
-                                                                )}
-
-                                                                {isDoc && !isYouTube && !isGDrive && (
-                                                                    <div className="p-3 bg-light rounded border text-center">
-                                                                        <i className="fas fa-file-word text-primary fa-3x mb-2"></i>
-                                                                        <h6 className="fw-bold mb-1">Dokumen Materi Belajar</h6>
-                                                                        <p className="text-muted small mb-2">
-                                                                            Dokumen modul pembelajaran peserta.
-                                                                        </p>
-                                                                        <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
-                                                                            <i className="fas fa-external-link-alt me-1"></i> Unduh / Buka Dokumen
-                                                                        </a>
-                                                                    </div>
-                                                                )}
-
-                                                                {!isYouTube && !isGDrive && !isAudio && !isPdf && !isPresentation && !isDoc && (
-                                                                    <div className="rounded overflow-hidden bg-black text-center">
-                                                                        <video
-                                                                            width="100%"
-                                                                            controls
-                                                                            className="rounded"
-                                                                            style={{ maxHeight: '380px', backgroundColor: '#000' }}
-                                                                        >
-                                                                            <source src={mediaUrl} />
-                                                                            Browser Anda tidak mendukung putar video HTML5.
-                                                                        </video>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
+                            {/* Right Column: SCORM Container OR Media Container */}
+                            <div className="col-md-6">
+                                {isItemScorm ? (
+                                    /* === SCORM MODULE CONTAINER === */
+                                    isScormLinked ? (
+                                        <div className="p-2 rounded-3 border bg-white shadow-xs h-100 d-flex flex-column justify-content-between" style={{ borderLeft: '3px solid #0f766e', backgroundColor: '#f0fdfa' }}>
+                                            <div>
+                                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                                    <span className="badge bg-teal text-white py-0 px-2" style={{ fontSize: "10px" }}>
+                                                        <i className="fas fa-cube me-1"></i>Paket SCORM 1.2
+                                                    </span>
+                                                    <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-1" style={{ fontSize: "10px" }}>
+                                                        <i className="fas fa-check-circle me-1"></i>Terhubung
+                                                    </span>
                                                 </div>
-                                            )}
+                                                <h6 className="fw-bold text-dark mb-1 text-truncate" title={scormTitle} style={{ fontSize: "0.85rem" }}>
+                                                    {scormTitle}
+                                                </h6>
+                                                <div className="d-flex align-items-center gap-2 small text-muted flex-wrap" style={{ fontSize: "0.75rem" }}>
+                                                    <span><i className="fas fa-file-code text-teal me-1"></i><code className="text-dark bg-light px-1 py-0 rounded">{scormEntry}</code></span>
+                                                    <span>&bull;</span>
+                                                    <span><i className="fas fa-shield-alt text-success me-1"></i>cmi.core RTE Aktif</span>
+                                                </div>
+                                            </div>
 
-                                            {/* Media Mode Switcher (Upload vs URL) */}
-                                            <div className="mb-3">
-                                                <div className="d-flex align-items-center justify-content-between mb-2">
-                                                    <label className="form-label fw-bold mb-0">
-                                                        <i className="fas fa-photo-video me-2 text-primary"></i>
-                                                        {mediaUrl ? "Ganti / Perbarui Media Pelajaran" : "Pilih Media Pelajaran"}
+                                            <div className="d-flex align-items-center justify-content-between mt-2 pt-1 border-top">
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-xs btn-outline-teal d-inline-flex align-items-center gap-1 py-1 px-2 shadow-xs"
+                                                    onClick={() => onPreviewScorm && onPreviewScorm(item)}
+                                                    title="Uji coba pemutar SCORM interaktif"
+                                                    style={{ fontSize: "0.75rem" }}
+                                                >
+                                                    <i className="fas fa-play text-teal" style={{ fontSize: "10px" }}></i>
+                                                    <span className="fw-semibold">Uji Coba SCORM</span>
+                                                </button>
+                                                <div className="d-flex align-items-center gap-1">
+                                                    <label className="btn btn-xs btn-outline-secondary py-1 px-2 mb-0 shadow-xs" title="Ganti paket SCORM" style={{ fontSize: "0.725rem", cursor: "pointer" }}>
+                                                        <i className="fas fa-sync-alt me-1"></i>Ganti
+                                                        <input
+                                                            type="file"
+                                                            accept=".zip,.h5p"
+                                                            hidden
+                                                            onChange={(e) => handleScormZipUpload(e.target.files?.[0])}
+                                                        />
                                                     </label>
-                                                    <div className="btn-group btn-group-sm" role="group">
-                                                        <button
-                                                            type="button"
-                                                            className={`btn ${mediaTab === 'upload' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                                                            onClick={() => setMediaTab('upload')}
-                                                        >
-                                                            <i className="fas fa-cloud-upload-alt me-1"></i> Unggah Berkas
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className={`btn ${mediaTab === 'url' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                                                            onClick={() => setMediaTab('url')}
-                                                        >
-                                                            <i className="fas fa-link me-1"></i> Tautan URL / Cloud
-                                                        </button>
-                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-xs btn-outline-danger py-1 px-2 shadow-xs"
+                                                        title="Lepaskan modul SCORM dari materi ini"
+                                                        onClick={handleDetachScorm}
+                                                        style={{ fontSize: "0.725rem" }}
+                                                    >
+                                                        <i className="fas fa-unlink me-1"></i>Lepas
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="p-2 rounded-3 border bg-light h-100 d-flex flex-column justify-content-between" style={{ borderLeft: '3px solid #0f766e' }}>
+                                            <div>
+                                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                                    <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-0 px-2 fw-bold" style={{ fontSize: "10px" }}>
+                                                        <i className="fas fa-cube me-1"></i>Unggah / Pilih SCORM
+                                                    </span>
+                                                    <span className="text-muted small" style={{ fontSize: "0.72rem" }}>
+                                                        ZIP maks. 500MB
+                                                    </span>
                                                 </div>
 
-                                                {mediaTab === 'upload' ? (
-                                                    <div className="curriculum-file-upload-wrapper p-3 border rounded-3 bg-light">
-                                                        <div className="input-group mb-2">
-                                                            <input
-                                                                type="file"
-                                                                className="form-control curriculum-form-control"
-                                                                accept=".mp4,.webm,.ogv,.mov,.avi,.mkv,.ppt,.pptx,.pdf,.doc,.docx,.txt,.mp3,.wav,.ogg,.m4a,video/*,audio/*,application/pdf"
-                                                                onChange={(e) => {
-                                                                    const file = e.target.files?.[0];
-                                                                    if (file) {
-                                                                        const validExts = ['.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv', '.ppt', '.pptx', '.pdf', '.doc', '.docx', '.txt', '.mp3', '.wav', '.ogg', '.m4a', '.aac'];
-                                                                        const fileName = (file.name || '').toLowerCase();
-                                                                        const isExtOk = validExts.some(ext => fileName.endsWith(ext));
-                                                                        const isMimeOk = file.type.startsWith('video/') || file.type.startsWith('audio/') || file.type === 'application/pdf' || file.type.includes('presentation') || file.type.includes('document');
-
-                                                                        if (!isExtOk && !isMimeOk) {
-                                                                            Toast().fire({
-                                                                                icon: "error",
-                                                                                title: "Tipe Berkas Tidak Didukung",
-                                                                                text: "Silakan unggah video (MP4/WebM/MOV), presentasi (PPT/PPTX), dokumen (PDF/DOCX), atau audio (MP3/WAV).",
-                                                                            });
-                                                                            return;
-                                                                        }
-
-                                                                        if (file.size > 500 * 1024 * 1024) {
-                                                                            Toast().fire({
-                                                                                icon: "error",
-                                                                                title: "Berkas Terlalu Besar",
-                                                                                text: "Ukuran maksimal 500MB. Berkas Anda: " + (file.size / 1024 / 1024).toFixed(2) + "MB",
-                                                                            });
-                                                                            return;
-                                                                        }
-
-                                                                        const formData = new FormData();
-                                                                        formData.append("file", file);
-                                                                        if (course?.course_id) {
-                                                                            formData.append("course_id", course.course_id);
-                                                                        }
-                                                                        formData.append("upload_type", "curriculum");
-                                                                        if (variant?.variant_id) {
-                                                                            formData.append("variant_id", variant.variant_id);
-                                                                        }
-                                                                        if (item?.variant_item_id) {
-                                                                            formData.append("item_id", item.variant_item_id);
-                                                                        } else {
-                                                                            formData.append("item_id", itemIndex + 1);
-                                                                        }
-
-                                                                        const progressKey = `${variantIndex}_${itemIndex}`;
-                                                                        setCurriculumUploadProgress(prev => ({
-                                                                            ...prev,
-                                                                            [progressKey]: { percentage: 0, isUploading: true }
-                                                                        }));
-
-                                                                        (async () => {
-                                                                            try {
-                                                                                const response = await useAxios.post("file-upload/", formData, {
-                                                                                    headers: {
-                                                                                        "Content-Type": "multipart/form-data",
-                                                                                    },
-                                                                                    onUploadProgress: (progressEvent) => {
-                                                                                        const percentCompleted = Math.round(
-                                                                                            (progressEvent.loaded * 100) / progressEvent.total
-                                                                                        );
-                                                                                        setCurriculumUploadProgress(prev => ({
-                                                                                            ...prev,
-                                                                                            [progressKey]: { percentage: percentCompleted, isUploading: true }
-                                                                                        }));
-                                                                                    }
-                                                                                });
-
-                                                                                if (response?.data?.url) {
-                                                                                    handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
-                                                                                    handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
-                                                                                    handleLessonChange(variantIndex, itemIndex, "uploadedFile", response.data.url);
-                                                                                    handleLessonChange(variantIndex, itemIndex, "file", response.data.url);
-                                                                                    handleLessonChange(variantIndex, itemIndex, "file_id", response.data.file_id || response.data.id);
-                                                                                    handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
-                                                                                    handleLessonChange(variantIndex, itemIndex, "file_type", response.data.file_type || (file.type.startsWith('audio/') ? 'audio' : file.type === 'application/pdf' ? 'pdf' : 'video'));
-
-                                                                                    if (response.data.duration_seconds) {
-                                                                                        const key = `${variantIndex}_${itemIndex}`;
-                                                                                        setExtractedDuration(prev => ({
-                                                                                            ...prev,
-                                                                                            [key]: response.data.duration_seconds
-                                                                                        }));
-                                                                                        handleDurationInput(variantIndex, itemIndex, response.data.duration_seconds);
-                                                                                    }
-
-                                                                                    setCurriculumUploadProgress(prev => ({
-                                                                                        ...prev,
-                                                                                        [progressKey]: { percentage: 100, isUploading: false }
-                                                                                    }));
-
-                                                                                    setTimeout(() => {
-                                                                                        autoSaveCurriculum();
-                                                                                    }, 100);
-
-                                                                                    Toast().fire({
-                                                                                        icon: "success",
-                                                                                        title: "Berkas Berhasil Diunggah",
-                                                                                        text: response.data.video_duration
-                                                                                            ? `Berkas materi berhasil diunggah! Durasi: ${response.data.video_duration}`
-                                                                                            : "Berkas materi berhasil disimpan!",
-                                                                                        timer: 2000,
-                                                                                        showConfirmButton: false
-                                                                                    });
-
-                                                                                    setTimeout(() => {
-                                                                                        setCurriculumUploadProgress(prev => {
-                                                                                            const updated = { ...prev };
-                                                                                            delete updated[progressKey];
-                                                                                            return updated;
-                                                                                        });
-                                                                                    }, 1000);
-                                                                                }
-                                                                            } catch (error) {
-                                                                                console.error("Error uploading file:", error);
-                                                                                setCurriculumUploadProgress(prev => {
-                                                                                    const updated = { ...prev };
-                                                                                    delete updated[progressKey];
-                                                                                    return updated;
-                                                                                });
-                                                                                Toast().fire({
-                                                                                    icon: "error",
-                                                                                    title: "Unggahan Gagal",
-                                                                                    text: error.response?.data?.message || "Gagal mengunggah berkas. Silakan coba lagi.",
-                                                                                });
-                                                                            }
-                                                                            e.target.value = '';
-                                                                        })();
-                                                                    }
-                                                                }}
-                                                                id={`file-input-${variantIndex}-${itemIndex}`}
-                                                            />
-                                                            <label htmlFor={`file-input-${variantIndex}-${itemIndex}`} className="btn btn-success ms-2">
-                                                                <i className="fas fa-folder-open me-2"></i>
-                                                                Pilih Berkas
-                                                            </label>
+                                                {scormUploadState.isUploading ? (
+                                                    <div className="py-2 text-center">
+                                                        <div className="spinner-border spinner-border-sm text-teal mb-1" role="status"></div>
+                                                        <div className="small fw-bold text-dark" style={{ fontSize: "0.8rem" }}>
+                                                            Mengunggah & Mengekstrak SCORM... {scormUploadState.progress}%
                                                         </div>
-
-                                                        <div className="d-flex flex-wrap gap-3 mt-2 text-muted small">
-                                                            <span><i className="fas fa-film text-primary me-1"></i> Video (MP4, WebM, MOV, AVI)</span>
-                                                            <span><i className="fas fa-file-powerpoint text-warning me-1"></i> Slide (PPT, PPTX)</span>
-                                                            <span><i className="fas fa-file-pdf text-danger me-1"></i> Dokumen (PDF, DOCX)</span>
-                                                            <span><i className="fas fa-headphones text-info me-1"></i> Audio (MP3, WAV)</span>
-                                                            <span><i className="fas fa-database text-secondary me-1"></i> Maks. 500MB</span>
+                                                        <div className="progress mt-1" style={{ height: "6px" }}>
+                                                            <div className="progress-bar bg-teal" style={{ width: `${scormUploadState.progress}%` }}></div>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="p-3 border rounded-3 bg-light">
-                                                        <div className="input-group">
-                                                            <span className="input-group-text bg-white">
-                                                                <i className="fas fa-link text-primary"></i>
-                                                            </span>
+                                                    <div className="d-flex flex-column gap-1">
+                                                        <label className="btn btn-sm btn-outline-teal w-100 d-flex align-items-center justify-content-center gap-1 py-1 mb-0 shadow-xs" style={{ cursor: "pointer", fontSize: "0.8rem" }}>
+                                                            <i className="fas fa-cloud-arrow-up"></i>
+                                                            <span className="fw-semibold">Unggah Paket SCORM 1.2 (.zip)</span>
+                                                            <input
+                                                                type="file"
+                                                                accept=".zip,.h5p"
+                                                                hidden
+                                                                onChange={(e) => handleScormZipUpload(e.target.files?.[0])}
+                                                            />
+                                                        </label>
+
+                                                        {availableScormModules && availableScormModules.length > 0 && (
+                                                            <div className="d-flex align-items-center gap-1 mt-1">
+                                                                <select
+                                                                    className="form-select form-select-sm py-1"
+                                                                    style={{ fontSize: "0.78rem" }}
+                                                                    defaultValue=""
+                                                                    onChange={(e) => handleSelectExistingModule(e.target.value)}
+                                                                >
+                                                                    <option value="" disabled>-- Atau pilih paket dari pustaka --</option>
+                                                                    {availableScormModules.map(m => (
+                                                                        <option key={m.id} value={m.id}>
+                                                                            {m.judul} ({m.module_type === 'scorm_12' ? 'SCORM 1.2' : m.module_type.toUpperCase()})
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="small text-muted mt-2 pt-1 border-top d-flex align-items-center justify-content-between" style={{ fontSize: "0.72rem" }}>
+                                                <span><i className="fas fa-check-circle text-teal me-1"></i>Otomatis ekstrak imsmanifest</span>
+                                                <span><i className="fas fa-shield-alt text-teal me-1"></i>Zip-Slip safe</span>
+                                            </div>
+                                        </div>
+                                    )
+                                ) : (
+                                    /* === STANDARD MEDIA CONTAINER === */
+                                    <div className="h-100 d-flex flex-column justify-content-between">
+                                        {Boolean(activeMediaUrl) ? (
+                                            <div className="p-2 rounded-3 border bg-white shadow-xs">
+                                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                                    <div className="d-flex align-items-center gap-1 overflow-hidden me-2">
+                                                        <span className="badge bg-primary-subtle text-primary border border-primary-subtle py-0 px-1" style={{ fontSize: "10px" }}>
+                                                            <i className={
+                                                                isItemAudio ? "fas fa-headphones me-1" :
+                                                                    isItemPdf ? "fas fa-file-pdf me-1" :
+                                                                        isItemPpt ? "fas fa-file-powerpoint me-1" :
+                                                                            isItemWord ? "fas fa-file-word me-1" :
+                                                                                "fas fa-play-circle me-1"
+                                                            }></i>
+                                                            {isItemAudio ? "Audio" : isItemPdf ? "PDF" : isItemPpt ? "Slide" : isItemWord ? "Dokumen" : "Video"}
+                                                        </span>
+                                                        <span className="small text-dark fw-bold text-truncate" title={activeMediaUrl} style={{ maxWidth: "210px", fontSize: "0.8rem" }}>
+                                                            {activeMediaUrl.split('/').pop().split('?')[0] || "Media Terpasang"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="d-flex align-items-center gap-1">
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-xs btn-outline-secondary py-0 px-1"
+                                                            style={{ fontSize: "0.72rem" }}
+                                                            onClick={() => togglePreviewVisibility(variantIndex, itemIndex)}
+                                                            title={isPreviewOpen ? "Tutup Pratinjau" : "Buka Pratinjau"}
+                                                        >
+                                                            <i className={`fas fa-${isPreviewOpen ? 'eye-slash' : 'eye'} me-1`}></i>
+                                                            {isPreviewOpen ? 'Tutup' : 'Lihat'}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-xs btn-outline-danger py-0 px-1"
+                                                            style={{ fontSize: "0.72rem" }}
+                                                            title="Hapus media dari pelajaran ini"
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                if (window.confirm("Hapus media ini dari materi pembelajaran?")) {
+                                                                    if (item?.uploadedFile && item.uploadedFile.includes('/media/')) {
+                                                                        await handleDeleteLessonFile(variantIndex, itemIndex, item.uploadedFile);
+                                                                    } else {
+                                                                        handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "file", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
+                                                                        handleLessonChange(variantIndex, itemIndex, "media_source", "");
+                                                                        setTimeout(() => autoSaveCurriculum(), 100);
+                                                                    }
+                                                                    setMediaUrlInput('');
+                                                                    Toast().fire({
+                                                                        icon: "success",
+                                                                        title: "Media Dihapus",
+                                                                        text: "Media pelajaran berhasil dilepas.",
+                                                                        timer: 1500,
+                                                                        showConfirmButton: false
+                                                                    });
+                                                                }
+                                                            }}
+                                                        >
+                                                            <i className="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Expandable Compact Preview Container */}
+                                                {isPreviewOpen && (
+                                                    <div className="mt-1 pt-1 border-top rounded overflow-hidden" style={{ maxHeight: '180px' }}>
+                                                        {isItemVideo && (activeMediaUrl.includes('youtube.com') || activeMediaUrl.includes('youtu.be')) ? (
+                                                            <div className="ratio ratio-16x9 rounded overflow-hidden" style={{ maxHeight: "170px" }}>
+                                                                <iframe
+                                                                    src={`https://www.youtube-nocookie.com/embed/${extractYoutubeIdLesson(item.youtubeLink || activeMediaUrl) || ''}`}
+                                                                    title="YouTube video player"
+                                                                    frameBorder="0"
+                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                    allowFullScreen
+                                                                ></iframe>
+                                                            </div>
+                                                        ) : isItemVideo && activeMediaUrl.includes('drive.google.com') ? (
+                                                            <div className="ratio ratio-16x9 rounded overflow-hidden" style={{ maxHeight: "170px" }}>
+                                                                <iframe
+                                                                    src={activeMediaUrl.includes('/preview') ? activeMediaUrl : activeMediaUrl.replace(/\/view(\?.*)?$/, '/preview')}
+                                                                    title="Google Drive Media"
+                                                                    allow="autoplay"
+                                                                ></iframe>
+                                                            </div>
+                                                        ) : isItemAudio ? (
+                                                            <div className="p-2 text-center bg-light rounded">
+                                                                <audio controls className="w-100" style={{ maxHeight: '40px' }}>
+                                                                    <source src={activeMediaUrl} />
+                                                                </audio>
+                                                            </div>
+                                                        ) : isItemPdf ? (
+                                                            <div style={{ height: "160px" }}>
+                                                                <iframe src={activeMediaUrl} title="PDF Preview" className="w-100 h-100 border-0"></iframe>
+                                                            </div>
+                                                        ) : isItemPpt || isItemWord ? (
+                                                            <div className="p-2 text-center bg-light rounded">
+                                                                <i className={`fas ${isItemPpt ? 'fa-file-powerpoint text-warning' : 'fa-file-word text-primary'} fa-2x mb-1`}></i>
+                                                                <div className="small fw-semibold text-truncate">{activeMediaUrl.split('/').pop()}</div>
+                                                                <a href={activeMediaUrl} target="_blank" rel="noopener noreferrer" className="btn btn-xs btn-outline-primary mt-1 py-0 px-2" style={{ fontSize: "0.72rem" }}>
+                                                                    <i className="fas fa-external-link-alt me-1"></i>Buka Dokumen
+                                                                </a>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="bg-black text-center rounded overflow-hidden">
+                                                                <video width="100%" controls style={{ maxHeight: '160px', backgroundColor: '#000' }}>
+                                                                    <source src={activeMediaUrl} />
+                                                                </video>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            /* No Media: Compact Upload / URL Switcher */
+                                            <div className="p-2 rounded-3 border bg-light h-100 d-flex flex-column justify-content-between">
+                                                <div>
+                                                    <div className="d-flex align-items-center justify-content-between mb-1">
+                                                        <span className="small fw-bold text-dark" style={{ fontSize: "0.78rem" }}>
+                                                            <i className="fas fa-photo-video text-teal me-1"></i>Pilih Berkas / URL:
+                                                        </span>
+                                                        <div className="btn-group btn-group-sm" role="group">
+                                                            <button
+                                                                type="button"
+                                                                className={`btn py-0 px-2 ${mediaTab === 'upload' ? 'btn-teal text-white' : 'btn-outline-secondary'}`}
+                                                                style={{ fontSize: "0.72rem", height: "22px" }}
+                                                                onClick={() => setMediaTab('upload')}
+                                                            >
+                                                                <i className="fas fa-upload me-1"></i>Unggah
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className={`btn py-0 px-2 ${mediaTab === 'url' ? 'btn-teal text-white' : 'btn-outline-secondary'}`}
+                                                                style={{ fontSize: "0.72rem", height: "22px" }}
+                                                                onClick={() => setMediaTab('url')}
+                                                            >
+                                                                <i className="fas fa-link me-1"></i>Tautan
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {mediaTab === 'upload' ? (
+                                                        <div>
+                                                            <label className="btn btn-sm btn-outline-teal w-100 d-flex align-items-center justify-content-center gap-1 py-1 mb-0 shadow-xs" style={{ cursor: "pointer", fontSize: "0.8rem" }}>
+                                                                <i className="fas fa-folder-open"></i>
+                                                                <span className="fw-semibold">Pilih Berkas Media (Video/Doc/PPT)</span>
+                                                                <input
+                                                                    type="file"
+                                                                    hidden
+                                                                    accept=".mp4,.webm,.ogv,.mov,.avi,.mkv,.ppt,.pptx,.pdf,.doc,.docx,.txt,.mp3,.wav,.ogg,.m4a,video/*,audio/*,application/pdf"
+                                                                    onChange={(e) => {
+                                                                        const file = e.target.files?.[0];
+                                                                        if (file) {
+                                                                            const validExts = ['.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv', '.ppt', '.pptx', '.pdf', '.doc', '.docx', '.txt', '.mp3', '.wav', '.ogg', '.m4a', '.aac'];
+                                                                            const fileName = (file.name || '').toLowerCase();
+                                                                            const isExtOk = validExts.some(ext => fileName.endsWith(ext));
+                                                                            const isMimeOk = file.type.startsWith('video/') || file.type.startsWith('audio/') || file.type === 'application/pdf' || file.type.includes('presentation') || file.type.includes('document');
+
+                                                                            if (!isExtOk && !isMimeOk) {
+                                                                                Toast().fire({
+                                                                                    icon: "error",
+                                                                                    title: "Tipe Berkas Tidak Didukung",
+                                                                                    text: "Silakan unggah video (MP4/WebM/MOV), presentasi (PPT/PPTX), dokumen (PDF/DOCX), atau audio (MP3/WAV).",
+                                                                                });
+                                                                                return;
+                                                                            }
+
+                                                                            if (file.size > 500 * 1024 * 1024) {
+                                                                                Toast().fire({
+                                                                                    icon: "error",
+                                                                                    title: "Berkas Terlalu Besar",
+                                                                                    text: "Ukuran maksimal 500MB.",
+                                                                                });
+                                                                                return;
+                                                                            }
+
+                                                                            const formData = new FormData();
+                                                                            formData.append("file", file);
+                                                                            if (course?.course_id) formData.append("course_id", course.course_id);
+                                                                            formData.append("upload_type", "curriculum");
+                                                                            if (variant?.variant_id) formData.append("variant_id", variant.variant_id);
+                                                                            formData.append("item_id", item?.variant_item_id || itemIndex + 1);
+
+                                                                            const progressKey = `${variantIndex}_${itemIndex}`;
+                                                                            setCurriculumUploadProgress(prev => ({
+                                                                                ...prev,
+                                                                                [progressKey]: { percentage: 0, isUploading: true }
+                                                                            }));
+
+                                                                            (async () => {
+                                                                                try {
+                                                                                    const response = await useAxios.post("file-upload/", formData, {
+                                                                                        headers: { "Content-Type": "multipart/form-data" },
+                                                                                        onUploadProgress: (progressEvent) => {
+                                                                                            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                                                                                            setCurriculumUploadProgress(prev => ({
+                                                                                                ...prev,
+                                                                                                [progressKey]: { percentage: percentCompleted, isUploading: true }
+                                                                                            }));
+                                                                                        }
+                                                                                    });
+
+                                                                                    if (response?.data?.url) {
+                                                                                        handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
+                                                                                        handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
+                                                                                        handleLessonChange(variantIndex, itemIndex, "uploadedFile", response.data.url);
+                                                                                        handleLessonChange(variantIndex, itemIndex, "file", response.data.url);
+                                                                                        handleLessonChange(variantIndex, itemIndex, "file_id", response.data.file_id || response.data.id);
+                                                                                        handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
+                                                                                        handleLessonChange(variantIndex, itemIndex, "file_type", response.data.file_type || (file.type.startsWith('audio/') ? 'audio' : file.type === 'application/pdf' ? 'pdf' : 'video'));
+
+                                                                                        if (response.data.duration_seconds) {
+                                                                                            setExtractedDuration(prev => ({ ...prev, [progressKey]: response.data.duration_seconds }));
+                                                                                            handleDurationInput(variantIndex, itemIndex, response.data.duration_seconds);
+                                                                                        }
+
+                                                                                        setCurriculumUploadProgress(prev => ({
+                                                                                            ...prev,
+                                                                                            [progressKey]: { percentage: 100, isUploading: false }
+                                                                                        }));
+
+                                                                                        setTimeout(() => autoSaveCurriculum(), 100);
+                                                                                        Toast().fire({
+                                                                                            icon: "success",
+                                                                                            title: "Berkas Berhasil Diunggah",
+                                                                                            timer: 1800,
+                                                                                            showConfirmButton: false
+                                                                                        });
+                                                                                    }
+                                                                                } catch (error) {
+                                                                                    console.error("Error uploading file:", error);
+                                                                                    setCurriculumUploadProgress(prev => {
+                                                                                        const updated = { ...prev };
+                                                                                        delete updated[progressKey];
+                                                                                        return updated;
+                                                                                    });
+                                                                                    Toast().fire({
+                                                                                        icon: "error",
+                                                                                        title: "Unggahan Gagal",
+                                                                                        text: error.response?.data?.message || "Gagal mengunggah berkas.",
+                                                                                    });
+                                                                                }
+                                                                                e.target.value = '';
+                                                                            })();
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </label>
+
+                                                            {/* Upload Progress Bar */}
+                                                            {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.isUploading && (
+                                                                <div className="mt-1">
+                                                                    <div className="d-flex justify-content-between small text-teal mb-0" style={{ fontSize: "0.72rem" }}>
+                                                                        <span><i className="fas fa-spinner fa-spin me-1"></i>Mengunggah...</span>
+                                                                        <span>{curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%</span>
+                                                                    </div>
+                                                                    <div className="progress" style={{ height: '5px' }}>
+                                                                        <div
+                                                                            className="progress-bar bg-teal"
+                                                                            style={{ width: `${curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%` }}
+                                                                        ></div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="d-flex align-items-center gap-1">
                                                             <input
                                                                 type="url"
-                                                                className="form-control"
-                                                                placeholder="Tempelkan URL YouTube, Google Drive, Google Slides, Podcast Audio, atau Link Pembelajaran..."
+                                                                className="form-control form-control-sm py-1"
+                                                                style={{ fontSize: "0.78rem" }}
+                                                                placeholder="Tempel tautan YouTube / Drive..."
                                                                 value={mediaUrlInput}
                                                                 onChange={(e) => setMediaUrlInput(e.target.value)}
                                                             />
                                                             <button
                                                                 type="button"
-                                                                className="btn btn-primary px-3"
+                                                                className="btn btn-sm btn-teal px-2 py-1 text-nowrap"
+                                                                style={{ fontSize: "0.78rem" }}
                                                                 disabled={!mediaUrlInput.trim()}
                                                                 onClick={() => {
                                                                     const trimmed = mediaUrlInput.trim();
                                                                     if (!trimmed) return;
-
                                                                     if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
                                                                         handleLessonChange(variantIndex, itemIndex, "youtubeLink", trimmed);
                                                                         handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
@@ -1799,99 +1857,49 @@ function SortableLessonItem({
                                                                         handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
                                                                         handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
                                                                         handleLessonChange(variantIndex, itemIndex, "media_source", "url");
-                                                                        const lower = trimmed.toLowerCase();
-                                                                        if (lower.endsWith('.mp3') || lower.endsWith('.wav') || lower.endsWith('.m4a')) {
-                                                                            handleLessonChange(variantIndex, itemIndex, "file_type", "audio");
-                                                                        } else if (lower.endsWith('.pdf')) {
-                                                                            handleLessonChange(variantIndex, itemIndex, "file_type", "pdf");
-                                                                        } else if (lower.endsWith('.ppt') || lower.endsWith('.pptx') || lower.includes('presentation')) {
-                                                                            handleLessonChange(variantIndex, itemIndex, "file_type", "presentation");
-                                                                        } else {
-                                                                            handleLessonChange(variantIndex, itemIndex, "file_type", "video");
-                                                                        }
                                                                     }
-
-                                                                    setTimeout(() => {
-                                                                        autoSaveCurriculum();
-                                                                    }, 100);
-
+                                                                    setTimeout(() => autoSaveCurriculum(), 100);
                                                                     Toast().fire({
                                                                         icon: "success",
-                                                                        title: "Tautan Berhasil Disimpan",
-                                                                        text: "Media tautan pelajaran berhasil diperbarui!",
-                                                                        timer: 1800,
+                                                                        title: "Tautan Disimpan",
+                                                                        timer: 1500,
                                                                         showConfirmButton: false
                                                                     });
                                                                 }}
                                                             >
-                                                                <i className="fas fa-check me-1"></i> Terapkan Tautan
+                                                                <i className="fas fa-check"></i>
                                                             </button>
                                                         </div>
-                                                        <div className="d-flex flex-wrap gap-3 mt-2 text-muted small">
-                                                            <span><i className="fab fa-youtube text-danger me-1"></i> YouTube</span>
-                                                            <span><i className="fab fa-google-drive text-success me-1"></i> Google Drive Video</span>
-                                                            <span><i className="fas fa-file-powerpoint text-warning me-1"></i> Google Slides / PPT Link</span>
-                                                            <span><i className="fas fa-globe text-info me-1"></i> Direct Web Stream / Link</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Upload Progress Bar for Curriculum Media */}
-                                            {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.isUploading && (
-                                                <div className="mt-3 mb-3">
-                                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                                        <label className="form-label mb-0 fw-bold text-info">
-                                                            <i className="fas fa-spinner fa-spin me-2"></i>
-                                                            Mengunggah Berkas...
-                                                        </label>
-                                                        <span className="badge bg-info">
-                                                            {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%
-                                                        </span>
-                                                    </div>
-                                                    <div className="progress" style={{ height: '24px' }}>
-                                                        <div
-                                                            className="progress-bar progress-bar-striped progress-bar-animated bg-info"
-                                                            role="progressbar"
-                                                            style={{
-                                                                width: `${curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%`
-                                                            }}
-                                                            aria-valuenow={curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}
-                                                            aria-valuemin="0"
-                                                            aria-valuemax="100"
-                                                        >
-                                                            <span className="d-flex align-items-center justify-content-center h-100 text-white fw-bold">
-                                                                {curriculumUploadProgress[`${variantIndex}_${itemIndex}`]?.percentage || 0}%
-                                                            </span>
-                                                        </div>
-                                                    </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </>
-                                    );
-                                })()}
-                            </>
-                        )}
-                    </div>
-                </div>
 
-                {/* Bottom Section: SCORM Evaluation Alert OR Lesson Completion Question Editor */}
-                {isItemScorm ? (
-                    <div className="alert alert-light border rounded-2 p-2 mt-3 mb-0 d-flex align-items-center gap-2 small text-secondary" style={{ backgroundColor: "#f8fafc" }}>
-                        <i className="fas fa-info-circle text-teal fs-5" style={{ color: "#0f766e" }}></i>
-                        <div>
-                            <strong>Pelacakan Kuis & Kelulusan Terintegrasi:</strong> Kuis interaktif dan penilaian evaluasi telah terintegrasi langsung di dalam paket e-learning SCORM ini. Nilai skor (<code>cmi.core.score.raw</code>) dan status kelulusan (<code>cmi.core.lesson_status</code>) akan disinkronkan secara otomatis saat siswa menyelesaikan materi.
+                                                <div className="small text-muted mt-1 pt-1 border-top d-flex align-items-center justify-content-between" style={{ fontSize: "0.72rem" }}>
+                                                    <span><i className="fas fa-file-video text-teal me-1"></i>Video, Slide, PDF, Audio</span>
+                                                    <span>Maks. 500MB</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    <LessonCompletionQuestionEditor
-                        variantItemId={item?.variant_item_id}
-                        onQuestionSaved={(question) => {
-                            // Refresh question data if needed
-                            console.log('Question saved:', question);
-                        }}
-                    />
-                )}
+
+                        {/* Bottom Row: SCORM RTE Indicator OR Lesson Completion Question Editor */}
+                        {isItemScorm ? (
+                            <div className="mt-2 py-1 px-2 rounded border d-flex align-items-center gap-2 small text-muted bg-light" style={{ fontSize: "0.74rem", borderLeft: "3px solid #0f766e" }}>
+                                <i className="fas fa-shield-alt text-teal"></i>
+                                <div>
+                                    <strong>Pelacakan SCORM 1.2 Aktif:</strong> Nilai evaluasi (<code>cmi.core.score.raw</code>) dan status kelulusan (<code>cmi.core.lesson_status</code>) disinkronkan secara otomatis melalui SCORM RTE saat siswa berinteraksi.
+                                </div>
+                            </div>
+                        ) : (
+                            <LessonCompletionQuestionEditor
+                                variantItemId={item?.variant_item_id}
+                                onQuestionSaved={(question) => {
+                                    console.log('Question saved:', question);
+                                }}
+                            />
+                        )}
                     </>
                 )}
             </div>
@@ -1944,6 +1952,7 @@ function CourseEditCurriculum() {
 
     // ✨ Quizzes state for curriculum embedding & Pre/Post-Test detection
     const [courseQuizzes, setCourseQuizzes] = useState([]);
+    const [availableScormModules, setAvailableScormModules] = useState([]);
     const prePostQuiz = courseQuizzes.find(q => q.quiz_type === 'pre_post_test' || q.has_pre_test || q.has_post_test) || null;
     const regularQuizzes = courseQuizzes.filter(q => q.quiz_type !== 'pre_post_test' && !q.has_pre_test && !q.has_post_test);
     const [ckEditorData, setCKEditorData] = useState("");
@@ -2611,6 +2620,15 @@ function CourseEditCurriculum() {
                 setCourseQuizzes(quizList);
             } catch (qErr) {
                 console.warn("[CourseEditCurriculum] Could not fetch course quizzes:", qErr);
+            }
+
+            // ✨ Fetch available SCORM / H5P modules for curriculum insertion
+            try {
+                const scormResponse = await useAxios.get(`teacher/upload-elearning-module/?course_id=${param.course_id}`);
+                const moduleList = Array.isArray(scormResponse.data?.modules) ? scormResponse.data.modules : [];
+                setAvailableScormModules(moduleList);
+            } catch (sErr) {
+                console.warn("[CourseEditCurriculum] Could not fetch SCORM modules:", sErr);
             }
 
             // Fetch course details
@@ -3557,6 +3575,49 @@ function CourseEditCurriculum() {
         });
     };
 
+    const addScormLesson = (variantIndex) => {
+        const updatedVariants = [...variants];
+        const currentItems = updatedVariants[variantIndex].items || [];
+        const maxOrder = currentItems.reduce((max, item) => Math.max(max, item.order || 0), -1);
+        const newOrder = maxOrder + 1;
+
+        const defaultLm = course?.learning_module || (availableScormModules?.length === 1 ? availableScormModules[0] : null);
+
+        updatedVariants[variantIndex].items.push({
+            title: defaultLm?.judul || "Modul Pembelajaran SCORM",
+            description: defaultLm?.deskripsi || "",
+            gdriveLink: "",
+            youtubeLink: "",
+            uploadedFile: "",
+            file: "",
+            preview: false,
+            order: newOrder,
+            duration_seconds: 2700, // 1 JP default
+            duration_formatted: "45 Menit (1 JP)",
+            media_source: 'scorm',
+            file_type: 'scorm',
+            learning_module_id: defaultLm?.id || null,
+            learning_module_info: defaultLm ? {
+                id: defaultLm.id,
+                judul: defaultLm.judul,
+                module_type: defaultLm.module_type,
+                player_url: defaultLm.player_url,
+                entry_file: defaultLm.entry_file || "index.html"
+            } : null,
+        });
+
+        setVariants(updatedVariants);
+        trackFormChanges();
+
+        Toast().fire({
+            icon: "success",
+            title: "Modul SCORM Ditambahkan!",
+            text: "Pelajaran dengan format SCORM 1.2 siap dikonfigurasi.",
+            timer: 2000,
+            showConfirmButton: false
+        });
+    };
+
     const addLesson = (variantIndex) => {
         const updatedVariants = [...variants];
 
@@ -4460,15 +4521,26 @@ function CourseEditCurriculum() {
             // This ensures media source is re-detected from refreshed item data
             setLessonMediaSource({});
 
-            // Count what was actually saved
+            // Count what was actually saved, differentiating lessons and quizzes
             const savedSectionsCount = freshVariants.length;
-            const savedLessonsCount = freshVariants.reduce((total, variant) =>
-                total + (variant.items?.length || 0), 0
-            );
+            let savedLessonsCount = 0;
+            let savedQuizzesCount = 0;
+
+            freshVariants.forEach(variant => {
+                (variant.items || []).forEach(it => {
+                    const isQuiz = it.item_type === 'quiz' || Boolean(it.quiz_id) || Boolean(it.quiz);
+                    if (isQuiz) {
+                        savedQuizzesCount++;
+                    } else {
+                        savedLessonsCount++;
+                    }
+                });
+            });
+
+            const initialTotalItems = variants.reduce((total, variant) => total + (variant.items?.length || 0), 0);
+            const savedTotalItems = savedLessonsCount + savedQuizzesCount;
             const blankSectionsCount = variants.length - cleanedVariants.length;
-            const blankLessonsCount = variants.reduce((total, variant) =>
-                total + variant.items.length, 0
-            ) - savedLessonsCount;
+            const blankLessonsCount = Math.max(0, initialTotalItems - savedTotalItems);
 
             // ✨ PHASE 4.43.11: Handle status change when published course curriculum is updated
             const statusChanged = updatedCourse?.platform_status === "Review" && course?.platform_status === "Published";
@@ -4476,15 +4548,18 @@ function CourseEditCurriculum() {
             // Create detailed success message
             let successDetails = `✅ Successfully saved:\n`;
             successDetails += `• ${savedSectionsCount} section${savedSectionsCount !== 1 ? 's' : ''}\n`;
-            successDetails += `• ${savedLessonsCount} lesson${savedLessonsCount !== 1 ? 's' : ''}`;
+            successDetails += `• ${savedLessonsCount} lesson${savedLessonsCount !== 1 ? 's' : ''}\n`;
+            if (savedQuizzesCount > 0) {
+                successDetails += `• ${savedQuizzesCount} Kuis\n`;
+            }
 
             if (blankSectionsCount > 0 || blankLessonsCount > 0) {
-                successDetails += `\n\n📝 Ignored (blank items):\n`;
+                successDetails += `\n📝 Ignored (blank items):\n`;
                 if (blankSectionsCount > 0) {
                     successDetails += `• ${blankSectionsCount} empty section${blankSectionsCount !== 1 ? 's' : ''}\n`;
                 }
                 if (blankLessonsCount > 0) {
-                    successDetails += `• ${blankLessonsCount} empty lesson${blankLessonsCount !== 1 ? 's' : ''}`;
+                    successDetails += `• ${blankLessonsCount} empty item${blankLessonsCount !== 1 ? 's' : ''}`;
                 }
             }
 
@@ -4536,7 +4611,13 @@ function CourseEditCurriculum() {
         return acc + (section.items || []).reduce((itemAcc, it) => itemAcc + (Number(it.duration_seconds) || 0), 0);
     }, 0);
     const totalCourseJP = totalCourseSeconds > 0 ? Math.ceil(totalCourseSeconds / 2700) : 0;
-    const totalLessons = (variants || []).reduce((acc, section) => acc + (section.items?.length || 0), 0);
+    const totalActualLessons = (variants || []).reduce((acc, section) => {
+        return acc + (section.items || []).filter(it => !(it.item_type === 'quiz' || Boolean(it.quiz_id) || Boolean(it.quiz))).length;
+    }, 0);
+    const totalQuizzes = (variants || []).reduce((acc, section) => {
+        return acc + (section.items || []).filter(it => it.item_type === 'quiz' || Boolean(it.quiz_id) || Boolean(it.quiz)).length;
+    }, 0);
+    const totalLessons = totalActualLessons;
 
     // Show full-page loading spinner on initial load
     if (uiState.loading && !course.title) {
@@ -4684,10 +4765,21 @@ function CourseEditCurriculum() {
                                             <i className="fas fa-book-reader"></i>
                                         </div>
                                         <div>
-                                            <div className="curriculum-kpi-val">{totalLessons}</div>
+                                            <div className="curriculum-kpi-val">{totalActualLessons}</div>
                                             <div className="curriculum-kpi-lbl">Total Pelajaran</div>
                                         </div>
                                     </div>
+                                    {totalQuizzes > 0 && (
+                                        <div className="curriculum-kpi-pill">
+                                            <div className="curriculum-kpi-icon" style={{ background: "rgba(245, 158, 11, 0.12)", color: "#f59e0b" }}>
+                                                <i className="fas fa-clipboard-question"></i>
+                                            </div>
+                                            <div>
+                                                <div className="curriculum-kpi-val">{totalQuizzes}</div>
+                                                <div className="curriculum-kpi-lbl">Total Kuis</div>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="curriculum-kpi-pill">
                                         <div className="curriculum-kpi-icon">
                                             <i className="fas fa-clock"></i>
@@ -4807,7 +4899,7 @@ function CourseEditCurriculum() {
                                                 </div>
                                                 <div>
                                                     <div className="d-flex align-items-center gap-2 mb-1">
-                                                        <span className="badge bg-success text-white px-2 py-1" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>LANGKAH 1 (OTOMATIS)</span>
+                                                        <span className="badge bg-success text-white px-2 py-1" style={{ fontSize: '11px', letterSpacing: '0px' }}>LANGKAH 1 (OTOMATIS)</span>
                                                         <h6 className="mb-0 fw-bold text-dark">Pre-Test Diagnostik</h6>
                                                     </div>
                                                     {prePostQuiz ? (
@@ -4874,6 +4966,7 @@ function CourseEditCurriculum() {
                                                         collapsedSections={collapsedSections}
                                                         toggleSectionCollapse={toggleSectionCollapse}
                                                         addLesson={addLesson}
+                                                        addScormLesson={addScormLesson}
                                                         addQuiz={addQuiz}
                                                     >
                                                         {/* Lessons Container */}
@@ -4947,6 +5040,8 @@ function CourseEditCurriculum() {
                                                                                     isElearningScorm={isElearningScorm}
                                                                                     onPreviewScorm={handleOpenScormPreview}
                                                                                     courseQuizzes={courseQuizzes}
+                                                                                    availableScormModules={availableScormModules}
+                                                                                    setAvailableScormModules={setAvailableScormModules}
                                                                                 />
                                                                             );
                                                                         })}
@@ -4984,7 +5079,7 @@ function CourseEditCurriculum() {
                                                 </div>
                                                 <div>
                                                     <div className="d-flex align-items-center gap-2 mb-1">
-                                                        <span className="badge bg-danger text-white px-2 py-1" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>LANGKAH AKHIR (OTOMATIS)</span>
+                                                        <span className="badge bg-danger text-white px-2 py-1" style={{ fontSize: '11px', letterSpacing: '0px' }}>LANGKAH AKHIR (OTOMATIS)</span>
                                                         <h6 className="mb-0 fw-bold text-dark">Post-Test Evaluasi Akhir</h6>
                                                     </div>
                                                     {prePostQuiz ? (

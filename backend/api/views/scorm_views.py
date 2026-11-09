@@ -17,18 +17,49 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.parsers import MultiPartParser, FormParser
 
+from django.db.models import Q
+
 from api import models as api_models
 from api.serializer import LearningModuleSerializer, UserProgressSerializer
 
 
 class UploadElearningModuleAPIView(APIView):
     """
-    API View untuk mengunggah paket e-learning SCORM 1.2 (.zip) atau H5P (.h5p).
+    API View untuk mengunggah dan menampilkan daftar paket e-learning SCORM 1.2 (.zip) atau H5P (.h5p).
     Mendukung upload hingga 500MB dengan ekstraksi otomatis dan deteksi manifest.
     """
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
     parser_classes = (MultiPartParser, FormParser)
+
+    def get(self, request):
+        """
+        Mengambil daftar modul e-learning SCORM/H5P yang dapat dihubungkan ke kurikulum.
+        """
+        course_id = request.query_params.get('course_id')
+        queryset = api_models.LearningModule.objects.all()
+
+        if course_id:
+            course_obj = api_models.Course.objects.filter(course_id=course_id).first()
+            if not course_obj and str(course_id).isdigit():
+                course_obj = api_models.Course.objects.filter(id=course_id).first()
+
+            if course_obj:
+                queryset = queryset.filter(
+                    Q(course=course_obj) | Q(author=request.user) | Q(course__isnull=True)
+                )
+            else:
+                queryset = queryset.filter(
+                    Q(author=request.user) | Q(course__isnull=True)
+                )
+        else:
+            queryset = queryset.filter(
+                Q(author=request.user) | Q(course__isnull=True)
+            )
+
+        queryset = queryset.order_by('-tanggal_dibuat')
+        serializer = LearningModuleSerializer(queryset, many=True, context={'request': request})
+        return Response({"modules": serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
         file_obj = request.FILES.get('file')
