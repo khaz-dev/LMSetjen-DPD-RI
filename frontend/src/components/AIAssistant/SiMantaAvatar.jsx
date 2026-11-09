@@ -813,12 +813,45 @@ const SiMantaAvatar = () => {
         setIsGameOpen(true);
     };
 
-    // Pilih sprite berdasarkan status aktif
+    // Preload seluruh aset sprite avatar agar transisi emote instan tanpa kedipan
+    useEffect(() => {
+        const sprites = [mantaTabletIdleWebp, mantaTabletWaveWebp, mantaHappyWebp, mantaIdleWebp];
+        sprites.forEach((src) => {
+            const img = new Image();
+            img.src = src;
+        });
+    }, []);
+
+    // Pilih sprite/emote berdasarkan status aktif Manta
     const getCurrentSprite = useCallback(() => {
+        // 1. Suara TTS sedang aktif berbicara -> Manta mengekspresikan wajah bahagia bercerita
+        if (speakingIdx !== null) return mantaHappyWebp;
+
+        // 2. Mikrofon sedang mendengarkan ucapan user -> Manta menyimak aktif
+        if (isListening) return mantaTabletWaveWebp;
+
+        // 3. Pose spesifik yang dipicu oleh event langsung
         if (pose === 'happy') return mantaHappyWebp;
-        if (pose === 'wave' || isHovered) return mantaTabletWaveWebp;
+        if (pose === 'wave') return mantaTabletWaveWebp;
+
+        // 4. KETIKA JENDELA CHAT SEDANG AKTIF (simanta-chat-window terbuka):
+        // Emote karakter Manta berubah ke pose interaktif yang hidup & responsif
+        if (isChatOpen) {
+            // Saat AI sedang berpikir / mengetik balasan -> Manta antusias tersenyum gembira
+            if (isTyping) return mantaHappyWebp;
+
+            // Saat kursor mengarah ke Manta di atas jendela chat -> Manta tersenyum bahagia disapa
+            if (isHovered) return mantaHappyWebp;
+
+            // Emote aktif bawaan saat jendela chat terbuka -> Pose melambaikan tangan dengan tablet siap membantu
+            return mantaTabletWaveWebp;
+        }
+
+        // 5. KONDISI STANDBY SAAT CHAT TERTUTUP:
+        // Jika di-hover -> melambai menyapa, jika diam santai -> pose tenang memegang tablet
+        if (isHovered) return mantaTabletWaveWebp;
         return mantaTabletIdleWebp;
-    }, [pose, isHovered]);
+    }, [pose, isHovered, isChatOpen, isTyping, isListening, speakingIdx]);
 
     // Eksekusi Tombol Aksi Cepat (Quick Action Click)
     const handleActionClick = (action) => {
@@ -1242,7 +1275,7 @@ const SiMantaAvatar = () => {
 
     return (
         <aside 
-            className={`simanta-container ${isChatOpen && !isMinimized ? 'simanta-chat-open' : ''}`}
+            className={`simanta-container ${isChatOpen && !isMinimized ? 'simanta-chat-open' : ''} ${isTyping ? 'simanta-ai-typing' : ''}`}
             aria-label="Asisten AI LMS Setjen DPD RI"
         >
             {/* JIKA DALAM MODE MINIMIZED (Lencana Kecil) */}
