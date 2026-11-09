@@ -65,7 +65,7 @@ except ImportError:
     VideoFileClip = None
 from django.core.files.base import ContentFile
 import math
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -207,8 +207,8 @@ class SSOTokenVerifyAPIView(APIView):
         
         logger = logging.getLogger(__name__)
         
-        # 1. Ambil token dari request
-        sso_token = request.data.get('sso_token')
+        # 1. Ambil token dari request (dukung parameter 'sso_token' maupun 'token')
+        sso_token = request.data.get('sso_token') or request.data.get('token')
         
         logger.info("[AUTH] SSO Token Verification Started")
         logger.info(f"Request data: {request.data}")
@@ -550,7 +550,7 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = api_serializer.ProfileSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
-    parser_classes = [MultiPartParser, FormParser]  # Support file uploads
+    parser_classes = [MultiPartParser, FormParser, JSONParser]  # Support file uploads and JSON payloads
 
     def get_object(self):
         user_id = self.kwargs.get('user_id')

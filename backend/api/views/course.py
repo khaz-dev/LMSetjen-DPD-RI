@@ -1761,7 +1761,10 @@ class CourseEnrollmentAPIView(generics.CreateAPIView):
             return Response({"error": "course_id and user_id are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            course = api_models.Course.objects.get(id=course_id)
+            if str(course_id).isdigit():
+                course = api_models.Course.objects.get(id=course_id)
+            else:
+                course = api_models.Course.objects.get(course_id=course_id)
             user = User.objects.get(id=user_id)
         except api_models.Course.DoesNotExist:
             return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -1845,7 +1848,10 @@ class CheckEnrollmentStatusAPIView(generics.RetrieveAPIView):
 
     def get(self, request, course_id, user_id):
         try:
-            course = api_models.Course.objects.get(id=course_id)
+            if str(course_id).isdigit():
+                course = api_models.Course.objects.get(id=course_id)
+            else:
+                course = api_models.Course.objects.get(course_id=course_id)
             user = User.objects.get(id=user_id)
         except api_models.Course.DoesNotExist:
             return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)

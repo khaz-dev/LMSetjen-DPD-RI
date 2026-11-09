@@ -181,7 +181,7 @@ def log_quiz_activity(sender, instance, created, **kwargs):
                     'quiz_attempt_id': instance.id,
                     'quiz_id': instance.quiz.id if instance.quiz else None,
                     'quiz_title': q_title,
-                    'score': instance.score,
+                    'score': float(instance.score),
                     'is_passed': instance.is_passed,
                     'course_id': instance.quiz.course.id if instance.quiz and instance.quiz.course else None
                 }

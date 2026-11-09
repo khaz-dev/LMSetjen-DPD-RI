@@ -253,14 +253,12 @@ class StudentCourseCompletedCreateAPIView(generics.CreateAPIView):
             print(f"   course_id: {course_id} (type: {type(course_id).__name__})")
             print(f"   variant_item_id: {variant_item_id} (type: {type(variant_item_id).__name__})")
 
-            # Validate that course_id is actually a Course ID, not an enrollment ID
-            # Enrollment IDs are usually short strings (ShortUUIDField), Course IDs are integers
+            # Validate that course_id is handled whether numeric or ShortUUID
             print(f"\n[StudentCourseCompletedCreateAPIView] 🔍 Validating IDs")
-            if not str(course_id).isdigit():
-                print(f"   ⚠️  WARNING: course_id '{course_id}' looks like an enrollment ID (not numeric)")
-                print(f"   This suggests frontend sent course?.id instead of course?.course?.id")
-            
-            course = api_models.Course.objects.get(id=course_id)
+            if str(course_id).isdigit():
+                course = api_models.Course.objects.get(id=course_id)
+            else:
+                course = api_models.Course.objects.get(course_id=course_id)
             print(f"   ✅ Found course: {course.title}")
             
             variant_item = api_models.VariantItem.objects.get(variant_item_id=variant_item_id)
@@ -390,27 +388,22 @@ class VideoProgressAPIView(generics.CreateAPIView):
         if not all([user, course_id, variant_item_id]):
             print(f"[{timestamp}] 🎥 VideoProgress GET: Missing required parameters")
             return Response({
-                "error": "Missing required parameters: user_id, course_id, variant_item_id"
+                "error": "Missing required parameters: course_id, variant_item_id"
             }, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            user = int(user)
-            course_id = int(course_id)
-            # ✨ PHASE 16: FIX - variant_item_id is a ShortUUID string, NOT an integer!
-            # DO NOT convert to int - keep it as string for database lookup
-            # variant_item_id = int(variant_item_id)  # REMOVED - This breaks the query!
-            print(f"[{timestamp}] 🔍 VideoProgress GET: Looking up progress user_id={user_id}, course_id={course_id}, variant_item_id={variant_item_id}")
-        except ValueError as e:
-            print(f"[{timestamp}] ❌ VideoProgress GET: Parameter conversion error - {e}")
-            return Response({
-                "error": f"Invalid parameter format - user_id and course_id must be integers: {e}"
-            }, status=status.HTTP_400_BAD_REQUEST)
+            if str(course_id).isdigit():
+                course = api_models.Course.objects.get(id=course_id)
+            else:
+                course = api_models.Course.objects.get(course_id=course_id)
+        except api_models.Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
         
         try:
             # Get progress using variant_item_id (ShortUUID field)
             progress = api_models.VideoProgress.objects.get(
                 user=user,
-                course_id=course_id,
+                course=course,
                 variant_item__variant_item_id=variant_item_id
             )
             
@@ -465,7 +458,6 @@ class VideoProgressAPIView(generics.CreateAPIView):
             progress_percentage = float(progress_percentage)
             last_watched_position = float(last_watched_position)
             total_duration = float(total_duration)
-            course_id = int(course_id) if course_id else None
         except (TypeError, ValueError) as e:
             print(f"[{timestamp}] ❌ VideoProgress CREATE: Type conversion error - {e}")
             return Response({
@@ -485,8 +477,11 @@ class VideoProgressAPIView(generics.CreateAPIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             try:
-                course = api_models.Course.objects.get(id=course_id)
-                print(f"[{timestamp}] ✅ VideoProgress CREATE: Found course '{course.title}' (ID: {course_id})")
+                if str(course_id).isdigit():
+                    course = api_models.Course.objects.get(id=course_id)
+                else:
+                    course = api_models.Course.objects.get(course_id=course_id)
+                print(f"[{timestamp}] ✅ VideoProgress CREATE: Found course '{course.title}' (ID: {course.id})")
             except api_models.Course.DoesNotExist:
                 print(f"[{timestamp}] ❌ VideoProgress CREATE: Course {course_id} not found")
                 return Response({
@@ -1109,26 +1104,41 @@ class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
     - Data validated by Question_AnswerSerializer
     """
     serializer_class = api_serializer.Question_AnswerSerializer
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    authentication_classes = [JWTAuthentication]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         course_id = self.kwargs.get('course_id')
         if not course_id:
             return api_models.Question_Answer.objects.none()
         try:
-            course = api_models.Course.objects.get(id=course_id)
+            if str(course_id).isdigit():
+                course = api_models.Course.objects.get(id=course_id)
+            else:
+                course = api_models.Course.objects.get(course_id=course_id)
             return api_models.Question_Answer.objects.filter(course=course)
-        except api_models.Course.DoesNotExist:
+        except (api_models.Course.DoesNotExist, ValueError):
             return api_models.Question_Answer.objects.none()
     
     def create(self, request, *args, **kwargs):
-        course_id = request.data['course_id']
-        user_id = request.data['user_id']
-        title = request.data['title']
-        message = request.data['message']
-        # ✨ PHASE 7.25: Require variant_item_id for proper lesson organization
+        course_id = request.data.get('course_id') or self.kwargs.get('course_id')
+        user = request.user if (request.user and request.user.is_authenticated) else None
+        if not user and request.data.get('user_id'):
+            try:
+                user = User.objects.get(id=request.data.get('user_id'))
+            except (User.DoesNotExist, ValueError):
+                user = None
+
+        if not user:
+            return Response({"error": "User authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        title = request.data.get('title', '')
+        message = request.data.get('message', '')
         variant_item_id = request.data.get('variant_item_id', None)
         
         # Validate that variant_item_id is provided
@@ -1138,8 +1148,13 @@ class QuestionAnswerListCreateAPIView(generics.ListCreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        user = User.objects.get(id=user_id)
-        course = api_models.Course.objects.get(id=course_id)
+        try:
+            if str(course_id).isdigit():
+                course = api_models.Course.objects.get(id=course_id)
+            else:
+                course = api_models.Course.objects.get(course_id=course_id)
+        except (api_models.Course.DoesNotExist, ValueError):
+            return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
         
         # Get variant_item - should always exist since validation passed
         try:
@@ -1304,21 +1319,24 @@ class QuestionAnswerLikeAPIView(generics.CreateAPIView):
     POST /api/v1/student/question-answer-like/{qa_id}/
     Body: {user_id, course_id}
     """
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def create(self, request, qa_id=None):
         try:
-            user_id = request.data.get('user_id')
-            course_id = request.data.get('course_id')
+            user = request.user if (request.user and request.user.is_authenticated) else None
+            if not user and request.data.get('user_id'):
+                try:
+                    user = User.objects.get(id=request.data.get('user_id'))
+                except User.DoesNotExist:
+                    user = None
 
-            if not all([user_id, course_id, qa_id]):
+            if not user or not qa_id:
                 return Response(
-                    {"error": "Missing required fields: user_id, course_id, qa_id"}, 
+                    {"error": "Missing required fields: user, qa_id"}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            user = User.objects.get(id=user_id)
             question = api_models.Question_Answer.objects.get(qa_id=qa_id)
             
             # Toggle like - if exists, delete it; if not, create it

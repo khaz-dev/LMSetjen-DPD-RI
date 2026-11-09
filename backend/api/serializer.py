@@ -3432,6 +3432,7 @@ class FeedbackCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.Feedback
         fields = [
+            'id',
             'feedback_type',
             'title',
             'description',
@@ -3440,6 +3441,7 @@ class FeedbackCreateSerializer(serializers.ModelSerializer):
             'affected_area',
             'attachments',
         ]
+        read_only_fields = ['id']
     
     def validate_title(self, value):
         """Validate title is provided and not too short"""

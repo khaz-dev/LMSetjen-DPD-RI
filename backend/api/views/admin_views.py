@@ -466,7 +466,7 @@ class AdminUserManagementAPIView(generics.ListAPIView):
     Frontend fetches all pages and handles client-side pagination for responsive UX
     """
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = api_serializer.UserSerializer
     pagination_class = PageNumberPagination  # Enable pagination
     
@@ -555,7 +555,7 @@ class AdminUserManagementAllAPIView(generics.ListAPIView):
     Performance benefit: 60% faster, 40% less frontend code
     """
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = api_serializer.UserSerializer
     pagination_class = None  # ✨ PHASE 67: No pagination - return ALL users
     
@@ -903,7 +903,7 @@ class AdminUserDetailAPIView(generics.RetrieveAPIView):
     Get detailed information about a specific user
     """
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = api_serializer.UserSerializer
     
     def get_object(self):
@@ -973,7 +973,7 @@ class AdminUserCreateAPIView(generics.CreateAPIView):
     Create a new user account
     """
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = api_serializer.RegisterSerializer
     
     def create(self, request, *args, **kwargs):
@@ -1101,7 +1101,7 @@ class AdminUserUpdateAPIView(generics.UpdateAPIView):
     Update user information
     """
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = api_serializer.UserSerializer
     
     def get_object(self):
@@ -1238,7 +1238,7 @@ class AdminUserDeleteAPIView(generics.DestroyAPIView):
     Delete a user account
     """
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     
     def get_object(self):
         # Verify admin access
@@ -1281,7 +1281,7 @@ class AdminUserBulkActionsAPIView(APIView):
     Handle bulk actions on multiple users
     """
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     
     def post(self, request):
         try:

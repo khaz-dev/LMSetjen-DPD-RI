@@ -1153,6 +1153,10 @@ class FeedbackMarkResolvedAPIView(generics.UpdateAPIView):
     permission_classes = [IsAdminUser]
     lookup_field = 'pk'
     
+    def post(self, request, *args, **kwargs):
+        """Allow POST method as documented in URLs and API contracts"""
+        return self.update(request, *args, **kwargs)
+
     def update(self, request, *args, **kwargs):
         """Mark feedback as resolved with optional notes"""
         feedback = self.get_object()
@@ -1183,6 +1187,10 @@ class FeedbackMarkInProgressAPIView(generics.UpdateAPIView):
     permission_classes = [IsAdminUser]
     lookup_field = 'pk'
     
+    def post(self, request, *args, **kwargs):
+        """Allow POST method as documented in URLs and API contracts"""
+        return self.update(request, *args, **kwargs)
+
     def update(self, request, *args, **kwargs):
         """Mark feedback as in progress"""
         feedback = self.get_object()
