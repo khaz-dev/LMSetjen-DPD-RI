@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import apiInstance from "../../../utils/axios";
 import Toast from "../../plugin/Toast";
 import { getImageUrl, getCourseCurriculumSummary } from "../../../utils/courseUtils";
@@ -551,6 +551,15 @@ function CourseReviewTab({ onCountsUpdated }) {
                                                 <span>Tinjau & Detail</span>
                                             </button>
 
+                                            <Link
+                                                to={`/admin/courses/${course.course_id}/evaluation/`}
+                                                className="btn-review-evaluation"
+                                                title="Evaluasi efektivitas belajar, ranking, audit ujian, & rekapitulasi JP peserta"
+                                            >
+                                                <i className="fas fa-chart-line"></i>
+                                                <span>Evaluasi Kursus</span>
+                                            </Link>
+
                                             {course.platform_status === "Published" && (
                                                 <a
                                                     href={`/instructor/preview-course/${course.course_id}/?view=published`}
@@ -671,15 +680,26 @@ function CourseReviewTab({ onCountsUpdated }) {
                                             </span>
                                         </td>
                                         <td style={{ textAlign: "right" }}>
-                                            <button
-                                                className="btn btn-sm btn-outline-success py-1 px-2"
-                                                style={{ fontSize: "0.78rem", borderColor: "#0f766e", color: "#0f766e" }}
-                                                onClick={() => handleViewDetails(course)}
-                                                title="Tinjau Detail Kursus"
-                                            >
-                                                <i className="fas fa-eye me-1"></i>
-                                                Tinjau
-                                            </button>
+                                            <div className="d-flex align-items-center justify-content-end gap-1">
+                                                <button
+                                                    className="btn btn-sm btn-outline-success py-1 px-2"
+                                                    style={{ fontSize: "0.78rem", borderColor: "#0f766e", color: "#0f766e" }}
+                                                    onClick={() => handleViewDetails(course)}
+                                                    title="Tinjau Detail Kursus"
+                                                >
+                                                    <i className="fas fa-eye me-1"></i>
+                                                    Tinjau
+                                                </button>
+                                                <Link
+                                                    to={`/admin/courses/${course.course_id}/evaluation/`}
+                                                    className="btn btn-sm btn-outline-teal py-1 px-2"
+                                                    style={{ fontSize: "0.78rem", borderColor: "#0d9488", color: "#0d9488" }}
+                                                    title="Evaluasi Kursus & Rekapitulasi JP"
+                                                >
+                                                    <i className="fas fa-chart-line me-1"></i>
+                                                    Evaluasi
+                                                </Link>
+                                            </div>
                                         </td>
                                     </tr>
                                 );

@@ -680,6 +680,39 @@ aside.simanta-container section.simanta-chat-window.simanta-chat-expanded,
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+}
+
+.simanta-role-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.2px;
+}
+
+.simanta-role-pill.simanta-role-admin {
+    background: rgba(239, 68, 68, 0.35);
+    border-color: rgba(252, 165, 165, 0.7);
+}
+
+.simanta-role-pill.simanta-role-instructor {
+    background: rgba(245, 158, 11, 0.35);
+    border-color: rgba(253, 230, 138, 0.7);
+}
+
+.simanta-role-pill.simanta-role-student {
+    background: rgba(16, 185, 129, 0.35);
+    border-color: rgba(167, 243, 208, 0.7);
 }
 
 .simanta-chat-subtitle {

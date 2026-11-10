@@ -273,6 +273,132 @@ KNOWLEDGE_BASE = [
             {"label": "🚀 Mulai Belajar", "url": "/search/", "type": "route"},
             {"label": "🏛️ Tentang LMS", "url": "/tentang/", "type": "route"}
         ]
+    },
+    {
+        "id": "instructor_create_course",
+        "keywords": [
+            "buat kursus", "tambah kursus", "bikin kursus", "buat pelatihan",
+            "tambah materi", "buat silabus", "alur pembuatan kursus", "unggah modul", "panduan instruktur"
+        ],
+        "regex": r"\b(buat\s*kursus|tambah\s*kursus|bikin\s*kursus|buat\s*pelatihan|tambah\s*materi|buat\s*silabus|panduan\s*instruktur)\b",
+        "reply": (
+            "🎓 **Panduan Alur Pembuatan & Publikasi Kursus bagi Instruktur:**\n\n"
+            "1. **Inisiasi Data Kursus:** Buka menu **Buat Kursus Baru** (`/instructor/create-course/`), lengkapi judul pelatihan, deskripsi silabus, kategori, tingkat kesulitan, serta unggah thumbnail resmi.\n"
+            "2. **Penyusunan Bab & Silabus:** Tambahkan Bab (*Sections/Variants*) materi pembelajaran. Anda dapat memadukan video MP4/YouTube, materi teks, serta paket interaktif SCORM 1.2.\n"
+            "3. **Penyusunan Kuis Evaluasi:** Rancang pertanyaan kuis pemahaman dan tetapkan batas nilai kelulusan (*passing grade*) minimal standar (70% - 80%).\n"
+            "4. **Pengajuan Review:** Setelah silabus berstatus lengkap, klik tombol **Kirim untuk Ditinjau (*Submit for Review*)**. Tim Admin Setjen DPD RI akan mengurasi materi sebelum kursus dipublikasikan ke katalog umum."
+        ),
+        "suggestions": [
+            "Format dan spesifikasi modul SCORM 1.2",
+            "Bagaimana cara melihat daftar siswa terdaftar?",
+            "Atur template sertifikat kursus"
+        ],
+        "actions": [
+            {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"},
+            {"label": "📚 Buka Kursus Kelolaan", "url": "/instructor/courses/", "type": "route"}
+        ]
+    },
+    {
+        "id": "instructor_scorm_guide",
+        "keywords": [
+            "format scorm", "upload scorm", "unggah scorm", "spesifikasi scorm",
+            "scorm instruktur", "paket scorm", "scorm 1.2", "modul scorm", "imsmanifest"
+        ],
+        "regex": r"\b((format|unggah|upload|spesifikasi|paket)\s*scorm|scorm\s*1\.2|imsmanifest)\b",
+        "reply": (
+            "📦 **Panduan Teknis Paket SCORM 1.2 untuk Instruktur LMS Setjen DPD RI:**\n\n"
+            "• **Standar Dukungan:** LMS Setjen DPD RI mendukung penuh standar e-learning **SCORM 1.2** (*Sharable Content Object Reference Model*).\n"
+            "• **Struktur Berkas (.zip):** Berkas `imsmanifest.xml` **wajib** berada di root (tingkat teratas) zip, bukan di dalam subfolder ekstra.\n"
+            "• **Titik Masuk (*Entry Point*):** Pastikan file utama (seperti `index.html`) terdefinisi dengan tepat di manifest dan dapat dimuat oleh iframe peramban.\n"
+            "• **Komunikasi CMI API:** Modul harus memanggil fungsi `LMSInitialize()`, mengupdate status kemajuan `cmi.core.lesson_status` (`completed`/`passed`), dan menutup sesi dengan `LMSFinish()` agar progres siswa tersimpan otomatis.\n"
+            "• **Cara Unggah:** Pada halaman edit kursus, tambahkan item materi silabus, pilih tipe **SCORM Package**, lalu unggah berkas zip Anda."
+        ),
+        "suggestions": [
+            "Panduan buat kursus baru",
+            "Cara pantau progres modul siswa",
+            "Kendala pemutar SCORM macet"
+        ],
+        "actions": [
+            {"label": "📚 Buka Kursus Kelolaan", "url": "/instructor/courses/", "type": "route"},
+            {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"}
+        ]
+    },
+    {
+        "id": "admin_course_review",
+        "keywords": [
+            "review kursus", "kurasi kursus", "setujui kursus", "tolak kursus",
+            "approval kursus", "verifikasi kursus", "kursus menunggu review", "kurasi materi"
+        ],
+        "regex": r"\b(review\s*kursus|kurasi\s*kursus|setujui\s*kursus|tolak\s*kursus|approval\s*kursus|verifikasi\s*kursus)\b",
+        "reply": (
+            "📝 **Panduan Kurasi & Review Kursus bagi Administrator:**\n\n"
+            "1. **Buka Antrean Kurasi:** Masuk ke menu **Manajemen Kursus / Review Kursus** di dashboard Admin (`/admin/courses/`).\n"
+            "2. **Pemeriksaan Standar Mutu:**\n"
+            "   • Verifikasi kejelasan judul, silabus, dan relevansi kompetensi keparlemenan/ASN.\n"
+            "   • Putar cuplikan video materi dan uji coba pemutar modul SCORM 1.2 untuk memastikan tidak ada kendala loading.\n"
+            "   • Cek kesiapan kuis pemahaman dan kriteria kelulusan peserta.\n"
+            "3. **Tindakan Persetujuan:**\n"
+            "   • **Setujui (Approve):** Kursus otomatis berubah status menjadi *Published* dan langsung tampil di katalog publik.\n"
+            "   • **Minta Revisi (Reject):** Berikan catatan perbaikan yang jelas kepada instruktur pengampu."
+        ),
+        "suggestions": [
+            "Berapa kursus menunggu review saat ini?",
+            "Statistik keseluruhan platform LMS",
+            "Panduan manajemen pengguna"
+        ],
+        "actions": [
+            {"label": "📝 Review Kursus Masuk", "url": "/admin/courses/", "type": "route"},
+            {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"}
+        ]
+    },
+    {
+        "id": "admin_user_management",
+        "keywords": [
+            "kelola user", "kelola pengguna", "manajemen user", "manajemen pengguna",
+            "tambah admin", "tambah instruktur", "ganti role", "hak akses", "role pengguna"
+        ],
+        "regex": r"\b(kelola\s*(user|pengguna)|manajemen\s*(user|pengguna)|tambah\s*(user|instruktur|admin)|ganti\s*role|hak\s*akses)\b",
+        "reply": (
+            "👥 **Panduan Manajemen Pengguna & Hak Akses (Administrator):**\n\n"
+            "• **Akses Menu:** Masuk ke menu **Pengguna** (`/admin/users/`) di panel admin.\n"
+            "• **Struktur Peran Multi-Role:** Setiap pengguna dapat memiliki kombinasi peran **Peserta**, **Instruktur**, dan **Administrator** yang saling melengkapi.\n"
+            "• **Pengaturan Peran:** Admin dapat mencentang izin peran (misal memberikan hak *Instruktur* kepada pejabat fungsional tertentu) tanpa menghilangkan riwayat belajarnya sebagai *Peserta*.\n"
+            "• **Integrasi SSO:** Data pegawai terhubung dengan basis data kepegawaian resmi Setjen DPD RI. NIP dan unit organisasi tersinkronisasi otomatis."
+        ),
+        "suggestions": [
+            "Berapa jumlah pengguna terdaftar?",
+            "Laporan analitik aktivitas pengguna",
+            "Pengaturan sertifikat global"
+        ],
+        "actions": [
+            {"label": "👥 Manajemen Pengguna", "url": "/admin/users/", "type": "route"},
+            {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"}
+        ]
+    },
+    {
+        "id": "admin_reports_analytics",
+        "keywords": [
+            "laporan admin", "analitik admin", "trafik pengunjung", "laporan aktivitas",
+            "statistik platform", "laporan lms", "analitik sistem", "metrik platform"
+        ],
+        "regex": r"\b(laporan\s*(admin|sistem|aktivitas|kinerja|lms)|analitik\s*(admin|sistem|platform|trafik)|trafik\s*pengunjung|statistik\s*(platform|lms))\b",
+        "reply": (
+            "📈 **Layanan Laporan & Analitik Platform (Administrator):**\n\n"
+            "Panel Administrator menyediakan pemantauan komprehensif terhadap ekosistem LMS Setjen DPD RI:\n"
+            "1. **Trafik & Kunjungan:** Pantau tren pengunjung harian, perangkat peramban, dan jam-jam belajar paling aktif.\n"
+            "2. **Ketercapaian Kompetensi (20 JP):** Rekapitulasi jumlah jam pelajaran (JP) aparatur Setjen DPD RI untuk kebutuhan pelaporan pengembangan SDM.\n"
+            "3. **Evaluasi Kursus:** Analisis tingkat kelulusan kuis, rating instruktur, dan ulasan peserta.\n"
+            "4. **Log Audit & Integritas:** Pemantauan keabsahan sertifikat dan aktivitas sistem secara real-time."
+        ),
+        "suggestions": [
+            "Ringkasan statistik LMS saat ini",
+            "Antrean kursus yang menunggu review",
+            "Manajemen pengguna"
+        ],
+        "actions": [
+            {"label": "📈 Laporan & Analitik", "url": "/admin/reports/", "type": "route"},
+            {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"}
+        ]
     }
 ]
 
@@ -594,17 +720,20 @@ class AIAssistantChatAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 1. Ekstraksi Konteks Pengguna (Personalisasi) & Halaman Aktif (Page Awareness)
-        user_ctx = self._get_user_context(request)
-        user_id_str = str(user_ctx.get("user_id") or "guest")
-
+        # 1. Ekstraksi Konteks Pengguna (Personalisasi), Role Aktif, & Halaman Aktif (Page Awareness)
         page_ctx = request.data.get("page_context") or {}
         course_slug = page_ctx.get("course_slug")
         pathname = page_ctx.get("pathname") or request.data.get("current_path") or ""
+        role_param = request.data.get("current_role") or request.data.get("role") or page_ctx.get("current_role")
+
         if not course_slug and "/course-detail/" in pathname:
             slug_match = re.search(r"/course-detail/([^/]+)/?", pathname)
             if slug_match:
                 course_slug = slug_match.group(1)
+
+        user_ctx = self._get_user_context(request, role_override=role_param, pathname=pathname)
+        user_id_str = str(user_ctx.get("user_id") or "guest")
+        role_key = f"_{user_ctx.get('role', 'student')}"
 
         current_course = None
         if course_slug:
@@ -613,10 +742,10 @@ class AIAssistantChatAPIView(APIView):
             except Exception:
                 current_course = None
 
-        # 2. Normalisasi teks & User-Isolated Caching (termasuk course_slug jika ada)
+        # 2. Normalisasi teks & User-Isolated Caching (termasuk role_key & course_slug jika ada)
         norm_query = re.sub(r"[^\w\s]", "", user_message.lower()).strip()
         course_slug_key = f"_{course_slug}" if course_slug else ""
-        cache_key = f"ai_manta_chat_{user_id_str}{course_slug_key}_{hashlib.md5(norm_query.encode('utf-8')).hexdigest()}"
+        cache_key = f"ai_manta_chat_{user_id_str}{role_key}{course_slug_key}_{hashlib.md5(norm_query.encode('utf-8')).hexdigest()}"
         cached_result = cache.get(cache_key)
         if cached_result:
             return Response(cached_result, status=status.HTTP_200_OK)
@@ -631,6 +760,38 @@ class AIAssistantChatAPIView(APIView):
                 response_data = self._handle_current_course_query(current_course, user_message, norm_query, user_ctx)
                 cache.set(cache_key, response_data, timeout=180)
                 return Response(response_data, status=status.HTTP_200_OK)
+
+        # 3.2. Handle Pertanyaan Status Role / Hak Akses Pengguna
+        is_role_identity_query = bool(re.search(
+            r"\b((role|peran|status)\s*saya|saya\s*(sebagai\s*)?siapa|ganti\s*(role|peran)|pindah\s*(role|peran)|siapa\s*saya|hak\s*akses\s*saya|bisa\s*apa\s*saja\s*(saya)?)\b",
+            norm_query
+        ))
+        if is_role_identity_query and not re.search(r"\b(kursus|modul|sertifikat|20\s*jp)\b", norm_query):
+            role_status_resp = self._handle_user_role_status(user_ctx)
+            cache.set(cache_key, role_status_resp, timeout=60)
+            return Response(role_status_resp, status=status.HTTP_200_OK)
+
+        # 3.3. Handle Alur & Pertanyaan Khusus Instruktur (Buat Kursus, Silabus, SCORM, Siswa)
+        is_instructor_topic = bool(re.search(
+            r"\b(buat\s*kursus|tambah\s*kursus|bikin\s*kursus|buat\s*pelatihan|tambah\s*materi|unggah\s*materi|format\s*scorm|upload\s*scorm|spesifikasi\s*scorm|panduan\s*instruktur|tanya\s*jawab\s*siswa|evaluasi\s*siswa|nilai\s*siswa|rekap\s*siswa)\b",
+            norm_query
+        ))
+        if is_instructor_topic or (user_ctx.get("role") == "instructor" and bool(re.search(r"\b(kursus|materi|silabus|scorm|siswa)\b", norm_query)) and not bool(re.search(r"\b(20\s*jp|sertifikat\s*saya)\b", norm_query))):
+            inst_resp = self._handle_instructor_workflow(user_message, norm_query, user_ctx)
+            if inst_resp:
+                cache.set(cache_key, inst_resp, timeout=120)
+                return Response(inst_resp, status=status.HTTP_200_OK)
+
+        # 3.4. Handle Alur & Pertanyaan Khusus Administrator (Kurasi, Review, Pengguna, Laporan)
+        is_admin_topic = bool(re.search(
+            r"\b(review\s*kursus|kurasi\s*kursus|setujui\s*kursus|tolak\s*kursus|approval\s*kursus|verifikasi\s*kursus|kelola\s*(user|pengguna)|manajemen\s*(user|pengguna)|tambah\s*(user|admin|instruktur)|laporan\s*(admin|sistem|kinerja)|analitik\s*sistem|trafik\s*pengunjung|reset\s*attempt)\b",
+            norm_query
+        ))
+        if is_admin_topic or (user_ctx.get("role") == "admin" and bool(re.search(r"\b(kursus|pengguna|user|laporan|analitik|review)\b", norm_query)) and not bool(re.search(r"\b(20\s*jp|sertifikat\s*saya)\b", norm_query))):
+            admin_resp = self._handle_admin_workflow(user_message, norm_query, user_ctx)
+            if admin_resp:
+                cache.set(cache_key, admin_resp, timeout=120)
+                return Response(admin_resp, status=status.HTTP_200_OK)
 
         # 4. Handle Pertanyaan Terpersonalisasi Khusus (Kursus Saya & Progres Belajar)
         is_my_courses_query = re.search(
@@ -868,84 +1029,158 @@ class AIAssistantChatAPIView(APIView):
 
             cloud_reply = self._call_gemini_api(user_message, history, ai_api_key, user_ctx, current_course, matched_lessons_ctx)
             if cloud_reply:
-                actions = [
-                    {"label": "🔍 Katalog Kursus", "url": "/search/", "type": "route"},
-                    {"label": "📜 Sertifikat Saya", "url": "/student/sertifikat/", "type": "route"}
-                ]
-                if current_course:
-                    actions.insert(0, {
-                        "label": f"📖 Kursus: {current_course.title[:20]}...",
-                        "url": f"/course-detail/{current_course.slug}/",
-                        "type": "route"
-                    })
-                elif user_ctx["is_authenticated"] and user_ctx.get("latest_course"):
-                    latest = user_ctx["latest_course"]
-                    if not latest.get("is_completed") and latest.get("enrollment_id"):
+                active_role = user_ctx.get("role", "student")
+                if active_role == "admin":
+                    actions = [
+                        {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"},
+                        {"label": "📝 Review Kursus", "url": "/admin/courses/", "type": "route"},
+                        {"label": "👥 Manajemen Pengguna", "url": "/admin/users/", "type": "route"},
+                        {"label": "📈 Laporan & Analitik", "url": "/admin/reports/", "type": "route"}
+                    ]
+                    suggested_qs = [
+                        "Berapa banyak kursus yang sedang menunggu review dan persetujuan admin?",
+                        "Ringkasan statistik LMS Setjen DPD RI saat ini",
+                        "Bagaimana cara mengelola akun dan hak akses pengguna di LMS?"
+                    ]
+                elif active_role == "instructor":
+                    actions = [
+                        {"label": "📊 Dashboard Instruktur", "url": "/instructor/dashboard/", "type": "route"},
+                        {"label": "📚 Kursus Kelolaan", "url": "/instructor/courses/", "type": "route"},
+                        {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"},
+                        {"label": "👥 Daftar Siswa", "url": "/instructor/students/", "type": "route"}
+                    ]
+                    suggested_qs = [
+                        "Bagaimana spesifikasi dan cara mengunggah paket modul SCORM 1.2?",
+                        "Berapa jumlah siswa terdaftar dan ulasan pada kursus yang saya ajar?",
+                        "Bagaimana panduan membuat materi kursus baru?"
+                    ]
+                else:
+                    actions = [
+                        {"label": "🔍 Katalog Kursus", "url": "/search/", "type": "route"},
+                        {"label": "📜 Sertifikat Saya", "url": "/student/sertifikat/", "type": "route"}
+                    ]
+                    if current_course:
                         actions.insert(0, {
-                            "label": "▶️ Lanjut Belajar",
-                            "url": f"/student/courses/{latest['enrollment_id']}/",
+                            "label": f"📖 Kursus: {current_course.title[:20]}...",
+                            "url": f"/course-detail/{current_course.slug}/",
                             "type": "route"
                         })
+                    elif user_ctx["is_authenticated"] and user_ctx.get("latest_course"):
+                        latest = user_ctx["latest_course"]
+                        if not latest.get("is_completed") and latest.get("enrollment_id"):
+                            actions.insert(0, {
+                                "label": "▶️ Lanjut Belajar",
+                                "url": f"/student/courses/{latest['enrollment_id']}/",
+                                "type": "route"
+                            })
+                    suggested_qs = [
+                        "Bagaimana cara unduh sertifikat?",
+                        "Cari kursus terbaru",
+                        "Apa itu LMS Setjen DPD RI?"
+                    ]
 
                 result = {
                     "status": "success",
                     "reply": cloud_reply,
                     "source": "cloud_llm",
-                    "suggested_questions": [
-                        "Bagaimana cara unduh sertifikat?",
-                        "Cari kursus terbaru",
-                        "Apa itu LMS Setjen DPD RI?"
-                    ],
+                    "suggested_questions": suggested_qs,
                     "actions": actions,
                     "recommended_courses": []
                 }
                 cache.set(cache_key, result, timeout=300)
                 return Response(result, status=status.HTTP_200_OK)
 
-        # 10. Smart Contextual Fallback (Sopan, Ramah, Membantu & Tidak Monoton)
+        # 10. Smart Contextual Fallback (Sopan, Ramah, Membantu & Adaptif Sesuai Peran Aktif)
         featured_courses = self._get_featured_courses()
-        fallback_reply = (
-            f"Terima kasih atas pertanyaan Anda: *\"{user_message}\"*.\n\n"
-            "Sebagai **Manta**, Asisten AI Virtual LMS Setjen DPD RI, saya siap membantu seluruh kebutuhan "
-            "pembelajaran daring Anda. Anda dapat menanyakan topik-topik berikut:\n\n"
-            "• **Panduan Memulai Belajar & Mendaftar Kursus**\n"
-            "• **Penerbitan & Unduh Sertifikat Ber-QR Code**\n"
-            "• **Akses Akun & Integrasi SSO Pegawai DPD RI**\n"
-            "• **Penanganan Kendala Video atau Modul SCORM**\n\n"
-            "Silakan pilih tombol aksi cepat di bawah atau buka katalog kursus pelatihan kami!"
-        )
+        active_role = user_ctx.get("role", "student")
 
-        default_actions = [
-            {"label": "🔍 Jelajahi Katalog Kursus", "url": "/search/", "type": "route"},
-            {"label": "📜 Sertifikat Saya", "url": "/student/sertifikat/", "type": "route"}
-        ]
-        if user_ctx["is_authenticated"] and user_ctx.get("latest_course"):
-            latest = user_ctx["latest_course"]
-            if not latest.get("is_completed") and latest.get("enrollment_id"):
-                default_actions.insert(0, {
-                    "label": "▶️ Lanjut Belajar",
-                    "url": f"/student/courses/{latest['enrollment_id']}/",
-                    "type": "route"
-                })
+        if active_role == "admin":
+            fallback_reply = (
+                f"Terima kasih atas pertanyaan Anda: *\"{user_message}\"*.\n\n"
+                "Sebagai **Manta**, Asisten AI Virtual LMS Setjen DPD RI, saya siap mendukung tata kelola sistem. "
+                "Anda dapat menanyakan topik-topik pengelolaan platform berikut:\n\n"
+                "• **Kurasi & Persetujuan Kursus Baru dari Instruktur**\n"
+                "• **Manajemen Akun Pengguna & Pengaturan Multi-Role**\n"
+                "• **Laporan Kinerja Belajar & Ketercapaian 20 JP ASN**\n"
+                "• **Pengaturan Template & Verifikasi Sertifikat Global**\n\n"
+                "Silakan pilih aksi cepat di bawah atau buka dashboard administrator!"
+            )
+            default_actions = [
+                {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"},
+                {"label": "📝 Review Kursus", "url": "/admin/courses/", "type": "route"},
+                {"label": "👥 Manajemen Pengguna", "url": "/admin/users/", "type": "route"},
+                {"label": "📈 Laporan & Analitik", "url": "/admin/reports/", "type": "route"}
+            ]
+            suggested_fallback_qs = [
+                "Berapa banyak kursus yang sedang menunggu review dan persetujuan admin?",
+                "Ringkasan statistik LMS Setjen DPD RI saat ini",
+                "Panduan manajemen pengguna dan peran"
+            ]
+        elif active_role == "instructor":
+            fallback_reply = (
+                f"Terima kasih atas pertanyaan Anda: *\"{user_message}\"*.\n\n"
+                "Sebagai **Manta**, Asisten AI Virtual LMS Setjen DPD RI, saya siap mendampingi aktivitas pengajaran Anda. "
+                "Anda dapat menanyakan topik instruksional berikut:\n\n"
+                "• **Panduan Pembuatan & Publikasi Kursus Baru**\n"
+                "• **Format & Spesifikasi Paket Modul SCORM 1.2**\n"
+                "• **Manajemen Kuis Evaluasi & Standar Passing Grade**\n"
+                "• **Pemantauan Progres & Tanya Jawab dengan Siswa**\n\n"
+                "Silakan pilih tombol aksi di bawah untuk mengelola pelatihan Anda!"
+            )
+            default_actions = [
+                {"label": "📊 Dashboard Instruktur", "url": "/instructor/dashboard/", "type": "route"},
+                {"label": "📚 Kursus Kelolaan", "url": "/instructor/courses/", "type": "route"},
+                {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"},
+                {"label": "👥 Daftar Siswa", "url": "/instructor/students/", "type": "route"}
+            ]
+            suggested_fallback_qs = [
+                "Bagaimana spesifikasi dan cara mengunggah paket modul SCORM 1.2?",
+                "Berapa jumlah siswa terdaftar dan ulasan pada kursus yang saya ajar?",
+                "Bagaimana panduan membuat materi kursus baru?"
+            ]
+        else:
+            fallback_reply = (
+                f"Terima kasih atas pertanyaan Anda: *\"{user_message}\"*.\n\n"
+                "Sebagai **Manta**, Asisten AI Virtual LMS Setjen DPD RI, saya siap membantu seluruh kebutuhan "
+                "pembelajaran daring Anda. Anda dapat menanyakan topik-topik berikut:\n\n"
+                "• **Panduan Memulai Belajar & Mendaftar Kursus**\n"
+                "• **Penerbitan & Unduh Sertifikat Ber-QR Code**\n"
+                "• **Akses Akun & Integrasi SSO Pegawai DPD RI**\n"
+                "• **Penanganan Kendala Video atau Modul SCORM**\n\n"
+                "Silakan pilih tombol aksi cepat di bawah atau buka katalog kursus pelatihan kami!"
+            )
+            default_actions = [
+                {"label": "🔍 Jelajahi Katalog Kursus", "url": "/search/", "type": "route"},
+                {"label": "📜 Sertifikat Saya", "url": "/student/sertifikat/", "type": "route"}
+            ]
+            if user_ctx["is_authenticated"] and user_ctx.get("latest_course"):
+                latest = user_ctx["latest_course"]
+                if not latest.get("is_completed") and latest.get("enrollment_id"):
+                    default_actions.insert(0, {
+                        "label": "▶️ Lanjut Belajar",
+                        "url": f"/student/courses/{latest['enrollment_id']}/",
+                        "type": "route"
+                    })
+            suggested_fallback_qs = [
+                "Apa itu LMS Setjen DPD RI?",
+                "Bagaimana cara mulai belajar?",
+                "Cara unduh sertifikat kelulusan",
+                "Rekomendasi kursus populer"
+            ]
 
         result = {
             "status": "success",
             "reply": fallback_reply,
             "source": "smart_fallback",
-            "suggested_questions": [
-                "Apa itu LMS Setjen DPD RI?",
-                "Bagaimana cara mulai belajar?",
-                "Cara unduh sertifikat kelulusan",
-                "Rekomendasi kursus populer"
-            ],
+            "suggested_questions": suggested_fallback_qs,
             "actions": default_actions,
             "recommended_courses": featured_courses
         }
         cache.set(cache_key, result, timeout=120)
         return Response(result, status=status.HTTP_200_OK)
 
-    def _get_user_context(self, request) -> Dict[str, Any]:
-        """Ekstraksi konteks pengguna aktif (profil, kursus, dan sertifikat)."""
+    def _get_user_context(self, request, role_override: str = None, pathname: str = "") -> Dict[str, Any]:
+        """Ekstraksi konteks pengguna aktif (profil, kursus, peran aktif: Peserta/Instruktur/Admin, dan metrik operasional)."""
         user = None
         if request.user and request.user.is_authenticated:
             user = request.user
@@ -959,10 +1194,22 @@ class AIAssistantChatAPIView(APIView):
 
         if not user:
             client_name = (request.data.get("user_name") or "").strip()
+            guest_role = "student"
+            if pathname:
+                if "/admin" in pathname:
+                    guest_role = "admin"
+                elif "/instructor" in pathname:
+                    guest_role = "instructor"
+            if role_override:
+                guest_role = "instructor" if role_override in ["teacher", "instructor"] else ("admin" if role_override in ["admin", "administrator"] else "student")
+            guest_role_display = "Administrator" if guest_role == "admin" else ("Instruktur" if guest_role == "instructor" else "Peserta")
             return {
                 "is_authenticated": False,
                 "user_id": None,
                 "name": client_name or "Rekan Pembelajar",
+                "role": guest_role,
+                "role_display": guest_role_display,
+                "available_roles": [guest_role],
                 "organization_unit": None,
                 "position": None,
                 "jenis_jabatan": None,
@@ -972,10 +1219,57 @@ class AIAssistantChatAPIView(APIView):
                 "certificates_count": 0,
                 "active_courses": [],
                 "completed_courses_count": 0,
-                "latest_course": None
+                "latest_course": None,
+                "teacher_courses_count": 0,
+                "teacher_published_count": 0,
+                "teacher_draft_count": 0,
+                "teacher_review_count": 0,
+                "teacher_students_count": 0,
+                "teacher_recent_courses": [],
+                "admin_total_users": 0,
+                "admin_total_courses": 0,
+                "admin_pending_reviews": 0,
+                "admin_pending_reports": 0
             }
 
         display_name = user.full_name or user.first_name or user.username or "Rekan ASN"
+
+        # Penentuan Peran Aktif Pengguna (Role-Aware Context)
+        active_role = (role_override or "").lower().strip()
+        if not active_role and pathname:
+            if "/admin" in pathname:
+                active_role = "admin"
+            elif "/instructor" in pathname:
+                active_role = "instructor"
+            elif "/student" in pathname:
+                active_role = "student"
+        
+        if not active_role:
+            active_role = getattr(user, 'current_role', None) or getattr(user, 'role', None) or 'student'
+            active_role = str(active_role).lower().strip()
+
+        if active_role in ['teacher', 'instructor', 'pengajar']:
+            active_role = 'instructor'
+        elif active_role in ['admin', 'administrator', 'superadmin']:
+            active_role = 'admin'
+        else:
+            active_role = 'student'
+
+        # Penentuan Seluruh Peran yang Dimiliki Pengguna
+        available_roles = []
+        user_roles_str = str(getattr(user, 'roles', '') or '').lower()
+        if getattr(user, 'is_student', False) or 'student' in user_roles_str or active_role == 'student':
+            available_roles.append('student')
+        if getattr(user, 'is_instructor', False) or getattr(user, 'is_staff', False) or 'teacher' in user_roles_str or 'instructor' in user_roles_str or active_role == 'instructor':
+            available_roles.append('instructor')
+        if getattr(user, 'is_admin', False) or getattr(user, 'is_superuser', False) or 'admin' in user_roles_str or active_role == 'admin':
+            available_roles.append('admin')
+        if not available_roles:
+            available_roles = [active_role]
+        if active_role not in available_roles:
+            available_roles.append(active_role)
+
+        role_display = "Administrator" if active_role == "admin" else ("Instruktur" if active_role == "instructor" else "Peserta")
 
         # Ekstraksi Unit Kerja, Jabatan, Jenis Jabatan, dan Golongan ASN Setjen DPD RI
         org_unit_name = None
@@ -994,7 +1288,7 @@ class AIAssistantChatAPIView(APIView):
         except Exception:
             pass
 
-        # Ambil riwayat kursus terdaftar
+        # Ambil riwayat kursus terdaftar (Konteks Peserta)
         enrollments = api_models.EnrolledCourse.objects.filter(user=user).select_related('course').order_by('-date')
         enrolled_count = enrollments.count()
 
@@ -1024,10 +1318,58 @@ class AIAssistantChatAPIView(APIView):
 
         cert_count = api_models.Certificate.objects.filter(user=user).count()
 
+        # Metrik Khusus Instruktur (jika peran aktif instruktur atau memiliki hak instruktur)
+        teacher_courses_count = 0
+        teacher_published_count = 0
+        teacher_draft_count = 0
+        teacher_review_count = 0
+        teacher_students_count = 0
+        teacher_recent_courses = []
+        if active_role == 'instructor' or 'instructor' in available_roles:
+            try:
+                teacher = api_models.Teacher.objects.filter(user=user).first()
+                if teacher:
+                    t_courses = api_models.Course.objects.filter(teacher=teacher)
+                    teacher_courses_count = t_courses.count()
+                    teacher_published_count = t_courses.filter(platform_status="Published").count()
+                    teacher_draft_count = t_courses.filter(platform_status="Draft").count()
+                    teacher_review_count = t_courses.filter(platform_status="Review").count()
+                    teacher_students_count = api_models.EnrolledCourse.objects.filter(course__teacher=teacher).values_list('user', flat=True).distinct().count()
+                    for tc in t_courses.order_by('-date')[:5]:
+                        teacher_recent_courses.append({
+                            "id": tc.id,
+                            "title": tc.title,
+                            "slug": tc.slug,
+                            "status": tc.platform_status,
+                            "students_count": api_models.EnrolledCourse.objects.filter(course=tc).count()
+                        })
+            except Exception as e:
+                logger.warning(f"Error fetching instructor context in Manta AI: {e}")
+
+        # Metrik Khusus Administrator (jika peran aktif admin atau memiliki hak admin)
+        admin_total_users = 0
+        admin_total_courses = 0
+        admin_pending_reviews = 0
+        admin_pending_reports = 0
+        if active_role == 'admin' or 'admin' in available_roles:
+            try:
+                admin_total_users = api_models.User.objects.count()
+                admin_total_courses = api_models.Course.objects.count()
+                admin_pending_reviews = api_models.Course.objects.filter(platform_status="Review").count()
+                try:
+                    admin_pending_reports = api_models.Feedback.objects.filter(status="pending").count()
+                except Exception:
+                    admin_pending_reports = 0
+            except Exception as e:
+                logger.warning(f"Error fetching admin context in Manta AI: {e}")
+
         return {
             "is_authenticated": True,
             "user_id": user.id,
             "name": display_name,
+            "role": active_role,
+            "role_display": role_display,
+            "available_roles": available_roles,
             "organization_unit": org_unit_name,
             "position": position_name,
             "jenis_jabatan": jenis_jabatan,
@@ -1037,70 +1379,22 @@ class AIAssistantChatAPIView(APIView):
             "certificates_count": cert_count,
             "active_courses": active_courses,
             "completed_courses_count": completed_courses_count,
-            "latest_course": latest_course
+            "latest_course": latest_course,
+            "teacher_courses_count": teacher_courses_count,
+            "teacher_published_count": teacher_published_count,
+            "teacher_draft_count": teacher_draft_count,
+            "teacher_review_count": teacher_review_count,
+            "teacher_students_count": teacher_students_count,
+            "teacher_recent_courses": teacher_recent_courses,
+            "admin_total_users": admin_total_users,
+            "admin_total_courses": admin_total_courses,
+            "admin_pending_reviews": admin_pending_reviews,
+            "admin_pending_reports": admin_pending_reports
         }
 
     def _handle_personalized_greeting(self, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
-        """Menghasilkan sapaan cerdas dan terpersonalisasi sesuai data pengguna."""
-        if user_ctx["is_authenticated"]:
-            name = user_ctx["name"]
-            enrolled_count = user_ctx["enrolled_count"]
-            cert_count = user_ctx["certificates_count"]
-            latest = user_ctx["latest_course"]
-
-            reply = f"Halo, Bapak/Ibu **{name}**! 👋 Senang bertemu kembali di LMS Sekretariat Jenderal DPD RI.\n\n"
-            actions = []
-
-            if enrolled_count > 0 and latest:
-                reply += (
-                    f"Saat ini Anda terdaftar dalam **{enrolled_count} pelatihan**. Kursus aktif terakhir Anda adalah "
-                    f"**{latest['title']}** dengan progres belajar **{latest['progress']}%**.\n\n"
-                )
-                if not latest.get("is_completed") and latest.get("enrollment_id"):
-                    actions.append({
-                        "label": "▶️ Lanjut Belajar",
-                        "url": f"/student/courses/{latest['enrollment_id']}/",
-                        "type": "route"
-                    })
-                actions.append({
-                    "label": "📚 Kursus Saya",
-                    "url": "/student/courses/",
-                    "type": "route"
-                })
-            else:
-                reply += (
-                    "Anda belum memiliki kursus yang sedang aktif. Manta siap membantu merekomendasikan pelatihan "
-                    "terbaik untuk peningkatan kompetensi Anda hari ini!\n\n"
-                )
-                actions.append({
-                    "label": "🔍 Jelajahi Katalog Kursus",
-                    "url": "/search/",
-                    "type": "route"
-                })
-
-            if cert_count > 0:
-                actions.append({
-                    "label": f"📜 Sertifikat Saya ({cert_count})",
-                    "url": "/student/sertifikat/",
-                    "type": "route"
-                })
-
-            reply += "Ada materi pembelajaran atau informasi yang ingin Manta bantu carikan?"
-
-            return {
-                "status": "success",
-                "reply": reply,
-                "source": "personalized_greeting",
-                "suggested_questions": [
-                    "Progres kursus saya",
-                    "Bagaimana cara unduh sertifikat?",
-                    "Rekomendasi kursus populer",
-                    "Apa itu LMS Setjen DPD RI?"
-                ],
-                "actions": actions,
-                "recommended_courses": []
-            }
-        else:
+        """Menghasilkan sapaan cerdas dan terpersonalisasi sesuai peran aktif pengguna (Peserta, Instruktur, Admin)."""
+        if not user_ctx["is_authenticated"]:
             return {
                 "status": "success",
                 "reply": (
@@ -1122,13 +1416,149 @@ class AIAssistantChatAPIView(APIView):
                 "recommended_courses": []
             }
 
+        name = user_ctx["name"]
+        role = user_ctx.get("role", "student")
+
+        # 1. Sapaan Khusus Administrator
+        if role == "admin":
+            pending_reviews = user_ctx.get("admin_pending_reviews", 0)
+            total_users = user_ctx.get("admin_total_users", 0)
+            total_courses = user_ctx.get("admin_total_courses", 0)
+
+            reply = f"Halo, Administrator Bapak/Ibu **{name}**! 🛡️ Senang mendampingi Anda di Pusat Kendali LMS Setjen DPD RI.\n\n"
+            reply += (
+                f"📊 **Ringkasan Operasional LMS Saat Ini:**\n"
+                f"• **Total Pengguna Terdaftar:** {total_users:,} aparatur\n"
+                f"• **Total Katalog Kursus:** {total_courses} pelatihan\n"
+                f"• **Antrean Review Kursus:** **{pending_reviews} kursus** {'⏳ *perlu diverifikasi*' if pending_reviews > 0 else '✅ *semua tuntas*'}\n\n"
+                "Manta siap membantu Anda dalam memantau statistik platform, kurasi kursus masuk dari instruktur, manajemen akun pengguna, hingga laporan analitik sistem."
+            )
+            actions = [
+                {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"},
+                {"label": f"📝 Review Kursus ({pending_reviews})" if pending_reviews > 0 else "📚 Manajemen Kursus", "url": "/admin/courses/", "type": "route"},
+                {"label": "👥 Manajemen Pengguna", "url": "/admin/users/", "type": "route"},
+                {"label": "📈 Laporan & Analitik", "url": "/admin/reports/", "type": "route"}
+            ]
+            return {
+                "status": "success",
+                "reply": reply,
+                "source": "personalized_greeting_admin",
+                "suggested_questions": [
+                    "Berapa banyak kursus yang sedang menunggu review dan persetujuan admin?",
+                    "Bagaimana ringkasan statistik dan metrik pengguna LMS Setjen DPD RI saat ini?",
+                    "Bagaimana cara mengelola akun dan hak akses pengguna di LMS?",
+                    "Bagaimana konfigurasi template dan verifikasi keabsahan sertifikat resmi?"
+                ],
+                "actions": actions,
+                "recommended_courses": []
+            }
+
+        # 2. Sapaan Khusus Instruktur
+        if role == "instructor":
+            t_courses_count = user_ctx.get("teacher_courses_count", 0)
+            t_published = user_ctx.get("teacher_published_count", 0)
+            t_draft = user_ctx.get("teacher_draft_count", 0)
+            t_review = user_ctx.get("teacher_review_count", 0)
+            t_students = user_ctx.get("teacher_students_count", 0)
+
+            reply = f"Halo, Instruktur Bapak/Ibu **{name}**! 🎓 Senang mendampingi aktivitas pengajaran Anda di LMS Setjen DPD RI.\n\n"
+            if t_courses_count > 0:
+                reply += (
+                    f"📊 **Aktivitas Kursus Kelolaan Anda:**\n"
+                    f"• **Total Kursus:** {t_courses_count} pelatihan ({t_published} aktif publikasi, {t_review} dalam review, {t_draft} draf)\n"
+                    f"• **Total Siswa Terdaftar:** {t_students:,} aparatur\n\n"
+                    "Manta siap mendampingi Anda menyusun silabus materi, mengunggah paket SCORM 1.2/video, memantau kemajuan peserta, hingga merespons diskusi tanya jawab."
+                )
+            else:
+                reply += (
+                    "Anda saat ini belum memiliki kursus kelolaan. Manta siap memandu langkah awal pembuatan silabus, "
+                    "pengunggahan paket SCORM 1.2, hingga pengajuan kurasi review ke admin!"
+                )
+            actions = [
+                {"label": "📊 Dashboard Instruktur", "url": "/instructor/dashboard/", "type": "route"},
+                {"label": f"📚 Kursus Kelolaan ({t_courses_count})", "url": "/instructor/courses/", "type": "route"},
+                {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"},
+                {"label": "👥 Daftar Siswa Terdaftar", "url": "/instructor/students/", "type": "route"}
+            ]
+            return {
+                "status": "success",
+                "reply": reply,
+                "source": "personalized_greeting_instructor",
+                "suggested_questions": [
+                    "Berapa jumlah siswa terdaftar dan ulasan pada kursus yang saya ajar?",
+                    "Bagaimana panduan membuat dan mengunggah materi kursus baru?",
+                    "Bagaimana spesifikasi dan cara mengunggah paket modul SCORM 1.2?",
+                    "Bagaimana cara merespons pertanyaan dan diskusi dari siswa?"
+                ],
+                "actions": actions,
+                "recommended_courses": []
+            }
+
+        # 3. Sapaan Khusus Peserta (Default Student)
+        enrolled_count = user_ctx["enrolled_count"]
+        cert_count = user_ctx["certificates_count"]
+        latest = user_ctx["latest_course"]
+
+        reply = f"Halo, Bapak/Ibu **{name}**! 👋 Senang bertemu kembali di LMS Sekretariat Jenderal DPD RI.\n\n"
+        actions = []
+
+        if enrolled_count > 0 and latest:
+            reply += (
+                f"Saat ini Anda terdaftar dalam **{enrolled_count} pelatihan**. Kursus aktif terakhir Anda adalah "
+                f"**{latest['title']}** dengan progres belajar **{latest['progress']}%**.\n\n"
+            )
+            if not latest.get("is_completed") and latest.get("enrollment_id"):
+                actions.append({
+                    "label": "▶️ Lanjut Belajar",
+                    "url": f"/student/courses/{latest['enrollment_id']}/",
+                    "type": "route"
+                })
+            actions.append({
+                "label": "📚 Kursus Saya",
+                "url": "/student/courses/",
+                "type": "route"
+            })
+        else:
+            reply += (
+                "Anda belum memiliki kursus yang sedang aktif. Manta siap membantu merekomendasikan pelatihan "
+                "terbaik untuk peningkatan kompetensi Anda hari ini!\n\n"
+            )
+            actions.append({
+                "label": "🔍 Jelajahi Katalog Kursus",
+                "url": "/search/",
+                "type": "route"
+            })
+
+        if cert_count > 0:
+            actions.append({
+                "label": f"📜 Sertifikat Saya ({cert_count})",
+                "url": "/student/sertifikat/",
+                "type": "route"
+            })
+
+        reply += "Ada materi pembelajaran atau informasi yang ingin Manta bantu carikan?"
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "personalized_greeting",
+            "suggested_questions": [
+                "Progres kursus saya",
+                "Bagaimana cara unduh sertifikat?",
+                "Rekomendasi kursus populer",
+                "Apa itu LMS Setjen DPD RI?"
+            ],
+            "actions": actions,
+            "recommended_courses": []
+        }
+
     def _handle_personalized_courses(self, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
-        """Menampilkan daftar kursus dan progres belajar pengguna secara personal."""
+        """Menampilkan daftar kursus dan progres belajar sesuai peran aktif pengguna (Peserta, Instruktur, Admin)."""
         if not user_ctx["is_authenticated"]:
             return {
                 "status": "success",
                 "reply": (
-                    "Untuk melihat daftar dan progres kursus pribadi Anda, silakan masuk terlebih dahulu menggunakan akun SSO Setjen DPD RI."
+                    "Untuk melihat daftar kursus Anda, silakan masuk terlebih dahulu menggunakan akun SSO Setjen DPD RI."
                 ),
                 "source": "user_context_courses",
                 "suggested_questions": [
@@ -1143,8 +1573,76 @@ class AIAssistantChatAPIView(APIView):
                 "recommended_courses": []
             }
 
-        enrolled_count = user_ctx["enrolled_count"]
         name = user_ctx["name"]
+        role = user_ctx.get("role", "student")
+
+        # 1. Kursus Tinjauan Administrator
+        if role == "admin":
+            total_courses = user_ctx.get("admin_total_courses", 0)
+            pending_reviews = user_ctx.get("admin_pending_reviews", 0)
+            reply = (
+                f"🏛️ **Katalog & Status Kursus Platform LMS Setjen DPD RI (Tinjauan Administrator):**\n\n"
+                f"Saat ini platform memiliki **{total_courses} kursus** secara keseluruhan:\n"
+                f"• **Menunggu Kurasi / Review Admin:** **{pending_reviews} pengajuan kursus** ⏳\n"
+                f"• **Status Publikasi:** Terbuka untuk seluruh aparatur Setjen DPD RI.\n\n"
+                "Sebagai Administrator, Anda berwenang melakukan verifikasi silabus, memeriksa pemutar video & paket SCORM, serta menyetujui publikasi kursus."
+            )
+            actions = [
+                {"label": "📝 Review Kursus Masuk", "url": "/admin/courses/", "type": "route"},
+                {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"},
+                {"label": "📈 Laporan Pembelajaran", "url": "/admin/reports/", "type": "route"}
+            ]
+            return {
+                "status": "success",
+                "reply": reply,
+                "source": "admin_courses_overview",
+                "suggested_questions": [
+                    "Berapa banyak kursus yang sedang menunggu review dan persetujuan admin?",
+                    "Bagaimana alur kurasi dan verifikasi kursus baru?",
+                    "Ringkasan statistik pengguna dan kursus"
+                ],
+                "actions": actions,
+                "recommended_courses": []
+            }
+
+        # 2. Kursus Kelolaan Instruktur
+        if role == "instructor":
+            t_count = user_ctx.get("teacher_courses_count", 0)
+            recent = user_ctx.get("teacher_recent_courses", [])
+            t_students = user_ctx.get("teacher_students_count", 0)
+            if t_count > 0:
+                reply = f"📚 **Daftar Kursus Kelolaan Anda, Instruktur Bapak/Ibu {name}:**\n\n"
+                reply += f"Anda mengelola **{t_count} pelatihan** dengan total **{t_students} siswa terdaftar**:\n\n"
+                for i, c in enumerate(recent, 1):
+                    st = c.get("status", "Draft")
+                    st_icon = "🟢" if st == "Published" else ("🟡" if st == "Review" else "⚪")
+                    reply += f"{i}. **{c['title']}** — {st_icon} *{st}* ({c.get('students_count', 0)} siswa)\n"
+                reply += "\nSilakan klik tombol di bawah untuk mengelola silabus, menambahkan materi, atau membuat kursus baru!"
+            else:
+                reply = (
+                    f"Instruktur Bapak/Ibu **{name}**, Anda saat ini belum memiliki kursus yang dibuat.\n\n"
+                    "Klik tombol **➕ Buat Kursus Baru** di bawah untuk mulai menyusun silabus pelatihan kompetensi ASN!"
+                )
+            actions = [
+                {"label": "📚 Kelola Kursus Saya", "url": "/instructor/courses/", "type": "route"},
+                {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"},
+                {"label": "👥 Daftar Siswa", "url": "/instructor/students/", "type": "route"}
+            ]
+            return {
+                "status": "success",
+                "reply": reply,
+                "source": "instructor_courses_overview",
+                "suggested_questions": [
+                    "Bagaimana alur pengajuan review kursus ke admin?",
+                    "Panduan format paket SCORM 1.2",
+                    "Bagaimana cara melihat evaluasi nilai kuis siswa?"
+                ],
+                "actions": actions,
+                "recommended_courses": []
+            }
+
+        # 3. Kursus Terdaftar Peserta (Default Student)
+        enrolled_count = user_ctx["enrolled_count"]
         courses = user_ctx["active_courses"]
 
         if enrolled_count > 0:
@@ -1208,7 +1706,7 @@ class AIAssistantChatAPIView(APIView):
             }
 
     def _handle_personalized_certificates(self, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
-        """Menampilkan status sertifikat terpersonalisasi untuk pengguna aktif."""
+        """Menampilkan status sertifikat terpersonalisasi sesuai peran aktif pengguna (Peserta, Instruktur, Admin)."""
         if not user_ctx["is_authenticated"]:
             return {
                 "status": "success",
@@ -1228,8 +1726,64 @@ class AIAssistantChatAPIView(APIView):
                 "recommended_courses": []
             }
 
-        cert_count = user_ctx["certificates_count"]
         name = user_ctx["name"]
+        role = user_ctx.get("role", "student")
+
+        # 1. Konteks Sertifikat untuk Administrator
+        if role == "admin":
+            reply = (
+                f"📜 **Tata Kelola & Verifikasi Sertifikat Digital (Administrator):**\n\n"
+                f"Bapak/Ibu **{name}**, selaku Administrator Anda memiliki kewenangan:\n"
+                "1. **Template Sertifikat Global:** Mengonfigurasi layout baku PPTX/PDF, logo instansi Setjen DPD RI, format penomoran SK, serta tanda tangan elektronik pejabat berwenang.\n"
+                "2. **Verifikasi QR-Code Publik:** Setiap sertifikat kelulusan dilengkapi tautan kode hash unik yang dapat dipindai oleh publik atau BKN/LAN RI untuk memvalidasi keaslian dokumen.\n"
+                "3. **Integritas Penerbitan:** Memantau riwayat audit log penerbitan dan kelulusan seluruh aparatur di lingkungan Setjen DPD RI."
+            )
+            actions = [
+                {"label": "📜 Pengaturan Sertifikat Global", "url": "/admin/certificate-settings/", "type": "route"},
+                {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"},
+                {"label": "📈 Laporan Pembelajaran", "url": "/admin/reports/", "type": "route"}
+            ]
+            return {
+                "status": "success",
+                "reply": reply,
+                "source": "admin_certificates_management",
+                "suggested_questions": [
+                    "Bagaimana konfigurasi template dan verifikasi keabsahan sertifikat resmi?",
+                    "Ringkasan statistik LMS Setjen DPD RI saat ini",
+                    "Manajemen pengguna dan peran"
+                ],
+                "actions": actions,
+                "recommended_courses": []
+            }
+
+        # 2. Konteks Sertifikat untuk Instruktur
+        if role == "instructor":
+            reply = (
+                f"📜 **Pengaturan Sertifikat Kelulusan Kursus (Instruktur):**\n\n"
+                f"Instruktur Bapak/Ibu **{name}**, Anda dapat mengatur kriteria penerbitan sertifikat untuk kursus kelolaan Anda:\n"
+                "1. **Standar Kelulusan Evaluasi:** Tentukan batas nilai kelulusan (*passing grade*) kuis akhir (umumnya 70% – 80%).\n"
+                "2. **Penyelesaian 100% Modul:** Sertifikat resmi hanya otomatis terbit jika siswa telah menuntaskan seluruh materi video dan modul SCORM.\n"
+                "3. **Template Kursus:** Anda dapat menyesuaikan nama kompetensi dan spesifikasi pelatihan melalui pengaturan sertifikat kursus."
+            )
+            actions = [
+                {"label": "📚 Buka Kursus Kelolaan", "url": "/instructor/courses/", "type": "route"},
+                {"label": "📊 Rekap Evaluasi Siswa", "url": "/instructor/evaluation/", "type": "route"}
+            ]
+            return {
+                "status": "success",
+                "reply": reply,
+                "source": "instructor_certificates_management",
+                "suggested_questions": [
+                    "Bagaimana alur evaluasi nilai dan kelulusan siswa?",
+                    "Panduan buat kursus baru",
+                    "Format dan spesifikasi modul SCORM 1.2"
+                ],
+                "actions": actions,
+                "recommended_courses": []
+            }
+
+        # 3. Konteks Sertifikat untuk Peserta (Default Student)
+        cert_count = user_ctx["certificates_count"]
 
         if cert_count > 0:
             reply = (
@@ -1268,6 +1822,186 @@ class AIAssistantChatAPIView(APIView):
             "recommended_courses": []
         }
 
+    def _handle_user_role_status(self, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
+        """Memberikan informasi peran aktif dan kemampuan switching role bagi pengguna."""
+        if not user_ctx["is_authenticated"]:
+            return {
+                "status": "success",
+                "reply": (
+                    "Saat ini Anda mengakses LMS Setjen DPD RI sebagai **Tamu (Guest)**. "
+                    "Silakan masuk menggunakan akun SSO Setjen DPD RI untuk mengakses peran Peserta, Instruktur, atau Administrator."
+                ),
+                "source": "role_status",
+                "suggested_questions": ["Bagaimana cara masuk SSO?", "Apa itu LMS Setjen DPD RI?"],
+                "actions": [{"label": "🔐 Masuk SSO", "url": "/login/", "type": "route"}],
+                "recommended_courses": []
+            }
+
+        name = user_ctx["name"]
+        role = user_ctx.get("role", "student")
+        role_display = user_ctx.get("role_display", "Peserta")
+        available_roles = user_ctx.get("available_roles", ["student"])
+
+        role_labels_map = {
+            "student": "📚 Peserta (Aparatur Pembelajar)",
+            "instructor": "🎓 Instruktur (Pengajar & Penyusun Kursus)",
+            "admin": "🛡️ Administrator (Pengelola Sistem LMS)"
+        }
+        available_roles_text = "\n".join([f"• {role_labels_map.get(r, r)}" for r in available_roles])
+
+        reply = (
+            f"🎭 **Informasi Peran Akun Anda, Bapak/Ibu {name}:**\n\n"
+            f"• **Peran Aktif Saat Ini:** **{role_display}** (`{role}`)\n"
+            f"• **Daftar Peran yang Anda Miliki:**\n{available_roles_text}\n\n"
+            "💡 **Cara Berganti Peran (*Switch Role*):**\n"
+            "LMS Setjen DPD RI mendukung peralihan peran fleksibel. Anda dapat mengeklik menu profil Anda di navigasi pojok kanan atas, lalu memilih peran yang ingin Anda aktifkan."
+        )
+
+        actions = []
+        if "instructor" in available_roles and role != "instructor":
+            actions.append({"label": "🎓 Beralih ke Instruktur", "url": "/instructor/dashboard/", "type": "route"})
+        if "admin" in available_roles and role != "admin":
+            actions.append({"label": "🛡️ Beralih ke Admin", "url": "/admin/dashboard/", "type": "route"})
+        if "student" in available_roles and role != "student":
+            actions.append({"label": "📚 Beralih ke Peserta", "url": "/student/dashboard/", "type": "route"})
+
+        dash_url = "/admin/dashboard/" if role == "admin" else ("/instructor/dashboard/" if role == "instructor" else "/student/dashboard/")
+        actions.insert(0, {"label": f"📊 Dashboard {role_display}", "url": dash_url, "type": "route"})
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "role_status",
+            "suggested_questions": [
+                "Bagaimana alur pembuatan kursus baru?",
+                "Bagaimana alur review kursus admin?",
+                "Progres kursus saya"
+            ],
+            "actions": actions,
+            "recommended_courses": []
+        }
+
+    def _handle_instructor_workflow(self, raw_message: str, norm_query: str, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
+        """Menangani pertanyaan teknis alur kerja instruktur: SCORM 1.2, pembuatan kursus, silabus, dan siswa."""
+        name = user_ctx["name"]
+        t_count = user_ctx.get("teacher_courses_count", 0)
+
+        # Cek jika pertanyaan spesifik mengenai format/spesifikasi SCORM 1.2
+        if re.search(r"\b(scorm|imsmanifest|zip|cmi)\b", norm_query):
+            reply = (
+                f"📦 **Panduan Lengkap Modul SCORM 1.2 untuk Instruktur (Bapak/Ibu {name}):**\n\n"
+                "LMS Setjen DPD RI mendukung modul e-learning berstandar internasional **SCORM 1.2**:\n"
+                "1. **Struktur Berkas (.zip):** File `imsmanifest.xml` **wajib** berada di root/tingkat teratas paket ZIP (bukan di dalam subfolder ekstra).\n"
+                "2. **Titik Masuk (*Entry Point*):** Berkas HTML utama (misalnya `index.html`) harus terdaftar secara valid di dalam manifest.\n"
+                "3. **Komunikasi CMI API:** Modul harus memanggil `LMSInitialize()`, mengirimkan status berkala `cmi.core.lesson_status` (`completed`/`passed`), dan memanggil `LMSFinish()` saat peserta selesai.\n"
+                "4. **Cara Unggah:** Pada halaman edit kursus, tambahkan materi baru di bab silabus, pilih tipe **SCORM Package**, lalu unggah berkas zip Anda."
+            )
+            actions = [
+                {"label": "📚 Kursus Kelolaan", "url": "/instructor/courses/", "type": "route"},
+                {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"}
+            ]
+        elif re.search(r"\b(siswa|peserta|tanya\s*jawab|diskusi|evaluasi|nilai|rekap)\b", norm_query):
+            reply = (
+                f"👥 **Panduan Manajemen Siswa & Evaluasi Pembelajaran (Bapak/Ibu {name}):**\n\n"
+                "Sebagai Instruktur, Anda dapat memantau dan berinteraksi langsung dengan peserta:\n"
+                "1. **Daftar Siswa Terdaftar:** Pantau siapa saja aparatur yang telah mendaftar di kelas Anda melalui menu **Siswa** (`/instructor/students/`).\n"
+                "2. **Tanya Jawab (Q&A):** Berikan respons atas pertanyaan atau diskusi materi dari peserta melalui menu **Tanya Jawab** (`/instructor/questions/`).\n"
+                "3. **Rekap Kelulusan & Nilai:** Tinjau capaian skor kuis pemahaman dan status kelulusan peserta melalui menu **Evaluasi Kursus** (`/instructor/evaluation/`)."
+            )
+            actions = [
+                {"label": "💬 Tanya Jawab Siswa", "url": "/instructor/questions/", "type": "route"},
+                {"label": "👥 Daftar Siswa Terdaftar", "url": "/instructor/students/", "type": "route"},
+                {"label": "📊 Evaluasi & Kelulusan", "url": "/instructor/evaluation/", "type": "route"}
+            ]
+        else:
+            reply = (
+                f"🎓 **Panduan Pembuatan & Publikasi Kursus Baru (Bapak/Ibu {name}):**\n\n"
+                "Berikut 4 langkah mudah meluncurkan pelatihan di LMS Setjen DPD RI:\n"
+                "1. **Inisiasi Kursus:** Buka menu **Buat Kursus Baru** (`/instructor/create-course/`), isi Judul, Deskripsi Silabus, Kategori, dan upload thumbnail poster.\n"
+                "2. **Susun Bab & Materi:** Tambahkan Bab materi. Setiap bab dapat berisi video MP4/YouTube interaktif, modul SCORM 1.2, teks, dan dokumen pendukung.\n"
+                "3. **Rancang Kuis Pemahaman:** Buat soal kuis evaluasi dan tentukan *passing grade* kelulusan (standar 70% - 80%).\n"
+                "4. **Ajukan ke Admin:** Klik tombol **Kirim untuk Ditinjau (*Submit for Review*)**. Tim Admin akan meninjau dan menerbitkan kursus Anda ke katalog resmi."
+            )
+            actions = [
+                {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"},
+                {"label": f"📚 Kursus Kelolaan ({t_count})", "url": "/instructor/courses/", "type": "route"},
+                {"label": "📊 Dashboard Instruktur", "url": "/instructor/dashboard/", "type": "route"}
+            ]
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "instructor_workflow_guide",
+            "suggested_questions": [
+                "Bagaimana spesifikasi dan cara mengunggah paket modul SCORM 1.2?",
+                "Bagaimana cara melihat daftar siswa dan nilai kuis?",
+                "Bagaimana alur persetujuan kursus oleh tim admin?"
+            ],
+            "actions": actions,
+            "recommended_courses": []
+        }
+
+    def _handle_admin_workflow(self, raw_message: str, norm_query: str, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
+        """Menangani pertanyaan teknis alur kerja administrator: kurasi review, manajemen user, dan analitik."""
+        name = user_ctx["name"]
+        pending_reviews = user_ctx.get("admin_pending_reviews", 0)
+        total_users = user_ctx.get("admin_total_users", 0)
+        total_courses = user_ctx.get("admin_total_courses", 0)
+
+        # Cek topik spesifik admin
+        if re.search(r"\b(review|kurasi|setujui|tolak|approval|verifikasi)\b", norm_query):
+            reply = (
+                f"📝 **Panduan Kurasi & Review Kursus Baru (Administrator {name}):**\n\n"
+                f"Saat ini terdapat **{pending_reviews} pengajuan kursus** yang menunggu kurasi admin:\n"
+                "1. **Buka Antrean Review:** Masuk ke menu **Review Kursus** (`/admin/courses/` atau tab *Course Review*).\n"
+                "2. **Pemeriksaan Konten:** Pastikan silabus terstruktur rapi, pemutar modul SCORM 1.2 berjalan lancar tanpa error frame, dan video materi dapat diputar jernih.\n"
+                "3. **Tindakan Persetujuan:**\n"
+                "   • **Setujui (*Approve*):** Kursus otomatis berubah status menjadi *Published* dan tayang di katalog umum.\n"
+                "   • **Minta Perbaikan (*Reject/Revisi*):** Tuliskan catatan evaluasi instruksional agar instruktur dapat merevisi silabus."
+            )
+            actions = [
+                {"label": f"📝 Review Kursus Masuk ({pending_reviews})", "url": "/admin/courses/", "type": "route"},
+                {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"}
+            ]
+        elif re.search(r"\b(user|pengguna|role|hak\s*akses|sso|nip)\b", norm_query):
+            reply = (
+                f"👥 **Panduan Manajemen Pengguna & Hak Akses (Administrator {name}):**\n\n"
+                f"Platform saat ini mengelola **{total_users:,} akun pengguna**:\n"
+                "1. **Menu Pengguna:** Akses melalui **Pengguna** (`/admin/users/`).\n"
+                "2. **Penugasan Peran:** Anda dapat memberikan peran *Instruktur* atau *Admin* kepada aparatur tertentu tanpa menghapus hak belajarnya sebagai *Peserta*.\n"
+                "3. **Sinkronisasi SSO:** NIP, nama lengkap, jabatan, dan unit kerja otomatis tersinkronisasi dari portal Single Sign-On Setjen DPD RI."
+            )
+            actions = [
+                {"label": "👥 Manajemen Pengguna", "url": "/admin/users/", "type": "route"},
+                {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"}
+            ]
+        else:
+            reply = (
+                f"📊 **Ringkasan Operasional & Analitik Platform LMS (Administrator {name}):**\n\n"
+                f"• **Katalog Pelatihan:** {total_courses} kursus terdaftar\n"
+                f"• **Antrean Review:** {pending_reviews} kursus menunggu kurasi\n"
+                f"• **Basis Pengguna:** {total_users:,} aparatur terdaftar\n\n"
+                "Anda dapat melihat laporan aktivitas harian, pemenuhan 20 JP LAN RI, dan analitik trafik pengunjung melalui menu **Laporan & Analitik**."
+            )
+            actions = [
+                {"label": "📈 Laporan & Analitik", "url": "/admin/reports/", "type": "route"},
+                {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"},
+                {"label": "📝 Review Kursus", "url": "/admin/courses/", "type": "route"}
+            ]
+
+        return {
+            "status": "success",
+            "reply": reply,
+            "source": "admin_workflow_guide",
+            "suggested_questions": [
+                "Berapa banyak kursus yang sedang menunggu review dan persetujuan admin?",
+                "Bagaimana cara mengelola akun dan hak akses pengguna di LMS?",
+                "Bagaimana konfigurasi template dan verifikasi keabsahan sertifikat resmi?"
+            ],
+            "actions": actions,
+            "recommended_courses": []
+        }
+
     def _handle_learning_nudge_query(self, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
         """Menghasilkan respon pengingat belajar cerdas (Smart Learning Reminder) saat ditanyakan di chat."""
         if not user_ctx["is_authenticated"]:
@@ -1290,12 +2024,34 @@ class AIAssistantChatAPIView(APIView):
             }
 
         user = api_models.User.objects.filter(id=user_ctx["user_id"]).first()
-        nudge = get_user_learning_nudge(user)
+        nudge = get_user_learning_nudge(user, current_role=user_ctx.get("role"), pathname=user_ctx.get("pathname", ""))
 
         name = user_ctx["name"]
         actions = []
 
-        if nudge["nudge_type"] == "in_progress":
+        if nudge["nudge_type"].startswith("admin_"):
+            reply = (
+                f"🛡️ **Pengingat Tugas Administrator ({name}):**\n\n"
+                f"**{nudge['title']}**\n\n"
+                f"{nudge['message']}\n\n"
+                "Klik tombol aksi di bawah untuk langsung menuju halaman kurasi atau pemantauan operasional LMS."
+            )
+            actions = [
+                {"label": nudge["action_label"], "url": nudge["action_url"], "type": "route"},
+                {"label": "📊 Dashboard Admin", "url": "/admin/dashboard/", "type": "route"}
+            ]
+        elif nudge["nudge_type"].startswith("instructor_"):
+            reply = (
+                f"🎓 **Pengingat Tugas Instruktur ({name}):**\n\n"
+                f"**{nudge['title']}**\n\n"
+                f"{nudge['message']}\n\n"
+                "Klik tombol aksi di bawah untuk melanjutkan penyusunan silabus atau meninjau kelas Anda."
+            )
+            actions = [
+                {"label": nudge["action_label"], "url": nudge["action_url"], "type": "route"},
+                {"label": "📚 Buka Kursus Kelolaan", "url": "/instructor/courses/", "type": "route"}
+            ]
+        elif nudge["nudge_type"] == "in_progress":
             reply = (
                 f"⏰ **Pengingat Belajar Pribadi untuk Bapak/Ibu {name}:**\n\n"
                 f"Anda sedang aktif mempelajari kursus:\n"
@@ -3790,10 +4546,37 @@ class AIAssistantChatAPIView(APIView):
         try:
             user_name = user_ctx.get("name", "Rekan Pembelajar")
             auth_status = "Pengguna Terdaftar / Login" if user_ctx.get("is_authenticated") else "Tamu / Belum Login"
+            active_role = user_ctx.get("role", "student")
+            active_role_display = user_ctx.get("role_display", "Peserta")
+            available_roles = ", ".join(user_ctx.get("available_roles", [active_role]))
+
             enrolled_info = f"{user_ctx.get('enrolled_count', 0)} kursus terdaftar"
             cert_info = f"{user_ctx.get('certificates_count', 0)} sertifikat diperoleh"
             latest = user_ctx.get("latest_course")
             latest_info = f"Kursus aktif terakhir: {latest['title']} ({latest['progress']}%)" if latest else "Belum ada kursus aktif"
+
+            role_specific_ctx = ""
+            if active_role == "admin":
+                role_specific_ctx = (
+                    f"\n- Konteks Peran Pengguna: ADMINISTRATOR SISTEM ({active_role_display})\n"
+                    f"  Hak Akses Akun: {available_roles}\n"
+                    f"  Statistik Operasional: {user_ctx.get('admin_total_users', 0)} pengguna terdaftar, {user_ctx.get('admin_total_courses', 0)} kursus katalog, {user_ctx.get('admin_pending_reviews', 0)} kursus menunggu review/kurasi\n"
+                    f"  Pedoman Respons: Berikan jawaban dari sudut pandang administrator pengelola sistem (kurasi dan approval kursus, manajemen user & peran, analitik sistem, template sertifikat). Jangan meminta admin mengerjakan kuis untuk sertifikat kecuali membahas alur peserta.\n"
+                )
+            elif active_role == "instructor":
+                role_specific_ctx = (
+                    f"\n- Konteks Peran Pengguna: INSTRUKTUR / PENGAJAR ({active_role_display})\n"
+                    f"  Hak Akses Akun: {available_roles}\n"
+                    f"  Statistik Mengajar: {user_ctx.get('teacher_courses_count', 0)} kursus kelolaan ({user_ctx.get('teacher_published_count', 0)} terbit, {user_ctx.get('teacher_draft_count', 0)} draf, {user_ctx.get('teacher_review_count', 0)} review), {user_ctx.get('teacher_students_count', 0)} siswa terdaftar\n"
+                    f"  Pedoman Respons: Berikan jawaban dari sudut pandang instruktur pengampu (pembuatan kurikulum/silabus, spesifikasi paket SCORM 1.2, pembuatan soal kuis, passing grade, manajemen siswa, dan tanya-jawab).\n"
+                )
+            else:
+                role_specific_ctx = (
+                    f"\n- Konteks Peran Pengguna: PESERTA / SISWA ({active_role_display})\n"
+                    f"  Riwayat Belajar: {enrolled_info}, {cert_info}\n"
+                    f"  Status Terakhir: {latest_info}\n"
+                    f"  Pedoman Respons: Berikan jawaban berorientasi belajar mandiri, pemahaman modul, pencapaian 20 JP ASN LAN RI, pengerjaan kuis, dan pengunduhan sertifikat resmi.\n"
+                )
 
             course_context_str = ""
             if current_course:
@@ -3821,14 +4604,13 @@ class AIAssistantChatAPIView(APIView):
                 f"Konteks Pengguna Saat Ini:\n"
                 f"- Nama: {user_name}\n"
                 f"- Status Akun: {auth_status}\n"
-                f"- Riwayat: {enrolled_info}, {cert_info}\n"
-                f"- {latest_info}"
+                f"{role_specific_ctx}"
                 f"{course_context_str}"
                 f"{syllabus_context_str}\n\n"
                 "Pedoman Balasan:\n"
-                "- Sapalah pengguna dengan hormat (misalnya 'Bapak/Ibu ' diikuti nama jika pengguna terdaftar).\n"
+                "- Sapalah pengguna dengan hormat sesuai perannya (misalnya 'Bapak/Ibu ' diikuti nama, atau 'Administrator Bapak/Ibu ' atau 'Instruktur Bapak/Ibu ' jika relevan).\n"
                 "- Gunakan Markdown tebal (**teks**), poin bernomor/bullet, dan emoji yang relevan.\n"
-                "- Jika pengguna bertanya tentang 'kursus ini', materi, bab, atau silabus, manfaatkan informasi di atas secara akurat dan faktual.\n"
+                "- Sadari penuh peran aktif pengguna: sesuaikan jawaban untuk kebutuhan Peserta, Instruktur, atau Administrator.\n"
                 "- Selalu berorientasi mendukung peningkatan kompetensi aparatur di lingkungan Setjen DPD RI."
             )
 
@@ -3875,15 +4657,15 @@ class AIAssistantChatAPIView(APIView):
         return None
 
 
-def get_user_learning_nudge(user: Any) -> Dict[str, Any]:
-    """Menghitung dan menghasilkan pengingat belajar cerdas (Smart Learning Nudge) untuk pengguna."""
+def get_user_learning_nudge(user: Any, current_role: str = None, pathname: str = "") -> Dict[str, Any]:
+    """Menghitung dan menghasilkan pengingat cerdas (Smart Proactive Nudge) sesuai peran aktif pengguna (Peserta, Instruktur, Admin)."""
     if not user:
         return {
             "has_nudge": False,
             "nudge_type": "guest",
             "bubble_text": "Halo! Saya Manta 👋 Ada yang bisa Manta bantu hari ini?",
             "title": "Selamat Datang di LMS Setjen DPD RI",
-            "message": "Silakan masuk menggunakan akun SSO Setjen DPD RI untuk melacak progres belajar dan sertifikat resmi Anda.",
+            "message": "Silakan masuk menggunakan akun SSO Setjen DPD RI untuk melacak progres belajar, materi kursus, dan sertifikat resmi Anda.",
             "action_label": "🔐 Masuk SSO",
             "action_url": "/login/",
             "progress": 0,
@@ -3893,6 +4675,115 @@ def get_user_learning_nudge(user: Any) -> Dict[str, Any]:
         }
 
     display_name = user.full_name or user.first_name or user.username or "Rekan ASN"
+
+    # Tentukan peran aktif pengguna
+    role = (current_role or "").lower().strip()
+    if not role and pathname:
+        if "/admin" in pathname:
+            role = "admin"
+        elif "/instructor" in pathname:
+            role = "instructor"
+        elif "/student" in pathname:
+            role = "student"
+    if not role:
+        role = getattr(user, 'current_role', None) or getattr(user, 'role', None) or 'student'
+        role = str(role).lower().strip()
+
+    if role in ['teacher', 'instructor', 'pengajar']:
+        role = 'instructor'
+    elif role in ['admin', 'administrator', 'superadmin']:
+        role = 'admin'
+    else:
+        role = 'student'
+
+    # 1. Nudge untuk Administrator
+    if role == 'admin':
+        pending_reviews = api_models.Course.objects.filter(platform_status="Review").count()
+        if pending_reviews > 0:
+            return {
+                "has_nudge": True,
+                "nudge_type": "admin_pending_reviews",
+                "bubble_text": f"Halo Admin {display_name} 🛡️ Ada {pending_reviews} kursus baru menunggu kurasi & review Anda!",
+                "title": "Pengajuan Kursus Menunggu Kurasi",
+                "message": f"Terdapat {pending_reviews} kursus dari instruktur yang menunggu peninjauan dan persetujuan publikasi admin.",
+                "action_label": "📝 Tinjau Kursus Masuk",
+                "action_url": "/admin/courses/",
+                "progress": 0,
+                "remaining_lessons": pending_reviews,
+                "course_title": f"{pending_reviews} Kursus Antrean Review",
+                "enrollment_id": None
+            }
+        else:
+            total_users = api_models.User.objects.count()
+            return {
+                "has_nudge": True,
+                "nudge_type": "admin_normal",
+                "bubble_text": f"Halo Admin {display_name} 🛡️ Sistem LMS beroperasi optimal ({total_users:,} akun). Siap memantau dashboard?",
+                "title": "Pusat Kendali Administrator LMS",
+                "message": "Semua antrean kurasi tuntas. Anda dapat memantau analitik trafik, ketercapaian JP aparatur, dan manajemen pengguna.",
+                "action_label": "📊 Buka Dashboard Admin",
+                "action_url": "/admin/dashboard/",
+                "progress": 100,
+                "remaining_lessons": 0,
+                "course_title": "",
+                "enrollment_id": None
+            }
+
+    # 2. Nudge untuk Instruktur
+    if role == 'instructor':
+        teacher = api_models.Teacher.objects.filter(user=user).first()
+        t_courses = api_models.Course.objects.filter(teacher=teacher) if teacher else api_models.Course.objects.none()
+        draft_course = t_courses.filter(platform_status="Draft").first()
+        review_course = t_courses.filter(platform_status="Review").first()
+
+        if draft_course:
+            return {
+                "has_nudge": True,
+                "nudge_type": "instructor_draft",
+                "bubble_text": f"Halo Instruktur {display_name} 🎓 Draf kursus '{draft_course.title[:20]}...' siap dilengkapi & diajukan!",
+                "title": "Lanjutkan Penyusunan Silabus Kursus",
+                "message": f"Kursus '{draft_course.title}' masih dalam draf. Lengkapi materi video/SCORM untuk diajukan ke admin.",
+                "action_label": "✏️ Kelola Silabus",
+                "action_url": "/instructor/courses/",
+                "progress": 50,
+                "remaining_lessons": 0,
+                "course_title": draft_course.title,
+                "course_slug": draft_course.slug,
+                "enrollment_id": None
+            }
+        elif review_course:
+            return {
+                "has_nudge": True,
+                "nudge_type": "instructor_review",
+                "bubble_text": f"Halo Instruktur {display_name} 🎓 Kursus '{review_course.title[:20]}...' sedang dalam kurasi tim admin.",
+                "title": "Kursus Dalam Proses Peninjauan",
+                "message": f"Pengajuan kursus '{review_course.title}' sedang diverifikasi oleh admin sebelum diterbitkan ke katalog.",
+                "action_label": "📋 Cek Status Kursus",
+                "action_url": "/instructor/courses/",
+                "progress": 80,
+                "remaining_lessons": 0,
+                "course_title": review_course.title,
+                "course_slug": review_course.slug,
+                "enrollment_id": None
+            }
+        else:
+            t_count = t_courses.count()
+            t_students = api_models.EnrolledCourse.objects.filter(course__teacher=teacher).values_list('user', flat=True).distinct().count() if teacher else 0
+            return {
+                "has_nudge": True,
+                "nudge_type": "instructor_normal",
+                "bubble_text": f"Halo Instruktur {display_name} 🎓 Anda mengajar {t_students:,} siswa ({t_count} kursus). Siap membuat silabus baru?",
+                "title": "Pusat Pengajaran Instruktur",
+                "message": "Kelola silabus, unggah paket SCORM 1.2, atau pantau diskusi dan evaluasi kuis peserta kursus Anda.",
+                "action_label": "➕ Buat Kursus Baru",
+                "action_url": "/instructor/create-course/",
+                "progress": 100,
+                "remaining_lessons": 0,
+                "course_title": "",
+                "enrollment_id": None
+            }
+
+    # 3. Nudge untuk Peserta (Default Student Learning Nudge)
     enrollments = api_models.EnrolledCourse.objects.filter(user=user).select_related('course').order_by('-date')
 
     if not enrollments.exists():
@@ -4023,15 +4914,20 @@ class AILearningNudgeAPIView(APIView):
         if request.user and request.user.is_authenticated:
             user = request.user
         else:
-            uid = request.GET.get("user_id")
+            uid = request.GET.get("user_id") or request.data.get("user_id")
             if uid:
                 try:
                     user = api_models.User.objects.filter(id=uid).first()
                 except Exception:
                     user = None
 
-        nudge_data = get_user_learning_nudge(user)
+        current_role = request.GET.get("current_role") or request.data.get("current_role")
+        pathname = request.GET.get("pathname") or request.data.get("pathname") or ""
+        nudge_data = get_user_learning_nudge(user, current_role=current_role, pathname=pathname)
         return Response({"status": "success", "nudge": nudge_data})
+
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
 
 
 def sync_manta_proactive_notifications(user: Any) -> int:

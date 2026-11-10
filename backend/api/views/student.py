@@ -4327,23 +4327,21 @@ class CourseLeaderboardAPIView(APIView):
             except Exception:
                 avatar_url = None
 
-            full_display_name = user.get_full_name() or user.username
+            prof = getattr(user, 'profile', None)
+            full_display_name = getattr(user, 'full_name', '') or (getattr(prof, 'full_name', '') if prof else '') or user.get_full_name() or user.username
             is_me = (current_user and current_user.id == user.id)
 
             # Get employee / ASN profile metadata
-            nip = "-"
+            nip = getattr(user, 'nip', None) or (getattr(prof, 'nip', None) if prof else None) or "-"
             unit_kerja = "-"
             jabatan = "-"
-            golongan = "-"
+            golongan = getattr(user, 'golongan', None) or (getattr(prof, 'golongan', None) if prof else None) or "-"
             try:
-                prof = getattr(user, 'profile', None)
                 if prof:
-                    nip = prof.nip or "-"
                     if prof.organization_unit:
                         unit_kerja = getattr(prof.organization_unit, 'name', str(prof.organization_unit))
                     if prof.position:
                         jabatan = getattr(prof.position, 'name', str(prof.position))
-                    golongan = prof.golongan or "-"
             except Exception:
                 pass
 

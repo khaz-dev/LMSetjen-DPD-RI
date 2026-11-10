@@ -87,6 +87,8 @@ const ContentManagementAdmin = lazy(() => import("./views/admin/ContentManagemen
 const CertificateSettingsAdmin = lazy(() => import("./views/admin/CertificateSettingsAdmin"));
 // ✨ PHASE 4.37+: Dedicated admin course review detail page
 const AdminCourseReviewDetail = lazy(() => import("./views/admin/AdminCourseReviewDetail"));
+// ✨ PHASE 5.2: Dedicated admin course evaluation, exam verification, and JP recap page
+const AdminCourseEvaluation = lazy(() => import("./views/admin/AdminCourseEvaluation"));
 // ✨ PHASE 4.210: Unified reports management page
 const ReportsAdmin = lazy(() => import("./views/admin/ReportsAdmin"));
 // ✨ PHASE 4.210 / 11.3: Dedicated System Diagnostics & Technical Architecture Center
@@ -642,6 +644,27 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["admin"]}>
                                             <AdminCourseReviewDetail />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            {/* ✨ PHASE 5.2: Dedicated Admin Course Evaluation & Exam Verification (UAT Skenario 5) */}
+                            <Route
+                                path="/admin/courses/:course_id/evaluation/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["admin"]}>
+                                            <AdminCourseEvaluation />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/admin/course-evaluation/:course_id/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["admin"]}>
+                                            <AdminCourseEvaluation />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }

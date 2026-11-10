@@ -2864,6 +2864,379 @@ class AdminVisitorTrafficAnalyticsAPIView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# =====================================================================
+# ✨ PHASE 5.2: ADMIN COURSE EVALUATION & EXAM VERIFICATION
+# Mendukung UAT Skenario 5: Manajemen Verifikasi Ujian, Rekapitulasi JP
+# per Unit Kerja, Transparansi Butir Soal, & Reset Percobaan Ujian
+# =====================================================================
+
+class AdminCourseEvaluationAPIView(APIView):
+    """
+    ✨ PHASE 5.2: Admin Course Evaluation & Exam Verification API
+    Menyediakan data komprehensif bagi Administrator Pengelola SDM Setjen DPD RI:
+    - Statistik Eksekutif (Total Peserta, Kelulusan, Rata-rata Skor, Total JP Terbit, Status Integritas)
+    - Riwayat Seluruh Percobaan Ujian / Kuis Peserta (Quiz Attempts Audit Trail)
+    - Butir Soal & Pilihan Jawaban Kuis untuk Transparansi Jawaban Peserta
+    - Daftar Lengkap Peserta, NIP, Unit Kerja / Kantor Daerah, Capaian JP, dan Status Sertifikat
+    - Rekapitulasi Efektivitas Belajar (Pre-Test -> Post-Test) dan Kepuasan (Kirkpatrick Level 1)
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request, course_id):
+        user = request.user
+        is_admin_or_staff = getattr(user, 'is_staff', False) or getattr(user, 'is_admin', False)
+        if not is_admin_or_staff:
+            return Response({"error": "Akses ditolak. Fitur ini khusus Administrator Setjen DPD RI."}, status=status.HTTP_403_FORBIDDEN)
+
+        # 1. Resolusi course (by id, course_id, or slug)
+        course = None
+        if str(course_id).isdigit():
+            course = api_models.Course.objects.filter(id=int(course_id)).first()
+        if not course:
+            course = api_models.Course.objects.filter(course_id=str(course_id)).first()
+        if not course:
+            course = api_models.Course.objects.filter(slug=str(course_id)).first()
+        if not course:
+            enr = api_models.EnrolledCourse.objects.filter(enrollment_id=str(course_id)).select_related('course').first()
+            if enr:
+                course = enr.course
+
+        if not course:
+            return Response({"error": f"Kursus dengan ID '{course_id}' tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+        related_course_ids = course.get_related_course_ids() if hasattr(course, 'get_related_course_ids') else {course.id}
+
+        # 2. Ambil data analitik leaderboard dasar dari CourseLeaderboardAPIView
+        from api.views.student import CourseLeaderboardAPIView
+        lb_view = CourseLeaderboardAPIView()
+        lb_response = lb_view.get(request, course_id)
+        lb_data = lb_response.data if lb_response.status_code == 200 else {}
+        leaderboard = lb_data.get("leaderboard", [])
+
+        # 3. Hitung Bobot JP Kursus
+        total_jp = 0
+        try:
+            lectures = course.lectures() if callable(getattr(course, 'lectures', None)) else getattr(course, 'lectures', [])
+            total_sec = sum(l.content_duration_seconds for l in lectures if hasattr(l, 'content_duration_seconds') and l.content_duration_seconds)
+            total_jp = max(1, (total_sec + 2699) // 2700) if total_sec else 2
+        except Exception:
+            total_jp = 2
+
+        # 4. Ambil Daftar Kuis & Butir Soal untuk Transparansi Jawaban
+        quizzes = api_models.Quiz.objects.filter(course_id__in=related_course_ids, is_active=True).prefetch_related('questions', 'questions__choices')
+        quizzes_list = []
+        for q in quizzes:
+            questions_data = []
+            for qn in q.questions.all().order_by('order', 'id'):
+                choices_data = []
+                for ch in qn.choices.all().order_by('order', 'id'):
+                    c_text = getattr(ch, 'choice_text', None) or getattr(ch, 'title', '') or ''
+                    choices_data.append({
+                        "choice_id": ch.choice_id,
+                        "title": c_text,
+                        "choice_text": c_text,
+                        "is_correct": ch.is_correct
+                    })
+                q_text = getattr(qn, 'question_text', None) or getattr(qn, 'title', '') or ''
+                questions_data.append({
+                    "question_id": qn.question_id,
+                    "title": q_text,
+                    "question_text": q_text,
+                    "question_type": getattr(qn, 'question_type', 'multiple_choice') or 'multiple_choice',
+                    "explanation": getattr(qn, 'explanation', '') or "",
+                    "order": qn.order,
+                    "choices": choices_data
+                })
+            quizzes_list.append({
+                "quiz_id": q.quiz_id,
+                "title": q.title,
+                "quiz_type": q.quiz_type,
+                "total_questions": len(questions_data),
+                "questions": questions_data
+            })
+
+        # 5. Ambil Seluruh Riwayat Percobaan Kuis (QuizAttempts)
+        attempts_qs = api_models.QuizAttempt.objects.filter(
+            quiz__course_id__in=related_course_ids
+        ).select_related('user', 'user__profile', 'quiz').order_by('-date_attempted')
+
+        attempts_list = []
+        for att in attempts_qs:
+            prof = getattr(att.user, 'profile', None)
+            unit_name = "-"
+            nip_val = getattr(att.user, 'nip', None) or (getattr(prof, 'nip', None) if prof else None) or "-"
+            jabatan_val = "-"
+            if prof:
+                org_unit = getattr(prof, 'organization_unit', None)
+                if org_unit:
+                    unit_name = getattr(org_unit, 'name', str(org_unit))
+                pos = getattr(prof, 'position', None)
+                if pos:
+                    jabatan_val = getattr(pos, 'name', str(pos))
+
+            # Hitung durasi pengerjaan dalam detik
+            time_sec = None
+            if att.time_taken:
+                time_sec = int(att.time_taken.total_seconds())
+
+            # Cek integritas pengerjaan attempt
+            min_expected_sec = max(15, att.total_questions * 3)
+            is_anomaly = (time_sec is not None and time_sec < min_expected_sec and att.total_questions > 0)
+            anomaly_reasons = []
+            if is_anomaly:
+                anomaly_reasons.append(f"Waktu pengerjaan tidak wajar ({time_sec} detik untuk {att.total_questions} butir soal)")
+
+            # Cari status integritas enrollment siswa
+            enr = api_models.EnrolledCourse.objects.filter(user=att.user, course_id__in=related_course_ids).first()
+            integrity_status = "verified"
+            if enr:
+                integ_data = enr.check_integrity_status()
+                integrity_status = integ_data.get("status", "verified")
+                if integ_data.get("reasons"):
+                    anomaly_reasons.extend(integ_data.get("reasons", []))
+
+            # Format Attempt ID
+            raw_att_id = att.attempt_id or str(att.id)
+            display_att_id = raw_att_id if raw_att_id.startswith("ATTEMPT-") else f"ATTEMPT-{raw_att_id}"
+            user_full_name = att.user.get_full_name() or getattr(att.user, 'full_name', '') or att.user.username
+
+            attempts_list.append({
+                "id": att.id,
+                "attempt_id": display_att_id,
+                "raw_attempt_id": raw_att_id,
+                "user_id": att.user.id,
+                "user_name": user_full_name,
+                "email": att.user.email,
+                "nip": nip_val,
+                "unit_kerja": unit_name,
+                "jabatan": jabatan_val,
+                "quiz_id": att.quiz.quiz_id,
+                "quiz_title": att.quiz.title,
+                "quiz_type": att.quiz.quiz_type,
+                "attempt_type": att.attempt_type or 'quiz',
+                "score": float(att.score),
+                "total_questions": att.total_questions,
+                "correct_answers": att.correct_answers,
+                "is_passed": att.is_passed,
+                "time_taken_seconds": time_sec,
+                "date_attempted": att.date_attempted.isoformat() if att.date_attempted else None,
+                "date_attempted_display": att.date_attempted.strftime("%d %b %Y %H:%M") if att.date_attempted else "-",
+                "integrity_status": integrity_status,
+                "anomaly_flag": len(anomaly_reasons) > 0,
+                "anomaly_reasons": list(set(anomaly_reasons))
+            })
+
+        # 6. Kumpulkan Daftar Unit Kerja Unik
+        unit_kerja_set = set()
+        for s in leaderboard:
+            u_info = s.get("employee_info", {})
+            u_name = u_info.get("unit_kerja")
+            if u_name and u_name != "-":
+                unit_kerja_set.add(u_name)
+        for a in attempts_list:
+            if a["unit_kerja"] and a["unit_kerja"] != "-":
+                unit_kerja_set.add(a["unit_kerja"])
+
+        # Standar unit kerja Setjen DPD RI (Kantor Daerah & Sekretariat)
+        common_units = [
+            "Kantor DPD RI Provinsi Jawa Timur",
+            "Kantor DPD RI Provinsi Jawa Barat",
+            "Kantor DPD RI Provinsi Sumatera Utara",
+            "Kantor DPD RI Provinsi Bali",
+            "Kantor DPD RI Provinsi Sulawesi Selatan",
+            "Kantor DPD RI Provinsi Papua",
+            "Biro Organisasi, Keanggotaan, dan Kepegawaian",
+            "Biro Protokol, Hubungan Masyarakat, dan Media",
+            "Biro Keuangan dan Perencanaan",
+            "Pusat Kajian Daerah dan Anggaran",
+            "Inspektorat"
+        ]
+        for cu in common_units:
+            unit_kerja_set.add(cu)
+
+        # 7. Ringkasan Eksekutif
+        total_enrolled = len(leaderboard)
+        completed_count = sum(1 for s in leaderboard if s.get("completion_stats", {}).get("is_completed"))
+        completion_rate = round((completed_count / total_enrolled * 100), 1) if total_enrolled > 0 else 0.0
+        total_jp_issued = completed_count * total_jp
+        flagged_count = sum(1 for s in leaderboard if s.get("integrity_check", {}).get("status") == "pending_review")
+
+        post_scores = [s.get("learning_stats", {}).get("post_score") for s in leaderboard if s.get("learning_stats", {}).get("post_score") is not None]
+        avg_post_score = round(sum(post_scores) / len(post_scores), 1) if post_scores else 0.0
+
+        return Response({
+            "course": {
+                "id": course.id,
+                "course_id": course.course_id,
+                "title": course.title,
+                "slug": course.slug,
+                "image": (course.image.url if hasattr(course.image, "url") else str(course.image)) if course.image else None,
+                "category": course.category.title if course.category else "-",
+                "teacher_name": course.teacher.user.full_name if (course.teacher and course.teacher.user) else "Instruktur Setjen DPD RI",
+                "level": course.level,
+                "platform_status": course.platform_status,
+                "total_jp": total_jp,
+                "date_created": course.date.strftime("%d %b %Y") if course.date else "-"
+            },
+            "metrics": {
+                "total_enrolled": total_enrolled,
+                "completed_count": completed_count,
+                "completion_rate": completion_rate,
+                "total_jp": total_jp,
+                "total_jp_issued": total_jp_issued,
+                "flagged_count": flagged_count,
+                "avg_post_score": avg_post_score,
+                "total_attempts": len(attempts_list)
+            },
+            "unit_kerja_list": sorted(list(unit_kerja_set)),
+            "attempts": attempts_list,
+            "quizzes": quizzes_list,
+            "leaderboard": leaderboard,
+            "evaluation": lb_data.get("evaluation", {})
+        }, status=status.HTTP_200_OK)
+
+
+class AdminResetQuizAttemptAPIView(APIView):
+    """
+    ✨ PHASE 5.2: Admin Reset Exam Attempt (Exam Reset) API
+    Memverifikasi modul administrator Bagian Pengembangan Kapasitas SDM Setjen DPD RI
+    dalam melakukan intervensi reset pengerjaan ujian peserta akibat kendala teknis/jaringan
+    sesuai Skenario 5 Step 3 UAT.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        user = request.user
+        is_admin_or_staff = getattr(user, 'is_staff', False) or getattr(user, 'is_admin', False)
+        if not is_admin_or_staff:
+            return Response({"error": "Akses ditolak. Fitur ini khusus Administrator Setjen DPD RI."}, status=status.HTTP_403_FORBIDDEN)
+
+        course_id = request.data.get('course_id')
+        user_id = request.data.get('user_id')
+        attempt_id = request.data.get('attempt_id') # e.g. "ATTEMPT-881" or "881" or id
+        reason = request.data.get('reason', 'Peserta mengalami kendala teknis / jaringan saat ujian.')
+        action = request.data.get('action', 'reset_exam')
+
+        course = None
+        if course_id:
+            if str(course_id).isdigit():
+                course = api_models.Course.objects.filter(id=int(course_id)).first()
+            if not course:
+                course = api_models.Course.objects.filter(course_id=str(course_id)).first()
+            if not course:
+                course = api_models.Course.objects.filter(slug=str(course_id)).first()
+
+        target_attempt = None
+        target_student = None
+
+        # 1. Cari attempt jika attempt_id disediakan
+        if attempt_id:
+            clean_att_id = str(attempt_id).replace("ATTEMPT-", "").strip()
+            # Coba cari berdasarkan attempt_id
+            target_attempt = api_models.QuizAttempt.objects.filter(attempt_id=clean_att_id).first()
+            if not target_attempt and clean_att_id.isdigit():
+                target_attempt = api_models.QuizAttempt.objects.filter(id=int(clean_att_id)).first()
+            if not target_attempt:
+                target_attempt = api_models.QuizAttempt.objects.filter(attempt_id=attempt_id).first()
+
+            if target_attempt:
+                target_student = target_attempt.user
+                if not course and target_attempt.quiz and target_attempt.quiz.course:
+                    course = target_attempt.quiz.course
+
+        if not target_student and user_id:
+            target_student = User.objects.filter(id=user_id).first()
+
+        if not target_student and not target_attempt:
+            return Response({"error": "Data peserta atau ID percobaan tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not course and target_attempt and target_attempt.quiz:
+            course = target_attempt.quiz.course
+
+        if not course:
+            return Response({"error": "Kursus tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+        related_course_ids = course.get_related_course_ids() if hasattr(course, 'get_related_course_ids') else {course.id}
+        formatted_attempt_code = attempt_id or (f"ATTEMPT-{target_attempt.attempt_id}" if target_attempt else "ATTEMPT-RESET")
+
+        # 2. Hapus / Reset Attempt
+        deleted_count = 0
+        if target_attempt:
+            target_attempt.delete()
+            deleted_count = 1
+        elif target_student:
+            # Hapus post-test attempts atau quiz attempts untuk kursus ini
+            pre_post_quiz = api_models.Quiz.objects.filter(course_id__in=related_course_ids, quiz_type='pre_post_test', is_active=True).first()
+            if pre_post_quiz:
+                attempts = api_models.QuizAttempt.objects.filter(user=target_student, quiz=pre_post_quiz)
+                pre_att = attempts.filter(attempt_type='pre_test').first() or attempts.order_by('date_attempted').first()
+                post_attempts = attempts.filter(attempt_type='post_test')
+                if not post_attempts.exists() and attempts.count() >= 2:
+                    post_attempts = attempts.exclude(id=pre_att.id if pre_att else None)
+                deleted_count = post_attempts.count()
+                post_attempts.delete()
+
+        # 3. Reset Status Enrollment Peserta
+        if target_student:
+            enrollment = api_models.EnrolledCourse.objects.filter(user=target_student, course_id__in=related_course_ids).first()
+            if enrollment:
+                enrollment.manual_integrity_approved = False
+                enrollment.integrity_status = 'verified'
+                enrollment.integrity_notes = f"Percobaan ujian direset oleh Administrator {user.full_name}. Alasan: {reason}"
+                enrollment.save(update_fields=['manual_integrity_approved', 'integrity_status', 'integrity_notes'])
+
+            # Batalkan / bekukan sertifikat jika sebelumnya sudah terbit agar peserta lulus ulang
+            cert = api_models.Certificate.objects.filter(user=target_student, course_id__in=related_course_ids).first()
+            if cert:
+                cert.delete()
+
+        # 4. Catat Riwayat Resmi pada Audit Trail (ActivityLog)
+        student_name = target_student.full_name if target_student else "Peserta"
+        api_models.ActivityLog.objects.create(
+            user=user,
+            activity_type='quiz_attempted',
+            role_at_time='admin',
+            course=course,
+            title=f"Reset Percobaan Ujian: {student_name} ({formatted_attempt_code})",
+            description=f"Administrator SDM {user.full_name} melakukan Exam Reset untuk peserta {student_name}. ID Percobaan: {formatted_attempt_code}. Alasan: {reason}",
+            success=True,
+            metadata={
+                'action': 'exam_reset',
+                'attempt_id': formatted_attempt_code,
+                'student_id': target_student.id if target_student else None,
+                'student_name': student_name,
+                'admin_name': user.full_name,
+                'reason': reason,
+                'course_id': course.id,
+                'deleted_count': deleted_count,
+                'timestamp': timezone.now().isoformat()
+            }
+        )
+
+        # 5. Kirim Notifikasi Resmi ke Peserta
+        if target_student:
+            try:
+                api_models.Notification.objects.create(
+                    user=target_student,
+                    course=course,
+                    type="Exam Reset",
+                    title=f"Kesempatan Ujian Direset - {course.title}",
+                    message=f"Percobaan ujian Anda ({formatted_attempt_code}) untuk materi '{course.title}' telah direset oleh Administrator Bagian Pengembangan Kapasitas SDM DPD RI ({reason}). Anda sekarang dapat mengerjakan kembali ujian.",
+                    seen=False
+                )
+            except Exception as notif_e:
+                print(f"Error creating notification: {notif_e}")
+
+        return Response({
+            "success": True,
+            "message": f"Percobaan ujian {formatted_attempt_code} untuk {student_name} berhasil direset. Audit trail dicatat.",
+            "attempt_id": formatted_attempt_code,
+            "student_name": student_name
+        }, status=status.HTTP_200_OK)
+
+
 
 
 

@@ -11,56 +11,150 @@ import mantaTabletWaveWebp from '../../assets/avatar/manta-tablet-wave.webp';
 import mantaHappyWebp from '../../assets/avatar/manta-happy.webp';
 import mantaIdleWebp from '../../assets/avatar/manta-idle.webp';
 
-// Kunci penyimpanan riwayat sesi chat
-const CHAT_STORAGE_KEY = 'manta_chat_session_history';
+// Kunci penyimpanan riwayat sesi chat per-peran
+const getChatStorageKey = (role) => `manta_chat_session_history_${role || 'student'}`;
 
-// Saran pertanyaan cepat bawaan umum
-const DEFAULT_SUGGESTIONS = [
-    {
-        label: '🏆 Lencana & Level Saya',
-        query: 'Lihat lencana prestasi dan progres level belajar saya'
-    },
-    {
-        label: '🗂️ Flashcard Pemahaman',
-        query: 'Buatkan flashcard pemahaman materi pembelajaran'
-    },
-    {
-        label: '🧠 Latihan Kuis Mandiri',
-        query: 'Beri saya latihan kuis dan simulasi uji pemahaman'
-    },
-    {
-        label: '🎯 Target 20 JP ASN',
-        query: 'Bagaimana progres pemenuhan 20 JP belajar saya tahun ini?'
-    },
-    {
-        label: '📅 AI Study Coach',
-        query: 'Buatkan rencana belajar mingguan untuk mengejar target JP saya'
-    },
-    {
-        label: '🎓 Panduan Kursus',
-        query: 'Bagaimana cara mulai belajar atau mendaftar kursus di LMS?'
-    },
-    {
-        label: '📜 Unduh Sertifikat',
-        query: 'Bagaimana cara mendapatkan dan mengunduh sertifikat pelatihan?'
-    },
-    {
-        label: '⚡ Kendala Teknis',
-        query: 'Video atau modul SCORM macet, apa solusinya?'
-    },
-    {
-        label: '🔐 Login & SSO',
-        query: 'Bagaimana cara masuk menggunakan SSO Setjen DPD RI?'
-    }
+// Saran pertanyaan cepat bawaan untuk PESERTA
+const DEFAULT_SUGGESTIONS_STUDENT = [
+    { label: '🏆 Lencana & Level Saya', query: 'Lihat lencana prestasi dan progres level belajar saya' },
+    { label: '🗂️ Flashcard Pemahaman', query: 'Buatkan flashcard pemahaman materi pembelajaran' },
+    { label: '🧠 Latihan Kuis Mandiri', query: 'Beri saya latihan kuis dan simulasi uji pemahaman' },
+    { label: '🎯 Target 20 JP ASN', query: 'Bagaimana progres pemenuhan 20 JP belajar saya tahun ini?' },
+    { label: '📅 AI Study Coach', query: 'Buatkan rencana belajar mingguan untuk mengejar target JP saya' },
+    { label: '🎓 Panduan Kursus', query: 'Bagaimana cara mulai belajar atau mendaftar kursus di LMS?' },
+    { label: '📜 Unduh Sertifikat', query: 'Bagaimana cara mendapatkan dan mengunduh sertifikat pelatihan?' },
+    { label: '⚡ Kendala Teknis', query: 'Video atau modul SCORM macet, apa solusinya?' },
+    { label: '🎭 Cek Role Saya', query: 'Peran apa yang sedang aktif pada akun saya?' }
 ];
 
-/**
- * Memberikan rekomendasi pertanyaan cepat yang adaptif sesuai halaman yang sedang dibuka (Contextual Page Awareness)
- */
-const getContextualSuggestions = (pathname) => {
-    if (!pathname) return DEFAULT_SUGGESTIONS;
+// Saran pertanyaan cepat bawaan untuk INSTRUKTUR
+const DEFAULT_SUGGESTIONS_INSTRUCTOR = [
+    { label: '📊 Statistik Kursus Saya', query: 'Berapa jumlah siswa terdaftar dan ulasan pada kursus yang saya ajar?' },
+    { label: '➕ Panduan Buat Kursus', query: 'Bagaimana panduan membuat dan mengunggah materi kursus baru?' },
+    { label: '📦 Spesifikasi SCORM 1.2', query: 'Bagaimana format dan spesifikasi paket modul SCORM 1.2 yang didukung?' },
+    { label: '💬 Tanya Jawab Siswa (Q&A)', query: 'Bagaimana cara merespons pertanyaan dan diskusi dari siswa?' },
+    { label: '📝 Standar Kuis & Kelulusan', query: 'Berapa passing grade standar dan panduan pembuatan evaluasi kuis?' },
+    { label: '📜 Template Sertifikat Kursus', query: 'Bagaimana mengatur kelulusan dan sertifikat untuk kursus saya?' },
+    { label: '👥 Manajemen Nilai Siswa', query: 'Bagaimana cara melihat progres belajar dan rekap nilai kuis siswa?' },
+    { label: '🎭 Cek Role Saya', query: 'Peran apa yang sedang aktif pada akun saya?' }
+];
 
-    if (pathname.includes('/course-detail/')) {
+// Saran pertanyaan cepat bawaan untuk ADMINISTRATOR
+const DEFAULT_SUGGESTIONS_ADMIN = [
+    { label: '📊 Ringkasan Statistik LMS', query: 'Bagaimana ringkasan statistik dan metrik pengguna LMS Setjen DPD RI saat ini?' },
+    { label: '📝 Antrean Review Kursus', query: 'Berapa banyak kursus yang sedang menunggu review dan persetujuan admin?' },
+    { label: '👥 Manajemen Pengguna', query: 'Bagaimana cara mengelola akun dan hak akses pengguna di LMS?' },
+    { label: '📜 Pengaturan Sertifikat', query: 'Bagaimana konfigurasi template dan verifikasi keabsahan sertifikat resmi?' },
+    { label: '📈 Laporan & Analitik', query: 'Apa saja metrik aktivitas dan laporan trafik yang tersedia di LMS?' },
+    { label: '🛡️ Info Hak Akses Peran', query: 'Jelaskan perbedaan hak akses peran Peserta, Instruktur, dan Admin' },
+    { label: '🎭 Cek Role Saya', query: 'Peran apa yang sedang aktif pada akun saya?' }
+];
+
+const getInitialGreeting = (user, role) => {
+    const name = user?.full_name ? `Bapak/Ibu **${user.full_name}**` : '';
+    if (role === 'admin') {
+        return name
+            ? `Halo, Administrator ${name}! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 🛡️ Ada monitoring platform, kurasi kursus, atau manajemen pengguna yang ingin Manta bantu?`
+            : 'Halo, Administrator! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 🛡️ Siap membantu monitoring operasional, kurasi materi, dan manajemen platform.';
+    }
+    if (role === 'instructor') {
+        return name
+            ? `Halo, Instruktur ${name}! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 🎓 Ada silabus materi, paket modul SCORM 1.2, atau evaluasi siswa yang ingin Manta bantu?`
+            : 'Halo, Instruktur! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 🎓 Siap mendampingi perancangan materi, kuis evaluasi, dan interaksi kelas Anda.';
+    }
+    return name
+        ? `Halo, ${name}! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 👋 Ada materi atau topik pembelajaran yang ingin Manta bantu?`
+        : 'Halo! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 👋 Ada topik atau bantuan pembelajaran yang ingin Anda tanyakan?';
+};
+
+const getInitialActions = (user, role) => {
+    if (!user) {
+        return [
+            { label: '🔍 Jelajahi Katalog Kursus', url: '/search/', type: 'route' },
+            { label: '🔐 Masuk Akun SSO', url: '/login/', type: 'route' }
+        ];
+    }
+    if (role === 'admin') {
+        return [
+            { label: '📊 Dashboard Admin', url: '/admin/dashboard/', type: 'route' },
+            { label: '📝 Review Kursus', url: '/admin/courses/', type: 'route' },
+            { label: '👥 Manajemen Pengguna', url: '/admin/users/', type: 'route' },
+            { label: '📈 Laporan & Analitik', url: '/admin/reports/', type: 'route' }
+        ];
+    }
+    if (role === 'instructor') {
+        return [
+            { label: '📊 Dashboard Instruktur', url: '/instructor/dashboard/', type: 'route' },
+            { label: '📚 Kursus Kelolaan', url: '/instructor/courses/', type: 'route' },
+            { label: '➕ Buat Kursus Baru', url: '/instructor/create-course/', type: 'route' },
+            { label: '👥 Daftar Siswa', url: '/instructor/students/', type: 'route' }
+        ];
+    }
+    return [
+        { label: '🏆 Lencana & Level', query: 'Lihat lencana prestasi dan progres level belajar saya', type: 'query' },
+        { label: '📚 Kursus Saya', url: '/student/courses/', type: 'route' },
+        { label: '📜 Sertifikat Saya', url: '/student/sertifikat/', type: 'route' },
+        { label: '🔍 Cari Pelatihan Baru', url: '/search/', type: 'route' }
+    ];
+};
+
+/**
+ * Memberikan rekomendasi pertanyaan cepat yang adaptif sesuai halaman yang sedang dibuka dan peran aktif pengguna
+ */
+const getContextualSuggestions = (pathname, role = 'student') => {
+    const currentPath = pathname || '';
+    const safeRole = (role || 'student').toLowerCase();
+
+    // 1. Rekomendasi Khusus Administrator
+    if (safeRole === 'admin' || currentPath.startsWith('/admin')) {
+        if (currentPath.includes('/courses') || currentPath.includes('/course-review')) {
+            return [
+                { label: '📝 Alur Review Kursus', query: 'Bagaimana panduan kurasi dan standar persetujuan kursus di LMS?' },
+                { label: '⏳ Kursus Menunggu Review', query: 'Berapa banyak kursus yang sedang menunggu review dan persetujuan admin?' },
+                { label: '📊 Status Publikasi Kursus', query: 'Ringkasan kursus yang berstatus Published, Review, dan Draft' },
+                { label: '👥 Manajemen Pengguna', query: 'Bagaimana cara mengelola akun dan hak akses pengguna?' }
+            ];
+        }
+        if (currentPath.includes('/users')) {
+            return [
+                { label: '👥 Tambah & Kelola User', query: 'Bagaimana cara menambah pengguna atau mengubah role pengguna?' },
+                { label: '🔐 Integrasi Akun SSO', query: 'Bagaimana mekanisme sinkronisasi data akun SSO pegawai Setjen DPD RI?' },
+                { label: '📊 Statistik Pengguna', query: 'Berapa jumlah total peserta, instruktur, dan admin saat ini?' },
+                { label: '🛡️ Hak Akses Peran', query: 'Jelaskan perbedaan hak akses peran Peserta, Instruktur, dan Admin' }
+            ];
+        }
+        if (currentPath.includes('/reports') || currentPath.includes('/analytics')) {
+            return [
+                { label: '📈 Laporan Aktivitas', query: 'Apa saja laporan analitik aktivitas dan trafik yang tersedia di LMS?' },
+                { label: '🎯 Ketercapaian JP Pegawai', query: 'Bagaimana memantau pemenuhan target 20 JP tahunan aparatur?' },
+                { label: '📜 Verifikasi Sertifikat', query: 'Bagaimana memverifikasi laporan sertifikat dan QR Code keabsahan?' }
+            ];
+        }
+        return DEFAULT_SUGGESTIONS_ADMIN;
+    }
+
+    // 2. Rekomendasi Khusus Instruktur
+    if (safeRole === 'instructor' || currentPath.startsWith('/instructor')) {
+        if (currentPath.includes('/create-course') || currentPath.includes('/edit-course')) {
+            return [
+                { label: '➕ Panduan Buat Kursus', query: 'Bagaimana langkah-langkah membuat kursus baru hingga diajukan ke admin?' },
+                { label: '📦 Spesifikasi SCORM 1.2', query: 'Bagaimana format dan spesifikasi paket modul SCORM 1.2 yang didukung?' },
+                { label: '🎬 Panduan Video Materi', query: 'Format video dan durasi apa yang direkomendasikan untuk materi pembelajaran?' },
+                { label: '📝 Standar Kuis & Kelulusan', query: 'Berapa passing grade standar dan panduan pembuatan soal kuis?' }
+            ];
+        }
+        if (currentPath.includes('/students') || currentPath.includes('/evaluation')) {
+            return [
+                { label: '👥 Pantau Progres Siswa', query: 'Bagaimana cara melihat progres belajar dan rekap nilai kuis siswa?' },
+                { label: '💬 Tanya Jawab Siswa', query: 'Bagaimana cara merespons pertanyaan dan diskusi dari siswa?' },
+                { label: '📜 Kelulusan & Sertifikat', query: 'Bagaimana syarat penerbitan sertifikat resmi bagi siswa yang telah lulus?' }
+            ];
+        }
+        return DEFAULT_SUGGESTIONS_INSTRUCTOR;
+    }
+
+    // 3. Rekomendasi Khusus Peserta / Umum
+    if (currentPath.includes('/course-detail/')) {
         return [
             { label: '🗂️ Flashcard Materi', query: 'Buatkan flashcard pemahaman materi kursus ini' },
             { label: '🧠 Latihan Kuis Mandiri', query: 'Beri saya latihan kuis pemahaman materi ini' },
@@ -70,7 +164,7 @@ const getContextualSuggestions = (pathname) => {
             { label: '📜 Sertifikat Kelulusan', query: 'Apakah kursus ini menerbitkan sertifikat digital resmi?' }
         ];
     }
-    if (pathname.includes('/student/sertifikat/')) {
+    if (currentPath.includes('/student/sertifikat/')) {
         return [
             { label: '🎯 Cek Akumulasi 20 JP', query: 'Berapa akumulasi JP yang sudah saya penuhi dari sertifikat resmi saya?' },
             { label: '📜 Sertifikat Saya', query: 'Berapa banyak sertifikat yang sudah saya miliki?' },
@@ -79,7 +173,7 @@ const getContextualSuggestions = (pathname) => {
             { label: '📚 Lanjut Belajar', query: 'Lihat progres kursus saya' }
         ];
     }
-    if (pathname.includes('/student/courses/')) {
+    if (currentPath.includes('/student/courses/')) {
         return [
             { label: '🗂️ Flashcard Materi', query: 'Buatkan flashcard pemahaman materi bab ini' },
             { label: '🧠 Latihan Kuis Mandiri', query: 'Beri saya latihan kuis pemahaman materi ini' },
@@ -90,7 +184,7 @@ const getContextualSuggestions = (pathname) => {
             { label: '▶️ Lanjut Kursus Tertunda', query: 'Kursus apa yang belum saya selesaikan?' }
         ];
     }
-    if (pathname.includes('/search/')) {
+    if (currentPath.includes('/search/')) {
         return [
             { label: '🌟 Kursus Terpopuler', query: 'Rekomendasikan kursus paling populer di LMS' },
             { label: '🏛️ Pelatihan Keparlemenan', query: 'Cari kursus keparlemenan Setjen DPD RI' },
@@ -98,7 +192,7 @@ const getContextualSuggestions = (pathname) => {
             { label: '🚀 Cara Mendaftar', query: 'Bagaimana cara mendaftar kursus di katalog?' }
         ];
     }
-    if (pathname.includes('/user-guide/') || pathname.includes('/tentang/')) {
+    if (currentPath.includes('/user-guide/') || currentPath.includes('/tentang/')) {
         return [
             { label: '🏛️ Visi Misi LMS', query: 'Apa visi dan fungsi LMS Setjen DPD RI?' },
             { label: '🔐 Panduan Akun SSO', query: 'Bagaimana cara masuk menggunakan SSO Setjen DPD RI?' },
@@ -107,7 +201,7 @@ const getContextualSuggestions = (pathname) => {
         ];
     }
 
-    return DEFAULT_SUGGESTIONS;
+    return DEFAULT_SUGGESTIONS_STUDENT;
 };
 
 /**
@@ -364,14 +458,29 @@ const SiMantaAvatar = () => {
         }
     });
 
-    // Ambil data pengingat belajar proaktif pengguna dari Backend
+    const currentRole = React.useMemo(() => {
+        if (location.pathname.startsWith('/admin')) return 'admin';
+        if (location.pathname.startsWith('/instructor')) return 'instructor';
+        if (location.pathname.startsWith('/student')) return 'student';
+        const r = (currentUser?.current_role || currentUser?.role || '').toLowerCase().trim();
+        if (r === 'admin') return 'admin';
+        if (r === 'teacher' || r === 'instructor') return 'instructor';
+        if (r === 'student') return 'student';
+        return 'student';
+    }, [location.pathname, currentUser?.current_role, currentUser?.role]);
+
+    // Ambil data pengingat belajar proaktif pengguna dari Backend (Peka Peran: Peserta/Instruktur/Admin)
     useEffect(() => {
         let isMounted = true;
         const fetchNudge = async () => {
             try {
                 const uid = currentUser?.user_id || currentUser?.id;
                 const resp = await apiInstance.get('ai/nudge/', {
-                    params: uid ? { user_id: uid } : {}
+                    params: {
+                        ...(uid ? { user_id: uid } : {}),
+                        current_role: currentRole,
+                        pathname: location.pathname
+                    }
                 });
                 if (isMounted && resp.data?.status === 'success' && resp.data.nudge) {
                     setLearningNudge(resp.data.nudge);
@@ -382,7 +491,7 @@ const SiMantaAvatar = () => {
         };
         fetchNudge();
         return () => { isMounted = false; };
-    }, [currentUser?.user_id, currentUser?.id]);
+    }, [currentUser?.user_id, currentUser?.id, currentRole, location.pathname]);
 
     // Deteksi real-time apakah pengguna sedang berada di layar pengerjaan kuis/pre-test/post-test
     useEffect(() => {
@@ -451,9 +560,15 @@ const SiMantaAvatar = () => {
         }, 3600);
     }, []);
     const [chatMessages, setChatMessages] = useState(() => {
+        const user = UserData();
+        const path = typeof window !== 'undefined' ? window.location.pathname : '';
+        const role = path.startsWith('/admin') ? 'admin' : (path.startsWith('/instructor') ? 'instructor' : ((user?.current_role || user?.role || 'student').toLowerCase().trim()));
+        const normalizedRole = role === 'teacher' ? 'instructor' : (role === 'admin' ? 'admin' : 'student');
+        const storageKey = getChatStorageKey(normalizedRole);
+
         if (typeof window !== 'undefined') {
             try {
-                const saved = sessionStorage.getItem(CHAT_STORAGE_KEY);
+                const saved = sessionStorage.getItem(storageKey);
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     if (Array.isArray(parsed) && parsed.length > 0) {
@@ -465,37 +580,22 @@ const SiMantaAvatar = () => {
             }
         }
 
-        const user = UserData();
-        const greeting = user?.full_name
-            ? `Halo, Bapak/Ibu **${user.full_name}**! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 👋 Ada materi atau topik pembelajaran yang ingin Manta bantu?`
-            : 'Halo! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 👋 Ada topik atau bantuan pembelajaran yang ingin Anda tanyakan?';
-
-        const initialActions = user
-            ? [
-                { label: '🏆 Lencana & Level', query: 'Lihat lencana prestasi dan progres level belajar saya', type: 'query' },
-                { label: '📚 Kursus Saya', url: '/student/courses/', type: 'route' },
-                { label: '📜 Sertifikat Saya', url: '/student/sertifikat/', type: 'route' },
-                { label: '🔍 Cari Pelatihan Baru', url: '/search/', type: 'route' }
-            ]
-            : [
-                { label: '🔍 Jelajahi Katalog Kursus', url: '/search/', type: 'route' },
-                { label: '🔐 Masuk Akun SSO', url: '/login/', type: 'route' }
-            ];
-
         return [
             {
                 sender: 'bot',
-                text: greeting,
+                text: getInitialGreeting(user, normalizedRole),
                 time: 'Baru saja',
                 courses: [],
-                actions: initialActions
+                actions: getInitialActions(user, normalizedRole)
             }
         ];
     });
 
-    // Saran pertanyaan cepat yang adaptif sesuai halaman aktif (Contextual Page Awareness)
+    // Saran pertanyaan cepat yang adaptif sesuai halaman aktif & peran aktif (Contextual Awareness)
     const [quickChips, setQuickChips] = useState(() => {
-        return getContextualSuggestions(typeof window !== 'undefined' ? window.location.pathname : '');
+        const path = typeof window !== 'undefined' ? window.location.pathname : '';
+        const role = path.startsWith('/admin') ? 'admin' : (path.startsWith('/instructor') ? 'instructor' : 'student');
+        return getContextualSuggestions(path, role);
     });
     const [inputText, setInputText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -508,60 +608,69 @@ const SiMantaAvatar = () => {
         }
     }, [chatMessages, isTyping, isChatOpen]);
 
-    // Simpan riwayat chat ke sessionStorage setiap kali ada pesan baru
+    // Simpan riwayat chat ke sessionStorage sesuai active storage key
     useEffect(() => {
         if (typeof window === 'undefined') return;
         try {
             if (chatMessages && chatMessages.length > 0) {
-                sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatMessages));
+                sessionStorage.setItem(getChatStorageKey(currentRole), JSON.stringify(chatMessages));
             }
         } catch (e) {
             console.warn('Gagal menyimpan riwayat obrolan Manta:', e);
         }
-    }, [chatMessages]);
+    }, [chatMessages, currentRole]);
 
-    // Contextual Page Awareness: Perbarui saran pertanyaan cepat saat pengguna berpindah halaman
+    // Contextual Page & Role Awareness: Perbarui saran pertanyaan cepat saat pengguna berpindah halaman atau peran
     useEffect(() => {
-        const contextualChips = getContextualSuggestions(location.pathname);
+        const contextualChips = getContextualSuggestions(location.pathname, currentRole);
         setQuickChips(contextualChips);
-    }, [location.pathname]);
+    }, [location.pathname, currentRole]);
+
+    // Dengarkan event pergantian peran aktif (Role Switch)
+    useEffect(() => {
+        const handleRoleChange = (e) => {
+            const switchedRole = (e?.detail?.current_role || '').toLowerCase().trim();
+            const normalized = switchedRole === 'teacher' ? 'instructor' : (switchedRole || currentRole);
+            setQuickChips(getContextualSuggestions(location.pathname, normalized));
+            // Sesuaikan sapaan awal bot jika chat belum memiliki pesan dari user
+            setChatMessages((prev) => {
+                if (prev.length === 1 && prev[0].sender === 'bot') {
+                    return [
+                        {
+                            sender: 'bot',
+                            text: getInitialGreeting(currentUser, normalized),
+                            time: 'Baru saja',
+                            courses: [],
+                            actions: getInitialActions(currentUser, normalized)
+                        }
+                    ];
+                }
+                return prev;
+            });
+        };
+        window.addEventListener('authRoleChanged', handleRoleChange);
+        return () => window.removeEventListener('authRoleChanged', handleRoleChange);
+    }, [location.pathname, currentRole, currentUser]);
 
     // Mulai sesi obrolan baru (Reset Chat)
     const handleResetChat = () => {
         if (typeof window !== 'undefined') {
             try {
-                sessionStorage.removeItem(CHAT_STORAGE_KEY);
+                sessionStorage.removeItem(getChatStorageKey(currentRole));
             } catch (e) {
                 console.warn(e);
             }
         }
-        const user = UserData();
-        const greeting = user?.full_name
-            ? `Halo, Bapak/Ibu **${user.full_name}**! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 👋 Sesi obrolan baru telah dimulai. Ada materi atau topik pembelajaran yang ingin Anda tanyakan?`
-            : 'Halo! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 👋 Sesi obrolan baru telah dimulai. Ada topik atau bantuan pembelajaran yang ingin Anda tanyakan?';
-
-        const initialActions = user
-            ? [
-                { label: '🏆 Lencana & Level', query: 'Lihat lencana prestasi dan progres level belajar saya', type: 'query' },
-                { label: '📚 Kursus Saya', url: '/student/courses/', type: 'route' },
-                { label: '📜 Sertifikat Saya', url: '/student/sertifikat/', type: 'route' },
-                { label: '🔍 Cari Pelatihan Baru', url: '/search/', type: 'route' }
-            ]
-            : [
-                { label: '🔍 Jelajahi Katalog Kursus', url: '/search/', type: 'route' },
-                { label: '🔐 Masuk Akun SSO', url: '/login/', type: 'route' }
-            ];
-
         setChatMessages([
             {
                 sender: 'bot',
-                text: greeting,
+                text: getInitialGreeting(currentUser, currentRole),
                 time: 'Baru saja',
                 courses: [],
-                actions: initialActions
+                actions: getInitialActions(currentUser, currentRole)
             }
         ]);
-        setQuickChips(getContextualSuggestions(location.pathname));
+        setQuickChips(getContextualSuggestions(location.pathname, currentRole));
         stopSpeaking();
     };
 
@@ -1109,14 +1218,16 @@ const SiMantaAvatar = () => {
         const currentCourseSlug = courseSlugMatch ? courseSlugMatch[1] : null;
 
         try {
-            // Panggil Backend AI LMS Setjen DPD RI dengan konteks pengguna & konteks halaman aktif
+            // Panggil Backend AI LMS Setjen DPD RI dengan konteks pengguna, peran aktif & konteks halaman aktif
             const response = await apiInstance.post('ai/chat/', {
                 message: query,
                 user_id: currentUser?.user_id || currentUser?.id || null,
                 user_name: currentUser?.full_name || currentUser?.username || '',
+                current_role: currentRole,
                 page_context: {
                     pathname: location.pathname,
-                    course_slug: currentCourseSlug
+                    course_slug: currentCourseSlug,
+                    current_role: currentRole
                 },
                 history: chatMessages.slice(-6).map((m) => ({
                     role: m.sender === 'user' ? 'user' : 'assistant',
@@ -1355,7 +1466,11 @@ const SiMantaAvatar = () => {
                                     <span className="simanta-action-icon">💬</span>
                                     <div className="simanta-action-text">
                                         <strong>Ngobrol dengan Manta AI</strong>
-                                        <small>Tanya materi, kuis, atau panduan LMS</small>
+                                        <small>
+                                            {currentRole === 'admin' ? 'Monitoring platform, kurasi kursus & user' :
+                                             currentRole === 'instructor' ? 'Silabus, SCORM, kuis & kelola siswa' :
+                                             'Tanya materi, kuis, atau panduan LMS'}
+                                        </small>
                                     </div>
                                 </button>
                                 <button 
@@ -1437,10 +1552,18 @@ const SiMantaAvatar = () => {
                                 <img src={mantaTabletIdleWebp} alt="Manta Avatar" />
                             </div>
                             <div>
-                                <h3 id="simanta-dialog-title" className="simanta-chat-title">Manta AI</h3>
+                                <h3 id="simanta-dialog-title" className="simanta-chat-title">
+                                    Manta AI
+                                    <span className={`simanta-role-pill simanta-role-${currentRole}`}>
+                                        {currentRole === 'admin' ? '🛡️ Admin' :
+                                         currentRole === 'instructor' ? '🎓 Instruktur' : '📚 Peserta'}
+                                    </span>
+                                </h3>
                                 <p className="simanta-chat-subtitle">
                                     <span className="simanta-status-dot" style={{ width: 5, height: 5 }} />
-                                    Asisten LMS Setjen DPD RI
+                                    {currentRole === 'admin' ? 'Pusat Administrator LMS' :
+                                     currentRole === 'instructor' ? 'Mode Instruktur & Pengajar' :
+                                     'Asisten LMS Setjen DPD RI'}
                                 </p>
                             </div>
                         </div>

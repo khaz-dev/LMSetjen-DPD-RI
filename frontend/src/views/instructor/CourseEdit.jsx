@@ -166,7 +166,7 @@ function CourseEdit() {
         setCanPublish(meetsPublishRequirements);
     }, [courseData]);
 
-    // ✨ PHASE 4.51: Track form changes for dirty state using useEffect instead of setTimeout
+    // ✨ PHASE 41: Track form changes for dirty state using useEffect instead of setTimeout
     // This fixes the stale closure bug where courseData wasn't updated in time
     // ✨ PHASE X.2.2: FIX - Improved comparison to handle tags properly
     // Tags are objects with different references even if they have same IDs, so JSON.stringify fails
@@ -292,7 +292,7 @@ function CourseEdit() {
         updateCourseData({ [name]: value });
         handleFieldValidation(name, value);
 
-        // ✨ PHASE 4.51: Dirty tracking now happens automatically in useEffect above
+        // ✨ PHASE 41: Dirty tracking now happens automatically in useEffect above
         // This fixes stale closure issues from setTimeout
 
         // Reset submit status when user makes changes after an error
@@ -307,7 +307,7 @@ function CourseEdit() {
         updateCourseData({ description: content });
         handleFieldValidation("description", content);
 
-        // ✨ PHASE 4.51: Dirty tracking now happens automatically in useEffect
+        // ✨ PHASE 41: Dirty tracking now happens automatically in useEffect
 
         if (submitStatus === "error") {
             setSubmitStatus("idle");
@@ -319,7 +319,7 @@ function CourseEdit() {
     const handleCourseSubmit = async (event) => {
         event.preventDefault();
 
-        // 🎯 PHASE 4.57: Debug log - Check current state when form is submitted
+        // 🎯 PHASE 47: Debug log - Check current state when form is submitted
         console.log("[CourseEdit.handleCourseSubmit] Form submitted");
         console.log("[CourseEdit.handleCourseSubmit] Current isDirty state:", isDirty);
         console.log("[CourseEdit.handleCourseSubmit] Current hasRelatedChanges state:", hasRelatedChanges);
@@ -385,7 +385,7 @@ function CourseEdit() {
                     setSubmitStatus("success");
                     setSubmitMessage("Kursus berhasil diperbarui!");
                     setIsDirty(false);
-                    setHasRelatedChanges(false); // ✨ PHASE 4.56: Reset flag after successful submission
+                    setHasRelatedChanges(false); // ✨ PHASE 46: Reset flag after successful submission
 
                     // ✨ CRITICAL FIX: Immediately update courseData with response from backend
                     // This ensures the UI instantly reflects status changes (Review, Published, Rejected, etc.)
@@ -457,7 +457,7 @@ function CourseEdit() {
                         confirmButtonText: "Coba Lagi"
                     });
                 },
-                hasRelatedChanges  // ✨ PHASE 4.56: Pass flag indicating features/requirements/outcomes were updated
+                hasRelatedChanges  // ✨ PHASE 46: Pass flag indicating features/requirements/outcomes were updated
             );
         } catch (error) {
             console.error("Submission error:", error);
@@ -643,7 +643,7 @@ function CourseEdit() {
                                     <div class="alert alert-info mt-2">
                                         <i class="fas fa-info-circle me-2"></i>
                                         <strong>Apa yang terjadi selanjutnya?</strong>
-                                        <ol class="mt-2 mb-0 small" style="padding-left: 1.5rem;">
+                                        <ol class="mt-2 mb-0 small" style="padding-left: 1rem;">
                                             <li>Admin akan meninjau perubahan konten kursus Anda</li>
                                             <li>Anda akan menerima notifikasi tentang persetujuan atau permintaan revisi</li>
                                             <li>Jika disetujui, perubahan akan langsung diterapkan untuk semua siswa</li>
@@ -664,7 +664,7 @@ function CourseEdit() {
                                     <div class="alert alert-info mt-2">
                                         <i class="fas fa-info-circle me-2"></i>
                                         <strong>Apa yang terjadi selanjutnya?</strong>
-                                        <ol class="mt-2 mb-0 small" style="padding-left: 1.5rem;">
+                                        <ol class="mt-2 mb-0 small" style="padding-left: 1rem;">
                                             <li>Admin akan meninjau konten dan kualitas kursus Anda</li>
                                             <li>Anda akan menerima notifikasi saat keputusan dibuat</li>
                                             <li>Jika disetujui, kursus akan langsung dipublikasikan dan tersedia untuk siswa</li>
@@ -950,20 +950,18 @@ function CourseEdit() {
                                 <div className="d-flex align-items-center justify-content-between flex-nowrap gap-3">
                                     <div className="flex-grow-1 min-w-0" style={{ minWidth: 0 }}>
                                         <div className="d-flex align-items-center gap-2 mb-1">
-                                            <span className={`badge ${
-                                                courseData?.platform_status === "Published" ? "bg-emerald-subtle text-emerald" :
-                                                courseData?.platform_status === "Review" ? "bg-teal-subtle text-teal" :
-                                                courseData?.platform_status === "Rejected" ? "bg-danger-subtle text-danger" :
-                                                "bg-amber-subtle text-amber"
-                                            } fw-semibold px-2 py-0.5`} style={{ fontSize: "11px" }}>
-                                                <i className={`fas ${
-                                                    courseData?.platform_status === "Published" ? "fa-check-circle" :
-                                                    courseData?.platform_status === "Review" ? "fa-hourglass-half" :
-                                                    courseData?.platform_status === "Rejected" ? "fa-times-circle" : "fa-pen-nib"
-                                                } me-1`}></i>
+                                            <span className={`badge ${courseData?.platform_status === "Published" ? "bg-emerald-subtle text-emerald" :
+                                                    courseData?.platform_status === "Review" ? "bg-teal-subtle text-teal" :
+                                                        courseData?.platform_status === "Rejected" ? "bg-danger-subtle text-danger" :
+                                                            "bg-amber-subtle text-amber"
+                                                } fw-semibold px-2 py-0`} style={{ fontSize: "11px" }}>
+                                                <i className={`fas ${courseData?.platform_status === "Published" ? "fa-check-circle" :
+                                                        courseData?.platform_status === "Review" ? "fa-hourglass-half" :
+                                                            courseData?.platform_status === "Rejected" ? "fa-times-circle" : "fa-pen-nib"
+                                                    } me-1`}></i>
                                                 {courseData?.platform_status === "Published" ? "Dipublikasikan" :
-                                                 courseData?.platform_status === "Review" ? "Menunggu Review" :
-                                                 courseData?.platform_status === "Rejected" ? "Ditolak" : "Mode Draf"}
+                                                    courseData?.platform_status === "Review" ? "Menunggu Review" :
+                                                        courseData?.platform_status === "Rejected" ? "Ditolak" : "Mode Draf"}
                                             </span>
                                             <span className="text-muted small">
                                                 ID: #{courseData?.id || param?.course_id}
@@ -981,8 +979,8 @@ function CourseEdit() {
                                     </div>
 
                                     <div className="d-flex align-items-center gap-2 flex-nowrap flex-shrink-0 ms-auto">
-                                        <Link 
-                                            to="/instructor/courses/" 
+                                        <Link
+                                            to="/instructor/courses/"
                                             className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2 text-nowrap"
                                             title="Kembali ke Daftar Kursus"
                                         >
@@ -1251,7 +1249,7 @@ function CourseEdit() {
                                         // When user clicks "Perbarui Kursus", the course will be validated and updated
                                         // This ensures the save button is visible when features are added/edited/deleted
                                         setIsDirty(true);
-                                        // ✨ PHASE 4.56: Mark that related models were updated for status reset detection
+                                        // ✨ PHASE 46: Mark that related models were updated for status reset detection
                                         console.log("[CourseEdit] Feature updated - setting hasRelatedChanges to true");
                                         setHasRelatedChanges(true);
                                     }}
@@ -1263,7 +1261,7 @@ function CourseEdit() {
                                         // ✨ PHASE 4.48: Mark form as dirty to enable "Perbarui Kursus" button
                                         // Requirements are saved via API immediately, but we need to mark course as modified
                                         setIsDirty(true);
-                                        // ✨ PHASE 4.56: Mark that related models were updated for status reset detection
+                                        // ✨ PHASE 46: Mark that related models were updated for status reset detection
                                         console.log("[CourseEdit] Requirement updated - setting hasRelatedChanges to true");
                                         setHasRelatedChanges(true);
                                     }}
@@ -1275,7 +1273,7 @@ function CourseEdit() {
                                         // ✨ PHASE 4.48: Mark form as dirty to enable "Perbarui Kursus" button
                                         // Learning outcomes are saved via API immediately, but we need to mark course as modified
                                         setIsDirty(true);
-                                        // ✨ PHASE 4.56: Mark that related models were updated for status reset detection
+                                        // ✨ PHASE 46: Mark that related models were updated for status reset detection
                                         console.log("[CourseEdit] Learning outcome updated - setting hasRelatedChanges to true");
                                         setHasRelatedChanges(true);
                                     }}
@@ -1394,29 +1392,29 @@ function CourseEdit() {
                                             <div className="form-status-info ms-sm-2">
                                                 {autoSaveStatus === "saving" ? (
                                                     <div className="text-info small d-flex align-items-center">
-                                                        <span className="spinner-border spinner-border-sm me-1.5" style={{ width: "13px", height: "13px", display: "inline-block" }}></span>
+                                                        <span className="spinner-border spinner-border-sm me-1" style={{ width: "13px", height: "13px", display: "inline-block" }}></span>
                                                         <span>Menyimpan perubahan otomatis...</span>
                                                     </div>
                                                 ) : isDirty ? (
                                                     <div className="text-secondary small d-flex align-items-center">
-                                                        <span className="spinner-border spinner-border-sm text-warning me-1.5" style={{ width: "13px", height: "13px", display: "inline-block" }}></span>
+                                                        <span className="spinner-border spinner-border-sm text-warning me-1" style={{ width: "13px", height: "13px", display: "inline-block" }}></span>
                                                         <span>Menyimpan perubahan...</span>
                                                     </div>
                                                 ) : autoSaveStatus === "error" ? (
                                                     <div className="text-danger small d-flex align-items-center">
-                                                        <i className="fas fa-exclamation-circle text-danger me-1.5"></i>
+                                                        <i className="fas fa-exclamation-circle text-danger me-1"></i>
                                                         <span>Gagal menyimpan otomatis, akan dicoba lagi...</span>
                                                     </div>
                                                 ) : lastAutoSaveTime ? (
                                                     <div className="text-muted small d-flex align-items-center">
-                                                        <i className="fas fa-check-circle text-success me-1.5 gap-2"></i>
+                                                        <i className="fas fa-check-circle text-success me-1 gap-2"></i>
                                                         <span>
                                                             Perubahan tersimpan pada {lastAutoSaveTime.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).replace(/:/g, ".")}
                                                         </span>
                                                     </div>
                                                 ) : (
                                                     <div className="text-muted small d-flex align-items-center gap-2">
-                                                        <i className="fas fa-check-circle text-success me-1.5"></i>
+                                                        <i className="fas fa-check-circle text-success me-1"></i>
                                                         <span>Semua perubahan tersimpan</span>
                                                     </div>
                                                 )}
@@ -1518,7 +1516,7 @@ function CourseEdit() {
                                         const hasPublishedVersion = !!courseData?.published_version;
                                         const platformStatus = courseData?.platform_status;
                                         const isReview = platformStatus === "Review";
-                                        // ✨ PHASE 7.5f FIX: Show buttons if:
+                                        // ✨ PHASE 7f FIX: Show buttons if:
                                         // 1. Course has published_version (was published before) OR platform_status is Published
                                         // 2. AND course is not awaiting admin review
                                         const shouldShowBothButtons = (hasPublishedVersion || platformStatus === "Published") && !isReview;

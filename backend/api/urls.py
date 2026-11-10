@@ -166,6 +166,9 @@ urlpatterns = [
     # ✨ PHASE 4.36: Course approval workflow endpoints
     path("admin/course-approval/<course_id>/", api_views.CourseApprovalAPIView.as_view()),
     path("admin/courses-pending-review/", api_views.AdminCourseListAPIView.as_view()),
+    # ✨ PHASE 5.2: Admin Course Evaluation & Exam Verification (UAT Skenario 5)
+    path("admin/course/<course_id>/evaluation/", api_views.AdminCourseEvaluationAPIView.as_view(), name="admin-course-evaluation"),
+    path("admin/reset-exam-attempt/", api_views.AdminResetQuizAttemptAPIView.as_view(), name="admin-reset-exam-attempt"),
     
     path("teacher/course/variant-delete/<variant_id>/<teacher_id>/<course_id>/", api_views.CourseVariantDeleteAPIView.as_view()),
     path("teacher/course/variant-item-delete/<variant_id>/<variant_item_id>/<teacher_id>/<course_id>/", api_views.CourseVariantItemDeleteAPIVIew.as_view()),
