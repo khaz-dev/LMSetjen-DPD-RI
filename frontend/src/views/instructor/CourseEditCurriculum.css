@@ -1436,27 +1436,260 @@
 }
 
 /* ========================================================
-   ✨ SCORM E-LEARNING CURRICULUM ENHANCEMENTS
+   ✨ SCORM E-LEARNING CURRICULUM BANNER ENHANCEMENTS
    ======================================================== */
 .scorm-curriculum-banner {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 60%, #134e4a 100%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    box-shadow: 0 10px 25px -5px rgba(15, 118, 110, 0.25), 0 8px 10px -6px rgba(15, 118, 110, 0.2) !important;
-    border-radius: 12px;
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 45%, #042f2e 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    box-shadow: 0 8px 24px -4px rgba(15, 118, 110, 0.3), 0 4px 10px -2px rgba(15, 118, 110, 0.2) !important;
+    border-radius: 12px !important;
+    padding: 0.95rem 1.15rem !important;
+    margin-bottom: 1rem !important;
+    box-sizing: border-box !important;
+    isolation: isolate;
 }
 
 .scorm-curriculum-banner::before {
     content: "";
     position: absolute;
-    top: -40px;
+    top: -50px;
     right: -40px;
-    width: 140px;
-    height: 140px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(204, 251, 241, 0.08) 50%, rgba(255, 255, 255, 0) 75%);
     border-radius: 50%;
     pointer-events: none;
+    z-index: 0;
+}
+
+.scorm-curriculum-banner .scorm-banner-content {
+    position: relative;
+    z-index: 1;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 768px) {
+    .scorm-curriculum-banner .scorm-banner-content {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.85rem !important;
+    }
+}
+
+.scorm-curriculum-banner .scorm-banner-left {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 0.85rem !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important; /* CRITICAL: Prevents flex child from overflowing or causing overlap */
+}
+
+.scorm-curriculum-banner .scorm-banner-icon-box {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    flex-shrink: 0 !important;
+    background: #ffffff !important;
+    color: #0f766e !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.25rem !important;
+    margin-top: 2px !important;
+}
+
+.scorm-curriculum-banner .scorm-banner-text-content {
+    flex: 1 1 auto !important;
+    min-width: 0 !important; /* CRITICAL: Allows title & description to wrap gracefully without overflow */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+}
+
+/* Badges row with clean wrapping and no overlapping */
+.scorm-curriculum-banner .scorm-banner-badges-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+    margin-bottom: 0.25rem !important;
+    line-height: normal !important;
+}
+
+/* Reset and isolate every scorm-badge against external CSS contamination from other pages */
+.scorm-curriculum-banner .scorm-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.22rem 0.65rem !important;
+    font-size: 0.725rem !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    letter-spacing: 0.01em !important;
+    text-transform: none !important; /* Guard against uppercase leakage */
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+.scorm-curriculum-banner .scorm-badge-primary {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    backdrop-filter: blur(4px) !important;
+}
+
+.scorm-curriculum-banner .scorm-badge-type {
+    background: #ffffff !important;
+    color: #0f766e !important;
+    border: 1px solid #ccfbf1 !important;
+    font-weight: 700 !important;
+}
+
+.scorm-curriculum-banner .scorm-badge-load {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #ccfbf1 !important;
+}
+
+.scorm-curriculum-banner .scorm-badge-load strong {
+    color: #0f766e !important;
+    font-weight: 700 !important;
+    margin-left: 0.25rem !important;
+}
+
+.scorm-curriculum-banner .scorm-badge-duration {
+    color: #64748b !important;
+    font-weight: 500 !important;
+    margin-left: 0.25rem !important;
+}
+
+.scorm-curriculum-banner .scorm-badge-pending {
+    color: #ef4444 !important;
+    font-weight: 600 !important;
+    margin-left: 0.25rem !important;
+}
+
+/* Banner Title: Crystal clear crisp white with perfect contrast */
+.scorm-curriculum-banner .scorm-banner-title {
+    font-size: 0.975rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.35 !important;
+    letter-spacing: -0.01em !important;
+    word-break: break-word !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Banner Description: High-contrast soft mint text */
+.scorm-curriculum-banner .scorm-banner-desc {
+    font-size: 0.8125rem !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.4 !important;
+    word-break: break-word !important;
+}
+
+/* Action button area */
+.scorm-curriculum-banner .scorm-banner-actions {
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* Preview button: High quality contrasting white button with teal text & glowing hover */
+.scorm-curriculum-banner .scorm-banner-preview-btn {
+    background: #ffffff !important;
+    color: #0f766e !important;
+    border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    border-radius: 8px !important;
+    padding: 0.45rem 0.9rem !important;
+    font-size: 0.825rem !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.45rem !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    white-space: nowrap !important;
+    outline: none !important;
+    text-decoration: none !important;
+}
+
+.scorm-curriculum-banner .scorm-banner-preview-btn i {
+    color: #0f766e !important;
+    font-size: 0.75rem !important;
+    transition: transform 0.2s ease !important;
+}
+
+.scorm-curriculum-banner .scorm-banner-preview-btn:hover {
+    background: #f0fdfa !important;
+    color: #115e59 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+    border-color: #ffffff !important;
+}
+
+.scorm-curriculum-banner .scorm-banner-preview-btn:hover i {
+    transform: scale(1.15) !important;
+    color: #115e59 !important;
+}
+
+.scorm-curriculum-banner .scorm-banner-preview-btn:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Defensive fallback rules against generic Bootstrap classes leaking */
+.scorm-curriculum-banner h6,
+.scorm-curriculum-banner .text-dark {
+    color: #ffffff !important;
+}
+
+.scorm-curriculum-banner p,
+.scorm-curriculum-banner .text-muted {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.scorm-curriculum-banner .badge {
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    padding: 0.22rem 0.65rem !important;
+    font-size: 0.725rem !important;
+    line-height: 1.3 !important;
+    border-radius: 6px !important;
+}
+
+.scorm-curriculum-banner .btn-outline-teal {
+    background: #ffffff !important;
+    color: #0f766e !important;
+    border: 1px solid #ffffff !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.scorm-curriculum-banner .btn-outline-teal:hover {
+    background: #f0fdfa !important;
+    color: #115e59 !important;
 }
 
 .scorm-module-card {

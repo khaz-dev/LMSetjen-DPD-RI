@@ -52,7 +52,7 @@ function Sidebar() {
     };
 
     return (
-        <div className="col-lg-3 col-md-4 col-12 instructor-sidebar-column">
+        <div className={`col-lg-3 col-md-4 col-12 instructor-sidebar-column ${isCollapsed ? "collapsed" : ""}`}>
             <nav className={`instructor-sidebar ${isCollapsed ? "collapsed" : ""}`}>
                 {/* Mobile Header */}
                 <div className="d-md-none">

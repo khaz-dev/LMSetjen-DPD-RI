@@ -3,6 +3,221 @@
    Platform LMSetjen DPD RI
    ======================================================================== */
 
+/* ==========================================================================
+   CONTAINER & LAYOUT SYNCHRONIZATION WITH SITE HEADER (.header-container)
+   Aligns left and right borders pixel-perfectly with main header (max-width: 1400px)
+   ========================================================================== */
+.instructor-course-gamification-page,
+.course-gamification-page {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    min-height: 100vh;
+    background: transparent !important;
+    padding-top: 1rem !important;
+    padding-bottom: 2.5rem !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    overflow: visible !important;
+    overflow-x: clip;
+}
+
+.instructor-course-gamification-page .container,
+.course-gamification-page .container,
+.instructor-course-gamification-page .header-container-aligned,
+.course-gamification-page .header-container-aligned {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    position: relative;
+    z-index: 1;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* ==========================================================================
+   1. INSTRUCTOR HEADER CARD ALIGNMENT
+   Aligns left and right edges pixel-perfectly with container & header-container
+   ========================================================================== */
+.instructor-course-gamification-page .row.instructor-header-row,
+.course-gamification-page .row.instructor-header-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.instructor-course-gamification-page .row.instructor-header-row > .col-xl-12,
+.instructor-course-gamification-page .row.instructor-header-row > .col-lg-12,
+.instructor-course-gamification-page .row.instructor-header-row > .col-md-12,
+.instructor-course-gamification-page .row.instructor-header-row > .col-12,
+.course-gamification-page .row.instructor-header-row > .col-xl-12,
+.course-gamification-page .row.instructor-header-row > .col-lg-12,
+.course-gamification-page .row.instructor-header-row > .col-md-12,
+.course-gamification-page .row.instructor-header-row > .col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+.instructor-course-gamification-page .instructor-header-card,
+.course-gamification-page .instructor-header-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow: visible !important;
+}
+
+.instructor-course-gamification-page .instructor-header-collapsed,
+.course-gamification-page .instructor-header-collapsed {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* ==========================================================================
+   2. MAIN ROW ALIGNMENT
+   Aligns left and right edges pixel-perfectly with container & header-container
+   ========================================================================== */
+.instructor-course-gamification-page > .container > .row:not(.instructor-header-row),
+.course-gamification-page > .container > .row:not(.instructor-header-row),
+.instructor-course-gamification-page .container > .row:has(.instructor-sidebar-column),
+.course-gamification-page .container > .row:has(.instructor-sidebar-column),
+.instructor-course-gamification-page .row.gamification-main-row,
+.course-gamification-page .row.gamification-main-row {
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0 !important;
+    overflow: visible !important;
+}
+
+/* Sidebar Column: Fixed/Auto hug-content size, identical to /certificate/, /quiz/, and /curriculum/ */
+.instructor-course-gamification-page .row > .instructor-sidebar-column,
+.course-gamification-page .row > .instructor-sidebar-column,
+.instructor-course-gamification-page .row.gamification-main-row > .instructor-sidebar-column,
+.course-gamification-page .row.gamification-main-row > .instructor-sidebar-column {
+    flex: 0 0 auto !important;
+    width: fit-content !important;
+    max-width: fit-content !important;
+    min-width: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: stretch !important;
+    height: auto !important;
+    position: static !important;
+    overflow: visible !important;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sidebar Column: Collapsed state tightly hugs 72px sidebar + margin */
+.instructor-course-gamification-page .row > .instructor-sidebar-column.collapsed,
+.course-gamification-page .row > .instructor-sidebar-column.collapsed,
+.instructor-course-gamification-page .row.gamification-main-row > .instructor-sidebar-column.collapsed,
+.course-gamification-page .row.gamification-main-row > .instructor-sidebar-column.collapsed,
+.instructor-course-gamification-page .row > .instructor-sidebar-column:has(.instructor-sidebar.collapsed),
+.course-gamification-page .row > .instructor-sidebar-column:has(.instructor-sidebar.collapsed),
+.instructor-course-gamification-page .row.gamification-main-row > .instructor-sidebar-column:has(.instructor-sidebar.collapsed),
+.course-gamification-page .row.gamification-main-row > .instructor-sidebar-column:has(.instructor-sidebar.collapsed) {
+    width: fit-content !important;
+    max-width: calc(72px + 1.15rem) !important;
+    flex: 0 0 auto !important;
+}
+
+/* Sidebar Column: Expanded state tightly hugs 262px sidebar + margin */
+.instructor-course-gamification-page .row > .instructor-sidebar-column:not(.collapsed),
+.course-gamification-page .row > .instructor-sidebar-column:not(.collapsed),
+.instructor-course-gamification-page .row.gamification-main-row > .instructor-sidebar-column:not(.collapsed),
+.course-gamification-page .row.gamification-main-row > .instructor-sidebar-column:not(.collapsed) {
+    width: fit-content !important;
+    max-width: calc(262px + 1.15rem) !important;
+    flex: 0 0 auto !important;
+}
+
+/* Content Column: Matches gap across all other instructor edit pages
+   (padding-left: 0; the clean gap is supplied by .instructor-sidebar's margin-right: 1.15rem) */
+.instructor-course-gamification-page .gamification-content-column,
+.course-gamification-page .gamification-content-column,
+.instructor-course-gamification-page .row:has(.instructor-sidebar-column) > .col-lg-9,
+.course-gamification-page .row:has(.instructor-sidebar-column) > .col-lg-9,
+.instructor-course-gamification-page .row:has(.instructor-sidebar-column) > .col-md-8,
+.course-gamification-page .row:has(.instructor-sidebar-column) > .col-md-8,
+.instructor-course-gamification-page .row:has(.instructor-sidebar-column) > .col-12,
+.course-gamification-page .row:has(.instructor-sidebar-column) > .col-12,
+.instructor-course-gamification-page .row:has(.instructor-sidebar-column) > .transition-all,
+.course-gamification-page .row:has(.instructor-sidebar-column) > .transition-all,
+.instructor-course-gamification-page > .container > .row:not(.instructor-header-row) > .col-lg-9,
+.course-gamification-page > .container > .row:not(.instructor-header-row) > .col-lg-9,
+.instructor-course-gamification-page .container > .row:not(.instructor-header-row) > .col-lg-9,
+.course-gamification-page .container > .row:not(.instructor-header-row) > .col-lg-9 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure inner container of gamification stays full width */
+.instructor-course-gamification-page .course-gamification-container,
+.course-gamification-page .course-gamification-container {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Mobile responsive fallback: stacked layout on smaller screens */
+@media (max-width: 767px) {
+    .instructor-course-gamification-page > .container > .row:not(.instructor-header-row),
+    .course-gamification-page > .container > .row:not(.instructor-header-row),
+    .instructor-course-gamification-page .row.gamification-main-row,
+    .course-gamification-page .row.gamification-main-row {
+        flex-direction: column !important;
+        flex-wrap: wrap !important;
+    }
+
+    .instructor-course-gamification-page .row > .instructor-sidebar-column,
+    .course-gamification-page .row > .instructor-sidebar-column {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    .instructor-course-gamification-page .gamification-content-column,
+    .course-gamification-page .gamification-content-column {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+}
+
 .course-gamification-container {
     --primary-teal: #0f766e;
     --primary-teal-dark: #115e59;
@@ -23,13 +238,16 @@
 /* 1. Header Card (Matching LMS Setjen DPD RI Header Pattern) */
 .gamification-header-card {
     background: #ffffff;
-    border: 1px solid rgba(226, 232, 240, 0.9);
+    border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 0.95rem 1.25rem;
-    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    padding: 0.85rem 1.15rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     margin-bottom: 1rem !important;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .gamification-header-card::before {
@@ -39,11 +257,12 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #0f766e 0%, #14b8a6 50%, #0d9488 100%);
+    background: linear-gradient(90deg, #0d5c3a 0%, #10b981 50%, #0d5c3a 100%);
+    border-radius: 12px 12px 0 0;
 }
 
 .gamification-header-title {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     line-height: 1.35;
     letter-spacing: -0.015em;
     color: var(--neutral-900);
@@ -136,7 +355,7 @@
     color: var(--neutral-900);
     white-space: nowrap;
     overflow: hidden;
-    text-truncate: ellipsis;
+    text-overflow: ellipsis;
 }
 
 .compact-type-sub {

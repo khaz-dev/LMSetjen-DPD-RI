@@ -68,9 +68,10 @@
     position: static !important;
     overflow: visible !important;
     flex: 0 0 auto !important;
-    width: auto !important;
+    width: fit-content !important;
     min-width: 0 !important;
-    max-width: none !important;
+    max-width: fit-content !important;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Desktop & Tablet: Column stretches full height to act as sticky track */
@@ -771,6 +772,24 @@
 
 /* Desktop: Large screens (lg >= 992px) */
 @media (min-width: 992px) {
+    .col-lg-3.instructor-sidebar-column {
+        transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .col-lg-3.instructor-sidebar-column:not(.collapsed),
+    .col-lg-3.instructor-sidebar-column:has(.instructor-sidebar:not(.collapsed)) {
+        width: fit-content !important;
+        max-width: calc(262px + 1.15rem) !important;
+        flex: 0 0 auto !important;
+    }
+
+    .col-lg-3.instructor-sidebar-column.collapsed,
+    .col-lg-3.instructor-sidebar-column:has(.instructor-sidebar.collapsed) {
+        width: fit-content !important;
+        max-width: calc(72px + 1.15rem) !important;
+        flex: 0 0 auto !important;
+    }
+
     .col-lg-3.instructor-sidebar-column .instructor-sidebar {
         transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -790,6 +809,24 @@
 
 /* Tablet: Medium screens (md: 768px - 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
+    .col-md-4.instructor-sidebar-column {
+        transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .col-md-4.instructor-sidebar-column:not(.collapsed),
+    .col-md-4.instructor-sidebar-column:has(.instructor-sidebar:not(.collapsed)) {
+        width: fit-content !important;
+        max-width: calc(262px + 1.15rem) !important;
+        flex: 0 0 auto !important;
+    }
+
+    .col-md-4.instructor-sidebar-column.collapsed,
+    .col-md-4.instructor-sidebar-column:has(.instructor-sidebar.collapsed) {
+        width: fit-content !important;
+        max-width: calc(72px + 1.15rem) !important;
+        flex: 0 0 auto !important;
+    }
+
     .col-md-4.instructor-sidebar-column .instructor-sidebar {
         transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -866,7 +903,9 @@
     .course-edit-container > .container > .row > .col-lg-9,
     .course-quiz-container > .container > .row > .col-lg-9,
     .course-quiz-page > .container > .row > .col-lg-9,
-    .instructor-course-certificate-page > .container > .row > .col-lg-9 {
+    .instructor-course-certificate-page > .container > .row > .col-lg-9,
+    .instructor-course-gamification-page > .container > .row > .col-lg-9,
+    .course-gamification-page > .container > .row > .col-lg-9 {
         flex: 1 1 auto !important;
         max-width: 100% !important;
         transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -896,7 +935,9 @@
     .course-edit-container > .container > .row > .col-md-8,
     .course-quiz-container > .container > .row > .col-md-8,
     .course-quiz-page > .container > .row > .col-md-8,
-    .instructor-course-certificate-page > .container > .row > .col-md-8 {
+    .instructor-course-certificate-page > .container > .row > .col-md-8,
+    .instructor-course-gamification-page > .container > .row > .col-md-8,
+    .course-gamification-page > .container > .row > .col-md-8 {
         flex: 1 1 auto !important;
         max-width: 100% !important;
         transition: flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -943,7 +984,9 @@
 .instructor-password-page,
 .qa-bg-section,
 .instructor-qa-detail-page,
-.instructor-testimonials-page {
+.instructor-testimonials-page,
+.instructor-course-gamification-page,
+.course-gamification-page {
     overflow: visible !important;
 }
 
@@ -965,6 +1008,10 @@
 .instructor-course-create-page > .container,
 .course-create-container > .container,
 .course-quiz-container > .container,
+.instructor-course-certificate-page > .container,
+.instructor-course-gamification-page > .container,
+.course-gamification-page > .container,
+.course-evaluation-page > .container,
 .instructor-review-page > .container,
 .modern-students > .container,
 .instructor-students-page > .container,

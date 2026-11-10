@@ -50,7 +50,7 @@ const GAME_TYPES = [
 function CourseGamification() {
     const { course_id } = useParams();
     const navigate = useNavigate();
-    const { isSidebarCollapsed } = useInstructorSidebarCollapse();
+    const isSidebarCollapsed = useInstructorSidebarCollapse();
 
     const [course, setCourse] = useState(null);
     const [games, setGames] = useState([]);
@@ -394,12 +394,12 @@ function CourseGamification() {
     return (
         <>
             <BaseHeader title="Kelola Gamifikasi Kursus" />
-            <section className="pt-3 pb-4">
-                <div className="container">
+            <section className="instructor-course-gamification-page course-gamification-page pt-3 pb-4">
+                <div className="container header-container-aligned">
                     <Header />
-                    <div className="row mt-0 mt-md-3">
+                    <div className="row gamification-main-row">
                         <Sidebar />
-                        <div className={`col-lg-9 col-md-8 col-12 transition-all ${isSidebarCollapsed ? "col-lg-11 col-md-11" : ""}`}>
+                        <div className={`col-lg-9 col-md-8 col-12 gamification-content-column transition-all ${isSidebarCollapsed ? "sidebar-collapsed-adapted" : ""}`}>
 
                             {/* Workflow Stepper */}
                             <WorkflowStepper currentStep={4} courseId={course_id} courseData={course} />
@@ -408,59 +408,56 @@ function CourseGamification() {
 
                                 {/* 1. Sleek Compact Header Card (Matches LMS Setjen DPD RI Header Pattern) */}
                                 <div className="gamification-header-card">
-                                    <div className="d-flex flex-column flex-md-row md-align-items-center justify-content-between gap-3">
-                                        <div>
-                                            <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
-                                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle fw-semibold px-2 py-0" style={{ fontSize: "11px" }}>
+                                    <div className="d-flex align-items-center justify-content-between gap-2 mb-2 flex-nowrap" style={{ width: "100%", maxWidth: "100%", minWidth: 0 }}>
+                                        <div className="d-flex flex-column min-w-0" style={{ minWidth: 0, flex: "1 1 0%" }}>
+                                            <div className="d-flex align-items-center gap-1 mb-1 flex-nowrap overflow-hidden">
+                                                <span className="badge bg-teal-subtle text-teal fw-semibold px-2 py-0 fs-8 text-nowrap flex-shrink-0">
                                                     <i className="fas fa-gamepad me-1"></i> Gamifikasi Kursus
                                                 </span>
-                                                <span className="badge bg-light text-muted border px-2 py-0" style={{ fontSize: "11px" }}>
+                                                <span className="badge bg-light text-muted border px-2 py-0 fs-8 text-nowrap flex-shrink-0">
                                                     ID: #{course_id}
                                                 </span>
-                                                <span className={`badge px-2 py-0 ${course?.platform_status === "Published" ? "bg-success text-white" : "bg-secondary text-white"}`} style={{ fontSize: "11px" }}>
+                                                <span className={`badge px-2 py-0 fs-8 text-nowrap flex-shrink-0 ${course?.platform_status === "Published" ? "bg-success text-white" : "bg-secondary text-white"}`}>
                                                     {course?.platform_status === "Published" ? "Terbit" : "Draf"}
                                                 </span>
-                                                <span className="badge bg-info-subtle text-info border px-2 py-0" style={{ fontSize: "11px" }}>
+                                                <span className="badge bg-info-subtle text-info border px-2 py-0 fs-8 text-nowrap flex-shrink-0">
                                                     {gamesList.length} Game Tersedia
                                                 </span>
                                             </div>
-                                            <h4 className="gamification-header-title mb-1">
+                                            <h3 className="gamification-header-title mb-0 text-truncate" title={course?.title}>
                                                 {course?.title || "Gamifikasi Pembelajaran Kursus"}
-                                            </h4>
-                                            <p className="gamification-header-desc mb-0">
-                                                Kelola mini-game materi interaktif (TTS, Word Search, Anagram, Memory Match) dengan batas 3 kali pengerjaan bagi peserta.
-                                            </p>
+                                            </h3>
                                         </div>
 
-                                        <div className="d-flex align-items-center gap-2 flex-wrap flex-shrink-0">
+                                        <div className="d-flex align-items-center gap-1 flex-nowrap flex-shrink-0 ms-auto">
                                             <Link
                                                 to={`/instructor/edit-course/${course_id}/`}
-                                                className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
-                                                title="Kembali ke Pengaturan Dasar Kursus"
+                                                className="btn btn-outline-secondary btn-sm px-2 py-1 d-inline-flex align-items-center gap-1 text-nowrap"
+                                                title="Informasi Dasar"
                                             >
                                                 <i className="fas fa-arrow-left"></i>
                                                 <span>Detail</span>
                                             </Link>
                                             <Link
                                                 to={`/instructor/edit-course/${course_id}/curriculum/`}
-                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-1"
-                                                title="Kelola Kurikulum Kursus"
+                                                className="btn btn-outline-teal btn-sm px-2 py-1 d-inline-flex align-items-center gap-1 text-nowrap"
+                                                title="Kelola Kurikulum"
                                             >
                                                 <i className="fas fa-list"></i>
                                                 <span>Kurikulum</span>
                                             </Link>
                                             <Link
                                                 to={`/instructor/edit-course/${course_id}/quiz/`}
-                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-1"
-                                                title="Kelola Kuis Kursus"
+                                                className="btn btn-outline-teal btn-sm px-2 py-1 d-inline-flex align-items-center gap-1 text-nowrap"
+                                                title="Kelola Kuis"
                                             >
                                                 <i className="fas fa-question-circle"></i>
                                                 <span>Kuis</span>
                                             </Link>
                                             <Link
                                                 to={`/instructor/edit-course/${course_id}/certificate/`}
-                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-1"
-                                                title="Kelola Desain Sertifikat Kursus"
+                                                className="btn btn-outline-teal btn-sm px-2 py-1 d-inline-flex align-items-center gap-1 text-nowrap"
+                                                title="Kelola Sertifikat"
                                             >
                                                 <i className="fas fa-certificate"></i>
                                                 <span>Sertifikat</span>
@@ -468,7 +465,7 @@ function CourseGamification() {
                                             {!showForm && (
                                                 <button
                                                     type="button"
-                                                    className="btn btn-teal-primary btn-sm d-inline-flex align-items-center gap-1"
+                                                    className="btn btn-teal-primary btn-sm px-2 py-1 d-inline-flex align-items-center gap-1 shadow-sm text-nowrap ms-0"
                                                     onClick={handleOpenCreateForm}
                                                 >
                                                     <i className="fas fa-plus"></i>
@@ -478,7 +475,7 @@ function CourseGamification() {
                                             <Link
                                                 to={`/instructor/preview-course/${course_id}/`}
                                                 target="_blank"
-                                                className="btn btn-teal btn-sm d-inline-flex align-items-center gap-1"
+                                                className="btn btn-teal btn-sm px-2 py-1 d-inline-flex align-items-center gap-1 text-nowrap ms-0"
                                                 title="Pratinjau Kursus"
                                             >
                                                 <i className="fas fa-eye"></i>

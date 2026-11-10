@@ -4822,47 +4822,50 @@ function CourseEditCurriculum() {
                                 {/* ✨ SCORM Curriculum Banner (Compact & Refined) */}
                                 {isElearningScorm && (
                                     <div className="scorm-curriculum-banner mb-3 p-3 rounded-3 border">
-                                        <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                                            <div className="d-flex align-items-start gap-2">
-                                                <div className="scorm-curriculum-icon bg-white p-2 rounded-3 shadow-sm text-teal d-flex align-items-center justify-content-center" style={{ width: "44px", height: "44px", fontSize: "20px" }}>
+                                        <div className="scorm-banner-content">
+                                            <div className="scorm-banner-left">
+                                                <div className="scorm-banner-icon-box">
                                                     <i className="fas fa-boxes-stacked"></i>
                                                 </div>
-                                                <div>
-                                                    <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
-                                                        <span className="badge bg-teal text-white fw-bold px-2 py-0" style={{ fontSize: "11px" }}>
+                                                <div className="scorm-banner-text-content">
+                                                    <div className="scorm-banner-badges-row">
+                                                        <span className="scorm-badge scorm-badge-primary">
+                                                            <i className="fas fa-bolt me-1"></i>
                                                             E-Learning SCORM Terintegrasi
                                                         </span>
-                                                        <span className="badge bg-white text-teal border border-teal-subtle px-2 py-0" style={{ fontSize: "11px" }}>
+                                                        <span className="scorm-badge scorm-badge-type">
+                                                            <i className="fas fa-layer-group me-1"></i>
                                                             {course?.learning_module?.module_type?.toUpperCase() || course?.course_type?.toUpperCase() || 'SCORM 1.2'}
                                                         </span>
-                                                        <span className="badge bg-white text-dark border border-teal-subtle shadow-sm px-2 py-0" style={{ fontSize: "11px" }}>
-                                                            <i className="fas fa-graduation-cap me-1 text-teal"></i>
-                                                            Total Beban: <strong className="text-teal ms-1">{totalCourseJP} JP</strong>
+                                                        <span className="scorm-badge scorm-badge-load">
+                                                            <i className="fas fa-graduation-cap me-1"></i>
+                                                            Total Beban: <strong>{totalCourseJP} JP</strong>
                                                             {totalCourseSeconds > 0 ? (
-                                                                <span className="text-muted ms-1">({Math.floor(totalCourseSeconds / 3600)}j {Math.floor((totalCourseSeconds % 3600) / 60)}m)</span>
+                                                                <span className="scorm-badge-duration">({Math.floor(totalCourseSeconds / 3600)}j {Math.floor((totalCourseSeconds % 3600) / 60)}m)</span>
                                                             ) : (
-                                                                <span className="text-danger ms-1">(Belum diatur)</span>
+                                                                <span className="scorm-badge-pending">(Belum diatur)</span>
                                                             )}
                                                         </span>
                                                     </div>
-                                                    <h6 className="fw-bold mb-0 text-dark">
+                                                    <h6 className="scorm-banner-title">
                                                         {course?.learning_module?.judul || course?.title || 'Paket SCORM E-Learning'}
                                                     </h6>
-                                                    <p className="text-muted small mb-0" style={{ fontSize: "0.8rem" }}>
+                                                    <p className="scorm-banner-desc">
                                                         Modul interaktif SCORM terhubung otomatis tanpa perlu mengunggah video secara manual.
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                            <div className="scorm-banner-actions">
                                                 <button
                                                     type="button"
-                                                    className="btn btn-sm btn-outline-teal px-2 py-1 fw-semibold d-inline-flex align-items-center gap-1"
+                                                    className="scorm-banner-preview-btn"
                                                     onClick={() => handleOpenScormPreview({
                                                         title: course?.learning_module?.judul || course?.title,
                                                         learning_module_info: course?.learning_module || curriculum?.[0]?.items?.[0]?.learning_module_info
                                                     })}
+                                                    title="Buka simulasi pratinjau modul SCORM"
                                                 >
-                                                    <i className="fas fa-play text-teal small"></i>
+                                                    <i className="fas fa-play"></i>
                                                     <span>Uji Coba SCORM</span>
                                                 </button>
                                             </div>
