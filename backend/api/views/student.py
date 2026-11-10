@@ -2824,19 +2824,32 @@ class StudentCertificateDownloadAPIView(APIView):
                     'error': 'Certificate is not valid'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # ✨ PHASE 4.222: Serve the certificate image file
+            # ✨ PHASE 4.222: Serve the certificate file (PNG or PDF A4 Landscape)
             if certificate.image_file:
                 import os
                 file_path = certificate.image_file.path
                 
                 if os.path.exists(file_path):
-                    with open(file_path, 'rb') as image_file:
-                        response = HttpResponse(image_file.read(), content_type='image/png')
-                        # Use attachment disposition for download
-                        filename = f'{course_id}_{user_id}.png'
+                    format_param = request.query_params.get('format', 'png').lower()
+                    if format_param == 'pdf':
+                        from PIL import Image
+                        import io
+                        img = Image.open(file_path).convert('RGB')
+                        buf = io.BytesIO()
+                        # A4 Landscape resolution
+                        img.save(buf, format='PDF', resolution=300.0)
+                        pdf_bytes = buf.getvalue()
+                        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+                        filename = f'Sertifikat_{course_id}_{user_id}.pdf'
                         response['Content-Disposition'] = f'attachment; filename="{filename}"'
-                        response['Content-Type'] = 'image/png'
                         return response
+                    else:
+                        with open(file_path, 'rb') as image_file:
+                            response = HttpResponse(image_file.read(), content_type='image/png')
+                            filename = f'Sertifikat_{course_id}_{user_id}.png'
+                            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                            response['Content-Type'] = 'image/png'
+                            return response
             
             # Fallback: return JSON with message
             return Response({

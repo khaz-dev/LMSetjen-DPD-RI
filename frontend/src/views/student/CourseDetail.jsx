@@ -42,6 +42,7 @@ import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE
 import "./CourseDetail.css";
 
 import apiInstance from "../../utils/axios";
+import { promptCertificateDownload } from "../../utils/certificateDownloadHelper";
 
 import {
 
@@ -2459,40 +2460,17 @@ function CourseDetail() {
 
     const handleDownloadCertFromDisplay = async () => {
         if (!existingCertificate || !course?.course?.course_id) return;
-        try {
-            Toast().fire({
-                icon: 'info',
-                title: 'Mengunduh Sertifikat...',
-                text: 'Menyiapkan berkas sertifikat resolusi tinggi...'
-            });
-            const courseId = course?.course?.course_id;
-            const userId = UserData()?.user_id;
-            const response = await apiInstance.get(
-                `student/certificate-download/${courseId}/${userId}/`,
-                { responseType: 'blob' }
-            );
-            const blob = new Blob([response.data], { type: 'image/png' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `Sertifikat_${courseId}_${userId}.png`);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode.removeChild(link);
-            window.URL.revokeObjectURL(url);
-            Toast().fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: 'Sertifikat resolusi tinggi berhasil diunduh.'
-            });
-        } catch (err) {
-            console.error('Download error:', err);
-            Toast().fire({
-                icon: 'error',
-                title: 'Gagal Mengunduh',
-                text: 'Gagal mengunduh file sertifikat.'
-            });
-        }
+        const courseId = course?.course?.course_id;
+        const userId = UserData()?.user_id;
+
+        await promptCertificateDownload({
+            imageUrl: existingCertificate.image_file_url,
+            courseId,
+            userId,
+            certificateId: existingCertificate.formatted_certificate_id || existingCertificate.certificate_id,
+            courseTitle: course?.course?.title || "Kursus",
+            targetElement: document.querySelector('.cert-lightbox-container') || document.body
+        });
     };
 
     const handleCopyCertId = (id) => {

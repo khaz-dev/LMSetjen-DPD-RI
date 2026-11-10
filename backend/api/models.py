@@ -1637,6 +1637,9 @@ class CompletedLesson(models.Model):
     variant_item = models.ForeignKey(VariantItem, on_delete=models.CASCADE)
     date = models.DateTimeField(default=timezone.now)
 
+    class Meta:
+        unique_together = ('user', 'course', 'variant_item')
+
     def __str__(self):
         return self.course.title
 
@@ -2058,6 +2061,8 @@ class UserProgress(models.Model):
     )
     last_accessed = models.DateTimeField(auto_now=True, verbose_name="Akses Terakhir")
     completed_at = models.DateTimeField(blank=True, null=True, verbose_name="Waktu Selesai")
+    last_reset_date = models.DateField(blank=True, null=True, verbose_name="Tanggal Reset Terakhir")
+    reset_count_today = models.IntegerField(default=0, verbose_name="Jumlah Reset Hari Ini")
 
     class Meta:
         db_table = 'scorm_user_progress'
@@ -2112,17 +2117,21 @@ class EnrolledCourse(models.Model):
     
     def completion_percentage(self):
         """Calculate comprehensive completion percentage including lessons, regular quizzes, pre-post test, and games"""
+        return self.completion_metrics()['progress']
+
+    def completion_metrics(self):
+        """Detailed breakdown of completion items for frontend synchronization"""
         total_lessons = self.lectures().count()
-        completed_lessons = self.completed_lesson().count()
+        completed_lessons = self.completed_lesson().values('variant_item').distinct().count()
         
         # 1. Kuis Reguler Kursus
         quizzes = Quiz.objects.filter(course=self.course, is_active=True)
         regular_quizzes = quizzes.filter(quiz_type='quiz')
         total_reg_quizzes = regular_quizzes.count()
-        passed_reg_quizzes = 0
-        for q in regular_quizzes:
-            if QuizAttempt.objects.filter(user=self.user, quiz=q, is_passed=True).exists():
-                passed_reg_quizzes += 1
+        passed_reg_quizzes = sum(
+            1 for q in regular_quizzes 
+            if QuizAttempt.objects.filter(user=self.user, quiz=q, is_passed=True).exists()
+        )
                 
         # 2. Pre-Test & Post-Test (jika ada kuis pre_post_test pada kursus)
         pre_post_quiz = quizzes.filter(quiz_type='pre_post_test').first()
@@ -2135,19 +2144,36 @@ class EnrolledCourse(models.Model):
         # 3. Gamifikasi (mini-games aktif pada kursus)
         active_games = self.course.games.filter(is_active=True)
         total_games = active_games.count()
-        completed_games = 0
-        for g in active_games:
-            if g.attempts.filter(user=self.user).exists():
-                completed_games += 1
+        completed_games = sum(
+            1 for g in active_games 
+            if g.attempts.filter(user=self.user).exists()
+        )
                 
         # Total bobot seluruh aktivitas pembelajaran
         total_items = total_lessons + total_reg_quizzes + pre_test_total + post_test_total + total_games
         completed_items = completed_lessons + passed_reg_quizzes + pre_test_completed + post_test_completed + completed_games
         
-        if total_items == 0:
-            return 100  # No items means 100% complete
+        # Guarantee completed_items never exceeds total_items
+        if total_items > 0:
+            completed_items = min(total_items, completed_items)
+            progress = min(100, round((completed_items / total_items) * 100))
+        else:
+            progress = 100
         
-        return min(100, (completed_items / total_items) * 100)
+        return {
+            'progress': progress,
+            'total_items': total_items,
+            'completed_items': completed_items,
+            'total_lessons': total_lessons,
+            'completed_lessons': completed_lessons,
+            'total_quizzes': total_reg_quizzes,
+            'passed_quizzes': passed_reg_quizzes,
+            'has_pre_post': bool(pre_post_quiz),
+            'pre_test_completed': bool(pre_test_completed),
+            'post_test_completed': bool(post_test_completed),
+            'total_games': total_games,
+            'completed_games': completed_games,
+        }
     
     def is_course_completed(self):
         """Check if all lessons are completed"""

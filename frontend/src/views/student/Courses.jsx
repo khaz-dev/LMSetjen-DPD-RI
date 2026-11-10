@@ -72,20 +72,79 @@ function Courses() {
 
     // Calculate combined progress metrics for a course item
     const getCourseMetrics = useCallback((course) => {
+        const totalJP = calculateTotalJP(course.lectures || []);
+        const durationObj = calculateTotalDuration(course.lectures || []);
+
+        // 1. Prioritize backend-calculated completion_metrics if available
+        if (course.completion_metrics) {
+            const m = course.completion_metrics;
+            const progress = Math.min(100, Math.max(0, m.progress || 0));
+            let status = "not-started";
+            if (progress === 100) {
+                status = "completed";
+            } else if (progress > 0) {
+                status = "in-progress";
+            }
+            return {
+                progress,
+                status,
+                totalItems: m.total_items,
+                completedItems: Math.min(m.total_items, m.completed_items),
+                totalLectures: m.total_lessons,
+                completedLessons: m.completed_lessons,
+                totalQuizzes: m.total_quizzes,
+                passedQuizzes: m.passed_quizzes,
+                totalJP,
+                durationFormatted: durationObj.formatted || "0m"
+            };
+        }
+
+        // 2. Comprehensive Client-Side Calculation Fallback
         const { lessonsCount } = getCourseCurriculumSummary(course);
         const totalLectures = lessonsCount || (course.lectures?.length || 0);
-        const completedLessons = course.completed_lesson?.length || 0;
+
+        // Deduplicate completed lessons
+        const completedLessonSet = new Set(
+            (course.completed_lesson || []).map(cl => cl.variant_item?.variant_item_id || cl.variant_item?.id || cl.id)
+        );
+        const completedLessons = completedLessonSet.size;
+
+        // Quizzes (regular quizzes vs pre/post test)
+        const allQuizzes = course.course?.quizzes || course.quizzes || [];
+        const regQuizzes = allQuizzes.filter(q => q.quiz_type === 'quiz');
+        const prePostQuiz = allQuizzes.find(q => q.quiz_type === 'pre_post_test');
 
         const quizResults = course.quiz_results || [];
-        const totalQuizzes = quizResults.length || 0;
-        const passedQuizzes = quizResults.filter((q) => q.passed).length || 0;
+        const passedQuizzes = regQuizzes.length > 0
+            ? regQuizzes.filter(rq => {
+                const res = quizResults.find(qr => String(qr.quiz_id) === String(rq.id) || String(qr.quiz_id) === String(rq.quiz_id));
+                return res?.passed || rq.is_passed;
+              }).length
+            : quizResults.filter(q => q.passed).length;
+        const totalQuizzes = regQuizzes.length > 0 ? regQuizzes.length : (quizResults.length || 0);
 
-        const totalItems = totalLectures + totalQuizzes;
-        const completedItems = completedLessons + passedQuizzes;
+        // Pre-test & Post-test
+        const preTestTotal = prePostQuiz ? 1 : 0;
+        const preTestCompleted = (prePostQuiz && (prePostQuiz.has_pre_test || quizResults.some(q => q.is_pre_test && q.passed))) ? 1 : 0;
+        const postTestTotal = prePostQuiz ? 1 : 0;
+        const postTestCompleted = (prePostQuiz && (prePostQuiz.has_post_test || quizResults.some(q => q.is_post_test && q.passed))) ? 1 : 0;
+
+        // Gamifikasi
+        const games = course.course?.games || course.games || [];
+        const totalGames = games.length;
+        const completedGames = games.filter(g => Boolean(g.user_is_passed || (g.user_attempts_count || 0) > 0)).length;
+
+        const totalItems = totalLectures + totalQuizzes + preTestTotal + postTestTotal + totalGames;
+        let completedItems = completedLessons + passedQuizzes + preTestCompleted + postTestCompleted + completedGames;
+
+        // Guarantee completedItems never exceeds totalItems
+        if (totalItems > 0 && completedItems > totalItems) {
+            completedItems = totalItems;
+        }
 
         let progress = 0;
         if (totalItems > 0) {
-            progress = Math.round((completedItems / totalItems) * 100);
+            progress = Math.min(100, Math.round((completedItems / totalItems) * 100));
         }
 
         let status = "not-started";
@@ -94,9 +153,6 @@ function Courses() {
         } else if (progress > 0) {
             status = "in-progress";
         }
-
-        const totalJP = calculateTotalJP(course.lectures || []);
-        const durationObj = calculateTotalDuration(course.lectures || []);
 
         return {
             progress,
@@ -142,7 +198,7 @@ function Courses() {
             progressSum += progress;
         });
 
-        const avgProgress = total > 0 ? Math.round(progressSum / total) : 0;
+        const avgProgress = total > 0 ? Math.min(100, Math.round(progressSum / total)) : 0;
 
         return {
             total,

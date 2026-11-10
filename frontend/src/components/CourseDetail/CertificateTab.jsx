@@ -9,6 +9,7 @@ import certificateBackgroundPNG from '../../assets/certificate-bg.png';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import ModernCertificateDocument from './ModernCertificateDocument';
+import { promptCertificateDownload } from '../../utils/certificateDownloadHelper';
 import './CertificateTab.css';
 
 function CertificateTab({
@@ -200,7 +201,7 @@ function CertificateTab({
         }
     }, [regenerateTrigger]);
 
-    // ✨ PHASE 4.222: Download certificate image from server (PNG format)
+    // ✨ Download certificate (PDF A4 Landscape or PNG Ultra-HD)
     const downloadCertificateFromServer = async () => {
         if (!certificate || !course?.course?.course_id) {
             Toast().fire({
@@ -211,49 +212,17 @@ function CertificateTab({
             return;
         }
 
-        try {
-            Toast().fire({
-                icon: 'info',
-                title: 'Mengunduh...',
-                text: 'Mengunduh sertifikat Anda...'
-            });
+        const courseId = course?.course?.course_id;
+        const userId = UserData()?.user_id;
 
-            // ✨ PHASE 4.222: Download certificate image (course_id_user_id.png)
-            const courseId = course?.course?.course_id;
-            const userId = UserData()?.user_id;
-
-            // ✨ PHASE 51: Use apiInstance to fetch the file with correct API base URL
-            const response = await apiInstance.get(
-                `student/certificate-download/${courseId}/${userId}/`,
-                {
-                    responseType: 'blob'  // Important: Get response as blob for binary file
-                }
-            );
-
-            // Create blob URL and download
-            const blob = new Blob([response.data], { type: 'image/png' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `${courseId}_${userId}.png`);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode.removeChild(link);
-            window.URL.revokeObjectURL(url);
-
-            Toast().fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: 'Sertifikat berhasil diunduh.'
-            });
-        } catch (error) {
-            console.error('Error downloading certificate:', error);
-            Toast().fire({
-                icon: 'error',
-                title: 'Unduhan Gagal',
-                text: 'Gagal mengunduh sertifikat. Silakan coba lagi.'
-            });
-        }
+        await promptCertificateDownload({
+            imageUrl: certificate.image_file_url,
+            courseId,
+            userId,
+            certificateId: certificate.formatted_certificate_id || certificate.certificate_id,
+            courseTitle: course?.course?.title || "Kursus",
+            targetElement: document.body
+        });
     };
 
     useEffect(() => {

@@ -47,22 +47,6 @@ function Dashboard() {
 
         // Synchronously compute progress before state updates to avoid race conditions
         const progressStats = courseData.map((course) => {
-            const { lessonsCount } = getCourseCurriculumSummary(course);
-            const totalLessons = lessonsCount || (course.lectures?.length || 0);
-            const completedLessons = course.completed_lesson?.length || 0;
-
-            const quizResults = course.quiz_results || [];
-            const totalQuizzes = quizResults.length || 0;
-            const passedQuizzes = quizResults.filter((q) => q.passed).length || 0;
-
-            const totalItems = totalLessons + totalQuizzes;
-            const completedItems = completedLessons + passedQuizzes;
-
-            let progressPercentage = 0;
-            if (totalItems > 0) {
-                progressPercentage = Math.round((completedItems / totalItems) * 100);
-            }
-
             const totalDuration = calculateTotalDuration(course.lectures || []);
             let courseDurationFormatted = totalDuration.formatted;
             let courseDurationWithJP = totalDuration.withJP;
@@ -74,6 +58,70 @@ function Dashboard() {
                 courseDurationWithJP = formatDurationWithJP(jpSecs);
             }
 
+            // 1. Prioritize backend-calculated completion_metrics if available
+            if (course.completion_metrics) {
+                const m = course.completion_metrics;
+                const progressPercentage = Math.min(100, Math.max(0, m.progress || 0));
+                return {
+                    ...course,
+                    progressPercentage,
+                    totalLessons: m.total_lessons,
+                    completedLessons: m.completed_lessons,
+                    totalQuizzes: m.total_quizzes,
+                    completedQuizzes: m.passed_quizzes,
+                    totalItems: m.total_items,
+                    completedItems: Math.min(m.total_items, m.completed_items),
+                    quizProgress: m.total_quizzes > 0 ? Math.round((m.passed_quizzes / m.total_quizzes) * 100) : 0,
+                    lessonProgress: m.total_lessons > 0 ? Math.round((m.completed_lessons / m.total_lessons) * 100) : 0,
+                    courseDurationFormatted,
+                    courseDurationWithJP
+                };
+            }
+
+            // 2. Comprehensive Client-Side Calculation Fallback
+            const { lessonsCount } = getCourseCurriculumSummary(course);
+            const totalLessons = lessonsCount || (course.lectures?.length || 0);
+
+            // Deduplicate completed lessons
+            const completedLessonSet = new Set(
+                (course.completed_lesson || []).map(cl => cl.variant_item?.variant_item_id || cl.variant_item?.id || cl.id)
+            );
+            const completedLessons = completedLessonSet.size;
+
+            const allQuizzes = course.course?.quizzes || course.quizzes || [];
+            const regQuizzes = allQuizzes.filter(q => q.quiz_type === 'quiz');
+            const prePostQuiz = allQuizzes.find(q => q.quiz_type === 'pre_post_test');
+
+            const quizResults = course.quiz_results || [];
+            const passedQuizzes = regQuizzes.length > 0
+                ? regQuizzes.filter(rq => {
+                    const res = quizResults.find(qr => String(qr.quiz_id) === String(rq.id) || String(qr.quiz_id) === String(rq.quiz_id));
+                    return res?.passed || rq.is_passed;
+                  }).length
+                : quizResults.filter(q => q.passed).length;
+            const totalQuizzes = regQuizzes.length > 0 ? regQuizzes.length : (quizResults.length || 0);
+
+            const preTestTotal = prePostQuiz ? 1 : 0;
+            const preTestCompleted = (prePostQuiz && (prePostQuiz.has_pre_test || quizResults.some(q => q.is_pre_test && q.passed))) ? 1 : 0;
+            const postTestTotal = prePostQuiz ? 1 : 0;
+            const postTestCompleted = (prePostQuiz && (prePostQuiz.has_post_test || quizResults.some(q => q.is_post_test && q.passed))) ? 1 : 0;
+
+            const games = course.course?.games || course.games || [];
+            const totalGames = games.length;
+            const completedGames = games.filter(g => Boolean(g.user_is_passed || (g.user_attempts_count || 0) > 0)).length;
+
+            const totalItems = totalLessons + totalQuizzes + preTestTotal + postTestTotal + totalGames;
+            let completedItems = completedLessons + passedQuizzes + preTestCompleted + postTestCompleted + completedGames;
+
+            if (totalItems > 0 && completedItems > totalItems) {
+                completedItems = totalItems;
+            }
+
+            let progressPercentage = 0;
+            if (totalItems > 0) {
+                progressPercentage = Math.min(100, Math.round((completedItems / totalItems) * 100));
+            }
+
             return {
                 ...course,
                 progressPercentage,
@@ -81,6 +129,8 @@ function Dashboard() {
                 completedLessons,
                 totalQuizzes,
                 completedQuizzes: passedQuizzes,
+                totalItems,
+                completedItems,
                 quizProgress: totalQuizzes > 0 ? Math.round((passedQuizzes / totalQuizzes) * 100) : 0,
                 lessonProgress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
                 courseDurationFormatted,
@@ -145,7 +195,7 @@ function Dashboard() {
     const averageProgress = useMemo(() => {
         if (progressData.length === 0) return 0;
         const total = progressData.reduce((sum, c) => sum + (c.progressPercentage || 0), 0);
-        return Math.round(total / progressData.length);
+        return Math.min(100, Math.round(total / progressData.length));
     }, [progressData]);
 
     // Total aggregate lessons, quizzes, and completed items across all courses
@@ -154,17 +204,22 @@ function Dashboard() {
         let completedLessons = 0;
         let totalQuizzes = 0;
         let completedQuizzes = 0;
+        let totalItems = 0;
+        let completedItems = 0;
 
         progressData.forEach((c) => {
             totalLessons += (c.totalLessons || 0);
             completedLessons += (c.completedLessons || 0);
             totalQuizzes += (c.totalQuizzes || 0);
             completedQuizzes += (c.completedQuizzes || 0);
+            totalItems += (c.totalItems || ((c.totalLessons || 0) + (c.totalQuizzes || 0)));
+            completedItems += (c.completedItems || ((c.completedLessons || 0) + (c.completedQuizzes || 0)));
         });
 
-        const totalItems = totalLessons + totalQuizzes;
-        const completedItems = completedLessons + completedQuizzes;
-        const itemsPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+        if (totalItems > 0 && completedItems > totalItems) {
+            completedItems = totalItems;
+        }
+        const itemsPercentage = totalItems > 0 ? Math.min(100, Math.round((completedItems / totalItems) * 100)) : 0;
 
         return {
             totalLessons,

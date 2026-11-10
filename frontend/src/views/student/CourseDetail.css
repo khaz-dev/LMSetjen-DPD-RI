@@ -3075,7 +3075,7 @@ body.modern-course-active {
     }
 }
 
-.modal-header-modern {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-header-modern {
     background: linear-gradient(135deg, #0f766e, #115e59) !important;
     color: white;
     /* ✨ PHASE 6.4: Prevent text selection while dragging */
@@ -3096,11 +3096,11 @@ body.modern-course-active {
     flex-shrink: 0;
 }
 
-.modal-header-modern::before {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-header-modern::before {
     display: none;
 }
 
-.modal-header-content {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-header-content {
     flex: 1;
     display: flex;
     align-items: flex-start;
@@ -3108,7 +3108,7 @@ body.modern-course-active {
     z-index: 1;
 }
 
-.modal-header-info {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-header-info {
     display: flex;
     align-items: center;
     /* ✨ PHASE 7.13: Vertically center icon with text */
@@ -3116,7 +3116,7 @@ body.modern-course-active {
     flex: 1;
 }
 
-.modal-icon-wrapper {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-icon-wrapper {
     font-size: 1.2rem;
     color: white;
     display: flex;
@@ -3129,13 +3129,13 @@ body.modern-course-active {
     flex-shrink: 0;
 }
 
-.modal-title-section {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-title-section {
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
 }
 
-.modal-title-modern {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-title-modern {
     font-size: 1.1rem;
     font-weight: 600;
     color: white;
@@ -3143,7 +3143,7 @@ body.modern-course-active {
     line-height: 1.2;
 }
 
-.modal-subtitle {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-subtitle {
     font-size: 0.75rem;
     opacity: 0.85;
     color: white;
@@ -3151,7 +3151,7 @@ body.modern-course-active {
     line-height: 1.2;
 }
 
-.btn-close-modern {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .btn-close-modern {
     background: transparent;
     border: none;
     color: white;
@@ -3166,12 +3166,12 @@ body.modern-course-active {
     transition: all 0.3s ease;
 }
 
-.btn-close-modern:hover {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .btn-close-modern:hover {
     opacity: 0.7;
     transform: scale(1.1);
 }
 
-.modal-body-modern {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-body-modern {
     padding: 16px 20px !important;
     background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     display: flex;
@@ -3631,37 +3631,37 @@ body.modern-course-active {
         height: 50px;
     }
 
-    .modal-header-modern,
+    :is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-header-modern,
     .add-note-modal:not(.compact-executive-modal) .modal-header-note {
         padding: 1rem 1.5rem;
     }
 
-    .modal-icon-wrapper {
+    :is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-icon-wrapper {
         width: 35px;
         height: 35px;
         font-size: 1rem;
     }
 
-    .modal-title-section h4 {
+    :is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-title-section h4 {
         font-size: 1.1rem;
     }
 
-    .modal-subtitle {
+    :is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-subtitle {
         font-size: 0.85rem;
     }
 
-    .btn-close-modern {
+    :is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .btn-close-modern {
         width: 30px;
         height: 30px;
         top: 1rem;
         right: 1.5rem;
     }
 
-    .modal-body-modern {
+    :is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-body-modern {
         padding: 1.5rem;
     }
 
-    .modal-footer-modern {
+    :is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-footer-modern {
         padding: 1rem 1.5rem;
     }
 
@@ -6863,7 +6863,7 @@ body.modern-course-active {
 }
 
 /* ✨ Modal Header Modern */
-.modal-header-modern {
+:is(.create-question-modal, .create-question-modal-bottom, .compact-executive-modal, .course-detail-page, .course-detail-container) .modal-header-modern {
     background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
 }
 
@@ -10893,19 +10893,19 @@ body.modern-course-active {
     min-height: 32px !important;
 }
 
-.avatar-compact,
-.avatar-compact-placeholder {
+.avatar-compact-wrapper .avatar-compact,
+.avatar-compact-wrapper .avatar-compact-placeholder {
     width: 100% !important;
     height: 100% !important;
     border-radius: 50% !important;
     object-fit: cover !important;
 }
 
-.avatar-compact {
+.avatar-compact-wrapper .avatar-compact {
     border: 1.5px solid #0d9488 !important;
 }
 
-.avatar-compact-placeholder {
+.avatar-compact-wrapper .avatar-compact-placeholder {
     width: 100% !important;
     height: 100% !important;
     border-radius: 50% !important;

@@ -908,7 +908,7 @@ function UsersAdmin() {
 
     if (loading) {
         return (
-            <div className="admin-page-wrapper">
+            <div className="admin-page-wrapper users-admin-page">
                 <AdminHeader />
                 <main className="admin-dashboard-container d-flex align-items-center justify-content-center" style={{ minHeight: "60vh" }}>
                     <div className="text-center p-4">
@@ -925,7 +925,7 @@ function UsersAdmin() {
     }
 
     return (
-        <div className="admin-page-wrapper">
+        <div className="admin-page-wrapper users-admin-page">
             <AdminHeader />
             
             <main className="admin-dashboard-container">
@@ -1294,7 +1294,7 @@ function UsersAdmin() {
                                             </td>
                                             <td className="col-user">
                                                 <div className="user-profile-compact">
-                                                    <div className="avatar-compact">
+                                                    <div className="avatar-compact user-avatar-compact">
                                                         {(user.full_name || user.username || "U").charAt(0).toUpperCase()}
                                                     </div>
                                                     <div className="user-texts">
@@ -1503,16 +1503,16 @@ function UsersAdmin() {
 
                     {/* Modern User Modal */}
                     {showModal && (
-                        <div className="modal-overlay-modern">
-                            <div className="modal-content-modern">
-                                <div className="modal-header-modern">
-                                    <div className="modal-title-section">
-                                        <div className="modal-icon">
+                        <div className="modal-overlay-modern user-admin-modal-overlay">
+                            <div className="modal-content-modern user-admin-modal-content">
+                                <div className="modal-header-modern user-admin-modal-header">
+                                    <div className="modal-title-section user-admin-modal-title-section">
+                                        <div className="modal-icon user-admin-modal-icon">
                                             {modalType === "create" && <MdPersonAdd />}
                                             {modalType === "edit" && <FaEdit />}
                                             {modalType === "view" && <FaEye />}
                                         </div>
-                                        <div className="modal-title-text">
+                                        <div className="modal-title-text user-admin-modal-title-text">
                                             <h2>
                                                 {modalType === "create" && "Buat Akun Pengguna Baru"}
                                                 {modalType === "edit" && "Edit Pengguna"}
@@ -1526,14 +1526,14 @@ function UsersAdmin() {
                                         </div>
                                     </div>
                                     <button 
-                                        className="modal-close-modern"
+                                        className="modal-close-modern user-admin-modal-close"
                                         onClick={() => setShowModal(false)}
                                     >
                                         ×
                                     </button>
                                 </div>
                                 
-                                <div className="modal-body-modern">
+                                <div className="modal-body-modern user-admin-modal-body">
                                     {modalType === "view" ? (
                                         <div className="user-details-view-compact">
                                             {/* User Identity Hero Card */}

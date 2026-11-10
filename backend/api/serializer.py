@@ -1397,6 +1397,8 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
     qa_count = serializers.SerializerMethodField()  # ✨ PHASE 4.18: QA count - kept for forum stats
     # ✨ PHASE 52: Add certificate data for activity tracking (Quiz, Video, Certificate activities)
     certificate = serializers.SerializerMethodField()
+    completion_percentage = serializers.SerializerMethodField()
+    completion_metrics = serializers.SerializerMethodField()
 
 
     class Meta:
@@ -1589,13 +1591,29 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
                         # ✅ Student answered correctly = completion is VALID
                         valid_completions.append(completion)
         
-        # Serialize only the valid completions
+        # Serialize only unique valid completions (strictly deduplicated by variant_item_id)
+        seen_items = set()
+        unique_valid_completions = []
+        for completion in valid_completions:
+            v_id = completion.variant_item_id
+            if v_id not in seen_items:
+                seen_items.add(v_id)
+                unique_valid_completions.append(completion)
+
         serializer = CompletedLessonSerializer(
-            valid_completions, 
+            unique_valid_completions, 
             many=True, 
             context=self.context
         )
         return serializer.data
+
+    def get_completion_percentage(self, obj):
+        """Return overall completion percentage (0-100)"""
+        return obj.completion_percentage()
+
+    def get_completion_metrics(self, obj):
+        """Return comprehensive breakdown of completion items"""
+        return obj.completion_metrics()
 
     def get_certificate(self, obj):
         """✨ PHASE 52: Return certificate data for activity tracking (Quiz, Video, Certificate activities)
@@ -1868,9 +1886,17 @@ class CourseSerializer(serializers.ModelSerializer):
                         # ✅ Student answered correctly = completion is VALID
                         valid_completions.append(completion)
         
-        # Serialize only the valid completions
+        # Serialize only unique valid completions (strictly deduplicated by variant_item_id)
+        seen_items = set()
+        unique_valid_completions = []
+        for completion in valid_completions:
+            v_id = completion.variant_item_id
+            if v_id not in seen_items:
+                seen_items.add(v_id)
+                unique_valid_completions.append(completion)
+
         serializer = CompletedLessonSerializer(
-            valid_completions, 
+            unique_valid_completions, 
             many=True, 
             context=self.context
         )

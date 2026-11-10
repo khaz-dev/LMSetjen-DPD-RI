@@ -11,6 +11,7 @@ import Toast from "../plugin/Toast";
 import apiInstance from "../../utils/axios";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import { usePageCache } from "../../utils/usePageCache";
+import { promptCertificateDownload } from "../../utils/certificateDownloadHelper";
 
 import "./SertifikatKursus.css";
 
@@ -158,7 +159,7 @@ function SertifikatKursus() {
         });
     };
 
-    // Download certificate image
+    // Download certificate (PDF A4 Landscape or PNG)
     const downloadCertificate = async (certificate, e) => {
         if (e) e.stopPropagation();
         if (!certificate?.id) {
@@ -170,57 +171,24 @@ function SertifikatKursus() {
         }
 
         try {
-            setDownloadingId(certificate.id);
             const imageUrl = getCertificateImageUrl(certificate);
+            const userId = UserData()?.user_id;
 
-            if (!imageUrl) {
-                Toast().fire({
-                    icon: "warning",
-                    title: "Gambar sertifikat belum tersedia",
-                    text: "Silakan coba lagi dalam beberapa saat"
-                });
-                setDownloadingId(null);
-                return;
-            }
-
-            const response = await fetch(imageUrl);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = blobUrl;
-            const safeTitle = (certificate.course_title || "Kursus")
-                .replace(/[^\w\s-]/gi, "")
-                .replace(/\s+/g, "_");
-            link.setAttribute("download", `Sertifikat_${safeTitle}_${certificate.certificate_id}.png`);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode.removeChild(link);
-            window.URL.revokeObjectURL(blobUrl);
-
-            Toast().fire({
-                icon: "success",
-                title: "Unduhan Berhasil!",
-                text: "Sertifikat berhasil diunduh ke perangkat Anda",
-                timer: 2000
+            await promptCertificateDownload({
+                imageUrl,
+                courseId: certificate.course_id,
+                userId,
+                certificateId: certificate.formatted_certificate_id || certificate.certificate_id,
+                courseTitle: certificate.course_title || "Kursus",
+                targetElement: document.querySelector('.cert-preview-modal') || document.body
             });
         } catch (error) {
             console.error("Error downloading certificate:", error);
-            const fallbackUrl = getCertificateImageUrl(certificate);
-            if (fallbackUrl) {
-                window.open(fallbackUrl, "_blank");
-            } else {
-                Toast().fire({
-                    icon: "error",
-                    title: "Unduhan Gagal",
-                    text: "Gagal mengunduh sertifikat. Silakan coba lagi"
-                });
-            }
-        } finally {
-            setDownloadingId(null);
+            Toast().fire({
+                icon: "error",
+                title: "Unduhan Gagal",
+                text: "Gagal memproses unduhan sertifikat."
+            });
         }
     };
 
