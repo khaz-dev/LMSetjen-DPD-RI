@@ -29,13 +29,13 @@ const DEFAULT_SUGGESTIONS_STUDENT = [
 
 // Saran pertanyaan cepat bawaan untuk INSTRUKTUR
 const DEFAULT_SUGGESTIONS_INSTRUCTOR = [
-    { label: '📊 Statistik Kursus Saya', query: 'Berapa jumlah siswa terdaftar dan ulasan pada kursus yang saya ajar?' },
+    { label: '📊 Statistik Kursus Saya', query: 'Berapa jumlah peserta terdaftar dan ulasan pada kursus yang saya ajar?' },
     { label: '➕ Panduan Buat Kursus', query: 'Bagaimana panduan membuat dan mengunggah materi kursus baru?' },
     { label: '📦 Spesifikasi SCORM 1.2', query: 'Bagaimana format dan spesifikasi paket modul SCORM 1.2 yang didukung?' },
-    { label: '💬 Tanya Jawab Siswa (Q&A)', query: 'Bagaimana cara merespons pertanyaan dan diskusi dari siswa?' },
+    { label: '💬 Tanya Jawab Peserta (Q&A)', query: 'Bagaimana cara merespons pertanyaan dan diskusi dari peserta?' },
     { label: '📝 Standar Kuis & Kelulusan', query: 'Berapa passing grade standar dan panduan pembuatan evaluasi kuis?' },
     { label: '📜 Template Sertifikat Kursus', query: 'Bagaimana mengatur kelulusan dan sertifikat untuk kursus saya?' },
-    { label: '👥 Manajemen Nilai Siswa', query: 'Bagaimana cara melihat progres belajar dan rekap nilai kuis siswa?' },
+    { label: '👥 Manajemen Nilai Peserta', query: 'Bagaimana cara melihat progres belajar dan rekap nilai kuis peserta?' },
     { label: '🎭 Cek Role Saya', query: 'Peran apa yang sedang aktif pada akun saya?' }
 ];
 
@@ -59,7 +59,7 @@ const getInitialGreeting = (user, role) => {
     }
     if (role === 'instructor') {
         return name
-            ? `Halo, Instruktur ${name}! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 🎓 Ada silabus materi, paket modul SCORM 1.2, atau evaluasi siswa yang ingin Manta bantu?`
+            ? `Halo, Instruktur ${name}! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 🎓 Ada silabus materi, paket modul SCORM 1.2, atau evaluasi peserta yang ingin Manta bantu?`
             : 'Halo, Instruktur! Saya **Manta**, Asisten AI Virtual LMS Setjen DPD RI 🎓 Siap mendampingi perancangan materi, kuis evaluasi, dan interaksi kelas Anda.';
     }
     return name
@@ -87,7 +87,7 @@ const getInitialActions = (user, role) => {
             { label: '📊 Dashboard Instruktur', url: '/instructor/dashboard/', type: 'route' },
             { label: '📚 Kursus Kelolaan', url: '/instructor/courses/', type: 'route' },
             { label: '➕ Buat Kursus Baru', url: '/instructor/create-course/', type: 'route' },
-            { label: '👥 Daftar Siswa', url: '/instructor/students/', type: 'route' }
+            { label: '👥 Daftar Peserta', url: '/instructor/students/', type: 'route' }
         ];
     }
     return [
@@ -145,9 +145,9 @@ const getContextualSuggestions = (pathname, role = 'student') => {
         }
         if (currentPath.includes('/students') || currentPath.includes('/evaluation')) {
             return [
-                { label: '👥 Pantau Progres Siswa', query: 'Bagaimana cara melihat progres belajar dan rekap nilai kuis siswa?' },
-                { label: '💬 Tanya Jawab Siswa', query: 'Bagaimana cara merespons pertanyaan dan diskusi dari siswa?' },
-                { label: '📜 Kelulusan & Sertifikat', query: 'Bagaimana syarat penerbitan sertifikat resmi bagi siswa yang telah lulus?' }
+                { label: '👥 Pantau Progres Peserta', query: 'Bagaimana cara melihat progres belajar dan rekap nilai kuis peserta?' },
+                { label: '💬 Tanya Jawab Peserta', query: 'Bagaimana cara merespons pertanyaan dan diskusi dari peserta?' },
+                { label: '📜 Kelulusan & Sertifikat', query: 'Bagaimana syarat penerbitan sertifikat resmi bagi peserta yang telah lulus?' }
             ];
         }
         return DEFAULT_SUGGESTIONS_INSTRUCTOR;
@@ -1468,7 +1468,7 @@ const SiMantaAvatar = () => {
                                         <strong>Ngobrol dengan Manta AI</strong>
                                         <small>
                                             {currentRole === 'admin' ? 'Monitoring platform, kurasi kursus & user' :
-                                             currentRole === 'instructor' ? 'Silabus, SCORM, kuis & kelola siswa' :
+                                             currentRole === 'instructor' ? 'Silabus, SCORM, kuis & kelola peserta' :
                                              'Tanya materi, kuis, atau panduan LMS'}
                                         </small>
                                     </div>
@@ -1562,7 +1562,7 @@ const SiMantaAvatar = () => {
                                 <p className="simanta-chat-subtitle">
                                     <span className="simanta-status-dot" style={{ width: 5, height: 5 }} />
                                     {currentRole === 'admin' ? 'Pusat Administrator LMS' :
-                                     currentRole === 'instructor' ? 'Mode Instruktur & Pengajar' :
+                                     currentRole === 'instructor' ? 'Mode Instruktur' :
                                      'Asisten LMS Setjen DPD RI'}
                                 </p>
                             </div>

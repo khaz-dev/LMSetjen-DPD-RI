@@ -1895,7 +1895,7 @@ function SortableLessonItem({
                             <div className="mt-2 py-1 px-2 rounded border d-flex align-items-center gap-2 small text-muted bg-light" style={{ fontSize: "0.74rem", borderLeft: "3px solid #0f766e" }}>
                                 <i className="fas fa-shield-alt text-teal"></i>
                                 <div>
-                                    <strong>Pelacakan SCORM 1.2 Aktif:</strong> Nilai evaluasi (<code>cmi.core.score.raw</code>) dan status kelulusan (<code>cmi.core.lesson_status</code>) disinkronkan secara otomatis melalui SCORM RTE saat siswa berinteraksi.
+                                    <strong>Pelacakan SCORM 1.2 Aktif:</strong> Nilai evaluasi (<code>cmi.core.score.raw</code>) dan status kelulusan (<code>cmi.core.lesson_status</code>) disinkronkan secara otomatis melalui SCORM RTE saat peserta berinteraksi.
                                 </div>
                             </div>
                         ) : (
@@ -4917,7 +4917,7 @@ function CourseEditCurriculum() {
                                                         </p>
                                                     ) : (
                                                         <p className="mb-0 small text-muted">
-                                                            Kursus ini belum memiliki Pre/Post-Test. Siswa akan langsung memulai dari Bagian 1.
+                                                            Kursus ini belum memiliki Pre/Post-Test. Peserta akan langsung memulai dari Bagian 1.
                                                         </p>
                                                     )}
                                                 </div>
@@ -4936,7 +4936,7 @@ function CourseEditCurriculum() {
                                         <div className="mt-2 pt-2 border-top border-success border-opacity-10">
                                             <small className="text-secondary d-flex align-items-center gap-1">
                                                 <i className="fas fa-info-circle text-success"></i>
-                                                Pre-test otomatis muncul di urutan pertama pada antarmuka belajar siswa tanpa perlu diurutkan manual di sini.
+                                                Pre-test otomatis muncul di urutan pertama pada antarmuka belajar peserta tanpa perlu diurutkan manual di sini.
                                             </small>
                                         </div>
                                     </div>
@@ -5117,7 +5117,7 @@ function CourseEditCurriculum() {
                                         <div className="mt-2 pt-2 border-top border-danger border-opacity-10">
                                             <small className="text-secondary d-flex align-items-center gap-1">
                                                 <i className="fas fa-info-circle text-danger"></i>
-                                                Post-test otomatis muncul di urutan paling akhir pada antarmuka belajar siswa setelah seluruh materi dan kuis diselesaikan.
+                                                Post-test otomatis muncul di urutan paling akhir pada antarmuka belajar peserta setelah seluruh materi dan kuis diselesaikan.
                                             </small>
                                         </div>
                                     </div>

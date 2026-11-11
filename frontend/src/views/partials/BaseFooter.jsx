@@ -29,8 +29,8 @@ function BaseFooter() {
   const config = {
     brand: {
       name: "LMSetjen DPD RI",
-      description: "Platform e-learning BPSDM OKK Setjen DPD RI untuk pelatihan digital & pengembangan kompetensi aparatur sipil negara terpadu.",
-      copyright: `©${currentYear} BPSDM OKK Setjen DPD RI`,
+      description: "Platform e-learning Biro Organisasi Keanggotaan dan Kepegawaian (OKK) Setjen DPD RI untuk pelatihan digital & pengembangan kompetensi aparatur sipil negara terpadu.",
+      copyright: `©${currentYear} Biro OKK Setjen DPD RI`,
       version: `${version || APP_VERSION}`
     },
     contact: {
@@ -100,12 +100,12 @@ function BaseFooter() {
                     />
                   </picture>
                 </div>
-                <div className="footer-institution-logo-item" title="Bagian Pengembangan Sumber Daya Manusia (BPSDM)">
+                <div className="footer-institution-logo-item" title="Biro Organisasi Keanggotaan dan Kepegawaian (Biro OKK)">
                   <picture>
                     <source srcSet={logoBpsdmWebP} type="image/webp" />
                     <img
                       src={logoBpsdmPNG}
-                      alt="Logo BPSDM Setjen DPD RI"
+                      alt="Logo Biro OKK Setjen DPD RI"
                       className="footer-institution-logo-img"
                       height="26"
                       width="23"
@@ -141,7 +141,7 @@ function BaseFooter() {
               </h5>
               <ul className="footer-section-list">
                 <li><Link to="/user-guide/" className="footer-link">Panduan Pengguna</Link></li>
-                <li><Link to="/contact/" className="footer-link">Menjadi Pemateri</Link></li>
+                <li><Link to="/contact/" className="footer-link">Menjadi Instruktur</Link></li>
                 <li>
                   <a href="#" className="footer-link footer-link-badge-wrap" onClick={handleComingSoon}>
                     <span>Dapatkan Aplikasi</span>
@@ -169,7 +169,7 @@ function BaseFooter() {
                 <div className="footer-contact-icon-box" aria-hidden="true">
                   <i className="fas fa-envelope"></i>
                 </div>
-                <a href={`mailto:${config.contact.email}`} className="footer-contact-link" title="Kirim email ke BPSDM OKK">
+                <a href={`mailto:${config.contact.email}`} className="footer-contact-link" title="Kirim email ke Biro OKK">
                   {config.contact.email}
                 </a>
               </div>

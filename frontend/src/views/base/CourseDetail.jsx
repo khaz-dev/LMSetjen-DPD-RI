@@ -540,7 +540,7 @@ function CourseDetail() {
                                                 <i className="fas fa-chalkboard-user" style={{ fontSize: "0.8rem" }}></i>
                                             </div>
                                             <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
-                                                Instruktur Pengajar
+                                                Instruktur
                                             </h5>
                                         </div>
                                         <button
@@ -572,7 +572,7 @@ function CourseDetail() {
                                             </p>
                                             <div className="d-flex align-items-center gap-2 small text-secondary" style={{ fontSize: "0.78rem" }}>
                                                 <span><i className="fas fa-star text-warning me-1"></i>{(course.teacher?.average_rating || 5.0).toFixed(1)} Rating</span>
-                                                <span><i className="fas fa-users text-teal me-1" style={{ color: "#0d9488" }}></i>{course.teacher?.total_students || 0} Siswa</span>
+                                                <span><i className="fas fa-users text-teal me-1" style={{ color: "#0d9488" }}></i>{course.teacher?.total_students || 0} Peserta</span>
                                                 <span><i className="fas fa-book text-muted me-1"></i>{course.teacher?.total_courses || 1} Kursus</span>
                                             </div>
                                         </div>

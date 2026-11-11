@@ -425,7 +425,7 @@ function CookiePolicy() {
                       <ul className="cookie-feature-list">
                         <li>Token autentikasi sesi JWT kedinasan</li>
                         <li>Proteksi keamanan Cross-Site Request Forgery (CSRF)</li>
-                        <li>Verifikasi hak akses peran (Admin / Instruktur / Siswa)</li>
+                        <li>Verifikasi hak akses peran (Admin / Instruktur / Peserta)</li>
                       </ul>
                     </div>
 

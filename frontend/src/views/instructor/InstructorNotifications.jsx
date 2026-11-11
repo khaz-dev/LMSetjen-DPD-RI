@@ -52,8 +52,8 @@ function InstructorNotifications() {
         { value: 'quiz_deleted', label: 'Hapus Kuis', icon: 'fa-trash-can', color: 'rose', role: 'instructor' },
         { value: 'announcement_posted', label: 'Posting Pengumuman', icon: 'fa-bullhorn', color: 'amber', role: 'instructor' },
         { value: 'grade_recorded', label: 'Berikan Nilai', icon: 'fa-award', color: 'indigo', role: 'instructor' },
-        { value: 'student_enrolled_manual', label: 'Daftar Siswa Manual', icon: 'fa-user-plus', color: 'emerald', role: 'instructor' },
-        { value: 'student_unenrolled', label: 'Hapus Siswa', icon: 'fa-user-minus', color: 'rose', role: 'instructor' },
+        { value: 'student_enrolled_manual', label: 'Daftar Peserta Manual', icon: 'fa-user-plus', color: 'emerald', role: 'instructor' },
+        { value: 'student_unenrolled', label: 'Hapus Peserta', icon: 'fa-user-minus', color: 'rose', role: 'instructor' },
         { value: 'testimonial_posted', label: 'Kirim Testimoni', icon: 'fa-heart', color: 'amber', role: 'instructor' },
         { value: 'testimonial_updated', label: 'Update Testimoni', icon: 'fa-pen-to-square', color: 'blue', role: 'instructor' },
         { value: 'testimonial_deleted', label: 'Hapus Testimoni', icon: 'fa-trash-can', color: 'rose', role: 'instructor' },
@@ -61,7 +61,7 @@ function InstructorNotifications() {
         { value: 'review_deleted', label: 'Hapus Review', icon: 'fa-trash-can', color: 'rose', role: 'instructor' },
 
         // Student Learning Activities
-        { value: 'enrollment', label: 'Pendaftaran Siswa', icon: 'fa-user-graduate', color: 'emerald', role: 'student' },
+        { value: 'enrollment', label: 'Pendaftaran Peserta', icon: 'fa-user-graduate', color: 'emerald', role: 'student' },
         { value: 'course_completed', label: 'Selesaikan Kursus', icon: 'fa-graduation-cap', color: 'emerald', role: 'student' },
         { value: 'certificate_earned', label: 'Raih Sertifikat', icon: 'fa-certificate', color: 'amber', role: 'student' },
         { value: 'lesson_completed', label: 'Selesaikan Pelajaran', icon: 'fa-circle-check', color: 'emerald', role: 'student' },
@@ -200,7 +200,7 @@ function InstructorNotifications() {
         if (found) {
             return {
                 ...found,
-                roleCategory: activity.role_at_time === 'instructor' ? 'Pengajaran' : 'Siswa'
+                roleCategory: activity.role_at_time === 'instructor' ? 'Instruktur' : 'Peserta'
             };
         }
 
@@ -236,7 +236,7 @@ function InstructorNotifications() {
             icon,
             color,
             label,
-            roleCategory: activity.role_at_time === 'instructor' ? 'Pengajaran' : 'Siswa'
+            roleCategory: activity.role_at_time === 'instructor' ? 'Instruktur' : 'Peserta'
         };
     };
 
@@ -325,7 +325,7 @@ function InstructorNotifications() {
                                             Riwayat Aktivitas & Log
                                         </h2>
                                         <p className="act-hero-desc">
-                                            Monitor rekam jejak pengajaran materi, partisipasi kuis, dan interaksi siswa di lingkungan LMSetjen DPD RI.
+                                            Monitor rekam jejak aktivitas instruktur, partisipasi kuis, dan interaksi peserta di lingkungan LMSetjen DPD RI.
                                         </p>
                                     </div>
 
@@ -384,7 +384,7 @@ function InstructorNotifications() {
                                         </div>
                                         <div className="act-stat-chip-info">
                                             <span className="act-stat-chip-val">{pointsData?.summary?.student_enrollment?.count || 0}</span>
-                                            <span className="act-stat-chip-lbl">Siswa Terdaftar</span>
+                                            <span className="act-stat-chip-lbl">Peserta Terdaftar</span>
                                         </div>
                                     </div>
                                     <div className="act-stat-chip">
@@ -423,7 +423,7 @@ function InstructorNotifications() {
                                             onClick={() => handleTabChange('teaching')}
                                         >
                                             <i className="fas fa-chalkboard-user"></i>
-                                            <span>Pengajaran</span>
+                                            <span>Aktivitas Instruktur</span>
                                         </button>
                                         <button
                                             type="button"
@@ -431,7 +431,7 @@ function InstructorNotifications() {
                                             onClick={() => handleTabChange('student')}
                                         >
                                             <i className="fas fa-user-graduate"></i>
-                                            <span>Aktivitas Siswa</span>
+                                            <span>Aktivitas Peserta</span>
                                         </button>
                                         <button
                                             type="button"
@@ -449,7 +449,7 @@ function InstructorNotifications() {
                                         <input
                                             type="text"
                                             className="act-search-input"
-                                            placeholder="Cari aktivitas, materi, siswa..."
+                                            placeholder="Cari aktivitas, materi, peserta..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                         />
@@ -689,7 +689,7 @@ function InstructorNotifications() {
                                         <p className="act-empty-desc">
                                             {hasActiveFilters
                                                 ? 'Tidak ada data aktivitas yang sesuai dengan kriteria filter atau pencarian Anda.'
-                                                : 'Aktivitas pengajaran materi dan interaksi siswa akan otomatis tercatat di sini.'}
+                                                : 'Aktivitas materi instruktur dan interaksi peserta akan otomatis tercatat di sini.'}
                                         </p>
                                         {hasActiveFilters && (
                                             <button
@@ -845,7 +845,7 @@ function InstructorNotifications() {
                                                     </div>
                                                     <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1">
                                                         <i className="fas fa-user-graduate text-info"></i>
-                                                        <span>Siswa Terdaftar: <strong>{pointsData?.summary?.student_enrollment?.count || 0}</strong> ({pointsData?.summary?.student_enrollment?.points || 0} pt)</span>
+                                                        <span>Peserta Terdaftar: <strong>{pointsData?.summary?.student_enrollment?.count || 0}</strong> ({pointsData?.summary?.student_enrollment?.points || 0} pt)</span>
                                                     </div>
                                                 </div>
                                             </div>

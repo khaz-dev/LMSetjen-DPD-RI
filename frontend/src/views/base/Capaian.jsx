@@ -525,14 +525,14 @@ function Capaian() {
                         </div>
                       </div>
 
-                      {/* Metric 3: Instruktur & Pengajar */}
+                      {/* Metric 3: Instruktur */}
                       <div className="col-sm-6 col-xl-3">
                         <div className={`metric-box border-indigo ${isLoadingStats ? "is-loading" : ""}`}>
                           <div className="metric-icon-wrap bg-indigo-subtle text-indigo">
                             <i className="bi bi-person-workspace" aria-hidden="true"></i>
                           </div>
                           <div className="metric-val">{stats.total_teachers} Instruktur</div>
-                          <div className="metric-title">Tenaga Pengajar</div>
+                          <div className="metric-title">Instruktur</div>
                           <small className="metric-sub text-muted">Widyaiswara & pakar parlemen</small>
                         </div>
                       </div>
@@ -734,7 +734,7 @@ function Capaian() {
                           </div>
                           <div>
                             <h3 className="milestone-title">Keamanan Sesi JWT & Kontrol Akses RBAC</h3>
-                            <p className="milestone-text">Penerapan enkripsi token otentikasi JWT dengan rotasi berkala, proteksi header HTTP ketat, serta pemisahan hak akses berbasis peran (Admin, Instruktur, Siswa).</p>
+                            <p className="milestone-text">Penerapan enkripsi token otentikasi JWT dengan rotasi berkala, proteksi header HTTP ketat, serta pemisahan hak akses berbasis peran (Admin, Instruktur, Peserta).</p>
                           </div>
                         </div>
                       </div>

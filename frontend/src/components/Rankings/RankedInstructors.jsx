@@ -369,7 +369,7 @@ const RankedInstructors = ({ maxResults = 5 }) => {
                         </div>
                         <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1 shadow-xs">
                           <i className="fas fa-user-graduate text-info"></i>
-                          <span>Siswa Terdaftar: <strong>{breakdownData?.summary?.student_enrollment?.count || 0}</strong> ({breakdownData?.summary?.student_enrollment?.points || 0} pt)</span>
+                          <span>Peserta Terdaftar: <strong>{breakdownData?.summary?.student_enrollment?.count || 0}</strong> ({breakdownData?.summary?.student_enrollment?.points || 0} pt)</span>
                         </div>
                       </div>
                     </div>

@@ -129,7 +129,7 @@ const CourseInstructor = ({ teacher, courseCount = 0 }) => {
                             <i className="fas fa-star text-warning me-1"></i>{(teacher?.average_rating || 5.0).toFixed(1)} Rating
                         </span>
                         <span className="badge bg-white text-secondary border px-2.5 py-1" style={{ fontSize: "0.74rem" }}>
-                            <i className="fas fa-users text-primary me-1"></i>{teacher?.total_students || 0} Siswa
+                            <i className="fas fa-users text-primary me-1"></i>{teacher?.total_students || 0} Peserta
                         </span>
                     </div>
                 </div>

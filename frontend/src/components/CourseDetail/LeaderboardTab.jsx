@@ -224,7 +224,7 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
                             <div className="global-link-alert">
                                 <i className="fas fa-link fa-lg"></i>
                                 <div>
-                                    <strong>Terhubung ke Profil Global Siswa:</strong> Anda memiliki akumulasi total <strong>{myStats.global_stats.lifetime_points} Global Points</strong> di sistem LMSetjen DPD RI. Poin yang diraih dari kursus ini otomatis meningkatkan level & peringkat platform Anda!
+                                    <strong>Terhubung ke Profil Global Peserta:</strong> Anda memiliki akumulasi total <strong>{myStats.global_stats.lifetime_points} Global Points</strong> di sistem LMSetjen DPD RI. Poin yang diraih dari kursus ini otomatis meningkatkan level & peringkat platform Anda!
                                 </div>
                             </div>
                         </div>
@@ -470,7 +470,7 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
                     <h6 className="mb-0 fw-bold">Formula & Transparansi Perhitungan Skor Kursus (1.000 XP)</h6>
                 </div>
                 <p className="text-muted small mb-3">
-                    Setiap pilar dinilai secara objektif untuk mengukur integritas dan pertumbuhan kompetensi siswa secara komprehensif:
+                    Setiap pilar dinilai secara objektif untuk mengukur integritas dan pertumbuhan kompetensi peserta secara komprehensif:
                 </p>
 
                 <div className="formula-grid">
@@ -481,7 +481,7 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
 
                     <div className="formula-item">
                         <h6><i className="fas fa-chart-line text-emerald me-1"></i> 2. Efektivitas Belajar (35% / 350 XP)</h6>
-                        <small>Mengukur lonjakan pemahaman dari Pre-Test ke Post-Test (Normalized Learning Gain). Siswa yang paling berkembang mendapatkan apresiasi tertinggi.</small>
+                        <small>Mengukur lonjakan pemahaman dari Pre-Test ke Post-Test (Normalized Learning Gain). Peserta yang paling berkembang mendapatkan apresiasi tertinggi.</small>
                     </div>
 
                     <div className="formula-item">
@@ -497,7 +497,7 @@ function LeaderboardTab({ courseId, enrollmentId, activeTab }) {
 
                 <div className="mt-3 pt-3 border-top d-flex align-items-center gap-2 text-muted small">
                     <i className="fas fa-shield-alt text-teal"></i>
-                    <span>Poin dari kursus ini terhubung dan menyumbang langsung ke <strong>StudentPoints</strong> profil global siswa di seluruh sistem LMS Setjen DPD RI.</span>
+                    <span>Poin dari kursus ini terhubung dan menyumbang langsung ke <strong>StudentPoints</strong> profil global peserta di seluruh sistem LMS Setjen DPD RI.</span>
                 </div>
             </div>
         </div>

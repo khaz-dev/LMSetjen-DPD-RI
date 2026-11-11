@@ -123,7 +123,7 @@ function CourseEvaluation() {
 
                                             <div className="ce-subtext">
                                                 <i className="fas fa-info-circle text-teal me-1"></i>
-                                                Rekapitulasi efektivitas pembelajaran Pre &rarr; Post-Test, ulasan kepuasan siswa, perolehan XP, dan pantauan integritas ujian.
+                                                Rekapitulasi efektivitas pembelajaran Pre &rarr; Post-Test, ulasan kepuasan peserta, perolehan XP, dan pantauan integritas ujian.
                                             </div>
                                         </div>
 

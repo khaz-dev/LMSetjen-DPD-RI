@@ -479,7 +479,7 @@ function Courses() {
                                             <input
                                                 type="text"
                                                 className="form-control courses-search-input"
-                                                placeholder="Cari kursus berdasarkan judul, kategori, atau pengajar..."
+                                                placeholder="Cari kursus berdasarkan judul, kategori, atau instruktur..."
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                             />
@@ -683,7 +683,7 @@ function Courses() {
                                                                     {c.course?.category?.title || "Umum"}
                                                                 </span>
                                                                 {c.course?.teacher?.full_name && (
-                                                                    <span className="course-instructor-text" title={`Pengajar: ${c.course.teacher.full_name}`}>
+                                                                    <span className="course-instructor-text" title={`Instruktur: ${c.course.teacher.full_name}`}>
                                                                         <i className="fas fa-chalkboard-user"></i>
                                                                         {c.course.teacher.full_name}
                                                                     </span>
@@ -857,7 +857,7 @@ function Courses() {
 
                                                             <div className="course-list-bottom-row">
                                                                 {c.course?.teacher?.full_name && (
-                                                                    <span className="course-instructor-text" title={`Pengajar: ${c.course.teacher.full_name}`}>
+                                                                    <span className="course-instructor-text" title={`Instruktur: ${c.course.teacher.full_name}`}>
                                                                         <i className="fas fa-chalkboard-user"></i>
                                                                         {c.course.teacher.full_name}
                                                                     </span>

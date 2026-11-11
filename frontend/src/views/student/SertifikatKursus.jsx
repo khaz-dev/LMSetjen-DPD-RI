@@ -609,7 +609,7 @@ function SertifikatKursus() {
                                                     <div className="cert-card-instructor">
                                                         <i className="fas fa-user-tie text-teal me-2"></i>
                                                         <span className="text-truncate">
-                                                            {cert.instructor_name || "BPSDM Setjen DPD RI"}
+                                                            {cert.instructor_name || "Biro Organisasi Keanggotaan dan Kepegawaian Setjen DPD RI"}
                                                         </span>
                                                     </div>
 
@@ -750,7 +750,7 @@ function SertifikatKursus() {
                                                     <div className="cert-list-meta-sub">
                                                         <span>
                                                             <i className="fas fa-user-tie text-teal me-1"></i>
-                                                            {cert.instructor_name || "BPSDM Setjen DPD RI"}
+                                                            {cert.instructor_name || "Biro Organisasi Keanggotaan dan Kepegawaian Setjen DPD RI"}
                                                         </span>
                                                         <span className="bullet-sep">•</span>
                                                         <span>

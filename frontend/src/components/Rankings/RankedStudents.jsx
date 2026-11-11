@@ -46,7 +46,7 @@ const RankedStudents = ({ maxResults = 5 }) => {
         Toast().fire({
           icon: 'error',
           title: 'Error',
-          text: 'Gagal memuat daftar siswa terbaik'
+          text: 'Gagal memuat daftar peserta terbaik'
         });
       }
       setStudents([]);
@@ -137,7 +137,7 @@ const RankedStudents = ({ maxResults = 5 }) => {
       <div className="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
         <h5 className="mb-0 d-flex align-items-center gap-2">
           <i className="fas fa-graduation-cap"></i>
-          <span>Siswa Terbaik</span>
+          <span>Peserta Terbaik</span>
         </h5>
         <span className="badge bg-white text-primary fw-bold">Top {students.length > 0 ? students.length : maxResults}</span>
       </div>
@@ -182,7 +182,7 @@ const RankedStudents = ({ maxResults = 5 }) => {
               ? 'Belum ada data untuk bulan ini'
               : period === 'yearly'
               ? 'Belum ada data untuk tahun ini'
-              : 'Belum ada data siswa'}
+              : 'Belum ada data peserta'}
           </p>
         </div>
       )}
@@ -302,7 +302,7 @@ const RankedStudents = ({ maxResults = 5 }) => {
               <div className="modal-header py-3">
                 <h5 className="modal-title fw-bold fs-6 mb-0">
                   <i className="fas fa-trophy me-2"></i>
-                  Rincian Poin Siswa
+                  Rincian Poin Peserta
                 </h5>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button>
               </div>
@@ -346,7 +346,7 @@ const RankedStudents = ({ maxResults = 5 }) => {
                   />
                   <div>
                     <h6 className="fw-bold mb-0 text-dark">{selectedStudent?.full_name}</h6>
-                    <small className="text-muted">{selectedStudent?.position_name || selectedStudent?.organization_unit_name || 'Siswa LMS'}</small>
+                    <small className="text-muted">{selectedStudent?.position_name || selectedStudent?.organization_unit_name || 'Peserta LMS'}</small>
                   </div>
                   <div className="ms-auto text-end">
                     <span className="badge fs-6 px-3 py-2" style={{ backgroundColor: '#1d4ed8', color: '#ffffff', fontWeight: 700 }}>

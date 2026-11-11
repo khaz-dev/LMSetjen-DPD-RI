@@ -68,7 +68,7 @@ function CourseCertificateDesign() {
         body_font: "'Montserrat', sans-serif",
         agency_sup: "SEKRETARIAT JENDERAL",
         agency_main: "DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA",
-        agency_sub: "PUSAT PENGEMBANGAN SUMBER DAYA MANUSIA APARATUR",
+        agency_sub: "BIRO ORGANISASI KEANGGOTAAN DAN KEPEGAWAIAN",
         certificate_title: "SERTIFIKAT KELULUSAN",
         certificate_subtitle: "Certificate of Completion",
         statement_text: "Telah berhasil dan berintegritas menyelesaikan seluruh materi pembelajaran mandiri, penugasan studi kasus, serta memenuhi standar evaluasi kelulusan pada program:",

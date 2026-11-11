@@ -77,7 +77,7 @@ export const validateCategory = (categoryId) => {
 export const validateLevel = (level) => {
   const warnings = [];
   if (!level) {
-    warnings.push("Menambahkan tingkat kesulitan membantu siswa memilih dengan tepat");
+    warnings.push("Menambahkan tingkat kesulitan membantu peserta memilih dengan tepat");
   }
   return { errors: [], warnings };
 };

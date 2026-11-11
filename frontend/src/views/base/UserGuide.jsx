@@ -232,7 +232,7 @@ function UserGuide() {
                                             <i className="fas fa-book-open me-1"></i> 7 {language === 'en' ? 'Guide Topics' : 'Topik Panduan'}
                                         </span>
                                         <span className="quick-meta-pill">
-                                            <i className="fas fa-user-check me-1"></i> {language === 'en' ? 'Students, Instructors & Admins' : 'Peserta, Pemateri & Admin'}
+                                            <i className="fas fa-user-check me-1"></i> {language === 'en' ? 'Students, Instructors & Admins' : 'Peserta, Instruktur & Admin'}
                                         </span>
                                         <span className="quick-meta-pill">
                                             <i className="fas fa-calendar-check me-1"></i> {t.lastUpdated}: {liveVersion ? `v${liveVersion}` : 'v1.1.0'} (Nov 2026)
@@ -402,7 +402,7 @@ function UserGuide() {
                                                             <div className="role-top">
                                                                 <span className="role-tag">{dash.role}</span>
                                                                 <span className="role-icon-mini">
-                                                                    <i className={dash.role.includes('Peserta') || dash.role.includes('Student') ? 'fas fa-graduation-cap' : dash.role.includes('Pemateri') || dash.role.includes('Instructor') ? 'fas fa-chalkboard-teacher' : 'fas fa-user-shield'}></i>
+                                                                    <i className={dash.role.includes('Peserta') || dash.role.includes('Student') ? 'fas fa-graduation-cap' : dash.role.includes('Instruktur') || dash.role.includes('Instructor') ? 'fas fa-chalkboard-teacher' : 'fas fa-user-shield'}></i>
                                                                 </span>
                                                             </div>
                                                             <code className="compact-path-code">{dash.path}</code>

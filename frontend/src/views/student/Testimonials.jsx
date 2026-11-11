@@ -113,7 +113,7 @@ function Testimonials() {
     };
 
     // Extract student profile metadata
-    const authorName = activeProfile?.full_name || userData?.full_name || userData?.username || "Siswa LMSetjen DPD RI";
+    const authorName = activeProfile?.full_name || userData?.full_name || userData?.username || "Peserta LMSetjen DPD RI";
     const authorRawAvatar = activeProfile?.image || userData?.image || null;
     const authorAvatar = getValidProfileImageUrl(authorRawAvatar);
 
@@ -121,7 +121,7 @@ function Testimonials() {
     const resolvedGolongan = activeProfile?.golongan || userData?.golongan || "";
     const authorUnit = extractUnit(activeProfile) || extractUnit(userData) || (activeProfile ? "Setjen DPD RI" : "");
 
-    let authorTitle = "Siswa LMS Setjen DPD RI";
+    let authorTitle = "Peserta LMS Setjen DPD RI";
     if (resolvedPosition && resolvedGolongan) {
         authorTitle = `${resolvedPosition} (${resolvedGolongan})`;
     } else if (resolvedPosition) {
@@ -149,7 +149,7 @@ function Testimonials() {
                                     <div className="spinner-border text-teal" role="status" style={{ width: "3rem", height: "3rem" }}>
                                         <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted">Memuat Testimoni Siswa...</p>
+                                    <p className="mt-3 text-muted">Memuat Testimoni Peserta...</p>
                                 </div>
                             </div>
                         </div>
@@ -178,7 +178,7 @@ function Testimonials() {
                                             <i className="fas fa-quote-left"></i>
                                         </div>
                                         <div>
-                                            <h2 className="header-title mb-1">Testimoni Student Platform</h2>
+                                            <h2 className="header-title mb-1">Testimoni Peserta Platform</h2>
                                             <p className="header-subtitle mb-0">
                                                 Bagikan pengalaman dan ulasan belajar Anda pada portal LMS Setjen DPD RI
                                             </p>
@@ -226,7 +226,7 @@ function Testimonials() {
                                                                 <strong className="text-success">Testimoni Anda Telah Disetujui & Tampil di Beranda!</strong>
                                                             </div>
                                                             <p className="small text-muted mb-0">
-                                                                Terima kasih telah memberikan ulasan. Testimoni ini telah dipublikasikan pada halaman utama portal LMSetjen DPD RI dan Anda memperoleh reward <strong>+50 Poin Siswa</strong>.
+                                                                Terima kasih telah memberikan ulasan. Testimoni ini telah dipublikasikan pada halaman utama portal LMSetjen DPD RI dan Anda memperoleh reward <strong>+50 Poin Peserta</strong>.
                                                             </p>
                                                         </div>
                                                     ) : currentTestimonial.status === 'pending' ? (
@@ -264,7 +264,7 @@ function Testimonials() {
                                                 <div>
                                                     <h5 className="fw-bold mb-1 text-dark">
                                                         <i className="fas fa-pen-fancy text-teal me-2"></i>
-                                                        {currentTestimonial ? "Edit Testimoni Anda" : "Tulis Testimoni Siswa"}
+                                                        {currentTestimonial ? "Edit Testimoni Anda" : "Tulis Testimoni Peserta"}
                                                     </h5>
                                                     <span className="small text-muted">
                                                         Penilaian Anda membantu peningkatan kualitas pembelajaran digital Setjen DPD RI
@@ -351,7 +351,7 @@ function Testimonials() {
                                                     {/* Badges */}
                                                     <div className="d-flex flex-wrap justify-content-center gap-1 mb-3">
                                                         <span className="badge badge-role-student">
-                                                            <i className="fas fa-graduation-cap me-1"></i>Sebagai Siswa
+                                                            <i className="fas fa-graduation-cap me-1"></i>Sebagai Peserta
                                                         </span>
                                                         {currentTestimonial?.status === 'approved' ? (
                                                             <span className="badge bg-success-subtle text-success border border-success-subtle">
@@ -396,14 +396,14 @@ function Testimonials() {
                                                         <span className="badge badge-points-reward">+50 Poin</span>
                                                     </div>
                                                     <p className="small text-muted mb-0">
-                                                        Saat testimoni disetujui Admin, Anda otomatis mendapatkan <strong>50 Poin</strong> yang berkontribusi langsung pada akumulasi skor & peringkat Anda di Leaderboard Siswa.
+                                                        Saat testimoni disetujui Admin, Anda otomatis mendapatkan <strong>50 Poin</strong> yang berkontribusi langsung pada akumulasi skor & peringkat Anda di Leaderboard Peserta.
                                                     </p>
                                                 </div>
 
                                                 {/* Activity Tracking Breakdown */}
                                                 <div className="activity-timeline-box mb-3">
                                                     <span className="timeline-title d-block fw-semibold text-dark small mb-2">
-                                                        <i className="fas fa-clock-rotate-left me-1 text-teal"></i>Terekap di Riwayat Aktivitas Siswa:
+                                                        <i className="fas fa-clock-rotate-left me-1 text-teal"></i>Terekap di Riwayat Aktivitas Peserta:
                                                     </span>
                                                     <ul className="activity-list list-unstyled mb-0">
                                                         <li className="d-flex align-items-start gap-2 mb-2">
@@ -442,7 +442,7 @@ function Testimonials() {
                                                         to="/rankings/" 
                                                         className="btn btn-action-rankings flex-fill"
                                                     >
-                                                        <i className="fas fa-trophy me-1"></i>Peringkat Siswa
+                                                        <i className="fas fa-trophy me-1"></i>Peringkat Peserta
                                                     </Link>
                                                 </div>
                                             </div>

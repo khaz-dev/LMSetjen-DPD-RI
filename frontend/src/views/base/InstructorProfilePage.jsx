@@ -289,7 +289,7 @@ function InstructorProfilePage() {
                                         </span>
                                     ) : (
                                         <span className="instructor-location-badge" style={{ background: '#f1f5f9', color: '#475569', borderColor: '#cbd5e1' }}>
-                                            <i className="fas fa-globe me-1"></i> Pengajar Umum {teacher.pekerjaan ? `• ${teacher.pekerjaan}` : ""}
+                                            <i className="fas fa-globe me-1"></i> Instruktur Umum {teacher.pekerjaan ? `• ${teacher.pekerjaan}` : ""}
                                         </span>
                                     )}
                                     {teacher.country && (
@@ -370,7 +370,7 @@ function InstructorProfilePage() {
                                 </div>
                                 <div className="stat-pill-info">
                                     <span className="stat-pill-num">{totalStudents}</span>
-                                    <span className="stat-pill-lbl">Siswa</span>
+                                    <span className="stat-pill-lbl">Peserta</span>
                                 </div>
                             </div>
 
@@ -491,7 +491,7 @@ function InstructorProfilePage() {
                                         </div>
                                         <div className="rep-caption">
                                             {reviews.length > 0
-                                                ? `Berdasarkan ${reviews.length} ulasan siswa`
+                                                ? `Berdasarkan ${reviews.length} ulasan peserta`
                                                 : "Indeks kepuasan peserta diklat DPD RI"}
                                         </div>
                                     </div>
@@ -584,7 +584,7 @@ function InstructorProfilePage() {
                                                                     </div>
                                                                     <div className="meta-stat-item text-secondary">
                                                                         <i className="fas fa-users me-1"></i>
-                                                                        <span>{course.students?.length || 0} Siswa</span>
+                                                                        <span>{course.students?.length || 0} Peserta</span>
                                                                     </div>
                                                                 </div>
 
@@ -623,7 +623,7 @@ function InstructorProfilePage() {
                                             <i className="fas fa-comments"></i>
                                         </div>
                                         <div>
-                                            <h2 className="compact-card-heading mb-0">Ulasan & Testimoni Siswa</h2>
+                                            <h2 className="compact-card-heading mb-0">Ulasan & Testimoni Peserta</h2>
                                             <span className="compact-card-subheading">Tanggapan dari para peserta pelatihan</span>
                                         </div>
                                     </div>
@@ -688,7 +688,7 @@ function InstructorProfilePage() {
                                             </div>
                                             <h4 className="empty-review-title">Belum Ada Ulasan</h4>
                                             <p className="empty-review-text">
-                                                Belum ada ulasan siswa untuk instruktur ini. Ulasan akan muncul setelah peserta menyelesaikan kursus dan memberikan penilaian.
+                                                Belum ada ulasan peserta untuk instruktur ini. Ulasan akan muncul setelah peserta menyelesaikan kursus dan memberikan penilaian.
                                             </p>
                                         </div>
                                     )}

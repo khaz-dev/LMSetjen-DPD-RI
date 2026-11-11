@@ -1545,7 +1545,7 @@ class CertificateTemplateConfig(models.Model):
     # Lembaga & Kop
     agency_sup = models.CharField(max_length=255, default="SEKRETARIAT JENDERAL")
     agency_main = models.CharField(max_length=255, default="DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA")
-    agency_sub = models.CharField(max_length=255, default="PUSAT PENGEMBANGAN SUMBER DAYA MANUSIA APARATUR")
+    agency_sub = models.CharField(max_length=255, default="BIRO ORGANISASI KEANGGOTAAN DAN KEPEGAWAIAN")
     
     # Judul Sertifikat & Pernyataan
     certificate_title = models.CharField(max_length=150, default="SERTIFIKAT KELULUSAN")
@@ -1595,7 +1595,7 @@ class CertificateTemplateConfig(models.Model):
                 signatory_sub_title="Sekretariat Jenderal DPD RI",
                 signatory_name="Dr. Fitriani, A.P., M.Si.",
                 signatory_nip="19741017 199311 2 001",
-                agency_sub="PUSAT PENGEMBANGAN SUMBER DAYA MANUSIA APARATUR",
+                agency_sub="BIRO ORGANISASI KEANGGOTAAN DAN KEPEGAWAIAN",
                 statement_text="Telah berhasil dan berintegritas menyelesaikan seluruh materi pembelajaran mandiri, penugasan studi kasus, serta memenuhi standar evaluasi kelulusan pada program:"
             )
         return config
@@ -4443,7 +4443,7 @@ class StudentPoints(models.Model):
     @classmethod
     def reconcile_points(cls, user):
         """
-        Anti-redundansi, Sinkronisasi Komprehensif, dan Adaptasi Perubahan Data Poin Siswa:
+        Anti-redundansi, Sinkronisasi Komprehensif, dan Adaptasi Perubahan Data Poin Peserta:
         1. Kuis & Ujian (quiz_score):
            - Evaluasi QuizAttempt user yang lulus (is_passed=True).
            - Ambil attempt terbaik (skor tertinggi) untuk setiap kuis.
@@ -4456,7 +4456,7 @@ class StudentPoints(models.Model):
            - Sinkronkan PointsAuditLog (+50 pt per kursus) dan hapus entri jika review dihapus / dinonaktifkan.
         4. Testimoni Platform (platform_testimonial):
            - Evaluasi Review aktif testimoni platform (active=True, role='student', course__isnull=True).
-           - Sinkronkan PointsAuditLog (+50 pt per siswa) dan hapus jika dihapus / dinonaktifkan.
+           - Sinkronkan PointsAuditLog (+50 pt per peserta) dan hapus jika dihapus / dinonaktifkan.
         5. Rekalkulasi StudentPoints:
            - Hitung total aktual lifetime, yearly, dan monthly points.
         6. Sinkronisasi ActivityLog:
@@ -5061,8 +5061,8 @@ class ActivityLog(models.Model):
         ('quiz_created', 'Buat Kuis'),
         ('quiz_updated', 'Update Kuis'),
         ('quiz_deleted', 'Hapus Kuis'),
-        ('student_enrolled_manual', 'Daftar Siswa Secara Manual'),
-        ('student_unenrolled', 'Hapus Siswa'),
+        ('student_enrolled_manual', 'Daftar Peserta Secara Manual'),
+        ('student_unenrolled', 'Hapus Peserta'),
         ('announcement_posted', 'Posting Pengumuman'),
         ('grade_recorded', 'Berikan Nilai'),
         ('exam_verified', 'Pengesahan Integritas Ujian'),
@@ -5076,8 +5076,8 @@ class ActivityLog(models.Model):
     ]
     
     ROLE_CHOICES = [
-        ('student', 'Siswa'),
-        ('instructor', 'Pengajar'),
+        ('student', 'Peserta'),
+        ('instructor', 'Instruktur'),
         ('admin', 'Admin'),
         ('system', 'Sistem'),
     ]

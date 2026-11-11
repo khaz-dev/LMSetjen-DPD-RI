@@ -169,7 +169,7 @@ function TestimonialsAdmin() {
                 </div>
                 <div className="role-badge">
                     <span className={`badge badge-${testimonial.role === 'instructor' ? 'primary' : 'info'}`}>
-                        {testimonial.role === 'instructor' ? 'Instruktur' : 'Siswa'}
+                        {testimonial.role === 'instructor' ? 'Instruktur' : 'Peserta'}
                     </span>
                 </div>
             </div>

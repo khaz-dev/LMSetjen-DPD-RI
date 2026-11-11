@@ -217,7 +217,7 @@ function TestimonialSubmitForm({ onSuccess, initialData = null, role = 'student'
     formData.review !== existingTestimonial.review;
 
   const isEditing = !!existingTestimonial;
-  const roleLabel = role === 'instructor' ? 'Instruktur' : 'Siswa';  // ✨ PHASE 4.11: Role label
+  const roleLabel = role === 'instructor' ? 'Instruktur' : 'Peserta';  // ✨ Standardized to Peserta
   const formTitle = isEditing ? `Edit Testimoni Anda sebagai ${roleLabel}` : `Bagikan Testimoni Anda sebagai ${roleLabel}`;
   const submitButtonText = isEditing ? 'Perbarui Testimoni' : 'Kirim Testimoni';
   const submitButtonIcon = isEditing ? 'fa-save' : 'fa-paper-plane';

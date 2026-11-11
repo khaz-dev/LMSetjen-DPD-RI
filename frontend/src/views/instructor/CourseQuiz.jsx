@@ -1586,7 +1586,7 @@ function CourseQuiz() {
                                                             onChange={(e) => setQuizForm({ ...quizForm, is_active: e.target.checked })}
                                                         />
                                                         <label className="form-check-label" htmlFor="isActive">
-                                                            Kuis Aktif (terlihat oleh siswa)
+                                                            Kuis Aktif (terlihat oleh peserta)
                                                         </label>
                                                     </div>
                                                 </div>

@@ -3532,7 +3532,7 @@ class StudentPointsBreakdownAPIView(APIView):
             
         if not target_user:
             return Response(
-                {"detail": "Siswa / Pengguna tidak ditemukan"},
+                {"detail": "Peserta / Pengguna tidak ditemukan"},
                 status=status.HTTP_404_NOT_FOUND
             )
             
@@ -3614,7 +3614,7 @@ class StudentPointsBreakdownAPIView(APIView):
                 
             clean_desc = (log.description or '').strip()
             if not clean_desc:
-                clean_desc = f"{disp}: Perolehan Poin Siswa"
+                clean_desc = f"{disp}: Perolehan Poin Peserta"
                 
             history.append({
                 'id': log.id,
@@ -4312,7 +4312,7 @@ class CourseLeaderboardAPIView(APIView):
                 level_icon = "fas fa-medal"
                 level_color = "#06b6d4"
             elif lifetime_pts >= 100:
-                level_name = "Siswa Aktif"
+                level_name = "Peserta Aktif"
                 level_icon = "fas fa-star"
                 level_color = "#10b981"
             else:

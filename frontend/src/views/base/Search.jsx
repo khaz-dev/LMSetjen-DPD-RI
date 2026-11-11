@@ -294,7 +294,7 @@ function Search() {
                 const badges = [
                     "⭐ Rating Tertinggi",
                     "🔥 Terpopuler di DPD RI",
-                    "🏛️ Kurasi BPSDM Setjen",
+                    "🏛️ Kurasi Biro OKK Setjen",
                     "🎯 Rekomendasi Sistem"
                 ];
 
@@ -884,7 +884,7 @@ function Search() {
                                                             </div>
                                                             <div className="card-students-stat">
                                                                 <i className="fas fa-users me-1 text-secondary"></i>
-                                                                <span>{c.students?.length || 0} Siswa</span>
+                                                                <span>{c.students?.length || 0} Peserta</span>
                                                             </div>
                                                         </div>
 
@@ -1067,7 +1067,7 @@ function Search() {
                                                             </div>
                                                             <div className="card-students-stat">
                                                                 <i className="fas fa-users me-1 text-secondary"></i>
-                                                                <span>{c.students?.length || 0} Siswa</span>
+                                                                <span>{c.students?.length || 0} Peserta</span>
                                                             </div>
                                                         </div>
 
@@ -1103,7 +1103,7 @@ function Search() {
                                         <i className="fas fa-chalkboard-teacher"></i>
                                     </div>
                                     <div className="cta-copy">
-                                        <h2 className="cta-heading">Jadilah Pengajar & Berbagi Pengetahuan di DPD RI</h2>
+                                        <h2 className="cta-heading">Jadilah Instruktur & Berbagi Pengetahuan di DPD RI</h2>
                                         <p className="cta-subheading">
                                             Bagikan kompetensi dan keahlian Anda untuk mendukung pengembangan SDM aparatur Sekretariat Jenderal DPD RI.
                                         </p>

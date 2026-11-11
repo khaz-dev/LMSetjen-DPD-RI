@@ -484,10 +484,10 @@ function Index() {
         },
         {
             id: "teachers",
-            label: "Widyaiswara & Pengajar",
+            label: "Widyaiswara & Instruktur",
             value: stats.total_teachers,
             unit: "",
-            pill: "BPSDM DPD RI",
+            pill: "Biro OKK DPD RI",
             pillIcon: "fas fa-award",
             pillColor: "warning",
             subtext: "Instruktur & Tenaga Ahli",
@@ -619,7 +619,7 @@ function Index() {
                                             <i className="fas fa-university me-2 hero-badge-icon"></i>
                                             <span className="fw-semibold">Sekretariat Jenderal DPD RI</span>
                                             <span className="hero-badge-sep">•</span>
-                                            <span className="hero-badge-sub">E-Learning BPSDM OKK</span>
+                                            <span className="hero-badge-sub">E-Learning Biro OKK</span>
                                         </div>
 
                                         {/* Main Headline */}
@@ -1132,7 +1132,7 @@ function Index() {
                             <div className="categories-live-toolbar d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                                 <div className="d-flex align-items-center gap-2">
                                     <span className="cat-live-radar-dot"></span>
-                                    <span className="cat-live-title">Klaster Bidang Keahlian BPSDM</span>
+                                    <span className="cat-live-title">Klaster Bidang Keahlian Biro OKK</span>
                                     <span className="cat-live-badge">{categories.length} Bidang Kompetensi</span>
                                 </div>
                                 <div className="d-flex align-items-center gap-3 cat-live-meta">

@@ -434,7 +434,7 @@ function InAppNotificationBell() {
 
     if (!userId) return null;
 
-    const roleName = isAdminMode ? 'Admin' : isInstructorMode ? 'Pengajar' : 'Siswa';
+    const roleName = isAdminMode ? 'Admin' : isInstructorMode ? 'Instruktur' : 'Peserta';
 
     return (
         <div className="in-app-noti-wrapper" ref={dropdownRef}>
@@ -465,7 +465,7 @@ function InAppNotificationBell() {
                         <div className="d-flex align-items-center justify-content-between w-100 mb-2">
                             <div className="d-flex align-items-center gap-2">
                                 <h6 className="in-app-noti-title mb-0">
-                                    {isAdminMode ? 'Notifikasi Admin' : isInstructorMode ? 'Notifikasi Pengajar' : 'Notifikasi Siswa'}
+                                    {isAdminMode ? 'Notifikasi Admin' : isInstructorMode ? 'Notifikasi Instruktur' : 'Notifikasi Peserta'}
                                 </h6>
                                 {unreadCount > 0 && (
                                     <span className="in-app-noti-unread-count">
@@ -506,7 +506,7 @@ function InAppNotificationBell() {
                                 </button>
                             </div>
                             <span className="noti-role-context-hint">
-                                {isAdminMode ? 'Fokus: Tata Kelola Platform' : isInstructorMode ? 'Fokus: Pengajaran' : 'Fokus: Pembelajaran'}
+                                {isAdminMode ? 'Fokus: Tata Kelola Platform' : isInstructorMode ? 'Fokus: Aktivitas Instruktur' : 'Fokus: Pembelajaran'}
                             </span>
                         </div>
                     </div>
@@ -531,7 +531,7 @@ function InAppNotificationBell() {
                                     {isAdminMode
                                         ? 'Pengajuan review kursus, laporan pelanggaran konten, dan masukan pengguna akan muncul di sini.'
                                         : isInstructorMode
-                                            ? 'Pemberitahuan verifikasi integritas ujian siswa, pendaftaran kursus, dan ulasan akan tampil di sini.'
+                                            ? 'Pemberitahuan verifikasi integritas ujian peserta, pendaftaran kursus, dan ulasan akan tampil di sini.'
                                             : 'Pemberitahuan kelulusan ujian, reset kuis, dan penerbitan sertifikat akan tampil di sini.'}
                                 </div>
                             </div>
@@ -667,7 +667,7 @@ function InAppNotificationBell() {
                                     }
                                 }}
                             >
-                                <span>{isAdminMode ? 'Buka Laporan & Masukan' : isInstructorMode ? 'Log Pengajaran' : 'Log Belajar'}</span>
+                                <span>{isAdminMode ? 'Buka Laporan & Masukan' : isInstructorMode ? 'Log Aktivitas Instruktur' : 'Log Belajar'}</span>
                                 <i className="fas fa-arrow-right ms-1"></i>
                             </button>
                         </div>

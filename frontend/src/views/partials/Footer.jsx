@@ -14,7 +14,7 @@ function Footer() {
   const content = {
     brand: {
       name: "LMSetjen DPD RI",
-      copyright: `©${currentYear} BPSDM OKK Setjen DPD RI`,
+      copyright: `©${currentYear} Biro OKK Setjen DPD RI`,
       version: `v${version || APP_VERSION}`
     },
     contact: {
@@ -78,7 +78,7 @@ function Footer() {
             <a
               href={`mailto:${content.contact.email}`}
               className="footer-contact-pill"
-              title="Kirim email ke BPSDM OKK Setjen DPD RI"
+              title="Kirim email ke Biro OKK Setjen DPD RI"
             >
               <span className="footer-contact-icon-wrapper">
                 <i className="fas fa-envelope footer-contact-icon" aria-hidden="true"></i>

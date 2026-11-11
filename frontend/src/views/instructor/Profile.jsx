@@ -965,7 +965,7 @@ function Profile() {
                                                 <Link
                                                     to="/student/profile/"
                                                     className="role-tag-pill role-student-link"
-                                                    title="Terhubung dengan Peran Siswa / Peserta. Klik untuk melihat profil siswa"
+                                                    title="Terhubung dengan Peran Peserta. Klik untuk melihat profil peserta"
                                                 >
                                                     <i className="fas fa-graduation-cap"></i> Terhubung: Peserta Pelatihan
                                                     <i className="fas fa-arrow-up-right-from-square role-link-icon"></i>
@@ -1437,7 +1437,7 @@ function Profile() {
                                                                 Data Kepegawaian & Instansi Asal (ASN Luar)
                                                             </h4>
                                                             <p className="section-subtext">
-                                                                Informasi NIP, Jabatan, dan Instansi Asal Anda untuk validasi kepakaran pengajar dan pencatatan kediklatan resmi.
+                                                                Informasi NIP, Jabatan, dan Instansi Asal Anda untuk validasi kepakaran instruktur dan pencatatan kediklatan resmi.
                                                             </p>
                                                         </div>
                                                     </div>
@@ -1565,7 +1565,7 @@ function Profile() {
                                                         <div className="notice-body">
                                                             <strong style={{ color: '#0369a1' }}>Profil Instruktur Umum</strong>
                                                             <p style={{ color: '#334155' }}>
-                                                                Sebagai pengajar dari masyarakat umum, identitas profesi dan asal daerah ditampilkan pada kartu pengajar publik kursus Anda.
+                                                                Sebagai instruktur dari masyarakat umum, identitas profesi dan asal daerah ditampilkan pada kartu instruktur publik kursus Anda.
                                                             </p>
                                                         </div>
                                                     </div>
@@ -1693,7 +1693,7 @@ function Profile() {
 
                                     {/* ----------------------------------------------------
                                         TAB 3: PROFIL PERAN (INSTRUKTUR & PESERTA)
-                                        Menghubungkan peran Instruktur & Siswa tanpa duplikasi data
+                                        Menghubungkan peran Instruktur & Peserta tanpa duplikasi data
                                         ---------------------------------------------------- */}
                                     {activeTab === "roles" && (
                                         <div className="tab-pane-content fade-in">
@@ -1701,10 +1701,10 @@ function Profile() {
                                                 <div>
                                                     <h4 className="section-heading">
                                                         <i className="fas fa-users-gear me-2 text-teal"></i>
-                                                        Profil Peran Terintegrasi (Instruktur & Siswa)
+                                                        Profil Peran Terintegrasi (Instruktur & Peserta)
                                                     </h4>
                                                     <p className="section-subtext">
-                                                        Sistem menghubungkan pengaturan profil Anda untuk peran Instruktur dan Siswa/Peserta secara terpadu tanpa duplikasi data profil umum.
+                                                        Sistem menghubungkan pengaturan profil Anda untuk peran Instruktur dan Peserta secara terpadu tanpa duplikasi data profil umum.
                                                     </p>
                                                 </div>
                                             </div>
@@ -1719,8 +1719,8 @@ function Profile() {
                                                                 <i className="fas fa-chalkboard-user"></i>
                                                             </div>
                                                             <div>
-                                                                <h5 className="role-subcard-title">Peran Instruktur / Pengajar</h5>
-                                                                <span className="role-subcard-subtitle">Widyaiswara & Pemateri Kursus DPD RI</span>
+                                                                <h5 className="role-subcard-title">Peran Instruktur</h5>
+                                                                <span className="role-subcard-subtitle">Widyaiswara & Instruktur Kursus DPD RI</span>
                                                             </div>
                                                         </div>
                                                         <span className="role-badge-pill-inst">Aktif</span>
@@ -1742,7 +1742,7 @@ function Profile() {
                                                                 disabled={uiState.loading}
                                                             ></textarea>
                                                             <small className="field-hint">
-                                                                Teks ini ditampilkan pada halaman kursus dan profil publik instruktur bagi siswa.
+                                                                Teks ini ditampilkan pada halaman kursus dan profil publik instruktur bagi peserta.
                                                             </small>
                                                         </div>
 
@@ -1753,7 +1753,7 @@ function Profile() {
                                                                     <i className="fas fa-book-open"></i> Kursus Saya
                                                                 </Link>
                                                                 <Link to="/instructor/reviews/" className="shortcut-chip">
-                                                                    <i className="fas fa-star text-warning"></i> Ulasan Siswa
+                                                                    <i className="fas fa-star text-warning"></i> Ulasan Peserta
                                                                 </Link>
                                                                 <Link to="/instructor/testimonials/" className="shortcut-chip">
                                                                     <i className="fas fa-quote-left"></i> Testimoni
@@ -1779,7 +1779,7 @@ function Profile() {
                                                                 <i className="fas fa-graduation-cap"></i>
                                                             </div>
                                                             <div>
-                                                                <h5 className="role-subcard-title">Peran Siswa / Peserta Pelatihan</h5>
+                                                                <h5 className="role-subcard-title">Peran Peserta</h5>
                                                                 <span className="role-subcard-subtitle">Pengembangan Kompetensi ASN DPD RI</span>
                                                             </div>
                                                         </div>
@@ -1805,9 +1805,9 @@ function Profile() {
                                                                     type="button" 
                                                                     onClick={() => switchRoleAndNavigate('student', '/student/profile/', navigate)} 
                                                                     className="btn-switch-role-view"
-                                                                    title="Beralih peran ke Siswa dan buka profil siswa"
+                                                                    title="Beralih peran ke Peserta dan buka profil peserta"
                                                                 >
-                                                                    <i className="fas fa-arrow-right-arrow-left me-1"></i> Buka Halaman Profil Siswa
+                                                                    <i className="fas fa-arrow-right-arrow-left me-1"></i> Buka Halaman Profil Peserta
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -1819,7 +1819,7 @@ function Profile() {
                                                                     type="button" 
                                                                     onClick={() => switchRoleAndNavigate('student', '/student/courses/', navigate)} 
                                                                     className="shortcut-chip"
-                                                                    title="Beralih peran ke Siswa dan buka kursus diikuti"
+                                                                    title="Beralih peran ke Peserta dan buka kursus diikuti"
                                                                 >
                                                                     <i className="fas fa-play-circle"></i> Kursus Diikuti
                                                                 </button>
@@ -1827,7 +1827,7 @@ function Profile() {
                                                                     type="button" 
                                                                     onClick={() => switchRoleAndNavigate('student', '/student/sertifikat/', navigate)} 
                                                                     className="shortcut-chip"
-                                                                    title="Beralih peran ke Siswa dan buka sertifikat"
+                                                                    title="Beralih peran ke Peserta dan buka sertifikat"
                                                                 >
                                                                     <i className="fas fa-award text-amber"></i> Sertifikat Saya
                                                                 </button>
@@ -1835,7 +1835,7 @@ function Profile() {
                                                                     type="button" 
                                                                     onClick={() => switchRoleAndNavigate('student', '/student/activities/', navigate)} 
                                                                     className="shortcut-chip"
-                                                                    title="Beralih peran ke Siswa dan buka riwayat belajar"
+                                                                    title="Beralih peran ke Peserta dan buka riwayat belajar"
                                                                 >
                                                                     <i className="fas fa-clock-rotate-left"></i> Riwayat Belajar
                                                                 </button>
@@ -1843,9 +1843,9 @@ function Profile() {
                                                                     type="button" 
                                                                     onClick={() => switchRoleAndNavigate('student', '/student/dashboard/', navigate)} 
                                                                     className="shortcut-chip"
-                                                                    title="Beralih peran ke Siswa dan buka dasbor siswa"
+                                                                    title="Beralih peran ke Peserta dan buka dasbor peserta"
                                                                 >
-                                                                    <i className="fas fa-gauge-high"></i> Dasbor Siswa
+                                                                    <i className="fas fa-gauge-high"></i> Dasbor Peserta
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -2034,7 +2034,7 @@ function Profile() {
                                                         </div>
                                                         <h5 className="empty-social-title">Belum Ada Media Sosial Ditambahkan</h5>
                                                         <p className="empty-social-desc">
-                                                            Hubungkan akun media sosial profesional Anda seperti YouTube, Instagram, TikTok, LinkedIn, Twitter/X, atau Facebook agar siswa dan kolega dapat terhubung dengan Anda.
+                                                            Hubungkan akun media sosial profesional Anda seperti YouTube, Instagram, TikTok, LinkedIn, Twitter/X, atau Facebook agar peserta dan kolega dapat terhubung dengan Anda.
                                                         </p>
                                                         <button
                                                             type="button"
@@ -2215,12 +2215,12 @@ function Profile() {
                             <div className="public-card-bio-section">
                                 <h6 className="bio-section-title">
                                     <i className="fas fa-quote-left text-teal me-2"></i>
-                                    Kepakaran & Biografi Pengajar
+                                    Kepakaran & Biografi Instruktur
                                 </h6>
                                 <p className="bio-section-text">
                                     {profileData.bio || profileData.about || (
                                         <span className="text-muted fst-italic">
-                                            Belum ada biografi pengajar. Anda dapat melengkapi kepakaran Anda di Tab "Profil Peran (Instruktur & Peserta)".
+                                            Belum ada biografi instruktur. Anda dapat melengkapi kepakaran Anda di Tab "Profil Peran (Instruktur & Peserta)".
                                         </span>
                                     )}
                                 </p>

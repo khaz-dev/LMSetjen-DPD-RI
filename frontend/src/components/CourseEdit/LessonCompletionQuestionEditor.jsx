@@ -95,7 +95,7 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
             Toast().fire({
                 icon: 'error',
                 title: 'Teks Pertanyaan Diperlukan',
-                text: 'Silakan masukkan teks pertanyaan untuk siswa'
+                text: 'Silakan masukkan teks pertanyaan untuk peserta'
             });
             return;
         }
@@ -182,7 +182,7 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
     const handleDelete = async () => {
         if (!existingQuestion) return;
 
-        if (!window.confirm('Yakin ingin menghapus pertanyaan penyelesaian pelajaran ini? Siswa nantinya dapat menyelesaikan pelajaran tanpa harus menjawab pertanyaan.')) return;
+        if (!window.confirm('Yakin ingin menghapus pertanyaan penyelesaian pelajaran ini? Peserta nantinya dapat menyelesaikan pelajaran tanpa harus menjawab pertanyaan.')) return;
 
         try {
             setIsLoading(true);
@@ -245,7 +245,7 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
                         </div>
                         <span className="lcq-sub-title">
                             {existingQuestion
-                                ? 'Siswa wajib menjawab pertanyaan ini dengan benar agar materi tercatat selesai.'
+                                ? 'Peserta wajib menjawab pertanyaan ini dengan benar agar materi tercatat selesai.'
                                 : 'Tambahkan 1 pertanyaan cepat penguji pemahaman sebelum materi ditandai selesai.'}
                         </span>
                     </div>
@@ -284,7 +284,7 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
                             rows="2"
                             value={questionText}
                             onChange={(e) => setQuestionText(e.target.value)}
-                            placeholder="Tuliskan pertanyaan penguji pemahaman siswa terhadap pelajaran ini..."
+                            placeholder="Tuliskan pertanyaan penguji pemahaman peserta terhadap pelajaran ini..."
                             disabled={isLoading}
                         />
                     </div>
@@ -416,7 +416,7 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
                                 className="form-control form-control-sm lcq-input"
                                 value={correctAnswerText}
                                 onChange={(e) => setCorrectAnswerText(e.target.value)}
-                                placeholder="Masukkan teks jawaban benar yang harus diketikkan siswa..."
+                                placeholder="Masukkan teks jawaban benar yang harus diketikkan peserta..."
                                 disabled={isLoading}
                             />
                             <div className="form-check mt-1 d-flex align-items-center gap-2">

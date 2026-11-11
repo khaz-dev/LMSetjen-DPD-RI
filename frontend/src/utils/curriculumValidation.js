@@ -46,7 +46,7 @@ export const validateCurriculumImage = (image) => {
     const warnings = [];
 
     if (!image) {
-        warnings.push("Menambahkan thumbnail kursus meningkatkan keterlibatan siswa");
+        warnings.push("Menambahkan thumbnail kursus meningkatkan keterlibatan peserta");
     }
 
     return { errors, warnings };
@@ -68,7 +68,7 @@ export const validateCurriculumLevel = (level) => {
     const warnings = [];
 
     if (!level) {
-        warnings.push("Menetapkan tingkat kesulitan membantu siswa memilih dengan tepat");
+        warnings.push("Menetapkan tingkat kesulitan membantu peserta memilih dengan tepat");
     }
 
     return { errors, warnings };

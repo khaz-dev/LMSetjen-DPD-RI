@@ -89,7 +89,7 @@ function Sidebar() {
                                 <i className="fas fa-graduation-cap"></i>
                             </div>
                             <div className="sidebar-header-text">
-                                <h6 className="sidebar-header-title">Menu Siswa</h6>
+                                <h6 className="sidebar-header-title">Menu Peserta</h6>
                                 <span className="sidebar-header-badge">LMSetjen DPD RI</span>
                             </div>
                         </div>

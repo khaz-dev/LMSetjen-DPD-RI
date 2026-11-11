@@ -321,7 +321,7 @@ function Dashboard() {
                                             </div>
                                             <div className="stat-info-wrapper">
                                                 <div className="stat-number">{stats.total_students || 0}</div>
-                                                <div className="stat-label">Total Siswa</div>
+                                                <div className="stat-label">Total Peserta</div>
                                             </div>
                                         </div>
                                         <div className="stat-footer">
@@ -345,7 +345,7 @@ function Dashboard() {
                                         </div>
                                         <div className="stat-footer">
                                             <span className="stat-badge warning">
-                                                <i className="fas fa-star me-1"></i> {enhancedStats.totalReviews} ulasan siswa
+                                                <i className="fas fa-star me-1"></i> {enhancedStats.totalReviews} ulasan peserta
                                             </span>
                                         </div>
                                     </div>
@@ -459,7 +459,7 @@ function Dashboard() {
                                                                 <div className="performance-item-tags">
                                                                     <span className="metric-chip">
                                                                         <i className="fas fa-users text-primary"></i>
-                                                                        {course.students?.length || 0} siswa
+                                                                        {course.students?.length || 0} peserta
                                                                     </span>
                                                                     <span className="metric-chip">
                                                                         <i className="fas fa-star text-warning"></i>

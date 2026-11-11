@@ -355,7 +355,7 @@ function Profile() {
             console.error("Error fetching student profile:", error);
             Toast().fire({
                 icon: "error",
-                title: "Gagal memuat profil siswa"
+                title: "Gagal memuat profil peserta"
             });
         } finally {
             setUiState((prev) => ({ ...prev, loading: false }));
@@ -777,7 +777,7 @@ function Profile() {
                                     <div className="spinner-border text-teal-dpd" role="status" style={{ width: "2.8rem", height: "2.8rem" }}>
                                         <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted fw-semibold">Memuat Pengaturan Profil Siswa...</p>
+                                    <p className="mt-3 text-muted fw-semibold">Memuat Pengaturan Profil Peserta...</p>
                                 </div>
                             </div>
                         </div>
@@ -925,7 +925,7 @@ function Profile() {
                                                 <Link 
                                                     to="/instructor/profile/" 
                                                     className="role-tag-pill role-instructor-link"
-                                                    title="Terhubung dengan Peran Instruktur / Pengajar. Klik untuk beralih ke profil instruktur"
+                                                    title="Terhubung dengan Peran Instruktur. Klik untuk beralih ke profil instruktur"
                                                 >
                                                     <i className="fas fa-chalkboard-user"></i> Terhubung: Instruktur Setjen
                                                     <i className="fas fa-arrow-up-right-from-square role-link-icon"></i>
@@ -1692,7 +1692,7 @@ function Profile() {
                                                         Profil Peran Terintegrasi (Peserta & Instruktur)
                                                     </h4>
                                                     <p className="section-subtext">
-                                                        Kedua peran saling terhubung tanpa duplikasi data. Anda dapat mengelola tujuan belajar sekaligus aspek kepakaran pengajar.
+                                                        Kedua peran saling terhubung tanpa duplikasi data. Anda dapat mengelola tujuan belajar sekaligus aspek kepakaran instruktur.
                                                     </p>
                                                 </div>
                                             </div>
@@ -1707,7 +1707,7 @@ function Profile() {
                                                                 <i className="fas fa-graduation-cap"></i>
                                                             </div>
                                                             <div>
-                                                                <h5 className="role-subcard-title">Peran Siswa / Peserta</h5>
+                                                                <h5 className="role-subcard-title">Peran Peserta</h5>
                                                                 <span className="role-subcard-subtitle">Pengembangan Kompetensi ASN DPD RI</span>
                                                             </div>
                                                         </div>
@@ -1759,8 +1759,8 @@ function Profile() {
                                                                 <i className="fas fa-chalkboard-user"></i>
                                                             </div>
                                                             <div>
-                                                                <h5 className="role-subcard-title">Peran Instruktur / Pengajar</h5>
-                                                                <span className="role-subcard-subtitle">Pemateri Kursus & Widyaiswara</span>
+                                                                <h5 className="role-subcard-title">Peran Instruktur</h5>
+                                                                <span className="role-subcard-subtitle">Instruktur Kursus & Widyaiswara</span>
                                                             </div>
                                                         </div>
                                                         <span className="role-badge-pill-inst">
@@ -1776,7 +1776,7 @@ function Profile() {
                                                             <div className="student-profile-sync-box">
                                                                 <div className="d-flex align-items-center gap-2 mb-2">
                                                                     <i className="fas fa-circle-check text-teal"></i>
-                                                                    <span className="fw-semibold text-dark">Data Pengajar Terintegrasi</span>
+                                                                    <span className="fw-semibold text-dark">Data Instruktur Terintegrasi</span>
                                                                 </div>
                                                                 <p className="student-sync-desc mb-2">
                                                                     Jika Anda mengajar kursus, data profil dan biografi kepakaran otomatis terhubung dengan kartu instruktur publik tanpa perlu mengisi ulang data dasar.
@@ -1791,7 +1791,7 @@ function Profile() {
                                                                         <i className="fas fa-arrow-right-arrow-left me-1"></i> Buka Pengaturan Profil Instruktur
                                                                     </button>
                                                                 ) : (
-                                                                    <span className="text-muted small">Hubungi admin untuk aktivasi peran pengajar.</span>
+                                                                    <span className="text-muted small">Hubungi admin untuk aktivasi peran instruktur.</span>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -2010,7 +2010,7 @@ function Profile() {
                                                         </div>
                                                         <h5 className="empty-social-title">Belum Ada Media Sosial Ditambahkan</h5>
                                                         <p className="empty-social-desc">
-                                                            Hubungkan akun media sosial profesional Anda seperti YouTube, Instagram, TikTok, LinkedIn, Twitter/X, atau Facebook agar rekan kerja dan pengajar di DPD RI dapat terhubung dengan Anda.
+                                                            Hubungkan akun media sosial profesional Anda seperti YouTube, Instagram, TikTok, LinkedIn, Twitter/X, atau Facebook agar rekan kerja dan instruktur di DPD RI dapat terhubung dengan Anda.
                                                         </p>
                                                         <button
                                                             type="button"

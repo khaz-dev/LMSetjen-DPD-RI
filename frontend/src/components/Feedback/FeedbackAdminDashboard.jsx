@@ -226,7 +226,7 @@ function FeedbackAdminDashboard({ refreshTrigger = 0, onMutationSuccess }) {
     const getUserRoleBadge = (role) => {
         const map = {
             student: "Peserta",
-            teacher: "Pengajar",
+            teacher: "Instruktur",
             instructor: "Instruktur",
             admin: "Admin",
             super_admin: "Super Admin",

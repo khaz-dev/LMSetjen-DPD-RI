@@ -25,7 +25,7 @@ const CourseTabNavigation = ({ activeTab, setActiveTab, course }) => {
         {
             key: "instructor",
             label: "Instruktur",
-            shortLabel: "Pengajar",
+            shortLabel: "Instruktur",
             icon: "fas fa-chalkboard-user",
             badge: null
         },

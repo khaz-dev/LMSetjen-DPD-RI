@@ -341,7 +341,7 @@ function TestimonialTab({ onCountsUpdated }) {
                             title="Filter Berdasarkan Peran"
                         >
                             <option value="all">Semua Peran</option>
-                            <option value="student">Peserta / Siswa</option>
+                            <option value="student">Peserta</option>
                             <option value="instructor">Instruktur</option>
                         </select>
                     </div>
@@ -454,7 +454,7 @@ function TestimonialTab({ onCountsUpdated }) {
                                     </div>
                                     <div className="cm-t-role-tag">
                                         <i className={`fas ${item.role === 'instructor' ? 'fa-chalkboard-teacher' : 'fa-user-graduate'} me-1`}></i>
-                                        <span>{item.role === 'instructor' ? 'Instruktur' : 'Siswa'}</span>
+                                        <span>{item.role === 'instructor' ? 'Instruktur' : 'Peserta'}</span>
                                     </div>
                                 </div>
 
@@ -548,7 +548,7 @@ function TestimonialTab({ onCountsUpdated }) {
                                         </td>
                                         <td>
                                             <span className="badge bg-light text-dark border">
-                                                {item.role === 'instructor' ? 'Instruktur' : 'Siswa'}
+                                                {item.role === 'instructor' ? 'Instruktur' : 'Peserta'}
                                             </span>
                                         </td>
                                         <td>

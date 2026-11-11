@@ -56,13 +56,13 @@ function Students() {
             await refetch();
             Toast().fire({
                 icon: "success",
-                title: "Data siswa berhasil diperbarui",
+                title: "Data peserta berhasil diperbarui",
             });
         } catch (err) {
             console.error("Refresh students error:", err);
             Toast().fire({
                 icon: "error",
-                title: "Gagal memperbarui data siswa",
+                title: "Gagal memperbarui data peserta",
             });
         } finally {
             setIsRefreshing(false);
@@ -81,7 +81,7 @@ function Students() {
             return getMediaUrl(student.image);
         }
 
-        const name = student?.full_name || "Peserta Didik";
+        const name = student?.full_name || "Peserta";
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=96&background=0f766e&color=ffffff&bold=true`;
     };
 
@@ -94,9 +94,9 @@ function Students() {
             return student.email.split("@")[0];
         }
         if (student?.user_id) {
-            return `Siswa #${student.user_id}`;
+            return `Peserta #${student.user_id}`;
         }
-        return "Peserta Didik";
+        return "Peserta";
     };
 
     // Helper: Unit Kerja / Asal
@@ -238,7 +238,7 @@ function Students() {
         if (emails.length === 0) {
             Toast().fire({
                 icon: "info",
-                title: "Tidak ada email siswa untuk disalin",
+                title: "Tidak ada email peserta untuk disalin",
             });
             return;
         }
@@ -246,7 +246,7 @@ function Students() {
         navigator.clipboard.writeText(emails.join("; "));
         Toast().fire({
             icon: "success",
-            title: `${emails.length} email siswa berhasil disalin!`,
+            title: `${emails.length} email peserta berhasil disalin!`,
         });
     };
 
@@ -279,10 +279,10 @@ function Students() {
                                     <div className="students-header-meta">
                                         <h2 className="students-title mb-1">
                                             <i className="fas fa-user-graduate text-teal me-2"></i>
-                                            Siswa Saya
+                                            Peserta Saya
                                         </h2>
                                         <p className="students-subtitle mb-0">
-                                            Pantau peserta didik yang terdaftar dalam program pelatihan Anda di LMSetjen DPD RI
+                                            Pantau peserta yang terdaftar dalam program pelatihan Anda di LMSetjen DPD RI
                                         </p>
                                     </div>
 
@@ -292,7 +292,7 @@ function Students() {
                                             className="btn btn-sm btn-outline-teal"
                                             onClick={handleRefresh}
                                             disabled={isLoading || isRefreshing}
-                                            title="Perbarui daftar siswa"
+                                            title="Perbarui daftar peserta"
                                         >
                                             <i className={`fas fa-sync-alt me-1.5 ${isRefreshing ? "fa-spin" : ""}`}></i>
                                             Perbarui
@@ -303,7 +303,7 @@ function Students() {
                                                 type="button"
                                                 className="btn btn-sm btn-outline-secondary"
                                                 onClick={handleCopyEmails}
-                                                title="Salin semua email siswa yang sedang ditampilkan"
+                                                title="Salin semua email peserta yang sedang ditampilkan"
                                             >
                                                 <i className="fas fa-copy me-1"></i>
                                                 Salin Email ({filteredStudents.filter((s) => s.email).length})
@@ -312,7 +312,7 @@ function Students() {
 
                                         <span className="students-counter-pill">
                                             <i className="fas fa-users me-1"></i>
-                                            {students.length} Total Siswa
+                                            {students.length} Total Peserta
                                         </span>
                                     </div>
                                 </div>
@@ -493,7 +493,7 @@ function Students() {
                                             )}
                                         </div>
                                         <span className="text-muted small">
-                                            Ditemukan <strong>{filteredStudents.length}</strong> siswa
+                                            Ditemukan <strong>{filteredStudents.length}</strong> peserta
                                         </span>
                                     </div>
                                 )}
@@ -503,7 +503,7 @@ function Students() {
                             {error && (
                                 <div className="students-empty-card error-card">
                                     <i className="fas fa-exclamation-triangle text-danger mb-2"></i>
-                                    <h5>Gagal Memuat Data Siswa</h5>
+                                    <h5>Gagal Memuat Data Peserta</h5>
                                     <p className="text-muted small mb-3">{error?.message || "Terjadi kendala jaringan saat menghubungi server."}</p>
                                     <button className="btn btn-sm btn-teal" onClick={() => refetch()}>
                                         <i className="fas fa-redo me-1"></i> Coba Lagi
@@ -517,8 +517,8 @@ function Students() {
                                     <div className="spinner-border text-teal mb-3" role="status">
                                         <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <h6 className="text-dark fw-bold mb-1">Memuat Siswa Anda...</h6>
-                                    <p className="text-muted small mb-0">Menyiapkan daftar peserta didik dan statistik kelas</p>
+                                    <h6 className="text-dark fw-bold mb-1">Memuat Peserta Anda...</h6>
+                                    <p className="text-muted small mb-0">Menyiapkan daftar peserta dan statistik kelas</p>
                                 </div>
                             )}
 
@@ -529,12 +529,12 @@ function Students() {
                                         <i className="fas fa-user-friends"></i>
                                     </div>
                                     <h5 className="fw-bold text-dark mb-1">
-                                        {isFilterActive ? "Tidak Ada Siswa yang Cocok" : "Belum Ada Siswa Terdaftar"}
+                                        {isFilterActive ? "Tidak Ada Peserta yang Cocok" : "Belum Ada Peserta Terdaftar"}
                                     </h5>
                                     <p className="text-muted small mb-3" style={{ maxWidth: "480px", margin: "0 auto" }}>
                                         {isFilterActive
-                                            ? "Tidak ditemukan siswa yang sesuai dengan kriteria pencarian atau filter yang Anda terapkan."
-                                            : "Peserta didik yang mendaftar ke kelas Anda akan muncul secara otomatis di halaman ini."}
+                                            ? "Tidak ditemukan peserta yang sesuai dengan kriteria pencarian atau filter yang Anda terapkan."
+                                            : "Peserta yang mendaftar ke kelas Anda akan muncul secara otomatis di halaman ini."}
                                     </p>
                                     {isFilterActive ? (
                                         <button className="btn btn-sm btn-outline-teal" onClick={handleResetFilters}>
@@ -542,7 +542,7 @@ function Students() {
                                         </button>
                                     ) : (
                                         <span className="badge bg-light text-muted border py-2 px-3">
-                                            <i className="fas fa-info-circle me-1"></i> Pastikan kursus Anda telah diterbitkan untuk menerima siswa
+                                            <i className="fas fa-info-circle me-1"></i> Pastikan kursus Anda telah diterbitkan untuk menerima peserta
                                         </span>
                                     )}
                                 </div>
@@ -644,7 +644,7 @@ function Students() {
                                                             type="button"
                                                             className="btn btn-xs btn-detail-trigger"
                                                             onClick={() => setSelectedStudent(student)}
-                                                            title="Lihat detail lengkap siswa"
+                                                            title="Lihat detail lengkap peserta"
                                                         >
                                                             Detail <i className="fas fa-chevron-right ms-1"></i>
                                                         </button>
@@ -663,7 +663,7 @@ function Students() {
                                         <table className="table table-hover align-middle mb-0 students-table">
                                             <thead>
                                                 <tr>
-                                                    <th scope="col" style={{ width: "32%" }}>Siswa</th>
+                                                    <th scope="col" style={{ width: "32%" }}>Peserta</th>
                                                     <th scope="col" style={{ width: "24%" }}>Unit Kerja / Asal</th>
                                                     <th scope="col" style={{ width: "24%" }}>Kursus Diikuti</th>
                                                     <th scope="col" style={{ width: "12%" }}>Terdaftar</th>
@@ -755,7 +755,7 @@ function Students() {
                                                                         type="button"
                                                                         className="btn btn-xs btn-outline-teal"
                                                                         onClick={() => setSelectedStudent(student)}
-                                                                        title="Lihat rincian siswa"
+                                                                        title="Lihat rincian peserta"
                                                                     >
                                                                         <i className="fas fa-info-circle"></i>
                                                                     </button>
@@ -779,7 +779,7 @@ function Students() {
                                             {(currentPage - 1) * itemsPerPage + 1}-
                                             {Math.min(currentPage * itemsPerPage, filteredStudents.length)}
                                         </strong>{" "}
-                                        dari <strong>{filteredStudents.length}</strong> siswa
+                                        dari <strong>{filteredStudents.length}</strong> peserta
                                         {filteredStudents.length !== students.length && (
                                             <span className="ms-1">(difilter dari {students.length} total)</span>
                                         )}
@@ -806,7 +806,7 @@ function Students() {
 
                                         {/* Page navigation */}
                                         {totalPages > 1 && (
-                                            <nav aria-label="Navigasi Halaman Siswa">
+                                            <nav aria-label="Navigasi Halaman Peserta">
                                                 <ul className="pagination pagination-sm mb-0">
                                                     <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
                                                         <button
@@ -877,7 +877,7 @@ function Students() {
                                         <div className="student-modal-header d-flex justify-content-between align-items-center">
                                             <h5 className="modal-title mb-0">
                                                 <i className="fas fa-id-card text-teal me-2"></i>
-                                                Rincian Peserta Didik
+                                                Rincian Peserta
                                             </h5>
                                             <button
                                                 type="button"
@@ -938,7 +938,7 @@ function Students() {
                                                         <span className="info-box-label">Jabatan / Posisi</span>
                                                         <span className="info-box-value">
                                                             <i className="fas fa-briefcase text-teal me-1"></i>
-                                                            {selectedStudent.position || "Pegawai / Peserta Didik"}
+                                                            {selectedStudent.position || "Pegawai / Peserta"}
                                                         </span>
                                                     </div>
                                                 </div>

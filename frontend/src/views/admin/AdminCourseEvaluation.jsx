@@ -1135,7 +1135,7 @@ function AdminCourseEvaluation() {
                                                 <div className="ace-param-item">
                                                     <div className="ace-param-top">
                                                         <span className="ace-param-lbl">
-                                                            <i className="fas fa-person-chalkboard text-teal"></i> Kompetensi Pengajar & Kualitas Modul
+                                                            <i className="fas fa-person-chalkboard text-teal"></i> Kompetensi Instruktur & Kualitas Modul
                                                         </span>
                                                         <span className="ace-param-val">96%</span>
                                                     </div>

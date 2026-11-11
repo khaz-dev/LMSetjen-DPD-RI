@@ -423,7 +423,7 @@ function BaseHeader() {
         const displayName = getFirstTwoWords(cleanedFullName);
         
         if (isAdmin) return displayName || 'Admin';
-        return displayName || (hasTeacherId ? 'Pemateri' : 'Peserta');
+        return displayName || (hasTeacherId ? 'Instruktur' : 'Peserta');
     };
 
     // ✨ PHASE X: Render admin avatar in navigation - same as student/instructor
@@ -545,7 +545,7 @@ function BaseHeader() {
         { to: "/instructor/create-course/", icon: "fas fa-plus", text: "Buat Materi" },
         { to: "/instructor/reviews/", icon: "fas fa-star", text: "Review" },
         { to: "/instructor/question-answer/", icon: "fas fa-envelope", text: "Tanya Jawab" },
-        { to: "/instructor/students/", icon: "fas fa-users", text: "Murid Saya" },
+        { to: "/instructor/students/", icon: "fas fa-users", text: "Peserta Saya" },
         { to: "/instructor/profile/", icon: "fas fa-gear", text: "Pengaturan" },
         { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar" }
     ];

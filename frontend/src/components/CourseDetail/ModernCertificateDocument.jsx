@@ -21,7 +21,7 @@ const ModernCertificateDocument = React.forwardRef(({
     const cfg = templateConfig || {};
     const agencySup = cfg.agency_sup || "Dewan Perwakilan Daerah Republik Indonesia";
     const agencyMain = cfg.agency_main || "Sekretariat Jenderal";
-    const agencySub = cfg.agency_sub || "Pusat Pengembangan Sumber Daya Manusia Aparatur";
+    const agencySub = cfg.agency_sub || "Biro Organisasi Keanggotaan dan Kepegawaian";
     const certTitle = cfg.certificate_title || "Sertifikat Kelulusan";
     const certSubTitle = cfg.certificate_subtitle || "Certificate of Completion";
     const statementText = cfg.statement_text || "Telah berhasil dan berintegritas menyelesaikan seluruh materi pembelajaran mandiri, penugasan studi kasus, serta memenuhi standar evaluasi kelulusan pada program:";
@@ -77,7 +77,7 @@ const ModernCertificateDocument = React.forwardRef(({
     const courseTitle = course?.course?.title || certificate?.course?.title || 'Program Pelatihan Kompetensi';
     const totalJP = course?.course?.total_jam_pelatihan || certificate?.course?.total_jam_pelatihan || 2;
     const categoryName = course?.course?.category?.title || certificate?.course?.category?.title || 'Pelatihan Mandiri Digital';
-    const instructorName = course?.course?.teacher?.full_name || certificate?.instructor_name || 'Fasilitator & Tenaga Pengajar';
+    const instructorName = course?.course?.teacher?.full_name || certificate?.instructor_name || 'Fasilitator & Instruktur';
 
     // Resolve certificate ID
     const formattedId = certificate?.formatted_certificate_id || certificate?.certificate_id || 'KP.04/LMS/DPDRI/2026';
@@ -341,7 +341,7 @@ const ModernCertificateDocument = React.forwardRef(({
                             <div className="cert-sig-line" />
                             <div className="cert-instructor-name">{cfg.signatory_name || instructorName}</div>
                             <div className="cert-instructor-title">
-                                {cfg.signatory_nip ? `NIP. ${cfg.signatory_nip}` : (cfg.signatory_sub_title || 'Tenaga Pengajar & Verifikator Kompetensi')}
+                                {cfg.signatory_nip ? `NIP. ${cfg.signatory_nip}` : (cfg.signatory_sub_title || 'Instruktur & Verifikator Kompetensi')}
                             </div>
                         </div>
                     )}

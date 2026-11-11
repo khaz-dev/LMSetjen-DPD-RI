@@ -2320,7 +2320,7 @@ class AdminCertificateResetDefaultAPIView(APIView):
             config.body_font = "'Montserrat', sans-serif"
             config.agency_sup = "SEKRETARIAT JENDERAL"
             config.agency_main = "DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA"
-            config.agency_sub = "PUSAT PENGEMBANGAN SUMBER DAYA MANUSIA APARATUR"
+            config.agency_sub = "BIRO ORGANISASI KEANGGOTAAN DAN KEPEGAWAIAN"
             config.certificate_title = "SERTIFIKAT KELULUSAN"
             config.certificate_subtitle = "Certificate of Completion"
             config.statement_text = "Telah berhasil dan berintegritas menyelesaikan seluruh materi pembelajaran mandiri, penugasan studi kasus, serta memenuhi standar evaluasi kelulusan pada program:"
@@ -3050,6 +3050,7 @@ class AdminCourseEvaluationAPIView(APIView):
             "Biro Protokol, Hubungan Masyarakat, dan Media",
             "Biro Keuangan dan Perencanaan",
             "Pusat Kajian Daerah dan Anggaran",
+            "Pusat Perancangan dan Kajian Kebijakan Hukum",
             "Inspektorat"
         ]
         for cu in common_units:

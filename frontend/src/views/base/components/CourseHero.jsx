@@ -243,7 +243,7 @@ const CourseHero = ({ course }) => {
                                 {/* Students */}
                                 <div className="d-flex align-items-center small">
                                     <i className="fas fa-user-graduate me-1 text-white-50"></i>
-                                    <span>{course.students?.length || 0} Siswa</span>
+                                    <span>{course.students?.length || 0} Peserta</span>
                                 </div>
 
                                 {/* Total Curriculum / Lessons */}

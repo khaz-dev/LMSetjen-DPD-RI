@@ -1033,7 +1033,7 @@ function UsersAdmin() {
                                     <FaUserGraduate />
                                 </div>
                                 <div className="kpi-info-wrap">
-                                    <span className="kpi-label">Siswa</span>
+                                    <span className="kpi-label">Peserta</span>
                                     <div className="kpi-number">{stats.students}</div>
                                     <span className="kpi-meta warning">
                                         {stats.total_users > 0 ? `${((stats.students / stats.total_users) * 100).toFixed(1)}% dari total` : '0%'}
@@ -1146,7 +1146,7 @@ function UsersAdmin() {
                                         onChange={(e) => setRoleFilter(e.target.value)}
                                     >
                                         <option value="all">Semua Peran</option>
-                                        <option value="student">🎓 Siswa</option>
+                                        <option value="student">🎓 Peserta</option>
                                         <option value="teacher">👨‍🏫 Instruktur</option>
                                         <option value="admin">⚙️ Admin</option>
                                     </select>
@@ -1311,8 +1311,8 @@ function UsersAdmin() {
                                             <td className="col-roles">
                                                 <div className="roles-pills-wrap">
                                                     {user.is_student && (
-                                                        <span className="role-pill-compact student" title="Siswa Pembelajaran">
-                                                            <FaUserGraduate className="role-pill-icon" /> Siswa
+                                                        <span className="role-pill-compact student" title="Peserta Pembelajaran">
+                                                            <FaUserGraduate className="role-pill-icon" /> Peserta
                                                         </span>
                                                     )}
                                                     {user.is_instructor && (
@@ -1653,7 +1653,7 @@ function UsersAdmin() {
                                                         <div className="view-table-row">
                                                             <span className="v-label">Peran Terdaftar</span>
                                                             <div className="v-value role-chips-wrap">
-                                                                {selectedUser?.user_info?.is_student && <span className="role-chip student">🎓 Siswa</span>}
+                                                                {selectedUser?.user_info?.is_student && <span className="role-chip student">🎓 Peserta</span>}
                                                                 {selectedUser?.user_info?.is_instructor && <span className="role-chip teacher">👨‍🏫 Instruktur</span>}
                                                                 {selectedUser?.user_info?.is_admin && <span className="role-chip admin">⚙️ Admin</span>}
                                                             </div>
@@ -1688,7 +1688,7 @@ function UsersAdmin() {
                                             {(selectedUser?.user_info?.is_student || selectedUser?.user_info?.is_instructor) && (
                                                 <div className="view-stats-container">
                                                     <div className="view-stats-title">
-                                                        <FaChartLine className="me-2 text-primary" /> Statistik Pembelajaran & Pengajaran Nyata
+                                                        <FaChartLine className="me-2 text-primary" /> Statistik Pembelajaran & Instruktur Nyata
                                                     </div>
                                                     <div className="view-stats-grid">
                                                         {selectedUser?.user_info?.is_student && (
@@ -1723,7 +1723,7 @@ function UsersAdmin() {
                                                                 </div>
                                                                 <div className="stat-tile">
                                                                     <span className="stat-number text-primary">{selectedUser?.teaching_stats?.total_students || 0}</span>
-                                                                    <span className="stat-text">Total Siswa Terdaftar</span>
+                                                                    <span className="stat-text">Total Peserta Terdaftar</span>
                                                                 </div>
                                                                 <div className="stat-tile">
                                                                     <span className="stat-number text-warning">{selectedUser?.teaching_stats?.total_reviews || 0}</span>
@@ -1999,7 +1999,7 @@ function UsersAdmin() {
                                                         onChange={(e) => setFormData({...formData, is_student: e.target.checked})}
                                                     />
                                                     <div className="pill-card-body">
-                                                        <span className="pill-title">🎓 Siswa</span>
+                                                        <span className="pill-title">🎓 Peserta</span>
                                                         <span className="pill-subtitle">Akses pembelajaran kursus</span>
                                                     </div>
                                                     {formData.is_student && <FaCheckCircle className="pill-check" />}

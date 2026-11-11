@@ -181,7 +181,7 @@ export const userGuideContent = {
                 management: {
                     title: "Engagement & Student Mentorship",
                     features: [
-                        "Monitor individual student progress and quiz performance in 'Murid Saya' (My Students).",
+                        "Monitor individual student progress and quiz performance in 'Peserta Saya' (My Participants).",
                         "Respond to student inquiries with instant In-App Notification delivery to the student.",
                         "Review student ratings, constructive feedback, and learning completion statistics.",
                         "Update curriculum materials and announcements dynamically without losing existing progress records."
@@ -404,7 +404,7 @@ export const userGuideContent = {
             items: [
                 { id: "getting-started", title: "Memulai", icon: "fa-rocket" },
                 { id: "for-students", title: "Untuk Peserta", icon: "fa-graduation-cap" },
-                { id: "for-instructors", title: "Untuk Pemateri", icon: "fa-chalkboard-teacher" },
+                { id: "for-instructors", title: "Untuk Instruktur", icon: "fa-chalkboard-teacher" },
                 { id: "manta-ai", title: "Manta AI", icon: "fa-robot" },
                 { id: "features", title: "Fitur Platform", icon: "fa-star" },
                 { id: "troubleshooting", title: "Pemecahan Masalah", icon: "fa-tools" },
@@ -415,7 +415,7 @@ export const userGuideContent = {
         sections: {
             gettingStarted: {
                 title: "Memulai",
-                intro: "Selamat datang di LMSetjen DPD RI Versi 1.1.0! Panduan ini dirancang untuk membantu seluruh pegawai dan pemateri memanfaatkan ekosistem pembelajaran digital secara optimal.",
+                intro: "Selamat datang di LMSetjen DPD RI Versi 1.1.0! Panduan ini dirancang untuk membantu seluruh pegawai dan instruktur memanfaatkan ekosistem pembelajaran digital secara optimal.",
 
                 registration: {
                     title: "Aktivasi Akun & Onboarding",
@@ -424,7 +424,7 @@ export const userGuideContent = {
                         "Masuk menggunakan akun 'SSO Nusa DPD' atau akun kedinasan resmi 'Google Workspace' (@dpd.go.id).",
                         "Untuk pengguna pertama kali melalui Google, lengkapi verifikasi data singkat pada form Onboarding (Nama Lengkap, NIP, Unit Kerja).",
                         "Akun Anda akan aktif secara otomatis tanpa perlu membuat kata sandi baru secara terpisah.",
-                        "Jika Anda memiliki peran ganda (misal Peserta dan Pemateri), pilih peran aktif melalui jendela pemilihan peran (Multi-Role Switcher)."
+                        "Jika Anda memiliki peran ganda (misal Peserta dan Instruktur), pilih peran aktif melalui jendela pemilihan peran (Multi-Role Switcher)."
                     ]
                 },
 
@@ -433,7 +433,7 @@ export const userGuideContent = {
                     steps: [
                         "Klik tombol 'Masuk' di bagian header kanan atas.",
                         "Pilih gerbang autentikasi yang diinginkan: SSO Nusa DPD atau Google Workspace.",
-                        "Setelah berhasil login, pengguna multi-peran dapat memilih apakah ingin masuk sebagai Peserta, Pemateri, atau Admin.",
+                        "Setelah berhasil login, pengguna multi-peran dapat memilih apakah ingin masuk sebagai Peserta, Instruktur, atau Admin.",
                         "Anda dapat berpindah peran kapan saja melalui menu profil tanpa perlu keluar (logout) dari platform."
                     ]
                 },
@@ -443,7 +443,7 @@ export const userGuideContent = {
                     description: "LMSetjen DPD RI menyediakan dashboard yang disesuaikan khusus untuk tiap peran tugas:",
                     dashboards: [
                         { role: "Peserta", path: "/student/dashboard/", description: "Akses materi yang diikuti, modul interaktif SCORM, catatan belajar, dan sertifikat." },
-                        { role: "Pemateri", path: "/instructor/dashboard/", description: "Kelola kurikulum materi, upload modul SCORM, buat kuis, kelola sertifikat, dan pantau murid." },
+                        { role: "Instruktur", path: "/instructor/dashboard/", description: "Kelola kurikulum materi, upload modul SCORM, buat kuis, kelola sertifikat, dan pantau peserta." },
                         { role: "Admin", path: "/admin/dashboard/", description: "Pusat tata kelola sistem, moderasi konten, pembaruan versi (Update Logs), dan analitik instansi." }
                     ]
                 }
@@ -459,8 +459,8 @@ export const userGuideContent = {
                     steps: [
                         "Gunakan bilah pencarian pintar yang dilengkapi Pencarian Populer (Trending Searches) dan saran kata kunci.",
                         "Telusuri seksi 'Rekomendasi Untuk Anda' yang disesuaikan dengan riwayat belajar dan minat kompetensi Anda.",
-                        "Gunakan filter kategori, tingkat kesulitan, pemateri, dan format materi (Video atau SCORM).",
-                        "Periksa silabus, tujuan pembelajaran, estimasi durasi, dan profil pemateri sebelum memulai."
+                        "Gunakan filter kategori, tingkat kesulitan, instruktur, dan format materi (Video atau SCORM).",
+                        "Periksa silabus, tujuan pembelajaran, estimasi durasi, dan profil instruktur sebelum memulai."
                     ]
                 },
 
@@ -491,7 +491,7 @@ export const userGuideContent = {
                         },
                         {
                             name: "Materi & Dokumen Pendukung",
-                            description: "Unduh materi paparan, modul PDF, SOP, dan regulasi resmi yang disediakan pemateri."
+                            description: "Unduh materi paparan, modul PDF, SOP, dan regulasi resmi yang disediakan instruktur."
                         },
                         {
                             name: "Kuis Evaluasi Terstruktur",
@@ -508,7 +508,7 @@ export const userGuideContent = {
                     title: "Kolaborasi & Notifikasi Langsung",
                     features: [
                         "Ajukan pertanyaan di forum Tanya Jawab (Q&A) materi dan berikan upvote pada jawaban yang bermanfaat.",
-                        "Dapatkan pemberitahuan seketika melalui ikon lonceng Pusat Notifikasi (In-App Bell) saat pemateri membalas pertanyaan Anda.",
+                        "Dapatkan pemberitahuan seketika melalui ikon lonceng Pusat Notifikasi (In-App Bell) saat instruktur membalas pertanyaan Anda.",
                         "Berikan ulasan dan rating bintang setelah menyelesaikan seluruh rangkaian materi.",
                         "Sampaikan masukan atau laporan kendala secara instan melalui tombol melayang Feedback."
                     ]
@@ -526,13 +526,13 @@ export const userGuideContent = {
             },
 
             forInstructors: {
-                title: "Untuk Pemateri",
+                title: "Untuk Instruktur",
                 subtitle: "Susun materi berkualitas, integrasikan modul SCORM, dan pantau kemajuan kompetensi peserta",
 
                 creatingCourse: {
                     title: "Membuat Materi Baru",
                     steps: [
-                        "Buka Dashboard Pemateri dan klik 'Buat Materi' (Create Course).",
+                        "Buka Dashboard Instruktur dan klik 'Buat Materi' (Create Course).",
                         "Lengkapi informasi utama: Judul, Deskripsi, Kategori, Tingkat Kesulitan, dan Target Sasaran Pegawai.",
                         "Unggah gambar thumbnail representatif dan video cuplikan materi (teaser).",
                         "Simpan sebagai Draf untuk melanjutkan penyusunan kurikulum materi."
@@ -566,17 +566,17 @@ export const userGuideContent = {
                         "Pilih dan sesuaikan Template Sertifikat resmi dengan tanda tangan digital dan stempel yang sah.",
                         "Pastikan seluruh modul pelajaran, materi unduhan, dan kuis telah terverifikasi dengan lengkap.",
                         "Klik 'Publikasikan Materi' agar materi dapat diakses oleh seluruh pegawai di lingkungan Setjen DPD RI.",
-                        "Pantau jumlah pendaftar, tingkat penyelesaian, dan ulasan melalui dashboard analitik pemateri."
+                        "Pantau jumlah pendaftar, tingkat penyelesaian, dan ulasan melalui dashboard analitik instruktur."
                     ]
                 },
 
                 management: {
                     title: "Bimbingan & Interaksi Peserta",
                     features: [
-                        "Pantau kemajuan belajar dan capaian kuis setiap murid pada menu 'Murid Saya'.",
+                        "Pantau kemajuan belajar dan capaian kuis setiap peserta pada menu 'Peserta Saya'.",
                         "Jawab pertanyaan peserta di forum Q&A dengan notifikasi langsung yang terkirim ke peserta.",
                         "Tinjau ulasan bintang dan umpan balik konstruktif untuk peningkatan materi selanjutnya.",
-                        "Perbarui modul materi dan pengumuman secara berkala tanpa menghapus riwayat belajar murid yang sudah ada."
+                        "Perbarui modul materi dan pengumuman secara berkala tanpa menghapus riwayat belajar peserta yang sudah ada."
                     ]
                 }
             },
@@ -630,7 +630,7 @@ export const userGuideContent = {
                     items: [
                         "Pantau materi yang sedang dipelajari, persentase tuntas, dan jam pembelajaran.",
                         "Akses cepat ke materi unduhan, catatan pribadi, kuis, dan sertifikat resmi.",
-                        "Fitur Multi-Role Switcher untuk beralih peran (Peserta/Pemateri/Admin) dalam 1 klik tanpa logout.",
+                        "Fitur Multi-Role Switcher untuk beralih peran (Peserta/Instruktur/Admin) dalam 1 klik tanpa logout.",
                         "Riwayat aktivitas dan tombol lanjutkan belajar dari posisi terakhir."
                     ]
                 },
@@ -641,7 +641,7 @@ export const userGuideContent = {
                     items: [
                         "Pencarian Populer (Trending Searches) untuk mengetahui topik yang banyak dipelajari rekan kerja.",
                         "Rekomendasi materi yang dipersonalisasi berdasarkan bidang kompetensi dan riwayat.",
-                        "Filter multi-kategori: tingkat kesulitan, pemateri, serta format materi (SCORM/Video).",
+                        "Filter multi-kategori: tingkat kesulitan, instruktur, serta format materi (SCORM/Video).",
                         "Pencarian cepat dengan toleransi salah ketik (typo-tolerant)."
                     ]
                 },
@@ -659,11 +659,11 @@ export const userGuideContent = {
 
                 qa: {
                     title: "Pusat Notifikasi & Forum Q&A",
-                    description: "Terhubung secara aktif dengan rekan sejawat dan pemateri:",
+                    description: "Terhubung secara aktif dengan rekan sejawat dan instruktur:",
                     features: [
                         "Pusat Notifikasi Langsung (In-App Bell) di navbar atas untuk pengingat dan pembaruan seketika.",
                         "Forum diskusi dan tanya jawab materi berformat teks kaya (rich-text).",
-                        "Dukungan upvote jawaban terbaik serta penanda jawaban terverifikasi dari pemateri.",
+                        "Dukungan upvote jawaban terbaik serta penanda jawaban terverifikasi dari instruktur.",
                         "Manajemen notifikasi dengan fitur tandai sudah dibaca dan filter notifikasi."
                     ]
                 },
@@ -763,8 +763,8 @@ export const userGuideContent = {
                         a: "SCORM adalah format standar modul e-learning interaktif internasional. Berbeda dengan video pasif biasa, materi SCORM berisi animasi, simulasi interaktif, latihan berkas, dan kuis terintegrasi yang secara otomatis mencatat capaian nilai ke dalam profil belajar Anda."
                     },
                     {
-                        q: "Apakah satu akun dapat memiliki peran sebagai Peserta sekaligus Pemateri?",
-                        a: "Ya! LMSetjen DPD RI mendukung fitur Multi-Role. Jika Anda memiliki hak akses ganda, Anda dapat dengan mudah beralih peran antara Peserta, Pemateri, atau Admin melalui menu akun tanpa perlu logout dari sistem."
+                        q: "Apakah satu akun dapat memiliki peran sebagai Peserta sekaligus Instruktur?",
+                        a: "Ya! LMSetjen DPD RI mendukung fitur Multi-Role. Jika Anda memiliki hak akses ganda, Anda dapat dengan mudah beralih peran antara Peserta, Instruktur, atau Admin melalui menu akun tanpa perlu logout dari sistem."
                     },
                     {
                         q: "Bagaimana cara memeriksa keaslian sertifikat yang diterbitkan?",

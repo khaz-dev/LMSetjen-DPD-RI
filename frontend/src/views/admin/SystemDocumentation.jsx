@@ -212,7 +212,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 authorizationDesc: "Each authenticated user is bound to one or more strict authorization scopes:",
                 roles: [
                     { name: "Student (Peserta)", description: "Can browse courses, enroll, stream lectures, use Si Manta AI tutor, take quizzes, obtain certificates, take notes, and post Q&A." },
-                    { name: "Teacher / Instructor (Pengajar)", description: "Can create curriculum drafts, upload lecture media, manage owned courses, and review student questions." },
+                    { name: "Teacher / Instructor (Instruktur)", description: "Can create curriculum drafts, upload lecture media, manage owned courses, and review student questions." },
                     { name: "Administrator (Admin Setjen)", description: "Full operational governance over users, course approvals, certificate designer, reports, and platform configurations." }
                 ],
                 protection: "Defensive Measures",
@@ -366,7 +366,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     "✗ Create, edit, or delete course curriculum",
                     "✗ Access admin analytics, moderation queues, or user databases"
                 ],
-                teacher: "Instructor Role (Pengajar)",
+                teacher: "Instructor Role (Instruktur)",
                 teacherPerms: [
                     "✓ All student privileges included",
                     "✓ Create, draft, and update course materials and quizzes",
@@ -469,7 +469,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     "Menyediakan fitur Catatan Belajar mandiri interaktif per modul dengan klasifikasi warna dan rangkuman AI",
                     "Menyediakan sistem evaluasi kuis otomatis dan penerbitan sertifikat digital berkode hash verifikasi QR sah",
                     "Meningkatkan motivasi belajar melalui gamifikasi poin capaian, lencana keahlian (badges), dan papan peringkat",
-                    "Menyediakan pusat notifikasi in-app real-time untuk peserta, pengajar, dan admin sistem",
+                    "Menyediakan pusat notifikasi in-app real-time untuk peserta, instruktur, dan admin sistem",
                     "Menyediakan moderasi konten komprehensif, pelaporan tiket masukan bug pengguna, dan diagnostik kesehatan server"
                 ],
                 systemInfo: "Informasi Runtime & Infrastruktur",
@@ -536,7 +536,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
 
             features: {
                 title: "Fitur Utama Platform (v1.1.0)",
-                student: "Fitur Peserta / Siswa",
+                student: "Fitur Peserta",
                 studentList: [
                     "Katalog kursus interaktif dengan filter kategori, pencarian SearchVector, dan pendaftaran mandiri",
                     "Pemutar video ganda (MP4 & YouTube) dengan checkpoint otomatis dan auto-unlock kelulusan 95%",
@@ -548,18 +548,18 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     "Notifikasi in-app real-time untuk status pendaftaran, progres kursus, kuis, dan diskusi",
                     "Forum diskusi tanya jawab (Q&A) kursus dan ulasan rating bintang"
                 ],
-                instructor: "Fitur Pengajar / Instruktur",
+                instructor: "Fitur Instruktur",
                 instructorList: [
                     "Pusat pembuatan kurikulum modular (bagian, materi pelajaran video/dokumen, dan kuis)",
                     "Editor teks kaya (rich text) dengan penyematan media, blok kode, dan berkas unduhan",
-                    "Pusat Notifikasi Pengajar untuk pendaftaran baru, pertanyaan Q&A, dan ulasan kursus",
-                    "Statistik pendaftaran peserta, metrik keterlibatan, dan evaluasi kelulusan siswa",
-                    "Pengelolaan forum tanya-jawab untuk merespons pertanyaan siswa secara langsung",
+                    "Pusat Notifikasi Instruktur untuk pendaftaran baru, pertanyaan Q&A, dan ulasan kursus",
+                    "Statistik pendaftaran peserta, metrik keterlibatan, dan evaluasi kelulusan peserta",
+                    "Pengelolaan forum tanya-jawab untuk merespons pertanyaan peserta secara langsung",
                     "Alur revisi dan pengajuan penerbitan kursus (draf dan publikasi)"
                 ],
                 admin: "Fitur Administrator Sistem",
                 adminList: [
-                    "Manajemen terpadu akun pengguna (Peserta, Pengajar, Administrator) dan eskalasi role",
+                    "Manajemen terpadu akun pengguna (Peserta, Instruktur, Administrator) dan eskalasi role",
                     "Alur kurasi dan persetujuan publikasi kursus sebelum tampil ke katalog umum",
                     "Desainer Template Sertifikat: editor visual stempel dinas, tanda tangan pejabat, dan tata letak",
                     "Pusat moderasi konten, laporan penyalahgunaan ulasan, dan diskusi Q&A",
@@ -586,7 +586,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 authorizationDesc: "Setiap pengguna terautentikasi memiliki cakupan hak akses yang tegas:",
                 roles: [
                     { name: "Peserta (Student)", description: "Dapat menjelajah kursus, mendaftar, memutar video, bertanya pada Si Manta AI, mengerjakan kuis, memperoleh sertifikat, membuat catatan belajar, dan bertanya di forum." },
-                    { name: "Pengajar (Teacher)", description: "Dapat menyusun draf materi kursus, mengunggah media video, mengelola kurikulum pribadi, dan merespons pertanyaan peserta." },
+                    { name: "Instruktur (Teacher)", description: "Dapat menyusun draf materi kursus, mengunggah media video, mengelola kurikulum pribadi, dan merespons pertanyaan peserta." },
                     { name: "Admin Setjen", description: "Akses operasional penuh mencakup manajemen pengguna, kurasi kursus, desainer sertifikat, moderasi laporan, dan diagnostik server." }
                 ],
                 protection: "Lapisan Proteksi Keamanan",
@@ -614,7 +614,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     "GET/POST /api/v1/student/notes/ - Manajemen catatan belajar mandiri per kursus dan materi",
                     "GET /api/v1/course/category/ - Daftar kategori kursus untuk navigasi katalog",
                     "GET /api/v1/course/course-list/ - Daftar kursus publik dengan kueri SearchVector",
-                    "GET/POST /api/v1/student/course-detail/<slug>/ - Akses materi pelajaran dan progres siswa",
+                    "GET/POST /api/v1/student/course-detail/<slug>/ - Akses materi pelajaran dan progres peserta",
                     "GET /api/v1/certificate/verify/<hash>/ - Verifikasi keabsahan sertifikat secara publik",
                     "GET/POST /api/v1/admin/certificates/templates/ - Konfigurasi template sertifikat dinas",
                     "GET /api/v1/rankings/ - Papan peringkat gamifikasi & metrik poin keaktifan",
@@ -643,7 +643,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     "Quiz, Question & Answer: Evaluasi objektif berbatas waktu, ambang batas kelulusan, dan riwayat skor",
                     "Certificate & CertificateTemplate: Hash verifikasi unik SHA-256, stempel digital, tanda tangan, dan validasi QR",
                     "AIMessage & AIChatSession: Riwayat percakapan interaktif Si Manta AI dengan konteks modul",
-                    "Notification: Entitas notifikasi in-app untuk peserta, pengajar, dan administrator",
+                    "Notification: Entitas notifikasi in-app untuk peserta, instruktur, dan administrator",
                     "StudentNote: Catatan belajar terstruktur per materi pelajaran dengan klasifikasi warna",
                     "Gamification (Badge & Point): Riwayat poin keaktifan, streak harian, dan lencana keahlian",
                     "Review & AbuseReport: Ulasan rating bintang, laporan penyalahgunaan, dan audit moderasi",
@@ -740,13 +740,13 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     "✗ Membuat, mengedit, atau menghapus materi kurikulum kursus",
                     "✗ Mengakses analitik administratif, antrean moderasi, atau basis data pengguna"
                 ],
-                teacher: "Peran Pengajar (Teacher)",
+                teacher: "Peran Instruktur (Instructor)",
                 teacherPerms: [
                     "✓ Seluruh hak akses peserta sudah termasuk",
                     "✓ Membuat, mengunggah draf kurikulum, materi, dan soal kuis",
-                    "✓ Mengakses Pusat Notifikasi Pengajar untuk pendaftaran dan diskusi baru",
+                    "✓ Mengakses Pusat Notifikasi Instruktur untuk pendaftaran dan diskusi baru",
                     "✓ Melihat daftar peserta terdaftar dan progres kelulusan materi",
-                    "✓ Merespons pertanyaan siswa pada kursus yang diampu secara langsung",
+                    "✓ Merespons pertanyaan peserta pada kursus yang diampu secara langsung",
                     "✓ Mengajukan revisi dan publikasi kursus untuk ditinjau admin",
                     "✗ Menyetujui kursus untuk tayang di katalog publik",
                     "✗ Mengakses konfigurasi sistem atau memodifikasi akun pengguna lain"
@@ -754,7 +754,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                 admin: "Peran Administrator (Admin Setjen)",
                 adminPerms: [
                     "✓ Akses tanpa batas ke pengaturan sistem dan model basis data",
-                    "✓ Menyetujui atau menolak publikasi kursus pengajar",
+                    "✓ Menyetujui atau menolak publikasi kursus instruktur",
                     "✓ Mengelola akun pengguna, kenaikan role, dan status keaktifan",
                     "✓ Mendesain template sertifikat resmi dengan stempel dan tanda tangan dinas",
                     "✓ Memoderasi laporan penyalahgunaan ulasan, Q&A, dan keluhan tiket",
@@ -937,7 +937,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     </div>
                     <div className="metric-data">
                         <div className="metric-val">{dbStats.total_students ?? 0}</div>
-                        <div className="metric-lbl">Peserta / Siswa</div>
+                        <div className="metric-lbl">Peserta</div>
                     </div>
                 </div>
 
@@ -947,7 +947,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                     </div>
                     <div className="metric-data">
                         <div className="metric-val">{dbStats.total_teachers ?? 0}</div>
-                        <div className="metric-lbl">Pengajar / Instruktur</div>
+                        <div className="metric-lbl">Instruktur</div>
                     </div>
                 </div>
 
@@ -1164,7 +1164,7 @@ function SystemDocumentation({ isEmbedded = false, refreshTrigger = 0 }) {
                                                     </div>
                                                     <p className="mb-0 text-muted" style={{ fontSize: "0.72rem" }}>
                                                         {language === "id"
-                                                            ? "Pusat notifikasi lonceng real-time untuk peserta, pengajar, dan admin dengan filter kategori dan mark-as-read."
+                                                            ? "Pusat notifikasi lonceng real-time untuk peserta, instruktur, dan admin dengan filter kategori dan mark-as-read."
                                                             : "Real-time in-app notification bell for learners, instructors, and admins with category filters."}
                                                     </p>
                                                 </div>

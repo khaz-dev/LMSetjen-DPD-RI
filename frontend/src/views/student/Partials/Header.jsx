@@ -286,10 +286,6 @@ function Header({ defaultCollapsed = false }) {
                     )}
                   </div>
                   <div className="d-flex align-items-center gap-2 flex-wrap min-w-0">
-                    <span className="student-portal-badge d-none d-sm-inline-flex">
-                      <i className="fas fa-graduation-cap me-1"></i>
-                      Siswa
-                    </span>
                     <h5 className="mb-0 text-white student-collapsed-name text-truncate">
                       {fullName}
                     </h5>

@@ -506,7 +506,7 @@ function CourseCreate() {
                                             Buat Kursus Baru
                                         </h2>
                                         <p className="header-subtitle mb-0">
-                                            Lengkapi informasi kursus, format media, dan deskripsi materi untuk siswa
+                                            Lengkapi informasi kursus, format media, dan deskripsi materi untuk peserta
                                         </p>
                                     </div>
                                     <div className="d-flex align-items-center gap-2">

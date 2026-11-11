@@ -123,7 +123,7 @@ KNOWLEDGE_BASE = [
         "reply": (
             "📜 **Panduan Lengkap Sertifikat Kelulusan:**\n\n"
             "• **Syarat Penerbitan:** Anda harus menuntaskan 100% materi pembelajaran (video/SCORM) serta mencapai nilai minimal (*passing grade*) pada kuis/evaluasi akhir.\n"
-            "• **Cara Mengunduh:** Masuk ke menu **Siswa / Profil** di pojok kanan atas, pilih **Sertifikat Kursus**, lalu klik tombol **Unduh PDF** pada kursus yang telah Anda selesaikan.\n"
+            "• **Cara Mengunduh:** Masuk ke menu **Peserta / Profil** di pojok kanan atas, pilih **Sertifikat Kursus**, lalu klik tombol **Unduh PDF** pada kursus yang telah Anda selesaikan.\n"
             "• **Keabsahan & Verifikasi:** Setiap lembar sertifikat dilengkapi tanda tangan elektronik resmi dan **QR-Code unik**. Siapapun dapat memindai QR tersebut untuk memvalidasi keaslian dokumen di portal resmi Setjen DPD RI."
         ),
         "suggestions": [
@@ -290,7 +290,7 @@ KNOWLEDGE_BASE = [
         ),
         "suggestions": [
             "Format dan spesifikasi modul SCORM 1.2",
-            "Bagaimana cara melihat daftar siswa terdaftar?",
+            "Bagaimana cara melihat daftar peserta terdaftar?",
             "Atur template sertifikat kursus"
         ],
         "actions": [
@@ -310,12 +310,12 @@ KNOWLEDGE_BASE = [
             "• **Standar Dukungan:** LMS Setjen DPD RI mendukung penuh standar e-learning **SCORM 1.2** (*Sharable Content Object Reference Model*).\n"
             "• **Struktur Berkas (.zip):** Berkas `imsmanifest.xml` **wajib** berada di root (tingkat teratas) zip, bukan di dalam subfolder ekstra.\n"
             "• **Titik Masuk (*Entry Point*):** Pastikan file utama (seperti `index.html`) terdefinisi dengan tepat di manifest dan dapat dimuat oleh iframe peramban.\n"
-            "• **Komunikasi CMI API:** Modul harus memanggil fungsi `LMSInitialize()`, mengupdate status kemajuan `cmi.core.lesson_status` (`completed`/`passed`), dan menutup sesi dengan `LMSFinish()` agar progres siswa tersimpan otomatis.\n"
+            "• **Komunikasi CMI API:** Modul harus memanggil fungsi `LMSInitialize()`, mengupdate status kemajuan `cmi.core.lesson_status` (`completed`/`passed`), dan menutup sesi dengan `LMSFinish()` agar progres peserta tersimpan otomatis.\n"
             "• **Cara Unggah:** Pada halaman edit kursus, tambahkan item materi silabus, pilih tipe **SCORM Package**, lalu unggah berkas zip Anda."
         ),
         "suggestions": [
             "Panduan buat kursus baru",
-            "Cara pantau progres modul siswa",
+            "Cara pantau progres modul peserta",
             "Kendala pemutar SCORM macet"
         ],
         "actions": [
@@ -1047,11 +1047,11 @@ class AIAssistantChatAPIView(APIView):
                         {"label": "📊 Dashboard Instruktur", "url": "/instructor/dashboard/", "type": "route"},
                         {"label": "📚 Kursus Kelolaan", "url": "/instructor/courses/", "type": "route"},
                         {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"},
-                        {"label": "👥 Daftar Siswa", "url": "/instructor/students/", "type": "route"}
+                        {"label": "👥 Daftar Peserta", "url": "/instructor/students/", "type": "route"}
                     ]
                     suggested_qs = [
                         "Bagaimana spesifikasi dan cara mengunggah paket modul SCORM 1.2?",
-                        "Berapa jumlah siswa terdaftar dan ulasan pada kursus yang saya ajar?",
+                        "Berapa jumlah peserta terdaftar dan ulasan pada kursus yang saya ajar?",
                         "Bagaimana panduan membuat materi kursus baru?"
                     ]
                 else:
@@ -1124,18 +1124,18 @@ class AIAssistantChatAPIView(APIView):
                 "• **Panduan Pembuatan & Publikasi Kursus Baru**\n"
                 "• **Format & Spesifikasi Paket Modul SCORM 1.2**\n"
                 "• **Manajemen Kuis Evaluasi & Standar Passing Grade**\n"
-                "• **Pemantauan Progres & Tanya Jawab dengan Siswa**\n\n"
+                "• **Pemantauan Progres & Tanya Jawab dengan Peserta**\n\n"
                 "Silakan pilih tombol aksi di bawah untuk mengelola pelatihan Anda!"
             )
             default_actions = [
                 {"label": "📊 Dashboard Instruktur", "url": "/instructor/dashboard/", "type": "route"},
                 {"label": "📚 Kursus Kelolaan", "url": "/instructor/courses/", "type": "route"},
                 {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"},
-                {"label": "👥 Daftar Siswa", "url": "/instructor/students/", "type": "route"}
+                {"label": "👥 Daftar Peserta", "url": "/instructor/students/", "type": "route"}
             ]
             suggested_fallback_qs = [
                 "Bagaimana spesifikasi dan cara mengunggah paket modul SCORM 1.2?",
-                "Berapa jumlah siswa terdaftar dan ulasan pada kursus yang saya ajar?",
+                "Berapa jumlah peserta terdaftar dan ulasan pada kursus yang saya ajar?",
                 "Bagaimana panduan membuat materi kursus baru?"
             ]
         else:
@@ -1466,7 +1466,7 @@ class AIAssistantChatAPIView(APIView):
                 reply += (
                     f"📊 **Aktivitas Kursus Kelolaan Anda:**\n"
                     f"• **Total Kursus:** {t_courses_count} pelatihan ({t_published} aktif publikasi, {t_review} dalam review, {t_draft} draf)\n"
-                    f"• **Total Siswa Terdaftar:** {t_students:,} aparatur\n\n"
+                    f"• **Total Peserta Terdaftar:** {t_students:,} aparatur\n\n"
                     "Manta siap mendampingi Anda menyusun silabus materi, mengunggah paket SCORM 1.2/video, memantau kemajuan peserta, hingga merespons diskusi tanya jawab."
                 )
             else:
@@ -1478,17 +1478,17 @@ class AIAssistantChatAPIView(APIView):
                 {"label": "📊 Dashboard Instruktur", "url": "/instructor/dashboard/", "type": "route"},
                 {"label": f"📚 Kursus Kelolaan ({t_courses_count})", "url": "/instructor/courses/", "type": "route"},
                 {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"},
-                {"label": "👥 Daftar Siswa Terdaftar", "url": "/instructor/students/", "type": "route"}
+                {"label": "👥 Daftar Peserta Terdaftar", "url": "/instructor/students/", "type": "route"}
             ]
             return {
                 "status": "success",
                 "reply": reply,
                 "source": "personalized_greeting_instructor",
                 "suggested_questions": [
-                    "Berapa jumlah siswa terdaftar dan ulasan pada kursus yang saya ajar?",
+                    "Berapa jumlah peserta terdaftar dan ulasan pada kursus yang saya ajar?",
                     "Bagaimana panduan membuat dan mengunggah materi kursus baru?",
                     "Bagaimana spesifikasi dan cara mengunggah paket modul SCORM 1.2?",
-                    "Bagaimana cara merespons pertanyaan dan diskusi dari siswa?"
+                    "Bagaimana cara merespons pertanyaan dan diskusi dari peserta?"
                 ],
                 "actions": actions,
                 "recommended_courses": []
@@ -1612,11 +1612,11 @@ class AIAssistantChatAPIView(APIView):
             t_students = user_ctx.get("teacher_students_count", 0)
             if t_count > 0:
                 reply = f"📚 **Daftar Kursus Kelolaan Anda, Instruktur Bapak/Ibu {name}:**\n\n"
-                reply += f"Anda mengelola **{t_count} pelatihan** dengan total **{t_students} siswa terdaftar**:\n\n"
+                reply += f"Anda mengelola **{t_count} pelatihan** dengan total **{t_students} peserta terdaftar**:\n\n"
                 for i, c in enumerate(recent, 1):
                     st = c.get("status", "Draft")
                     st_icon = "🟢" if st == "Published" else ("🟡" if st == "Review" else "⚪")
-                    reply += f"{i}. **{c['title']}** — {st_icon} *{st}* ({c.get('students_count', 0)} siswa)\n"
+                    reply += f"{i}. **{c['title']}** — {st_icon} *{st}* ({c.get('students_count', 0)} peserta)\n"
                 reply += "\nSilakan klik tombol di bawah untuk mengelola silabus, menambahkan materi, atau membuat kursus baru!"
             else:
                 reply = (
@@ -1626,7 +1626,7 @@ class AIAssistantChatAPIView(APIView):
             actions = [
                 {"label": "📚 Kelola Kursus Saya", "url": "/instructor/courses/", "type": "route"},
                 {"label": "➕ Buat Kursus Baru", "url": "/instructor/create-course/", "type": "route"},
-                {"label": "👥 Daftar Siswa", "url": "/instructor/students/", "type": "route"}
+                {"label": "👥 Daftar Peserta", "url": "/instructor/students/", "type": "route"}
             ]
             return {
                 "status": "success",
@@ -1635,7 +1635,7 @@ class AIAssistantChatAPIView(APIView):
                 "suggested_questions": [
                     "Bagaimana alur pengajuan review kursus ke admin?",
                     "Panduan format paket SCORM 1.2",
-                    "Bagaimana cara melihat evaluasi nilai kuis siswa?"
+                    "Bagaimana cara melihat evaluasi nilai kuis peserta?"
                 ],
                 "actions": actions,
                 "recommended_courses": []
@@ -1762,19 +1762,19 @@ class AIAssistantChatAPIView(APIView):
                 f"📜 **Pengaturan Sertifikat Kelulusan Kursus (Instruktur):**\n\n"
                 f"Instruktur Bapak/Ibu **{name}**, Anda dapat mengatur kriteria penerbitan sertifikat untuk kursus kelolaan Anda:\n"
                 "1. **Standar Kelulusan Evaluasi:** Tentukan batas nilai kelulusan (*passing grade*) kuis akhir (umumnya 70% – 80%).\n"
-                "2. **Penyelesaian 100% Modul:** Sertifikat resmi hanya otomatis terbit jika siswa telah menuntaskan seluruh materi video dan modul SCORM.\n"
+                "2. **Penyelesaian 100% Modul:** Sertifikat resmi hanya otomatis terbit jika peserta telah menuntaskan seluruh materi video dan modul SCORM.\n"
                 "3. **Template Kursus:** Anda dapat menyesuaikan nama kompetensi dan spesifikasi pelatihan melalui pengaturan sertifikat kursus."
             )
             actions = [
                 {"label": "📚 Buka Kursus Kelolaan", "url": "/instructor/courses/", "type": "route"},
-                {"label": "📊 Rekap Evaluasi Siswa", "url": "/instructor/evaluation/", "type": "route"}
+                {"label": "📊 Rekap Evaluasi Peserta", "url": "/instructor/evaluation/", "type": "route"}
             ]
             return {
                 "status": "success",
                 "reply": reply,
                 "source": "instructor_certificates_management",
                 "suggested_questions": [
-                    "Bagaimana alur evaluasi nilai dan kelulusan siswa?",
+                    "Bagaimana alur evaluasi nilai dan kelulusan peserta?",
                     "Panduan buat kursus baru",
                     "Format dan spesifikasi modul SCORM 1.2"
                 ],
@@ -1844,7 +1844,7 @@ class AIAssistantChatAPIView(APIView):
 
         role_labels_map = {
             "student": "📚 Peserta (Aparatur Pembelajar)",
-            "instructor": "🎓 Instruktur (Pengajar & Penyusun Kursus)",
+            "instructor": "🎓 Instruktur (Penyusun & Pengelola Kursus)",
             "admin": "🛡️ Administrator (Pengelola Sistem LMS)"
         }
         available_roles_text = "\n".join([f"• {role_labels_map.get(r, r)}" for r in available_roles])
@@ -1902,15 +1902,15 @@ class AIAssistantChatAPIView(APIView):
             ]
         elif re.search(r"\b(siswa|peserta|tanya\s*jawab|diskusi|evaluasi|nilai|rekap)\b", norm_query):
             reply = (
-                f"👥 **Panduan Manajemen Siswa & Evaluasi Pembelajaran (Bapak/Ibu {name}):**\n\n"
+                f"👥 **Panduan Manajemen Peserta & Evaluasi Pembelajaran (Bapak/Ibu {name}):**\n\n"
                 "Sebagai Instruktur, Anda dapat memantau dan berinteraksi langsung dengan peserta:\n"
-                "1. **Daftar Siswa Terdaftar:** Pantau siapa saja aparatur yang telah mendaftar di kelas Anda melalui menu **Siswa** (`/instructor/students/`).\n"
+                "1. **Daftar Peserta Terdaftar:** Pantau siapa saja aparatur yang telah mendaftar di kelas Anda melalui menu **Peserta** (`/instructor/students/`).\n"
                 "2. **Tanya Jawab (Q&A):** Berikan respons atas pertanyaan atau diskusi materi dari peserta melalui menu **Tanya Jawab** (`/instructor/questions/`).\n"
                 "3. **Rekap Kelulusan & Nilai:** Tinjau capaian skor kuis pemahaman dan status kelulusan peserta melalui menu **Evaluasi Kursus** (`/instructor/evaluation/`)."
             )
             actions = [
-                {"label": "💬 Tanya Jawab Siswa", "url": "/instructor/questions/", "type": "route"},
-                {"label": "👥 Daftar Siswa Terdaftar", "url": "/instructor/students/", "type": "route"},
+                {"label": "💬 Tanya Jawab Peserta", "url": "/instructor/questions/", "type": "route"},
+                {"label": "👥 Daftar Peserta Terdaftar", "url": "/instructor/students/", "type": "route"},
                 {"label": "📊 Evaluasi & Kelulusan", "url": "/instructor/evaluation/", "type": "route"}
             ]
         else:
@@ -1934,7 +1934,7 @@ class AIAssistantChatAPIView(APIView):
             "source": "instructor_workflow_guide",
             "suggested_questions": [
                 "Bagaimana spesifikasi dan cara mengunggah paket modul SCORM 1.2?",
-                "Bagaimana cara melihat daftar siswa dan nilai kuis?",
+                "Bagaimana cara melihat daftar peserta dan nilai kuis?",
                 "Bagaimana alur persetujuan kursus oleh tim admin?"
             ],
             "actions": actions,
@@ -2264,7 +2264,7 @@ class AIAssistantChatAPIView(APIView):
 
     def _handle_current_course_query(self, course: Any, raw_message: str, norm_query: str, user_ctx: Dict[str, Any]) -> Dict[str, Any]:
         """Menjawab pertanyaan spesifik mengenai kursus yang sedang dibuka pengguna di layar."""
-        teacher_name = getattr(course.teacher, "full_name", None) or getattr(course.teacher, "name", None) or "Instruktur BPSDM Setjen DPD RI"
+        teacher_name = getattr(course.teacher, "full_name", None) or getattr(course.teacher, "name", None) or "Instruktur Biro Organisasi Keanggotaan dan Kepegawaian Setjen DPD RI"
         cat_title = course.category.title if course.category else "Kompetensi Umum"
         level_name = getattr(course, "level", "Semua Tingkatan")
 
@@ -3649,7 +3649,7 @@ class AIAssistantChatAPIView(APIView):
                     "Berdasarkan **Peraturan LAN RI No. 10 Tahun 2018** tentang Pengembangan Kompetensi PNS, "
                     "setiap Aparatur Sipil Negara diwajibkan memenuhi hak & kewajiban minimal **20 Jam Pelajaran (JP)** per tahun anggaran.\n\n"
                     "• **Ketentuan JP:** 1 JP setara dengan 45 menit pembelajaran daring / e-learning mandiri.\n"
-                    "• **Pemanfaatan:** Perolehan JP dan sertifikat digital LMS terintegrasi langsung dengan Sasaran Kinerja Pegawai (SKP) dan rekam jejak kompetensi BPSDM Setjen DPD RI.\n\n"
+                    "• **Pemanfaatan:** Perolehan JP dan sertifikat digital LMS terintegrasi langsung dengan Sasaran Kinerja Pegawai (SKP) dan rekam jejak kompetensi Biro Organisasi Keanggotaan dan Kepegawaian Setjen DPD RI.\n\n"
                     "👉 **Silakan masuk menggunakan akun SSO Setjen DPD RI** untuk memantau akumulasi JP Anda secara real-time dan mendapatkan rekomendasi jadwal belajar mingguan dari Manta AI!"
                 ),
                 "source": "asn_jp_tracker",
@@ -4565,14 +4565,14 @@ class AIAssistantChatAPIView(APIView):
                 )
             elif active_role == "instructor":
                 role_specific_ctx = (
-                    f"\n- Konteks Peran Pengguna: INSTRUKTUR / PENGAJAR ({active_role_display})\n"
+                    f"\n- Konteks Peran Pengguna: INSTRUKTUR ({active_role_display})\n"
                     f"  Hak Akses Akun: {available_roles}\n"
-                    f"  Statistik Mengajar: {user_ctx.get('teacher_courses_count', 0)} kursus kelolaan ({user_ctx.get('teacher_published_count', 0)} terbit, {user_ctx.get('teacher_draft_count', 0)} draf, {user_ctx.get('teacher_review_count', 0)} review), {user_ctx.get('teacher_students_count', 0)} siswa terdaftar\n"
-                    f"  Pedoman Respons: Berikan jawaban dari sudut pandang instruktur pengampu (pembuatan kurikulum/silabus, spesifikasi paket SCORM 1.2, pembuatan soal kuis, passing grade, manajemen siswa, dan tanya-jawab).\n"
+                    f"  Statistik Mengajar: {user_ctx.get('teacher_courses_count', 0)} kursus kelolaan ({user_ctx.get('teacher_published_count', 0)} terbit, {user_ctx.get('teacher_draft_count', 0)} draf, {user_ctx.get('teacher_review_count', 0)} review), {user_ctx.get('teacher_students_count', 0)} peserta terdaftar\n"
+                    f"  Pedoman Respons: Berikan jawaban dari sudut pandang instruktur pengampu (pembuatan kurikulum/silabus, spesifikasi paket SCORM 1.2, pembuatan soal kuis, passing grade, manajemen peserta, dan tanya-jawab).\n"
                 )
             else:
                 role_specific_ctx = (
-                    f"\n- Konteks Peran Pengguna: PESERTA / SISWA ({active_role_display})\n"
+                    f"\n- Konteks Peran Pengguna: PESERTA ({active_role_display})\n"
                     f"  Riwayat Belajar: {enrolled_info}, {cert_info}\n"
                     f"  Status Terakhir: {latest_info}\n"
                     f"  Pedoman Respons: Berikan jawaban berorientasi belajar mandiri, pemahaman modul, pencapaian 20 JP ASN LAN RI, pengerjaan kuis, dan pengunduhan sertifikat resmi.\n"
@@ -4772,8 +4772,8 @@ def get_user_learning_nudge(user: Any, current_role: str = None, pathname: str =
             return {
                 "has_nudge": True,
                 "nudge_type": "instructor_normal",
-                "bubble_text": f"Halo Instruktur {display_name} 🎓 Anda mengajar {t_students:,} siswa ({t_count} kursus). Siap membuat silabus baru?",
-                "title": "Pusat Pengajaran Instruktur",
+                "bubble_text": f"Halo Instruktur {display_name} 🎓 Anda mengajar {t_students:,} peserta ({t_count} kursus). Siap membuat silabus baru?",
+                "title": "Pusat Aktivitas Instruktur",
                 "message": "Kelola silabus, unggah paket SCORM 1.2, atau pantau diskusi dan evaluasi kuis peserta kursus Anda.",
                 "action_label": "➕ Buat Kursus Baru",
                 "action_url": "/instructor/create-course/",

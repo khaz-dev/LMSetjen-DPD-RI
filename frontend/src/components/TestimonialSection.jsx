@@ -281,7 +281,7 @@ function TestimonialSection() {
                       }}
                     >
                       <i className={`fas ${testimonial.role === "instructor" ? "fa-chalkboard-user" : "fa-graduation-cap"} me-1`}></i>
-                      {testimonial.role === "instructor" ? "Sebagai Instruktur" : "Sebagai Siswa"}
+                      {testimonial.role === "instructor" ? "Sebagai Instruktur" : "Sebagai Peserta"}
                     </span>
                     
                     {/* ✨ PHASE 4.12.2: Public User Indicator - if NIP is missing, user is from public */}

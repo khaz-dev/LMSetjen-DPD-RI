@@ -1244,7 +1244,7 @@ function QA() {
                                                 <i className="fas fa-layer-group text-teal" style={{ color: "#0f766e" }}></i>
                                                 Pilih Kursus
                                             </h4>
-                                            <small className="text-muted">Pilih kursus untuk melihat diskusi dan menjawab pertanyaan siswa</small>
+                                            <small className="text-muted">Pilih kursus untuk melihat diskusi dan menjawab pertanyaan peserta</small>
                                         </div>
                                         <span className="badge bg-white text-muted border px-2 py-1 rounded-pill small">
                                             Total: {filteredCourses.length} Kursus
@@ -1650,7 +1650,7 @@ function QA() {
                                                 </div>
                                                 <h5 className="qa-empty-title">Tidak Ada Pertanyaan</h5>
                                                 <p className="qa-empty-desc mb-0">
-                                                    Ketika siswa mengajukan pertanyaan tentang kursus ini, mereka akan muncul di sini.
+                                                    Ketika peserta mengajukan pertanyaan tentang kursus ini, mereka akan muncul di sini.
                                                 </p>
                                             </div>
                                         )}
@@ -1997,7 +1997,7 @@ function QA() {
                                                     onChange={handleMessageChange}
                                                     onPaste={handleReplyPasteImage}
                                                     value={getCurrentMessage()}
-                                                    placeholder="Ketik balasan untuk siswa di sini... Mendukung Markdown, tautan [link], dan tempel screenshot langsung (Ctrl+V)."
+                                                    placeholder="Ketik balasan untuk peserta di sini... Mendukung Markdown, tautan [link], dan tempel screenshot langsung (Ctrl+V)."
                                                     disabled={messageLoading}
                                                     required={!replyAttachment}
                                                 />

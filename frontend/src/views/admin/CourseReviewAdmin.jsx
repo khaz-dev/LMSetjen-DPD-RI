@@ -55,7 +55,7 @@ function CourseReviewAdmin() {
                 <div class="text-start">
                     <p>Instruktur: <strong>${course.teacher?.full_name || "Unknown"}</strong></p>
                     <p>Kategori: <strong>${course.category?.title || "N/A"}</strong></p>
-                    <p class="text-muted small">Kursus ini akan dipublikasikan dan tersedia untuk siswa.</p>
+                    <p class="text-muted small">Kursus ini akan dipublikasikan dan tersedia untuk peserta.</p>
                 </div>
             `,
             icon: "question",

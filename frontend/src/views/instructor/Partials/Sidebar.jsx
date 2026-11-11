@@ -158,12 +158,12 @@ function Sidebar() {
                             <Link
                                 className={`instructor-nav-link ${isActive("/instructor/students") ? "active" : ""}`}
                                 to="/instructor/students/"
-                                data-tooltip="Siswa"
+                                data-tooltip="Peserta"
                             >
                                 <div className="instructor-nav-icon nav-icon">
                                     <i className="fas fa-user-graduate"></i>
                                 </div>
-                                <span className="nav-text">Siswa</span>
+                                <span className="nav-text">Peserta</span>
                             </Link>
 
                             <Link

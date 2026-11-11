@@ -345,7 +345,7 @@ function Dashboard() {
                                     <div className="spinner-border text-teal" role="status" style={{ width: "2.5rem", height: "2.5rem", color: "#0f766e" }}>
                                         <span className="visually-hidden">Memuat...</span>
                                     </div>
-                                    <p className="mt-3 text-muted small fw-semibold">Memuat Dasbor Siswa LMSetjen DPD RI...</p>
+                                    <p className="mt-3 text-muted small fw-semibold">Memuat Dasbor Peserta LMSetjen DPD RI...</p>
                                 </div>
                             </div>
                         </div>

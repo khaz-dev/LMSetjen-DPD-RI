@@ -189,7 +189,7 @@ function Activities() {
         if (found) {
             return {
                 ...found,
-                roleCategory: 'Siswa'
+                roleCategory: 'Peserta'
             };
         }
 
@@ -225,7 +225,7 @@ function Activities() {
             icon,
             color,
             label,
-            roleCategory: 'Siswa'
+            roleCategory: 'Peserta'
         };
     };
 
@@ -307,7 +307,7 @@ function Activities() {
                                     <div className="act-hero-info">
                                         <div className="act-hero-badge">
                                             <i className="fas fa-shield-halved"></i>
-                                            <span>Pusat Aktivitas Siswa</span>
+                                            <span>Pusat Aktivitas Peserta</span>
                                         </div>
                                         <h2 className="act-hero-title">
                                             <i className="fas fa-clock-rotate-left"></i>
@@ -331,7 +331,7 @@ function Activities() {
                                                 </div>
                                                 <div className="act-points-rank">
                                                     <i className="fas fa-medal text-warning"></i>
-                                                    <span>{pointsData?.rank_position ? `Peringkat #${pointsData.rank_position}` : 'Siswa LMS'}</span>
+                                                    <span>{pointsData?.rank_position ? `Peringkat #${pointsData.rank_position}` : 'Peserta LMS'}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -800,7 +800,7 @@ function Activities() {
                                                     <i className="fas fa-award text-warning"></i>
                                                 </div>
                                                 <div>
-                                                    <h5 className="mb-0">Rincian Perolehan Poin Siswa</h5>
+                                                    <h5 className="mb-0">Rincian Perolehan Poin Peserta</h5>
                                                     <small className="opacity-75">Transparansi gamifikasi dan riwayat audit perolehan poin belajar</small>
                                                 </div>
                                             </div>
@@ -888,7 +888,7 @@ function Activities() {
                                             {/* Point Earning Rules */}
                                             <h6 className="fw-bold mb-2 small text-dark d-flex align-items-center gap-1">
                                                 <i className="fas fa-book-open text-primary"></i>
-                                                Cara Memperoleh Poin Siswa
+                                                Cara Memperoleh Poin Peserta
                                             </h6>
                                             <div className="points-rules-list">
                                                 {pointsData?.rules?.map((rule) => (

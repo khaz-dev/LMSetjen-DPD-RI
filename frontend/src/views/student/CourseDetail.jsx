@@ -9751,7 +9751,7 @@ function CourseDetail() {
                                                                                             <span className="badge bg-warning text-dark border border-warning" style={{ fontSize: '10px' }}>Pace Cepat</span>
                                                                                         </div>
                                                                                         <small className="text-secondary d-block mt-0" style={{ fontSize: '11px', lineHeight: '1.4' }}>
-                                                                                            Durasi pengerjaan Anda terdeteksi sangat singkat. Nilai berhasil disimpan, namun penerbitan sertifikat digital ditahan sementara menunggu pengesahan pengajar.
+                                                                                            Durasi pengerjaan Anda terdeteksi sangat singkat. Nilai berhasil disimpan, namun penerbitan sertifikat digital ditahan sementara menunggu pengesahan instruktur.
                                                                                         </small>
                                                                                     </div>
                                                                                 </div>

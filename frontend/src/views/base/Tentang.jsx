@@ -116,7 +116,7 @@ function Tentang() {
                   <div>
                     <h1 className="tentang-hero-title">Tentang LMSetjen DPD RI</h1>
                     <p className="tentang-subtitle-text">
-                      Platform pembelajaran digital resmi Bagian Pengembangan Sumber Daya Manusia (BPSDM) Sekretariat Jenderal DPD RI untuk mengakselerasi kompetensi dan profesionalisme aparatur sipil.
+                      Platform pembelajaran digital resmi Biro Organisasi Keanggotaan dan Kepegawaian (Biro OKK) Sekretariat Jenderal DPD RI untuk mengakselerasi kompetensi dan profesionalisme aparatur sipil.
                     </p>
                   </div>
                 </div>
@@ -147,7 +147,7 @@ function Tentang() {
                     <i className="bi bi-person-workspace"></i>
                   </span>
                   <div className="stat-pill-text">
-                    <span className="stat-label">Tenaga Pengajar</span>
+                    <span className="stat-label">Instruktur</span>
                     <strong className="stat-val">50+ Instruktur Ahli</strong>
                   </div>
                 </div>
@@ -157,7 +157,7 @@ function Tentang() {
                   </span>
                   <div className="stat-pill-text">
                     <span className="stat-label">Akreditasi Mutu</span>
-                    <strong className="stat-val">Standar BPSDM DPD RI</strong>
+                    <strong className="stat-val">Standar Biro OKK DPD RI</strong>
                   </div>
                 </div>
               </div>

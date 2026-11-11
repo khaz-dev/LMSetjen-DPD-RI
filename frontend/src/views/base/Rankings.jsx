@@ -44,7 +44,7 @@ function Rankings() {
                     Papan Peringkat LMSetjen DPD RI
                   </div>
                   <h1 className="h2 fw-bold text-white mb-2 rankings-hero-title">
-                    Peringkat Instruktur & Siswa Terbaik
+                    Peringkat Instruktur & Peserta Terbaik
                   </h1>
                   <p className="text-white text-opacity-75 mb-3 small mx-auto rankings-hero-subtitle" style={{ maxWidth: '620px' }}>
                     Apresiasi atas dedikasi pengajaran instruktur dan konsistensi pembelajaran pegawai di lingkungan Sekretariat Jenderal DPD RI.
@@ -69,7 +69,7 @@ function Rankings() {
                     className={`btn rounded-pill px-3 py-1 px-md-4 py-md-2 ${activeTab === 'students' ? 'btn-white-active' : 'btn-tab-inactive'}`}
                     onClick={() => setActiveTab('students')}
                   >
-                    <i className="fas fa-graduation-cap me-2"></i>Siswa Terbaik
+                    <i className="fas fa-graduation-cap me-2"></i>Peserta Terbaik
                   </button>
                 </div>
               </div>
@@ -164,8 +164,8 @@ function Rankings() {
                       <i className="fas fa-graduation-cap fs-5"></i>
                     </div>
                     <div>
-                      <h6 className="fw-bold mb-0 text-dark">Sistem Poin Siswa</h6>
-                      <span className="small text-muted" style={{ fontSize: '0.78rem' }}>Cara menaikkan ranking sebagai peserta didik</span>
+                      <h6 className="fw-bold mb-0 text-dark">Sistem Poin Peserta</h6>
+                      <span className="small text-muted" style={{ fontSize: '0.78rem' }}>Cara menaikkan ranking sebagai peserta pelatihan</span>
                     </div>
                   </div>
                   <ul className="list-unstyled mb-3 rule-points-list small">

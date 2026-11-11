@@ -392,7 +392,7 @@ function Review() {
                                             Ulasan Kursus
                                         </h2>
                                         <p className="reviews-subtitle mb-0">
-                                            Pantau kepuasan siswa, respon umpan balik, dan tingkatkan mutu pembelajaran
+                                            Pantau kepuasan peserta, respon umpan balik, dan tingkatkan mutu pembelajaran
                                         </p>
                                     </div>
                                     <div className="d-flex align-items-center gap-2">
@@ -532,7 +532,7 @@ function Review() {
                                         <input
                                             type="text"
                                             className="form-control compact-input"
-                                            placeholder="Cari kursus, nama siswa, atau kata kunci ulasan..."
+                                            placeholder="Cari kursus, nama peserta, atau kata kunci ulasan..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                         />
@@ -602,7 +602,7 @@ function Review() {
                                         <div className="spinner-border text-teal spinner-border-sm me-2" role="status">
                                             <span className="visually-hidden">Memuat...</span>
                                         </div>
-                                        <span>Memuat data ulasan siswa...</span>
+                                        <span>Memuat data ulasan peserta...</span>
                                     </div>
                                 ) : filteredReviews.length > 0 ? (
                                     <div className="reviews-cards-stack">
@@ -625,7 +625,7 @@ function Review() {
                                                                 {r.user?.image ? (
                                                                     <img
                                                                         src={r.user.image}
-                                                                        alt={r.user.full_name || "Siswa"}
+                                                                        alt={r.user.full_name || "Peserta"}
                                                                         className="reviewer-img"
                                                                         onError={(e) => {
                                                                             e.target.style.display = "none";
@@ -648,7 +648,7 @@ function Review() {
                                                             <div className="reviewer-details">
                                                                 <div className="d-flex align-items-center flex-wrap gap-2">
                                                                     <h5 className="reviewer-name mb-0">
-                                                                        {r.user?.full_name || "Siswa Anonymous"}
+                                                                        {r.user?.full_name || "Peserta Anonymous"}
                                                                     </h5>
                                                                     {r.user?.jenis_jabatan && (
                                                                         <span className="user-role-badge">
@@ -775,7 +775,7 @@ function Review() {
                                                             <div className="editor-header">
                                                                 <span className="editor-title">
                                                                     <i className="fas fa-pen-alt me-1 text-teal"></i>
-                                                                    {hasReply ? "Edit Tanggapan Anda" : "Tulis Tanggapan untuk Siswa"}
+                                                                    {hasReply ? "Edit Tanggapan Anda" : "Tulis Tanggapan untuk Peserta"}
                                                                 </span>
                                                                 <span className="editor-hint">
                                                                     Tanggapan Anda akan tampil di halaman kursus
@@ -786,7 +786,7 @@ function Review() {
                                                                 rows="3"
                                                                 value={replies[r.id] ?? r.reply ?? ""}
                                                                 onChange={(e) => setReplies({ ...replies, [r.id]: e.target.value })}
-                                                                placeholder="Tuliskan ucapan terima kasih atau jawaban atas masukan siswa..."
+                                                                placeholder="Tuliskan ucapan terima kasih atau jawaban atas masukan peserta..."
                                                                 disabled={loadingReply[r.id]}
                                                             />
                                                             <div className="editor-footer">
@@ -835,7 +835,7 @@ function Review() {
                                         <p className="empty-desc mb-3">
                                             {hasActiveFilters
                                                 ? "Coba ubah kriteria pencarian, rating, atau filter status ulasan Anda."
-                                                : "Ketika siswa menyelesaikan kursus dan memberikan ulasan, umpan balik mereka akan muncul di sini."}
+                                                : "Ketika peserta menyelesaikan kursus dan memberikan ulasan, umpan balik mereka akan muncul di sini."}
                                         </p>
                                         {hasActiveFilters && (
                                             <button

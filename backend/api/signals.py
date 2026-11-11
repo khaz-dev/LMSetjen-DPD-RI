@@ -708,7 +708,7 @@ def log_instructor_course_activities(sender, instance, created, **kwargs):
                     role_at_time='instructor',
                     course=instance,
                     title=f"Publikasikan Kursus: {instance.title}",
-                    description=f"Mempublikasikan kursus '{instance.title}' untuk siswa (+50 Poin)",
+                    description=f"Mempublikasikan kursus '{instance.title}' untuk peserta (+50 Poin)",
                     points_awarded=50,
                     success=True,
                     metadata={
@@ -1049,8 +1049,8 @@ def log_student_unenrolled(sender, instance, **kwargs):
             activity_type='student_unenrolled',
             role_at_time='instructor',
             course=course,
-            title=f"Siswa Dihapus: {student_name}",
-            description=f"Menghapus siswa '{student_name}' dari kursus '{course.title}'",
+            title=f"Peserta Dihapus: {student_name}",
+            description=f"Menghapus peserta '{student_name}' dari kursus '{course.title}'",
             success=True,
             metadata={
                 'enrollment_id': str(instance.enrollment_id) if hasattr(instance, 'enrollment_id') else str(instance.id),

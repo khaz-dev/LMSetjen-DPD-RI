@@ -202,7 +202,7 @@ export const handleDeleteCourse = async (courseId, courseName, onSuccess) => {
         // Show enhanced delete confirmation dialog
         const result = await DeleteConfirmation({
             title: 'Hapus Kursus?',
-            text: `Anda akan menghapus secara permanen "${courseName}". Ini akan menghapus semua konten terkait termasuk kurikulum, pelajaran, kuis, dan pendaftaran siswa. Tindakan ini tidak dapat dibatalkan.`
+            text: `Anda akan menghapus secara permanen "${courseName}". Ini akan menghapus semua konten terkait termasuk kurikulum, pelajaran, kuis, dan pendaftaran peserta. Tindakan ini tidak dapat dibatalkan.`
         });
         
         if (result.isConfirmed) {

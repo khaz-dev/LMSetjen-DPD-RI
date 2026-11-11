@@ -295,7 +295,7 @@ function Courses() {
                                         <span className="metric-value">{metrics.totalStudents}</span>
                                         <span className="metric-label">Total Peserta</span>
                                     </div>
-                                    <span className="metric-badge bg-purple-subtle text-purple">Siswa Terdaftar</span>
+                                    <span className="metric-badge bg-purple-subtle text-purple">Peserta Terdaftar</span>
                                 </div>
                             </div>
 
@@ -365,7 +365,7 @@ function Courses() {
                                         >
                                             <option value="newest">Terbaru</option>
                                             <option value="oldest">Terlama</option>
-                                            <option value="students_desc">Siswa Terbanyak</option>
+                                            <option value="students_desc">Peserta Terbanyak</option>
                                             <option value="title_asc">Judul (A-Z)</option>
                                             <option value="title_desc">Judul (Z-A)</option>
                                         </select>
@@ -423,7 +423,7 @@ function Courses() {
 
                                             {sortBy !== "newest" && (
                                                 <span className="filter-chip">
-                                                    Urutan: {sortBy === "oldest" ? "Terlama" : sortBy === "students_desc" ? "Siswa Terbanyak" : sortBy === "title_asc" ? "Judul A-Z" : "Judul Z-A"}
+                                                    Urutan: {sortBy === "oldest" ? "Terlama" : sortBy === "students_desc" ? "Peserta Terbanyak" : sortBy === "title_asc" ? "Judul A-Z" : "Judul Z-A"}
                                                     <i className="fas fa-times ms-1.5" onClick={() => setSortBy("newest")}></i>
                                                 </span>
                                             )}

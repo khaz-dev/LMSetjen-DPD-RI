@@ -554,7 +554,7 @@ function SystemTestAdmin({ isEmbedded = false }) {
                                                 className="btn btn-outline-danger text-start p-3 rounded-3"
                                                 onClick={() => DeleteConfirmation({
                                                     title: 'Hapus Kursus Ini?',
-                                                    text: 'Kursus "Teknik Penyusunan Naskah Kebijakan DPD RI" akan dihapus secara permanen beserta seluruh rekaman nilai siswa.'
+                                                    text: 'Kursus "Teknik Penyusunan Naskah Kebijakan DPD RI" akan dihapus secara permanen beserta seluruh rekaman nilai peserta.'
                                                 })}
                                             >
                                                 <div className="fw-bold"><i className="fas fa-trash-alt me-2"></i> Delete Confirmation Dialog</div>

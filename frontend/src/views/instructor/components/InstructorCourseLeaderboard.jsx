@@ -55,7 +55,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                 <div class="text-start mt-2">
                     <p class="text-muted mb-2">Tindakan ini akan <strong>menghapus riwayat Post-Test</strong> peserta terkait dan memberikan kesempatan untuk melakukan ujian ulang.</p>
                     <div class="alert alert-warning py-2 px-3 small mb-0">
-                        <i class="fas fa-exclamation-triangle me-1"></i> Skor Post-Test sebelumnya akan direset dan siswa dapat mengerjakan kembali Post-Test.
+                        <i class="fas fa-exclamation-triangle me-1"></i> Skor Post-Test sebelumnya akan direset dan peserta dapat mengerjakan kembali Post-Test.
                     </div>
                 </div>
             `;
@@ -96,7 +96,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                 Toast().fire({
                     icon: "success",
                     title: "Status Integritas & Notifikasi Terkirim",
-                    text: `${res.data.message} Notifikasi otomatis telah dikirimkan ke siswa.`
+                    text: `${res.data.message} Notifikasi otomatis telah dikirimkan ke peserta.`
                 });
                 fetchLeaderboard(true);
             }
@@ -417,7 +417,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                             Peringkat, Efektivitas Belajar & Evaluasi Peserta Kursus
                         </h4>
                         <p className="icl-hero-desc">
-                            Pantau perolehan skor peserta, evaluasi lonjakan kompetensi (Pre-Test ke Post-Test), ulasan kepuasan siswa, serta monitor keabsahan ujian melalui sistem deteksi anti-cheat.
+                            Pantau perolehan skor peserta, evaluasi lonjakan kompetensi (Pre-Test ke Post-Test), ulasan kepuasan peserta, serta monitor keabsahan ujian melalui sistem deteksi anti-cheat.
                         </p>
                     </div>
                     <button
@@ -491,7 +491,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                 <div className="icl-podium-card">
                     <div className="icl-podium-title">
                         <i className="fas fa-award text-warning"></i>
-                        3 Siswa Berprestasi Tertinggi Kursus Ini
+                        3 Peserta Berprestasi Tertinggi Kursus Ini
                     </div>
                     <div className="icl-podium-flex">
                         {/* Juara 2 */}
@@ -602,7 +602,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                         className="icl-export-btn icl-btn-excel"
                         onClick={exportExcel}
                         disabled={downloadingExcel}
-                        title="Unduh rekapitulasi nilai dan integritas siswa ke file Excel (.xlsx)"
+                        title="Unduh rekapitulasi nilai dan integritas peserta ke file Excel (.xlsx)"
                     >
                         <i className={`fas ${downloadingExcel ? "fa-spinner fa-spin" : "fa-file-excel"} me-1`}></i>
                         <span>{downloadingExcel ? "Mengunduh..." : "Ekspor Excel"}</span>
@@ -874,7 +874,7 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                                         <div className="d-flex flex-column align-items-center gap-1">
                                                             <span
                                                                 className="integrity-badge-warning"
-                                                                title={student.integrity_check?.reasons?.join("; ") || "Perlu verifikasi pengajar"}
+                                                                title={student.integrity_check?.reasons?.join("; ") || "Perlu verifikasi instruktur"}
                                                             >
                                                                 <i className="fas fa-triangle-exclamation"></i>
                                                                 <span>Perlu Verifikasi</span>
@@ -1221,12 +1221,12 @@ function InstructorCourseLeaderboard({ courseId, courseTitle }) {
                                 <div className="doc-signature-row">
                                     <div className="doc-signature-col">
                                         <div>Mengetahui,</div>
-                                        <div style={{ fontWeight: 700 }}>Pengajar / Instruktur Pelatihan</div>
+                                        <div style={{ fontWeight: 700 }}>Instruktur Pelatihan</div>
                                         <div className="doc-signature-space"></div>
                                         <div className="doc-signature-name">
                                             {leaderboardData?.course?.teacher_name || "Instruktur Pelatihan"}
                                         </div>
-                                        <div className="doc-signature-role">Tenaga Pengajar Setjen DPD RI</div>
+                                        <div className="doc-signature-role">Instruktur Setjen DPD RI</div>
                                     </div>
 
                                     <div className="doc-stamp-col">

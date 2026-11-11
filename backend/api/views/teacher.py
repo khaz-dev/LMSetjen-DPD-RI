@@ -897,7 +897,7 @@ class TeacherCreateFromProfileAPIView(APIView):
             # 🔒 Validasi kepemilikan
             is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
             if str(request.user.id) != str(user_id) and not is_admin:
-                return Response({'error': 'Akses ditolak. Anda tidak berhak membuat profil pengajar untuk user lain.'}, status=status.HTTP_403_FORBIDDEN)
+                return Response({'error': 'Akses ditolak. Anda tidak berhak membuat profil instruktur untuk user lain.'}, status=status.HTTP_403_FORBIDDEN)
             
             # Check if teacher already exists
             existing_teacher = api_models.Teacher.objects.filter(user_id=user_id).first()
@@ -934,7 +934,7 @@ class TeacherProfileAPIView(generics.RetrieveAPIView):
     Secured with:
     - JWT authentication (IsAuthenticated)
     - Anti-IDOR Object-Level Authorization:
-      Hanya pemilik akun guru atau admin/staff yang berhak melihat profil internal pengajar.
+      Hanya pemilik akun instruktur atau admin/staff yang berhak melihat profil internal instruktur.
     """
     serializer_class = api_serializer.BasicTeacherSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrStaff]
@@ -956,7 +956,7 @@ class TeacherProfileAPIView(generics.RetrieveAPIView):
                 f"[IDOR ATTEMPT] User {request_user.id} ({request_user.email}) "
                 f"attempted unauthorized access to teacher profile of user_id={user_id}"
             )
-            raise PermissionDenied("Anda tidak memiliki izin untuk mengakses profil pengajar ini.")
+            raise PermissionDenied("Anda tidak memiliki izin untuk mengakses profil instruktur ini.")
         
         teacher = api_models.Teacher.objects.filter(user_id=user_id).first()
         if not teacher:
@@ -966,7 +966,7 @@ class TeacherProfileAPIView(generics.RetrieveAPIView):
                 profile = Profile.objects.get(user_id=user_id)
                 teacher = api_models.Teacher.create_from_profile(profile.user)
             except Profile.DoesNotExist:
-                raise Http404("Data pengajar tidak ditemukan.")
+                raise Http404("Data instruktur tidak ditemukan.")
         return teacher
 
 
@@ -1010,7 +1010,7 @@ class TeacherProfileUpdateAPIView(APIView):
     - Uses JWT authentication for teacher operations
     - Secured by JWT token validation (IsAuthenticated)
     - Anti-IDOR Object-Level Authorization (IsOwnerOrStaff):
-      Hanya pemilik akun pengajar atau admin/staff yang dapat mengubah data profil.
+      Hanya pemilik akun instruktur atau admin/staff yang dapat mengubah data profil.
     """
     permission_classes = [IsAuthenticated, IsOwnerOrStaff]
     authentication_classes = [JWTAuthentication]
@@ -1032,7 +1032,7 @@ class TeacherProfileUpdateAPIView(APIView):
                     f"attempted unauthorized patch on teacher profile of user_id={user_id}"
                 )
                 return Response(
-                    {'error': 'Anda tidak memiliki izin untuk mengubah profil pengajar ini.'},
+                    {'error': 'Anda tidak memiliki izin untuk mengubah profil instruktur ini.'},
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -1697,19 +1697,19 @@ class InstructorPointsBreakdownAPIView(APIView):
                 'key': 'course_published',
                 'title': 'Publikasi Kursus Baru',
                 'points_text': '+50 Poin',
-                'description': 'Diberikan otomatis setiap kursus Anda berhasil dipublikasikan untuk siswa.'
+                'description': 'Diberikan otomatis setiap kursus Anda berhasil dipublikasikan untuk peserta.'
             },
             {
                 'key': 'student_enrollment',
-                'title': 'Pendaftaran Siswa Baru',
+                'title': 'Pendaftaran Peserta Baru',
                 'points_text': '+10 Poin',
-                'description': 'Diberikan setiap kali seorang siswa mendaftar ke kursus yang Anda ajar.'
+                'description': 'Diberikan setiap kali seorang peserta mendaftar ke kursus yang Anda ajar.'
             },
             {
                 'key': 'student_rating',
                 'title': 'Ulasan & Rating Bintang',
                 'points_text': '+10 s/d +50 Poin',
-                'description': 'Diberikan saat siswa memberikan ulasan pada kursus Anda (1★ = 10 pt, 2★ = 20 pt, 3★ = 30 pt, 4★ = 40 pt, 5★ = 50 pt).'
+                'description': 'Diberikan saat peserta memberikan ulasan pada kursus Anda (1★ = 10 pt, 2★ = 20 pt, 3★ = 30 pt, 4★ = 40 pt, 5★ = 50 pt).'
             },
             {
                 'key': 'platform_contribution',
@@ -1740,7 +1740,7 @@ class InstructorPointsBreakdownAPIView(APIView):
 
 class TeacherVerifyStudentIntegrityAPIView(APIView):
     """
-    Instruktur / Pengajar memverifikasi atau menganulir status integritas ujian peserta kursus,
+    Instruktur memverifikasi atau menganulir status integritas ujian peserta kursus,
     serta memberikan izin penerbitan sertifikat atau mereset pengerjaan Post-Test yang terindikasi curang.
     """
     permission_classes = [IsAuthenticated]
@@ -1763,7 +1763,7 @@ class TeacherVerifyStudentIntegrityAPIView(APIView):
 
             related_course_ids = course.get_related_course_ids()
             if not is_staff and (not teacher or (course.teacher != teacher and not api_models.Course.objects.filter(id__in=related_course_ids, teacher=teacher).exists())):
-                return Response({"error": "Akses ditolak. Anda bukan pengajar untuk kursus ini."}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"error": "Akses ditolak. Anda bukan instruktur untuk kursus ini."}, status=status.HTTP_403_FORBIDDEN)
 
             target_student = User.objects.filter(id=user_id).first()
             if not target_student:
@@ -1835,7 +1835,7 @@ class TeacherVerifyStudentIntegrityAPIView(APIView):
 
                 return Response({
                     "success": True,
-                    "message": f"Hasil ujian {target_student.full_name} berhasil diverifikasi dan disahkan. Siswa kini berhak menerbitkan sertifikat.",
+                    "message": f"Hasil ujian {target_student.full_name} berhasil diverifikasi dan disahkan. Peserta kini berhak menerbitkan sertifikat.",
                     "integrity_status": "verified"
                 }, status=status.HTTP_200_OK)
 
@@ -1967,7 +1967,7 @@ class TeacherNotificationMarkAllReadAPIView(APIView):
         try:
             teacher = api_models.Teacher.objects.filter(id=teacher_id).first()
             if not teacher:
-                return Response({"error": "Pengajar tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"error": "Instruktur tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
             
             if not request.user.is_staff and teacher.user != request.user:
                 return Response({"error": "Akses ditolak"}, status=status.HTTP_403_FORBIDDEN)
@@ -2012,7 +2012,7 @@ class TeacherCourseExportRecapAPIView(APIView):
         related_course_ids = course.get_related_course_ids() if hasattr(course, 'get_related_course_ids') else {course.id}
 
         if not is_staff and (not teacher or (course.teacher != teacher and not api_models.Course.objects.filter(id__in=related_course_ids, teacher=teacher).exists())):
-            return Response({"error": "Akses ditolak. Anda bukan pengajar untuk kursus ini."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "Akses ditolak. Anda bukan instruktur untuk kursus ini."}, status=status.HTTP_403_FORBIDDEN)
 
         # 2. Ambil data analitik & leaderboard dari CourseLeaderboardAPIView
         lb_view = CourseLeaderboardAPIView()
@@ -2079,7 +2079,7 @@ class TeacherCourseExportRecapAPIView(APIView):
         ws1["A1"].alignment = align_center
 
         ws1.merge_cells("A2:U2")
-        ws1["A2"] = "PUSAT PENGEMBANGAN KOMPETENSI APARATUR SIPIL NEGARA (LMS SETJEN DPD RI)"
+        ws1["A2"] = "BIRO ORGANISASI KEANGGOTAAN DAN KEPEGAWAIAN (LMS SETJEN DPD RI)"
         ws1["A2"].font = Font(name="Calibri", size=10, bold=True, color="475569")
         ws1["A2"].alignment = align_center
 
@@ -2094,7 +2094,7 @@ class TeacherCourseExportRecapAPIView(APIView):
         ws1["B5"] = course.title
         ws1["B5"].font = Font(name="Calibri", size=10, bold=True)
 
-        ws1["A6"] = "Instruktur / Pengajar:"
+        ws1["A6"] = "Instruktur:"
         ws1["A6"].font = font_meta_lbl
         ws1["B6"] = course.teacher.user.get_full_name() if (course.teacher and course.teacher.user) else "-"
         ws1["B6"].font = font_meta_val

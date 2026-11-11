@@ -1677,7 +1677,7 @@ function AdminCourseReviewDetail() {
                                 <div className="acrd-card mb-3">
                                     <div className="d-flex align-items-center gap-1 mb-2 pb-1 border-bottom">
                                         <i className="fas fa-id-badge text-teal"></i>
-                                        <strong className="small text-dark">Profil Pengajar</strong>
+                                        <strong className="small text-dark">Profil Instruktur</strong>
                                     </div>
 
                                     <div className="d-flex align-items-center gap-2 mb-2">

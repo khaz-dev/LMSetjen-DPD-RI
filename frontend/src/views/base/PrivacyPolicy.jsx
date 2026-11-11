@@ -436,7 +436,7 @@ function PrivacyPolicy() {
                         <h3 className="data-item-title">Data Profil Pegawai</h3>
                       </div>
                       <p className="data-item-desc">
-                        Foto profil akun, ringkasan biografi profesional, jabatan, peran pengguna (Siswa/Instruktur/Admin), dan minat rumpun diklat.
+                        Foto profil akun, ringkasan biografi profesional, jabatan, peran pengguna (Peserta/Instruktur/Admin), dan minat rumpun diklat.
                       </p>
                     </div>
 
@@ -608,7 +608,7 @@ function PrivacyPolicy() {
                     <div className="sec-feature-box">
                       <i className="bi bi-person-check-fill sec-feat-icon text-teal" aria-hidden="true"></i>
                       <h4>Token JWT & Kontrol Akses RBAC</h4>
-                      <p>Pengamanan sesi pengguna berbasis JSON Web Token dengan rotasi aman serta pemisahan hak akses ketat (Admin, Instruktur, Siswa).</p>
+                      <p>Pengamanan sesi pengguna berbasis JSON Web Token dengan rotasi aman serta pemisahan hak akses ketat (Admin, Instruktur, Peserta).</p>
                     </div>
 
                     <div className="sec-feature-box">

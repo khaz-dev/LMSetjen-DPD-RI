@@ -137,12 +137,12 @@ function DashboardAdmin() {
                 ["Diekspor Oleh", userData?.full_name || "Administrator"],
                 [""],
                 ["METRIK UTAMA", "NILAI REAL", "KETERANGAN"],
-                ["Total Siswa", dashboardData?.total_students || 0, `+${dashboardData?.recent_registrations || 0} pendaftar 30 hari terakhir`],
+                ["Total Peserta", dashboardData?.total_students || 0, `+${dashboardData?.recent_registrations || 0} pendaftar 30 hari terakhir`],
                 ["Total Instruktur", dashboardData?.total_teachers || 0, `${dashboardData?.active_teachers_count ?? dashboardData?.active_teachers?.length ?? 0} aktif mengajar`],
                 ["Total Kursus", dashboardData?.total_courses || 0, `${dashboardData?.active_courses || 0} dipublikasikan, ${dashboardData?.draft_courses || 0} draf`],
                 ["Total Pendaftaran", dashboardData?.total_enrollments || 0, `+${dashboardData?.recent_enrollments || 0} pendaftaran 30 hari terakhir`],
                 ["Sertifikat Terbit", dashboardData?.total_certificates || 0, `+${dashboardData?.recent_certificates || 0} 30 hari terakhir`],
-                ["Tingkat Kelulusan", `${dashboardData?.completion_rate || 0}%`, "Rasio kelulusan siswa sah"],
+                ["Tingkat Kelulusan", `${dashboardData?.completion_rate || 0}%`, "Rasio kelulusan peserta sah"],
                 ["Total Kuis", dashboardData?.total_quizzes || 0, `${dashboardData?.total_quiz_attempts || 0} kali dikerjakan`],
                 ["Rating LMS Rata-rata", `${dashboardData?.avg_rating || 0} / 5.0`, `Berdasarkan ${dashboardData?.total_reviews || 0} ulasan`],
                 [""],
@@ -197,7 +197,7 @@ function DashboardAdmin() {
     const fieldTranslations = {
         database_size: "Ukuran Database",
         total_users: "Total Pengguna Terdaftar",
-        total_students: "Total Siswa",
+        total_students: "Total Peserta",
         total_teachers: "Total Instruktur",
         total_courses: "Total Kursus Aktif",
         total_lessons: "Total Materi Pelajaran",
@@ -234,7 +234,7 @@ function DashboardAdmin() {
                 `${item.month.substring(0, 3)} ${String(item.year).slice(-2)}`
             ),
             datasets: [{
-                label: "Pendaftaran Siswa",
+                label: "Pendaftaran Peserta",
                 data: enrollmentAnalytics.monthly_enrollments.map(item => item.enrollments),
                 borderColor: "#0284c7",
                 backgroundColor: "rgba(2, 132, 199, 0.12)",
@@ -378,14 +378,14 @@ function DashboardAdmin() {
 
                     {/* Compact 8 KPI Metric Cards Grid */}
                     <div className="row g-2 mb-3">
-                        {/* 1. Total Siswa */}
+                        {/* 1. Total Peserta */}
                         <div className="col-6 col-md-3 col-xl-3">
                             <div className="kpi-compact-card kpi-blue">
                                 <div className="kpi-icon-wrap">
                                     <i className="fas fa-user-graduate"></i>
                                 </div>
                                 <div className="kpi-info-wrap">
-                                    <span className="kpi-label">Total Siswa</span>
+                                    <span className="kpi-label">Total Peserta</span>
                                     <div className="kpi-number">
                                         {Number(dashboardData?.total_students || 0).toLocaleString("id-ID")}
                                     </div>
@@ -576,7 +576,7 @@ function DashboardAdmin() {
                                             border: "1px solid rgba(245, 158, 11, 0.35)",
                                             fontSize: "0.68rem"
                                         }}
-                                        title={`${atRiskSummary.total_students} siswa dalam pemantauan risiko belajar`}
+                                        title={`${atRiskSummary.total_students} peserta dalam pemantauan risiko belajar`}
                                     >
                                         <i className="fas fa-exclamation-triangle me-1"></i>
                                         {atRiskSummary.total_students} Terpantau
@@ -709,7 +709,7 @@ function DashboardAdmin() {
                                                                     <th style={{ width: "45px" }} className="text-center">#</th>
                                                                     <th>Judul Kursus</th>
                                                                     <th>Instruktur</th>
-                                                                    <th style={{ minWidth: "160px" }}>Pendaftaran Siswa</th>
+                                                                    <th style={{ minWidth: "160px" }}>Pendaftaran Peserta</th>
                                                                     <th className="text-center" style={{ width: "90px" }}>Status</th>
                                                                 </tr>
                                                             </thead>
@@ -943,7 +943,7 @@ function DashboardAdmin() {
                                                 <div className="admin-card-header d-flex justify-content-between align-items-center">
                                                     <h6 className="admin-card-title mb-0">
                                                         <i className="fas fa-chart-line text-primary me-2"></i>
-                                                        Tren Pendaftaran Siswa (12 Bulan Terakhir)
+                                                        Tren Pendaftaran Peserta (12 Bulan Terakhir)
                                                     </h6>
                                                     <span className="badge bg-primary-subtle text-primary">Data Real-Time</span>
                                                 </div>
@@ -1283,7 +1283,7 @@ function DashboardAdmin() {
                                                 <i className="fas fa-user-shield"></i>
                                             </div>
                                             <div className="ai-kpi-details">
-                                                <span className="ai-kpi-label">Siswa Terpantau Risiko</span>
+                                                <span className="ai-kpi-label">Peserta Terpantau Risiko</span>
                                                 <div className="ai-kpi-val">
                                                     {atRiskSummary?.total_students || 0}
                                                     <span className="ai-kpi-meta">
@@ -1348,10 +1348,10 @@ function DashboardAdmin() {
                                     <button 
                                         className={`ai-subtab-pill ${aiSubTab === "at-risk" ? "active" : ""}`}
                                         onClick={() => setAiSubTab("at-risk")}
-                                        title="Pantau pegawai/siswa yang berpotensi putus belajar untuk intervensi dini"
+                                        title="Pantau pegawai/peserta yang berpotensi putus belajar untuk intervensi dini"
                                     >
                                         <i className="fas fa-user-shield"></i>
-                                        <span>Siswa Berisiko</span>
+                                        <span>Peserta Berisiko</span>
                                         {atRiskSummary?.total_students > 0 && (
                                             <span className="ai-subtab-badge warning">
                                                 {atRiskSummary.total_students}

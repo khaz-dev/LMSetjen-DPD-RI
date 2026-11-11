@@ -69,8 +69,8 @@ function InstructorActivityDisplay({
         { value: 'testimonial_deleted', label: 'Hapus Testimoni', icon: 'fa-trash-can', color: 'danger', category: 'pengajar', badge: 'Testimoni' },
         { value: 'review_updated', label: 'Update Review', icon: 'fa-pen-to-square', color: 'info', category: 'pengajar', badge: 'Review' },
         { value: 'review_deleted', label: 'Hapus Review', icon: 'fa-trash-can', color: 'danger', category: 'pengajar', badge: 'Review' },
-        { value: 'student_enrolled_manual', label: 'Daftar Siswa', icon: 'fa-user-plus', color: 'success', category: 'pengajar', badge: 'Mengajar' },
-        { value: 'student_unenrolled', label: 'Hapus Siswa', icon: 'fa-user-minus', color: 'danger', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'student_enrolled_manual', label: 'Daftar Peserta', icon: 'fa-user-plus', color: 'success', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'student_unenrolled', label: 'Hapus Peserta', icon: 'fa-user-minus', color: 'danger', category: 'pengajar', badge: 'Mengajar' },
         { value: 'announcement_posted', label: 'Posting Pengumuman', icon: 'fa-bullhorn', color: 'warning', category: 'pengajar', badge: 'Mengajar' },
         { value: 'grade_recorded', label: 'Berikan Nilai', icon: 'fa-award', color: 'purple', category: 'pengajar', badge: 'Mengajar' },
     ];
@@ -141,7 +141,7 @@ function InstructorActivityDisplay({
             return { icon: 'fa-certificate', color: 'amber', label: 'Sertifikat' };
         }
         if (key.includes('enroll') || key.includes('daftar') || key.includes('student') || key.includes('siswa')) {
-            return { icon: 'fa-user-graduate', color: 'success', label: 'Pendaftaran Siswa' };
+            return { icon: 'fa-user-graduate', color: 'success', label: 'Pendaftaran Peserta' };
         }
         if (key.includes('review') || key.includes('ulasan') || key.includes('rating') || key.includes('star')) {
             return { icon: 'fa-star', color: 'amber', label: 'Ulasan & Rating' };
@@ -361,7 +361,7 @@ function InstructorActivityDisplay({
                         <i className="fas fa-clock-rotate-left fa-2x mb-2 text-muted" style={{ opacity: 0.5 }}></i>
                         <h6 className="fw-semibold">Belum ada aktivitas</h6>
                         <p className="text-muted small mb-0">
-                            Aktivitas siswa dan pengajaran Anda akan tampil di sini
+                            Aktivitas peserta dan kursus Anda akan tampil di sini
                         </p>
                     </div>
                 )}

@@ -403,7 +403,7 @@ function CourseEdit() {
                         Toast().fire({
                             icon: "info",
                             title: "Status Diubah ke Menunggu Review",
-                            text: "Kursus Anda yang telah dipublikasikan telah kembali ke status 'Menunggu Review dari Admin' karena ada perubahan. Admin akan meninjau kembali sebelum kursus tersedia untuk siswa.",
+                            text: "Kursus Anda yang telah dipublikasikan telah kembali ke status 'Menunggu Review dari Admin' karena ada perubahan. Admin akan meninjau kembali sebelum kursus tersedia untuk peserta.",
                             timer: 5000,
                             timerProgressBar: true,
                             showConfirmButton: false
@@ -570,7 +570,7 @@ function CourseEdit() {
                             <strong>Ringkasan Update:</strong>
                             <ul class="mt-1 mb-0 small ps-3">
                                 <li>Perubahan materi akan ditinjau oleh admin</li>
-                                <li>Kursus tetap aktif & dapat diakses siswa selama review</li>
+                                <li>Kursus tetap aktif & dapat diakses peserta selama review</li>
                                 <li>Pembaruan langsung aktif setelah disetujui</li>
                             </ul>
                         </div>
@@ -636,7 +636,7 @@ function CourseEdit() {
                                         <strong>Status Update:</strong>
                                         <ul class="mt-2 mb-0 small">
                                             <li>✓ Perubahan Anda sedang ditinjau oleh admin</li>
-                                            <li>✓ Kursus tetap dapat diakses siswa selama proses review</li>
+                                            <li>✓ Kursus tetap dapat diakses peserta selama proses review</li>
                                             <li>⏳ Menunggu persetujuan publikasi dari admin</li>
                                         </ul>
                                     </div>
@@ -646,7 +646,7 @@ function CourseEdit() {
                                         <ol class="mt-2 mb-0 small" style="padding-left: 1rem;">
                                             <li>Admin akan meninjau perubahan konten kursus Anda</li>
                                             <li>Anda akan menerima notifikasi tentang persetujuan atau permintaan revisi</li>
-                                            <li>Jika disetujui, perubahan akan langsung diterapkan untuk semua siswa</li>
+                                            <li>Jika disetujui, perubahan akan langsung diterapkan untuk semua peserta</li>
                                             <li>Jika perlu perbaikan, kami akan memberikan feedback spesifik</li>
                                         </ol>
                                     </div>
@@ -667,7 +667,7 @@ function CourseEdit() {
                                         <ol class="mt-2 mb-0 small" style="padding-left: 1rem;">
                                             <li>Admin akan meninjau konten dan kualitas kursus Anda</li>
                                             <li>Anda akan menerima notifikasi saat keputusan dibuat</li>
-                                            <li>Jika disetujui, kursus akan langsung dipublikasikan dan tersedia untuk siswa</li>
+                                            <li>Jika disetujui, kursus akan langsung dipublikasikan dan tersedia untuk peserta</li>
                                             <li>Jika perlu perbaikan, kami akan memberikan feedback spesifik</li>
                                         </ol>
                                     </div>
@@ -804,7 +804,7 @@ function CourseEdit() {
                                 </ul>
                             </div>
                             <p class="text-muted small mb-0 mt-3">
-                                Kursus Anda kembali ke status <strong>Published</strong> dan siap diakses siswa.
+                                Kursus Anda kembali ke status <strong>Published</strong> dan siap diakses peserta.
                             </p>
                         </div>
                     `,
@@ -1094,7 +1094,7 @@ function CourseEdit() {
                                                 getValidationClass={getFieldValidationClass}
                                                 required
                                                 placeholder="Masukkan judul kursus yang menarik..."
-                                                helpText="Buat judul yang dengan akurat menggambarkan kursus Anda dan menarik siswa"
+                                                helpText="Buat judul yang dengan akurat menggambarkan kursus Anda dan menarik peserta"
                                             />
                                         </div>
                                     </div>
@@ -1172,7 +1172,7 @@ function CourseEdit() {
                                                         console.log("[CourseEdit.TagSelector] After updateCourseData, isDirty should trigger");
                                                     }}
                                                     placeholder="Cari atau pilih tag kursus..."
-                                                    helpText="Tag membantu siswa menemukan kursus dengan lebih mudah. Pilih 1 atau lebih tag yang relevan dengan konten kursus."
+                                                    helpText="Tag membantu peserta menemukan kursus dengan lebih mudah. Pilih 1 atau lebih tag yang relevan dengan konten kursus."
                                                 />
                                             </div>
                                         </div>
@@ -1233,7 +1233,7 @@ function CourseEdit() {
                                             errors={errors.description}
                                             warnings={warnings.description}
                                             required
-                                            placeholder="Deskripsikan apa yang akan dipelajari siswa di kursus ini..."
+                                            placeholder="Deskripsikan apa yang akan dipelajari peserta di kursus ini..."
                                             helpText="Berikan ringkasan komprehensif tentang konten kursus Anda dan hasil pembelajaran"
                                         />
                                     </Suspense>
@@ -1504,7 +1504,7 @@ function CourseEdit() {
                                                 <i className="fas fa-check-circle text-success me-3"></i>
                                                 <div className="flex-grow-1">
                                                     <h6 className="alert-heading mb-1 fw-bold">✓ Kursus Dipublikasikan</h6>
-                                                    <small className="text-muted">Kursus Anda telah disetujui dan sekarang tersedia untuk siswa di platform.</small>
+                                                    <small className="text-muted">Kursus Anda telah disetujui dan sekarang tersedia untuk peserta di platform.</small>
                                                 </div>
                                             </div>
                                         </div>

@@ -28,7 +28,7 @@ Tata kelola kelembagaan, kepemilikan produk, dan pengembangan teknologi resmi di
 - **Dukungan Tata Kelola Infrastruktur:** 
   Koordinasi teknis infrastruktur server, jaringan intranet/internet parlemen, dan kepatuhan standar keamanan siber disinergikan bersama **Biro Sistem Informasi dan Dokumentasi** (khususnya **Bagian Pengembangan Sistem Informasi**).
 - **Struktur Organisasi Pelayanan Pembelajaran:** 
-  Setjen DPD RI **belum memiliki Pusdiklat**. Layanan pelatihan digital pada LMS ini mencakup seluruh unit kerja Setjen DPD RI: **Pusat** (Pusat Kajian Daerah dan Anggaran, Pusat Perancangan Kebijakan dan Hukum, Biro Sistem Informasi dan Dokumentasi), **Biro-Biro Kesekretariatan**, **Inspektorat**, serta **Kantor Daerah DPD RI** di 38 Ibukota Provinsi.
+  Setjen DPD RI **belum memiliki Pusdiklat**. Layanan pelatihan digital pada LMS ini mencakup seluruh unit kerja Setjen DPD RI: **Pusat** (Pusat Kajian Daerah dan Anggaran, Pusat Perancangan dan Kajian Kebijakan Hukum, Biro Sistem Informasi dan Dokumentasi), **Biro-Biro Kesekretariatan**, **Inspektorat**, serta **Kantor Daerah DPD RI** di 38 Ibukota Provinsi.
 - **Karakteristik Pengajar / Instruktur:** 
   Sistem **tidak menggunakan jabatan Widyaiswara internal** (tidak ada Diklat Widyaiswara), melainkan memberdayakan **Instruktur / Fasilitator Pembelajaran / Narasumber Materi** yang berasal dari pejabat fungsional keahlian internal, pejabat struktural, maupun pakar eksternal yang dikurasi langsung oleh Bagian Pengembangan Kapasitas SDM.
 - **Karakteristik Autentikasi Mandiri (Passwordless):** 
@@ -261,7 +261,7 @@ Struktur data uji mencerminkan susunan unit kerja nyata di lingkungan Sekretaria
    - **Biro Organisasi, Keanggotaan, dan Kepegawaian** *(unit pengembang penuh LMS & SSO Nusa, serta penanggung jawab kompetensi SDM)*.
    - **Biro Sistem Informasi dan Dokumentasi** *(unit pendukung infrastruktur TI & jaringan)*.
    - **Biro Lainnya:** Biro Protokol Humas dan Media, Biro Persidangan dan Musyawarah, Biro Umum, Biro Keuangan.
-   - **Pusat:** Pusat Kajian Daerah dan Anggaran, Pusat Perancangan Kebijakan dan Hukum, Biro Sistem Informasi dan Dokumentasi.
+   - **Pusat:** Pusat Kajian Daerah dan Anggaran, Pusat Perancangan dan Kajian Kebijakan Hukum, Biro Sistem Informasi dan Dokumentasi.
    - **Inspektorat:** Inspektorat Setjen DPD RI.
    - **Kantor Daerah (Provinsi):** Kantor DPD RI Provinsi Jawa Barat, Kantor DPD RI Provinsi Jawa Timur, Kantor DPD RI Provinsi Sumatera Utara, Kantor DPD RI Provinsi Bali, Kantor DPD RI Provinsi Sulawesi Selatan, Kantor DPD RI Provinsi Papua, dll.
 2. **Kategori Modul Pelatihan / Materi Pembelajaran**:

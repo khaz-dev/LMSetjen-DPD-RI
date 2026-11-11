@@ -299,7 +299,7 @@ function Wishlist() {
                                         <input
                                             type="text"
                                             className="form-control wishlist-search-input"
-                                            placeholder="Cari kursus tersimpan, kategori, atau pengajar..."
+                                            placeholder="Cari kursus tersimpan, kategori, atau instruktur..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                         />
@@ -622,7 +622,7 @@ function Wishlist() {
                                                                 </div>
                                                                 <div className="wishlist-students-wrap">
                                                                     <i className="fas fa-users text-teal"></i>
-                                                                    <span>{course.students?.length || 0} siswa</span>
+                                                                    <span>{course.students?.length || 0} peserta</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -712,7 +712,7 @@ function Wishlist() {
                                                                 <span className="meta-dot">•</span>
                                                                 <span className="meta-item">
                                                                     <i className="fas fa-users text-teal me-1"></i>
-                                                                    {course.students?.length || 0} siswa
+                                                                    {course.students?.length || 0} peserta
                                                                 </span>
                                                             </div>
                                                         </div>

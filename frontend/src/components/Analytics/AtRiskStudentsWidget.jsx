@@ -30,7 +30,7 @@ export default function AtRiskStudentsWidget() {
       console.error('Failed to fetch risk data:', error);
       Toast().fire({
         icon: 'error',
-        title: 'Gagal mengambil data siswa berisiko'
+        title: 'Gagal mengambil data peserta berisiko'
       });
     }
     setLoading(false);
@@ -111,9 +111,9 @@ export default function AtRiskStudentsWidget() {
         <div>
           <h3>
             <i className="fas fa-user-shield me-2"></i>
-            Siswa Berisiko
+            Peserta Berisiko
           </h3>
-          <p className="text-muted">Pantau siswa yang berisiko putus sekolah</p>
+          <p className="text-muted">Pantau peserta yang berisiko tidak menyelesaikan pelatihan</p>
         </div>
         <button 
           onClick={handleTriggerAssessment} 
@@ -202,20 +202,20 @@ export default function AtRiskStudentsWidget() {
       {loading ? (
         <div className="loading-state">
           <div className="spinner-border"></div>
-          <p>Memuat siswa berisiko...</p>
+          <p>Memuat peserta berisiko...</p>
         </div>
       ) : filteredRisks.length === 0 ? (
         <div className="empty-state">
           <i className="fas fa-inbox"></i>
-          <p>Tidak ada siswa yang ditemukan</p>
-          <small>Siswa berisiko akan muncul di sini</small>
+          <p>Tidak ada peserta yang ditemukan</p>
+          <small>Peserta berisiko akan muncul di sini</small>
         </div>
       ) : (
         <div className="table-responsive">
           <table className="risks-table">
             <thead>
               <tr>
-                <th>Siswa</th>
+                <th>Peserta</th>
                 <th>Tingkat Risiko</th>
                 <th>Skor Risiko</th>
                 <th>Pendaftaran</th>

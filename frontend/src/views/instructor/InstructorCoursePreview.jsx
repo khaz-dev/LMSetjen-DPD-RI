@@ -523,7 +523,7 @@ function InstructorCoursePreview() {
                                                                     <span>&bull;</span>
                                                                     <span><i className="fas fa-question-circle me-1 text-success"></i>{prePostQuiz.questions?.length || prePostQuiz.total_questions || prePostQuiz.question_count || 0} Soal</span>
                                                                     <span>&bull;</span>
-                                                                    <span className="text-secondary">Wajib dikerjakan siswa sebelum membuka materi Bagian 1</span>
+                                                                    <span className="text-secondary">Wajib dikerjakan peserta sebelum membuka materi Bagian 1</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1473,7 +1473,7 @@ function InstructorCoursePreview() {
                                         <div>
                                             <h6 className="fw-bold mb-1" style={{ fontSize: '0.85rem' }}>Pratinjau Read-Only</h6>
                                             <p className="text-muted mb-0" style={{ fontSize: '0.78rem', lineHeight: '1.4' }}>
-                                                Halaman ini menampilkan pratinjau seperti yang akan dilihat oleh siswa saat kursus dipublikasikan.
+                                                Halaman ini menampilkan pratinjau seperti yang akan dilihat oleh peserta saat kursus dipublikasikan.
                                             </p>
                                         </div>
                                     </div>

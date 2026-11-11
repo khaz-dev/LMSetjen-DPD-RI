@@ -190,7 +190,7 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                             </span>
                             <span className="course-meta-tag students-tag">
                                 <i className="fas fa-user-graduate me-1"></i>
-                                {studentsCount} Siswa
+                                {studentsCount} Peserta
                             </span>
                             {totalJP > 0 && (
                                 <span className="course-meta-tag duration-tag">
@@ -354,7 +354,7 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                         </span>
                         <span className="course-meta-tag students-tag">
                             <i className="fas fa-user-graduate me-1"></i>
-                            {studentsCount} Siswa
+                            {studentsCount} Peserta
                         </span>
                         <span className="course-meta-tag date-tag">
                             <i className="far fa-calendar-alt me-1"></i>
