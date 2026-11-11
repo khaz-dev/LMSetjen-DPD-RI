@@ -351,9 +351,17 @@ function CourseEdit() {
                     field => validationResult.errors[field].length > 0
                 );
 
-                if (firstErrorField && eval(`${firstErrorField}Ref`)?.current) {
-                    eval(`${firstErrorField}Ref`).current.focus();
-                    eval(`${firstErrorField}Ref`).current.scrollIntoView({
+                const fieldRefMap = {
+                    title: titleRef,
+                    category: categoryRef,
+                    image: imageRef,
+                    level: levelRef
+                };
+                const targetRef = firstErrorField ? fieldRefMap[firstErrorField] : null;
+
+                if (targetRef?.current) {
+                    targetRef.current.focus();
+                    targetRef.current.scrollIntoView({
                         behavior: "smooth",
                         block: "center"
                     });
