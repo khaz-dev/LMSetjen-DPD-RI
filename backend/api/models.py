@@ -2427,6 +2427,10 @@ class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     
+    class Meta:
+        verbose_name = "Kursus yang Ingin Dipelajari"
+        verbose_name_plural = "Kursus yang Ingin Dipelajari"
+
     def __str__(self):
         return str(self.course.title)
 
@@ -5048,7 +5052,7 @@ class ActivityLog(models.Model):
         ('points_earned', 'Dapatkan Poin'),
         ('search_query', 'Cari Kursus'),
         ('content_liked', 'Sukai Konten'),
-        ('wishlist_added', 'Tambah Wishlist'),
+        ('wishlist_added', 'Simpan Kursus yang Ingin Dipelajari'),
         ('discussion_participated', 'Ikut Diskusi'),
         # ✨ PHASE 53+: Instructor Teaching Activities
         ('course_created', 'Buat Kursus'),

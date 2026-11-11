@@ -189,7 +189,7 @@ function Search() {
         if (!userId) {
             Toast().fire({
                 icon: "warning",
-                title: "Silakan login untuk menambah ke daftar keinginan",
+                title: "Silakan login untuk menyimpan kursus yang ingin dipelajari",
             });
             return;
         }
@@ -197,7 +197,7 @@ function Search() {
         if (isTeacher) {
             Toast().fire({
                 icon: "info",
-                title: "Instruktur tidak dapat menambahkan kursus ke daftar keinginan",
+                title: "Instruktur tidak dapat menambahkan kursus ke daftar yang ingin dipelajari",
             });
             return;
         }
@@ -211,13 +211,13 @@ function Search() {
             
             Toast().fire({
                 icon: "success",
-                title: response.data.message || "Daftar keinginan berhasil diperbarui",
+                title: response.data.message || "Daftar kursus yang ingin dipelajari berhasil diperbarui",
             });
             
             await fetchWishlistItems();
             refreshWishlistCount();
         } catch (error) {
-            let errorMessage = "Kesalahan saat memperbarui daftar keinginan";
+            let errorMessage = "Kesalahan saat memperbarui daftar kursus yang ingin dipelajari";
             if (error.response) {
                 if (error.response.status === 404) {
                     errorMessage = "Kursus tidak ditemukan";
@@ -834,11 +834,12 @@ function Search() {
                                                                     addToWishlist(c.id);
                                                                 }} 
                                                                 className="card-wishlist-action"
-                                                                title={isCourseInWishlist(c.id) ? "Hapus dari daftar keinginan" : "Tambah ke daftar keinginan"}
+                                                                title={isCourseInWishlist(c.id) ? "Hapus dari kursus yang ingin dipelajari" : "Simpan ke kursus yang ingin dipelajari"}
                                                                 disabled={!userId}
-                                                                aria-label="Wishlist kursus"
+                                                                aria-label="Simpan ke kursus yang ingin dipelajari"
+                                                                style={{ color: "#2563eb" }}
                                                             >
-                                                                <i className={`${isCourseInWishlist(c.id) ? 'fas fa-heart text-danger' : 'far fa-heart'}`} />
+                                                                <i className={`${isCourseInWishlist(c.id) ? 'fas fa-bookmark text-primary' : 'far fa-bookmark text-primary'}`} />
                                                             </button>
                                                         )}
 
@@ -1014,11 +1015,12 @@ function Search() {
                                                                     addToWishlist(c.id);
                                                                 }} 
                                                                 className="card-wishlist-action"
-                                                                title={isCourseInWishlist(c.id) ? "Hapus dari daftar keinginan" : "Tambah ke daftar keinginan"}
+                                                                title={isCourseInWishlist(c.id) ? "Hapus dari kursus yang ingin dipelajari" : "Simpan ke kursus yang ingin dipelajari"}
                                                                 disabled={!userId}
-                                                                aria-label="Wishlist kursus"
+                                                                aria-label="Simpan ke kursus yang ingin dipelajari"
+                                                                style={{ color: "#2563eb" }}
                                                             >
-                                                                <i className={`${isCourseInWishlist(c.id) ? 'fas fa-heart text-danger' : 'far fa-heart'}`} />
+                                                                <i className={`${isCourseInWishlist(c.id) ? 'fas fa-bookmark text-primary' : 'far fa-bookmark text-primary'}`} />
                                                             </button>
                                                         )}
 

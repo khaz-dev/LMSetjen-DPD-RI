@@ -2303,21 +2303,32 @@ class FileUploadSerializer(serializers.Serializer):
     def validate_file(self, value):
         """
         Validate file extension against strict whitelist (T-01 Pentest Fix)
-        Only allows: .pdf, .png, .jpg, .jpeg, .mp4
-        Rejects: .html, .svg, .php, etc.
+        Supports media formats:
+        - Documents: .pdf, .doc, .docx, .txt
+        - Presentations: .ppt, .pptx
+        - Images: .png, .jpg, .jpeg, .webp
+        - Videos: .mp4, .webm, .ogv, .mov, .avi, .mkv
+        - Audio: .mp3, .wav, .ogg, .m4a, .aac
         """
         import os
-        allowed_extensions = {'.pdf', '.png', '.jpg', '.jpeg', '.mp4'}
+        allowed_extensions = {
+            '.pdf', '.png', '.jpg', '.jpeg', '.webp',
+            '.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv',
+            '.ppt', '.pptx',
+            '.doc', '.docx', '.txt',
+            '.mp3', '.wav', '.ogg', '.m4a', '.aac'
+        }
         dangerous_extensions = {
             '.html', '.htm', '.svg', '.php', '.phtml', '.php3', '.php4', '.php5',
-            '.sh', '.bash', '.exe', '.bat', '.cmd', '.js', '.jsx', '.ts', '.tsx',
-            '.py', '.pl', '.cgi', '.asp', '.aspx', '.jsp', '.jspx', '.htaccess'
+            '.phps', '.phar', '.sh', '.bash', '.exe', '.bat', '.cmd', '.js',
+            '.jsx', '.ts', '.tsx', '.py', '.pl', '.cgi', '.asp', '.aspx',
+            '.jsp', '.jspx', '.htaccess', '.env', '.config', '.war'
         }
         
         ext = os.path.splitext(value.name)[1].lower()
         if ext in dangerous_extensions or ext not in allowed_extensions:
             raise serializers.ValidationError(
-                f"Format file '{ext}' tidak diizinkan. Hanya file .pdf, .png, .jpg, dan .mp4 yang diperbolehkan."
+                f"Format file '{ext}' tidak diizinkan. Ekstensi yang didukung: Dokumen (PDF, PPT/PPTX, DOC/DOCX, TXT), Video (MP4, WebM, dll), Audio (MP3, WAV, dll), dan Gambar."
             )
         return value
 

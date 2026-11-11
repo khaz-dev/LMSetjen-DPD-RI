@@ -1051,14 +1051,14 @@ class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
             # 🔒 Validasi kepemilikan
             is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
             if str(request.user.id) != str(user_id) and not is_admin:
-                return Response({"message": "Akses ditolak. Anda tidak berhak memodifikasi wishlist pengguna lain."}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"message": "Akses ditolak. Anda tidak berhak memodifikasi daftar kursus yang ingin dipelajari pengguna lain."}, status=status.HTTP_403_FORBIDDEN)
 
             # Get user and validate
             try:
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
                 return Response(
-                    {"message": "User not found"}, 
+                    {"message": "Pengguna tidak ditemukan"}, 
                     status=status.HTTP_404_NOT_FOUND
                 )
 
@@ -1066,7 +1066,7 @@ class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
             # Only block if they are actively in teacher role, not just if they have instructor capabilities
             if user.is_teacher_current():
                 return Response(
-                    {"message": "Teachers cannot add courses to wishlist"}, 
+                    {"message": "Instruktur tidak dapat menambahkan kursus ke daftar yang ingin dipelajari"}, 
                     status=status.HTTP_403_FORBIDDEN
                 )
 
@@ -1075,7 +1075,7 @@ class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
                 course = api_models.Course.objects.get(id=course_id)
             except api_models.Course.DoesNotExist:
                 return Response(
-                    {"message": "Course not found"}, 
+                    {"message": "Kursus tidak ditemukan"}, 
                     status=status.HTTP_404_NOT_FOUND
                 )
 
@@ -1086,21 +1086,21 @@ class StudentWishListListCreateAPIView(generics.ListCreateAPIView):
                 # Remove from wishlist
                 wishlist.delete()
                 return Response(
-                    {"message": "Course removed from wishlist"}, 
+                    {"message": "Kursus berhasil dihapus dari daftar yang ingin dipelajari"}, 
                     status=status.HTTP_200_OK
                 )
             else:
                 # Add to wishlist
                 api_models.Wishlist.objects.create(user=user, course=course)
                 return Response(
-                    {"message": "Course added to wishlist"}, 
+                    {"message": "Kursus berhasil ditambahkan ke daftar yang ingin dipelajari"}, 
                     status=status.HTTP_201_CREATED
                 )
                 
         except Exception as e:
             print(f"[Wishlist Error] {str(e)}")
             return Response(
-                {"message": f"Error updating wishlist: {str(e)}"}, 
+                {"message": f"Terjadi kesalahan saat memperbarui daftar kursus yang ingin dipelajari: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

@@ -105,9 +105,19 @@ function CourseDetail() {
         if (!userData) {
             Swal.fire({
                 icon: "warning",
-                title: "Login Required",
-                text: "Please login to add courses to your wishlist",
+                title: "Perlu Login",
+                text: "Silakan login untuk menyimpan kursus yang ingin dipelajari",
                 confirmButtonColor: "#0d9488"
+            });
+            return;
+        }
+
+        if (isTeacher) {
+            Swal.fire({
+                icon: "info",
+                title: "Peran Instruktur",
+                text: "Fitur ini khusus untuk peserta pembelajaran. Instruktur tidak dapat menambahkan kursus ke daftar yang ingin dipelajari.",
+                confirmButtonColor: "#2563eb"
             });
             return;
         }
@@ -126,16 +136,16 @@ function CourseDetail() {
                 // Was in wishlist, now removed
                 Toast().fire({
                     icon: "success",
-                    title: "Removed from Wishlist",
-                    text: "Course has been removed from your wishlist",
+                    title: "Dihapus dari Daftar",
+                    text: "Kursus telah dihapus dari daftar kursus yang ingin Anda pelajari",
                 });
                 setIsInWishlist(false);
             } else {
                 // Was not in wishlist, now added
                 Toast().fire({
                     icon: "success",
-                    title: "Added to Wishlist",
-                    text: "Course has been added to your wishlist",
+                    title: "Disimpan untuk Dipelajari",
+                    text: "Kursus telah ditambahkan ke daftar kursus yang ingin Anda pelajari",
                 });
                 setIsInWishlist(true);
             }
@@ -143,8 +153,8 @@ function CourseDetail() {
             console.error("Error updating wishlist:", error);
             Toast().fire({
                 icon: "error",
-                title: "Error",
-                text: error.response?.data?.message || "Failed to update wishlist",
+                title: "Terjadi Kesalahan",
+                text: error.response?.data?.message || "Gagal memperbarui kursus yang ingin dipelajari",
             });
         } finally {
             setIsLoadingWishlist(false);
@@ -866,40 +876,46 @@ function CourseDetail() {
                 </div>
             </section>
 
-            {/* Floating Wishlist Button - Hidden for teachers/instructors, stacked above feedback button */}
-            {course && !isLoading && !isTeacher && (
+            {/* Floating Wishlist / Saved Course Button - Rendered via createPortal to document.body so it permanently STICKS to the viewport */}
+            {typeof document !== "undefined" && course && !isLoading && createPortal(
                 <div
                     className="floating-wishlist-container"
                     style={{
                         position: "fixed",
-                        bottom: "92px",
-                        right: "24px",
-                        zIndex: 1035,
+                        top: "50%",
+                        bottom: "auto",
+                        right: "20px",
+                        transform: "translateY(-50%)",
+                        zIndex: 1045,
                         display: "flex",
                         alignItems: "center",
                         gap: "10px",
                         pointerEvents: "auto"
                     }}
                 >
-                    {/* Text label (shows when in wishlist) */}
-                    {isInWishlist && (
+                    {/* Text label when in wishlist */}
+                    {isInWishlist ? (
                         <div
                             className="floating-wishlist-label"
                             style={{
-                                background: "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)",
+                                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
                                 color: "white",
                                 padding: "8px 16px",
                                 borderRadius: "30px",
                                 fontWeight: "600",
                                 fontSize: "0.82rem",
-                                boxShadow: "0 4px 15px rgba(255, 107, 107, 0.4)",
-                                border: "2px solid rgba(255, 255, 255, 0.3)",
+                                boxShadow: "0 4px 15px rgba(37, 99, 235, 0.35)",
+                                border: "1.5px solid rgba(255, 255, 255, 0.6)",
                                 whiteSpace: "nowrap",
                                 animation: "fadeInRight 0.3s ease",
-                                zIndex: 1035
+                                zIndex: 1045
                             }}
                         >
-                            Tersimpan di Wishlist
+                            Tersimpan untuk Dipelajari
+                        </div>
+                    ) : (
+                        <div className="floating-wishlist-hint">
+                            Ingin Dipelajari
                         </div>
                     )}
 
@@ -907,51 +923,46 @@ function CourseDetail() {
                         onClick={handleWishlist}
                         disabled={isLoadingWishlist}
                         className="btn floating-wishlist-button"
-                        aria-label={isInWishlist ? "Hapus dari Wishlist" : "Simpan ke Wishlist"}
-                        title={isInWishlist ? "Hapus dari Wishlist" : "Simpan ke Wishlist"}
+                        aria-label={isInWishlist ? "Hapus dari Kursus yang Ingin Dipelajari" : "Simpan ke Kursus yang Ingin Dipelajari"}
+                        title={isInWishlist ? "Hapus dari Kursus yang Ingin Dipelajari" : "Simpan ke Kursus yang Ingin Dipelajari"}
                         style={{
-                            width: "56px",
-                            height: "56px",
+                            width: "54px",
+                            height: "54px",
                             borderRadius: "50%",
                             background: isInWishlist
-                                ? "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)"
-                                : "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)",
-                            border: "3px solid rgba(255, 255, 255, 0.3)",
-                            boxShadow: "0 4px 16px rgba(13, 148, 136, 0.3)",
+                                ? "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)"
+                                : "#ffffff",
+                            border: isInWishlist
+                                ? "2px solid #ffffff"
+                                : "2px solid #2563eb",
+                            boxShadow: isInWishlist 
+                                ? "0 6px 20px rgba(37, 99, 235, 0.45), 0 2px 6px rgba(0, 0, 0, 0.1)" 
+                                : "0 6px 20px rgba(37, 99, 235, 0.25), 0 2px 8px rgba(0, 0, 0, 0.08)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             cursor: isLoadingWishlist ? "not-allowed" : "pointer",
-                            transition: "all 0.3s ease",
+                            transition: "all 0.25s ease",
                             padding: 0,
                             flexShrink: 0,
-                            zIndex: 1035,
+                            zIndex: 1045,
                             position: "relative"
-                        }}
-                        onMouseEnter={(e) => {
-                            if (!isLoadingWishlist) {
-                                e.currentTarget.style.transform = "scale(1.1) translateY(-3px)";
-                                e.currentTarget.style.boxShadow = "0 12px 35px rgba(102, 126, 234, 0)";
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "scale(1) translateY(0)";
-                            e.currentTarget.style.boxShadow = "0 8px 25px rgba(102, 126, 234, 0.4)";
                         }}
                     >
                         {isLoadingWishlist ? (
-                            <i className="fas fa-spinner fa-spin text-white" style={{ fontSize: "1rem" }}></i>
+                            <i className={`fas fa-spinner fa-spin ${isInWishlist ? "text-white" : "text-primary"}`} style={{ fontSize: "1rem" }}></i>
                         ) : (
                             <i
-                                className={`${isInWishlist ? "fas" : "far"} fa-heart text-white`}
+                                className={`${isInWishlist ? "fas text-white" : "far text-primary"} fa-bookmark`}
                                 style={{
-                                    fontSize: "1rem",
-                                    animation: isInWishlist ? "heartBeat 0s" : "none"
+                                    fontSize: "1.15rem",
+                                    color: isInWishlist ? "#ffffff" : "#2563eb"
                                 }}
                             ></i>
                         )}
                     </button>
-                </div>
+                </div>,
+                document.body
             )}
 
             </div>

@@ -33,6 +33,8 @@ urlpatterns = [
     path("course/full-text-search/", api_views.FullTextSearchAPIView.as_view()),  # ✨ PHASE 4: FTS endpoint
     path("course/trending-searches/", api_views.TrendingSearchesAPIView.as_view()),
     path("course/course-detail/<slug>/", api_views.CourseDetailAPIView.as_view()),
+    path("course/presentation-preview/", api_views.PresentationPreviewAPIView.as_view(), name="presentation-preview"),
+    path("course/pdf-data/", api_views.PdfDataAPIView.as_view(), name="pdf-data"),
     path("statistics/public-stats/", api_views.PublicStatsAPIView.as_view()),
     path("statistics/testimonials/", api_views.TestimonialListAPIView.as_view()),  # ✨ PHASE 4: Testimonials endpoint
     path("student/submit-testimonial/", api_views.TestimonialCreateAPIView.as_view()),  # ✨ PHASE 4.10: Testimonial submission endpoint

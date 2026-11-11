@@ -17,7 +17,7 @@ import { usePageCache } from "../../utils/usePageCache";
 import "./Wishlist.css";
 
 /**
- * ✨ Redesigned Student Wishlist Page (Daftar Keinginan Saya)
+ * ✨ Redesigned Student Wishlist Page (Kursus yang Ingin Dipelajari)
  * LMSetjen DPD RI - High-Density, Compact, Modern, Eye-Catching UI
  * Eliminates excessive white/blank space, provides grid/list views, quick search & filters
  */
@@ -77,10 +77,10 @@ function Wishlist() {
             return Array.isArray(wishlistData) ? wishlistData : [];
         } catch (err) {
             console.error("Error fetching wishlist:", err);
-            setError("Gagal memuat daftar keinginan kursus");
+            setError("Gagal memuat daftar kursus yang ingin dipelajari");
             Toast().fire({
                 icon: "error",
-                title: "Gagal memuat daftar keinginan",
+                title: "Gagal memuat kursus yang ingin dipelajari",
             });
             throw err;
         }
@@ -125,7 +125,7 @@ function Wishlist() {
 
             Toast().fire({
                 icon: "success",
-                title: "Dihapus dari Daftar Keinginan",
+                title: "Dihapus dari Daftar",
                 text: courseTitle ? `"${courseTitle}" telah dihapus` : response.data?.message,
                 timer: 1800,
             });
@@ -143,7 +143,7 @@ function Wishlist() {
             Toast().fire({
                 icon: "error",
                 title: "Gagal menghapus",
-                text: "Terjadi kesalahan saat memperbarui daftar keinginan.",
+                text: "Terjadi kesalahan saat memperbarui daftar kursus yang ingin dipelajari.",
             });
         } finally {
             setRemovingId(null);
@@ -245,8 +245,8 @@ function Wishlist() {
                                             <span>Setjen DPD RI • E-Learning Platform</span>
                                         </div>
                                         <h1 className="wishlist-hero-title">
-                                            <i className="fas fa-heart text-danger me-2"></i>
-                                            Daftar Keinginan Saya
+                                            <i className="fas fa-bookmark text-primary me-2"></i>
+                                            Kursus yang Ingin Dipelajari
                                         </h1>
                                         <p className="wishlist-hero-desc">
                                             Kelola kursus pilihan Anda untuk perencanaan pengembangan kompetensi ASN yang berkelanjutan.
@@ -255,9 +255,9 @@ function Wishlist() {
 
                                     {/* Compact Stat Chips */}
                                     <div className="wishlist-hero-stats">
-                                        <div className="wishlist-stat-chip" title="Total kursus tersimpan dalam wishlist">
-                                            <div className="wishlist-stat-chip-icon stat-icon-rose">
-                                                <i className="fas fa-heart"></i>
+                                        <div className="wishlist-stat-chip" title="Total kursus yang disimpan untuk dipelajari">
+                                            <div className="wishlist-stat-chip-icon stat-icon-blue">
+                                                <i className="fas fa-bookmark"></i>
                                             </div>
                                             <div className="wishlist-stat-chip-text">
                                                 <span className="wishlist-stat-chip-val">{wishlist?.length || 0}</span>
@@ -482,11 +482,11 @@ function Wishlist() {
                                         /* Empty State: Wishlist is completely empty */
                                         <div className="wishlist-empty-card">
                                             <div className="wishlist-empty-icon-wrap">
-                                                <i className="fas fa-heart"></i>
+                                                <i className="fas fa-bookmark"></i>
                                             </div>
-                                            <h3 className="wishlist-empty-title">Daftar Keinginan Anda Masih Kosong</h3>
+                                            <h3 className="wishlist-empty-title">Belum Ada Kursus yang Ingin Dipelajari</h3>
                                             <p className="wishlist-empty-desc">
-                                                Anda belum menyimpan kursus apapun. Temukan beragam kursus berkualitas di katalog LMSetjen DPD RI dan klik ikon hati untuk menyimpannya di sini.
+                                                Anda belum menyimpan kursus apapun. Temukan beragam kursus berkualitas di katalog LMSetjen DPD RI dan tandai kursus yang ingin Anda pelajari di sini.
                                             </p>
                                             <Link to="/search" className="btn-wishlist-explore">
                                                 <i className="fas fa-compass me-2"></i>
@@ -563,14 +563,14 @@ function Wishlist() {
                                                                 type="button"
                                                                 className="wishlist-remove-btn"
                                                                 onClick={(e) => handleRemove(course.id, course.title, e)}
-                                                                title="Hapus dari daftar keinginan"
-                                                                aria-label="Hapus dari daftar keinginan"
+                                                                title="Hapus dari kursus yang ingin dipelajari"
+                                                                aria-label="Hapus dari kursus yang ingin dipelajari"
                                                                 disabled={isRemoving}
                                                             >
                                                                 {isRemoving ? (
-                                                                    <span className="spinner-border spinner-border-sm text-danger" role="status"></span>
+                                                                    <span className="spinner-border spinner-border-sm text-primary" role="status"></span>
                                                                 ) : (
-                                                                    <i className="fas fa-heart text-danger"></i>
+                                                                    <i className="fas fa-bookmark text-primary"></i>
                                                                 )}
                                                             </button>
                                                         </div>
@@ -730,8 +730,8 @@ function Wishlist() {
                                                                 type="button"
                                                                 className="btn-wishlist-remove-outline"
                                                                 onClick={(e) => handleRemove(course.id, course.title, e)}
-                                                                title="Hapus dari daftar keinginan"
-                                                                aria-label="Hapus dari daftar keinginan"
+                                                                title="Hapus dari kursus yang ingin dipelajari"
+                                                                aria-label="Hapus dari kursus yang ingin dipelajari"
                                                                 disabled={isRemoving}
                                                             >
                                                                 {isRemoving ? (

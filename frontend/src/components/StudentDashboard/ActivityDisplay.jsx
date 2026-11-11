@@ -49,7 +49,7 @@ function ActivityDisplay({
         { value: 'points_earned', label: 'Dapatkan Poin', icon: 'fa-coins', color: 'amber' },
         { value: 'search_query', label: 'Cari Kursus', icon: 'fa-magnifying-glass', color: 'secondary' },
         { value: 'content_liked', label: 'Sukai Konten', icon: 'fa-heart', color: 'danger' },
-        { value: 'wishlist_added', label: 'Tambah Wishlist', icon: 'fa-bookmark', color: 'primary' },
+        { value: 'wishlist_added', label: 'Simpan Kursus yang Ingin Dipelajari', icon: 'fa-bookmark', color: 'primary' },
     ];
 
     // Fetch activities from API

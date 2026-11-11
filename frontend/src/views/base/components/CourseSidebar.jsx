@@ -144,7 +144,7 @@ const CourseSidebar = ({
             Swal.fire({
                 icon: 'warning',
                 title: 'Login Diperlukan',
-                text: 'Silakan login untuk menambahkan kursus ke wishlist Anda',
+                text: 'Silakan login untuk menyimpan kursus yang ingin dipelajari',
                 confirmButtonText: 'Ke Halaman Login',
                 confirmButtonColor: '#0d9488'
             }).then((result) => {
@@ -179,8 +179,8 @@ const CourseSidebar = ({
                 // Was in wishlist, now removed
                 Swal.fire({
                     icon: 'success',
-                    title: 'Removed from Wishlist',
-                    text: 'Course has been removed from your wishlist',
+                    title: 'Dihapus dari Daftar',
+                    text: 'Kursus telah dihapus dari daftar kursus yang ingin Anda pelajari',
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -189,8 +189,8 @@ const CourseSidebar = ({
                 // Was not in wishlist, now added
                 Swal.fire({
                     icon: 'success',
-                    title: 'Added to Wishlist',
-                    text: 'Course has been added to your wishlist',
+                    title: 'Disimpan untuk Dipelajari',
+                    text: 'Kursus telah ditambahkan ke daftar kursus yang ingin Anda pelajari',
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -200,8 +200,8 @@ const CourseSidebar = ({
             console.error("Wishlist error:", error);
             Swal.fire({
                 icon: 'error',
-                title: 'Action Failed',
-                text: error.response?.data?.message || 'Failed to update wishlist. Please try again.',
+                title: 'Gagal Memperbarui',
+                text: error.response?.data?.message || 'Gagal memperbarui kursus yang ingin dipelajari. Silakan coba lagi.',
                 confirmButtonColor: '#dc3545'
             });
         } finally {
@@ -456,18 +456,18 @@ const CourseSidebar = ({
                                     onClick={handleWishlist}
                                     disabled={isLoadingWishlist}
                                     className={`btn btn-sm w-100 py-2 rounded-3 fw-medium d-flex align-items-center justify-content-center gap-2 ${isInWishlist
-                                        ? 'btn-danger text-white'
-                                        : 'btn-outline-secondary'
+                                        ? 'btn-primary text-white'
+                                        : 'btn-outline-primary'
                                         }`}
                                     style={{ fontSize: '0.82rem' }}
-                                    title={isInWishlist ? 'Hapus dari Wishlist' : 'Simpan ke Wishlist'}
+                                    title={isInWishlist ? 'Hapus dari kursus yang ingin dipelajari' : 'Simpan ke kursus yang ingin dipelajari'}
                                 >
                                     {isLoadingWishlist ? (
                                         <i className="fas fa-spinner fa-spin"></i>
                                     ) : (
                                         <>
-                                            <i className={`${isInWishlist ? 'fas' : 'far'} fa-heart ${isInWishlist ? 'text-white' : 'text-danger'}`}></i>
-                                            <span className="text-truncate">{isInWishlist ? 'Tersimpan' : 'Wishlist'}</span>
+                                            <i className={`${isInWishlist ? 'fas' : 'far'} fa-bookmark ${isInWishlist ? 'text-white' : 'text-primary'}`}></i>
+                                            <span className="text-truncate">{isInWishlist ? 'Tersimpan' : 'Ingin Dipelajari'}</span>
                                         </>
                                     )}
                                 </button>
@@ -527,7 +527,7 @@ const CourseSidebar = ({
                                         }}
                                     >
                                         <i
-                                            className={item.icon || 'fas fa-check'}
+                                            className={item.icon === 'fas fa-document' ? 'fas fa-file-alt' : (item.icon || 'fas fa-check')}
                                             style={{
                                                 fontSize: '0.75rem',
                                                 color: item.highlight ? '#0d9488' : '#64748b'

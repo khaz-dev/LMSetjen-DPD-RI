@@ -24,7 +24,7 @@ export const useWishlist = (userId) => {
         if (!userId) {
             Toast().fire({
                 icon: "warning",
-                title: "Please login to manage wishlist",
+                title: "Silakan login untuk menyimpan kursus yang ingin dipelajari",
             });
             return;
         }
@@ -45,7 +45,7 @@ export const useWishlist = (userId) => {
             console.error("Error managing wishlist:", error);
             Toast().fire({
                 icon: "error",
-                title: "Error updating wishlist",
+                title: "Gagal memperbarui kursus yang ingin dipelajari",
             });
         }
     };

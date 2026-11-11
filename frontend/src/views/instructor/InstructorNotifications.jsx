@@ -77,7 +77,7 @@ function InstructorNotifications() {
         { value: 'points_earned', label: 'Dapatkan Poin', icon: 'fa-coins', color: 'amber', role: 'gamification' },
         { value: 'discussion_participated', label: 'Ikut Diskusi', icon: 'fa-comments', color: 'blue', role: 'student' },
         { value: 'content_liked', label: 'Sukai Konten', icon: 'fa-heart', color: 'rose', role: 'student' },
-        { value: 'wishlist_added', label: 'Tambah Wishlist', icon: 'fa-bookmark', color: 'teal', role: 'student' },
+        { value: 'wishlist_added', label: 'Simpan Kursus yang Ingin Dipelajari', icon: 'fa-bookmark', color: 'teal', role: 'student' },
         { value: 'search_query', label: 'Cari Kursus', icon: 'fa-magnifying-glass', color: 'slate', role: 'student' },
     ];
 

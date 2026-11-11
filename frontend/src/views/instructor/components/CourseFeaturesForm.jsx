@@ -161,19 +161,54 @@ function CourseFeaturesForm({ courseId, onFeaturesUpdate }) {
     };
 
     const commonIcons = [
-        { value: "fas fa-check", label: "✓ Centang" },
-        { value: "fas fa-book", label: "📖 Buku" },
-        { value: "fas fa-video", label: "🎥 Video" },
-        { value: "fas fa-document", label: "📄 Dokumen" },
-        { value: "fas fa-users", label: "👥 Komunitas" },
-        { value: "fas fa-certificate", label: "🎓 Sertifikat" },
-        { value: "fas fa-clock", label: "⏰ Waktu Fleksibel" },
-        { value: "fas fa-globe", label: "🌐 Akses Seumur Hidup" },
-        { value: "fas fa-star", label: "⭐ Premium" },
-        { value: "fas fa-desktop", label: "💻 Akses Mobile" },
-        { value: "fas fa-download", label: "📥 Materi Downloadable" },
-        { value: "fas fa-headphones", label: "🎧 Dukungan 24/7" },
+        { value: "fas fa-check", label: "✓ Centang", icon: "✓" },
+        { value: "fas fa-book", label: "📖 Buku", icon: "📖" },
+        { value: "fas fa-video", label: "🎥 Video", icon: "🎥" },
+        { value: "fas fa-document", label: "📄 Dokumen", icon: "📄" },
+        { value: "fas fa-users", label: "👥 Komunitas", icon: "👥" },
+        { value: "fas fa-certificate", label: "🎓 Sertifikat", icon: "🎓" },
+        { value: "fas fa-clock", label: "⏰ Waktu Fleksibel", icon: "⏰" },
+        { value: "fas fa-globe", label: "🌐 Akses Seumur Hidup", icon: "🌐" },
+        { value: "fas fa-star", label: "⭐ Premium", icon: "⭐" },
+        { value: "fas fa-desktop", label: "💻 Akses Mobile", icon: "💻" },
+        { value: "fas fa-download", label: "📥 Materi Downloadable", icon: "📥" },
+        { value: "fas fa-headphones", label: "🎧 Dukungan 24/7", icon: "🎧" },
     ];
+
+    // Helper function to extract and match the icon from form-select Tambah Fitur Baru
+    const getFeatureIconDisplay = (iconValue) => {
+        if (!iconValue) return "✓";
+        const matched = commonIcons.find(
+            (item) => item.value === iconValue || item.label?.startsWith(iconValue) || item.icon === iconValue
+        );
+        if (matched) return matched.icon;
+
+        // Fallbacks for known classes
+        const iconMap = {
+            "fas fa-video": "🎥",
+            "fas fa-document": "📄",
+            "fas fa-file": "📄",
+            "fas fa-file-alt": "📄",
+            "fas fa-certificate": "🎓",
+            "fas fa-graduation-cap": "🎓",
+            "fas fa-check": "✓",
+            "fas fa-check-circle": "✓",
+            "fas fa-book": "📖",
+            "fas fa-users": "👥",
+            "fas fa-clock": "⏰",
+            "fas fa-globe": "🌐",
+            "fas fa-star": "⭐",
+            "fas fa-desktop": "💻",
+            "fas fa-download": "📥",
+            "fas fa-headphones": "🎧",
+        };
+        if (iconMap[iconValue]) return iconMap[iconValue];
+
+        // If it's already an emoji or non-font-awesome string
+        if (!iconValue.startsWith("fa")) return iconValue;
+
+        return null;
+    };
 
     return (
         <div className="form-section">
@@ -186,42 +221,65 @@ function CourseFeaturesForm({ courseId, onFeaturesUpdate }) {
             {features.length > 0 && (
                 <div className="mb-4">
                     <div className="list-group">
-                        {features.map((feature) => (
-                            <div
-                                key={feature.id}
-                                className="list-group-item d-flex justify-content-between align-items-center"
-                            >
-                                <div className="d-flex align-items-center">
-                                    <i className={`${feature.icon} me-3 text-primary`}></i>
-                                    <div>
-                                        <p className="mb-1">{feature.text}</p>
-                                        {feature.highlight && (
-                                            <small className="badge bg-warning text-dark">
-                                                Disorot
-                                            </small>
-                                        )}
+                        {features.map((feature) => {
+                            const iconDisplay = getFeatureIconDisplay(feature.icon);
+                            return (
+                                <div
+                                    key={feature.id}
+                                    className="list-group-item d-flex justify-content-between align-items-center"
+                                >
+                                    <div className="d-flex align-items-center">
+                                        <span
+                                            className="feature-icon-badge me-3 d-inline-flex align-items-center justify-content-center"
+                                            style={{
+                                                fontSize: "1.2rem",
+                                                width: "36px",
+                                                height: "36px",
+                                                minWidth: "36px",
+                                                borderRadius: "8px",
+                                                background: "#f1f5f9",
+                                                flexShrink: 0,
+                                                lineHeight: 1
+                                            }}
+                                        >
+                                            {iconDisplay ? (
+                                                iconDisplay
+                                            ) : (
+                                                <i className={`${feature.icon || "fas fa-check"} text-teal`} />
+                                            )}
+                                        </span>
+                                        <div>
+                                            <p className="mb-0 fw-medium text-dark">{feature.text}</p>
+                                            {feature.highlight && (
+                                                <small className="badge bg-warning text-dark mt-1">
+                                                    Disorot
+                                                </small>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="btn-group" role="group">
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-primary"
+                                            onClick={() => handleEditFeature(feature)}
+                                            disabled={loading}
+                                            title="Edit fitur"
+                                        >
+                                            <i className="fas fa-edit"></i>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-danger"
+                                            onClick={() => handleDeleteFeature(feature.id)}
+                                            disabled={loading}
+                                            title="Hapus fitur"
+                                        >
+                                            <i className="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="btn-group" role="group">
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-primary"
-                                        onClick={() => handleEditFeature(feature)}
-                                        disabled={loading}
-                                    >
-                                        <i className="fas fa-edit"></i>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-danger"
-                                        onClick={() => handleDeleteFeature(feature.id)}
-                                        disabled={loading}
-                                    >
-                                        <i className="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -236,7 +294,19 @@ function CourseFeaturesForm({ courseId, onFeaturesUpdate }) {
                     <div className="row">
                         <div className="col-md-6">
                             <FormField
-                                label="Pilih Ikon"
+                                label={
+                                    <span className="d-flex align-items-center gap-2">
+                                        <span>Pilih Ikon</span>
+                                        {newFeature.icon && (
+                                            <span 
+                                                className="badge bg-light text-dark border px-2 py-0.5"
+                                                style={{ fontSize: "0.85rem", fontWeight: "normal" }}
+                                            >
+                                                Pratinjau: {getFeatureIconDisplay(newFeature.icon)}
+                                            </span>
+                                        )}
+                                    </span>
+                                }
                                 name="icon"
                                 type="select"
                                 value={newFeature.icon}

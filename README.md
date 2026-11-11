@@ -95,7 +95,7 @@ npm install
 
 - 💬 **Q&A Forum** - Tanya jawab dengan instruktur dan peserta lain- `backend/db.sqlite3` - Database
 
-- ❤️ **Wishlist** - Simpan kursus favorit untuk dipelajari nanti- `backend/.env` - Environment variables
+- 🔖 **Kursus yang Ingin Dipelajari** - Simpan kursus pilihan untuk dipelajari nanti- `backend/.env` - Environment variables
 
 - 📊 **Dashboard Progress** - Tracking progres pembelajaran real-time
 

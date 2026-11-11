@@ -65,7 +65,7 @@ function Activities() {
         { value: 'question_answered', label: 'Jawab Pertanyaan', icon: 'fa-comment-dots', color: 'blue', role: 'student', category: 'points' },
         { value: 'discussion_participated', label: 'Ikut Diskusi', icon: 'fa-comments', color: 'blue', role: 'student', category: 'points' },
         { value: 'content_liked', label: 'Sukai Konten', icon: 'fa-heart', color: 'rose', role: 'student', category: 'points' },
-        { value: 'wishlist_added', label: 'Tambah Wishlist', icon: 'fa-bookmark', color: 'teal', role: 'student', category: 'points' },
+        { value: 'wishlist_added', label: 'Simpan Kursus yang Ingin Dipelajari', icon: 'fa-bookmark', color: 'teal', role: 'student', category: 'points' },
         { value: 'search_query', label: 'Cari Kursus', icon: 'fa-magnifying-glass', color: 'slate', role: 'student', category: 'points' },
     ];
 

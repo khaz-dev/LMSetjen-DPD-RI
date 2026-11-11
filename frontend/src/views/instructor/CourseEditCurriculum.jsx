@@ -35,6 +35,8 @@ import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import WorkflowStepper from "../../components/WorkflowStepper";
 import LessonCompletionQuestionEditor from "../../components/CourseEdit/LessonCompletionQuestionEditor"; // ✨ PHASE 4.143
+import PptxRenderer from "../../components/Common/PptxRenderer";
+import PdfRenderer from "../../components/Common/PdfRenderer";
 
 // Utility imports
 import useAxios from "../../utils/useAxios";
@@ -71,6 +73,43 @@ const FILE_UPLOAD_CONFIG = {
     COMPRESSION_QUALITY_MEDIUM: 0.6,
     COMPRESSION_QUALITY_LOW: 0.4,
 };
+
+/**
+ * PresentationPreview - Dedicated Real PPT/PPTX Viewer on bright mode.
+ */
+const PresentationPreview = ({ fileUrl }) => {
+    if (!fileUrl) return null;
+
+    // Google Slides embed support
+    if (fileUrl.includes('docs.google.com/presentation')) {
+        let embedUrl = fileUrl;
+        if (embedUrl.includes('/edit') || embedUrl.includes('/view')) {
+            embedUrl = embedUrl.replace(/\/(edit|view).*$/, '/embed?start=false&loop=false&delayms=3000');
+        } else if (!embedUrl.endsWith('/embed')) {
+            embedUrl = embedUrl.replace(/\/$/, '') + '/embed';
+        }
+        return (
+            <div className="ratio ratio-16x9 rounded overflow-hidden shadow-xs border bg-white" style={{ minHeight: "360px" }}>
+                <iframe
+                    src={embedUrl}
+                    title="Google Slides Presentation"
+                    allowFullScreen
+                    style={{ border: 0 }}
+                ></iframe>
+            </div>
+        );
+    }
+
+    return (
+        <PptxRenderer
+            fileUrl={fileUrl}
+            height="440px"
+            showThumbnails={true}
+            showToolbar={true}
+        />
+    );
+};
+
 
 /**
  * Fix WebM duration metadata for seekability
@@ -983,21 +1022,38 @@ function SortableLessonItem({
     };
 
     // Detach SCORM module
-    const handleDetachScorm = () => {
-        if (window.confirm("Lepaskan paket SCORM dari materi pelajaran ini?")) {
-            handleLessonChange(variantIndex, itemIndex, "learning_module_id", null);
-            handleLessonChange(variantIndex, itemIndex, "learning_module_info", null);
-            handleLessonChange(variantIndex, itemIndex, "file_type", null);
-            handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
-            Toast().fire({
-                icon: "info",
-                title: "Modul SCORM Dilepaskan",
-                text: "Materi ini dapat diisi kembali dengan video/berkas atau paket modul lainnya.",
-                timer: 1500,
-                showConfirmButton: false
-            });
-            setTimeout(() => autoSaveCurriculum(), 150);
-        }
+    const handleDetachScorm = async () => {
+        const result = await Swal.fire({
+            title: 'Lepaskan Paket SCORM?',
+            text: 'Modul SCORM akan dilepaskan dari materi pelajaran ini.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-unlink me-1"></i> Ya, Lepas',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            customClass: {
+                confirmButton: 'btn btn-danger btn-sm px-3 shadow-sm',
+                cancelButton: 'btn btn-secondary btn-sm px-3 shadow-sm'
+            },
+            buttonsStyling: false
+        });
+
+        if (!result.isConfirmed) return;
+
+        handleLessonChange(variantIndex, itemIndex, "learning_module_id", null);
+        handleLessonChange(variantIndex, itemIndex, "learning_module_info", null);
+        handleLessonChange(variantIndex, itemIndex, "file_type", null);
+        handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
+        Toast().fire({
+            icon: "info",
+            title: "Modul SCORM Dilepaskan",
+            text: "Materi ini dapat diisi kembali dengan video/berkas atau paket modul lainnya.",
+            timer: 1500,
+            showConfirmButton: false
+        });
+        setTimeout(() => autoSaveCurriculum(), 150);
     };
 
     // Determine media type for standard lessons
@@ -1597,26 +1653,43 @@ function SortableLessonItem({
                                                             title="Hapus media dari pelajaran ini"
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
-                                                                if (window.confirm("Hapus media ini dari materi pembelajaran?")) {
-                                                                    if (item?.uploadedFile && item.uploadedFile.includes('/media/')) {
-                                                                        await handleDeleteLessonFile(variantIndex, itemIndex, item.uploadedFile);
-                                                                    } else {
-                                                                        handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
-                                                                        handleLessonChange(variantIndex, itemIndex, "file", "");
-                                                                        handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
-                                                                        handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
-                                                                        handleLessonChange(variantIndex, itemIndex, "media_source", "");
-                                                                        setTimeout(() => autoSaveCurriculum(), 100);
-                                                                    }
-                                                                    setMediaUrlInput('');
-                                                                    Toast().fire({
-                                                                        icon: "success",
-                                                                        title: "Media Dihapus",
-                                                                        text: "Media pelajaran berhasil dilepas.",
-                                                                        timer: 1500,
-                                                                        showConfirmButton: false
-                                                                    });
+                                                                const result = await Swal.fire({
+                                                                    title: 'Hapus Media Pelajaran?',
+                                                                    text: 'Media ini (video/dokumen/tautan) akan dilepas dari materi pembelajaran.',
+                                                                    icon: 'warning',
+                                                                    showCancelButton: true,
+                                                                    confirmButtonColor: '#dc3545',
+                                                                    cancelButtonColor: '#6c757d',
+                                                                    confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Ya, Hapus',
+                                                                    cancelButtonText: 'Batal',
+                                                                    reverseButtons: true,
+                                                                    customClass: {
+                                                                        confirmButton: 'btn btn-danger btn-sm px-3 shadow-sm',
+                                                                        cancelButton: 'btn btn-secondary btn-sm px-3 shadow-sm'
+                                                                    },
+                                                                    buttonsStyling: false
+                                                                });
+
+                                                                if (!result.isConfirmed) return;
+
+                                                                if (item?.uploadedFile && item.uploadedFile.includes('/media/')) {
+                                                                    await handleDeleteLessonFile(variantIndex, itemIndex, item.uploadedFile);
+                                                                } else {
+                                                                    handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
+                                                                    handleLessonChange(variantIndex, itemIndex, "file", "");
+                                                                    handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
+                                                                    handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
+                                                                    handleLessonChange(variantIndex, itemIndex, "media_source", "");
+                                                                    setTimeout(() => autoSaveCurriculum(), 100);
                                                                 }
+                                                                setMediaUrlInput('');
+                                                                Toast().fire({
+                                                                    icon: "success",
+                                                                    title: "Media Dihapus",
+                                                                    text: "Media pelajaran berhasil dilepas.",
+                                                                    timer: 1500,
+                                                                    showConfirmButton: false
+                                                                });
                                                             }}
                                                         >
                                                             <i className="fas fa-trash-alt"></i>
@@ -1626,7 +1699,7 @@ function SortableLessonItem({
 
                                                 {/* Expandable Compact Preview Container */}
                                                 {isPreviewOpen && (
-                                                    <div className="mt-1 pt-1 border-top rounded overflow-hidden" style={{ maxHeight: '180px' }}>
+                                                    <div className="mt-1 pt-1 border-top rounded overflow-hidden" style={{ maxHeight: (isItemPpt || isItemPdf) ? '580px' : '180px' }}>
                                                         {isItemVideo && (activeMediaUrl.includes('youtube.com') || activeMediaUrl.includes('youtu.be')) ? (
                                                             <div className="ratio ratio-16x9 rounded overflow-hidden" style={{ maxHeight: "170px" }}>
                                                                 <iframe
@@ -1652,12 +1725,16 @@ function SortableLessonItem({
                                                                 </audio>
                                                             </div>
                                                         ) : isItemPdf ? (
-                                                            <div style={{ height: "160px" }}>
-                                                                <iframe src={activeMediaUrl} title="PDF Preview" className="w-100 h-100 border-0"></iframe>
-                                                            </div>
-                                                        ) : isItemPpt || isItemWord ? (
+                                                            <PdfRenderer
+                                                                fileUrl={activeMediaUrl}
+                                                                height="460px"
+                                                                title={item.title || "Dokumen PDF"}
+                                                            />
+                                                        ) : isItemPpt ? (
+                                                            <PresentationPreview fileUrl={activeMediaUrl} />
+                                                        ) : isItemWord ? (
                                                             <div className="p-2 text-center bg-light rounded">
-                                                                <i className={`fas ${isItemPpt ? 'fa-file-powerpoint text-warning' : 'fa-file-word text-primary'} fa-2x mb-1`}></i>
+                                                                <i className="fas fa-file-word text-primary fa-2x mb-1"></i>
                                                                 <div className="small fw-semibold text-truncate">{activeMediaUrl.split('/').pop()}</div>
                                                                 <a href={activeMediaUrl} target="_blank" rel="noopener noreferrer" className="btn btn-xs btn-outline-primary mt-1 py-0 px-2" style={{ fontSize: "0.72rem" }}>
                                                                     <i className="fas fa-external-link-alt me-1"></i>Buka Dokumen
@@ -1665,7 +1742,7 @@ function SortableLessonItem({
                                                             </div>
                                                         ) : (
                                                             <div className="bg-black text-center rounded overflow-hidden">
-                                                                <video width="100%" controls style={{ maxHeight: '160px', backgroundColor: '#000' }}>
+                                                                <video key={activeMediaUrl} width="100%" controls style={{ maxHeight: '160px', backgroundColor: '#000' }}>
                                                                     <source src={activeMediaUrl} />
                                                                 </video>
                                                             </div>
@@ -1796,10 +1873,11 @@ function SortableLessonItem({
                                                                                         delete updated[progressKey];
                                                                                         return updated;
                                                                                     });
+                                                                                    const errorMsg = error.response?.data?.file?.[0] || error.response?.data?.error || error.response?.data?.message || error.response?.data?.detail || "Gagal mengunggah berkas.";
                                                                                     Toast().fire({
                                                                                         icon: "error",
                                                                                         title: "Unggahan Gagal",
-                                                                                        text: error.response?.data?.message || "Gagal mengunggah berkas.",
+                                                                                        text: errorMsg,
                                                                                     });
                                                                                 }
                                                                                 e.target.value = '';
@@ -3393,7 +3471,9 @@ function CourseEditCurriculum() {
      * Add a new curriculum section (variant)
      */
     const addCurriculumSection = () => {
+        let newIndex = 0;
         setVariants(prevVariants => {
+            newIndex = prevVariants.length;
             // Calculate next order number
             const maxOrder = prevVariants.reduce((max, v) => Math.max(max, v.order || 0), -1);
             const newOrder = maxOrder + 1;
@@ -3426,11 +3506,18 @@ function CourseEditCurriculum() {
                 },
             ];
         });
-        trackFormChanges();
+
+        // Ensure newly added section is open/expanded
+        setCollapsedSections(prev => ({
+            ...prev,
+            [newIndex]: false
+        }));
 
         Toast().fire({
             icon: "success",
             title: "Bagian baru berhasil ditambahkan!",
+            timer: 2000,
+            showConfirmButton: false
         });
     };
 
@@ -3625,40 +3712,55 @@ function CourseEditCurriculum() {
     };
 
     const addLesson = (variantIndex) => {
-        const updatedVariants = [...variants];
+        setVariants(prevVariants => {
+            if (!prevVariants || !prevVariants[variantIndex]) return prevVariants;
 
-        // Calculate next order number for lesson
-        const currentItems = updatedVariants[variantIndex].items || [];
-        const maxOrder = currentItems.reduce((max, item) => Math.max(max, item.order || 0), -1);
-        const newOrder = maxOrder + 1;
+            const updatedVariants = [...prevVariants];
+            const targetVariant = updatedVariants[variantIndex];
+            const currentItems = targetVariant.items ? [...targetVariant.items] : [];
+            const maxOrder = currentItems.reduce((max, item) => Math.max(max, item.order || 0), -1);
+            const newOrder = maxOrder + 1;
 
-        updatedVariants[variantIndex].items.push({
-            title: "",
-            description: "",
-            gdriveLink: "",  // ✅ Use gdriveLink instead of file
-            youtubeLink: "",  // ✨ PHASE 4.61: Initialize youtubeLink for new items
-            preview: false,
-            order: newOrder, // ✅ Assign order to new lesson
-            duration_seconds: null,  // ✨ PHASE 4.43.9: Initialize duration_seconds for new items
-            duration_formatted: null,  // ✨ PHASE 4.44: Initialize duration_formatted for new items
-            media_source: isElearningScorm ? 'scorm' : 'upload',
-            learning_module_id: isElearningScorm ? (course.learning_module_id || course.learning_module?.id || null) : null,
-            learning_module_info: isElearningScorm && course.learning_module ? {
-                id: course.learning_module.id,
-                judul: course.learning_module.judul || course.title,
-                module_type: course.learning_module.module_type || course.course_type,
-                player_url: course.learning_module.player_url,
-                entry_file: course.learning_module.entry_file || "index.html"
-            } : null,
-            file_type: isElearningScorm ? 'scorm' : null
+            const newItem = {
+                title: "",
+                description: "",
+                gdriveLink: "",  // ✅ Use gdriveLink instead of file
+                youtubeLink: "",  // ✨ PHASE 4.61: Initialize youtubeLink for new items
+                preview: false,
+                order: newOrder, // ✅ Assign order to new lesson
+                duration_seconds: null,  // ✨ PHASE 4.43.9: Initialize duration_seconds for new items
+                duration_formatted: null,  // ✨ PHASE 4.44: Initialize duration_formatted for new items
+                media_source: isElearningScorm ? 'scorm' : 'upload',
+                learning_module_id: isElearningScorm ? (course.learning_module_id || course.learning_module?.id || null) : null,
+                learning_module_info: isElearningScorm && course.learning_module ? {
+                    id: course.learning_module.id,
+                    judul: course.learning_module.judul || course.title,
+                    module_type: course.learning_module.module_type || course.course_type,
+                    player_url: course.learning_module.player_url,
+                    entry_file: course.learning_module.entry_file || "index.html"
+                } : null,
+                file_type: isElearningScorm ? 'scorm' : null
+            };
+
+            updatedVariants[variantIndex] = {
+                ...targetVariant,
+                items: [...currentItems, newItem]
+            };
+
+            return updatedVariants;
         });
 
-        setVariants(updatedVariants);
-        trackFormChanges();
+        // Ensure section is expanded so user sees the new lesson card
+        setCollapsedSections(prev => ({
+            ...prev,
+            [variantIndex]: false
+        }));
 
         Toast().fire({
             icon: "success",
             title: "Pelajaran baru berhasil ditambahkan!",
+            timer: 2000,
+            showConfirmButton: false
         });
     };
 
@@ -3865,6 +3967,134 @@ function CourseEditCurriculum() {
     };
 
     /**
+     * ✨ Reconcile client variants state with fresh curriculum from backend response
+     * Updates variant_id and variant_item_id to prevent duplicate creation & orphaned file deletion.
+     * Synchronously returns freshVariants and preserves any local draft items/sections.
+     */
+    const reconcileVariantsWithResponse = (updatedCourse, customBaseVariants = null) => {
+        if (!updatedCourse || (!updatedCourse.curriculum && !updatedCourse.variants)) return [];
+
+        setCourse(updatedCourse);
+
+        const baseVariants = customBaseVariants || variants || [];
+
+        const previousItemsMap = new Map();
+        (baseVariants || []).forEach(v => {
+            (v.items || []).forEach(it => {
+                if (it.variant_item_id) previousItemsMap.set(String(it.variant_item_id), it);
+                if (it.title) previousItemsMap.set(it.title, it);
+            });
+        });
+
+        const serverVariantsList = updatedCourse.curriculum || updatedCourse.variants || [];
+
+        const freshVariants = serverVariantsList.map((variant, index) => {
+            const variantItemsList = (variant.variant_items && variant.variant_items.length > 0)
+                ? variant.variant_items
+                : (variant.items || []);
+
+            const currentVariantId = variant.variant_id || variant.id;
+
+            // Match corresponding base variant
+            const baseVariant = (baseVariants || []).find(bv =>
+                (currentVariantId && bv.variant_id && String(bv.variant_id) === String(currentVariantId)) ||
+                (bv.order !== undefined && variant.order !== undefined && bv.order === variant.order)
+            ) || (baseVariants || [])[index];
+
+            const sortedItems = [...variantItemsList].sort((a, b) => {
+                const orderA = a.order !== undefined ? a.order : 999999;
+                const orderB = b.order !== undefined ? b.order : 999999;
+                return orderA - orderB;
+            });
+
+            const mappedItems = sortedItems.map((item, itemIndex) => {
+                const fileUrl = item.file || '';
+                const isYouTubeLink = fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be');
+                const isUploadedFile = fileUrl.includes('/media/') ||
+                    /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl);
+
+                const itemIdStr = String(item.variant_item_id || item.id || '');
+                const prevItem = (itemIdStr && previousItemsMap.get(itemIdStr)) || (item.title && previousItemsMap.get(item.title));
+
+                const itemLmInfo = item.learning_module_info || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module : updatedCourse.learning_module);
+                const itemLmId = item.learning_module_id || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module.id : (typeof item.learning_module === 'number' ? item.learning_module : (updatedCourse.learning_module_id || updatedCourse.learning_module?.id)));
+                const isItemScorm = isElearningScorm || Boolean(itemLmId) || item.file_type === 'scorm';
+
+                const detectedSource = isItemScorm ? 'scorm' : (isUploadedFile ? 'upload' : (isYouTubeLink ? 'youtube' : (fileUrl ? 'google_drive' : (prevItem?.media_source || null))));
+
+                return {
+                    title: item.title || '',
+                    description: item.description || '',
+                    item_type: item.item_type || (item.quiz_id || item.quiz ? 'quiz' : (prevItem?.item_type || 'lesson')),
+                    quiz_id: item.quiz_id || (item.quiz && typeof item.quiz === 'object' ? item.quiz.quiz_id : (item.quiz || prevItem?.quiz_id || null)),
+                    quiz_detail: item.quiz_detail || prevItem?.quiz_detail || null,
+                    gdriveLink: !isYouTubeLink && !isUploadedFile ? fileUrl : (prevItem?.gdriveLink || ''),
+                    youtubeLink: isYouTubeLink ? fileUrl : (prevItem?.youtubeLink || ''),
+                    uploadedFile: isUploadedFile ? fileUrl : (prevItem?.uploadedFile || ''),
+                    file: fileUrl,
+                    preview: item.preview || false,
+                    variant_item_id: item.variant_item_id || item.id,
+                    order: item.order !== undefined ? item.order : itemIndex,
+                    duration_seconds: item.duration_seconds || (prevItem?.duration_seconds || null),
+                    duration_formatted: item.content_duration || (prevItem?.duration_formatted || null),
+                    media_source: item.media_source || detectedSource,
+                    learning_module_id: itemLmId || null,
+                    learning_module_info: itemLmInfo ? {
+                        id: itemLmInfo.id,
+                        judul: itemLmInfo.judul || updatedCourse.title,
+                        module_type: itemLmInfo.module_type || updatedCourse.course_type,
+                        player_url: itemLmInfo.player_url,
+                        entry_file: itemLmInfo.entry_file || "index.html"
+                    } : null,
+                    file_type: isItemScorm ? 'scorm' : (item.file_type || null)
+                };
+            });
+
+            // ⭐ CRITICAL FIX: Preserve local draft items (e.g. newly added lesson forms that haven't been saved yet)
+            if (baseVariant && Array.isArray(baseVariant.items)) {
+                const serverItemIds = new Set(mappedItems.map(it => String(it.variant_item_id || '')));
+                const serverItemTitles = new Set(mappedItems.map(it => it.title).filter(Boolean));
+
+                baseVariant.items.forEach(baseItem => {
+                    const hasServerId = baseItem.variant_item_id && serverItemIds.has(String(baseItem.variant_item_id));
+                    const hasMatchingTitle = baseItem.title && serverItemTitles.has(baseItem.title);
+                    if (!hasServerId && !hasMatchingTitle) {
+                        // This is an unsaved / draft item (e.g. from "Tambah Pelajaran Baru")
+                        mappedItems.push(baseItem);
+                    }
+                });
+            }
+
+            return {
+                title: variant.title || '',
+                variant_id: currentVariantId,
+                order: variant.order !== undefined ? variant.order : index,
+                items: mappedItems
+            };
+        });
+
+        // ⭐ CRITICAL FIX: Preserve local draft variants (e.g. newly added sections that haven't been saved yet)
+        if (Array.isArray(baseVariants)) {
+            const serverVariantIds = new Set(freshVariants.map(v => String(v.variant_id || '')));
+            const serverVariantTitles = new Set(freshVariants.map(v => v.title).filter(Boolean));
+
+            baseVariants.forEach(baseVar => {
+                const hasServerId = baseVar.variant_id && serverVariantIds.has(String(baseVar.variant_id));
+                const hasMatchingTitle = baseVar.title && serverVariantTitles.has(baseVar.title);
+                if (!hasServerId && !hasMatchingTitle) {
+                    // This is an unsaved / draft section (e.g. from "Tambah Bagian Baru")
+                    freshVariants.push(baseVar);
+                }
+            });
+        }
+
+        setVariants(freshVariants);
+        setLessonMediaSource({});
+
+        return freshVariants;
+    };
+
+    /**
      * ✨ PHASE 4.110: Auto-save curriculum after file upload
      * Saves curriculum without validation to preserve uploaded file reference
      * Called automatically after successful file upload to prevent data loss on page reload
@@ -3880,6 +4110,7 @@ function CourseEditCurriculum() {
                     item.gdriveLink ||
                     item.youtubeLink ||
                     item.uploadedFile ||
+                    item.file ||
                     item.learning_module_id ||
                     item.learning_module_info ||
                     item.variant_item_id ||
@@ -3897,6 +4128,7 @@ function CourseEditCurriculum() {
                     item.gdriveLink ||
                     item.youtubeLink ||
                     item.uploadedFile ||
+                    item.file ||
                     item.learning_module_id ||
                     item.learning_module_info ||
                     item.variant_item_id ||
@@ -3973,7 +4205,7 @@ function CourseEditCurriculum() {
                         formData.append(`variants[${variantIndex}][items][${itemIndex}][order]`, item.order !== undefined ? item.order : itemIndex);
 
                         // ✨ PHASE 4.195: FIX - Only append ONE media source to prevent FormData conflicts
-                        // Priority: youtube_link > gdriveLink > uploadedFile
+                        // Priority: youtube_link > gdriveLink > uploadedFile > file
                         // This ensures backend only receives ONE file/link per item
                         if (item.youtubeLink) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][youtube_link]`, item.youtubeLink);
@@ -3981,6 +4213,8 @@ function CourseEditCurriculum() {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.gdriveLink);
                         } else if (item.uploadedFile) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.uploadedFile);
+                        } else if (item.file) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.file);
                         }
 
                         // ✨ PHASE 4.187: Send media_source to remember which source was used
@@ -4013,6 +4247,9 @@ function CourseEditCurriculum() {
             useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData)
                 .then(response => {
                     console.log("[AutoSave] ✅ Curriculum auto-saved successfully");
+                    if (response?.data) {
+                        reconcileVariantsWithResponse(response.data, variants);
+                    }
                 })
                 .catch(error => {
                     console.warn("[AutoSave] ⚠️ Auto-save failed:", error);
@@ -4041,6 +4278,7 @@ function CourseEditCurriculum() {
                     item.gdriveLink ||
                     item.youtubeLink ||
                     item.uploadedFile ||
+                    item.file ||
                     item.learning_module_id ||
                     item.learning_module_info ||
                     item.variant_item_id ||
@@ -4058,6 +4296,7 @@ function CourseEditCurriculum() {
                     item.gdriveLink ||
                     item.youtubeLink ||
                     item.uploadedFile ||
+                    item.file ||
                     item.learning_module_id ||
                     item.learning_module_info ||
                     item.variant_item_id ||
@@ -4125,7 +4364,7 @@ function CourseEditCurriculum() {
                         formData.append(`variants[${variantIndex}][items][${itemIndex}][order]`, item.order !== undefined ? item.order : itemIndex);
 
                         // ✨ PHASE 4.195: FIX - Only append ONE media source to prevent FormData conflicts
-                        // Priority: youtube_link > gdriveLink > uploadedFile
+                        // Priority: youtube_link > gdriveLink > uploadedFile > file
                         // This ensures backend only receives ONE file/link per item
                         if (item.youtubeLink) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][youtube_link]`, item.youtubeLink);
@@ -4133,6 +4372,8 @@ function CourseEditCurriculum() {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.gdriveLink);
                         } else if (item.uploadedFile) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.uploadedFile);
+                        } else if (item.file) {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.file);
                         }
 
                         // ✨ PHASE 4.187: Send media_source to remember which source was used
@@ -4159,7 +4400,11 @@ function CourseEditCurriculum() {
                 }
             });
 
-            await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData);
+            const response = await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData);
+
+            if (response?.data) {
+                reconcileVariantsWithResponse(response.data, variants);
+            }
 
             setAutoSaveStatus("saved");
             setLastAutoSaveTime(new Date());
@@ -4436,96 +4681,8 @@ function CourseEditCurriculum() {
                 throw new Error('Server response missing curriculum data. Please refresh the page.');
             }
 
-            // Update course state
-            setCourse(updatedCourse);
-
-            // Create a lookup of previous items by variant_item_id or title to preserve client state
-            const previousItemsMap = new Map();
-            cleanedVariants.forEach(v => {
-                (v.items || []).forEach(it => {
-                    if (it.variant_item_id) previousItemsMap.set(String(it.variant_item_id), it);
-                    if (it.title) previousItemsMap.set(it.title, it);
-                });
-            });
-
-            // Rebuild variants state with fresh IDs from backend
-            const freshVariants = (updatedCourse.curriculum || updatedCourse.variants || []).map((variant, index) => {
-                // ✨ PHASE 4.70: Check BOTH variant.variant_items and variant.items
-                // Backend serializer provides both fields, use whichever has data
-                const variantItemsList = (variant.variant_items && variant.variant_items.length > 0)
-                    ? variant.variant_items
-                    : (variant.items || []);
-
-                // Validate variant structure
-                if (!variant || !variantItemsList || variantItemsList.length === 0) {
-                    return {
-                        title: variant?.title || '',
-                        variant_id: variant?.variant_id || variant?.id,
-                        order: variant?.order !== undefined ? variant.order : index,
-                        items: []
-                    };
-                }
-
-                // Sort items by order
-                const sortedItems = [...variantItemsList].sort((a, b) => {
-                    const orderA = a.order !== undefined ? a.order : 999999;
-                    const orderB = b.order !== undefined ? b.order : 999999;
-                    return orderA - orderB;
-                });
-
-                return {
-                    title: variant.title || '',
-                    variant_id: variant.variant_id || variant.id,  // ← Fresh ID from backend
-                    order: variant.order !== undefined ? variant.order : index,  // ← Fresh order from backend
-                    items: sortedItems.map((item, itemIndex) => {
-                        // ✨ PHASE 4.142: Detect media type on fresh load - Support YouTube, Uploaded, and Google Drive
-                        const fileUrl = item.file || '';
-                        const isYouTubeLink = fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be');
-                        const isUploadedFile = fileUrl.includes('/media/') ||
-                            /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl); // Check for video extensions
-
-                        const prevItem = previousItemsMap.get(String(item.variant_item_id || item.id)) || previousItemsMap.get(item.title);
-
-                        const itemLmInfo = item.learning_module_info || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module : updatedCourse.learning_module);
-                        const itemLmId = item.learning_module_id || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module.id : (typeof item.learning_module === 'number' ? item.learning_module : (updatedCourse.learning_module_id || updatedCourse.learning_module?.id)));
-                        const isItemScorm = isElearningScorm || Boolean(itemLmId) || item.file_type === 'scorm';
-
-                        const detectedSource = isItemScorm ? 'scorm' : (isUploadedFile ? 'upload' : (isYouTubeLink ? 'youtube' : (fileUrl ? 'google_drive' : (prevItem?.media_source || null))));
-
-                        return {
-                            title: item.title || '',
-                            description: item.description || '',
-                            item_type: item.item_type || (item.quiz_id || item.quiz ? 'quiz' : (prevItem?.item_type || 'lesson')),
-                            quiz_id: item.quiz_id || (item.quiz && typeof item.quiz === 'object' ? item.quiz.quiz_id : (item.quiz || prevItem?.quiz_id || null)),
-                            quiz_detail: item.quiz_detail || prevItem?.quiz_detail || null,
-                            gdriveLink: !isYouTubeLink && !isUploadedFile ? fileUrl : (prevItem?.gdriveLink || ''),
-                            youtubeLink: isYouTubeLink ? fileUrl : (prevItem?.youtubeLink || ''),
-                            uploadedFile: isUploadedFile ? fileUrl : (prevItem?.uploadedFile || ''),
-                            preview: item.preview || false,
-                            variant_item_id: item.variant_item_id || item.id,  // ← Fresh ID from backend
-                            order: item.order !== undefined ? item.order : itemIndex,  // ← Fresh order from backend
-                            duration_seconds: item.duration_seconds || (prevItem?.duration_seconds || null),  // ✨ Preserve duration in seconds
-                            duration_formatted: item.content_duration || (prevItem?.duration_formatted || null),  // Store formatted duration
-                            media_source: item.media_source || detectedSource,
-                            learning_module_id: itemLmId || null,
-                            learning_module_info: itemLmInfo ? {
-                                id: itemLmInfo.id,
-                                judul: itemLmInfo.judul || updatedCourse.title,
-                                module_type: itemLmInfo.module_type || updatedCourse.course_type,
-                                player_url: itemLmInfo.player_url,
-                                entry_file: itemLmInfo.entry_file || "index.html"
-                            } : null,
-                            file_type: isItemScorm ? 'scorm' : (item.file_type || null)
-                        };
-                    })
-                };
-            });
-
-            setVariants(freshVariants);
-
-            // ✨ PHASE 4.73: Clear lessonMediaSource state after save
-            // This ensures media source is re-detected from refreshed item data
-            setLessonMediaSource({});
+            // Update course state and rebuild variants state with fresh IDs from backend
+            const freshVariants = reconcileVariantsWithResponse(updatedCourse, variants);
 
             // Count what was actually saved, differentiating lessons and quizzes
             const savedSectionsCount = freshVariants.length;

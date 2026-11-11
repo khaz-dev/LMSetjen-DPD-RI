@@ -24,14 +24,15 @@ const CourseActions = ({
                 
                 {/* Action Buttons */}
                 <div className="d-flex align-items-center gap-2">
-                    {/* Wishlist heart icon */}
+                    {/* Wishlist bookmark icon */}
                     <button 
                         onClick={() => addToWishlist(courseId)} 
-                        className={`btn btn-outline-danger btn-sm rounded-circle p-2 action-button ${isCourseInWishlist(courseId) ? 'active' : ''}`}
+                        className={`btn btn-outline-primary btn-sm rounded-circle p-2 action-button ${isCourseInWishlist(courseId) ? 'active' : ''}`}
                         type="button"
-                        title={isCourseInWishlist(courseId) ? "Remove from wishlist" : "Add to wishlist"}
+                        title={isCourseInWishlist(courseId) ? "Hapus dari kursus yang ingin dipelajari" : "Simpan ke kursus yang ingin dipelajari"}
+                        aria-label={isCourseInWishlist(courseId) ? "Hapus dari kursus yang ingin dipelajari" : "Simpan ke kursus yang ingin dipelajari"}
                     >
-                        <i className={`${isCourseInWishlist(courseId) ? 'fas' : 'far'} fa-heart action-button-icon`} />
+                        <i className={`${isCourseInWishlist(courseId) ? 'fas' : 'far'} fa-bookmark action-button-icon text-primary`} />
                     </button>
                     
                     {/* Share button with dropdown */}

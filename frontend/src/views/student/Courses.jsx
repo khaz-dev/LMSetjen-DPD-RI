@@ -970,8 +970,8 @@ function Courses() {
                                             Jelajahi Katalog Kursus
                                         </Link>
                                         <Link to="/student/wishlist/" className="courses-btn-empty-reset">
-                                            <i className="fas fa-heart text-danger me-2"></i>
-                                            Lihat Daftar Keinginan
+                                            <i className="fas fa-bookmark text-primary me-2"></i>
+                                            Lihat Kursus yang Ingin Dipelajari
                                         </Link>
                                     </div>
                                 </div>

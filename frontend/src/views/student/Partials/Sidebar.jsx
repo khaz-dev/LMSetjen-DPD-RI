@@ -148,12 +148,12 @@ function Sidebar() {
                             <Link
                                 className={`student-nav-link modern-nav-link ${isActive("/student/wishlist") ? "active" : ""}`}
                                 to="/student/wishlist/"
-                                data-tooltip="Daftar Keinginan"
+                                data-tooltip="Kursus yang Ingin Dipelajari"
                             >
                                 <div className="student-nav-icon nav-icon">
                                     <i className="fas fa-bookmark"></i>
                                 </div>
-                                <span className="nav-text">Daftar Keinginan</span>
+                                <span className="nav-text">Kursus yang Ingin Dipelajari</span>
                             </Link>
 
                             <Link

@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { getMediaUrl } from '../../utils/constants';
 import Toast from '../../views/plugin/Toast';
+import PptxRenderer from '../Common/PptxRenderer';
+import PdfRenderer from '../Common/PdfRenderer';
 import './VideoPlayerUnggah.css';
 
 /**
@@ -286,10 +288,11 @@ const NonVideoMediaViewer = forwardRef(({
 
                 {isPdf && (
                     <div style={{ flex: 1, minHeight: '520px', position: 'relative' }}>
-                        <iframe
-                            src={`${fileUrl}#toolbar=1&navpanes=0`}
+                        <PdfRenderer
+                            fileUrl={fileUrl}
+                            height="520px"
                             title={variantItem?.title || 'Dokumen PDF'}
-                            style={{ width: '100%', height: '100%', minHeight: '520px', border: 'none', background: '#fff' }}
+                            showThumbnails={true}
                         />
                     </div>
                 )}
@@ -304,10 +307,11 @@ const NonVideoMediaViewer = forwardRef(({
                                 allowFullScreen
                             />
                         ) : (
-                            <iframe
-                                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`}
-                                title={variantItem?.title || 'Paparan Slide PPTX'}
-                                style={{ width: '100%', height: '100%', minHeight: '520px', border: 'none', background: '#fff' }}
+                            <PptxRenderer
+                                fileUrl={fileUrl}
+                                height="560px"
+                                showThumbnails={true}
+                                showToolbar={true}
                             />
                         )}
                     </div>

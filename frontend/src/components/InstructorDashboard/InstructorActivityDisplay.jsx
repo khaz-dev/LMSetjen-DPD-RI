@@ -50,7 +50,7 @@ function InstructorActivityDisplay({
         { value: 'points_earned', label: 'Dapatkan Poin', icon: 'fa-coins', color: 'amber', category: 'siswa' },
         { value: 'search_query', label: 'Cari Kursus', icon: 'fa-magnifying-glass', color: 'secondary', category: 'siswa' },
         { value: 'content_liked', label: 'Sukai Konten', icon: 'fa-heart', color: 'danger', category: 'siswa' },
-        { value: 'wishlist_added', label: 'Tambah Wishlist', icon: 'fa-bookmark', color: 'primary', category: 'siswa' },
+        { value: 'wishlist_added', label: 'Simpan Kursus yang Ingin Dipelajari', icon: 'fa-bookmark', color: 'primary', category: 'siswa' },
         { value: 'discussion_participated', label: 'Ikut Diskusi', icon: 'fa-comments', color: 'info', category: 'siswa' },
 
         // 👨‍🏫 Instructor Teaching Activities (Meaningful & Distinct Icons)

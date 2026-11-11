@@ -890,12 +890,12 @@ input.search-input-field::placeholder {
 .card-wishlist-action:hover {
     background: #ffffff;
     transform: scale(1.12);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .card-wishlist-action i {
     font-size: 0.95rem;
-    color: #ef4444;
+    color: #2563eb;
 }
 
 .card-badge-category {

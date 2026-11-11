@@ -431,7 +431,7 @@ class CourseCreateAPIView(APIView):
 
 
 # ✨ PHASE 4.101: Helper function to delete orphaned files
-def delete_orphaned_file(file_url):
+def delete_orphaned_file(file_url, exclude_course_id=None, exclude_variant_item_id=None):
     """
     Delete a file from storage based on its URL
     
@@ -441,6 +441,8 @@ def delete_orphaned_file(file_url):
     
     Args:
         file_url (str): Full URL or path to file
+        exclude_course_id (str/int, optional): Exclude this course when checking active DB references
+        exclude_variant_item_id (str/int, optional): Exclude this item when checking active DB references
     
     Returns:
         bool: True if deleted, False otherwise
@@ -481,6 +483,26 @@ def delete_orphaned_file(file_url):
         if not os.path.abspath(full_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
             print(f"[File Cleanup] SECURITY: Attempted to delete outside MEDIA_ROOT: {full_path}")
             return False
+
+        # 🛡️ SAFETY CHECK: Ensure file is not actively referenced by another VariantItem or Course
+        filename = os.path.basename(full_path)
+        if filename:
+            from api import models as check_models
+            from django.db.models import Q
+            
+            item_query = check_models.VariantItem.objects.filter(file__icontains=filename)
+            if exclude_variant_item_id:
+                item_query = item_query.exclude(variant_item_id=exclude_variant_item_id)
+            if item_query.exists():
+                print(f"[File Cleanup] ⏭️ SKIPPED: File '{filename}' is still referenced by {item_query.count()} VariantItem(s) in DB.")
+                return False
+                
+            course_query = check_models.Course.objects.filter(Q(file__icontains=filename) | Q(image__icontains=filename))
+            if exclude_course_id:
+                course_query = course_query.exclude(course_id=exclude_course_id)
+            if course_query.exists():
+                print(f"[File Cleanup] ⏭️ SKIPPED: File '{filename}' is still referenced by {course_query.count()} Course(s) in DB.")
+                return False
         
         # Delete if exists
         if os.path.exists(full_path):
@@ -582,7 +604,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                 # Only delete if image is actually changing
                 if course.image and new_image != course.image:
                     print(f"[Memory Cleanup] ✅ IMAGE CLEANUP: Deleting old: {course.image}")
-                    delete_orphaned_file(course.image)
+                    delete_orphaned_file(course.image, exclude_course_id=course.course_id)
                 elif not course.image:
                     print(f"[Memory Cleanup] ⏭️  SKIPPED: course.image is empty/None (first upload?)")
                 elif new_image == course.image:
@@ -606,7 +628,7 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                 # Only delete if file is actually changing
                 if course.file and new_file != course.file:
                     print(f"[Memory Cleanup] ✅ FILE CLEANUP: Deleting old: {course.file}")
-                    delete_orphaned_file(course.file)
+                    delete_orphaned_file(course.file, exclude_course_id=course.course_id)
                 elif not course.file:
                     print(f"[Memory Cleanup] ⏭️  SKIPPED: course.file is empty/None")
                 elif new_file == course.file:
@@ -855,6 +877,15 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
             else:
                 existing_variant = None
             
+            # ✨ Fallback matching: If no variant_id was provided (e.g. quick auto-save before state update),
+            # match with an existing variant in this course that hasn't been updated yet
+            if not existing_variant:
+                # First try matching by order
+                existing_variant = course.curriculum.filter(order=int(order) if order else 0).exclude(variant_id__in=updated_variant_ids).first()
+                # Second try matching by title
+                if not existing_variant:
+                    existing_variant = course.curriculum.filter(title=title).exclude(variant_id__in=updated_variant_ids).first()
+            
             if existing_variant:
                 print(f"[Curriculum Update] Updating existing variant {existing_variant.variant_id}: {title}")
                 existing_variant.title = title
@@ -964,59 +995,48 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                 # Find existing item or create new one
                 if variant_item_id:
                     variant_item = api_models.VariantItem.objects.filter(variant_item_id=variant_item_id).first()
-                    if variant_item:
-                        print(f"[Curriculum Update] Updating existing item {variant_item.variant_item_id}: {item_title}")
-                        variant_item.title = item_title
-                        variant_item.description = item_description
-                        variant_item.preview = preview
-                        variant_item.order = int(item_order) if item_order else 0
-                        variant_item.item_type = item_type
-                        variant_item.quiz = target_quiz
-                        # PHASE 4.167: Always set file field (None if empty) to allow clearing files
-                        # This ensures deleted files are properly removed from the database
+                else:
+                    variant_item = None
+                
+                # ✨ Fallback matching: If no variant_item_id was provided, match existing item in this variant
+                if not variant_item and variant:
+                    # Match by order in this variant
+                    variant_item = variant.variant_items.filter(order=int(item_order) if item_order else 0).exclude(variant_item_id__in=updated_item_ids).first()
+                    # Or match by title in this variant
+                    if not variant_item:
+                        variant_item = variant.variant_items.filter(title=item_title).exclude(variant_item_id__in=updated_item_ids).first()
+
+                if variant_item:
+                    print(f"[Curriculum Update] Updating existing item {variant_item.variant_item_id}: {item_title}")
+                    variant_item.title = item_title
+                    variant_item.description = item_description
+                    variant_item.preview = preview
+                    variant_item.order = int(item_order) if item_order else 0
+                    variant_item.item_type = item_type
+                    variant_item.quiz = target_quiz
+                    # PHASE 4.167: Update file field
+                    if 'file' in item_data or 'youtube_link' in item_data:
                         variant_item.file = file
-                        if duration is not None:
-                            variant_item.duration = duration
-                        
-                        # ✨ Support SCORM learning_module_id
-                        item_lm_id = item_data.get("learning_module_id")
-                        if item_lm_id and str(item_lm_id) not in ["null", "undefined", "", "none", "0"]:
-                            try:
-                                variant_item.learning_module_id = int(item_lm_id)
-                            except (ValueError, TypeError):
-                                pass
-                        elif str(item_lm_id).lower() in ["null", "undefined", "", "none", "0"] and course.course_type == 'standard':
-                            variant_item.learning_module_id = None
-                        elif not variant_item.learning_module_id and course.learning_module_id and course.course_type != 'standard':
-                            variant_item.learning_module = course.learning_module
+                    elif not variant_item.file:
+                        variant_item.file = file
 
-                        variant_item.save()
-                        updated_item_ids.add(variant_item.variant_item_id)
-                    else:
-                        print(f"[Curriculum Update] Item ID {variant_item_id} not found, creating new item: {item_title}")
-                        item_lm_id = item_data.get("learning_module_id")
-                        target_lm_id = None
-                        if item_lm_id and str(item_lm_id) not in ["null", "undefined", ""]:
-                            try:
-                                target_lm_id = int(item_lm_id)
-                            except (ValueError, TypeError):
-                                pass
-                        elif course.learning_module_id and course.course_type != 'standard':
-                            target_lm_id = course.learning_module_id
+                    if duration is not None:
+                        variant_item.duration = duration
+                    
+                    # ✨ Support SCORM learning_module_id
+                    item_lm_id = item_data.get("learning_module_id")
+                    if item_lm_id and str(item_lm_id) not in ["null", "undefined", "", "none", "0"]:
+                        try:
+                            variant_item.learning_module_id = int(item_lm_id)
+                        except (ValueError, TypeError):
+                            pass
+                    elif str(item_lm_id).lower() in ["null", "undefined", "", "none", "0"] and course.course_type == 'standard':
+                        variant_item.learning_module_id = None
+                    elif not variant_item.learning_module_id and course.learning_module_id and course.course_type != 'standard':
+                        variant_item.learning_module = course.learning_module
 
-                        variant_item = api_models.VariantItem.objects.create(
-                            variant=variant,
-                            title=item_title,
-                            description=item_description,
-                            file=file,
-                            duration=duration,
-                            preview=preview,
-                            order=int(item_order) if item_order else 0,
-                            learning_module_id=target_lm_id,
-                            item_type=item_type,
-                            quiz=target_quiz
-                        )
-                        updated_item_ids.add(variant_item.variant_item_id)
+                    variant_item.save()
+                    updated_item_ids.add(variant_item.variant_item_id)
                 else:
                     print(f"[Curriculum Update] Creating new item: {item_title}")
                     item_lm_id = item_data.get("learning_module_id")
@@ -1053,10 +1073,10 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
         for variant in all_course_variants:
             if variant.variant_id not in updated_variant_ids:
                 print(f"[Curriculum Cleanup] Deleting orphaned variant {variant.variant_id}: {variant.title}")
-                # ✨ PHASE 4.101: Clean up variant item files before deletion
+                # ✨ PHASE 4.101: Clean up variant item files before deletion only if not used elsewhere
                 for item in variant.variant_items.all():
                     if item.file:
-                        delete_orphaned_file(item.file)
+                        delete_orphaned_file(item.file, exclude_variant_item_id=item.variant_item_id)
                 variant.delete()  # Cascade deletes items
                 deleted_variant_count += 1
         
@@ -1069,9 +1089,9 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
                 for item in all_variant_items:
                     if item.variant_item_id not in updated_item_ids:
                         print(f"[Curriculum Cleanup] Deleting orphaned item {item.variant_item_id}: {item.title}")
-                        # ✨ PHASE 4.101: Clean up item file before deletion
+                        # ✨ PHASE 4.101: Clean up item file before deletion only if not used elsewhere
                         if item.file:
-                            delete_orphaned_file(item.file)
+                            delete_orphaned_file(item.file, exclude_variant_item_id=item.variant_item_id)
                         item.delete()
                         deleted_item_count += 1
         
@@ -2419,6 +2439,7 @@ class CourseGameListCreateAPIView(generics.ListCreateAPIView):
         context['user'] = self.request.user
         return context
 
+
     def perform_create(self, serializer):
         course_id = self.request.data.get('course_id')
         course = api_models.Course.objects.get(course_id=course_id)
@@ -2446,3 +2467,314 @@ class CourseGameDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         context = super().get_serializer_context()
         context['user'] = self.request.user
         return context
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PdfDataAPIView(APIView):
+    """
+    Returns base64 data for PDF documents to bypass IDM (Internet Download Manager)
+    and browser interception extensions, allowing 100% reliable in-browser PDF viewing.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        file_url = request.query_params.get("file_url", "").strip()
+        if not file_url:
+            return Response({"success": False, "error": "file_url parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        import urllib.parse
+        import os
+        import base64
+        from django.conf import settings
+
+        parsed = urllib.parse.urlparse(file_url)
+        path = parsed.path
+        if path.startswith("/media/"):
+            rel_path = path[len("/media/"):]
+            abs_file_path = os.path.join(settings.MEDIA_ROOT, rel_path)
+        else:
+            abs_file_path = os.path.join(settings.MEDIA_ROOT, path.lstrip("/"))
+
+        if not os.path.exists(abs_file_path) or not os.path.isfile(abs_file_path):
+            return Response({"success": False, "error": "Berkas PDF tidak ditemukan di server."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            with open(abs_file_path, "rb") as f:
+                file_bytes = f.read()
+
+            base64_data = base64.b64encode(file_bytes).decode("utf-8")
+            file_name = os.path.basename(abs_file_path)
+
+            return Response({
+                "success": True,
+                "file_name": file_name,
+                "size_bytes": len(file_bytes),
+                "data": base64_data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"success": False, "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PresentationPreviewAPIView(APIView):
+    """
+    Generate preview metadata for presentation files (PPTX) and online presentations (Google Slides).
+    Allows curriculum editor and course viewer to render slide previews without requiring Office Live.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        file_url = request.query_params.get("file_url", "").strip()
+        if not file_url:
+            return Response({"success": False, "error": "file_url parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 1. Handle Google Slides URLs
+        if "docs.google.com/presentation" in file_url:
+            import re
+            embed_url = file_url
+            if "/edit" in embed_url or "/view" in embed_url:
+                embed_url = re.sub(r'/(edit|view).*$', '/embed?start=false&loop=false&delayms=3000', embed_url)
+            elif not embed_url.endswith("/embed"):
+                embed_url = embed_url.rstrip("/") + "/embed"
+            return Response({
+                "success": True,
+                "is_google_slides": True,
+                "embed_url": embed_url,
+                "original_url": file_url,
+                "file_name": "Google Slides Presentation"
+            })
+
+        # 2. Resolve local file path safely
+        import urllib.parse
+        import os
+        import base64
+        import zipfile
+        from django.conf import settings
+
+        parsed = urllib.parse.urlparse(file_url)
+        path = urllib.parse.unquote(parsed.path)
+
+        media_url = getattr(settings, 'MEDIA_URL', '/media/')
+        if path.startswith(media_url):
+            rel_path = path[len(media_url):].lstrip("/\\")
+        elif "/media/" in path:
+            rel_path = path.split("/media/", 1)[1].lstrip("/\\")
+        else:
+            rel_path = path.lstrip("/\\")
+
+        abs_file_path = os.path.abspath(os.path.join(settings.MEDIA_ROOT, rel_path))
+        real_media_root = os.path.abspath(settings.MEDIA_ROOT)
+
+        # Prevent directory traversal
+        if not abs_file_path.startswith(real_media_root):
+            return Response({"success": False, "error": "Akses path berkas tidak diizinkan."}, status=status.HTTP_403_FORBIDDEN)
+
+        if not os.path.exists(abs_file_path):
+            return Response({"success": False, "error": f"Berkas tidak ditemukan: {os.path.basename(abs_file_path)}"}, status=status.HTTP_404_NOT_FOUND)
+
+        file_name = os.path.basename(abs_file_path)
+        ext = os.path.splitext(file_name)[1].lower()
+
+        if ext not in [".pptx", ".ppt"]:
+            return Response({"success": False, "error": "Hanya berkas presentasi (.pptx) yang didukung untuk pratinjau slide."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Extract presentation metadata
+        thumbnail_base64 = None
+        slide_count = 0
+        slides_info = []
+
+        # Try extracting thumbnail from OpenXML package (PPTX is a zip archive)
+        if ext == ".pptx":
+            try:
+                with zipfile.ZipFile(abs_file_path, 'r') as zf:
+                    # Look for thumbnail in docProps
+                    for item in zf.namelist():
+                        if item.lower().startswith("docprops/thumbnail."):
+                            img_data = zf.read(item)
+                            mime = "image/jpeg" if item.lower().endswith((".jpeg", ".jpg")) else "image/png"
+                            thumbnail_base64 = f"data:{mime};base64,{base64.b64encode(img_data).decode('utf-8')}"
+                            break
+            except Exception as e:
+                logger.warning(f"Failed to extract thumbnail from PPTX {file_name}: {e}")
+
+            # Extract slides structure with python-pptx
+            try:
+                from pptx import Presentation
+                prs = Presentation(abs_file_path)
+                slide_count = len(prs.slides)
+                slide_w = prs.slide_width or 12191695
+                slide_h = prs.slide_height or 6858000
+                aspect_ratio = round(float(slide_w) / float(slide_h), 4)
+
+                ns = {'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
+
+                def parse_paragraph_xml(p_element):
+                    pPr = p_element.find('a:pPr', ns)
+                    align = 'left'
+                    def_color = None
+                    def_size = None
+                    def_bold = False
+
+                    if pPr is not None:
+                        algn = pPr.get('algn', 'left')
+                        if algn == 'ctr': align = 'center'
+                        elif algn == 'r': align = 'right'
+                        elif algn == 'just': align = 'justify'
+
+                        defRPr = pPr.find('a:defRPr', ns)
+                        if defRPr is not None:
+                            if defRPr.get('b') == '1': def_bold = True
+                            sz = defRPr.get('sz')
+                            if sz: def_size = int(sz) / 100.0
+                            srgb = defRPr.find('.//a:srgbClr', ns)
+                            if srgb is not None: def_color = '#' + srgb.get('val')
+
+                    runs = []
+                    for r in p_element.findall('a:r', ns):
+                        t_el = r.find('a:t', ns)
+                        if t_el is None or not t_el.text: continue
+                        text = t_el.text
+                        rPr = r.find('a:rPr', ns)
+                        color = def_color
+                        size = def_size
+                        bold = def_bold
+                        if rPr is not None:
+                            if rPr.get('b') == '1': bold = True
+                            elif rPr.get('b') == '0': bold = False
+                            sz = rPr.get('sz')
+                            if sz: size = int(sz) / 100.0
+                            srgb = rPr.find('.//a:srgbClr', ns)
+                            if srgb is not None: color = '#' + srgb.get('val')
+                        runs.append({
+                            'text': text,
+                            'color': color,
+                            'size': size,
+                            'bold': bold
+                        })
+                    return {'align': align, 'runs': runs}
+
+                for idx, slide in enumerate(prs.slides):
+                    # 1. Determine slide title
+                    slide_title = ""
+                    try:
+                        if slide.shapes.title and slide.shapes.title.text.strip():
+                            slide_title = slide.shapes.title.text.strip()
+                    except Exception:
+                        pass
+
+                    # 2. Extract background color if any
+                    slide_bg_color = None
+                    try:
+                        if slide.background and hasattr(slide.background, 'fill') and slide.background.fill.type == 1:
+                            slide_bg_color = '#' + str(slide.background.fill.fore_color.rgb)
+                    except Exception:
+                        pass
+
+                    # 3. Extract all shapes with exact layout coordinates, styling, and text runs
+                    rendered_shapes = []
+                    all_text_list = []
+
+                    for shape in slide.shapes:
+                        left_pct = round((float(shape.left or 0) / float(slide_w)) * 100, 2)
+                        top_pct = round((float(shape.top or 0) / float(slide_h)) * 100, 2)
+                        width_pct = round((float(shape.width or 0) / float(slide_w)) * 100, 2)
+                        height_pct = round((float(shape.height or 0) / float(slide_h)) * 100, 2)
+
+                        fill_color = None
+                        try:
+                            if hasattr(shape, 'fill') and shape.fill.type == 1:
+                                fill_color = '#' + str(shape.fill.fore_color.rgb)
+                        except Exception:
+                            pass
+
+                        border_color = None
+                        try:
+                            if hasattr(shape, 'line') and shape.line.fill.type == 1:
+                                border_color = '#' + str(shape.line.color.rgb)
+                        except Exception:
+                            pass
+
+                        shape_type_name = "rectangle"
+                        shape_name_lower = (shape.name or "").lower()
+                        if "round" in shape_name_lower:
+                            shape_type_name = "rounded-rectangle"
+                        elif "text" in shape_name_lower:
+                            shape_type_name = "textbox"
+
+                        paragraphs_data = []
+                        if shape.has_text_frame:
+                            for p in shape.text_frame.paragraphs:
+                                parsed_p = parse_paragraph_xml(p._p)
+                                if parsed_p['runs']:
+                                    full_p_text = ''.join(r['text'] for r in parsed_p['runs']).strip()
+                                    if full_p_text:
+                                        all_text_list.append(full_p_text)
+                                        paragraphs_data.append({
+                                            'align': parsed_p['align'],
+                                            'runs': parsed_p['runs'],
+                                            'level': p.level or 0
+                                        })
+
+                        table_data = None
+                        if shape.has_table:
+                            table_rows = []
+                            for r in shape.table.rows:
+                                row_cells = []
+                                for cell in r.cells:
+                                    cell_text = cell.text.strip()
+                                    if cell_text: all_text_list.append(cell_text)
+                                    row_cells.append(cell_text)
+                                table_rows.append(row_cells)
+                            table_data = table_rows
+
+                        rendered_shapes.append({
+                            'name': shape.name,
+                            'type': shape_type_name,
+                            'left': left_pct,
+                            'top': top_pct,
+                            'width': width_pct,
+                            'height': height_pct,
+                            'fill': fill_color,
+                            'border': border_color,
+                            'paragraphs': paragraphs_data,
+                            'table': table_data
+                        })
+
+                    # Fallback title if not detected via slide.shapes.title
+                    if not slide_title and all_text_list:
+                        first_line = all_text_list[0].split("\n")[0].strip()
+                        slide_title = first_line[:100]
+
+                    if not slide_title:
+                        slide_title = f"Slide {idx + 1}"
+
+                    # Extract speaker notes if any
+                    notes = ""
+                    try:
+                        if slide.has_notes_slide and slide.notes_slide.notes_text_frame:
+                            notes = slide.notes_slide.notes_text_frame.text.strip()
+                    except Exception:
+                        pass
+
+                    slides_info.append({
+                        "slide_number": idx + 1,
+                        "title": slide_title,
+                        "bg_color": slide_bg_color,
+                        "shapes": rendered_shapes,
+                        "all_texts": all_text_list,
+                        "notes": notes
+                    })
+            except Exception as e:
+                logger.warning(f"python-pptx parse error for {file_name}: {e}")
+
+        return Response({
+            "success": True,
+            "file_name": file_name,
+            "slide_count": slide_count,
+            "aspect_ratio": aspect_ratio if ext == ".pptx" else 1.7778,
+            "thumbnail": thumbnail_base64,
+            "slides": slides_info,
+            "file_url": file_url
+        })
+
+

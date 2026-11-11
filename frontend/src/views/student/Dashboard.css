@@ -1341,6 +1341,7 @@
 .tile-teal .dash-shortcut-tile-icon { background: rgba(15, 118, 110, 0.12); color: var(--dpd-teal); }
 .tile-amber .dash-shortcut-tile-icon { background: rgba(217, 119, 6, 0.12); color: var(--dpd-amber); }
 .tile-rose .dash-shortcut-tile-icon { background: rgba(225, 29, 72, 0.12); color: var(--dpd-rose); }
+.tile-blue .dash-shortcut-tile-icon { background: rgba(37, 99, 235, 0.12); color: #2563eb; }
 .tile-indigo .dash-shortcut-tile-icon { background: rgba(67, 56, 202, 0.12); color: var(--dpd-indigo); }
 
 .dash-shortcut-tile-text {

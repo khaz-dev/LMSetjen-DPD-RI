@@ -548,11 +548,35 @@ class FileUploadAPIView(APIView):
         '.avi': ['video/x-msvideo', 'video/avi'],
         '.mkv': ['video/x-matroska', 'video/mkv'],
         # Presentasi
-        '.ppt': ['application/vnd.ms-powerpoint'],
-        '.pptx': ['application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/zip', 'application/octet-stream'],
+        '.ppt': [
+            'application/vnd.ms-powerpoint',
+            'application/msword',
+            'application/x-mspowerpoint',
+            'application/powerpoint',
+            'application/octet-stream'
+        ],
+        '.pptx': [
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/vnd.ms-powerpoint',
+            'application/x-mspowerpoint',
+            'application/powerpoint',
+            'application/zip',
+            'application/x-zip-compressed',
+            'application/octet-stream'
+        ],
         # Dokumen
-        '.doc': ['application/msword'],
-        '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/octet-stream'],
+        '.doc': [
+            'application/msword',
+            'application/vnd.ms-word',
+            'application/octet-stream'
+        ],
+        '.docx': [
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword',
+            'application/zip',
+            'application/x-zip-compressed',
+            'application/octet-stream'
+        ],
         '.txt': ['text/plain'],
         # Audio
         '.mp3': ['audio/mpeg', 'audio/mp3'],
@@ -587,7 +611,7 @@ class FileUploadAPIView(APIView):
                 f"[FILE UPLOAD REJECTED] Disallowed extension '{file_extension}' for file '{file.name}' by user {request.user.id}"
             )
             return Response(
-                {"error": f"Format file '{file_extension}' tidak diizinkan. Hanya file .pdf, .png, .jpg, dan .mp4 yang diperbolehkan."},
+                {"error": f"Format file '{file_extension}' tidak diizinkan. Ekstensi yang didukung: Dokumen (PDF, PPT/PPTX, DOC/DOCX, TXT), Video (MP4, WebM, dll), Audio (MP3, WAV, dll), dan Gambar."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

@@ -553,7 +553,7 @@ function BaseHeader() {
     const studentMenuItems = [
         { to: "/student/dashboard/", icon: "bi bi-grid-fill", text: "Dashboard" },
         { to: "/student/courses/", icon: "fas fa-book", text: "Pembelajaran" },
-        { to: "/student/wishlist/", icon: "fas fa-bookmark", text: "Materi Impian" },
+        { to: "/student/wishlist/", icon: "fas fa-bookmark", text: "Kursus yang Ingin Dipelajari" },
         { to: "/student/profile/", icon: "fas fa-gear", text: "Pengaturan" },
         { to: "/logout/", icon: "fas fa-sign-out-alt", text: "Keluar" }
     ];

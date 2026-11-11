@@ -567,8 +567,8 @@ function Dashboard() {
                                     <Link to="/student/sertifikat/" className="strip-action-btn">
                                         <i className="fas fa-certificate me-1"></i> Sertifikat
                                     </Link>
-                                    <Link to="/student/wishlist/" className="strip-action-btn secondary">
-                                        <i className="fas fa-heart me-1"></i> Wishlist
+                                    <Link to="/student/wishlist/" className="strip-action-btn secondary" title="Kursus yang Ingin Dipelajari">
+                                        <i className="fas fa-bookmark me-1"></i> Ingin Dipelajari
                                     </Link>
                                 </div>
                             </div>
@@ -839,13 +839,13 @@ function Dashboard() {
                                                 </div>
                                             </Link>
 
-                                            <Link to="/student/wishlist/" className="dash-shortcut-tile tile-rose">
+                                            <Link to="/student/wishlist/" className="dash-shortcut-tile tile-blue" title="Kursus yang Ingin Dipelajari">
                                                 <div className="dash-shortcut-tile-icon">
-                                                    <i className="fas fa-heart"></i>
+                                                    <i className="fas fa-bookmark"></i>
                                                 </div>
                                                 <div className="dash-shortcut-tile-text">
-                                                    <span className="dash-shortcut-tile-title">Keinginan</span>
-                                                    <span className="dash-shortcut-tile-sub">Disimpan</span>
+                                                    <span className="dash-shortcut-tile-title">Ingin Dipelajari</span>
+                                                    <span className="dash-shortcut-tile-sub">Kursus Tersimpan</span>
                                                 </div>
                                             </Link>
 

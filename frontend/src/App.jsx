@@ -351,6 +351,16 @@ function App() {
                                     </PrivateRoute>
                                 }
                             />
+                            <Route
+                                path="/student/kursus-ingin-dipelajari/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["student"]}>
+                                            <Wishlist />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
 
                             <Route
                                 path="/student/profile/"

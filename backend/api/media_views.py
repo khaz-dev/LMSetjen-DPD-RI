@@ -162,6 +162,7 @@ class EnhancedMediaView(View):
         response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
         response['Access-Control-Allow-Headers'] = '*'
         response['Content-Security-Policy'] = "frame-ancestors *"
+        response['Content-Disposition'] = f'inline; filename="{os.path.basename(file_path)}"'
         response.headers.pop('X-Frame-Options', None)
         
         return response
@@ -187,6 +188,7 @@ class EnhancedMediaView(View):
         response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
         response['Access-Control-Allow-Headers'] = '*'
         response['Content-Security-Policy'] = "frame-ancestors *"
+        response['Content-Disposition'] = f'inline; filename="{os.path.basename(file_path)}"'
         response.headers.pop('X-Frame-Options', None)
         
         return response

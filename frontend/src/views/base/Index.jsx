@@ -180,7 +180,7 @@ function Index() {
         if (!userId) {
             Toast().fire({
                 icon: "warning",
-                title: "Silakan login untuk menambahkan ke wishlist",
+                title: "Silakan login untuk menyimpan kursus yang ingin dipelajari",
             });
             return;
         }
@@ -189,7 +189,7 @@ function Index() {
         if (isAdminOrTeacher) {
             Toast().fire({
                 icon: "info",
-                title: "Admin dan instruktur tidak dapat menambahkan kursus ke wishlist",
+                title: "Admin dan instruktur tidak dapat menambahkan kursus ke daftar yang ingin dipelajari",
             });
             return;
         }
@@ -202,7 +202,7 @@ function Index() {
             const response = await apiInstance.post(`student/wishlist/${userId}/`, formdata);
             Toast().fire({
                 icon: "success",
-                title: response.data.message || "Wishlist berhasil diperbarui",
+                title: response.data.message || "Daftar kursus yang ingin dipelajari berhasil diperbarui",
             });
 
             // Refresh wishlist data
@@ -1418,14 +1418,14 @@ function Index() {
                                                             <button
                                                                 onClick={() => addToWishlist(course.id)}
                                                                 className="course-badge-wishlist"
-                                                                title={isCourseInWishlist(course.id) ? "Hapus dari wishlist" : "Tambahkan ke wishlist"}
+                                                                title={isCourseInWishlist(course.id) ? "Hapus dari kursus yang ingin dipelajari" : "Simpan ke kursus yang ingin dipelajari"}
                                                                 disabled={!userId}
-                                                                aria-label="Wishlist"
+                                                                aria-label="Simpan ke kursus yang ingin dipelajari"
                                                             >
                                                                 <i
-                                                                    className={`${isCourseInWishlist(course.id) ? "fas" : "far"} fa-heart`}
+                                                                    className={`${isCourseInWishlist(course.id) ? "fas" : "far"} fa-bookmark`}
                                                                     style={{
-                                                                        color: isCourseInWishlist(course.id) ? "#ef4444" : "#64748b",
+                                                                        color: isCourseInWishlist(course.id) ? "#2563eb" : "#64748b",
                                                                         fontSize: "0.85rem"
                                                                     }}
                                                                 />
