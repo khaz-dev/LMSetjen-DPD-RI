@@ -1219,17 +1219,38 @@ class LessonCompletionQuestion(models.Model):
         """
         Check if student's answer is correct.
         Returns True if correct, False otherwise.
+        Supports multiple acceptable answers separated by semicolons (;) or commas (,) or newlines (\n).
         """
         if self.question_type in ['short_answer', 'fill_in_blank']:
-            correct_text = self.correct_answer_text.strip()
-            student_text = student_answer.strip()
-            
+            if not self.correct_answer_text:
+                return False
+
+            raw_student_text = (student_answer or "").strip()
+            if not raw_student_text:
+                return False
+
+            # Support multiple valid keys separated by semicolon, comma, or newline
+            # Example: "Jakarta; DKI Jakarta; Daerah Khusus Ibukota"
+            import re
+            valid_keys = [
+                k.strip() for k in re.split(r'[;\n\r]+', self.correct_answer_text)
+                if k.strip()
+            ]
+
+            # If no semicolon/newline split happened, also try comma if user typed commas
+            if len(valid_keys) <= 1 and ',' in self.correct_answer_text:
+                valid_keys = [k.strip() for k in self.correct_answer_text.split(',') if k.strip()]
+
+            # Fallback to entire text if empty
+            if not valid_keys:
+                valid_keys = [self.correct_answer_text.strip()]
+
             if not self.case_sensitive:
-                correct_text = correct_text.lower()
-                student_text = student_text.lower()
-            
-            return student_text == correct_text
-        
+                raw_student_text = raw_student_text.lower()
+                valid_keys = [k.lower() for k in valid_keys]
+
+            return raw_student_text in valid_keys
+
         # For multiple choice and multi-select, checking done via choices
         return False
 

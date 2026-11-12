@@ -16,6 +16,7 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
     const [questionText, setQuestionText] = useState('');
     const [caseSensitive, setCaseSensitive] = useState(false);
     const [correctAnswerText, setCorrectAnswerText] = useState('');
+    const [shortAnswerList, setShortAnswerList] = useState(['']);
     const [choices, setChoices] = useState([
         { choice_text: '', is_correct: false },
         { choice_text: '', is_correct: false }
@@ -39,6 +40,15 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
                 setQuestionText(question.question_text || '');
                 setCaseSensitive(Boolean(question.case_sensitive));
                 setCorrectAnswerText(question.correct_answer_text || '');
+                if (question.correct_answer_text) {
+                    const parsedList = question.correct_answer_text
+                        .split(/[;\n\r]+/)
+                        .map(item => item.trim())
+                        .filter(Boolean);
+                    setShortAnswerList(parsedList.length > 0 ? parsedList : ['']);
+                } else {
+                    setShortAnswerList(['']);
+                }
                 if (question.choices && question.choices.length > 0) {
                     setChoices(question.choices);
                 }
@@ -120,11 +130,12 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
                 return;
             }
         } else {
-            if (!correctAnswerText.trim()) {
+            const validAnswers = shortAnswerList.map(a => a.trim()).filter(Boolean);
+            if (validAnswers.length === 0 && !correctAnswerText.trim()) {
                 Toast().fire({
                     icon: 'error',
                     title: 'Kunci Jawaban Diperlukan',
-                    text: 'Silakan masukkan jawaban yang benar'
+                    text: 'Silakan masukkan minimal satu jawaban benar yang valid'
                 });
                 return;
             }
@@ -132,11 +143,17 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
 
         try {
             setIsLoading(true);
+            const compiledAnswers = ['short_answer', 'fill_in_blank'].includes(questionType)
+                ? (shortAnswerList.map(a => a.trim()).filter(Boolean).length > 0
+                    ? shortAnswerList.map(a => a.trim()).filter(Boolean).join('; ')
+                    : correctAnswerText.trim())
+                : correctAnswerText;
+
             const payload = {
                 question_text: questionText,
                 question_type: questionType,
                 case_sensitive: caseSensitive,
-                correct_answer_text: correctAnswerText,
+                correct_answer_text: compiledAnswers,
                 choices: questionType !== 'multiple_choice' && questionType !== 'multi_select'
                     ? []
                     : choices.filter(c => c.choice_text.trim())
@@ -407,19 +424,72 @@ const LessonCompletionQuestionEditor = ({ variantItemId, onQuestionSaved }) => {
                     {/* Row 4: Short Answer / Fill in Blank */}
                     {['short_answer', 'fill_in_blank'].includes(questionType) && (
                         <div className="mb-2">
-                            <label className="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
-                                <i className="fas fa-key text-success"></i>
-                                <span>Kunci Jawaban yang Benar</span>
-                            </label>
-                            <input
-                                type="text"
-                                className="form-control form-control-sm lcq-input"
-                                value={correctAnswerText}
-                                onChange={(e) => setCorrectAnswerText(e.target.value)}
-                                placeholder="Masukkan teks jawaban benar yang harus diketikkan peserta..."
-                                disabled={isLoading}
-                            />
-                            <div className="form-check mt-1 d-flex align-items-center gap-2">
+                            <div className="d-flex align-items-center justify-content-between mb-1">
+                                <label className="form-label fw-bold small text-dark mb-0 d-flex align-items-center gap-1">
+                                    <i className="fas fa-key text-success"></i>
+                                    <span>Kunci Jawaban yang Benar (Bisa Lebih Dari 1)</span>
+                                </label>
+                                <span className="text-muted" style={{ fontSize: "0.72rem" }}>
+                                    Peserta dianggap benar jika menjawab salah satu dari kunci ini
+                                </span>
+                            </div>
+
+                            <div className="d-flex flex-column gap-1 mb-1">
+                                {shortAnswerList.map((ans, idx) => (
+                                    <div key={idx} className="d-flex align-items-center gap-1">
+                                        <span className="badge bg-light text-muted border py-1 px-2 flex-shrink-0" style={{ fontSize: "0.72rem" }}>
+                                            Kunci #{idx + 1}
+                                        </span>
+                                        <input
+                                            type="text"
+                                            className="form-control form-control-sm lcq-input flex-grow-1"
+                                            value={ans}
+                                            onChange={(e) => {
+                                                const updated = [...shortAnswerList];
+                                                updated[idx] = e.target.value;
+                                                setShortAnswerList(updated);
+                                                setCorrectAnswerText(updated.map(a => a.trim()).filter(Boolean).join('; '));
+                                            }}
+                                            placeholder={idx === 0 ? "Contoh: Jakarta" : "Variasi jawaban lain (contoh: DKI Jakarta)"}
+                                            disabled={isLoading}
+                                        />
+                                        {shortAnswerList.length > 1 && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-danger btn-sm py-0 px-2 flex-shrink-0"
+                                                style={{ height: '31px' }}
+                                                onClick={() => {
+                                                    const updated = shortAnswerList.filter((_, i) => i !== idx);
+                                                    setShortAnswerList(updated.length > 0 ? updated : ['']);
+                                                    setCorrectAnswerText(updated.map(a => a.trim()).filter(Boolean).join('; '));
+                                                }}
+                                                disabled={isLoading}
+                                                title="Hapus variasi jawaban ini"
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="d-flex align-items-center justify-content-between mt-1">
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-success py-0 px-2 d-inline-flex align-items-center gap-1"
+                                    onClick={() => setShortAnswerList([...shortAnswerList, ''])}
+                                    disabled={isLoading}
+                                    style={{ fontSize: "0.75rem", borderRadius: "5px" }}
+                                >
+                                    <i className="fas fa-plus"></i>
+                                    <span>Tambah Alternatif Jawaban</span>
+                                </button>
+                                <span className="text-muted" style={{ fontSize: "0.7rem" }}>
+                                    <i className="fas fa-info-circle me-1"></i>Otomatis dipisah titik koma (;)
+                                </span>
+                            </div>
+
+                            <div className="form-check mt-2 d-flex align-items-center gap-2">
                                 <input
                                     type="checkbox"
                                     id={`caseSensitive_${variantItemId}`}
