@@ -5,6 +5,9 @@ import Toast from "../plugin/Toast";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
 import { getImageUrl, getLevelText, getCourseCurriculumSummary } from "../../utils/courseUtils";
+import { getMediaUrl } from "../../utils/constants";
+import PptxRenderer from "../../components/Common/PptxRenderer";
+import PdfRenderer from "../../components/Common/PdfRenderer";
 import "./InstructorCoursePreview.css";
 
 /**
@@ -596,19 +599,51 @@ function InstructorCoursePreview() {
                                                                                 const lectureId = lecture.id || lecture.variant_item_id || `lec-${idx}-${lIdx}`;
                                                                                 const isQuiz = lecture.item_type === "quiz" || Boolean(lecture.quiz_id) || Boolean(lecture.quiz);
                                                                                 const targetQuiz = isQuiz ? ((course.quizzes || []).find(q => String(q.quiz_id) === String(lecture.quiz_id || (typeof lecture.quiz === 'object' ? lecture.quiz.quiz_id : lecture.quiz))) || lecture.quiz_detail) : null;
-                                                                                const isVideo = !isQuiz && (lecture.file_type === "video" ||
+                                                                                const rawFile = lecture.file || lecture.youtubeLink || lecture.gdriveLink || lecture.uploadedFile || "";
+                                                                                const fileUrl = rawFile.startsWith("http") || rawFile.startsWith("blob:") || rawFile.startsWith("data:")
+                                                                                    ? rawFile
+                                                                                    : getMediaUrl(rawFile);
+                                                                                const fileLower = (rawFile || "").toLowerCase();
+                                                                                const ext = fileLower.split("?")[0].split(".").pop();
+                                                                                const fileType = (lecture.file_type || "").toLowerCase();
+
+                                                                                const isScorm = fileType === "scorm" || Boolean(lecture.learning_module_info) || Boolean(lecture.learning_module_id);
+                                                                                const isVideo = !isQuiz && !isScorm && (
+                                                                                    fileType === "video" ||
                                                                                     lecture.content_type === "video" ||
-                                                                                    lecture.file?.includes('youtube') ||
-                                                                                    lecture.file?.includes('youtu.be') ||
-                                                                                    lecture.file?.includes('drive.google') ||
-                                                                                    lecture.file?.includes('/media/'));
+                                                                                    ['mp4', 'avi', 'mov', 'mkv', 'webm', 'ogv'].includes(ext) ||
+                                                                                    fileLower.includes("youtube") ||
+                                                                                    fileLower.includes("youtu.be") ||
+                                                                                    (fileLower.includes("drive.google.com") && !fileLower.includes("presentation"))
+                                                                                );
+                                                                                const isPresentation = !isQuiz && !isScorm && !isVideo && (
+                                                                                    fileType === "presentation" ||
+                                                                                    ['ppt', 'pptx', 'odp'].includes(ext) ||
+                                                                                    fileLower.includes("docs.google.com/presentation")
+                                                                                );
+                                                                                const isPdf = !isQuiz && !isScorm && !isVideo && !isPresentation && (
+                                                                                    fileType === "pdf" ||
+                                                                                    ext === "pdf"
+                                                                                );
+                                                                                const isAudio = !isQuiz && !isScorm && !isVideo && !isPresentation && !isPdf && (
+                                                                                    fileType === "audio" ||
+                                                                                    ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext)
+                                                                                );
                                                                                 const isLecturePreviewOpen = !!expandedLecturePreview[lectureId];
 
                                                                                 return (
                                                                                     <div key={lectureId} className={`icp-lecture-row ${isQuiz ? 'icp-lecture-quiz-row' : ''}`}>
                                                                                         <div className="icp-lecture-main">
                                                                                             <div className={`icp-lecture-icon-wrap ${isQuiz ? 'quiz-icon-wrap' : ''}`}>
-                                                                                                <i className={`fas ${isQuiz ? 'fa-clipboard-question text-warning' : isVideo ? 'fa-play-circle text-teal' : 'fa-file-alt text-primary'}`}></i>
+                                                                                                <i className={`fas ${
+                                                                                                    isQuiz ? 'fa-clipboard-question text-warning' :
+                                                                                                    isVideo ? 'fa-play-circle text-teal' :
+                                                                                                    isPresentation ? 'fa-file-powerpoint text-warning' :
+                                                                                                    isPdf ? 'fa-file-pdf text-danger' :
+                                                                                                    isAudio ? 'fa-headphones text-info' :
+                                                                                                    isScorm ? 'fa-cube text-purple' :
+                                                                                                    'fa-file-alt text-primary'
+                                                                                                }`}></i>
                                                                                             </div>
                                                                                             <div className="icp-lecture-content-block">
                                                                                                 <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -637,8 +672,15 @@ function InstructorCoursePreview() {
                                                                                                         </>
                                                                                                     ) : (
                                                                                                         <>
-                                                                                                            <span className={`icp-pill-micro ${isVideo ? 'pill-video' : 'pill-doc'}`}>
-                                                                                                                {isVideo ? 'Video' : 'Dokumen'}
+                                                                                                            <span className={`icp-pill-micro ${
+                                                                                                                isVideo ? 'pill-video' :
+                                                                                                                isPresentation ? 'pill-doc bg-warning-subtle text-warning-emphasis' :
+                                                                                                                isPdf ? 'pill-doc bg-danger-subtle text-danger' :
+                                                                                                                isAudio ? 'pill-doc bg-info-subtle text-info-emphasis' :
+                                                                                                                isScorm ? 'pill-doc bg-purple-subtle text-purple' :
+                                                                                                                'pill-doc'
+                                                                                                            }`}>
+                                                                                                                {isVideo ? 'Video' : isPresentation ? 'Presentasi' : isPdf ? 'PDF' : isAudio ? 'Audio' : isScorm ? 'SCORM' : 'Dokumen'}
                                                                                                             </span>
                                                                                                             {(lecture.duration_seconds || lecture.content_duration) && (
                                                                                                                 <span className="icp-pill-micro pill-time">
@@ -675,55 +717,94 @@ function InstructorCoursePreview() {
                                                                                                         <span>Detail Kuis</span>
                                                                                                     </button>
                                                                                                 </div>
-                                                                                            ) : lecture.file ? (
-                                                                                                <div className="icp-lecture-action">
-                                                                                                    {isVideo ? (
-                                                                                                        <button
-                                                                                                            className={`btn btn-xs ${isLecturePreviewOpen ? 'btn-teal' : 'btn-outline-teal'}`}
-                                                                                                            onClick={() => toggleLecturePreview(lectureId)}
-                                                                                                        >
-                                                                                                            <i className={`fas ${isLecturePreviewOpen ? 'fa-eye-slash' : 'fa-play'} me-1`}></i>
-                                                                                                            {isLecturePreviewOpen ? 'Tutup' : 'Lihat'}
-                                                                                                        </button>
-                                                                                                    ) : (
-                                                                                                        <a
-                                                                                                            href={lecture.file}
-                                                                                                            target="_blank"
-                                                                                                            rel="noopener noreferrer"
-                                                                                                            className="btn btn-xs btn-outline-secondary"
-                                                                                                        >
-                                                                                                            <i className="fas fa-download me-1"></i>
-                                                                                                            Unduh
-                                                                                                        </a>
-                                                                                                    )}
+                                                                                            ) : rawFile ? (
+                                                                                                <div className="icp-lecture-action d-flex align-items-center gap-1">
+                                                                                                    <button
+                                                                                                        className={`btn btn-xs ${isLecturePreviewOpen ? 'btn-teal' : 'btn-outline-teal'}`}
+                                                                                                        onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    >
+                                                                                                        <i className={`fas ${isLecturePreviewOpen ? 'fa-eye-slash' : 'fa-eye'} me-1`}></i>
+                                                                                                        {isLecturePreviewOpen ? 'Tutup' : 'Lihat'}
+                                                                                                    </button>
+                                                                                                    <a
+                                                                                                        href={fileUrl}
+                                                                                                        target="_blank"
+                                                                                                        rel="noopener noreferrer"
+                                                                                                        download
+                                                                                                        className="btn btn-xs btn-outline-secondary"
+                                                                                                        title="Unduh berkas asli"
+                                                                                                    >
+                                                                                                        <i className="fas fa-download"></i>
+                                                                                                    </a>
                                                                                                 </div>
                                                                                             ) : null}
                                                                                         </div>
 
-                                                                                        {/* Inline Lecture Video Preview */}
-                                                                                        {!isQuiz && isLecturePreviewOpen && lecture.file && (
-                                                                                            <div className="icp-lecture-video-box">
-                                                                                                {lecture.file.includes('youtube') || lecture.file.includes('youtu.be') ? (
-                                                                                                    <iframe
-                                                                                                        width="100%"
-                                                                                                        height="280"
-                                                                                                        src={getYouTubeEmbedUrl(lecture.file)}
-                                                                                                        title={lecture.title}
-                                                                                                        frameBorder="0"
-                                                                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                                                                        allowFullScreen
-                                                                                                        className="icp-video-iframe"
-                                                                                                    ></iframe>
+                                                                                        {/* Inline Lecture Preview */}
+                                                                                        {!isQuiz && isLecturePreviewOpen && rawFile && (
+                                                                                            <div className="icp-lecture-video-box mt-2">
+                                                                                                {isVideo ? (
+                                                                                                    fileLower.includes('youtube') || fileLower.includes('youtu.be') ? (
+                                                                                                        <iframe
+                                                                                                            width="100%"
+                                                                                                            height="280"
+                                                                                                            src={getYouTubeEmbedUrl(fileUrl)}
+                                                                                                            title={lecture.title}
+                                                                                                            frameBorder="0"
+                                                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                                                            allowFullScreen
+                                                                                                            className="icp-video-iframe"
+                                                                                                        ></iframe>
+                                                                                                    ) : (
+                                                                                                        <video
+                                                                                                            width="100%"
+                                                                                                            height="280"
+                                                                                                            controls
+                                                                                                            className="icp-video-player"
+                                                                                                        >
+                                                                                                            <source src={fileUrl} type="video/mp4" />
+                                                                                                            Browser Anda tidak mendukung pemutar video.
+                                                                                                        </video>
+                                                                                                    )
+                                                                                                ) : isPresentation ? (
+                                                                                                    <div className="p-2 bg-white rounded border">
+                                                                                                        {fileLower.includes('docs.google.com/presentation') ? (
+                                                                                                            <div className="ratio ratio-16x9">
+                                                                                                                <iframe
+                                                                                                                    src={rawFile.replace('/edit', '/embed').replace('/view', '/embed')}
+                                                                                                                    title={lecture.title || "Presentasi"}
+                                                                                                                    style={{ border: 0, width: "100%", height: "100%" }}
+                                                                                                                    allowFullScreen
+                                                                                                                />
+                                                                                                            </div>
+                                                                                                        ) : (
+                                                                                                            <PptxRenderer fileUrl={fileUrl} height="440px" showThumbnails={true} showToolbar={true} />
+                                                                                                        )}
+                                                                                                    </div>
+                                                                                                ) : isPdf ? (
+                                                                                                    <div className="p-2 bg-white rounded border">
+                                                                                                        <PdfRenderer fileUrl={fileUrl} height="480px" title={lecture.title} showThumbnails={true} />
+                                                                                                    </div>
+                                                                                                ) : isAudio ? (
+                                                                                                    <div className="p-3 bg-white rounded border d-flex align-items-center gap-3">
+                                                                                                        <div className="rounded-circle d-flex align-items-center justify-content-center bg-info text-white flex-shrink-0" style={{ width: '48px', height: '48px', fontSize: '1.2rem' }}>
+                                                                                                            <i className="fas fa-headphones"></i>
+                                                                                                        </div>
+                                                                                                        <div className="w-100 flex-grow-1">
+                                                                                                            <div className="fw-semibold text-dark small mb-1">{lecture.title}</div>
+                                                                                                            <audio controls preload="metadata" className="w-100" style={{ height: '36px' }}>
+                                                                                                                <source src={fileUrl} />
+                                                                                                            </audio>
+                                                                                                        </div>
+                                                                                                    </div>
                                                                                                 ) : (
-                                                                                                    <video
-                                                                                                        width="100%"
-                                                                                                        height="280"
-                                                                                                        controls
-                                                                                                        className="icp-video-player"
-                                                                                                    >
-                                                                                                        <source src={lecture.file} type="video/mp4" />
-                                                                                                        Browser Anda tidak mendukung pemutar video.
-                                                                                                    </video>
+                                                                                                    <div className="p-3 bg-white rounded border text-center">
+                                                                                                        <i className="fas fa-file-alt text-primary fa-2x mb-2"></i>
+                                                                                                        <h6 className="fw-bold mb-1">{lecture.title}</h6>
+                                                                                                        <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary mt-2">
+                                                                                                            <i className="fas fa-external-link-alt me-1"></i> Buka Berkas
+                                                                                                        </a>
+                                                                                                    </div>
                                                                                                 )}
                                                                                             </div>
                                                                                         )}

@@ -6,7 +6,9 @@ import Swal from "sweetalert2";
 import Footer from "../partials/Footer";
 import AdminHeader from "../partials/AdminHeader";
 import { getImageUrl, getLevelText } from "../../utils/courseUtils";
-import { DEFAULT_IMAGE_URL, DEFAULT_AVATAR_URL } from "../../utils/constants";
+import { DEFAULT_IMAGE_URL, DEFAULT_AVATAR_URL, getMediaUrl } from "../../utils/constants";
+import PptxRenderer from "../../components/Common/PptxRenderer";
+import PdfRenderer from "../../components/Common/PdfRenderer";
 import "./AdminCourseReviewDetail.css";
 
 /**
@@ -283,6 +285,9 @@ function AdminCourseReviewDetail() {
         let lessonsCount = 0;
         let videoCount = 0;
         let scormCount = 0;
+        let presentationCount = 0;
+        let pdfCount = 0;
+        let audioCount = 0;
         let docCount = 0;
         let totalDurationSeconds = 0;
 
@@ -291,12 +296,25 @@ function AdminCourseReviewDetail() {
             lessonsCount += items.length;
             items.forEach((item) => {
                 const type = (item.file_type || "").toLowerCase();
-                const file = item.file || "";
+                const rawF = item.file || item.youtubeLink || item.gdriveLink || "";
+                const fileLower = (rawF || "").toLowerCase();
+                const ext = fileLower.split('?')[0].split('.').pop();
+                const isItemScorm = type === "scorm" || Boolean(item.learning_module_info) || Boolean(item.learning_module_id);
+                const isItemVideo = !isItemScorm && (type === "video" || ['mp4', 'avi', 'mov', 'mkv', 'webm', 'ogv'].includes(ext) || fileLower.includes("youtube") || fileLower.includes("youtu.be") || (fileLower.includes("drive.google.com") && !fileLower.includes("presentation")));
+                const isItemPpt = !isItemScorm && !isItemVideo && (type === "presentation" || ['ppt', 'pptx', 'odp'].includes(ext) || fileLower.includes("docs.google.com/presentation"));
+                const isItemPdf = !isItemScorm && !isItemVideo && !isItemPpt && (type === "pdf" || ext === "pdf");
+                const isItemAud = !isItemScorm && !isItemVideo && !isItemPpt && !isItemPdf && (type === "audio" || ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext));
 
-                if (type === "video" || file.endsWith(".mp4") || file.includes("youtube") || file.includes("youtu.be")) {
-                    videoCount++;
-                } else if (type === "scorm") {
+                if (isItemScorm) {
                     scormCount++;
+                } else if (isItemVideo) {
+                    videoCount++;
+                } else if (isItemPpt) {
+                    presentationCount++;
+                } else if (isItemPdf) {
+                    pdfCount++;
+                } else if (isItemAud) {
+                    audioCount++;
                 } else {
                     docCount++;
                 }
@@ -332,6 +350,9 @@ function AdminCourseReviewDetail() {
             lessonsCount,
             videoCount,
             scormCount,
+            presentationCount,
+            pdfCount,
+            audioCount,
             docCount,
             totalDurationSeconds,
             totalDurationFormatted: formatDuration(totalDurationSeconds),
@@ -588,6 +609,17 @@ function AdminCourseReviewDetail() {
                             </div>
 
                             <div className="d-flex align-items-center gap-2 flex-wrap">
+                                <a
+                                    href={`/instructor/preview-course/${course.course_id}/`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1.5"
+                                    style={{ fontSize: "0.8rem", padding: "0.3rem 0.65rem" }}
+                                    title="Lihat Pratinjau Menyeluruh dalam Pemutar Peserta/Siswa di Tab Baru"
+                                >
+                                    <i className="fas fa-play-circle"></i>
+                                    <span>Pratinjau Siswa (Penuh)</span>
+                                </a>
                                 <span className={`acrd-status-pill ${statusInfo.className}`}>
                                     <i className={`${statusInfo.icon} me-1`}></i>
                                     {statusInfo.label}
@@ -879,8 +911,14 @@ function AdminCourseReviewDetail() {
                                                                         {items.map((lecture, lIdx) => {
                                                                             const lectureId = lecture.variant_item_id || lecture.id || `lec-${lIdx}`;
                                                                             const isPreviewOpen = !!expandedLecturePreview[lectureId];
+                                                                            const rawFile = lecture.file || lecture.youtubeLink || lecture.gdriveLink || lecture.uploadedFile || "";
+                                                                            const fileUrl = rawFile.startsWith("http") || rawFile.startsWith("blob:") || rawFile.startsWith("data:")
+                                                                                ? rawFile
+                                                                                : getMediaUrl(rawFile);
+                                                                            const fileLower = (rawFile || "").toLowerCase();
+                                                                            const ext = fileLower.split("?")[0].split(".").pop();
                                                                             const fileType = (lecture.file_type || "").toLowerCase();
-                                                                            const isVideo = fileType === "video" || lecture.file?.endsWith(".mp4") || lecture.file?.includes("youtube") || lecture.file?.includes("drive.google");
+
                                                                             const scormModuleId = lecture.learning_module_info?.id ||
                                                                                 lecture.learning_module?.id ||
                                                                                 (typeof lecture.learning_module === "number" ? lecture.learning_module : null) ||
@@ -890,6 +928,36 @@ function AdminCourseReviewDetail() {
                                                                             const scormPlayerUrl = scormModuleId
                                                                                 ? `/modules/${scormModuleId}/player/`
                                                                                 : (lecture.learning_module_info?.player_url ? getImageUrl(lecture.learning_module_info.player_url) : null);
+
+                                                                            const isVideo = !isScorm && (
+                                                                                fileType === "video" ||
+                                                                                ['mp4', 'avi', 'mov', 'mkv', 'webm', 'ogv'].includes(ext) ||
+                                                                                fileLower.includes("youtube") ||
+                                                                                fileLower.includes("youtu.be") ||
+                                                                                (fileLower.includes("drive.google.com") && !fileLower.includes("presentation"))
+                                                                            );
+
+                                                                            const isPresentation = !isScorm && !isVideo && (
+                                                                                fileType === "presentation" ||
+                                                                                ['ppt', 'pptx', 'odp'].includes(ext) ||
+                                                                                fileLower.includes("docs.google.com/presentation")
+                                                                            );
+
+                                                                            const isPdf = !isScorm && !isVideo && !isPresentation && (
+                                                                                fileType === "pdf" ||
+                                                                                ext === "pdf"
+                                                                            );
+
+                                                                            const isAudio = !isScorm && !isVideo && !isPresentation && !isPdf && (
+                                                                                fileType === "audio" ||
+                                                                                ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext)
+                                                                            );
+
+                                                                            const isWordDoc = !isScorm && !isVideo && !isPresentation && !isPdf && !isAudio && (
+                                                                                fileType === "document" ||
+                                                                                ['doc', 'docx', 'odt', 'rtf', 'txt'].includes(ext)
+                                                                            );
+
                                                                             const durText = formatLectureDuration(lecture);
 
                                                                             return (
@@ -919,6 +987,22 @@ function AdminCourseReviewDetail() {
                                                                                                 <span className="badge bg-purple-subtle text-purple border border-purple-subtle small py-1" style={{ backgroundColor: "#f3e8ff", color: "#7e22ce" }}>
                                                                                                     <i className="fas fa-cube me-1"></i> SCORM 1.2
                                                                                                 </span>
+                                                                                            ) : isPresentation ? (
+                                                                                                <span className="badge small py-1" style={{ backgroundColor: "#fff7ed", color: "#c2410c", border: "1px solid #fed7aa" }}>
+                                                                                                    <i className="fas fa-file-powerpoint me-1" style={{ color: "#ea580c" }}></i> Presentasi (PPT)
+                                                                                                </span>
+                                                                                            ) : isPdf ? (
+                                                                                                <span className="badge small py-1" style={{ backgroundColor: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>
+                                                                                                    <i className="fas fa-file-pdf me-1"></i> Dokumen PDF
+                                                                                                </span>
+                                                                                            ) : isAudio ? (
+                                                                                                <span className="badge small py-1" style={{ backgroundColor: "#f0f9ff", color: "#0284c7", border: "1px solid #bae6fd" }}>
+                                                                                                    <i className="fas fa-headphones me-1"></i> Audio
+                                                                                                </span>
+                                                                                            ) : isWordDoc ? (
+                                                                                                <span className="badge small py-1" style={{ backgroundColor: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe" }}>
+                                                                                                    <i className="fas fa-file-word me-1"></i> Naskah / Dokumen
+                                                                                                </span>
                                                                                             ) : (
                                                                                                 <span className="badge bg-light text-secondary border small py-1">
                                                                                                     <i className="fas fa-file-alt me-1"></i> {lecture.file_type ? lecture.file_type.toUpperCase() : "Dokumen"}
@@ -937,15 +1021,16 @@ function AdminCourseReviewDetail() {
                                                                                                 </span>
                                                                                             )}
 
-                                                                                            {/* Action buttons (Video preview, SCORM preview, or download) */}
-                                                                                            {isVideo && lecture.file && (
+                                                                                            {/* Action buttons (Video, SCORM, Presentation, PDF, Audio, Word, and Download) */}
+                                                                                            {isVideo && rawFile && (
                                                                                                 <button
                                                                                                     type="button"
                                                                                                     className={`btn btn-xs ${isPreviewOpen ? "btn-teal" : "btn-outline-teal"}`}
                                                                                                     onClick={() => toggleLecturePreview(lectureId)}
                                                                                                     style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                    title={isPreviewOpen ? "Tutup Pratinjau Video" : "Lihat Pratinjau Video"}
                                                                                                 >
-                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-eye"} me-1`}></i>
+                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-play-circle"} me-1`}></i>
                                                                                                     {isPreviewOpen ? "Tutup" : "Pratinjau"}
                                                                                                 </button>
                                                                                             )}
@@ -963,13 +1048,67 @@ function AdminCourseReviewDetail() {
                                                                                                 </button>
                                                                                             )}
 
-                                                                                            {!isVideo && !isScorm && lecture.file && (
+                                                                                            {isPresentation && rawFile && (
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-warning text-dark" : "btn-outline-warning text-warning-emphasis"}`}
+                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px", borderColor: "#f59e0b" }}
+                                                                                                    title={isPreviewOpen ? "Tutup Pratinjau Slide" : "Lihat Pratinjau Paparan Presentasi"}
+                                                                                                >
+                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-file-powerpoint"} me-1`}></i>
+                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau Slide"}
+                                                                                                </button>
+                                                                                            )}
+
+                                                                                            {isPdf && rawFile && (
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-danger" : "btn-outline-danger"}`}
+                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                    title={isPreviewOpen ? "Tutup Pratinjau PDF" : "Lihat Pratinjau Dokumen PDF"}
+                                                                                                >
+                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-file-pdf"} me-1`}></i>
+                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau PDF"}
+                                                                                                </button>
+                                                                                            )}
+
+                                                                                            {isAudio && rawFile && (
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-primary" : "btn-outline-primary"}`}
+                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                    title={isPreviewOpen ? "Tutup Pratinjau Audio" : "Dengarkan Pratinjau Audio"}
+                                                                                                >
+                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-headphones"} me-1`}></i>
+                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau Audio"}
+                                                                                                </button>
+                                                                                            )}
+
+                                                                                            {isWordDoc && rawFile && (
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-primary" : "btn-outline-primary"}`}
+                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                    title={isPreviewOpen ? "Tutup Info Dokumen" : "Lihat Info Dokumen"}
+                                                                                                >
+                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-file-word"} me-1`}></i>
+                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau"}
+                                                                                                </button>
+                                                                                            )}
+
+                                                                                            {rawFile && (
                                                                                                 <a
-                                                                                                    href={lecture.file}
+                                                                                                    href={fileUrl}
                                                                                                     target="_blank"
                                                                                                     rel="noopener noreferrer"
+                                                                                                    download
                                                                                                     className="btn btn-xs btn-outline-secondary"
                                                                                                     style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                    title="Unduh / Buka berkas materi asli"
                                                                                                 >
                                                                                                     <i className="fas fa-download me-1"></i> Unduh
                                                                                                 </a>
@@ -978,14 +1117,14 @@ function AdminCourseReviewDetail() {
                                                                                     </div>
 
                                                                                     {/* Inline Video Player Preview */}
-                                                                                    {isPreviewOpen && isVideo && lecture.file && (
-                                                                                        <div className="acrd-lecture-preview-box mt-2 p-2 rounded bg-light border">
+                                                                                    {isPreviewOpen && isVideo && rawFile && (
+                                                                                        <div className="acrd-lecture-preview-box acrd-video-preview-box mt-2 p-2 rounded bg-light border">
                                                                                             <div className="d-flex justify-content-between align-items-center mb-1">
                                                                                                 <span className="small text-muted fw-semibold">
                                                                                                     <i className="fas fa-video me-1 text-teal"></i> Pratinjau Video Materi
                                                                                                 </span>
                                                                                                 <a
-                                                                                                    href={convertEmbedUrlToViewable(lecture.file)}
+                                                                                                    href={convertEmbedUrlToViewable(fileUrl)}
                                                                                                     target="_blank"
                                                                                                     rel="noopener noreferrer"
                                                                                                     className="small text-teal text-decoration-none"
@@ -993,29 +1132,29 @@ function AdminCourseReviewDetail() {
                                                                                                     <i className="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
                                                                                                 </a>
                                                                                             </div>
-                                                                                            {lecture.file.includes("youtube") || lecture.file.includes("youtu.be") ? (
+                                                                                            {fileLower.includes("youtube") || fileLower.includes("youtu.be") ? (
                                                                                                 <iframe
                                                                                                     width="100%"
                                                                                                     height="260"
-                                                                                                    src={getEmbedUrl(lecture.file)}
+                                                                                                    src={getEmbedUrl(fileUrl)}
                                                                                                     title={lecture.title}
                                                                                                     frameBorder="0"
                                                                                                     allowFullScreen
                                                                                                     style={{ borderRadius: "6px" }}
                                                                                                 ></iframe>
-                                                                                            ) : lecture.file.includes("drive.google") ? (
+                                                                                            ) : fileLower.includes("drive.google") ? (
                                                                                                 <iframe
                                                                                                     width="100%"
                                                                                                     height="260"
-                                                                                                    src={getEmbedUrl(lecture.file)}
+                                                                                                    src={getEmbedUrl(fileUrl)}
                                                                                                     title={lecture.title}
                                                                                                     frameBorder="0"
                                                                                                     allowFullScreen
                                                                                                     style={{ borderRadius: "6px" }}
                                                                                                 ></iframe>
                                                                                             ) : (
-                                                                                                <video controls width="100%" preload="metadata" style={{ borderRadius: "6px", maxHeight: "280px" }}>
-                                                                                                    <source src={lecture.file} type="video/mp4" />
+                                                                                                <video controls width="100%" preload="metadata" style={{ borderRadius: "6px", maxHeight: "300px" }}>
+                                                                                                    <source src={fileUrl} type="video/mp4" />
                                                                                                     Browser tidak mendukung pemutar video.
                                                                                                 </video>
                                                                                             )}
@@ -1076,6 +1215,231 @@ function AdminCourseReviewDetail() {
                                                                                                         <p className="small mb-0">Paket modul SCORM tidak ditemukan atau belum diekstrak.</p>
                                                                                                     </div>
                                                                                                 )}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {/* Inline Presentation (PPT/PPTX & Google Slides) Player Preview */}
+                                                                                    {isPreviewOpen && isPresentation && rawFile && (
+                                                                                        <div className="acrd-lecture-preview-box acrd-presentation-preview-box mt-2 p-2 rounded bg-white border border-warning-subtle shadow-sm">
+                                                                                            <div className="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                                    <span className="badge" style={{ backgroundColor: "#fff7ed", color: "#c2410c", border: "1px solid #fed7aa", fontSize: "0.725rem" }}>
+                                                                                                        <i className="fas fa-file-powerpoint me-1" style={{ color: "#ea580c" }}></i> {rawFile.includes('docs.google.com') ? 'Google Slides' : 'Paparan Presentasi (PPTX)'}
+                                                                                                    </span>
+                                                                                                    <strong className="small text-dark text-truncate" style={{ maxWidth: "340px" }}>
+                                                                                                        {lecture.title}
+                                                                                                    </strong>
+                                                                                                </div>
+                                                                                                <div className="d-flex align-items-center gap-1">
+                                                                                                    <a
+                                                                                                        href={fileUrl}
+                                                                                                        target="_blank"
+                                                                                                        rel="noopener noreferrer"
+                                                                                                        className="btn btn-xs btn-outline-warning d-inline-flex align-items-center text-warning-emphasis"
+                                                                                                        style={{ fontSize: "0.725rem", padding: "3px 8px", lineHeight: 1 }}
+                                                                                                        title="Buka paparan di tab baru"
+                                                                                                    >
+                                                                                                        <i className="fas fa-external-link-alt me-1"></i>
+                                                                                                        <span>Tab Baru</span>
+                                                                                                    </a>
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        className="btn btn-xs btn-secondary d-inline-flex align-items-center"
+                                                                                                        style={{ fontSize: "0.725rem", padding: "3px 8px", lineHeight: 1 }}
+                                                                                                        onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    >
+                                                                                                        <i className="fas fa-times me-1"></i>
+                                                                                                        <span>Tutup</span>
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div className="rounded overflow-hidden border bg-light" style={{ minHeight: "440px" }}>
+                                                                                                {rawFile.includes('docs.google.com/presentation') ? (
+                                                                                                    <div className="ratio ratio-16x9" style={{ minHeight: "440px" }}>
+                                                                                                        <iframe
+                                                                                                            src={rawFile.replace('/edit', '/embed').replace('/view', '/embed')}
+                                                                                                            title={lecture.title || "Google Slides"}
+                                                                                                            style={{ border: 0, width: "100%", height: "100%" }}
+                                                                                                            allowFullScreen
+                                                                                                        />
+                                                                                                    </div>
+                                                                                                ) : (
+                                                                                                    <PptxRenderer
+                                                                                                        fileUrl={fileUrl}
+                                                                                                        height="480px"
+                                                                                                        showThumbnails={true}
+                                                                                                        showToolbar={true}
+                                                                                                    />
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {/* Inline PDF Document Preview */}
+                                                                                    {isPreviewOpen && isPdf && rawFile && (
+                                                                                        <div className="acrd-lecture-preview-box acrd-pdf-preview-box mt-2 p-2 rounded bg-white border border-danger-subtle shadow-sm">
+                                                                                            <div className="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                                    <span className="badge" style={{ backgroundColor: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: "0.725rem" }}>
+                                                                                                        <i className="fas fa-file-pdf me-1"></i> Dokumen PDF Materi
+                                                                                                    </span>
+                                                                                                    <strong className="small text-dark text-truncate" style={{ maxWidth: "340px" }}>
+                                                                                                        {lecture.title}
+                                                                                                    </strong>
+                                                                                                </div>
+                                                                                                <div className="d-flex align-items-center gap-1">
+                                                                                                    <a
+                                                                                                        href={fileUrl}
+                                                                                                        target="_blank"
+                                                                                                        rel="noopener noreferrer"
+                                                                                                        className="btn btn-xs btn-outline-danger d-inline-flex align-items-center"
+                                                                                                        style={{ fontSize: "0.725rem", padding: "3px 8px", lineHeight: 1 }}
+                                                                                                        title="Buka dokumen PDF di tab baru"
+                                                                                                    >
+                                                                                                        <i className="fas fa-external-link-alt me-1"></i>
+                                                                                                        <span>Tab Baru</span>
+                                                                                                    </a>
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        className="btn btn-xs btn-secondary d-inline-flex align-items-center"
+                                                                                                        style={{ fontSize: "0.725rem", padding: "3px 8px", lineHeight: 1 }}
+                                                                                                        onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    >
+                                                                                                        <i className="fas fa-times me-1"></i>
+                                                                                                        <span>Tutup</span>
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div className="rounded overflow-hidden border" style={{ minHeight: "520px", background: "#f8fafc" }}>
+                                                                                                <PdfRenderer
+                                                                                                    fileUrl={fileUrl}
+                                                                                                    height="520px"
+                                                                                                    title={lecture.title || "Dokumen PDF"}
+                                                                                                    showThumbnails={true}
+                                                                                                />
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {/* Inline Audio Player Preview */}
+                                                                                    {isPreviewOpen && isAudio && rawFile && (
+                                                                                        <div className="acrd-lecture-preview-box acrd-audio-preview-box mt-2 p-3 rounded bg-white border border-info-subtle shadow-sm">
+                                                                                            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                                    <span className="badge" style={{ backgroundColor: "#f0f9ff", color: "#0284c7", border: "1px solid #bae6fd", fontSize: "0.725rem" }}>
+                                                                                                        <i className="fas fa-headphones me-1"></i> Audio Pembelajaran / Podcast
+                                                                                                    </span>
+                                                                                                    <strong className="small text-dark text-truncate" style={{ maxWidth: "340px" }}>
+                                                                                                        {lecture.title}
+                                                                                                    </strong>
+                                                                                                </div>
+                                                                                                <div className="d-flex align-items-center gap-1">
+                                                                                                    <a
+                                                                                                        href={fileUrl}
+                                                                                                        target="_blank"
+                                                                                                        rel="noopener noreferrer"
+                                                                                                        className="btn btn-xs btn-outline-primary d-inline-flex align-items-center"
+                                                                                                        style={{ fontSize: "0.725rem", padding: "3px 8px", lineHeight: 1 }}
+                                                                                                        title="Buka audio di tab baru"
+                                                                                                    >
+                                                                                                        <i className="fas fa-external-link-alt me-1"></i>
+                                                                                                        <span>Tab Baru</span>
+                                                                                                    </a>
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        className="btn btn-xs btn-secondary d-inline-flex align-items-center"
+                                                                                                        style={{ fontSize: "0.725rem", padding: "3px 8px", lineHeight: 1 }}
+                                                                                                        onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    >
+                                                                                                        <i className="fas fa-times me-1"></i>
+                                                                                                        <span>Tutup</span>
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            </div>
+
+                                                                                            <div className="p-3 rounded-3 bg-light border d-flex flex-column flex-sm-row align-items-center gap-3">
+                                                                                                <div
+                                                                                                    className="rounded-circle d-flex align-items-center justify-content-center shadow-xs flex-shrink-0"
+                                                                                                    style={{
+                                                                                                        width: "54px",
+                                                                                                        height: "54px",
+                                                                                                        background: "linear-gradient(135deg, #0284c7 0%, #0d9488 100%)",
+                                                                                                        color: "#fff",
+                                                                                                        fontSize: "1.4rem"
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <i className="fas fa-headphones"></i>
+                                                                                                </div>
+                                                                                                <div className="w-100 flex-grow-1">
+                                                                                                    <div className="d-flex align-items-center justify-content-between mb-1">
+                                                                                                        <span className="fw-semibold text-dark small">{lecture.title}</span>
+                                                                                                        {durText && <span className="badge bg-white text-muted border small">{durText}</span>}
+                                                                                                    </div>
+                                                                                                    <audio
+                                                                                                        controls
+                                                                                                        preload="metadata"
+                                                                                                        className="w-100"
+                                                                                                        style={{ height: "40px", borderRadius: "8px" }}
+                                                                                                    >
+                                                                                                        <source src={fileUrl} />
+                                                                                                        Browser Anda tidak mendukung pemutar audio.
+                                                                                                    </audio>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {/* Inline Word Document Preview / Info */}
+                                                                                    {isPreviewOpen && isWordDoc && rawFile && (
+                                                                                        <div className="acrd-lecture-preview-box acrd-word-preview-box mt-2 p-3 rounded bg-white border border-primary-subtle shadow-sm">
+                                                                                            <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                                    <span className="badge" style={{ backgroundColor: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", fontSize: "0.725rem" }}>
+                                                                                                        <i className="fas fa-file-word me-1"></i> Dokumen Naskah / Modul ({ext.toUpperCase()})
+                                                                                                    </span>
+                                                                                                    <strong className="small text-dark text-truncate" style={{ maxWidth: "340px" }}>
+                                                                                                        {lecture.title}
+                                                                                                    </strong>
+                                                                                                </div>
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    className="btn btn-xs btn-secondary d-inline-flex align-items-center"
+                                                                                                    style={{ fontSize: "0.725rem", padding: "3px 8px", lineHeight: 1 }}
+                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                >
+                                                                                                    <i className="fas fa-times me-1"></i>
+                                                                                                    <span>Tutup</span>
+                                                                                                </button>
+                                                                                            </div>
+                                                                                            <div className="p-3 text-center rounded bg-light border">
+                                                                                                <div
+                                                                                                    className="rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                                                                                                    style={{ width: "50px", height: "50px", backgroundColor: "#dbeafe", color: "#2563eb", fontSize: "1.4rem" }}
+                                                                                                >
+                                                                                                    <i className="fas fa-file-word"></i>
+                                                                                                </div>
+                                                                                                <h6 className="fw-bold text-dark mb-1">{lecture.title}</h6>
+                                                                                                <p className="text-muted small mb-3">Format berkas: .{ext.toUpperCase()} &bull; Kurasi isi dokumen materi pembelajaran</p>
+                                                                                                <div className="d-flex gap-2 justify-content-center flex-wrap">
+                                                                                                    <a
+                                                                                                        href={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+                                                                                                        target="_blank"
+                                                                                                        rel="noopener noreferrer"
+                                                                                                        className="btn btn-sm btn-primary px-3"
+                                                                                                    >
+                                                                                                        <i className="fas fa-eye me-1"></i> Buka dengan Google Docs Viewer
+                                                                                                    </a>
+                                                                                                    <a
+                                                                                                        href={fileUrl}
+                                                                                                        target="_blank"
+                                                                                                        rel="noopener noreferrer"
+                                                                                                        download
+                                                                                                        className="btn btn-sm btn-outline-secondary px-3"
+                                                                                                    >
+                                                                                                        <i className="fas fa-download me-1"></i> Unduh Berkas Asli
+                                                                                                    </a>
+                                                                                                </div>
                                                                                             </div>
                                                                                         </div>
                                                                                     )}
@@ -1643,7 +2007,7 @@ function AdminCourseReviewDetail() {
                                         <div className="col-6">
                                             <div className="acrd-stat-tile">
                                                 <div className="acrd-stat-val text-teal">{liveStats.lessonsCount}</div>
-                                                <div className="acrd-stat-lbl">Pelajaran ({liveStats.videoCount} Video)</div>
+                                                <div className="acrd-stat-lbl">Total Pelajaran</div>
                                             </div>
                                         </div>
                                         <div className="col-6">

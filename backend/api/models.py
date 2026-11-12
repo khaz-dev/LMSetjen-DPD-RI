@@ -1114,8 +1114,10 @@ class VariantItem(models.Model):
             return "unknown"
         
         file_url = self.file.lower()
-        if any(ext in file_url for ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.ogg']):
+        if any(ext in file_url for ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.ogv']):
             return "video"
+        elif any(ext in file_url for ext in ['.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg']):
+            return "audio"
         elif any(ext in file_url for ext in ['.zip']) and 'scorm' in file_url:
             return "scorm"
         elif any(ext in file_url for ext in ['.h5p']):
@@ -1137,6 +1139,7 @@ class VariantItem(models.Model):
         file_type = self.file_type
         icon_map = {
             "video": "fas fa-play-circle",
+            "audio": "fas fa-headphones",
             "scorm": "fas fa-cubes",
             "h5p": "fas fa-puzzle-piece",
             "pdf": "fas fa-file-pdf",

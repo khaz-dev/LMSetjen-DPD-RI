@@ -382,6 +382,26 @@
     border-color: #e9d5ff !important;
 }
 
+.acrd-video-preview-box {
+    border-left: 3px solid var(--acrd-teal) !important;
+}
+
+.acrd-presentation-preview-box {
+    border-left: 3px solid #ea580c !important;
+}
+
+.acrd-pdf-preview-box {
+    border-left: 3px solid #dc2626 !important;
+}
+
+.acrd-audio-preview-box {
+    border-left: 3px solid #0284c7 !important;
+}
+
+.acrd-word-preview-box {
+    border-left: 3px solid #2563eb !important;
+}
+
 .acrd-scorm-preview-box {
     border-left: 3px solid #7e22ce !important;
 }

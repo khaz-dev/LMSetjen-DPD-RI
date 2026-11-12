@@ -3,6 +3,7 @@ import Swal from "sweetalert2";
 import useAxios from "../../../utils/useAxios";
 import Toast from "../../plugin/Toast";
 import FormField from "./FormField";
+import { commonFeatureIcons, getFeatureIconDisplay } from "../../../utils/courseUtils";
 
 /**
  * ✨ PHASE 4.45: CourseFeaturesForm Component
@@ -160,55 +161,7 @@ function CourseFeaturesForm({ courseId, onFeaturesUpdate }) {
         setErrors({});
     };
 
-    const commonIcons = [
-        { value: "fas fa-check", label: "✓ Centang", icon: "✓" },
-        { value: "fas fa-book", label: "📖 Buku", icon: "📖" },
-        { value: "fas fa-video", label: "🎥 Video", icon: "🎥" },
-        { value: "fas fa-document", label: "📄 Dokumen", icon: "📄" },
-        { value: "fas fa-users", label: "👥 Komunitas", icon: "👥" },
-        { value: "fas fa-certificate", label: "🎓 Sertifikat", icon: "🎓" },
-        { value: "fas fa-clock", label: "⏰ Waktu Fleksibel", icon: "⏰" },
-        { value: "fas fa-globe", label: "🌐 Akses Seumur Hidup", icon: "🌐" },
-        { value: "fas fa-star", label: "⭐ Premium", icon: "⭐" },
-        { value: "fas fa-desktop", label: "💻 Akses Mobile", icon: "💻" },
-        { value: "fas fa-download", label: "📥 Materi Downloadable", icon: "📥" },
-        { value: "fas fa-headphones", label: "🎧 Dukungan 24/7", icon: "🎧" },
-    ];
-
-    // Helper function to extract and match the icon from form-select Tambah Fitur Baru
-    const getFeatureIconDisplay = (iconValue) => {
-        if (!iconValue) return "✓";
-        const matched = commonIcons.find(
-            (item) => item.value === iconValue || item.label?.startsWith(iconValue) || item.icon === iconValue
-        );
-        if (matched) return matched.icon;
-
-        // Fallbacks for known classes
-        const iconMap = {
-            "fas fa-video": "🎥",
-            "fas fa-document": "📄",
-            "fas fa-file": "📄",
-            "fas fa-file-alt": "📄",
-            "fas fa-certificate": "🎓",
-            "fas fa-graduation-cap": "🎓",
-            "fas fa-check": "✓",
-            "fas fa-check-circle": "✓",
-            "fas fa-book": "📖",
-            "fas fa-users": "👥",
-            "fas fa-clock": "⏰",
-            "fas fa-globe": "🌐",
-            "fas fa-star": "⭐",
-            "fas fa-desktop": "💻",
-            "fas fa-download": "📥",
-            "fas fa-headphones": "🎧",
-        };
-        if (iconMap[iconValue]) return iconMap[iconValue];
-
-        // If it's already an emoji or non-font-awesome string
-        if (!iconValue.startsWith("fa")) return iconValue;
-
-        return null;
-    };
+    const commonIcons = commonFeatureIcons;
 
     return (
         <div className="form-section">

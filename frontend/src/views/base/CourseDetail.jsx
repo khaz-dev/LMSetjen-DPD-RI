@@ -430,7 +430,44 @@ function CourseDetail() {
                             </div>
                         </div>
 
-                        {/* 3. Target & Learning Outcomes */}
+                        {/* 3. Persyaratan & Prasyarat */}
+                        <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden">
+                            <div className="card-body p-3 p-md-4">
+                                <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                                        style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)" }}
+                                    >
+                                        <i className="fas fa-list-check" style={{ fontSize: "0.8rem" }}></i>
+                                    </div>
+                                    <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                                        Persyaratan & Prasyarat
+                                    </h5>
+                                </div>
+
+                                {course?.requirements && course.requirements.length > 0 ? (
+                                    <div className="d-flex flex-column gap-2">
+                                        {course.requirements.map((item, index) => (
+                                            <div key={item.id || index} className="d-flex align-items-center gap-2 p-2 px-3 rounded-3 bg-light">
+                                                <i className="fas fa-check text-teal" style={{ color: "#0d9488", fontSize: "0.8rem" }}></i>
+                                                <span className="small text-secondary" style={{ fontSize: "0.84rem" }}>{item.requirement}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="d-flex align-items-center gap-2 p-2 px-3 rounded-3 bg-light text-secondary small" style={{ fontSize: "0.84rem" }}>
+                                        <i className="fas fa-circle-info text-teal me-1" style={{ color: "#0d9488" }}></i>
+                                        <span>
+                                            {course?.target_audience === 'umum'
+                                                ? "Tidak ada prasyarat khusus. Kursus ini terbuka dan dapat diikuti langsung oleh masyarakat umum maupun aparatur sipil."
+                                                : "Tidak ada prasyarat khusus. Kursus ini dapat diikuti langsung oleh seluruh pegawai dan aparatur di lingkungan Setjen DPD RI."}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 4. Target & Capaian Pembelajaran */}
                         <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden">
                             <div className="card-body p-3 p-md-4">
                                 <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
@@ -499,97 +536,6 @@ function CourseDetail() {
                                 )}
                             </div>
                         </div>
-
-                        {/* 4. Requirements & Prerequisites */}
-                        <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden">
-                            <div className="card-body p-3 p-md-4">
-                                <div className="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
-                                    <div
-                                        className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
-                                        style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)" }}
-                                    >
-                                        <i className="fas fa-list-check" style={{ fontSize: "0.8rem" }}></i>
-                                    </div>
-                                    <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
-                                        Persyaratan & Prasyarat
-                                    </h5>
-                                </div>
-
-                                {course?.requirements && course.requirements.length > 0 ? (
-                                    <div className="d-flex flex-column gap-2">
-                                        {course.requirements.map((item, index) => (
-                                            <div key={item.id || index} className="d-flex align-items-center gap-2 p-2 px-3 rounded-3 bg-light">
-                                                <i className="fas fa-check text-teal" style={{ color: "#0d9488", fontSize: "0.8rem" }}></i>
-                                                <span className="small text-secondary" style={{ fontSize: "0.84rem" }}>{item.requirement}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="d-flex align-items-center gap-2 p-2 px-3 rounded-3 bg-light text-secondary small" style={{ fontSize: "0.84rem" }}>
-                                        <i className="fas fa-circle-info text-teal me-1" style={{ color: "#0d9488" }}></i>
-                                        <span>
-                                            {course?.target_audience === 'umum'
-                                                ? "Tidak ada prasyarat khusus. Kursus ini terbuka dan dapat diikuti langsung oleh masyarakat umum maupun aparatur sipil."
-                                                : "Tidak ada prasyarat khusus. Kursus ini dapat diikuti langsung oleh seluruh pegawai dan aparatur di lingkungan Setjen DPD RI."}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* 5. Instructor Quick Spotlight */}
-                        {course?.teacher && (
-                            <div className="card border-0 shadow-xs rounded-3 bg-white overflow-hidden">
-                                <div className="card-body p-3 p-md-4">
-                                    <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                                        <div className="d-flex align-items-center gap-2">
-                                            <div
-                                                className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
-                                                style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" }}
-                                            >
-                                                <i className="fas fa-chalkboard-user" style={{ fontSize: "0.8rem" }}></i>
-                                            </div>
-                                            <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
-                                                Instruktur
-                                            </h5>
-                                        </div>
-                                        <button
-                                            onClick={() => setActiveTab("instructor")}
-                                            className="btn btn-sm btn-link text-teal text-decoration-none fw-semibold p-0 d-flex align-items-center gap-1"
-                                            style={{ color: "#0d9488", fontSize: "0.82rem" }}
-                                        >
-                                            Profil Lengkap <i className="fas fa-arrow-right" style={{ fontSize: "0.72rem" }}></i>
-                                        </button>
-                                    </div>
-
-                                    <div className="d-flex align-items-center gap-2">
-                                        <img
-                                            src={getImageUrl(course.teacher?.image) || '/images/placeholders/default-instructor.svg'}
-                                            alt={course.teacher?.full_name}
-                                            className="rounded-circle border shadow-xs flex-shrink-0"
-                                            style={{ width: "52px", height: "52px", objectFit: "cover" }}
-                                            onError={(e) => { e.target.src = '/images/placeholders/default-instructor.svg'; }}
-                                        />
-                                        <div className="flex-grow-1 min-w-0">
-                                            <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
-                                                <h6 className="mb-0 fw-bold text-dark text-truncate" style={{ fontSize: "0.94rem" }}>{course.teacher?.full_name}</h6>
-                                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-0 px-2 rounded-pill" style={{ fontSize: "0.7rem" }}>
-                                                    <i className="fas fa-check-circle me-1"></i>Instruktur Resmi
-                                                </span>
-                                            </div>
-                                            <p className="text-muted small mb-2 text-truncate" style={{ fontSize: "0.8rem" }}>
-                                                {course.teacher?.about || course.teacher?.bio || "Instruktur Profesional di Lingkungan Setjen DPD RI"}
-                                            </p>
-                                            <div className="d-flex align-items-center gap-2 small text-secondary" style={{ fontSize: "0.78rem" }}>
-                                                <span><i className="fas fa-star text-warning me-1"></i>{(course.teacher?.average_rating || 5.0).toFixed(1)} Rating</span>
-                                                <span><i className="fas fa-users text-teal me-1" style={{ color: "#0d9488" }}></i>{course.teacher?.total_students || 0} Peserta</span>
-                                                <span><i className="fas fa-book text-muted me-1"></i>{course.teacher?.total_courses || 1} Kursus</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 );
             case "curriculum": {
@@ -870,6 +816,7 @@ function CourseDetail() {
                                 isInWishlist={isInWishlist}
                                 isLoadingWishlist={isLoadingWishlist}
                                 onWishlistToggle={handleWishlist}
+                                setActiveTab={setActiveTab}
                             />
                         </div>
                     </div>

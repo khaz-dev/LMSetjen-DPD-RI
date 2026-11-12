@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Toast, { DeleteConfirmation } from "../plugin/Toast";
 import apiInstance from "../../utils/axios";
@@ -303,6 +303,84 @@ function SortableQuestionCard({
     );
 }
 
+/**
+ * Standard RFC 4180 compliant CSV parser with quote escaping support,
+ * multi-line field support, and auto delimiter detection (comma, semicolon, tab).
+ */
+function parseCSV(text) {
+    if (!text || typeof text !== "string") return [];
+
+    // Strip UTF-8 BOM if present
+    let cleanText = text.replace(/^\uFEFF/, "");
+
+    // Detect delimiter from first line (common in Excel ID/EN: comma or semicolon)
+    const firstLine = cleanText.split(/\r\n|\n|\r/)[0] || "";
+    let delimiter = ",";
+    const commaCount = (firstLine.match(/,/g) || []).length;
+    const semicolonCount = (firstLine.match(/;/g) || []).length;
+    const tabCount = (firstLine.match(/\t/g) || []).length;
+
+    if (semicolonCount > commaCount && semicolonCount > tabCount) {
+        delimiter = ";";
+    } else if (tabCount > commaCount && tabCount > semicolonCount) {
+        delimiter = "\t";
+    }
+
+    const rows = [];
+    let currentRow = [];
+    let currentCell = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < cleanText.length; i++) {
+        const char = cleanText[i];
+        const nextChar = cleanText[i + 1];
+
+        if (inQuotes) {
+            if (char === '"' && nextChar === '"') {
+                currentCell += '"';
+                i++; // Skip escaped quote
+            } else if (char === '"') {
+                inQuotes = false;
+            } else {
+                currentCell += char;
+            }
+        } else {
+            if (char === '"') {
+                inQuotes = true;
+            } else if (char === delimiter) {
+                currentRow.push(currentCell.trim());
+                currentCell = "";
+            } else if (char === "\r" && nextChar === "\n") {
+                currentRow.push(currentCell.trim());
+                if (currentRow.some(c => c !== "")) {
+                    rows.push(currentRow);
+                }
+                currentRow = [];
+                currentCell = "";
+                i++; // Skip \n
+            } else if (char === "\n" || char === "\r") {
+                currentRow.push(currentCell.trim());
+                if (currentRow.some(c => c !== "")) {
+                    rows.push(currentRow);
+                }
+                currentRow = [];
+                currentCell = "";
+            } else {
+                currentCell += char;
+            }
+        }
+    }
+
+    if (currentCell !== "" || currentRow.length > 0) {
+        currentRow.push(currentCell.trim());
+        if (currentRow.some(c => c !== "")) {
+            rows.push(currentRow);
+        }
+    }
+
+    return rows;
+}
+
 function CourseQuiz() {
     const { course_id } = useParams();
     const navigate = useNavigate()
@@ -346,6 +424,19 @@ function CourseQuiz() {
     const [questionsAdded, setQuestionsAdded] = useState(0); // Track questions added in current session
     const [isContinuousAdd, setIsContinuousAdd] = useState(false); // Track if user wants to keep adding
     const [isReordering, setIsReordering] = useState(false); // Track if drag/reordering is in progress
+
+    // Import & Export States
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [importTargetQuizId, setImportTargetQuizId] = useState("");
+    const [importNewQuizTitle, setImportNewQuizTitle] = useState("");
+    const [importNewQuizType, setImportNewQuizType] = useState("quiz");
+    const [importFile, setImportFile] = useState(null);
+    const [parsedQuestions, setParsedQuestions] = useState([]);
+    const [isImporting, setIsImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState({ current: 0, total: 0, percent: 0 });
+    const [importError, setImportError] = useState("");
+    const [isDragOver, setIsDragOver] = useState(false);
+    const fileInputRef = useRef(null);
 
     // Configure drag sensors for @dnd-kit
     const sensors = useSensors(
@@ -838,6 +929,480 @@ function CourseQuiz() {
         setQuestionsAdded(0);
     };
 
+    // ==========================================
+    // Import & Export Quiz / Questions Handlers
+    // ==========================================
+    const resetImportState = () => {
+        setImportFile(null);
+        setParsedQuestions([]);
+        setImportProgress({ current: 0, total: 0, percent: 0 });
+        setImportError("");
+        setImportNewQuizTitle("");
+        setImportNewQuizType("quiz");
+        setIsDragOver(false);
+    };
+
+    const handleOpenImportModal = (preselectedQuizId = "") => {
+        resetImportState();
+        if (preselectedQuizId) {
+            setImportTargetQuizId(preselectedQuizId);
+        } else if (currentQuiz) {
+            setImportTargetQuizId(currentQuiz.quiz_id);
+        } else if (quizzes.length > 0) {
+            setImportTargetQuizId(quizzes[0].quiz_id);
+        } else {
+            setImportTargetQuizId("new");
+        }
+        setShowImportModal(true);
+    };
+
+    const handleExportTemplate = () => {
+        const csvContent =
+`No,Pertanyaan,Pilihan A,Pilihan B,Pilihan C,Pilihan D,Pilihan E,Kunci Jawaban
+1,"Apa tugas dan wewenang utama dari Dewan Perwakilan Daerah (DPD) RI menurut UUD 1945?","Mengajukan RUU terkait otonomi daerah dan hubungan pusat dengan daerah","Menetapkan Anggaran Pendapatan dan Belanja Negara (APBN) secara mandiri","Mengangkat dan memberhentikan para menteri kabinet pemerintahan","Memeriksa pertanggungjawaban pengelolaan keuangan negara","Mengadili perkara perselisihan sengketa hasil pemilihan umum","A"
+2,"Berapa jumlah anggota DPD RI dari setiap provinsi berdasarkan ketentuan konstitusi?","2 orang","3 orang","4 orang","5 orang","6 orang","C"
+3,"Kapan Dewan Perwakilan Daerah (DPD) RI resmi dibentuk dalam sistem ketatanegaraan Indonesia?","17 Agustus 1945","1 Oktober 2004","21 Mei 1998","5 Juli 1959","10 November 2001","B"
+4,"Manakah yang BUKAN merupakan wewenang DPD RI terkait fungsi pengawasan?","Pengawasan pelaksanaan undang-undang mengenai otonomi daerah","Pengawasan pembentukan dan pemekaran daerah","Pengawasan pelaksanaan anggaran pendapatan dan belanja negara","Pengawasan pelaksanaan pengelolaan sumber daya alam","Mengubah dan menetapkan Undang-Undang Dasar secara mandiri","E"
+5,"Sidang paripurna DPD RI diselenggarakan sekurang-kurangnya berapa kali dalam kurun satu tahun?","1 kali","2 kali","3 kali","4 kali","Sesuai kesepakatan seluruh anggota fraksi","A"`;
+
+        const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "Template_Import_Kuis_LMSetjenDPDRI.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        Toast().fire({
+            icon: "success",
+            title: "Template kuis berhasil diunduh (Format CSV/Excel)"
+        });
+    };
+
+    const handleExportQuizQuestions = async (targetQuiz) => {
+        if (!targetQuiz) return;
+        try {
+            let questionsToExport = [];
+            if (currentQuiz?.quiz_id === targetQuiz.quiz_id && questions.length > 0) {
+                questionsToExport = questions;
+            } else {
+                const res = await apiInstance.get(`quiz/question/list-create/?quiz_id=${targetQuiz.quiz_id}`);
+                questionsToExport = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+            }
+
+            if (questionsToExport.length === 0) {
+                Toast().fire({
+                    icon: "warning",
+                    title: "Kuis ini belum memiliki soal untuk diexport"
+                });
+                return;
+            }
+
+            const rows = [
+                ["No", "Pertanyaan", "Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D", "Pilihan E", "Kunci Jawaban"]
+            ];
+
+            questionsToExport.forEach((q, idx) => {
+                const choices = q.choices || [];
+                const choiceA = choices[0]?.choice_text || "";
+                const choiceB = choices[1]?.choice_text || "";
+                const choiceC = choices[2]?.choice_text || "";
+                const choiceD = choices[3]?.choice_text || "";
+                const choiceE = choices[4]?.choice_text || "";
+
+                let keyLetter = "A";
+                const correctIndex = choices.findIndex(c => c.is_correct);
+                if (correctIndex !== -1) {
+                    keyLetter = String.fromCharCode(65 + correctIndex);
+                }
+
+                rows.push([
+                    idx + 1,
+                    `"${(q.question_text || "").replace(/"/g, '""')}"`,
+                    `"${choiceA.replace(/"/g, '""')}"`,
+                    `"${choiceB.replace(/"/g, '""')}"`,
+                    `"${choiceC.replace(/"/g, '""')}"`,
+                    `"${choiceD.replace(/"/g, '""')}"`,
+                    choiceE ? `"${choiceE.replace(/"/g, '""')}"` : '""',
+                    `"${keyLetter}"`
+                ]);
+            });
+
+            const csvContent = rows.map(r => r.join(",")).join("\r\n");
+            const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const cleanTitle = (targetQuiz.title || "Kuis").replace(/[^a-zA-Z0-9_-]/g, "_");
+            link.href = url;
+            link.download = `Export_Soal_${cleanTitle}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            Toast().fire({
+                icon: "success",
+                title: `Berhasil mengexport ${questionsToExport.length} soal kuis!`
+            });
+        } catch (err) {
+            console.error("Export error:", err);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal mengexport soal kuis"
+            });
+        }
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        processSelectedFile(file);
+    };
+
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(true);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = "copy";
+        if (!isDragOver) {
+            setIsDragOver(true);
+        }
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.currentTarget && !e.currentTarget.contains(e.relatedTarget)) {
+            setIsDragOver(false);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+
+        const droppedFiles = e.dataTransfer?.files;
+        if (droppedFiles && droppedFiles.length > 0) {
+            processSelectedFile(droppedFiles[0]);
+        } else if (e.dataTransfer?.items && e.dataTransfer.items.length > 0) {
+            const item = e.dataTransfer.items[0];
+            if (item.kind === "file") {
+                const file = item.getAsFile();
+                if (file) {
+                    processSelectedFile(file);
+                }
+            }
+        }
+    };
+
+    const processSelectedFile = (file) => {
+        if (!file) return;
+        setImportFile(file);
+        setImportError("");
+        setParsedQuestions([]);
+
+        if (file.size > 5 * 1024 * 1024) {
+            setImportError("Ukuran file melebihi batas maksimal 5MB.");
+            return;
+        }
+
+        const fileName = (file.name || "").toLowerCase();
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const content = event.target.result;
+                if (fileName.endsWith(".json")) {
+                    parseJSONContent(content);
+                } else {
+                    parseCSVContent(content);
+                }
+            } catch (err) {
+                console.error("Error reading file:", err);
+                setImportError("Gagal membaca file: " + err.message);
+            }
+        };
+        reader.onerror = () => {
+            setImportError("Gagal membaca file dari sistem lokal Anda.");
+        };
+        reader.readAsText(file, "UTF-8");
+    };
+
+    const parseCSVContent = (content) => {
+        const rows = parseCSV(content);
+        if (!rows || rows.length < 2) {
+            setImportError("File CSV kosong atau tidak memiliki baris data soal.");
+            return;
+        }
+
+        const headers = rows[0].map(h => (h || "").toLowerCase().trim());
+        let questionIdx = -1;
+        let choiceAIdx = -1;
+        let choiceBIdx = -1;
+        let choiceCIdx = -1;
+        let choiceDIdx = -1;
+        let choiceEIdx = -1;
+        let keyIdx = -1;
+
+        headers.forEach((h, idx) => {
+            if (h.includes("pertanyaan") || h.includes("soal") || h.includes("question") || h.includes("tanya")) {
+                questionIdx = idx;
+            } else if (h.includes("kunci") || h.includes("jawaban benar") || h.includes("key") || h.includes("correct") || h.includes("answer")) {
+                keyIdx = idx;
+            } else if (h.includes("pilihan a") || h.includes("opsi a") || h.includes("option a") || h === "a") {
+                choiceAIdx = idx;
+            } else if (h.includes("pilihan b") || h.includes("opsi b") || h.includes("option b") || h === "b") {
+                choiceBIdx = idx;
+            } else if (h.includes("pilihan c") || h.includes("opsi c") || h.includes("option c") || h === "c") {
+                choiceCIdx = idx;
+            } else if (h.includes("pilihan d") || h.includes("opsi d") || h.includes("option d") || h === "d") {
+                choiceDIdx = idx;
+            } else if (h.includes("pilihan e") || h.includes("opsi e") || h.includes("option e") || h === "e") {
+                choiceEIdx = idx;
+            }
+        });
+
+        // Fallback column indexing
+        if (questionIdx === -1) {
+            if (rows[0].length >= 8) {
+                questionIdx = 1; choiceAIdx = 2; choiceBIdx = 3; choiceCIdx = 4; choiceDIdx = 5; choiceEIdx = 6; keyIdx = 7;
+            } else if (rows[0].length === 7) {
+                questionIdx = 1; choiceAIdx = 2; choiceBIdx = 3; choiceCIdx = 4; choiceDIdx = 5; keyIdx = 6;
+            } else if (rows[0].length >= 6) {
+                questionIdx = 0; choiceAIdx = 1; choiceBIdx = 2; choiceCIdx = 3; choiceDIdx = 4; keyIdx = 5;
+            } else {
+                setImportError("Format kolom CSV tidak dikenali. Pastikan terdapat kolom Pertanyaan, Pilihan A-D/E, dan Kunci Jawaban.");
+                return;
+            }
+        }
+
+        if (keyIdx === -1 && rows[0].length > 0) {
+            keyIdx = rows[0].length - 1;
+        }
+
+        const dataRows = rows.slice(1);
+        const parsed = [];
+
+        dataRows.forEach((row, rowIdx) => {
+            if (!row || row.length === 0 || row.every(cell => !cell.trim())) return;
+
+            const qText = (row[questionIdx] || "").trim();
+            const rawKey = (row[keyIdx] || "").trim().toUpperCase();
+
+            let keyLetter = "";
+            if (rawKey.includes("A") || rawKey === "1") keyLetter = "A";
+            else if (rawKey.includes("B") || rawKey === "2") keyLetter = "B";
+            else if (rawKey.includes("C") || rawKey === "3") keyLetter = "C";
+            else if (rawKey.includes("D") || rawKey === "4") keyLetter = "D";
+            else if (rawKey.includes("E") || rawKey === "5") keyLetter = "E";
+
+            const rawChoices = [
+                { letter: "A", text: (row[choiceAIdx] || "").trim() },
+                { letter: "B", text: (row[choiceBIdx] || "").trim() },
+                { letter: "C", text: (row[choiceCIdx] || "").trim() },
+                { letter: "D", text: (row[choiceDIdx] || "").trim() },
+                ...(choiceEIdx !== -1 && row[choiceEIdx] ? [{ letter: "E", text: (row[choiceEIdx] || "").trim() }] : [])
+            ];
+
+            const validChoices = rawChoices
+                .filter(c => c.text !== "")
+                .map(c => ({
+                    choice_text: c.text,
+                    letter: c.letter,
+                    is_correct: c.letter === keyLetter
+                }));
+
+            let isValid = true;
+            let errorMsg = "";
+
+            if (!qText) {
+                isValid = false;
+                errorMsg = "Teks pertanyaan kosong";
+            } else if (validChoices.length < 2) {
+                isValid = false;
+                errorMsg = "Pilihan jawaban kurang dari 2";
+            } else if (!validChoices.some(c => c.is_correct)) {
+                isValid = false;
+                errorMsg = `Kunci jawaban '${rawKey || "-"}' tidak cocok dengan pilihan jawaban`;
+            }
+
+            parsed.push({
+                rowNumber: rowIdx + 1,
+                question_text: qText,
+                choices: validChoices,
+                rawKey: rawKey || "-",
+                isValid,
+                errorMsg
+            });
+        });
+
+        if (parsed.length === 0) {
+            setImportError("Tidak ada baris pertanyaan yang valid di dalam file CSV.");
+        } else {
+            setParsedQuestions(parsed);
+        }
+    };
+
+    const parseJSONContent = (content) => {
+        let data;
+        try {
+            data = JSON.parse(content);
+        } catch {
+            setImportError("File JSON tidak valid atau struktur sintaks salah.");
+            return;
+        }
+
+        const items = Array.isArray(data) ? data : (data.questions || []);
+        if (!items || items.length === 0) {
+            setImportError("Tidak ada daftar soal di dalam file JSON.");
+            return;
+        }
+
+        const parsed = items.map((item, idx) => {
+            const qText = (item.question_text || item.pertanyaan || item.question || "").trim();
+            let choices = [];
+
+            if (Array.isArray(item.choices)) {
+                choices = item.choices.map((c, cIdx) => ({
+                    choice_text: (c.choice_text || c.text || "").trim(),
+                    letter: String.fromCharCode(65 + cIdx),
+                    is_correct: Boolean(c.is_correct)
+                }));
+            } else {
+                const rawKey = (item.kunci || item.correct_answer || item.answer || item.key || "").trim().toUpperCase();
+                ["A", "B", "C", "D", "E"].forEach((letter) => {
+                    const text = (item[`pilihan_${letter.toLowerCase()}`] || item[`opsi_${letter.toLowerCase()}`] || item[`choice_${letter.toLowerCase()}`] || item[letter] || item[letter.toLowerCase()] || "").trim();
+                    if (text) {
+                        choices.push({
+                            choice_text: text,
+                            letter,
+                            is_correct: rawKey.includes(letter)
+                        });
+                    }
+                });
+            }
+
+            const validChoices = choices.filter(c => c.choice_text);
+            let isValid = true;
+            let errorMsg = "";
+
+            if (!qText) {
+                isValid = false;
+                errorMsg = "Teks pertanyaan kosong";
+            } else if (validChoices.length < 2) {
+                isValid = false;
+                errorMsg = "Pilihan jawaban kurang dari 2";
+            } else if (!validChoices.some(c => c.is_correct)) {
+                isValid = false;
+                errorMsg = "Belum ada pilihan yang ditandai sebagai kunci jawaban";
+            }
+
+            return {
+                rowNumber: idx + 1,
+                question_text: qText,
+                choices: validChoices,
+                rawKey: validChoices.find(c => c.is_correct)?.letter || "-",
+                isValid,
+                errorMsg
+            };
+        });
+
+        setParsedQuestions(parsed);
+    };
+
+    const handleExecuteImport = async () => {
+        const validQuestions = parsedQuestions.filter(q => q.isValid);
+        if (validQuestions.length === 0) {
+            Toast().fire({
+                icon: "error",
+                title: "Tidak ada soal valid untuk diimpor"
+            });
+            return;
+        }
+
+        try {
+            setIsImporting(true);
+            setImportProgress({ current: 0, total: validQuestions.length, percent: 0 });
+
+            let targetQuizId = importTargetQuizId;
+
+            // If target is "new", create quiz first
+            if (targetQuizId === "new") {
+                const quizTitle = importNewQuizTitle.trim() || `Kuis Hasil Import (${new Date().toLocaleDateString("id-ID")})`;
+                const newQuizData = {
+                    title: quizTitle,
+                    description: `Kuis diimpor dari file ${importFile?.name || "eksternal"}`,
+                    quiz_type: importNewQuizType,
+                    presentation_mode: "ordered",
+                    is_active: true,
+                    course_id: course_id
+                };
+                const quizRes = await apiInstance.post("quiz/list-create/", newQuizData);
+                targetQuizId = quizRes.data.quiz_id;
+            }
+
+            // Create each valid question & choices
+            for (let i = 0; i < validQuestions.length; i++) {
+                const q = validQuestions[i];
+
+                // 1. Create question
+                const qRes = await apiInstance.post("quiz/question/list-create/", {
+                    question_text: q.question_text,
+                    quiz_id: targetQuizId
+                });
+                const createdQuestion = qRes.data;
+
+                // 2. Create choices
+                for (let cIdx = 0; cIdx < q.choices.length; cIdx++) {
+                    const choice = q.choices[cIdx];
+                    await apiInstance.post("quiz/choice/list-create/", {
+                        question_id: createdQuestion.question_id,
+                        choice_text: choice.choice_text,
+                        is_correct: choice.is_correct,
+                        order: cIdx + 1
+                    });
+                }
+
+                // Update progress
+                const current = i + 1;
+                const percent = Math.round((current / validQuestions.length) * 100);
+                setImportProgress({ current, total: validQuestions.length, percent });
+            }
+
+            Toast().fire({
+                icon: "success",
+                title: `Berhasil mengimpor ${validQuestions.length} soal kuis!`
+            });
+
+            // Refresh data
+            await fetchQuizzes();
+            await fetchCourseData();
+            if (targetQuizId) {
+                await fetchQuestions(targetQuizId);
+                const updatedQuiz = quizzes.find(q => q.quiz_id === targetQuizId);
+                if (updatedQuiz) setCurrentQuiz(updatedQuiz);
+            }
+
+            setShowImportModal(false);
+            resetImportState();
+        } catch (err) {
+            console.error("Import execution failed:", err);
+            Toast().fire({
+                icon: "error",
+                title: "Terjadi kesalahan saat mengimpor soal: " + (err.response?.data?.message || err.message)
+            });
+        } finally {
+            setIsImporting(false);
+        }
+    };
+
     // Show full-page loading spinner on initial load
     if (loading && !course) {
         return (
@@ -903,59 +1468,84 @@ function CourseQuiz() {
                                             Kelola evaluasi materi, kuis kompetensi, dan instrumen asesmen pembelajaran.
                                         </p>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2 flex-wrap flex-shrink-0">
-                                        <Link
-                                            to={`/instructor/edit-course/${param?.course_id}/`}
-                                            className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2"
-                                            title="Kembali ke Pengaturan Dasar Kursus"
-                                        >
-                                            <i className="fas fa-arrow-left"></i>
-                                            <span>Detail Kursus</span>
-                                        </Link>
-                                        <Link
-                                            to={`/instructor/edit-course/${param?.course_id}/curriculum/`}
-                                            className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-2"
-                                            title="Kelola Kurikulum Kursus"
-                                        >
-                                            <i className="fas fa-list"></i>
-                                            <span>Kurikulum</span>
-                                        </Link>
-                                        <Link
-                                            to={`/instructor/edit-course/${param?.course_id}/gamification/`}
-                                            className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-2"
-                                            title="Kelola Gamifikasi Kursus"
-                                        >
-                                            <i className="fas fa-gamepad"></i>
-                                            <span>Gamifikasi</span>
-                                        </Link>
-                                        <Link
-                                            to={`/instructor/preview-course/${param?.course_id}/`}
-                                            target="_blank"
-                                            className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-2"
-                                            title="Pratinjau Kursus"
-                                        >
-                                            <i className="fas fa-eye"></i>
-                                            <span>Pratinjau</span>
-                                        </Link>
-                                        {activeTab === "overview" ? (
+                                    <div className="d-flex flex-column align-items-md-end gap-2 flex-shrink-0">
+                                        {/* Baris Atas: Tombol Navigasi Kursus */}
+                                        <div className="d-flex align-items-center gap-2 flex-wrap justify-content-md-end">
+                                            <Link
+                                                to={`/instructor/edit-course/${param?.course_id}/`}
+                                                className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2"
+                                                title="Kembali ke Pengaturan Dasar Kursus"
+                                            >
+                                                <i className="fas fa-arrow-left"></i>
+                                                <span>Detail Kursus</span>
+                                            </Link>
+                                            <Link
+                                                to={`/instructor/edit-course/${param?.course_id}/curriculum/`}
+                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-2"
+                                                title="Kelola Kurikulum Kursus"
+                                            >
+                                                <i className="fas fa-list"></i>
+                                                <span>Kurikulum</span>
+                                            </Link>
+                                            <Link
+                                                to={`/instructor/edit-course/${param?.course_id}/gamification/`}
+                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-2"
+                                                title="Kelola Gamifikasi Kursus"
+                                            >
+                                                <i className="fas fa-gamepad"></i>
+                                                <span>Gamifikasi</span>
+                                            </Link>
+                                            <Link
+                                                to={`/instructor/preview-course/${param?.course_id}/`}
+                                                target="_blank"
+                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-2"
+                                                title="Pratinjau Kursus"
+                                            >
+                                                <i className="fas fa-eye"></i>
+                                                <span>Pratinjau</span>
+                                            </Link>
+                                        </div>
+
+                                        {/* Baris Bawah: Action Buttons Kuis (Stick di Kanan) */}
+                                        <div className="d-flex align-items-center gap-2 flex-wrap justify-content-md-end">
                                             <button
                                                 type="button"
-                                                className="btn btn-update-course btn-sm d-inline-flex align-items-center gap-2"
-                                                onClick={() => setShowQuizModal(true)}
+                                                className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1.5"
+                                                onClick={handleExportTemplate}
+                                                title="Unduh format template CSV untuk pengisian kuis & soal"
                                             >
-                                                <i className="fas fa-plus"></i>
-                                                <span>Tambah Kuis Baru</span>
+                                                <i className="fas fa-download"></i>
+                                                <span>Template CSV</span>
                                             </button>
-                                        ) : (
                                             <button
                                                 type="button"
-                                                className="btn btn-update-course btn-sm d-inline-flex align-items-center gap-2"
-                                                onClick={handleOpenAddQuestion}
+                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-1.5"
+                                                onClick={() => handleOpenImportModal()}
+                                                title="Import Soal Kuis dari File CSV atau JSON"
                                             >
-                                                <i className="fas fa-plus"></i>
-                                                <span>Tambah Soal</span>
+                                                <i className="fas fa-file-import"></i>
+                                                <span>Import Kuis</span>
                                             </button>
-                                        )}
+                                            {activeTab === "overview" ? (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-update-course btn-sm d-inline-flex align-items-center gap-2"
+                                                    onClick={() => setShowQuizModal(true)}
+                                                >
+                                                    <i className="fas fa-plus"></i>
+                                                    <span>Tambah Kuis Baru</span>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-update-course btn-sm d-inline-flex align-items-center gap-2"
+                                                    onClick={handleOpenAddQuestion}
+                                                >
+                                                    <i className="fas fa-plus"></i>
+                                                    <span>Tambah Soal</span>
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1073,6 +1663,26 @@ function CourseQuiz() {
                                                 <i className="fas fa-arrow-left"></i>
                                                 <span>Kembali ke Daftar Kuis</span>
                                             </button>
+                                            {questions.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1.5"
+                                                    onClick={() => handleExportQuizQuestions(currentQuiz)}
+                                                    title="Export seluruh soal kuis ini ke file CSV"
+                                                >
+                                                    <i className="fas fa-file-export text-teal"></i>
+                                                    <span>Export Soal</span>
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-1.5"
+                                                onClick={() => handleOpenImportModal(currentQuiz?.quiz_id)}
+                                                title="Import soal langsung ke kuis ini"
+                                            >
+                                                <i className="fas fa-file-import"></i>
+                                                <span>Import Soal</span>
+                                            </button>
                                             <span className="badge bg-light text-dark border px-2.5 py-1.5 fw-semibold small">
                                                 <i className="fas fa-question-circle text-teal me-1"></i>
                                                 {questions.length} Soal
@@ -1091,15 +1701,31 @@ function CourseQuiz() {
                                             <div className="quiz-empty-card text-center py-5">
                                                 <div className="empty-state">
                                                     <i className="fas fa-question-circle empty-icon"></i>
-                                                    <h4>No Quizzes Yet</h4>
-                                                    <p className="text-muted">Create your first quiz to get started</p>
-                                                    <button
-                                                        className="btn btn-update-course"
-                                                        onClick={() => setShowQuizModal(true)}
-                                                    >
-                                                        <i className="fas fa-plus me-2"></i>
-                                                        Create Your First Quiz
-                                                    </button>
+                                                    <h4>Belum Ada Kuis</h4>
+                                                    <p className="text-muted">Buat kuis pertama Anda atau import langsung dari file soal</p>
+                                                    <div className="d-flex justify-content-center gap-2 flex-wrap mt-3">
+                                                        <button
+                                                            className="btn btn-update-course"
+                                                            onClick={() => setShowQuizModal(true)}
+                                                        >
+                                                            <i className="fas fa-plus me-2"></i>
+                                                            Buat Kuis Baru
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-outline-teal btn-sm"
+                                                            onClick={() => handleOpenImportModal()}
+                                                        >
+                                                            <i className="fas fa-file-import me-1"></i>
+                                                            Import Kuis
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-outline-secondary btn-sm"
+                                                            onClick={handleExportTemplate}
+                                                        >
+                                                            <i className="fas fa-download me-1"></i>
+                                                            Unduh Template CSV
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ) : quizzes.filter(quiz => quizTypeFilter === "all" || (quiz.quiz_type || "quiz") === quizTypeFilter).length === 0 ? (
@@ -1122,11 +1748,17 @@ function CourseQuiz() {
                                                 .map((quiz) => (
                                                 <div key={quiz.quiz_id} className="quiz-card">
                                                     <div className="quiz-card-header">
+                                                        <div className="quiz-status">
+                                                            <span className={`status-badge ${quiz.is_active ? "active" : "inactive"}`}>
+                                                                <i className={`fas ${quiz.is_active ? "fa-check-circle" : "fa-pause-circle"}`}></i>
+                                                                {quiz.is_active ? "Aktif" : "Tidak Aktif"}
+                                                            </span>
+                                                        </div>
                                                         <div className="quiz-actions mb-0 pb-0">
                                                             <button
                                                                 className="btn-icon"
                                                                 onClick={() => handleEditQuiz(quiz)}
-                                                                title="Edit Quiz"
+                                                                title="Edit Kuis"
                                                             >
                                                                 <i className="fas fa-edit"></i>
                                                             </button>
@@ -1137,12 +1769,6 @@ function CourseQuiz() {
                                                             >
                                                                 <i className="fas fa-trash"></i>
                                                             </button>
-                                                        </div>
-                                                        <div className="quiz-status">
-                                                            <span className={`status-badge ${quiz.is_active ? "active" : "inactive"}`}>
-                                                                <i className={`fas ${quiz.is_active ? "fa-check-circle" : "fa-pause-circle"}`}></i>
-                                                                {quiz.is_active ? "Aktif" : "Tidak Aktif"}
-                                                            </span>
                                                         </div>
                                                     </div>
                                                     <div className="quiz-card-body mb-0">
@@ -1174,13 +1800,29 @@ function CourseQuiz() {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="quiz-card-footer">
+                                                    <div className="quiz-card-footer d-flex align-items-center gap-1.5">
                                                         <button
-                                                            className="btn btn-primary btn-sm w-100 d-inline-flex align-items-center justify-content-center gap-2"
+                                                            className="btn btn-primary btn-sm flex-grow-1 d-inline-flex align-items-center justify-content-center gap-1.5"
                                                             onClick={() => selectQuiz(quiz)}
                                                         >
                                                             <i className="fas fa-cog"></i>
                                                             <span>Kelola Pertanyaan</span>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-icon"
+                                                            onClick={() => handleExportQuizQuestions(quiz)}
+                                                            title="Export Soal Kuis (CSV)"
+                                                        >
+                                                            <i className="fas fa-file-export text-teal"></i>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-icon"
+                                                            onClick={() => handleOpenImportModal(quiz.quiz_id)}
+                                                            title="Import Soal ke Kuis Ini"
+                                                        >
+                                                            <i className="fas fa-file-import"></i>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1242,14 +1884,30 @@ function CourseQuiz() {
                                                 <div className="empty-state">
                                                     <i className="fas fa-question empty-icon"></i>
                                                     <h4>Belum Ada Pertanyaan</h4>
-                                                    <p className="text-muted">Tambahkan pertanyaan pertama Anda ke kuis ini secara langsung</p>
-                                                    <button
-                                                        className="btn btn-update-course"
-                                                        onClick={handleOpenAddQuestion}
-                                                    >
-                                                        <i className="fas fa-plus me-2"></i>
-                                                        Tambah Pertanyaan Pertama
-                                                    </button>
+                                                    <p className="text-muted">Tambahkan pertanyaan secara manual atau import dari file CSV/JSON</p>
+                                                    <div className="d-flex justify-content-center gap-2 flex-wrap mt-3">
+                                                        <button
+                                                            className="btn btn-update-course"
+                                                            onClick={handleOpenAddQuestion}
+                                                        >
+                                                            <i className="fas fa-plus me-2"></i>
+                                                            Tambah Pertanyaan
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-outline-teal btn-sm"
+                                                            onClick={() => handleOpenImportModal(currentQuiz?.quiz_id)}
+                                                        >
+                                                            <i className="fas fa-file-import me-1"></i>
+                                                            Import Soal
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-outline-secondary btn-sm"
+                                                            onClick={handleExportTemplate}
+                                                        >
+                                                            <i className="fas fa-download me-1"></i>
+                                                            Unduh Template CSV
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ) : (
@@ -1612,6 +2270,283 @@ function CourseQuiz() {
                                                 </button>
                                             </div>
                                         </form>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Import Modal */}
+                            {showImportModal && (
+                                <div className="quiz-modal-overlay">
+                                    <div className="quiz-modal quiz-modal-large">
+                                        <div className="modal-header">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <div className="quiz-modal-icon-badge">
+                                                    <i className="fas fa-file-import"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 className="quiz-modal-title mb-0">Import Soal Kuis</h4>
+                                                    <span className="quiz-modal-subtitle">Unggah file CSV atau JSON untuk menambahkan soal sekaligus</span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                className="btn-close"
+                                                onClick={() => {
+                                                    if (!isImporting) {
+                                                        setShowImportModal(false);
+                                                        resetImportState();
+                                                    }
+                                                }}
+                                                disabled={isImporting}
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        </div>
+
+                                        <div className="modal-body">
+                                            {/* Quick Guide & Download Template Banner */}
+                                            <div className="quiz-import-guide-banner mb-3">
+                                                <div className="d-flex align-items-center justify-content-between gap-3">
+                                                    <div className="d-flex align-items-center gap-2.5 flex-grow-1">
+                                                        <i className="fas fa-lightbulb text-warning fs-5 flex-shrink-0"></i>
+                                                        <span className="small text-secondary mb-0">
+                                                            Format file: <strong>CSV (.csv)</strong> atau <strong>JSON (.json)</strong>. Kolom: Pertanyaan, Pilihan A-E, Kunci Jawaban.
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1.5 flex-shrink-0 text-nowrap ms-auto"
+                                                        onClick={handleExportTemplate}
+                                                        title="Download file contoh CSV yang siap diisi"
+                                                    >
+                                                        <i className="fas fa-download"></i>
+                                                        <span>Unduh Template CSV</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Target Quiz Selection */}
+                                            <div className="quiz-import-target-card mb-3 p-3 rounded">
+                                                <label className="form-label quiz-compact-label fw-bold mb-1.5">
+                                                    <i className="fas fa-bullseye text-teal me-1"></i> Target Kuis Tujuan:
+                                                </label>
+                                                <div className="row g-2 align-items-center">
+                                                    <div className="col-12 col-md-5">
+                                                        <select
+                                                            className="form-select form-select-sm quiz-compact-select"
+                                                            value={importTargetQuizId}
+                                                            onChange={(e) => setImportTargetQuizId(e.target.value)}
+                                                            disabled={isImporting}
+                                                        >
+                                                            <option value="new">+ Buat Kuis Baru dari File</option>
+                                                            {quizzes.length > 0 && (
+                                                                <optgroup label="Pilih Kuis yang Sudah Ada">
+                                                                    {quizzes.map((q) => (
+                                                                        <option key={q.quiz_id} value={q.quiz_id}>
+                                                                            {q.title} ({q.total_questions || 0} Soal)
+                                                                        </option>
+                                                                    ))}
+                                                                </optgroup>
+                                                            )}
+                                                        </select>
+                                                    </div>
+                                                    {importTargetQuizId === "new" && (
+                                                        <>
+                                                            <div className="col-12 col-md-4">
+                                                                <input
+                                                                    type="text"
+                                                                    className="form-control form-control-sm quiz-compact-input-standalone"
+                                                                    placeholder="Judul Kuis Baru..."
+                                                                    value={importNewQuizTitle}
+                                                                    onChange={(e) => setImportNewQuizTitle(e.target.value)}
+                                                                    disabled={isImporting}
+                                                                />
+                                                            </div>
+                                                            <div className="col-12 col-md-3">
+                                                                <select
+                                                                    className="form-select form-select-sm quiz-compact-select"
+                                                                    value={importNewQuizType}
+                                                                    onChange={(e) => setImportNewQuizType(e.target.value)}
+                                                                    disabled={isImporting}
+                                                                >
+                                                                    <option value="quiz">Tipe: Kuis Biasa</option>
+                                                                    <option value="pre_post_test">Tipe: Pre & Post Test</option>
+                                                                </select>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* File Dropzone */}
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                className="d-none"
+                                                accept=".csv,.json,text/csv,application/json"
+                                                onChange={handleFileChange}
+                                            />
+
+                                            {!importFile ? (
+                                                <div
+                                                    className={`quiz-file-dropzone mb-3 text-center p-4 rounded ${isDragOver ? "drag-over" : ""}`}
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    onDragEnter={handleDragEnter}
+                                                    onDragOver={handleDragOver}
+                                                    onDragLeave={handleDragLeave}
+                                                    onDrop={handleDrop}
+                                                >
+                                                    <div className="dropzone-icon mb-2">
+                                                        <i className={`fas ${isDragOver ? "fa-file-download text-teal" : "fa-cloud-upload-alt text-teal"} fs-1`}></i>
+                                                    </div>
+                                                    <h6 className="mb-1 text-dark fw-bold">
+                                                        {isDragOver ? "Lepaskan File di Sini" : "Klik atau Seret File ke Sini"}
+                                                    </h6>
+                                                    <p className="text-muted small mb-0">
+                                                        Mendukung file <strong>.CSV</strong> (Excel/Google Sheets) dan <strong>.JSON</strong> (maks 5MB)
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="quiz-file-preview-card mb-3 p-3 rounded d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center gap-3">
+                                                        <div className="file-preview-icon">
+                                                            <i className={`fas ${importFile.name.endsWith(".json") ? "fa-file-code text-warning" : "fa-file-csv text-success"} fs-2`}></i>
+                                                        </div>
+                                                        <div>
+                                                            <div className="fw-bold text-dark file-preview-name">{importFile.name}</div>
+                                                            <div className="text-muted small file-preview-size">
+                                                                {(importFile.size / 1024).toFixed(1)} KB &bull; {parsedQuestions.length} pertanyaan terdeteksi
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {!isImporting && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-danger btn-sm btn-file-remove"
+                                                            onClick={() => {
+                                                                resetImportState();
+                                                                if (fileInputRef.current) fileInputRef.current.value = "";
+                                                            }}
+                                                            title="Ganti File"
+                                                        >
+                                                            <i className="fas fa-trash me-1"></i> Ganti File
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Error Alert */}
+                                            {importError && (
+                                                <div className="alert alert-danger py-2 px-3 small d-flex align-items-center gap-2 mb-3">
+                                                    <i className="fas fa-exclamation-triangle"></i>
+                                                    <span>{importError}</span>
+                                                </div>
+                                            )}
+
+                                            {/* Questions Preview Section */}
+                                            {parsedQuestions.length > 0 && (
+                                                <div className="quiz-import-preview-section mb-3">
+                                                    <div className="d-flex align-items-center justify-content-between mb-2">
+                                                        <span className="small fw-bold text-dark">
+                                                            <i className="fas fa-eye me-1 text-teal"></i> Pratinjau Soal ({parsedQuestions.filter(q => q.isValid).length} Siap Diimpor
+                                                            {parsedQuestions.some(q => !q.isValid) && (
+                                                                <span className="text-danger ms-1">
+                                                                    &bull; {parsedQuestions.filter(q => !q.isValid).length} bermasalah
+                                                                </span>
+                                                            )}
+                                                            ):
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="quiz-import-preview-list">
+                                                        {parsedQuestions.map((q, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className={`quiz-import-preview-item ${q.isValid ? "valid" : "invalid"}`}
+                                                            >
+                                                                <div className="d-flex align-items-start gap-2">
+                                                                    <span className={`import-q-num ${q.isValid ? "badge-valid" : "badge-invalid"}`}>
+                                                                        #{q.rowNumber}
+                                                                    </span>
+                                                                    <div className="flex-grow-1">
+                                                                        <p className="mb-1 fw-semibold import-q-text">{q.question_text || <em>(Teks Pertanyaan Kosong)</em>}</p>
+                                                                        {q.isValid ? (
+                                                                            <div className="import-choices-preview d-flex flex-wrap gap-1 mt-1">
+                                                                                {q.choices.map((c, cIdx) => (
+                                                                                    <span
+                                                                                        key={cIdx}
+                                                                                        className={`import-choice-pill ${c.is_correct ? "correct" : ""}`}
+                                                                                    >
+                                                                                        <strong>{c.letter || String.fromCharCode(65 + cIdx)}.</strong> {c.choice_text}
+                                                                                        {c.is_correct && <i className="fas fa-check-circle ms-1 text-success"></i>}
+                                                                                    </span>
+                                                                                ))}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="text-danger small">
+                                                                                <i className="fas fa-exclamation-circle me-1"></i> {q.errorMsg}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Progress Bar (during import) */}
+                                            {isImporting && (
+                                                <div className="quiz-import-progress-card p-3 rounded mb-2">
+                                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                                        <span className="small fw-bold text-teal">
+                                                            <i className="fas fa-spinner fa-spin me-1"></i> Sedang mengimpor soal...
+                                                        </span>
+                                                        <span className="small text-muted">
+                                                            {importProgress.current} / {importProgress.total} ({importProgress.percent}%)
+                                                        </span>
+                                                    </div>
+                                                    <div className="progress" style={{ height: "8px" }}>
+                                                        <div
+                                                            className="progress-bar bg-teal progress-bar-striped progress-bar-animated"
+                                                            role="progressbar"
+                                                            style={{ width: `${importProgress.percent}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="modal-footer">
+                                            <button
+                                                type="button"
+                                                className="btn btn-secondary"
+                                                onClick={() => {
+                                                    setShowImportModal(false);
+                                                    resetImportState();
+                                                }}
+                                                disabled={isImporting}
+                                            >
+                                                Tutup
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn btn-update-course d-inline-flex align-items-center gap-1.5"
+                                                onClick={handleExecuteImport}
+                                                disabled={isImporting || parsedQuestions.filter(q => q.isValid).length === 0}
+                                            >
+                                                {isImporting ? (
+                                                    <>
+                                                        <span className="spinner-border spinner-border-sm me-1"></span>
+                                                        Mengimpor ({importProgress.percent}%)...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="fas fa-file-import"></i>
+                                                        <span>Impor {parsedQuestions.filter(q => q.isValid).length > 0 ? `(${parsedQuestions.filter(q => q.isValid).length} Soal)` : ""}</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}

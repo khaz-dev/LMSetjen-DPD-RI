@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import useAxios from "../../../utils/useAxios";
 import UserData from "../../plugin/UserData";
-import { getImageUrl, getCourseCurriculumSummary } from "../../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary, getFeatureIconDisplay } from "../../../utils/courseUtils";
 import { getMediaUrl } from "../../../utils/constants";
 import { calculateTotalDuration } from "../../../utils/durationUtils";
 
@@ -11,7 +11,8 @@ const CourseSidebar = ({
     course,
     isInWishlist: parentIsInWishlist,
     isLoadingWishlist: parentIsLoadingWishlist,
-    onWishlistToggle
+    onWishlistToggle,
+    setActiveTab
 }) => {
     const [activeAccordion, setActiveAccordion] = useState("");
     const [isEnrolled, setIsEnrolled] = useState(false);
@@ -511,38 +512,103 @@ const CourseSidebar = ({
                             <span>Fasilitas & Fitur Kursus:</span>
                         </h6>
 
-                        <div className="d-flex flex-column gap-1">
-                            {smartFeatures.map((item, index) => (
-                                <div
-                                    key={item.id || index}
-                                    className="d-flex align-items-center gap-1"
-                                    style={{ fontSize: '0.85rem' }}
-                                >
+                        <div className="d-flex flex-column gap-2">
+                            {smartFeatures.map((item, index) => {
+                                const iconDisplay = getFeatureIconDisplay(item.icon);
+                                return (
                                     <div
-                                        className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                                        style={{
-                                            width: '28px',
-                                            height: '28px',
-                                            background: item.highlight ? 'rgba(13, 148, 136, 0.12)' : '#f1f5f9'
-                                        }}
+                                        key={item.id || index}
+                                        className="d-flex align-items-center gap-1"
+                                        style={{ fontSize: '0.85rem' }}
                                     >
-                                        <i
-                                            className={item.icon === 'fas fa-document' ? 'fas fa-file-alt' : (item.icon || 'fas fa-check')}
+                                        <div
+                                            className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                                             style={{
-                                                fontSize: '0.75rem',
-                                                color: item.highlight ? '#0d9488' : '#64748b'
+                                                width: '28px',
+                                                height: '28px',
+                                                background: item.highlight ? 'rgba(13, 148, 136, 0.12)' : '#f1f5f9',
+                                                fontSize: iconDisplay ? '1rem' : '0.75rem',
+                                                lineHeight: 1
                                             }}
-                                        ></i>
+                                        >
+                                            {iconDisplay ? (
+                                                <span>{iconDisplay}</span>
+                                            ) : (
+                                                <i
+                                                    className={item.icon === 'fas fa-document' ? 'fas fa-file-alt' : (item.icon || 'fas fa-check')}
+                                                    style={{
+                                                        fontSize: '0.75rem',
+                                                        color: item.highlight ? '#0d9488' : '#64748b'
+                                                    }}
+                                                ></i>
+                                            )}
+                                        </div>
+                                        <span className={`ps-1 ${item.highlight ? 'fw-semibold text-dark' : 'text-secondary'}`}>
+                                            {item.text}
+                                        </span>
                                     </div>
-                                    <span className={`ps-1 ${item.highlight ? 'fw-semibold text-dark' : 'text-secondary'}`}>
-                                        {item.text}
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* 1. Instruktur Card */}
+            {course?.teacher && (
+                <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-3">
+                    <div className="card-body p-3 p-md-4">
+                        <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                            <div className="d-flex align-items-center gap-2">
+                                <div
+                                    className="rounded-2 d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                                    style={{ width: "28px", height: "28px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" }}
+                                >
+                                    <i className="fas fa-chalkboard-user" style={{ fontSize: "0.8rem" }}></i>
+                                </div>
+                                <h5 className="mb-0 fw-bold text-dark" style={{ fontSize: "0.98rem" }}>
+                                    Instruktur
+                                </h5>
+                            </div>
+                            {setActiveTab && (
+                                <button
+                                    onClick={() => setActiveTab("instructor")}
+                                    className="btn btn-sm btn-link text-teal text-decoration-none fw-semibold p-0 d-flex align-items-center gap-1"
+                                    style={{ color: "#0d9488", fontSize: "0.82rem" }}
+                                >
+                                    Profil Lengkap <i className="fas fa-arrow-right" style={{ fontSize: "0.72rem" }}></i>
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="d-flex align-items-center gap-2">
+                            <img
+                                src={getImageUrl(course.teacher?.image) || '/images/placeholders/default-instructor.svg'}
+                                alt={course.teacher?.full_name}
+                                className="rounded-circle border shadow-xs flex-shrink-0"
+                                style={{ width: "52px", height: "52px", objectFit: "cover" }}
+                                onError={(e) => { e.target.src = '/images/placeholders/default-instructor.svg'; }}
+                            />
+                            <div className="flex-grow-1 min-w-0">
+                                <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                    <h6 className="mb-0 fw-bold text-dark text-truncate" style={{ fontSize: "0.94rem" }}>{course.teacher?.full_name}</h6>
+                                    <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-0 px-2 rounded-pill" style={{ fontSize: "0.7rem" }}>
+                                        <i className="fas fa-check-circle me-1"></i>Instruktur Resmi
+                                    </span>
+                                </div>
+                                <p className="text-muted small mb-2 text-truncate" style={{ fontSize: "0.8rem" }}>
+                                    {course.teacher?.about || course.teacher?.bio || "Instruktur Profesional di Lingkungan Setjen DPD RI"}
+                                </p>
+                                <div className="d-flex align-items-center gap-2 small text-secondary flex-wrap" style={{ fontSize: "0.78rem" }}>
+                                    <span><i className="fas fa-star text-warning me-1"></i>{(course.teacher?.average_rating || 5.0).toFixed(1)} Rating</span>
+                                    <span><i className="fas fa-users text-teal me-1" style={{ color: "#0d9488" }}></i>{course.teacher?.total_students || 0} Peserta</span>
+                                    <span><i className="fas fa-book text-muted me-1"></i>{course.teacher?.total_courses || 1} Kursus</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

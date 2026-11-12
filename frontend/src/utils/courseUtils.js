@@ -418,3 +418,55 @@ export const getCourseCurriculumSummary = (course) => {
         quizzesCount
     };
 };
+
+export const commonFeatureIcons = [
+    { value: "fas fa-check", label: "✓ Centang", icon: "✓" },
+    { value: "fas fa-book", label: "📖 Buku", icon: "📖" },
+    { value: "fas fa-video", label: "🎥 Video", icon: "🎥" },
+    { value: "fas fa-document", label: "📄 Dokumen", icon: "📄" },
+    { value: "fas fa-users", label: "👥 Komunitas", icon: "👥" },
+    { value: "fas fa-certificate", label: "🎓 Sertifikat", icon: "🎓" },
+    { value: "fas fa-clock", label: "⏰ Waktu Fleksibel", icon: "⏰" },
+    { value: "fas fa-globe", label: "🌐 Akses Seumur Hidup", icon: "🌐" },
+    { value: "fas fa-star", label: "⭐ Premium", icon: "⭐" },
+    { value: "fas fa-desktop", label: "💻 Akses Mobile", icon: "💻" },
+    { value: "fas fa-download", label: "📥 Materi Downloadable", icon: "📥" },
+    { value: "fas fa-headphones", label: "🎧 Dukungan 24/7", icon: "🎧" },
+];
+
+export const getFeatureIconDisplay = (iconValue) => {
+    if (!iconValue) return "✓";
+    const matched = commonFeatureIcons.find(
+        (item) => item.value === iconValue || item.label?.startsWith(iconValue) || item.icon === iconValue
+    );
+    if (matched) return matched.icon;
+
+    // Fallbacks for known classes
+    const iconMap = {
+        "fas fa-video": "🎥",
+        "fas fa-document": "📄",
+        "fas fa-file": "📄",
+        "fas fa-file-alt": "📄",
+        "fas fa-certificate": "🎓",
+        "fas fa-graduation-cap": "🎓",
+        "fas fa-check": "✓",
+        "fas fa-check-circle": "✓",
+        "fas fa-book": "📖",
+        "fas fa-users": "👥",
+        "fas fa-clock": "⏰",
+        "fas fa-globe": "🌐",
+        "fas fa-star": "⭐",
+        "fas fa-desktop": "💻",
+        "fas fa-download": "📥",
+        "fas fa-headphones": "🎧",
+        "fas fa-layer-group": "📚",
+        "fas fa-laptop-code": "💻",
+        "fas fa-infinity": "🌐",
+    };
+    if (iconMap[iconValue]) return iconMap[iconValue];
+
+    // If it's already an emoji or non-font-awesome string
+    if (!iconValue.startsWith("fa")) return iconValue;
+
+    return null;
+};
