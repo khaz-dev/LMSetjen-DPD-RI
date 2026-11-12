@@ -264,6 +264,27 @@ const VideoCompressionUtils = {
     },
 
     /**
+     * Get audio duration
+     */
+    getAudioDuration: (file) => {
+        return new Promise((resolve, reject) => {
+            const audio = document.createElement('audio');
+            audio.preload = 'metadata';
+
+            audio.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(audio.src);
+                resolve(audio.duration);
+            };
+
+            audio.onerror = () => {
+                reject(new Error('Failed to load audio metadata'));
+            };
+
+            audio.src = URL.createObjectURL(file);
+        });
+    },
+
+    /**
      * Compress video using canvas and MediaRecorder API with audio preservation
      * ✅ NEW ROBUST APPROACH: Uses captureStream() directly from video element for guaranteed audio
      */
@@ -812,6 +833,7 @@ function SortableLessonItem({
     setCurriculumUploadProgress,
     autoSaveCurriculum,
     handleDeleteLessonFile, // ✨ PHASE 4.146: Pass delete handler to component
+    handleClearLessonMedia,
     lessonLinkInputs, // ✨ PHASE 4.175: Temporary link inputs state
     setLessonLinkInputs, // ✨ PHASE 4.175: Setter for temporary link inputs
     formatSecondsToHMS, // ✨ PHASE 4.198: Format seconds to hh:mm:ss
@@ -1406,7 +1428,7 @@ function SortableLessonItem({
                                                         style={{ fontSize: "0.7rem", height: "22px" }}
                                                         onClick={() => toggleDurationEditMode(variantIndex, itemIndex)}
                                                         disabled={uiState.isSubmitting}
-                                                        title="Atur durasi video secara manual"
+                                                        title="Atur durasi secara manual"
                                                     >
                                                         <i className={`fas fa-${durationEditingMode[`${variantIndex}_${itemIndex}`] ? 'check text-success' : 'pencil-alt'} me-1`}></i>
                                                         {durationEditingMode[`${variantIndex}_${itemIndex}`] ? 'Selesai' : 'Edit'}
@@ -1672,7 +1694,10 @@ function SortableLessonItem({
 
                                                                 if (!result.isConfirmed) return;
 
-                                                                if (item?.uploadedFile && item.uploadedFile.includes('/media/')) {
+                                                                setMediaUrlInput('');
+                                                                if (handleClearLessonMedia) {
+                                                                    await handleClearLessonMedia(variantIndex, itemIndex);
+                                                                } else if (item?.uploadedFile && item.uploadedFile.includes('/media/')) {
                                                                     await handleDeleteLessonFile(variantIndex, itemIndex, item.uploadedFile);
                                                                 } else {
                                                                     handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
@@ -1681,15 +1706,14 @@ function SortableLessonItem({
                                                                     handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
                                                                     handleLessonChange(variantIndex, itemIndex, "media_source", "");
                                                                     setTimeout(() => autoSaveCurriculum(), 100);
+                                                                    Toast().fire({
+                                                                        icon: "success",
+                                                                        title: "Media Dihapus",
+                                                                        text: "Media pelajaran berhasil dilepas.",
+                                                                        timer: 1500,
+                                                                        showConfirmButton: false
+                                                                    });
                                                                 }
-                                                                setMediaUrlInput('');
-                                                                Toast().fire({
-                                                                    icon: "success",
-                                                                    title: "Media Dihapus",
-                                                                    text: "Media pelajaran berhasil dilepas.",
-                                                                    timer: 1500,
-                                                                    showConfirmButton: false
-                                                                });
                                                             }}
                                                         >
                                                             <i className="fas fa-trash-alt"></i>
@@ -1848,9 +1872,31 @@ function SortableLessonItem({
                                                                                         handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
                                                                                         handleLessonChange(variantIndex, itemIndex, "file_type", response.data.file_type || (file.type.startsWith('audio/') ? 'audio' : file.type === 'application/pdf' ? 'pdf' : 'video'));
 
-                                                                                        if (response.data.duration_seconds) {
-                                                                                            setExtractedDuration(prev => ({ ...prev, [progressKey]: response.data.duration_seconds }));
-                                                                                            handleDurationInput(variantIndex, itemIndex, response.data.duration_seconds);
+                                                                                        let detectedDuration = response.data?.duration_seconds;
+
+                                                                                        // Client-side fallback duration extraction if backend didn't extract or for instant accuracy
+                                                                                        if (!detectedDuration && file) {
+                                                                                            const isAudioFile = file.type.startsWith('audio/') || ['.mp3', '.wav', '.ogg', '.m4a', '.aac'].some(ext => (file.name || '').toLowerCase().endsWith(ext));
+                                                                                            const isVideoFile = file.type.startsWith('video/') || ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some(ext => (file.name || '').toLowerCase().endsWith(ext));
+
+                                                                                            if (isAudioFile) {
+                                                                                                try {
+                                                                                                    detectedDuration = await videoOptimizer.getAudioDuration(file);
+                                                                                                } catch (e) {
+                                                                                                    console.warn("[Upload] Could not extract client-side audio duration:", e);
+                                                                                                }
+                                                                                            } else if (isVideoFile) {
+                                                                                                try {
+                                                                                                    detectedDuration = await videoOptimizer.getVideoDuration(file);
+                                                                                                } catch (e) {
+                                                                                                    console.warn("[Upload] Could not extract client-side video duration:", e);
+                                                                                                }
+                                                                                            }
+                                                                                        }
+
+                                                                                        if (detectedDuration) {
+                                                                                            setExtractedDuration(prev => ({ ...prev, [progressKey]: detectedDuration }));
+                                                                                            handleDurationInput(variantIndex, itemIndex, detectedDuration);
                                                                                         }
 
                                                                                         setCurriculumUploadProgress(prev => ({
@@ -3341,6 +3387,93 @@ function CourseEditCurriculum() {
     };
 
     /**
+     * Delete/Clear media from lesson item (Uploaded file, YouTube, GDrive, etc.)
+     */
+    const handleClearLessonMedia = async (variantIndex, itemIndex) => {
+        try {
+            const currentItem = variants?.[variantIndex]?.items?.[itemIndex];
+            const targetFileUrl = currentItem?.uploadedFile || currentItem?.file;
+
+            // If it's an uploaded file on our server, trigger file cleanup on backend
+            if (targetFileUrl && typeof targetFileUrl === 'string' && targetFileUrl.includes('/media/')) {
+                try {
+                    await useAxios.delete('file-cleanup/', {
+                        data: {
+                            file_url: targetFileUrl,
+                            file_id: currentItem?.file_id
+                        }
+                    });
+                    console.log('[Curriculum] File deleted from server:', targetFileUrl);
+                } catch (cleanupErr) {
+                    console.warn('[Curriculum] File cleanup warning:', cleanupErr);
+                }
+            }
+
+            // Immediately clear ALL media fields in local state
+            setVariants(prevVariants => {
+                try {
+                    const updatedVariants = [...prevVariants];
+                    if (!updatedVariants[variantIndex]?.items?.[itemIndex]) return prevVariants;
+
+                    const item = updatedVariants[variantIndex].items[itemIndex];
+                    updatedVariants[variantIndex].items[itemIndex] = {
+                        ...item,
+                        file: "",
+                        uploadedFile: "",
+                        youtubeLink: "",
+                        gdriveLink: "",
+                        media_source: "",
+                        file_type: null,
+                        file_id: null,
+                    };
+                    return updatedVariants;
+                } catch (e) {
+                    console.error('[Curriculum] Error clearing media state:', e);
+                    return prevVariants;
+                }
+            });
+
+            // Close preview if it was open
+            const previewKey = `${variantIndex}_${itemIndex}`;
+            setPreviewVisibility(prev => ({
+                ...prev,
+                [previewKey]: false
+            }));
+
+            trackFormChanges();
+
+            // Clear validation errors for uploaded file
+            setValidationState(prev => ({
+                ...prev,
+                errors: {
+                    ...prev.errors,
+                    [`item_${variantIndex}_${itemIndex}_uploadedFile`]: null
+                }
+            }));
+
+            // Persist changes to server
+            setTimeout(() => {
+                autoSaveCurriculum();
+            }, 60);
+
+            Toast().fire({
+                icon: "success",
+                title: "Media Dihapus",
+                text: "Media pelajaran berhasil dilepas.",
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } catch (err) {
+            console.error('[Curriculum] Error in handleClearLessonMedia:', err);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal Menghapus Media",
+                text: "Terjadi kesalahan saat melepas media."
+            });
+        }
+    };
+
+    /**
      * ✨ PHASE 4.146: Delete uploaded lesson file from server
      * When instructor clicks "Hapus File", this function:
      * 1. Sends DELETE request to backend to delete physical file
@@ -4215,6 +4348,9 @@ function CourseEditCurriculum() {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.uploadedFile);
                         } else if (item.file) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.file);
+                        } else {
+                            // Explicitly send empty file to signal removal if media was cleared
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, "");
                         }
 
                         // ✨ PHASE 4.187: Send media_source to remember which source was used
@@ -4374,6 +4510,9 @@ function CourseEditCurriculum() {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.uploadedFile);
                         } else if (item.file) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.file);
+                        } else {
+                            // Explicitly send empty file to signal removal if media was cleared
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, "");
                         }
 
                         // ✨ PHASE 4.187: Send media_source to remember which source was used
@@ -4614,6 +4753,8 @@ function CourseEditCurriculum() {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.uploadedFile);
                         } else if (item.file) {
                             formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, item.file);
+                        } else {
+                            formData.append(`variants[${variantIndex}][items][${itemIndex}][file]`, "");
                         }
 
                         // ✨ PHASE 4.187: Send media_source to remember which source was used
@@ -5198,6 +5339,7 @@ function CourseEditCurriculum() {
                                                                                     setCurriculumUploadProgress={setCurriculumUploadProgress}
                                                                                     autoSaveCurriculum={autoSaveCurriculum}
                                                                                     handleDeleteLessonFile={handleDeleteLessonFile}  // ✨ PHASE 4.146: Pass delete handler
+                                                                                    handleClearLessonMedia={handleClearLessonMedia}
                                                                                     lessonLinkInputs={lessonLinkInputs}  // ✨ PHASE 4.175: Temporary link inputs
                                                                                     setLessonLinkInputs={setLessonLinkInputs}  // ✨ PHASE 4.175: Setter for temp link inputs
                                                                                     formatSecondsToHMS={formatSecondsToHMS}  // ✨ PHASE 4.198: Format seconds to hh:mm:ss

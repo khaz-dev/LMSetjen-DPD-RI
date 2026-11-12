@@ -60,9 +60,10 @@ import uuid
 import re
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 try:
-    from moviepy.editor import VideoFileClip
+    from moviepy.editor import VideoFileClip, AudioFileClip
 except ImportError:
     VideoFileClip = None
+    AudioFileClip = None
 from django.core.files.base import ContentFile
 import math
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -736,6 +737,29 @@ class FileUploadAPIView(APIView):
                     })
             except Exception as e:
                 print(f"[FileUploadAPIView] Error processing video metadata: {e}")
+                response_data["duration_error"] = str(e)
+
+        # Handle audio duration metadata if it is a supported audio file
+        elif file_extension in ['.mp3', '.wav', '.ogg', '.m4a', '.aac']:
+            file_full_path = os.path.join(default_storage.location, file_path)
+            try:
+                if AudioFileClip:
+                    clip = AudioFileClip(file_full_path)
+                    duration_seconds = clip.duration
+                    clip.close()
+
+                    minutes, remainder = divmod(duration_seconds, 60)
+                    minutes = math.floor(minutes)
+                    seconds = math.floor(remainder)
+                    duration_text = f"{minutes}m {seconds}s"
+
+                    response_data.update({
+                        "duration_seconds": duration_seconds,
+                        "audio_duration": duration_text,
+                        "is_audio": True
+                    })
+            except Exception as e:
+                print(f"[FileUploadAPIView] Error processing audio metadata: {e}")
                 response_data["duration_error"] = str(e)
 
         return Response(response_data, status=status.HTTP_200_OK)
