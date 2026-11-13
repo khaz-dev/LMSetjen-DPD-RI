@@ -19,6 +19,10 @@ function CertificateTab({
     onCertificateGenerated,
     isInline = false,
     onStartPosttest = null,
+    canTakePostTest = false,
+    postTestLockReason = null,
+    allGamesCompleted = true,
+    hasGames = false,
     regenerateTrigger = 0
 }) {
     const [certificate, setCertificate] = useState(null);
@@ -83,6 +87,25 @@ function CertificateTab({
 
             if (response.data.certificate) {
                 setCertificate(response.data.certificate);
+
+                // ✨ Trigger perayaan Manta AI (SiManta Floating) untuk memberi ucapan selamat
+                const courseTitle = course?.course?.title || course?.title || 'Pelatihan';
+                const userName = UserData()?.full_name || UserData()?.username || 'Rekan Pembelajar';
+
+                window.dispatchEvent(new CustomEvent('manta-certificate-generated', {
+                    detail: {
+                        courseTitle,
+                        certificate: response.data.certificate,
+                        userName
+                    }
+                }));
+                window.dispatchEvent(new CustomEvent('lms-certificate-issued', {
+                    detail: {
+                        courseTitle,
+                        certificate: response.data.certificate,
+                        userName
+                    }
+                }));
 
                 // ✨ PHASE 4.225: Generate and upload image (PNG) to server, then notify parent with complete data
                 setTimeout(() => {
@@ -360,17 +383,19 @@ function CertificateTab({
                                         <small>
                                             {postTestCompleted
                                                 ? `Gain: ${eligibilityData?.learning_gain >= 0 ? '+' : ''}${eligibilityData?.learning_gain || 0}%`
-                                                : allLessonsCompleted && allQuizzesPassed
+                                                : canTakePostTest
                                                     ? 'Siap dikerjakan'
                                                     : 'Terkunci'}
                                         </small>
-                                        {!postTestCompleted && allLessonsCompleted && allQuizzesPassed && onStartPosttest && (
+                                        {!postTestCompleted && onStartPosttest && (
                                             <button
                                                 type="button"
-                                                className="btn btn-xs btn-amber mt-1 py-0 px-2 fw-bold w-100"
+                                                className={`btn btn-xs ${canTakePostTest ? 'btn-amber' : 'btn-secondary'} mt-1 py-0 px-2 fw-bold w-100`}
                                                 onClick={onStartPosttest}
+                                                title={!canTakePostTest ? (postTestLockReason || 'Terkunci') : 'Mulai Post-test'}
                                             >
-                                                <i className="fas fa-play me-1"></i>Kerjakan
+                                                <i className={`fas ${canTakePostTest ? 'fa-play' : 'fa-lock'} me-1`}></i>
+                                                {canTakePostTest ? 'Kerjakan' : 'Terkunci'}
                                             </button>
                                         )}
                                     </div>
@@ -537,17 +562,25 @@ function CertificateTab({
                                     <i className={`fas ${allQuizzesPassed ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} me-2`}></i>
                                     <span>Lulus seluruh evaluasi kuis kursus</span>
                                 </li>
+                                {hasGames && (
+                                    <li className={allGamesCompleted ? 'completed' : 'pending'}>
+                                        <i className={`fas ${allGamesCompleted ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} me-2`}></i>
+                                        <span>Selesaikan seluruh tantangan mini-game (Gamifikasi)</span>
+                                    </li>
+                                )}
                                 {hasPrePostTest && (
                                     <li className={postTestCompleted ? 'completed' : 'pending'}>
                                         <i className={`fas ${postTestCompleted ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} me-2`}></i>
                                         <span>Kerjakan Post-test evaluasi akhir</span>
-                                        {!postTestCompleted && allLessonsCompleted && allQuizzesPassed && onStartPosttest && (
+                                        {!postTestCompleted && onStartPosttest && (
                                             <button
                                                 type="button"
-                                                className="btn btn-xs btn-amber ms-2 py-0 px-2 fw-bold"
+                                                className={`btn btn-xs ${canTakePostTest ? 'btn-amber' : 'btn-secondary'} ms-2 py-0 px-2 fw-bold`}
                                                 onClick={onStartPosttest}
+                                                title={!canTakePostTest ? (postTestLockReason || 'Terkunci') : 'Mulai Post-test'}
                                             >
-                                                <i className="fas fa-play me-1"></i>Kerjakan Post-test
+                                                <i className={`fas ${canTakePostTest ? 'fa-play' : 'fa-lock'} me-1`}></i>
+                                                {canTakePostTest ? 'Kerjakan Post-test' : 'Terkunci'}
                                             </button>
                                         )}
                                     </li>

@@ -12,9 +12,9 @@ export const useCourseData = (courseId) => {
         try {
             setLoading(true);
             setError(null);
-            
+
             const response = await useAxios.get(`/teacher/course-detail/${courseId}/?for_edit=true`);
-            
+
             if (response?.data) {
                 setCourseData(response.data);
             } else {
@@ -23,24 +23,24 @@ export const useCourseData = (courseId) => {
         } catch (error) {
             console.error("Error fetching course:", error);
             console.log("[useCourseData] Error response:", error.response?.data);
-            
+
             // ✨ PHASE 4.76: Check if error is due to published course requiring draft
             const errorData = error.response?.data;
             const errorDetail = errorData?.detail;
-            const isPublishedCourseError = error.response?.status === 403 && 
-                (errorDetail?.action === "edit_published" || 
-                 (typeof errorDetail === 'object' && errorDetail?.action === "edit_published"));
-            
+            const isPublishedCourseError = error.response?.status === 403 &&
+                (errorDetail?.action === "edit_published" ||
+                    (typeof errorDetail === 'object' && errorDetail?.action === "edit_published"));
+
             if (isPublishedCourseError) {
                 console.log("[useCourseData] Published course detected - setting published_course error type");
-                
+
                 // Show error to user
                 Toast().fire({
                     icon: "info",
                     title: "Kursus Sudah Dipublikasikan",
                     text: "Membuat draft versi untuk editing...",
                 });
-                
+
                 // The CourseEdit component will need to handle this
                 // Store the published course ID for the component to use
                 setError({
@@ -51,12 +51,12 @@ export const useCourseData = (courseId) => {
                 setLoading(false);
                 return;
             }
-            
+
             // Regular error
-            const errorMessage = (typeof errorDetail === 'object') 
+            const errorMessage = (typeof errorDetail === 'object')
                 ? errorDetail?.message || errorDetail?.error || "Failed to load course data"
                 : errorDetail || "Failed to load course data";
-            
+
             setError(errorMessage);
             Toast().fire({
                 icon: "error",
@@ -98,12 +98,12 @@ export const useCourseForm = (initialData = {}) => {
 
     const validateField = (fieldName, value, validationFunction) => {
         const result = validationFunction(value);
-        
+
         setErrors(prev => ({
             ...prev,
             [fieldName]: result.errors
         }));
-        
+
         setWarnings(prev => ({
             ...prev,
             [fieldName]: result.warnings
@@ -117,7 +117,7 @@ export const useCourseForm = (initialData = {}) => {
             ...prev,
             [fieldName]: []
         }));
-        
+
         setWarnings(prev => ({
             ...prev,
             [fieldName]: []
@@ -164,7 +164,7 @@ export const useFileUpload = () => {
 
     const uploadFile = async (file, onSuccess, onError) => {
         setLoading(true);
-        
+
         try {
             const formData = new FormData();
             formData.append("file", file);
@@ -184,7 +184,7 @@ export const useFileUpload = () => {
         } catch (error) {
             console.error("Error uploading file:", error);
             const errorMessage = error.response?.data?.message || "Failed to upload file. Please try again.";
-            
+
             if (onError) {
                 onError(errorMessage);
             } else {
@@ -214,53 +214,60 @@ export const useCourseSubmit = () => {
 
         try {
             const userData = UserData();
-            
+
             // ✨ CRITICAL FIX: Only send writable fields to avoid 400 Bad Request
             // The CourseSerializer has many read-only fields (students, curriculum, lectures, reviews, etc.)
             // Sending these causes validation errors. We must filter to only writable fields.
             // Writable fields: category, file, image, title, description, level, platform_status, 
-            //                  teacher_course_status, featured, intro_video_source, tags
+            //                  teacher_course_status, featured, intro_video_source, tags, target_audience, course_type
             // ✨ PHASE X.1 FIX: Added 'tags' to enable tag assignment
+            // ✨ FIX TARGET AUDIENCE: Added 'target_audience' and 'course_type'
             const writableFields = [
                 'category', 'file', 'image', 'title', 'description', 'level',
-                'platform_status', 'teacher_course_status', 'featured', 'intro_video_source', 'tags'
+                'platform_status', 'teacher_course_status', 'featured', 'intro_video_source', 'tags',
+                'target_audience', 'course_type'
             ];
-            
+
             const formattedData = {};
-            
+
             // Only include writable fields
             writableFields.forEach(field => {
                 if (field in courseData) {
                     formattedData[field] = courseData[field];
                 }
             });
-            
+
+            // Normalize legacy 'pegawai' target_audience to 'internal'
+            if (formattedData.target_audience === 'pegawai') {
+                formattedData.target_audience = 'internal';
+            }
+
             // 🎯 PHASE 4.57: CRITICAL FIX - Always include teacher_course_status for status reset detection
             // Even if not explicitly set, ensure it's present so backend can check it
             if (!('teacher_course_status' in formattedData) && courseData?.teacher_course_status) {
                 formattedData.teacher_course_status = courseData.teacher_course_status;
                 console.log('[useCourse.submitCourse] Added teacher_course_status from courseData:', formattedData.teacher_course_status);
             }
-            
+
             // Extract category ID if category is an object
             if (formattedData.category) {
-                formattedData.category = typeof formattedData.category === 'object' && formattedData.category?.id 
-                    ? formattedData.category.id 
+                formattedData.category = typeof formattedData.category === 'object' && formattedData.category?.id
+                    ? formattedData.category.id
                     : formattedData.category;
             }
-            
+
             // Extract teacher_course_status if it's an object
             if (formattedData.teacher_course_status) {
                 formattedData.teacher_course_status = typeof formattedData.teacher_course_status === 'object' && formattedData.teacher_course_status?.value
                     ? formattedData.teacher_course_status.value
                     : formattedData.teacher_course_status;
             }
-            
+
             // ✨ PHASE X.1 FIX: Extract tag IDs from tag objects
             // Frontend stores tags as [{id: 1, title: "Python"}, ...] 
             // Backend PrimaryKeyRelatedField expects [1, 2, 3...]
             if (formattedData.tags && Array.isArray(formattedData.tags)) {
-                formattedData.tags = formattedData.tags.map(tag => 
+                formattedData.tags = formattedData.tags.map(tag =>
                     typeof tag === 'object' && tag?.id ? tag.id : tag
                 );
                 console.log('[useCourse.submitCourse] ✅ Tags in formattedData - Converted objects to IDs:', formattedData.tags);
@@ -275,10 +282,10 @@ export const useCourseSubmit = () => {
             } else {
                 console.log('[useCourse.submitCourse] ❌ No related changes flag set - hasRelatedChanges param is:', hasRelatedChanges);
             }
-            
+
             // ✨ PHASE 4.101.3: Simplified - old files now deleted automatically on upload
             // No need to send unsaved_image_uploads list anymore!
-            
+
             console.log('[useCourse.submitCourse] ===== FULL REQUEST DATA BEING SENT =====');
             console.log('[useCourse.submitCourse] teacher_course_status:', formattedData.teacher_course_status);
             console.log('[useCourse.submitCourse] has_related_changes:', formattedData.has_related_changes);
@@ -297,36 +304,36 @@ export const useCourseSubmit = () => {
 
             if (response?.data) {
                 console.log('[useCourse.submitCourse] ✅ PATCH Response received');
-                console.log('[useCourse.submitCourse] 🏷️ Response Tags:', response.data?.tags?.map(t => ({id: t?.id, title: t?.title})));
+                console.log('[useCourse.submitCourse] 🏷️ Response Tags:', response.data?.tags?.map(t => ({ id: t?.id, title: t?.title })));
                 console.log('[useCourse.submitCourse] Full response:', response.data);
-                
+
                 Toast().fire({
                     icon: "success",
                     title: "Berhasil",
                     text: "Kursus berhasil diperbarui!",
                 });
-                
+
                 if (onSuccess) {
                     console.log('[useCourse.submitCourse] Calling onSuccess with response data');
                     onSuccess(response.data);
                 }
-                
+
                 return response.data;
             }
         } catch (error) {
             console.error("Error updating course:", error);
             const errorMessage = error.response?.data?.detail || "Gagal memperbarui kursus. Silakan coba lagi.";
-            
+
             Toast().fire({
                 icon: "error",
                 title: "Error",
                 text: errorMessage,
             });
-            
+
             if (onError) {
                 onError(errorMessage);
             }
-            
+
             throw error;
         } finally {
             setIsSubmitting(false);
@@ -349,24 +356,24 @@ export const useCategories = () => {
     useEffect(() => {
         // ✨ PHASE 4.177: Skip if categories already loaded (prevents duplicates in React Strict Mode)
         if (categories && categories.length > 0) return;
-        
+
         // Guard against multiple fetches in React Strict Mode
         if (hasFetchedRef.current) return;
         hasFetchedRef.current = true;
-        
+
         const fetchCategories = async () => {
             try {
                 setLoading(true);
                 setError(null);
-                
+
                 const response = await useAxios.get("/course/category/");
-                
+
                 if (response?.data) {
                     // Handle both paginated and direct array responses
-                    const data = Array.isArray(response.data) 
-                        ? response.data 
+                    const data = Array.isArray(response.data)
+                        ? response.data
                         : (response.data.results || []);
-                    
+
                     setCategories(Array.isArray(data) ? data : []);
                 } else {
                     setError("Failed to load categories");
@@ -401,24 +408,24 @@ export const useTags = () => {
     useEffect(() => {
         // ✨ PHASE X: Skip if tags already loaded (prevents duplicates in React Strict Mode)
         if (tags && tags.length > 0) return;
-        
+
         // Guard against multiple fetches in React Strict Mode
         if (hasFetchedRef.current) return;
         hasFetchedRef.current = true;
-        
+
         const fetchTags = async () => {
             try {
                 setLoading(true);
                 setError(null);
-                
+
                 const response = await useAxios.get("/course/tag/");
-                
+
                 if (response?.data) {
                     // Handle both paginated and direct array responses
-                    const data = Array.isArray(response.data) 
-                        ? response.data 
+                    const data = Array.isArray(response.data)
+                        ? response.data
                         : (response.data.results || []);
-                    
+
                     setTags(Array.isArray(data) ? data : []);
                 } else {
                     setError("Failed to load tags");

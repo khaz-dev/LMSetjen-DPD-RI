@@ -668,6 +668,10 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
             if 'language' in mutable_data and str(mutable_data['language']).strip() in ['undefined', 'null', 'NaN']:
                 del mutable_data['language']
 
+            # Normalize legacy 'pegawai' target_audience to 'internal'
+            if 'target_audience' in mutable_data and mutable_data['target_audience'] == 'pegawai':
+                mutable_data['target_audience'] = 'internal'
+
             # Allow partial updates for PATCH requests
             is_partial = request.method == 'PATCH' or kwargs.get('partial', True)
             
@@ -1164,6 +1168,20 @@ class CoursePublishAPIView(APIView):
             lesson_count = api_models.VariantItem.objects.filter(variant__course=course).count()
             if lesson_count == 0:
                 errors.append("Kursus harus memiliki setidaknya satu pelajaran")
+            
+            # Check if all active regular quizzes are embedded in curriculum (excluding Pre/Post-test)
+            active_regular_quizzes = course.quizzes.filter(is_active=True).exclude(quiz_type='pre_post_test')
+            if active_regular_quizzes.exists():
+                embedded_quiz_ids = set(
+                    api_models.VariantItem.objects.filter(
+                        variant__course=course,
+                        quiz__isnull=False
+                    ).values_list('quiz__id', flat=True)
+                )
+                unembedded_quizzes = [q for q in active_regular_quizzes if q.id not in embedded_quiz_ids]
+                if unembedded_quizzes:
+                    quiz_titles = ", ".join([f'"{q.title}"' for q in unembedded_quizzes])
+                    errors.append(f"Terdapat kuis aktif yang belum disematkan ke kurikulum: {quiz_titles}. Silakan sematkan semua kuis aktif ke kurikulum terlebih dahulu (kecuali Pre/Post-test).")
             
             # Check if course has image
             if not course.image:
@@ -2508,6 +2526,71 @@ class PdfDataAPIView(APIView):
             return Response({
                 "success": True,
                 "file_name": file_name,
+                "size_bytes": len(file_bytes),
+                "data": base64_data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"success": False, "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MediaDataAPIView(APIView):
+    """
+    Returns base64 data and mime-type for media files (audio, pdf, documents) to bypass
+    IDM (Internet Download Manager) and browser interception extensions, allowing 100%
+    reliable in-browser media playback without stream disconnection or download interception.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        file_url = request.query_params.get("file_url", "").strip()
+        if not file_url:
+            return Response({"success": False, "error": "file_url parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        import urllib.parse
+        import os
+        import base64
+        import mimetypes
+        from django.conf import settings
+
+        parsed = urllib.parse.urlparse(file_url)
+        path = parsed.path
+        if path.startswith("/media/"):
+            rel_path = path[len("/media/"):]
+            abs_file_path = os.path.join(settings.MEDIA_ROOT, rel_path)
+        else:
+            abs_file_path = os.path.join(settings.MEDIA_ROOT, path.lstrip("/"))
+
+        if not os.path.exists(abs_file_path) or not os.path.isfile(abs_file_path):
+            return Response({"success": False, "error": "Berkas media tidak ditemukan di server."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            ext = os.path.splitext(abs_file_path)[1].lower()
+            audio_mimes = {
+                '.mp3': 'audio/mpeg',
+                '.wav': 'audio/wav',
+                '.ogg': 'audio/ogg',
+                '.m4a': 'audio/mp4',
+                '.aac': 'audio/aac',
+                '.flac': 'audio/flac',
+                '.pdf': 'application/pdf',
+            }
+            mime_type = audio_mimes.get(ext)
+            if not mime_type:
+                mime_type, _ = mimetypes.guess_type(abs_file_path)
+            if not mime_type:
+                mime_type = 'application/octet-stream'
+
+            with open(abs_file_path, "rb") as f:
+                file_bytes = f.read()
+
+            base64_data = base64.b64encode(file_bytes).decode("utf-8")
+            file_name = os.path.basename(abs_file_path)
+
+            return Response({
+                "success": True,
+                "file_name": file_name,
+                "mime_type": mime_type,
                 "size_bytes": len(file_bytes),
                 "data": base64_data
             }, status=status.HTTP_200_OK)

@@ -15,7 +15,8 @@ const PptxRenderer = ({
     height = "420px",
     showThumbnails = true,
     showToolbar = true,
-    defaultSlideIndex = 0
+    defaultSlideIndex = 0,
+    onPresentationLoaded
 }) => {
     const [loading, setLoading] = useState(true);
     const [presentation, setPresentation] = useState(null);
@@ -41,6 +42,9 @@ const PptxRenderer = ({
                 if (isMounted) {
                     if (res.data?.success) {
                         setPresentation(res.data);
+                        if (typeof onPresentationLoaded === 'function') {
+                            onPresentationLoaded(res.data);
+                        }
                     } else {
                         setError(res.data?.error || "Gagal memproses berkas paparan.");
                     }
@@ -230,8 +234,8 @@ const PptxRenderer = ({
                     <div className="d-flex align-items-center gap-2">
                         <button
                             type="button"
-                            className="btn btn-sm btn-outline-secondary py-0 px-2 border"
-                            style={{ fontSize: "0.74rem", height: "24px" }}
+                            className="btn btn-sm btn-outline-secondary py-0 px-2 border d-inline-flex align-items-center justify-content-center"
+                            style={{ fontSize: "0.74rem", height: "24px", lineHeight: "1" }}
                             disabled={currentSlideIndex === 0}
                             onClick={() => setCurrentSlideIndex((prev) => Math.max(0, prev - 1))}
                             title="Slide Sebelumnya (◄)"
@@ -243,8 +247,8 @@ const PptxRenderer = ({
                         </span>
                         <button
                             type="button"
-                            className="btn btn-sm btn-outline-secondary py-0 px-2 border"
-                            style={{ fontSize: "0.74rem", height: "24px" }}
+                            className="btn btn-sm btn-outline-secondary py-0 px-2 border d-inline-flex align-items-center justify-content-center"
+                            style={{ fontSize: "0.74rem", height: "24px", lineHeight: "1" }}
                             disabled={currentSlideIndex >= totalSlides - 1}
                             onClick={() => setCurrentSlideIndex((prev) => Math.min(totalSlides - 1, prev + 1))}
                             title="Slide Selanjutnya (►)"
@@ -257,8 +261,8 @@ const PptxRenderer = ({
                     <div className="d-flex align-items-center gap-1">
                         <button
                             type="button"
-                            className={`btn btn-sm py-0 px-2 border ${sidebarOpen ? 'btn-teal text-white' : 'btn-outline-secondary'}`}
-                            style={{ fontSize: "0.72rem", height: "24px" }}
+                            className={`btn btn-sm py-0 px-2 border d-inline-flex align-items-center justify-content-center ${sidebarOpen ? 'btn-teal text-white' : 'btn-outline-secondary'}`}
+                            style={{ fontSize: "0.72rem", height: "24px", lineHeight: "1" }}
                             onClick={() => setSidebarOpen((prev) => !prev)}
                             title="Tampilkan / Sembunyikan Panel Thumbnail"
                         >
@@ -266,8 +270,8 @@ const PptxRenderer = ({
                         </button>
                         <button
                             type="button"
-                            className="btn btn-sm btn-outline-secondary py-0 px-2 border"
-                            style={{ fontSize: "0.72rem", height: "24px" }}
+                            className="btn btn-sm btn-outline-secondary py-0 px-2 border d-inline-flex align-items-center justify-content-center"
+                            style={{ fontSize: "0.72rem", height: "24px", lineHeight: "1" }}
                             onClick={toggleFullscreen}
                             title="Layar Penuh"
                         >
@@ -277,8 +281,8 @@ const PptxRenderer = ({
                             href={fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="btn btn-sm btn-outline-primary py-0 px-2"
-                            style={{ fontSize: "0.72rem", height: "24px" }}
+                            className="btn btn-sm btn-outline-primary py-0 px-2 d-inline-flex align-items-center justify-content-center"
+                            style={{ fontSize: "0.72rem", height: "24px", lineHeight: "1" }}
                             title="Unduh Berkas PPTX"
                         >
                             <i className="fas fa-download me-1"></i>Unduh

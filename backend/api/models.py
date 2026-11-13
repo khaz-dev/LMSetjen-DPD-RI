@@ -543,6 +543,8 @@ class Course(models.Model):
             target_course.title = self.title
             target_course.description = self.description
             target_course.level = self.level
+            target_course.target_audience = self.target_audience
+            target_course.course_type = self.course_type
             target_course.image = self.image
             target_course.file = self.file
             target_course.featured = self.featured
@@ -2238,6 +2240,14 @@ class EnrolledCourse(models.Model):
         
         return results
     
+    def are_all_lessons_completed(self):
+        """Check if all curriculum lessons are completed by the student"""
+        total = self.lectures().count()
+        if total == 0:
+            return True
+        completed = self.completed_lesson().values('variant_item').distinct().count()
+        return completed >= total
+
     def are_all_quizzes_passed(self):
         """Check if all regular quizzes are passed with 70% or higher"""
         quizzes = Quiz.objects.filter(course=self.course, quiz_type='quiz', is_active=True)
@@ -2265,12 +2275,23 @@ class EnrolledCourse(models.Model):
 
     def are_all_games_completed(self):
         """Check if all active course games have been completed (attempted) by the student"""
-        active_games = self.course.games.filter(is_active=True)
+        related_ids = self.course.get_related_course_ids() if hasattr(self.course, 'get_related_course_ids') else {self.course.id}
+        active_games = CourseGame.objects.filter(course_id__in=related_ids, is_active=True)
         if not active_games.exists():
             return True
+        seen_keys = set()
         for game in active_games:
-            if not game.attempts.filter(user=self.user).exists():
-                return False
+            key = f"{game.game_type}:{game.title}"
+            if key not in seen_keys:
+                seen_keys.add(key)
+                has_attempt = CourseGameAttempt.objects.filter(
+                    user=self.user,
+                    game__course_id__in=related_ids,
+                    game__game_type=game.game_type,
+                    game__title=game.title
+                ).exists()
+                if not has_attempt:
+                    return False
         return True
 
     def check_integrity_status(self):

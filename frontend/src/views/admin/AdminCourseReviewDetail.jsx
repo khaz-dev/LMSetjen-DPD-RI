@@ -265,8 +265,12 @@ function AdminCourseReviewDetail() {
             return {
                 sectionsCount: 0,
                 lessonsCount: 0,
+                curriculumQuizzesCount: 0,
                 videoCount: 0,
                 scormCount: 0,
+                presentationCount: 0,
+                pdfCount: 0,
+                audioCount: 0,
                 docCount: 0,
                 totalDurationSeconds: 0,
                 totalDurationFormatted: "0 Menit",
@@ -283,6 +287,7 @@ function AdminCourseReviewDetail() {
         const sections = Array.isArray(course.curriculum) ? course.curriculum : [];
         const sectionsCount = sections.length;
         let lessonsCount = 0;
+        let curriculumQuizzesCount = 0;
         let videoCount = 0;
         let scormCount = 0;
         let presentationCount = 0;
@@ -293,8 +298,13 @@ function AdminCourseReviewDetail() {
 
         sections.forEach((sec) => {
             const items = sec.variant_items || sec.items || [];
-            lessonsCount += items.length;
             items.forEach((item) => {
+                const isItemQuiz = item.item_type === "quiz" || Boolean(item.quiz_id) || Boolean(item.quiz) || Boolean(item.quiz_detail);
+                if (isItemQuiz) {
+                    curriculumQuizzesCount++;
+                    return;
+                }
+                lessonsCount++;
                 const type = (item.file_type || "").toLowerCase();
                 const rawF = item.file || item.youtubeLink || item.gdriveLink || "";
                 const fileLower = (rawF || "").toLowerCase();
@@ -326,7 +336,7 @@ function AdminCourseReviewDetail() {
         });
 
         const quizzes = Array.isArray(course.quizzes) ? course.quizzes : [];
-        const quizzesCount = quizzes.length;
+        const quizzesCount = Math.max(quizzes.length, curriculumQuizzesCount);
         let totalQuestions = 0;
         quizzes.forEach((q) => {
             if (Array.isArray(q.questions)) {
@@ -348,6 +358,7 @@ function AdminCourseReviewDetail() {
         return {
             sectionsCount,
             lessonsCount,
+            curriculumQuizzesCount,
             videoCount,
             scormCount,
             presentationCount,
@@ -804,7 +815,7 @@ function AdminCourseReviewDetail() {
                                     >
                                         <i className="fas fa-book-open me-1"></i>
                                         Kurikulum
-                                        <span className="badge ms-1">{liveStats.lessonsCount}</span>
+                                        <span className="badge ms-1">{liveStats.lessonsCount + liveStats.curriculumQuizzesCount}</span>
                                     </button>
                                     <button
                                         type="button"
@@ -852,7 +863,7 @@ function AdminCourseReviewDetail() {
                                             <i className="fas fa-graduation-cap text-teal"></i>
                                             <h3 className="acrd-card-title mb-0">Kurikulum & Materi Pembelajaran</h3>
                                             <span className="badge bg-teal-subtle text-teal">
-                                                {liveStats.sectionsCount} Bagian • {liveStats.lessonsCount} Pelajaran
+                                                {liveStats.sectionsCount} Bagian • {liveStats.lessonsCount} Pelajaran{liveStats.curriculumQuizzesCount > 0 ? ` • ${liveStats.curriculumQuizzesCount} Kuis` : ""}
                                             </span>
                                         </div>
                                         <button
@@ -872,9 +883,23 @@ function AdminCourseReviewDetail() {
                                                 const isExpanded = !!expandedSections[sectionId];
                                                 const items = section.variant_items || section.items || [];
                                                 let secDuration = 0;
+                                                let secLessons = 0;
+                                                let secQuizzes = 0;
+
                                                 items.forEach((it) => {
-                                                    if (it.duration_seconds) secDuration += Number(it.duration_seconds);
+                                                    const isItQuiz = it.item_type === "quiz" || Boolean(it.quiz_id) || Boolean(it.quiz) || Boolean(it.quiz_detail);
+                                                    if (isItQuiz) {
+                                                        secQuizzes++;
+                                                    } else {
+                                                        secLessons++;
+                                                        if (it.duration_seconds) secDuration += Number(it.duration_seconds);
+                                                    }
                                                 });
+
+                                                const summaryParts = [];
+                                                if (secLessons > 0) summaryParts.push(`${secLessons} Pelajaran`);
+                                                if (secQuizzes > 0) summaryParts.push(`${secQuizzes} Kuis`);
+                                                const countText = summaryParts.join(" • ") || "0 Materi";
 
                                                 return (
                                                     <div key={sectionId} className="acrd-section-block mb-2">
@@ -894,7 +919,7 @@ function AdminCourseReviewDetail() {
                                                             </div>
                                                             <div className="d-flex align-items-center gap-2 flex-shrink-0">
                                                                 <span className="text-muted small" style={{ fontSize: "0.75rem" }}>
-                                                                    {items.length} Pelajaran {secDuration > 0 && `• ${formatDuration(secDuration)}`}
+                                                                    {countText} {secDuration > 0 && `• ${formatDuration(secDuration)}`}
                                                                 </span>
                                                                 <i className={`fas fa-chevron-down acrd-chevron ${isExpanded ? "rotated" : ""}`}></i>
                                                             </div>
@@ -911,6 +936,23 @@ function AdminCourseReviewDetail() {
                                                                         {items.map((lecture, lIdx) => {
                                                                             const lectureId = lecture.variant_item_id || lecture.id || `lec-${lIdx}`;
                                                                             const isPreviewOpen = !!expandedLecturePreview[lectureId];
+                                                                            const isQuiz = lecture.item_type === "quiz" || Boolean(lecture.quiz_id) || Boolean(lecture.quiz) || Boolean(lecture.quiz_detail);
+
+                                                                            const quizTargetId = lecture.quiz_id ||
+                                                                                (lecture.quiz && typeof lecture.quiz === 'object' ? (lecture.quiz.quiz_id || lecture.quiz.id) : lecture.quiz) ||
+                                                                                lecture.quiz_detail?.quiz_id ||
+                                                                                lecture.quiz_detail?.id;
+
+                                                                            const targetQuiz = isQuiz
+                                                                                ? ((course.quizzes || []).find(q =>
+                                                                                    quizTargetId && (String(q.quiz_id) === String(quizTargetId) || String(q.id) === String(quizTargetId))
+                                                                                  ) || (lecture.quiz && typeof lecture.quiz === 'object' ? lecture.quiz : null) || lecture.quiz_detail)
+                                                                                : null;
+
+                                                                            const itemTitle = lecture.title || targetQuiz?.title || (isQuiz ? "Kuis" : "Materi");
+                                                                            const itemDescription = lecture.description || targetQuiz?.description || "";
+                                                                            const questionCount = targetQuiz?.questions?.length || targetQuiz?.total_questions || targetQuiz?.question_count || 0;
+
                                                                             const rawFile = lecture.file || lecture.youtubeLink || lecture.gdriveLink || lecture.uploadedFile || "";
                                                                             const fileUrl = rawFile.startsWith("http") || rawFile.startsWith("blob:") || rawFile.startsWith("data:")
                                                                                 ? rawFile
@@ -923,13 +965,13 @@ function AdminCourseReviewDetail() {
                                                                                 lecture.learning_module?.id ||
                                                                                 (typeof lecture.learning_module === "number" ? lecture.learning_module : null) ||
                                                                                 lecture.learning_module_id;
-                                                                            const isScorm = fileType === "scorm" || Boolean(scormModuleId) || Boolean(lecture.learning_module_info);
+                                                                            const isScorm = !isQuiz && (fileType === "scorm" || Boolean(scormModuleId) || Boolean(lecture.learning_module_info));
                                                                             const scormTitle = lecture.learning_module_info?.judul || lecture.title;
                                                                             const scormPlayerUrl = scormModuleId
                                                                                 ? `/modules/${scormModuleId}/player/`
                                                                                 : (lecture.learning_module_info?.player_url ? getImageUrl(lecture.learning_module_info.player_url) : null);
 
-                                                                            const isVideo = !isScorm && (
+                                                                            const isVideo = !isQuiz && !isScorm && (
                                                                                 fileType === "video" ||
                                                                                 ['mp4', 'avi', 'mov', 'mkv', 'webm', 'ogv'].includes(ext) ||
                                                                                 fileLower.includes("youtube") ||
@@ -937,23 +979,23 @@ function AdminCourseReviewDetail() {
                                                                                 (fileLower.includes("drive.google.com") && !fileLower.includes("presentation"))
                                                                             );
 
-                                                                            const isPresentation = !isScorm && !isVideo && (
+                                                                            const isPresentation = !isQuiz && !isScorm && !isVideo && (
                                                                                 fileType === "presentation" ||
                                                                                 ['ppt', 'pptx', 'odp'].includes(ext) ||
                                                                                 fileLower.includes("docs.google.com/presentation")
                                                                             );
 
-                                                                            const isPdf = !isScorm && !isVideo && !isPresentation && (
+                                                                            const isPdf = !isQuiz && !isScorm && !isVideo && !isPresentation && (
                                                                                 fileType === "pdf" ||
                                                                                 ext === "pdf"
                                                                             );
 
-                                                                            const isAudio = !isScorm && !isVideo && !isPresentation && !isPdf && (
+                                                                            const isAudio = !isQuiz && !isScorm && !isVideo && !isPresentation && !isPdf && (
                                                                                 fileType === "audio" ||
                                                                                 ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext)
                                                                             );
 
-                                                                            const isWordDoc = !isScorm && !isVideo && !isPresentation && !isPdf && !isAudio && (
+                                                                            const isWordDoc = !isQuiz && !isScorm && !isVideo && !isPresentation && !isPdf && !isAudio && (
                                                                                 fileType === "document" ||
                                                                                 ['doc', 'docx', 'odt', 'rtf', 'txt'].includes(ext)
                                                                             );
@@ -961,17 +1003,22 @@ function AdminCourseReviewDetail() {
                                                                             const durText = formatLectureDuration(lecture);
 
                                                                             return (
-                                                                                <div key={lectureId} className="acrd-lecture-row">
+                                                                                <div key={lectureId} className={`acrd-lecture-row ${isQuiz ? "acrd-quiz-item-row" : ""}`}>
                                                                                     <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
                                                                                         <div className="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
-                                                                                            <span className="acrd-lec-num">{lIdx + 1}</span>
+                                                                                            <span
+                                                                                                className={`acrd-lec-num ${isQuiz ? "acrd-quiz-num" : ""}`}
+                                                                                                title={isQuiz ? "Kuis Kurikulum" : `Pelajaran ke-${lIdx + 1}`}
+                                                                                            >
+                                                                                                {isQuiz ? <i className="fas fa-tasks" style={{ fontSize: "0.65rem" }}></i> : lIdx + 1}
+                                                                                            </span>
                                                                                             <div className="text-truncate">
                                                                                                 <div className="fw-semibold small text-dark text-truncate">
-                                                                                                    {lecture.title}
+                                                                                                    {itemTitle}
                                                                                                 </div>
-                                                                                                {lecture.description && (
+                                                                                                {itemDescription && (
                                                                                                     <div className="text-muted text-truncate" style={{ fontSize: "0.75rem" }}>
-                                                                                                        {lecture.description}
+                                                                                                        {itemDescription}
                                                                                                     </div>
                                                                                                 )}
                                                                                             </div>
@@ -979,7 +1026,26 @@ function AdminCourseReviewDetail() {
 
                                                                                         <div className="d-flex align-items-center gap-2 flex-shrink-0">
                                                                                             {/* Media Type Badge */}
-                                                                                            {isVideo ? (
+                                                                                            {isQuiz ? (
+                                                                                                <>
+                                                                                                    <span className="badge small py-1" style={{ backgroundColor: "#fffbeb", color: "#b45309", border: "1px solid #fde68a" }}>
+                                                                                                        <i className="fas fa-clipboard-check me-1"></i> Kuis
+                                                                                                    </span>
+                                                                                                    <span className="badge bg-light text-dark border small py-1">
+                                                                                                        <i className="fas fa-question-circle text-warning me-1"></i> {questionCount} Soal
+                                                                                                    </span>
+                                                                                                    {targetQuiz?.passing_score && (
+                                                                                                        <span className="badge bg-light text-secondary border small py-1" title="Nilai Kelulusan Minimum">
+                                                                                                            <i className="fas fa-award text-success me-1"></i> Min: {targetQuiz.passing_score}%
+                                                                                                        </span>
+                                                                                                    )}
+                                                                                                    {targetQuiz?.duration_minutes ? (
+                                                                                                        <span className="badge bg-light text-dark border small py-1 font-monospace" title="Batas Waktu Pengerjaan">
+                                                                                                            <i className="fas fa-clock text-muted me-1"></i> {targetQuiz.duration_minutes}m
+                                                                                                        </span>
+                                                                                                    ) : null}
+                                                                                                </>
+                                                                                            ) : isVideo ? (
                                                                                                 <span className="badge bg-teal-subtle text-teal border border-teal-subtle small py-1">
                                                                                                     <i className="fas fa-play-circle me-1"></i> Video
                                                                                                 </span>
@@ -1009,109 +1075,141 @@ function AdminCourseReviewDetail() {
                                                                                                 </span>
                                                                                             )}
 
-                                                                                            {durText && (
+                                                                                            {!isQuiz && durText && (
                                                                                                 <span className="badge bg-light text-dark border small py-1 font-monospace">
                                                                                                     <i className="fas fa-clock text-muted me-1"></i> {durText}
                                                                                                 </span>
                                                                                             )}
 
-                                                                                            {lecture.completion_question && (
+                                                                                            {!isQuiz && lecture.completion_question && (
                                                                                                 <span className="badge bg-success-subtle text-success border border-success-subtle small py-1" title="Terdapat Pertanyaan Penyelesaian">
                                                                                                     <i className="fas fa-question-circle me-1"></i> Checkpoint
                                                                                                 </span>
                                                                                             )}
 
-                                                                                            {/* Action buttons (Video, SCORM, Presentation, PDF, Audio, Word, and Download) */}
-                                                                                            {isVideo && rawFile && (
-                                                                                                <button
-                                                                                                    type="button"
-                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-teal" : "btn-outline-teal"}`}
-                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
-                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                                                                                                    title={isPreviewOpen ? "Tutup Pratinjau Video" : "Lihat Pratinjau Video"}
-                                                                                                >
-                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-play-circle"} me-1`}></i>
-                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau"}
-                                                                                                </button>
-                                                                                            )}
+                                                                                            {/* Action buttons */}
+                                                                                            {isQuiz ? (
+                                                                                                <div className="d-flex align-items-center gap-1">
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        className={`btn btn-xs ${isPreviewOpen ? "btn-warning text-dark" : "btn-outline-warning text-dark"}`}
+                                                                                                        onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                        style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                        title={isPreviewOpen ? "Tutup Pratinjau Kuis" : "Lihat Pratinjau Soal Kuis"}
+                                                                                                    >
+                                                                                                        <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-eye"} me-1`}></i>
+                                                                                                        {isPreviewOpen ? "Tutup" : "Pratinjau Kuis"}
+                                                                                                    </button>
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        className="btn btn-xs btn-outline-secondary"
+                                                                                                        onClick={() => {
+                                                                                                            setActiveTab("quizzes");
+                                                                                                            const qId = targetQuiz?.quiz_id || targetQuiz?.id;
+                                                                                                            if (qId) {
+                                                                                                                setExpandedQuizzes(prev => ({ ...prev, [qId]: true }));
+                                                                                                            }
+                                                                                                        }}
+                                                                                                        style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                        title="Buka tab Kuis untuk rincian lengkap"
+                                                                                                    >
+                                                                                                        <i className="fas fa-external-link-alt me-1"></i> Tab Kuis
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            ) : (
+                                                                                                <>
+                                                                                                    {isVideo && rawFile && (
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            className={`btn btn-xs ${isPreviewOpen ? "btn-teal" : "btn-outline-teal"}`}
+                                                                                                            onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                            style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                            title={isPreviewOpen ? "Tutup Pratinjau Video" : "Lihat Pratinjau Video"}
+                                                                                                        >
+                                                                                                            <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-play-circle"} me-1`}></i>
+                                                                                                            {isPreviewOpen ? "Tutup" : "Pratinjau"}
+                                                                                                        </button>
+                                                                                                    )}
 
-                                                                                            {isScorm && (
-                                                                                                <button
-                                                                                                    type="button"
-                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-purple" : "btn-outline-purple"}`}
-                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
-                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                                                                                                    title="Lihat Pratinjau Modul SCORM"
-                                                                                                >
-                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-play-circle"} me-1`}></i>
-                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau SCORM"}
-                                                                                                </button>
-                                                                                            )}
+                                                                                                    {isScorm && (
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            className={`btn btn-xs ${isPreviewOpen ? "btn-purple" : "btn-outline-purple"}`}
+                                                                                                            onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                            style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                            title="Lihat Pratinjau Modul SCORM"
+                                                                                                        >
+                                                                                                            <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-play-circle"} me-1`}></i>
+                                                                                                            {isPreviewOpen ? "Tutup" : "Pratinjau SCORM"}
+                                                                                                        </button>
+                                                                                                    )}
 
-                                                                                            {isPresentation && rawFile && (
-                                                                                                <button
-                                                                                                    type="button"
-                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-warning text-dark" : "btn-outline-warning text-warning-emphasis"}`}
-                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
-                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px", borderColor: "#f59e0b" }}
-                                                                                                    title={isPreviewOpen ? "Tutup Pratinjau Slide" : "Lihat Pratinjau Paparan Presentasi"}
-                                                                                                >
-                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-file-powerpoint"} me-1`}></i>
-                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau Slide"}
-                                                                                                </button>
-                                                                                            )}
+                                                                                                    {isPresentation && rawFile && (
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            className={`btn btn-xs ${isPreviewOpen ? "btn-warning text-dark" : "btn-outline-warning text-warning-emphasis"}`}
+                                                                                                            onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                            style={{ fontSize: "0.75rem", padding: "2px 8px", borderColor: "#f59e0b" }}
+                                                                                                            title={isPreviewOpen ? "Tutup Pratinjau Slide" : "Lihat Pratinjau Paparan Presentasi"}
+                                                                                                        >
+                                                                                                            <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-file-powerpoint"} me-1`}></i>
+                                                                                                            {isPreviewOpen ? "Tutup" : "Pratinjau Slide"}
+                                                                                                        </button>
+                                                                                                    )}
 
-                                                                                            {isPdf && rawFile && (
-                                                                                                <button
-                                                                                                    type="button"
-                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-danger" : "btn-outline-danger"}`}
-                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
-                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                                                                                                    title={isPreviewOpen ? "Tutup Pratinjau PDF" : "Lihat Pratinjau Dokumen PDF"}
-                                                                                                >
-                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-file-pdf"} me-1`}></i>
-                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau PDF"}
-                                                                                                </button>
-                                                                                            )}
+                                                                                                    {isPdf && rawFile && (
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            className={`btn btn-xs ${isPreviewOpen ? "btn-danger" : "btn-outline-danger"}`}
+                                                                                                            onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                            style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                            title={isPreviewOpen ? "Tutup Pratinjau PDF" : "Lihat Pratinjau Dokumen PDF"}
+                                                                                                        >
+                                                                                                            <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-file-pdf"} me-1`}></i>
+                                                                                                            {isPreviewOpen ? "Tutup" : "Pratinjau PDF"}
+                                                                                                        </button>
+                                                                                                    )}
 
-                                                                                            {isAudio && rawFile && (
-                                                                                                <button
-                                                                                                    type="button"
-                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-primary" : "btn-outline-primary"}`}
-                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
-                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                                                                                                    title={isPreviewOpen ? "Tutup Pratinjau Audio" : "Dengarkan Pratinjau Audio"}
-                                                                                                >
-                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-headphones"} me-1`}></i>
-                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau Audio"}
-                                                                                                </button>
-                                                                                            )}
+                                                                                                    {isAudio && rawFile && (
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            className={`btn btn-xs ${isPreviewOpen ? "btn-primary" : "btn-outline-primary"}`}
+                                                                                                            onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                            style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                            title={isPreviewOpen ? "Tutup Pratinjau Audio" : "Dengarkan Pratinjau Audio"}
+                                                                                                        >
+                                                                                                            <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-headphones"} me-1`}></i>
+                                                                                                            {isPreviewOpen ? "Tutup" : "Pratinjau Audio"}
+                                                                                                        </button>
+                                                                                                    )}
 
-                                                                                            {isWordDoc && rawFile && (
-                                                                                                <button
-                                                                                                    type="button"
-                                                                                                    className={`btn btn-xs ${isPreviewOpen ? "btn-primary" : "btn-outline-primary"}`}
-                                                                                                    onClick={() => toggleLecturePreview(lectureId)}
-                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                                                                                                    title={isPreviewOpen ? "Tutup Info Dokumen" : "Lihat Info Dokumen"}
-                                                                                                >
-                                                                                                    <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-file-word"} me-1`}></i>
-                                                                                                    {isPreviewOpen ? "Tutup" : "Pratinjau"}
-                                                                                                </button>
-                                                                                            )}
+                                                                                                    {isWordDoc && rawFile && (
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            className={`btn btn-xs ${isPreviewOpen ? "btn-primary" : "btn-outline-primary"}`}
+                                                                                                            onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                            style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                            title={isPreviewOpen ? "Tutup Info Dokumen" : "Lihat Info Dokumen"}
+                                                                                                        >
+                                                                                                            <i className={`fas ${isPreviewOpen ? "fa-eye-slash" : "fa-file-word"} me-1`}></i>
+                                                                                                            {isPreviewOpen ? "Tutup" : "Pratinjau"}
+                                                                                                        </button>
+                                                                                                    )}
 
-                                                                                            {rawFile && (
-                                                                                                <a
-                                                                                                    href={fileUrl}
-                                                                                                    target="_blank"
-                                                                                                    rel="noopener noreferrer"
-                                                                                                    download
-                                                                                                    className="btn btn-xs btn-outline-secondary"
-                                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                                                                                                    title="Unduh / Buka berkas materi asli"
-                                                                                                >
-                                                                                                    <i className="fas fa-download me-1"></i> Unduh
-                                                                                                </a>
+                                                                                                    {rawFile && (
+                                                                                                        <a
+                                                                                                            href={fileUrl}
+                                                                                                            target="_blank"
+                                                                                                            rel="noopener noreferrer"
+                                                                                                            download
+                                                                                                            className="btn btn-xs btn-outline-secondary"
+                                                                                                            style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                                            title="Unduh / Buka berkas materi asli"
+                                                                                                        >
+                                                                                                            <i className="fas fa-download me-1"></i> Unduh
+                                                                                                        </a>
+                                                                                                    )}
+                                                                                                </>
                                                                                             )}
                                                                                         </div>
                                                                                     </div>
@@ -1444,8 +1542,94 @@ function AdminCourseReviewDetail() {
                                                                                         </div>
                                                                                     )}
 
+                                                                                    {/* Inline Quiz Question List Preview */}
+                                                                                    {isPreviewOpen && isQuiz && (
+                                                                                        <div className="acrd-lecture-preview-box acrd-quiz-preview-box mt-2 p-3 rounded bg-white border border-warning-subtle shadow-sm">
+                                                                                            <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                                    <span className="badge" style={{ backgroundColor: "#fffbeb", color: "#b45309", border: "1px solid #fde68a", fontSize: "0.75rem" }}>
+                                                                                                        <i className="fas fa-clipboard-check me-1"></i> Pratinjau Kuis
+                                                                                                    </span>
+                                                                                                    <strong className="small text-dark text-truncate" style={{ maxWidth: "340px" }}>
+                                                                                                        {itemTitle}
+                                                                                                    </strong>
+                                                                                                </div>
+                                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                                    <span className="badge bg-light text-muted border small">
+                                                                                                        {questionCount} Pertanyaan
+                                                                                                    </span>
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        className="btn btn-xs btn-secondary d-inline-flex align-items-center"
+                                                                                                        style={{ fontSize: "0.725rem", padding: "3px 8px", lineHeight: 1 }}
+                                                                                                        onClick={() => toggleLecturePreview(lectureId)}
+                                                                                                    >
+                                                                                                        <i className="fas fa-times me-1"></i>
+                                                                                                        <span>Tutup</span>
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            </div>
+
+                                                                                            {itemDescription && (
+                                                                                                <div className="alert alert-light border small py-2 px-3 mb-2 text-muted">
+                                                                                                    <i className="fas fa-info-circle text-warning me-1"></i>
+                                                                                                    <strong>Petunjuk:</strong> {itemDescription}
+                                                                                                </div>
+                                                                                            )}
+
+                                                                                            {targetQuiz?.questions && targetQuiz.questions.length > 0 ? (
+                                                                                                <div className="acrd-questions-list">
+                                                                                                    {targetQuiz.questions.map((question, quIdx) => (
+                                                                                                        <div key={question.question_id || quIdx} className="acrd-question-card mb-2 p-2 rounded border bg-light">
+                                                                                                            <div className="d-flex align-items-start gap-2 mb-2">
+                                                                                                                <span className="badge bg-dark text-white flex-shrink-0" style={{ fontSize: "0.7rem", marginTop: "2px" }}>
+                                                                                                                    Soal {quIdx + 1}
+                                                                                                                </span>
+                                                                                                                <div className="fw-semibold small text-dark flex-grow-1">
+                                                                                                                    {question.question_text}
+                                                                                                                </div>
+                                                                                                            </div>
+
+                                                                                                            {question.choices && question.choices.length > 0 ? (
+                                                                                                                <div className="acrd-choices-grid">
+                                                                                                                    {question.choices.map((choice, cIdx) => (
+                                                                                                                        <div
+                                                                                                                            key={choice.choice_id || cIdx}
+                                                                                                                            className={`acrd-choice-pill ${choice.is_correct ? "correct" : ""}`}
+                                                                                                                        >
+                                                                                                                            <span className="acrd-choice-letter">
+                                                                                                                                {String.fromCharCode(65 + cIdx)}.
+                                                                                                                            </span>
+                                                                                                                            <span className="acrd-choice-text flex-grow-1">
+                                                                                                                                {choice.choice_text}
+                                                                                                                            </span>
+                                                                                                                            {choice.is_correct && (
+                                                                                                                                <span className="badge bg-success text-white py-0 px-1 ms-1" style={{ fontSize: "0.65rem" }}>
+                                                                                                                                    <i className="fas fa-check me-0"></i> Kunci
+                                                                                                                                </span>
+                                                                                                                            )}
+                                                                                                                        </div>
+                                                                                                                    ))}
+                                                                                                                </div>
+                                                                                                            ) : (
+                                                                                                                <div className="text-muted small fst-italic ps-4">
+                                                                                                                    Belum ada pilihan jawaban untuk pertanyaan ini.
+                                                                                                                </div>
+                                                                                                            )}
+                                                                                                        </div>
+                                                                                                    ))}
+                                                                                                </div>
+                                                                                            ) : (
+                                                                                                <div className="text-center py-3 text-muted small fst-italic">
+                                                                                                    <i className="fas fa-exclamation-triangle me-1 text-warning"></i>
+                                                                                                    {targetQuiz ? "Belum ada detail soal dalam kuis ini." : "Data kuis tidak ditemukan atau belum dimuat."}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
+
                                                                                     {/* Lesson Completion Question */}
-                                                                                    {lecture.completion_question && (
+                                                                                    {!isQuiz && lecture.completion_question && (
                                                                                         <div className="acrd-checkpoint-box mt-2 p-2 rounded">
                                                                                             <div className="d-flex align-items-center justify-content-between mb-1">
                                                                                                 <span className="small fw-bold text-success d-flex align-items-center gap-1">

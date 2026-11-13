@@ -2036,15 +2036,19 @@ class StudentQuizListAPIView(generics.ListAPIView):
     
     def get_queryset(self):
         course_id = self.kwargs['course_id']
-        # Find the course by course_id field, then filter quizzes by the actual Course instance
-        try:
-            course = api_models.Course.objects.get(course_id=course_id)
+        # Find the course by course_id field, id (numeric), or slug
+        course = api_models.Course.objects.filter(course_id=course_id).first()
+        if not course and str(course_id).isdigit():
+            course = api_models.Course.objects.filter(id=int(course_id)).first()
+        if not course:
+            course = api_models.Course.objects.filter(slug=course_id).first()
+
+        if course:
             return api_models.Quiz.objects.filter(
                 course=course,
                 is_active=True
             ).prefetch_related('questions__choices')
-        except api_models.Course.DoesNotExist:
-            return api_models.Quiz.objects.none()
+        return api_models.Quiz.objects.none()
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -2056,6 +2060,10 @@ class StudentQuizListAPIView(generics.ListAPIView):
             user = User.objects.get(id=user_id)
             course_id = self.kwargs.get('course_id')
             course = api_models.Course.objects.filter(course_id=course_id).first()
+            if not course and str(course_id).isdigit():
+                course = api_models.Course.objects.filter(id=int(course_id)).first()
+            if not course:
+                course = api_models.Course.objects.filter(slug=course_id).first()
             
             # Check pre-test status for course
             pre_post_quiz = api_models.Quiz.objects.filter(course=course, quiz_type='pre_post_test', is_active=True).first() if course else None
@@ -2076,7 +2084,7 @@ class StudentQuizListAPIView(generics.ListAPIView):
                     post_test_score = float(post_att.score)
 
             enrollment = api_models.EnrolledCourse.objects.filter(user=user, course=course).first() if course else None
-            all_lessons_completed = enrollment.is_course_completed() if enrollment else False
+            all_lessons_completed = enrollment.are_all_lessons_completed() if (enrollment and hasattr(enrollment, 'are_all_lessons_completed')) else (enrollment.completed_lesson().values('variant_item').distinct().count() >= enrollment.lectures().count() if enrollment else False)
             all_regular_quizzes_passed = enrollment.are_all_quizzes_passed() if enrollment else False
             all_games_completed = enrollment.are_all_games_completed() if enrollment else True
             can_take_post_test = all_lessons_completed and all_regular_quizzes_passed and all_games_completed
@@ -2193,7 +2201,10 @@ class StudentQuizDetailAPIView(generics.RetrieveAPIView):
                     has_post = bool(post_att)
 
                     enrollment = api_models.EnrolledCourse.objects.filter(user=user, course=quiz.course).first()
-                    can_take_post = (enrollment.is_course_completed() and enrollment.are_all_quizzes_passed()) if enrollment else False
+                    all_lessons_completed = enrollment.are_all_lessons_completed() if (enrollment and hasattr(enrollment, 'are_all_lessons_completed')) else (enrollment.completed_lesson().values('variant_item').distinct().count() >= enrollment.lectures().count() if enrollment else False)
+                    all_regular_quizzes_passed = enrollment.are_all_quizzes_passed() if enrollment else False
+                    all_games_completed = enrollment.are_all_games_completed() if enrollment else True
+                    can_take_post = bool(enrollment and all_lessons_completed and all_regular_quizzes_passed and all_games_completed)
 
                     quiz_data['has_pre_test'] = has_pre
                     quiz_data['has_post_test'] = has_post
@@ -2213,7 +2224,16 @@ class StudentQuizDetailAPIView(generics.RetrieveAPIView):
                         quiz_data['can_attempt'] = can_take_post
                         quiz_data['today_attempts'] = 0
                         quiz_data['is_locked'] = not can_take_post
-                        quiz_data['lock_reason'] = None if can_take_post else "Selesaikan seluruh materi kurikulum dan kuis kursus terlebih dahulu untuk membuka Post-test"
+                        if can_take_post:
+                            quiz_data['lock_reason'] = None
+                        elif not all_games_completed:
+                            quiz_data['lock_reason'] = "Selesaikan seluruh mini-game pada tab Gamifikasi terlebih dahulu untuk membuka Post-test"
+                        elif not all_lessons_completed:
+                            quiz_data['lock_reason'] = "Selesaikan seluruh materi kurikulum kursus terlebih dahulu untuk membuka Post-test"
+                        elif not all_regular_quizzes_passed:
+                            quiz_data['lock_reason'] = "Selesaikan dan luluskan semua kuis materi terlebih dahulu untuk membuka Post-test"
+                        else:
+                            quiz_data['lock_reason'] = "Selesaikan seluruh materi kurikulum, kuis, dan gamifikasi kursus terlebih dahulu untuk membuka Post-test"
                         quiz_data['is_passed'] = False
                     else:
                         quiz_data['current_mode'] = 'completed'
@@ -2305,7 +2325,8 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                                 {"error": "Post-test terkunci. Anda harus menyelesaikan seluruh tantangan mini-game pada tab Gamifikasi terlebih dahulu."},
                                 status=status.HTTP_403_FORBIDDEN
                             )
-                        if not enrollment.is_course_completed():
+                        lessons_done = enrollment.are_all_lessons_completed() if hasattr(enrollment, 'are_all_lessons_completed') else enrollment.is_course_completed()
+                        if not lessons_done:
                             return Response(
                                 {"error": "Post-test terkunci. Anda harus menyelesaikan seluruh materi kurikulum terlebih dahulu."},
                                 status=status.HTTP_403_FORBIDDEN

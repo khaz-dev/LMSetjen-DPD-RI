@@ -417,6 +417,8 @@ const SiMantaAvatar = () => {
     const [pose, setPose] = useState('idle'); // 'idle' | 'wave' | 'happy'
     const [isHovered, setIsHovered] = useState(false);
     const [showBubble, setShowBubble] = useState(false);
+    const [celebrationBubble, setCelebrationBubble] = useState(null);
+    const celebrationTimerRef = useRef(null);
     const [bubbleDismissed, setBubbleDismissed] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [isChatExpanded, setIsChatExpanded] = useState(() => {
@@ -1369,12 +1371,93 @@ const SiMantaAvatar = () => {
         window.addEventListener('open_manta_chat', handleOpenChatEvent);
         window.addEventListener('open-manta-chat', handleOpenChatEvent);
 
+        // 🎉 Event Listener Perayaan Penerbitan Sertifikat: SiManta Floating mengucapkan selamat kepada peserta
+        const handleCertificateCelebration = (e) => {
+            const courseTitle = e.detail?.courseTitle || 'Pelatihan';
+            const userName = e.detail?.userName || 'Rekan Pembelajar';
+            const certId = e.detail?.certificate?.formatted_certificate_id || e.detail?.certificate?.certificate_id || '';
+
+            // Un-minimize dan posisikan Manta aktif bergembira
+            setIsMinimized(false);
+            setIsQuizActiveScreen(false);
+            setPose('happy');
+            triggerConfetti();
+
+            // Tampilkan balon ucapan selamat cerdas di atas avatar floating
+            const cheerBubble = `🎉 Selamat ${userName}! Sertifikat resmi untuk "${courseTitle}" telah berhasil diterbitkan! 📜🏆✨`;
+            setCelebrationBubble(cheerBubble);
+            setShowBubble(true);
+            setBubbleDismissed(false);
+
+            if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current);
+            celebrationTimerRef.current = setTimeout(() => {
+                setShowBubble(false);
+                setCelebrationBubble(null);
+                setPose('idle');
+            }, 18000);
+
+            // Tambahkan pesan apresiasi kelulusan ke riwayat obrolan Manta
+            const congratulatoryMessage = {
+                sender: 'bot',
+                text: `🎉 **Selamat ${userName}!**\n\nSelamat atas kelulusan dan keberhasilan Anda menerbitkan Sertifikat resmi untuk pelatihan **"${courseTitle}"**! 📜🎖️\n\n${certId ? `Nomor Registrasi Sertifikat: \`${certId}\`\n\n` : ''}Seluruh kurikulum pembelajaran, kuis, dan evaluasi akhir telah Anda selesaikan dengan sangat baik. Terus tingkatkan kompetensi dan bagikan ilmu bermanfaat demi kemajuan Sekretariat Jenderal DPD RI! 🚀✨`,
+                time: 'Baru saja',
+                courses: [],
+                actions: [
+                    { label: 'Lihat Sertifikat', query: 'Bagaimana cara membagikan atau mengunduh sertifikat resmi saya?' },
+                    { label: 'Rekomendasi Pelatihan Lain', query: 'Rekomendasikan kursus lanjutan yang relevan dengan pelatihan ini' }
+                ]
+            };
+
+            setChatMessages(prev => {
+                const nextMessages = [...prev, congratulatoryMessage];
+                try {
+                    const user = UserData();
+                    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+                    const role = path.startsWith('/admin') ? 'admin' : (path.startsWith('/instructor') ? 'instructor' : ((user?.current_role || user?.role || 'student').toLowerCase().trim()));
+                    const normalizedRole = role === 'teacher' ? 'instructor' : (role === 'admin' ? 'admin' : 'student');
+                    const storageKey = getChatStorageKey(normalizedRole);
+                    sessionStorage.setItem(storageKey, JSON.stringify(nextMessages));
+                } catch (err) {
+                    console.warn('Gagal menyimpan chat perayaan sertifikat:', err);
+                }
+                return nextMessages;
+            });
+
+            // Putar audio ucapan suara ramah jika SpeechSynthesis tersedia di peramban
+            try {
+                if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const cheerAudioText = `Selamat ${userName}! Anda telah berhasil menyelesaikan pelatihan dan menerbitkan sertifikat resmi. Prestasi yang luar biasa!`;
+                    const utterance = new SpeechSynthesisUtterance(cheerAudioText);
+                    utterance.lang = 'id-ID';
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.1;
+                    const voices = window.speechSynthesis.getVoices();
+                    const idVoice = voices.find(v => 
+                        v.lang.toLowerCase().startsWith('id') || 
+                        v.lang.includes('ID') || 
+                        v.name.toLowerCase().includes('indonesia')
+                    );
+                    if (idVoice) utterance.voice = idVoice;
+                    window.speechSynthesis.speak(utterance);
+                }
+            } catch (ttsErr) {
+                console.warn('TTS perayaan sertifikat tidak dapat diputar:', ttsErr);
+            }
+        };
+
+        window.addEventListener('manta-certificate-generated', handleCertificateCelebration);
+        window.addEventListener('lms-certificate-issued', handleCertificateCelebration);
+
         return () => {
             delete window.openMantaChat;
             window.removeEventListener('manta_open_chat', handleOpenChatEvent);
             window.removeEventListener('manta-open-chat', handleOpenChatEvent);
             window.removeEventListener('open_manta_chat', handleOpenChatEvent);
             window.removeEventListener('open-manta-chat', handleOpenChatEvent);
+            window.removeEventListener('manta-certificate-generated', handleCertificateCelebration);
+            window.removeEventListener('lms-certificate-issued', handleCertificateCelebration);
+            if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current);
         };
     }, []);
 
@@ -1421,19 +1504,29 @@ const SiMantaAvatar = () => {
                     {/* Balon Sapaan Cerdas (Smart Proactive Learning Nudge) */}
                     {showBubble && !isChatOpen && !isActionMenuOpen && !isGameOpen && (
                         <div 
-                            className="simanta-speech-bubble"
-                            onClick={handleAvatarClick}
+                            className={`simanta-speech-bubble ${celebrationBubble ? 'simanta-speech-celebration' : ''}`}
+                            onClick={() => {
+                                if (celebrationBubble) {
+                                    setIsChatOpen(true);
+                                    setIsMinimized(false);
+                                    setShowBubble(false);
+                                    setCelebrationBubble(null);
+                                } else {
+                                    handleAvatarClick();
+                                }
+                            }}
                             role="button"
                             tabIndex={0}
                         >
                             <span>
-                                {learningNudge?.bubble_text || 'Halo! Saya Manta 👋 Ada yang bisa dibantu?'}
+                                {celebrationBubble || learningNudge?.bubble_text || 'Halo! Saya Manta 👋 Ada yang bisa dibantu?'}
                             </span>
                             <button
                                 className="simanta-speech-close"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setShowBubble(false);
+                                    setCelebrationBubble(null);
                                     setBubbleDismissed(true);
                                 }}
                                 title="Tutup sapaan"
@@ -1486,6 +1579,26 @@ const SiMantaAvatar = () => {
                                 </button>
                             </div>
                             <div className="simanta-action-menu-arrow" />
+                        </div>
+                    )}
+
+                    {/* Partikel Konfeti Perayaan saat Chat Belum Terbuka */}
+                    {confettiActive && !isChatOpen && (
+                        <div className="simanta-confetti-avatar-burst" aria-hidden="true">
+                            {Array.from({ length: 32 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className="simanta-confetti-piece"
+                                    style={{
+                                        left: `${(i * 3.1) % 94 + 3}%`,
+                                        animationDelay: `${(i % 8) * 0.12}s`,
+                                        backgroundColor: ['#0d9488', '#f59e0b', '#ec4899', '#6366f1', '#10b981', '#0ea5e9', '#eab308'][i % 7],
+                                        transform: `rotate(${i * 31}deg)`,
+                                        width: `${(i % 3) * 3 + 6}px`,
+                                        height: `${(i % 4) * 4 + 7}px`
+                                    }}
+                                />
+                            ))}
                         </div>
                     )}
 

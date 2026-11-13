@@ -34,7 +34,8 @@ import {
     validateImage,
     validateCategory,
     validateLevel,
-    validateAllFields
+    validateAllFields,
+    getUnassignedActiveQuizzes
 } from "../../utils/courseEditValidation";
 import { getStatusText } from "../../utils/courseUtils";
 import {
@@ -82,6 +83,7 @@ function CourseEdit() {
         getFieldValidationClass
     } = useCourseForm(courseData);
     const { submitCourse, isSubmitting } = useCourseSubmit();
+    const unassignedActiveQuizzes = getUnassignedActiveQuizzes(courseData);
 
     // Refs for focusing on error inputs
     const titleRef = useRef(null);
@@ -160,8 +162,12 @@ function CourseEdit() {
         // If they select "Draft" or "Disabled", button should be disabled
         const wantsToPublish = courseData?.teacher_course_status === "Published";
 
-        // Course must have curriculum, lessons, quizzes, AND instructor must want to publish
-        const meetsPublishRequirements = hasCurriculum && hasLessons && hasQuizzes && wantsToPublish;
+        // ✨ Check if all active regular quizzes are embedded in curriculum (excluding Pre/Post-test)
+        const unassignedQuizzes = getUnassignedActiveQuizzes(courseData);
+        const hasUnassignedActiveQuizzes = unassignedQuizzes.length > 0;
+
+        // Course must have curriculum, lessons, quizzes, instructor must want to publish, AND all active regular quizzes must be embedded
+        const meetsPublishRequirements = hasCurriculum && hasLessons && hasQuizzes && wantsToPublish && !hasUnassignedActiveQuizzes;
 
         setCanPublish(meetsPublishRequirements);
     }, [courseData]);
@@ -525,22 +531,74 @@ function CourseEdit() {
 
     // Handle course publishing with comprehensive validation
     const handlePublishCourse = async () => {
+        let currentCourseData = courseData;
+        try {
+            const freshRes = await useAxios.get(`/teacher/course-detail/${param?.course_id}/?for_edit=true`);
+            if (freshRes?.data) {
+                currentCourseData = freshRes.data;
+                setCourseData(freshRes.data);
+            }
+        } catch (fetchErr) {
+            console.warn("[CourseEdit] Could not refetch fresh course details before publish check:", fetchErr);
+        }
+
+        // ✨ Check for active regular quizzes not yet embedded in curriculum (excluding Pre/Post-test)
+        const unassignedQuizzes = getUnassignedActiveQuizzes(currentCourseData);
+        if (unassignedQuizzes.length > 0) {
+            await Swal.fire({
+                title: "Kuis Belum Disematkan ke Kurikulum",
+                html: `
+                    <div class="text-start">
+                        <p class="mb-2">Terdapat <strong>${unassignedQuizzes.length} kuis aktif</strong> yang belum disematkan ke dalam bagian kurikulum kursus <strong>"${currentCourseData?.title}"</strong>:</p>
+                        <div class="alert alert-warning mb-3">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>Daftar Kuis yang Perlu Disematkan:</strong>
+                            <ul class="mt-2 mb-0 small ps-3">
+                                ${unassignedQuizzes.map(q => `<li><strong>${q.title}</strong> (${q.total_questions || q.questions?.length || 0} Soal)</li>`).join("")}
+                            </ul>
+                        </div>
+                        <p class="small text-muted mb-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Silakan sematkan kuis di atas ke dalam kurikulum pembelajaran terlebih dahulu sebelum mengajukan review publikasi kursus.
+                        </p>
+                        <div class="alert alert-info py-2 px-3 mb-0 small">
+                            <i class="fas fa-graduation-cap me-1"></i>
+                            <em>Catatan: Kuis Pre/Post-test otomatis masuk pada awal dan akhir kurikulum, sehingga tidak perlu disematkan secara manual.</em>
+                        </div>
+                    </div>
+                `,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#0d9488",
+                cancelButtonColor: "#64748b",
+                confirmButtonText: '<i class="fas fa-layer-group me-1"></i> Buka Kelola Kurikulum',
+                cancelButtonText: '<i class="fas fa-times me-1"></i> Mengerti'
+            }).then((modalResult) => {
+                if (modalResult.isConfirmed) {
+                    navigate(`/instructor/edit-course/${param?.course_id}/curriculum/`);
+                }
+            });
+            return;
+        }
+
         // Pre-publish validation
-        const curriculumCount = courseData?.curriculum?.length || 0;
-        const lecturesCount = courseData?.lectures?.length || 0;
-        const quizzesCount = courseData?.quizzes?.length || 0;
+        const curriculumCount = currentCourseData?.curriculum?.length || 0;
+        const lecturesCount = currentCourseData?.lectures?.length || 0;
+        const quizzesCount = currentCourseData?.quizzes?.length || 0;
+        const wantsToPublish = currentCourseData?.teacher_course_status === "Published";
 
         // Check minimum requirements
-        if (!canPublish) {
+        if (!canPublish || !wantsToPublish || curriculumCount === 0 || lecturesCount === 0 || quizzesCount === 0) {
             await Swal.fire({
                 title: "Persyaratan Minimum Belum Terpenuhi",
                 html: `
                     <div class="text-start">
-                        <p class="mb-2">Kursus <strong>"${courseData?.title}"</strong> belum memenuhi syarat minimum untuk penerbitan:</p>
+                        <p class="mb-2">Kursus <strong>"${currentCourseData?.title}"</strong> belum memenuhi syarat minimum untuk penerbitan:</p>
                         <div class="alert alert-danger mb-2">
                             <i class="fas fa-exclamation-circle me-1"></i>
                             <strong>Persyaratan yang Belum Lengkap:</strong>
                             <ul class="mt-1 mb-0 small ps-3">
+                                ${!wantsToPublish ? "<li>Status kursus belum diatur ke 'Dipublikasikan'</li>" : ""}
                                 ${curriculumCount === 0 ? '<li>Belum ada bagian kurikulum yang dibuat</li>' : ""}
                                 ${lecturesCount === 0 ? '<li>Belum ada pelajaran yang diunggah</li>' : ""}
                                 ${quizzesCount === 0 ? '<li>Belum ada kuis yang ditambahkan</li>' : ""}
@@ -550,6 +608,7 @@ function CourseEdit() {
                             <i class="fas fa-info-circle me-1"></i>
                             <strong>Langkah Selanjutnya:</strong>
                             <ol class="mt-1 mb-0 small ps-3">
+                                ${!wantsToPublish ? "<li>Pilih 'Dipublikasikan' pada pilihan status kursus di atas</li>" : ""}
                                 ${curriculumCount === 0 ? '<li>Buka "Kelola Kurikulum" untuk membuat bagian kursus</li>' : ""}
                                 ${lecturesCount === 0 ? "<li>Unggah pelajaran ke dalam kurikulum</li>" : ""}
                                 ${quizzesCount === 0 ? '<li>Buka "Kelola Kuis" untuk menambahkan evaluasi kuis</li>' : ""}
@@ -1153,7 +1212,7 @@ function CourseEdit() {
                                                 label="Target Peserta & Akses"
                                                 name="target_audience"
                                                 type="select"
-                                                value={courseData?.target_audience || "pegawai"}
+                                                value={courseData?.target_audience === "pegawai" ? "internal" : (courseData?.target_audience || "internal")}
                                                 onChange={handleCourseInputChange}
                                                 options={COURSE_AUDIENCE_OPTIONS}
                                                 required
@@ -1599,7 +1658,7 @@ function CourseEdit() {
                                                     type="button"
                                                     className="btn btn-publish-course btn-sm d-inline-flex align-items-center gap-2"
                                                     onClick={handlePublishCourse}
-                                                    disabled={isPublishing || submitStatus === "submitting" || !canPublish}
+                                                    disabled={isPublishing || submitStatus === "submitting"}
                                                     style={{
                                                         background: canPublish
                                                             ? "linear-gradient(135deg, #0f766e 0%, #115e59 100%)"
@@ -1614,27 +1673,31 @@ function CourseEdit() {
                                                             ? "0 2px 8px rgba(15, 118, 110, 0.25)"
                                                             : "0 2px 8px rgba(0, 0, 0, 0.1)",
                                                         transition: "all 0.3s ease",
-                                                        cursor: canPublish ? "pointer" : "not-allowed",
-                                                        opacity: canPublish ? 1 : 0.6,
+                                                        cursor: isPublishing || submitStatus === "submitting" ? "not-allowed" : "pointer",
+                                                        opacity: canPublish ? 1 : 0.85,
                                                         whiteSpace: "nowrap",
                                                         minHeight: "34px"
                                                     }}
                                                     onMouseOver={(e) => {
-                                                        if (canPublish && !isPublishing && submitStatus !== "submitting") {
+                                                        if (!isPublishing && submitStatus !== "submitting") {
                                                             e.currentTarget.style.transform = "translateY(-2px)";
-                                                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(15, 118, 110, 0.35)";
+                                                            e.currentTarget.style.boxShadow = canPublish
+                                                                ? "0 4px 12px rgba(15, 118, 110, 0.35)"
+                                                                : "0 4px 12px rgba(0, 0, 0, 0.2)";
                                                         }
                                                     }}
                                                     onMouseOut={(e) => {
-                                                        if (canPublish) {
-                                                            e.currentTarget.style.transform = "translateY(0)";
-                                                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(15, 118, 110, 0.25)";
-                                                        }
+                                                        e.currentTarget.style.transform = "translateY(0)";
+                                                        e.currentTarget.style.boxShadow = canPublish
+                                                            ? "0 2px 8px rgba(15, 118, 110, 0.25)"
+                                                            : "0 2px 8px rgba(0, 0, 0, 0.1)";
                                                     }}
                                                     title={!canPublish ? (
                                                         courseData?.teacher_course_status !== "Published"
                                                             ? "Pilih 'Dipublikasikan' sebagai status yang diinginkan untuk mengajukan publikasi"
-                                                            : "Tambahkan kurikulum, pelajaran, dan kuis sebelum mengajukan"
+                                                            : unassignedActiveQuizzes.length > 0
+                                                                ? `Terdapat ${unassignedActiveQuizzes.length} kuis aktif yang belum disematkan ke kurikulum (klik untuk melihat detail)`
+                                                                : "Tambahkan kurikulum, pelajaran, dan kuis sebelum mengajukan"
                                                     ) : "Ajukan kursus Anda untuk persetujuan publikasi"}
                                                 >
                                                     {isPublishing ? (
@@ -1656,7 +1719,9 @@ function CourseEdit() {
                                                         <i className="fas fa-exclamation-triangle me-1"></i>
                                                         {courseData?.teacher_course_status !== "Published"
                                                             ? "Pilih 'Dipublikasikan' pada dropdown 'Status Kursus yang Diinginkan' di atas untuk melanjutkan"
-                                                            : "Tambahkan kurikulum, pelajaran & kuis terlebih dahulu"}
+                                                            : unassignedActiveQuizzes.length > 0
+                                                                ? `${unassignedActiveQuizzes.length} kuis aktif belum disematkan ke kurikulum (klik tombol untuk melihat)`
+                                                                : "Tambahkan kurikulum, pelajaran & kuis terlebih dahulu"}
                                                     </small>
                                                 )}
                                             </div>
@@ -1680,7 +1745,7 @@ function CourseEdit() {
                                                     type="button"
                                                     className="btn btn-publish-course btn-sm d-inline-flex align-items-center gap-2"
                                                     onClick={handlePublishCourse}
-                                                    disabled={isPublishing || submitStatus === "submitting" || !canPublish}
+                                                    disabled={isPublishing || submitStatus === "submitting"}
                                                     style={{
                                                         background: canPublish
                                                             ? "linear-gradient(135deg, #0f766e 0%, #115e59 100%)"
@@ -1695,27 +1760,31 @@ function CourseEdit() {
                                                             ? "0 2px 8px rgba(15, 118, 110, 0.25)"
                                                             : "0 2px 8px rgba(0, 0, 0, 0.1)",
                                                         transition: "all 0.3s ease",
-                                                        cursor: canPublish ? "pointer" : "not-allowed",
-                                                        opacity: canPublish ? 1 : 0.6,
+                                                        cursor: isPublishing || submitStatus === "submitting" ? "not-allowed" : "pointer",
+                                                        opacity: canPublish ? 1 : 0.85,
                                                         whiteSpace: "nowrap",
                                                         minHeight: "34px"
                                                     }}
                                                     onMouseOver={(e) => {
-                                                        if (canPublish && !isPublishing && submitStatus !== "submitting") {
+                                                        if (!isPublishing && submitStatus !== "submitting") {
                                                             e.currentTarget.style.transform = "translateY(-2px)";
-                                                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(15, 118, 110, 0.35)";
+                                                            e.currentTarget.style.boxShadow = canPublish
+                                                                ? "0 4px 12px rgba(15, 118, 110, 0.35)"
+                                                                : "0 4px 12px rgba(0, 0, 0, 0.2)";
                                                         }
                                                     }}
                                                     onMouseOut={(e) => {
-                                                        if (canPublish) {
-                                                            e.currentTarget.style.transform = "translateY(0)";
-                                                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(15, 118, 110, 0.25)";
-                                                        }
+                                                        e.currentTarget.style.transform = "translateY(0)";
+                                                        e.currentTarget.style.boxShadow = canPublish
+                                                            ? "0 2px 8px rgba(15, 118, 110, 0.25)"
+                                                            : "0 2px 8px rgba(0, 0, 0, 0.1)";
                                                     }}
                                                     title={!canPublish ? (
                                                         courseData?.teacher_course_status !== "Published"
                                                             ? "Pilih 'Dipublikasikan' sebagai status yang diinginkan untuk mengajukan publikasi"
-                                                            : "Tambahkan kurikulum, pelajaran, dan kuis sebelum mengajukan"
+                                                            : unassignedActiveQuizzes.length > 0
+                                                                ? `Terdapat ${unassignedActiveQuizzes.length} kuis aktif yang belum disematkan ke kurikulum (klik untuk melihat detail)`
+                                                                : "Tambahkan kurikulum, pelajaran, dan kuis sebelum mengajukan"
                                                     ) : "Ajukan kursus Anda untuk persetujuan publikasi"}
                                                 >
                                                     {isPublishing ? (
@@ -1737,7 +1806,9 @@ function CourseEdit() {
                                                         <i className="fas fa-exclamation-triangle me-1"></i>
                                                         {courseData?.teacher_course_status !== "Published"
                                                             ? "Pilih 'Dipublikasikan' pada dropdown 'Status Kursus yang Diinginkan' di atas untuk melanjutkan"
-                                                            : "Tambahkan kurikulum, pelajaran & kuis terlebih dahulu"}
+                                                            : unassignedActiveQuizzes.length > 0
+                                                                ? `${unassignedActiveQuizzes.length} kuis aktif belum disematkan ke kurikulum (klik tombol untuk melihat)`
+                                                                : "Tambahkan kurikulum, pelajaran & kuis terlebih dahulu"}
                                                     </small>
                                                 )}
                                             </div>

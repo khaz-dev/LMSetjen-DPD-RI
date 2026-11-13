@@ -11,6 +11,20 @@
     background-color: #ffffff !important;
 }
 
+.pptx-toolbar .btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    vertical-align: middle;
+}
+
+.pptx-toolbar .btn i {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+
 .pptx-stage-body {
     background-color: #f8f9fa !important;
 }

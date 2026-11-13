@@ -124,3 +124,54 @@ export const getSelectValidationClass = (fieldName, errors, warnings, value) => 
     }
     return baseClass;
 };
+
+/**
+ * Detect active regular quizzes not yet embedded in the curriculum.
+ * Pre/Post-tests are excluded because they are automatically included at course level.
+ * Inactive quizzes (is_active === false) are also excluded.
+ * 
+ * @param {Object} courseData
+ * @returns {Array} Array of unassigned active quiz objects
+ */
+export const getUnassignedActiveQuizzes = (courseData) => {
+    if (!courseData) return [];
+
+    const embeddedQuizIds = new Set();
+    const curriculum = Array.isArray(courseData.curriculum) ? courseData.curriculum : [];
+
+    curriculum.forEach(section => {
+        const items = section?.variant_items || section?.items || [];
+        if (Array.isArray(items)) {
+            items.forEach(item => {
+                const qId = item?.quiz_id ||
+                    (item?.quiz && typeof item.quiz === 'object' ? item.quiz.quiz_id : (item?.quiz || null)) ||
+                    (item?.quiz_detail && item.quiz_detail.quiz_id ? item.quiz_detail.quiz_id : null);
+                if (qId !== null && qId !== undefined && qId !== '') {
+                    embeddedQuizIds.add(String(qId));
+                }
+                if (item?.quiz && typeof item.quiz === 'object' && item?.quiz?.id !== undefined) {
+                    embeddedQuizIds.add(String(item.quiz.id));
+                }
+            });
+        }
+    });
+
+    const quizzes = Array.isArray(courseData.quizzes) ? courseData.quizzes : [];
+    return quizzes.filter(quiz => {
+        if (!quiz) return false;
+
+        // Exclude Pre/Post-test quizzes
+        const isPrePost = quiz.quiz_type === 'pre_post_test' || quiz.has_pre_test || quiz.has_post_test;
+        if (isPrePost) return false;
+
+        // Only check active quizzes (default is true if undefined)
+        const isActive = quiz.is_active !== false;
+        if (!isActive) return false;
+
+        const quizIdStr = quiz.quiz_id !== undefined && quiz.quiz_id !== null ? String(quiz.quiz_id) : null;
+        const idStr = quiz.id !== undefined && quiz.id !== null ? String(quiz.id) : null;
+
+        const isEmbedded = (quizIdStr && embeddedQuizIds.has(quizIdStr)) || (idStr && embeddedQuizIds.has(idStr));
+        return !isEmbedded;
+    });
+};

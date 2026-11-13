@@ -33,7 +33,8 @@ const PdfRenderer = ({
     fileUrl,
     height = "520px",
     title = "Dokumen PDF",
-    showThumbnails = false
+    showThumbnails = false,
+    onDocLoaded
 }) => {
     const [pdfDoc, setPdfDoc] = useState(null);
     const [numPages, setNumPages] = useState(0);
@@ -84,6 +85,9 @@ const PdfRenderer = ({
                             setPdfDoc(doc);
                             setNumPages(doc.numPages);
                             setLoading(false);
+                            if (typeof onDocLoaded === 'function') {
+                                onDocLoaded({ numPages: doc.numPages });
+                            }
                         }
                     });
                 } else {
@@ -105,6 +109,9 @@ const PdfRenderer = ({
                             setPdfDoc(doc);
                             setNumPages(doc.numPages);
                             setLoading(false);
+                            if (typeof onDocLoaded === 'function') {
+                                onDocLoaded({ numPages: doc.numPages });
+                            }
                         }
                     })
                     .catch((fallbackErr) => {

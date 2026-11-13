@@ -7,7 +7,8 @@ import {
   validateLevel,
   validateAllFields,
   getValidationClass,
-  getSelectValidationClass
+  getSelectValidationClass,
+  getUnassignedActiveQuizzes
 } from '../utils/courseEditValidation';
 
 describe('courseEditValidation', () => {
@@ -103,6 +104,94 @@ describe('courseEditValidation', () => {
 
       expect(getSelectValidationClass('cat', { cat: ['Err'] }, {}, 'val')).toBe('form-select is-invalid');
       expect(getSelectValidationClass('cat', null, null, 'val')).toBe('form-select is-valid');
+    });
+  });
+
+  describe('getUnassignedActiveQuizzes', () => {
+    it('returns empty array when courseData is null or has no quizzes', () => {
+      expect(getUnassignedActiveQuizzes(null)).toEqual([]);
+      expect(getUnassignedActiveQuizzes({})).toEqual([]);
+      expect(getUnassignedActiveQuizzes({ quizzes: [] })).toEqual([]);
+    });
+
+    it('identifies unassigned active regular quizzes', () => {
+      const courseData = {
+        quizzes: [
+          { id: 1, quiz_id: '150640', title: 'Quiz 1', quiz_type: 'quiz', is_active: true },
+          { id: 2, quiz_id: '217846', title: 'Pre/Post Test', quiz_type: 'pre_post_test', is_active: true }
+        ],
+        curriculum: [
+          {
+            title: 'Section 1',
+            variant_items: [
+              { title: 'Lesson 1', item_type: 'lesson' }
+            ]
+          }
+        ]
+      };
+
+      const unassigned = getUnassignedActiveQuizzes(courseData);
+      expect(unassigned).toHaveLength(1);
+      expect(unassigned[0].quiz_id).toBe('150640');
+      // Pre/Post-test is excluded
+    });
+
+    it('returns empty when all active regular quizzes are embedded in curriculum', () => {
+      const courseData = {
+        quizzes: [
+          { id: 1, quiz_id: '150640', title: 'Quiz 1', quiz_type: 'quiz', is_active: true },
+          { id: 2, quiz_id: '217846', title: 'Pre/Post Test', quiz_type: 'pre_post_test', is_active: true }
+        ],
+        curriculum: [
+          {
+            title: 'Section 1',
+            items: [
+              { title: 'Lesson 1', item_type: 'lesson' },
+              { title: 'Quiz 1', item_type: 'quiz', quiz_id: '150640' }
+            ]
+          }
+        ]
+      };
+
+      const unassigned = getUnassignedActiveQuizzes(courseData);
+      expect(unassigned).toHaveLength(0);
+    });
+
+    it('ignores inactive regular quizzes', () => {
+      const courseData = {
+        quizzes: [
+          { id: 1, quiz_id: '150640', title: 'Quiz 1', quiz_type: 'quiz', is_active: false },
+          { id: 2, quiz_id: '217846', title: 'Pre/Post Test', quiz_type: 'pre_post_test', is_active: true }
+        ],
+        curriculum: [
+          {
+            title: 'Section 1',
+            variant_items: [
+              { title: 'Lesson 1', item_type: 'lesson' }
+            ]
+          }
+        ]
+      };
+
+      const unassigned = getUnassignedActiveQuizzes(courseData);
+      expect(unassigned).toHaveLength(0);
+    });
+
+    it('handles nested quiz objects in variant_items', () => {
+      const courseData = {
+        quizzes: [
+          { id: 10, quiz_id: 'q-10', title: 'Quiz 10', quiz_type: 'quiz', is_active: true }
+        ],
+        curriculum: [
+          {
+            variant_items: [
+              { title: 'Item 1', quiz: { quiz_id: 'q-10', id: 10 } }
+            ]
+          }
+        ]
+      };
+
+      expect(getUnassignedActiveQuizzes(courseData)).toHaveLength(0);
     });
   });
 });

@@ -769,6 +769,20 @@ const LecturesTab = ({
                 ...markAsCompletedStatus,
                 [key]: "Error",
             });
+
+            // ✨ Tangani kasus jika materi memiliki pertanyaan verifikasi penyelesaian
+            if (error.response?.data?.requires_verification) {
+                Toast().fire({
+                    icon: "info",
+                    title: "Pertanyaan Verifikasi Diperlukan",
+                    text: error.response?.data?.message || "Materi ini memiliki pertanyaan verifikasi penyelesaian. Silakan buka materi dan jawab pertanyaan yang muncul di pemutar materi untuk menyelesaikan pelajaran.",
+                    timer: 4500
+                });
+                if (setVariantItem && lessonItem) {
+                    setVariantItem(lessonItem);
+                }
+                return;
+            }
             
             Toast().fire({
                 icon: "error",
@@ -1404,11 +1418,6 @@ const LecturesTab = ({
                                 <small className="text-muted d-block mt-1">
                                     {prePostQuiz.title} &bull; {prePostQuiz.total_questions || prePostQuiz.questions?.length || 0} Soal
                                 </small>
-                                {postTestLockReason && !canTakePostTest && !hasCompletedPosttest && (
-                                    <small className="text-danger d-block mt-1" style={{ fontSize: '11px' }}>
-                                        <i className="fas fa-lock me-1"></i>{postTestLockReason}
-                                    </small>
-                                )}
                             </div>
                         </div>
                         <div>
@@ -1864,6 +1873,11 @@ const LecturesTab = ({
                                 <small className="text-muted d-block mt-1">
                                     {prePostQuiz.title} &bull; {prePostQuiz.total_questions || prePostQuiz.questions?.length || 0} Soal
                                 </small>
+                                {postTestLockReason && !canTakePostTest && !hasCompletedPosttest && (
+                                    <small className="text-danger d-block mt-1 fw-semibold" style={{ fontSize: '11px' }}>
+                                        <i className="fas fa-lock me-1"></i>{postTestLockReason}
+                                    </small>
+                                )}
                             </div>
                         </div>
                         <div>

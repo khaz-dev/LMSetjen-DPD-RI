@@ -183,6 +183,10 @@ function CourseDetail() {
     const handleGameCompleted = async () => {
         try {
             await fetchCourseDetail(true);
+            const currentCourseId = course?.course?.course_id || course?.course?.id || course?.id;
+            if (currentCourseId && typeof fetchQuizzes === 'function') {
+                await fetchQuizzes(currentCourseId);
+            }
         } catch (err) {
             console.error("Error updating course detail after game completion:", err);
         } finally {
@@ -245,10 +249,17 @@ function CourseDetail() {
     const allRegularQuizzesPassed = regularQuizzes.length === 0 || regularQuizzes.every(q => q.is_passed);
 
     // Gamifikasi completion check: semua mini-game harus sudah dikerjakan/lulus
-    const courseGames = course?.course?.games || course?.games || [];
-    const allGamesCompleted = courseGames.length === 0 || courseGames.every(g => (g.user_is_passed || (g.user_attempts_count || 0) > 0));
+    const courseGames = useMemo(() => {
+        const raw = course?.course?.games || course?.games || [];
+        if (Array.isArray(raw)) return raw;
+        if (raw && Array.isArray(raw.results)) return raw.results;
+        return [];
+    }, [course]);
 
-    const canTakePostTest = hasPrePostTest && allLessonsCompleted && allRegularQuizzesPassed;
+    const hasCourseGames = courseGames.length > 0;
+    const allGamesCompleted = !hasCourseGames || courseGames.every(g => Boolean(g.user_is_passed || (g.user_attempts_count || 0) > 0 || (Array.isArray(g.attempts) && g.attempts.length > 0)));
+
+    const canTakePostTest = hasPrePostTest && allLessonsCompleted && allRegularQuizzesPassed && allGamesCompleted && (prePostQuiz?.can_take_post_test !== undefined ? prePostQuiz.can_take_post_test : true);
 
     const postTestLockReason = !hasPrePostTest
         ? null
@@ -256,62 +267,43 @@ function CourseDetail() {
             ? 'Selesaikan seluruh materi kurikulum kursus terlebih dahulu untuk membuka Post-test.'
             : !allRegularQuizzesPassed
                 ? 'Selesaikan dan luluskan semua kuis materi terlebih dahulu untuk membuka Post-test.'
-                : null;
-
-
+                : !allGamesCompleted
+                    ? 'Selesaikan seluruh tantangan mini-game pada tab Gamifikasi terlebih dahulu untuk membuka Post-test.'
+                    : (prePostQuiz?.lock_reason || null);
 
     const handleStartPretest = () => {
-
         if (prePostQuiz) {
-
             setActiveTab('quiz');
-
             handleQuizShow(prePostQuiz);
-
         } else {
-
             Toast().fire({
-
                 icon: 'info',
-
                 title: 'Info Pre-test',
-
                 text: 'Tidak ada Pre-test yang dikonfigurasi untuk kursus ini.'
-
             });
-
         }
-
     };
 
-
-
     const handleStartPosttest = () => {
-
         if (prePostQuiz) {
-
             if (!canTakePostTest) {
-
                 Toast().fire({
-
                     icon: 'warning',
-
                     title: 'Post-test Terkunci',
-
-                    text: 'Selesaikan semua materi kurikulum dan kuis kursus terlebih dahulu.'
-
+                    text: postTestLockReason || 'Selesaikan seluruh materi kurikulum, kuis, dan gamifikasi terlebih dahulu untuk membuka Post-test.'
                 });
-
+                if (!allGamesCompleted) {
+                    setActiveTab('gamification');
+                    const gamificationTabBtn = document.querySelector('#gamification-tab');
+                    if (gamificationTabBtn && window.bootstrap?.Tab) {
+                        window.bootstrap.Tab.getOrCreateInstance(gamificationTabBtn).show();
+                    }
+                }
                 return;
-
             }
-
             setActiveTab('quiz');
-
-            handleQuizShow(prePostQuiz);
-
+            handleQuizShow({ ...prePostQuiz, current_mode: 'post_test' });
         }
-
     };
 
     const [quizShow, setQuizShow] = useState(false);
@@ -3809,8 +3801,19 @@ function CourseDetail() {
             return flatItems[currentIndex + 1];
         }
 
-        // KASUS 3: Berada di MATERI TERAKHIR kurikulum -> Arahkan ke Post-Test Evaluasi Akhir!
+        // KASUS 3: Berada di MATERI TERAKHIR kurikulum -> Arahkan ke Gamifikasi atau Post-Test Evaluasi Akhir!
         if (currentIndex === flatItems.length - 1) {
+            // Jika ada mini-game yang belum selesai, arahkan ke Gamifikasi terlebih dahulu
+            if (hasCourseGames && !allGamesCompleted) {
+                const nextGame = courseGames.find(g => !(g.user_is_passed || (g.user_attempts_count || 0) > 0 || (Array.isArray(g.attempts) && g.attempts.length > 0))) || courseGames[0];
+                return {
+                    isGamification: true,
+                    game: nextGame,
+                    title: nextGame?.title ? `Mini-Game: ${nextGame.title}` : "Tantangan Gamifikasi Materi",
+                    sectionTitle: "Gamifikasi Pembelajaran",
+                    file_type: "game"
+                };
+            }
             if (hasPrePostTest && !hasCompletedPosttest && prePostQuiz) {
                 return {
                     isPostTest: true,
@@ -3825,7 +3828,7 @@ function CourseDetail() {
         }
 
         return null;
-    }, [course, hasPrePostTest, hasCompletedPosttest, prePostQuiz]);
+    }, [course, hasPrePostTest, hasCompletedPosttest, prePostQuiz, hasCourseGames, allGamesCompleted, courseGames]);
 
     // Batalkan countdown auto-next (siswa memilih tetap di materi saat ini)
     const cancelAutoNext = useCallback(() => {
@@ -3861,6 +3864,19 @@ function CourseDetail() {
         // 1. Jika lanjut ke Sertifikat Kelulusan
         if (itemToPlay.isCertificate) {
             setActiveTab('certificate');
+            return;
+        }
+
+        // 1.5 Jika lanjut ke Gamifikasi
+        if (itemToPlay.isGamification) {
+            setActiveTab('gamification');
+            const gamificationTabBtn = document.querySelector('#gamification-tab');
+            if (gamificationTabBtn && window.bootstrap?.Tab) {
+                window.bootstrap.Tab.getOrCreateInstance(gamificationTabBtn).show();
+            }
+            if (itemToPlay.game) {
+                handleSelectGame(itemToPlay.game);
+            }
             return;
         }
 
@@ -4099,19 +4115,13 @@ function CourseDetail() {
             return;
         }
 
-        // 3. PRIORITAS 3: Post-test (jika kurikulum selesai tapi post-test belum dikerjakan)
-        if (hasPrePostTest && !hasCompletedPosttest && prePostQuiz) {
-            console.log('[InitialAutoFocus] Priority 3: Opening Post-Test');
-            handleStartPosttest();
-            return;
-        }
-
-        // 4. PRIORITAS 4: Gamifikasi (jika ada mini-game dan belum semuanya selesai)
+        // 3. PRIORITAS 3: Gamifikasi (jika ada mini-game dan belum semuanya selesai)
         const currentGames = course?.course?.games || course?.games || [];
-        if (currentGames.length > 0) {
-            const pendingGame = currentGames.find(g => !(g.user_is_passed || (g.user_attempts_count || 0) > 0));
+        const gamesArray = Array.isArray(currentGames) ? currentGames : (currentGames?.results || []);
+        if (gamesArray.length > 0) {
+            const pendingGame = gamesArray.find(g => !(g.user_is_passed || (g.user_attempts_count || 0) > 0 || (Array.isArray(g.attempts) && g.attempts.length > 0)));
             if (pendingGame) {
-                console.log('[InitialAutoFocus] Priority 4: Focusing on Gamification tab & game:', pendingGame.title);
+                console.log('[InitialAutoFocus] Priority 3: Focusing on Gamification tab & game:', pendingGame.title);
                 setActiveTab('gamification');
                 const gamificationTabBtn = document.querySelector('#gamification-tab');
                 if (gamificationTabBtn && window.bootstrap?.Tab) {
@@ -4120,6 +4130,13 @@ function CourseDetail() {
                 handleSelectGame(pendingGame);
                 return;
             }
+        }
+
+        // 4. PRIORITAS 4: Post-test (hanya jika kurikulum dan gamifikasi selesai tapi post-test belum dikerjakan)
+        if (hasPrePostTest && !hasCompletedPosttest && prePostQuiz) {
+            console.log('[InitialAutoFocus] Priority 4: Opening Post-Test');
+            handleStartPosttest();
+            return;
         }
 
         // 5. PRIORITAS 5: Penerbitan Sertifikat (semua pembelajaran selesai tapi sertifikat belum terbit)
@@ -4216,6 +4233,8 @@ function CourseDetail() {
                         <div className="auto-next-preview-icon">
                             {autoNextPrompt.nextItem.isCertificate ? (
                                 <i className="fas fa-award text-teal" style={{ fontSize: '1.4rem' }}></i>
+                            ) : autoNextPrompt.nextItem.isGamification ? (
+                                <i className="fas fa-gamepad text-primary" style={{ fontSize: '1.4rem' }}></i>
                             ) : autoNextPrompt.nextItem.isPostTest ? (
                                 <i className="fas fa-graduation-cap text-success" style={{ fontSize: '1.4rem' }}></i>
                             ) : autoNextPrompt.nextItem.isQuiz ? (
@@ -4228,7 +4247,7 @@ function CourseDetail() {
                         </div>
                         <div className="auto-next-preview-info text-start">
                             <div className="auto-next-preview-label">
-                                {autoNextPrompt.nextItem.isCertificate ? 'Langkah Selanjutnya' : autoNextPrompt.nextItem.isPostTest ? 'Ujian Kelulusan' : 'Materi Selanjutnya'}
+                                {autoNextPrompt.nextItem.isCertificate ? 'Langkah Selanjutnya' : autoNextPrompt.nextItem.isGamification ? 'Tantangan Gamifikasi' : autoNextPrompt.nextItem.isPostTest ? 'Ujian Kelulusan' : 'Materi Selanjutnya'}
                             </div>
                             <div className="auto-next-preview-title fw-bold" title={autoNextPrompt.nextItem.title}>
                                 {autoNextPrompt.nextItem.title}
@@ -4285,6 +4304,24 @@ function CourseDetail() {
 
 
     const startQuiz = () => {
+        if (selectedQuiz?.quiz_type === 'pre_post_test') {
+            const isPostTest = Boolean(selectedQuiz.has_pre_test || selectedQuiz.current_mode === 'post_test');
+            if (isPostTest && !canTakePostTest) {
+                Toast().fire({
+                    icon: 'warning',
+                    title: 'Post-test Terkunci',
+                    text: postTestLockReason || 'Selesaikan seluruh materi kurikulum, kuis, dan gamifikasi terlebih dahulu untuk membuka Post-test.'
+                });
+                if (!allGamesCompleted) {
+                    setActiveTab('gamification');
+                    const gamificationTabBtn = document.querySelector('#gamification-tab');
+                    if (gamificationTabBtn && window.bootstrap?.Tab) {
+                        window.bootstrap.Tab.getOrCreateInstance(gamificationTabBtn).show();
+                    }
+                }
+                return;
+            }
+        }
 
         // Check if there's resume data for this quiz (in case auto-resume didn't trigger)
 
@@ -4691,32 +4728,49 @@ function CourseDetail() {
                 setShowQuizResult(true);
 
                 // Clear quiz progress since quiz is completed
-
                 clearQuizProgress(selectedQuiz);
 
                 // Update the selected quiz with new attempt information
-
                 if (selectedQuiz) {
-
-                    setSelectedQuiz({
-
-                        ...selectedQuiz,
-
+                    setSelectedQuiz(prev => ({
+                        ...(prev || selectedQuiz),
                         today_attempts: response.data.today_attempts,
-
                         can_attempt: response.data.can_attempt,
-
-                        best_score: Math.max(selectedQuiz.best_score || 0, response.data.score),
-
-                        is_passed: response.data.passed || selectedQuiz.is_passed
-
-                    });
-
+                        best_score: Math.max((prev?.best_score || selectedQuiz?.best_score || 0), response.data.score),
+                        is_passed: response.data.passed || prev?.is_passed || selectedQuiz.is_passed,
+                        has_pre_test: finalAttemptType === 'pre_test' ? true : (prev?.has_pre_test || selectedQuiz.has_pre_test),
+                        has_post_test: finalAttemptType === 'post_test' ? true : (prev?.has_post_test || selectedQuiz.has_post_test),
+                        post_test_score: finalAttemptType === 'post_test' ? response.data.score : (prev?.post_test_score || selectedQuiz.post_test_score),
+                        current_mode: finalAttemptType === 'post_test' ? 'completed' : (finalAttemptType === 'pre_test' ? 'post_test' : prev?.current_mode || selectedQuiz.current_mode),
+                    }));
                 }
 
-                // Refresh course data and quizzes immediately
-                if (course?.course?.id) {
-                    await fetchQuizzes(course.course.id);
+                // Immediately update quizzes list in state so post-test status is instantly reflected
+                const updatedQuizzes = (quizzes || []).map(q => {
+                    if (q.quiz_id === selectedQuiz?.quiz_id) {
+                        return {
+                            ...q,
+                            today_attempts: response.data.today_attempts,
+                            can_attempt: response.data.can_attempt,
+                            best_score: Math.max(q.best_score || 0, response.data.score),
+                            is_passed: response.data.passed || q.is_passed,
+                            has_pre_test: finalAttemptType === 'pre_test' ? true : q.has_pre_test,
+                            has_post_test: finalAttemptType === 'post_test' ? true : q.has_post_test,
+                            post_test_score: finalAttemptType === 'post_test' ? response.data.score : q.post_test_score,
+                            current_mode: finalAttemptType === 'post_test' ? 'completed' : (finalAttemptType === 'pre_test' ? 'post_test' : q.current_mode),
+                        };
+                    }
+                    return q;
+                });
+                setQuizzes(updatedQuizzes);
+
+                // Immediately recalculate completion percentage with updated data to reach 100% instantly
+                calculateCompletionPercentage(null, null, updatedQuizzes, course);
+
+                // Refresh course data and quizzes from server immediately
+                const currentCourseId = course?.course?.course_id || course?.course?.id || courseId || param.enrollment_id;
+                if (currentCourseId) {
+                    await fetchQuizzes(currentCourseId);
                 }
                 await fetchCourseDetail(true); // true = prevent loading state
 
@@ -4846,36 +4900,49 @@ function CourseDetail() {
 
 
                 // Clear quiz progress since quiz is completed
-
                 clearQuizProgress(selectedQuiz);
 
-
-
                 // Update the selected quiz with new attempt information
-
                 if (selectedQuiz) {
-
-                    setSelectedQuiz({
-
-                        ...selectedQuiz,
-
+                    setSelectedQuiz(prev => ({
+                        ...(prev || selectedQuiz),
                         today_attempts: response.data.today_attempts,
-
                         can_attempt: response.data.can_attempt,
-
-                        best_score: Math.max(selectedQuiz.best_score || 0, response.data.score),
-
-                        is_passed: response.data.passed || selectedQuiz.is_passed
-
-                    });
-
+                        best_score: Math.max((prev?.best_score || selectedQuiz?.best_score || 0), response.data.score),
+                        is_passed: response.data.passed || prev?.is_passed || selectedQuiz.is_passed,
+                        has_pre_test: finalAttemptType === 'pre_test' ? true : (prev?.has_pre_test || selectedQuiz.has_pre_test),
+                        has_post_test: finalAttemptType === 'post_test' ? true : (prev?.has_post_test || selectedQuiz.has_post_test),
+                        post_test_score: finalAttemptType === 'post_test' ? response.data.score : (prev?.post_test_score || selectedQuiz.post_test_score),
+                        current_mode: finalAttemptType === 'post_test' ? 'completed' : (finalAttemptType === 'pre_test' ? 'post_test' : prev?.current_mode || selectedQuiz.current_mode),
+                    }));
                 }
 
+                // Immediately update quizzes list in state so post-test status is instantly reflected
+                const updatedQuizzes = (quizzes || []).map(q => {
+                    if (q.quiz_id === selectedQuiz?.quiz_id) {
+                        return {
+                            ...q,
+                            today_attempts: response.data.today_attempts,
+                            can_attempt: response.data.can_attempt,
+                            best_score: Math.max(q.best_score || 0, response.data.score),
+                            is_passed: response.data.passed || q.is_passed,
+                            has_pre_test: finalAttemptType === 'pre_test' ? true : q.has_pre_test,
+                            has_post_test: finalAttemptType === 'post_test' ? true : q.has_post_test,
+                            post_test_score: finalAttemptType === 'post_test' ? response.data.score : q.post_test_score,
+                            current_mode: finalAttemptType === 'post_test' ? 'completed' : (finalAttemptType === 'pre_test' ? 'post_test' : q.current_mode),
+                        };
+                    }
+                    return q;
+                });
+                setQuizzes(updatedQuizzes);
 
+                // Immediately recalculate completion percentage with updated data to reach 100% instantly
+                calculateCompletionPercentage(null, null, updatedQuizzes, course);
 
-                // Refresh course data and quizzes immediately
-                if (course?.course?.id) {
-                    await fetchQuizzes(course.course.id);
+                // Refresh course data and quizzes from server immediately
+                const currentCourseId = course?.course?.course_id || course?.course?.id || courseId || param.enrollment_id;
+                if (currentCourseId) {
+                    await fetchQuizzes(currentCourseId);
                 }
                 await fetchCourseDetail(true); // true = prevent loading state
 
@@ -4932,36 +4999,58 @@ function CourseDetail() {
 
 
     // Helper function to calculate comprehensive completion percentage including lessons, quizzes, pre-post test, and games
-    const calculateCompletionPercentage = useCallback((customTotalLessons = null, customCompletedLessons = null, customTotalQuizzes = null, customPassedQuizzes = null) => {
+    const calculateCompletionPercentage = useCallback((customTotalLessons = null, customCompletedLessons = null, customQuizzesOrTotal = null, customCourseOrPassed = null) => {
+        let currCourse = course;
+        let currQuizzes = quizzes || [];
+        let legacyTotalQuizzes = null;
+        let legacyPassedQuizzes = null;
+
+        if (Array.isArray(customQuizzesOrTotal)) {
+            currQuizzes = customQuizzesOrTotal;
+            if (customCourseOrPassed && typeof customCourseOrPassed === 'object' && !Array.isArray(customCourseOrPassed)) {
+                currCourse = customCourseOrPassed;
+            }
+        } else if (typeof customQuizzesOrTotal === 'number') {
+            legacyTotalQuizzes = customQuizzesOrTotal;
+            if (typeof customCourseOrPassed === 'number') {
+                legacyPassedQuizzes = customCourseOrPassed;
+            }
+        } else if (customCourseOrPassed && typeof customCourseOrPassed === 'object') {
+            currCourse = customCourseOrPassed;
+        }
+
         // 1. Lessons
-        const totalLessons = customTotalLessons !== null ? customTotalLessons : (
-            course?.curriculum?.reduce((total, section) => {
-                const items = section.variant_items || section.items || [];
-                const actualLessonItems = items.filter(it => it.item_type !== 'quiz' && !it.quiz_id && !it.quiz);
-                return total + actualLessonItems.length;
-            }, 0) || (course?.lectures?.length || 0)
-        );
+        const lessonsFromCourse = currCourse?.curriculum?.reduce((total, section) => {
+            const items = section.variant_items || section.items || [];
+            const actualLessonItems = items.filter(it => it.item_type !== 'quiz' && !it.quiz_id && !it.quiz);
+            return total + actualLessonItems.length;
+        }, 0) || (currCourse?.lectures?.length || 0);
 
-        const completedLessons = customCompletedLessons !== null ? customCompletedLessons : (
-            new Set(course?.completed_lesson?.map(cl => cl.variant_item?.variant_item_id)).size
-        );
+        const totalLessons = (customTotalLessons !== null && customTotalLessons !== undefined && (customTotalLessons > 0 || lessonsFromCourse === 0))
+            ? customTotalLessons
+            : lessonsFromCourse;
 
-        // 2. Regular Quizzes
-        const regQuizzes = (quizzes || []).filter(q => q.quiz_type === 'quiz');
-        const totalQuizzes = customTotalQuizzes !== null ? customTotalQuizzes : regQuizzes.length;
-        const passedQuizzes = customPassedQuizzes !== null ? customPassedQuizzes : regQuizzes.filter(q => q.is_passed).length;
+        const completedFromCourse = new Set(currCourse?.completed_lesson?.map(cl => cl.variant_item?.variant_item_id)).size;
+        const completedLessons = (customCompletedLessons !== null && customCompletedLessons !== undefined && (customCompletedLessons > 0 || totalLessons === 0))
+            ? customCompletedLessons
+            : completedFromCourse;
+
+        // 2. Regular Quizzes (HANYA tipe 'quiz', JANGAN hitung pre_post_test)
+        const regQuizzes = (currQuizzes || []).filter(q => q.quiz_type === 'quiz');
+        const totalQuizzes = legacyTotalQuizzes !== null ? legacyTotalQuizzes : regQuizzes.length;
+        const passedQuizzes = legacyPassedQuizzes !== null ? legacyPassedQuizzes : regQuizzes.filter(q => q.is_passed).length;
 
         // 3. Pre-Test & Post-Test
-        const prePostQuizItem = (quizzes || []).find(q => q.quiz_type === 'pre_post_test') || null;
+        const prePostQuizItem = (currQuizzes || []).find(q => q.quiz_type === 'pre_post_test') || null;
         const hasPrePost = Boolean(prePostQuizItem);
         const preTestTotal = hasPrePost ? 1 : 0;
-        const preTestCompleted = (hasPrePost && prePostQuizItem.has_pre_test) ? 1 : 0;
+        const preTestCompleted = (hasPrePost && (prePostQuizItem.has_pre_test || prePostQuizItem.current_mode === 'post_test' || prePostQuizItem.current_mode === 'completed')) ? 1 : 0;
 
         const postTestTotal = hasPrePost ? 1 : 0;
-        const postTestCompleted = (hasPrePost && prePostQuizItem.has_post_test) ? 1 : 0;
+        const postTestCompleted = (hasPrePost && (prePostQuizItem.has_post_test || prePostQuizItem.current_mode === 'completed')) ? 1 : 0;
 
         // 4. Gamifikasi / Course Games
-        const gamesList = course?.course?.games || course?.games || [];
+        const gamesList = currCourse?.course?.games || currCourse?.games || [];
         const totalGames = gamesList.length;
         const completedGames = gamesList.filter(g => Boolean(g.user_is_passed || (g.user_attempts_count || 0) > 0)).length;
 
@@ -4972,6 +5061,11 @@ function CourseDetail() {
         let percentageCompleted = 0;
         if (totalItems > 0) {
             percentageCompleted = Math.min(100, Math.max(0, (completedItems / totalItems) * 100));
+        }
+
+        // Jika backend secara definitif menandai progress 100%, atau semua item tuntas
+        if (currCourse?.completion_percentage === 100 || (totalItems > 0 && completedItems >= totalItems)) {
+            percentageCompleted = 100;
         }
 
         const roundedPct = Math.round(percentageCompleted);
@@ -5158,21 +5252,21 @@ function CourseDetail() {
 
 
             // Store course ID for quiz operations
-
-            const currentCourseId = res.data.course?.course_id;
-
+            const currentCourseId = res.data.course?.course_id || res.data.course?.id;
             setCourseId(currentCourseId);
 
-
+            // Jika backend sudah menandai kelulusan tuntas (100%), set langsung
+            if (res.data.completion_percentage === 100) {
+                setCompletionPercentage(100);
+            }
 
             // Fetch quizzes and calculate completion percentage after quizzes are loaded
-
             if (currentCourseId) {
                 fetchQuizzes(currentCourseId, totalLessons, completedLessons);
             } else {
                 // No quizzes, just calculate based on lessons
                 setQuizzesLoaded(true);
-                calculateCompletionPercentage(totalLessons, completedLessons, 0, 0);
+                calculateCompletionPercentage(totalLessons, completedLessons, null, res.data);
             }
         }).catch((error) => {
             setQuizzesLoaded(true);
@@ -5673,33 +5767,30 @@ function CourseDetail() {
 
 
 
-    const fetchQuizzes = async (courseId, totalLessons = 0, completedLessons = 0) => {
+    const fetchQuizzes = async (courseId, totalLessons = null, completedLessons = null) => {
         if (!courseId) {
             setQuizzesLoaded(true);
-            return;
+            return [];
         }
 
         const apiUrl = `student/quiz-list/${UserData()?.user_id}/${courseId}/`;
 
-        useAxios.get(apiUrl).then((res) => {
-            setQuizzes(res.data);
+        try {
+            const res = await useAxios.get(apiUrl);
+            const quizList = Array.isArray(res.data) ? res.data : [];
+            setQuizzes(quizList);
             setQuizzesLoaded(true);
 
-            // Count total quizzes and passed quizzes
-            const totalQuizzes = res.data?.length || 0;
-            const passedQuizzes = res.data?.filter(quiz => quiz.is_passed)?.length || 0;
-
-            // Recalculate completion percentage including quizzes
-            if (totalLessons > 0 || totalQuizzes > 0) {
-                calculateCompletionPercentage(totalLessons, completedLessons, totalQuizzes, passedQuizzes);
-            }
-        }).catch((error) => {
+            // Recalculate completion percentage using fresh quiz list from backend
+            calculateCompletionPercentage(totalLessons, completedLessons, quizList, course);
+            return quizList;
+        } catch (error) {
+            console.error("Error fetching quizzes:", error);
             setQuizzesLoaded(true);
             // Still calculate completion with lessons only if quiz fetch fails
-            if (totalLessons > 0) {
-                calculateCompletionPercentage(totalLessons, completedLessons, 0, 0);
-            }
-        });
+            calculateCompletionPercentage(totalLessons, completedLessons, null, course);
+            return [];
+        }
     };
 
 
@@ -9280,10 +9371,36 @@ function CourseDetail() {
                                                                                     Post-test Sudah Selesai (Nilai: {Math.round(selectedQuiz.post_test_score || 0)})
                                                                                 </button>
                                                                             ) : (isPostTest && !canTakePostTest) ? (
-                                                                                <button className="btn btn-secondary btn-sm" disabled>
-                                                                                    <i className="fas fa-lock me-1"></i>
-                                                                                    Post-test Terkunci
-                                                                                </button>
+                                                                                <div className="d-flex flex-column align-items-end gap-1">
+                                                                                    <div className="d-flex gap-2 flex-wrap justify-content-end">
+                                                                                        {!allGamesCompleted && hasCourseGames && (
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                className="btn btn-primary btn-sm fw-bold"
+                                                                                                onClick={() => {
+                                                                                                    setActiveTab('gamification');
+                                                                                                    const gamificationTabBtn = document.querySelector('#gamification-tab');
+                                                                                                    if (gamificationTabBtn && window.bootstrap?.Tab) {
+                                                                                                        window.bootstrap.Tab.getOrCreateInstance(gamificationTabBtn).show();
+                                                                                                    }
+                                                                                                }}
+                                                                                            >
+                                                                                                <i className="fas fa-gamepad me-1"></i>
+                                                                                                Kerjakan Gamifikasi
+                                                                                            </button>
+                                                                                        )}
+                                                                                        <button className="btn btn-secondary btn-sm" disabled>
+                                                                                            <i className="fas fa-lock me-1"></i>
+                                                                                            Post-test Terkunci
+                                                                                        </button>
+                                                                                    </div>
+                                                                                    {postTestLockReason && (
+                                                                                        <small className="text-danger fw-semibold text-end mt-1" style={{ maxWidth: '360px', fontSize: '11px' }}>
+                                                                                            <i className="fas fa-exclamation-circle me-1"></i>
+                                                                                            {postTestLockReason}
+                                                                                        </small>
+                                                                                    )}
+                                                                                </div>
                                                                             ) : (
                                                                                 <button className="btn btn-teal btn-sm" onClick={startQuiz}>
                                                                                     <i className="fas fa-play me-1"></i>
@@ -10536,12 +10653,33 @@ function CourseDetail() {
                                                                 onCertificateGenerated={(cert) => {
                                                                     setExistingCertificate(cert);
                                                                     setCertImageVersion(Date.now());
+
+                                                                    // ✨ Trigger perayaan kelulusan Manta AI (SiManta Floating)
+                                                                    const courseTitle = course?.course?.title || course?.title || 'Pelatihan';
+                                                                    const userName = UserData()?.full_name || UserData()?.username || 'Rekan Pembelajar';
+                                                                    window.dispatchEvent(new CustomEvent('manta-certificate-generated', {
+                                                                        detail: {
+                                                                            courseTitle,
+                                                                            certificate: cert,
+                                                                            userName
+                                                                        }
+                                                                    }));
+                                                                    window.dispatchEvent(new CustomEvent('lms-certificate-issued', {
+                                                                        detail: {
+                                                                            courseTitle,
+                                                                            certificate: cert,
+                                                                            userName
+                                                                        }
+                                                                    }));
                                                                 }}
 
                                                                 isInline={true}
 
                                                                 onStartPosttest={handleStartPosttest}
-
+                                                                canTakePostTest={canTakePostTest}
+                                                                postTestLockReason={postTestLockReason}
+                                                                allGamesCompleted={allGamesCompleted}
+                                                                hasGames={hasCourseGames}
                                                                 regenerateTrigger={certRegenerateTrigger}
 
                                                             />

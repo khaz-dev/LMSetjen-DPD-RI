@@ -45,6 +45,7 @@ const VideoPlayer = forwardRef(({
                 courseId={courseId}
                 course={course}
                 seekPosition={seekPosition}
+                onProgress={onProgress}
             />
         );
     }

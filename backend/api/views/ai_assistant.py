@@ -1329,7 +1329,11 @@ class AIAssistantChatAPIView(APIView):
             try:
                 teacher = api_models.Teacher.objects.filter(user=user).first()
                 if teacher:
-                    t_courses = api_models.Course.objects.filter(teacher=teacher)
+                    t_courses = api_models.Course.objects.filter(
+                        teacher=teacher,
+                        is_published_version=False,
+                        parent_course__isnull=True
+                    )
                     teacher_courses_count = t_courses.count()
                     teacher_published_count = t_courses.filter(platform_status="Published").count()
                     teacher_draft_count = t_courses.filter(platform_status="Draft").count()
@@ -1341,7 +1345,7 @@ class AIAssistantChatAPIView(APIView):
                             "title": tc.title,
                             "slug": tc.slug,
                             "status": tc.platform_status,
-                            "students_count": api_models.EnrolledCourse.objects.filter(course=tc).count()
+                            "students_count": tc.students().count()
                         })
             except Exception as e:
                 logger.warning(f"Error fetching instructor context in Manta AI: {e}")
@@ -1354,8 +1358,8 @@ class AIAssistantChatAPIView(APIView):
         if active_role == 'admin' or 'admin' in available_roles:
             try:
                 admin_total_users = api_models.User.objects.count()
-                admin_total_courses = api_models.Course.objects.count()
-                admin_pending_reviews = api_models.Course.objects.filter(platform_status="Review").count()
+                admin_total_courses = api_models.Course.objects.filter(is_published_version=False, parent_course__isnull=True).count()
+                admin_pending_reviews = api_models.Course.objects.filter(is_published_version=False, platform_status="Review").count()
                 try:
                     admin_pending_reports = api_models.Feedback.objects.filter(status="pending").count()
                 except Exception:
@@ -2789,14 +2793,14 @@ class AIAssistantChatAPIView(APIView):
         # 2. Cari Kursus Aktif Terkait di LMS
         matched_courses = []
         try:
-            q_filter = Q(platform_status="Published")
+            q_filter = Q(platform_status="Published", is_published_version=True)
             tag_filter = Q()
             for tag in cluster["search_tags"]:
                 tag_filter |= Q(title__icontains=tag) | Q(description__icontains=tag)
             
             c_qs = api_models.Course.objects.filter(q_filter).filter(tag_filter).distinct()
             if not c_qs.exists():
-                c_qs = api_models.Course.objects.filter(platform_status="Published").order_by("-id")[:3]
+                c_qs = api_models.Course.objects.filter(platform_status="Published", is_published_version=True).order_by("-id")[:3]
             
             for c in c_qs[:3]:
                 matched_courses.append({
@@ -3762,7 +3766,8 @@ class AIAssistantChatAPIView(APIView):
 
         # Rekomendasi Kursus Pengejar JP (Kursus yang belum diambil oleh pengguna)
         recommended_courses_qs = api_models.Course.objects.filter(
-            platform_status="Published"
+            platform_status="Published",
+            is_published_version=True
         ).exclude(id__in=enrolled_course_ids)
 
         recommended_courses = []
@@ -4458,7 +4463,7 @@ class AIAssistantChatAPIView(APIView):
             stop_words = {"kursus", "materi", "pelatihan", "kelas", "rekomendasi", "cari", "ada", "apa", "saja", "yang", "di", "lms", "tentang", "minta", "tolong"}
             tokens = [t for t in norm_query.split() if t not in stop_words and len(t) > 2]
             
-            qs = api_models.Course.objects.filter(platform_status="Published")
+            qs = api_models.Course.objects.filter(platform_status="Published", is_published_version=True)
             
             if tokens:
                 q_filters = Q()
@@ -4526,7 +4531,8 @@ class AIAssistantChatAPIView(APIView):
         """Mengambil kursus unggulan secara cepat dan ringan."""
         try:
             courses = api_models.Course.objects.filter(
-                platform_status="Published"
+                platform_status="Published",
+                is_published_version=True
             ).order_by("-id")[:3]
             
             return [
@@ -4698,7 +4704,7 @@ def get_user_learning_nudge(user: Any, current_role: str = None, pathname: str =
 
     # 1. Nudge untuk Administrator
     if role == 'admin':
-        pending_reviews = api_models.Course.objects.filter(platform_status="Review").count()
+        pending_reviews = api_models.Course.objects.filter(is_published_version=False, platform_status="Review").count()
         if pending_reviews > 0:
             return {
                 "has_nudge": True,
@@ -4732,9 +4738,16 @@ def get_user_learning_nudge(user: Any, current_role: str = None, pathname: str =
     # 2. Nudge untuk Instruktur
     if role == 'instructor':
         teacher = api_models.Teacher.objects.filter(user=user).first()
-        t_courses = api_models.Course.objects.filter(teacher=teacher) if teacher else api_models.Course.objects.none()
+        t_courses = api_models.Course.objects.filter(
+            teacher=teacher,
+            is_published_version=False,
+            parent_course__isnull=True
+        ) if teacher else api_models.Course.objects.none()
         draft_course = t_courses.filter(platform_status="Draft").first()
         review_course = t_courses.filter(platform_status="Review").first()
+        published_courses = t_courses.filter(platform_status="Published")
+        published_count = published_courses.count()
+        t_count = t_courses.count()
 
         if draft_course:
             return {
@@ -4767,16 +4780,31 @@ def get_user_learning_nudge(user: Any, current_role: str = None, pathname: str =
                 "enrollment_id": None
             }
         else:
-            t_count = t_courses.count()
             t_students = api_models.EnrolledCourse.objects.filter(course__teacher=teacher).values_list('user', flat=True).distinct().count() if teacher else 0
+            if published_count > 0:
+                bubble_text = f"Halo Instruktur {display_name} 🎓 Anda mengajar {t_students:,} peserta ({published_count} kursus aktif). Siap membuat silabus baru?"
+                message = f"Anda mengelola {published_count} kursus aktif dengan total {t_students:,} peserta terdaftar. Kelola silabus, unggah paket SCORM 1.2, atau pantau diskusi dan evaluasi kuis peserta kursus Anda."
+                action_label = "📚 Kelola Kursus"
+                action_url = "/instructor/courses/"
+            elif t_count > 0:
+                bubble_text = f"Halo Instruktur {display_name} 🎓 Anda memiliki {t_count} kursus kelolaan. Siap melanjutkan penyusunan silabus?"
+                message = "Kelola silabus, unggah paket SCORM 1.2, atau pantau diskusi dan evaluasi kuis peserta kursus Anda."
+                action_label = "📚 Kelola Kursus"
+                action_url = "/instructor/courses/"
+            else:
+                bubble_text = f"Halo Instruktur {display_name} 🎓 Anda belum memiliki kursus kelolaan. Siap membuat silabus baru?"
+                message = "Mulai bagikan pengetahuan Anda kepada aparatur Setjen DPD RI dengan membuat kursus dan silabus pertama Anda."
+                action_label = "➕ Buat Kursus Baru"
+                action_url = "/instructor/create-course/"
+
             return {
                 "has_nudge": True,
                 "nudge_type": "instructor_normal",
-                "bubble_text": f"Halo Instruktur {display_name} 🎓 Anda mengajar {t_students:,} peserta ({t_count} kursus). Siap membuat silabus baru?",
+                "bubble_text": bubble_text,
                 "title": "Pusat Aktivitas Instruktur",
-                "message": "Kelola silabus, unggah paket SCORM 1.2, atau pantau diskusi dan evaluasi kuis peserta kursus Anda.",
-                "action_label": "➕ Buat Kursus Baru",
-                "action_url": "/instructor/create-course/",
+                "message": message,
+                "action_label": action_label,
+                "action_url": action_url,
                 "progress": 100,
                 "remaining_lessons": 0,
                 "course_title": "",
@@ -5025,7 +5053,7 @@ def sync_manta_proactive_notifications(user: Any) -> int:
 
             if not existing_jp_notif:
                 remaining_jp = 20 - total_jp
-                rec_course = api_models.Course.objects.filter(platform_status="Published").exclude(
+                rec_course = api_models.Course.objects.filter(platform_status="Published", is_published_version=True).exclude(
                     id__in=[e.course_id for e in enrollments]
                 ).first()
 

@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
 import { getMediaUrl } from "../../utils/constants";
 import { formatDurationStyle } from "../../utils/durationUtils";
 import useAxios from "../../utils/useAxios"; // ✨ PHASE 4.143: For fetching completion question
@@ -556,9 +558,18 @@ const VideoPlayerUnggah = forwardRef(({
                                     {variantContext.variantTitle}
                                 </span>
                             )}
-                            <span className="video-header-lesson-title" title={variantItem?.title}>
-                                {variantItem?.title}
-                            </span>
+                            <OverlayTrigger
+                                placement="bottom"
+                                overlay={
+                                    <Tooltip id={`video-tip-${variantItem?.variant_item_id || 'active'}`} className="video-player-title-tooltip">
+                                        {variantItem?.title}
+                                    </Tooltip>
+                                }
+                            >
+                                <span className="video-header-lesson-title text-truncate" title={variantItem?.title}>
+                                    {variantItem?.title}
+                                </span>
+                            </OverlayTrigger>
                         </div>
                     </div>
                 </div>

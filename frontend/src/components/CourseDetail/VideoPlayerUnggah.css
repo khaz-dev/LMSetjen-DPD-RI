@@ -1,30 +1,30 @@
 /* ✨ PHASE 4.142: VideoPlayerUnggah - HTML5 Uploaded Video Player Styles */
 
-/* Main Container - Executive Setjen DPD RI Theme */
+/* Main Container - Executive Setjen DPD RI Theme (Light Mode Aligned) */
 .video-player-inline {
-    background: #021a1a;
-    border-radius: 12px;
+    background: #ffffff;
+    border-radius: 14px;
     overflow: hidden;
     box-sizing: border-box;
     width: 100%;
     max-width: 100%;
-    border: 1.5px solid rgba(13, 148, 136, 0.4);
-    box-shadow: 0 8px 24px -4px rgba(4, 47, 46, 0.4), 0 0 12px rgba(13, 148, 136, 0.15);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
 }
 
 /* Header - Ultra-Compact High-Density DPD RI Bar */
 .video-player-header {
-    padding: 0.42rem 0.85rem;
-    min-height: 42px;
-    background: linear-gradient(135deg, #042f2e 0%, #064e3b 45%, #0f172a 100%);
-    color: white;
+    padding: 0.5rem 0.85rem;
+    min-height: 44px;
+    background: #ffffff;
+    color: #0f172a;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 0.65rem;
+    gap: 0.75rem;
     box-sizing: border-box;
-    border-bottom: 1px solid rgba(45, 212, 191, 0.22);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .video-player-header-left {
@@ -32,21 +32,21 @@
     align-items: center;
     gap: 0.55rem;
     min-width: 0;
-    flex: 1;
+    flex: 1 1 0%;
+    overflow: hidden;
 }
 
 .video-player-icon-box {
     width: 28px;
     height: 28px;
-    background: rgba(13, 148, 136, 0.3);
-    border: 1px solid rgba(45, 212, 191, 0.4);
+    background: rgba(13, 148, 136, 0.1);
+    border: 1px solid rgba(13, 148, 136, 0.25);
     border-radius: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: #2dd4bf;
-    box-shadow: 0 0 10px rgba(45, 212, 191, 0.2);
+    color: #0d9488;
 }
 
 .video-player-icon-box i {
@@ -56,9 +56,10 @@
 
 .video-player-title-wrapper {
     min-width: 0;
-    flex: 1;
+    flex: 1 1 0%;
     display: flex;
     align-items: center;
+    overflow: hidden;
 }
 
 .video-player-title-row {
@@ -66,19 +67,42 @@
     align-items: center;
     gap: 0.45rem;
     min-width: 0;
+    width: 100%;
     flex-wrap: nowrap;
+}
+
+/* Shared title-box for NonVideoMediaViewer */
+.video-player-title-box {
+    min-width: 0;
+    flex: 1 1 0%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.video-player-title-box .video-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    width: 100%;
+}
+
+.video-player-title-box .badge {
+    flex-shrink: 0;
 }
 
 .video-header-section-chip {
     display: inline-flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.12);
-    color: #99f6e4;
+    background: rgba(13, 148, 136, 0.1);
+    color: #0f766e;
     font-size: 0.72rem;
     font-weight: 700;
     padding: 2px 7px;
     border-radius: 5px;
-    border: 1px solid rgba(45, 212, 191, 0.3);
+    border: 1px solid rgba(13, 148, 136, 0.25);
     white-space: nowrap;
     flex-shrink: 0;
     letter-spacing: 0.2px;
@@ -87,19 +111,63 @@
 .video-header-lesson-title {
     font-size: 0.88rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #0f172a;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     letter-spacing: 0.1px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.video-player-lesson-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.1px;
+    flex: 1 1 auto;
+    min-width: 0;
+    cursor: default;
 }
 
 .video-player-header-right {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.5rem;
     flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* Ensure Tandai Selesai button is clearly styled in Light Mode */
+.video-player-header-right .btn-outline-light,
+.video-player-header .btn-outline-light {
+    color: #0f766e !important;
+    border-color: #0d9488 !important;
+    background-color: transparent !important;
+}
+
+.video-player-header-right .btn-outline-light:hover,
+.video-player-header .btn-outline-light:hover {
+    color: #ffffff !important;
+    background-color: #0d9488 !important;
+    border-color: #0d9488 !important;
+}
+
+/* Floating custom tooltip for truncated lesson title */
+.video-player-title-tooltip .tooltip-inner {
+    max-width: 380px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.4;
+    text-align: left;
+    background-color: #0f172a;
+    color: #ffffff;
+    border-radius: 6px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .video-player-live-badge {
@@ -108,9 +176,9 @@
     gap: 0.35rem;
     font-size: 0.72rem;
     font-weight: 700;
-    color: #34d399;
-    background: rgba(16, 185, 129, 0.18);
-    border: 1px solid rgba(52, 211, 153, 0.35);
+    color: #059669;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
     padding: 2px 8px;
     border-radius: 999px;
     letter-spacing: 0.2px;
@@ -121,20 +189,20 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #34d399;
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+    background: #10b981;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
     animation: livePulse 2s infinite;
 }
 
 @keyframes livePulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
     }
     70% {
-        box-shadow: 0 0 0 5px rgba(52, 211, 153, 0);
+        box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
     }
 }
 
@@ -143,17 +211,16 @@
     align-items: center;
     font-size: 0.74rem;
     line-height: 1.2;
-    color: #f1f5f9;
+    color: #475569;
     font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
     letter-spacing: 0.3px;
     font-weight: 600;
-    background: rgba(0, 0, 0, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
     padding: 3px 8px;
     border-radius: 6px;
     white-space: nowrap;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 .video-player-close-btn {
@@ -161,10 +228,10 @@
     height: 26px !important;
     min-width: 26px !important;
     padding: 0 !important;
-    background: rgba(255, 255, 255, 0.12) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 6px !important;
-    color: #cbd5e1 !important;
+    color: #64748b !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -174,15 +241,15 @@
 }
 
 .video-player-close-btn:hover {
-    background: rgba(239, 68, 68, 0.35) !important;
-    border-color: rgba(239, 68, 68, 0.5) !important;
-    color: #ffffff !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+    color: #dc2626 !important;
     transform: scale(1.05);
 }
 
 /* Content Area */
 .video-player-content {
-    background: #1a1a1a;
+    background: #000000;
     position: relative;
     box-sizing: border-box;
     display: flex;

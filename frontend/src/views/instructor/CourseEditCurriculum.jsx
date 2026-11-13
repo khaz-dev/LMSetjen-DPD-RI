@@ -1235,6 +1235,7 @@ function SortableLessonItem({
                                     className={`form-select form-select-sm curriculum-form-control ${getValidationClass(
                                         validationState.errors[`item_${variantIndex}_${itemIndex}_quiz_id`]
                                     )}`}
+                                    style={{ paddingRight: '2.5rem', textOverflow: 'ellipsis' }}
                                     value={item?.quiz_id || ''}
                                     onChange={(e) => {
                                         const chosenId = e.target.value;
