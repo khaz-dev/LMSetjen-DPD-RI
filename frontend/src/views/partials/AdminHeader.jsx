@@ -21,6 +21,7 @@ function AdminHeader() {
         online_users: 1,
         total_users: 0,
         pending_courses: 0,
+        pending_instructor_requests: 0,
         pending_reports: 0,
         pending_testimonials: 0,
         pending_feedback: 0,
@@ -152,6 +153,15 @@ function AdminHeader() {
     const getAdminNotiMeta = useCallback((item) => {
         const cat = item?.category || '';
         const bType = item?.badge_type || '';
+        if (cat === 'instructor_request' || cat === 'instructor') {
+            return {
+                icon: 'fas fa-chalkboard-teacher',
+                badgeClass: 'badge-teal',
+                label: item?.badge || 'Permintaan Instruktur',
+                dotColor: '#0d9488',
+                isActionable: true
+            };
+        }
         if (cat === 'course' || bType === 'warning') {
             return {
                 icon: 'fas fa-book-reader',
@@ -419,7 +429,7 @@ function AdminHeader() {
                                                         : 'Belum ada notifikasi baru untuk Admin'}
                                                 </div>
                                                 <div className="in-app-noti-empty-sub">
-                                                    Pemberitahuan verifikasi kursus baru, laporan ulasan pengguna, testimoni, dan masukan akan tampil di sini.
+                                                    Pemberitahuan verifikasi kursus baru, pengajuan instruktur, laporan ulasan pengguna, testimoni, dan masukan akan tampil di sini.
                                                 </div>
                                             </div>
                                         ) : (

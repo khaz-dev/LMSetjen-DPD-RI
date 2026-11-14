@@ -6,20 +6,20 @@ import './InstructorRequestModal.css';
 /**
  * Instructor Request Modal Component
  * 
- * Modal form for students to request instructor/teacher role.
- * Collects expertise areas, bio, and experience level.
+ * Compact, eye-catching modal form for students/staff to request instructor/teacher role
+ * in the LMSetjen DPD RI platform.
  * 
  * @param {Object} props
  * @param {boolean} props.show - Controls modal visibility
  * @param {Function} props.onClose - Callback when modal is closed
  * @param {Function} props.onSuccess - Callback after successful submission
  * @param {Object} props.user - Current user data
- * @param {Object} props.existingRequest - If user has pending request
+ * @param {Object} props.existingRequest - If user has pending/rejected request
  */
 const InstructorRequestModal = ({
   show = false,
-  onClose = () => {},
-  onSuccess = () => {},
+  onClose = () => { },
+  onSuccess = () => { },
   user = {},
   existingRequest = null
 }) => {
@@ -30,7 +30,7 @@ const InstructorRequestModal = ({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isReapplying, setIsReapplying] = useState(false); // Track when user clicks Mendaftar Ulang
+  const [isReapplying, setIsReapplying] = useState(false);
 
   // Reset reapply flag when modal closes or existing request changes
   useEffect(() => {
@@ -42,15 +42,6 @@ const InstructorRequestModal = ({
   if (!show) {
     return null;
   }
-
-  const getExperienceLevelLabel = (level) => {
-    const labelMap = {
-      BEGINNER: 'Pemula',
-      INTERMEDIATE: 'Menengah',
-      ADVANCED: 'Lanjutan'
-    };
-    return labelMap[level] || level;
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -75,7 +66,7 @@ const InstructorRequestModal = ({
     }
 
     if (!formData.bio.trim()) {
-      newErrors.bio = 'Biografi tidak boleh kosong';
+      newErrors.bio = 'Biografi & ringkasan portofolio tidak boleh kosong';
     } else if (formData.bio.trim().length < 20) {
       newErrors.bio = 'Biografi minimal 20 karakter';
     }
@@ -102,7 +93,7 @@ const InstructorRequestModal = ({
       Toast().fire({
         icon: 'success',
         title: 'Permintaan Dikirim',
-        text: 'Permintaan Anda telah dikirim. Admin akan meninjau dalam 1-2 hari kerja.',
+        text: 'Permintaan Anda telah dikirim. Admin Setjen DPD RI akan meninjau dalam 1-2 hari kerja.',
       });
 
       // Reset form
@@ -112,17 +103,17 @@ const InstructorRequestModal = ({
         experience_level: 'BEGINNER'
       });
       setErrors({});
-      setIsReapplying(false); // Reset reapply flag
+      setIsReapplying(false);
 
       // Close modal and call success callback
       onClose();
       onSuccess(response.data);
     } catch (error) {
       console.error('Error submitting request:', error);
-      
+
       const errorMessage = error.response?.data?.detail ||
-                          error.response?.data?.error ||
-                          'Gagal mengirim permintaan. Silakan coba lagi.';
+        error.response?.data?.error ||
+        'Gagal mengirim permintaan. Silakan coba lagi.';
 
       Toast().fire({
         icon: 'error',
@@ -134,43 +125,86 @@ const InstructorRequestModal = ({
     }
   };
 
-  // If user has existing pending request
+  // State 1: If user has existing pending request
   if (existingRequest && existingRequest.status === 'PENDING') {
     return (
-      <div className="instructor-modal-overlay" onClick={onClose}>
-        <div 
-          className="instructor-modal-content" 
+      <div className="instructor-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+        <div
+          className="instructor-modal-content instructor-modal-status"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="modal-header border-0">
-            <h5 className="modal-title">
-              <i className="fas fa-hourglass-half text-warning"></i> Permintaan Tertunda
-            </h5>
-            <button 
-              type="button" 
-              className="btn-close" 
-              onClick={onClose}
-              disabled={isSubmitting}
-              aria-label="Close"
-            />
-          </div>
-          <div className="modal-body">
-            <div className="alert alert-info">
-              <i className="fas fa-info-circle"></i>
-              <strong className="ms-2">Anda sudah memiliki permintaan yang menunggu review</strong>
+          <div className="instructor-modal-top-accent"></div>
+
+          <div className="instructor-modal-header">
+            <div className="modal-header-top-row">
+              <span className="instructor-brand-badge">
+                <i className="fas fa-landmark"></i> LMSetjen DPD RI
+              </span>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={onClose}
+                disabled={isSubmitting}
+                aria-label="Tutup"
+              >
+                <i className="fas fa-times"></i>
+              </button>
             </div>
-            <p className="text-muted">
-              Admin kami sedang meninjau permintaan Anda untuk menjadi instruktur. 
-              Anda akan menerima notifikasi ketika ada keputusan.
-            </p>
-            <p className="text-muted small">
-              <strong>Tanggal Permintaan:</strong> {new Date(existingRequest.request_date).toLocaleDateString('id-ID')}
-            </p>
+            <div className="modal-header-content">
+              <h5 className="modal-title">
+                <i className="fas fa-hourglass-half text-amber"></i> Permintaan Instruktur
+              </h5>
+              <p className="modal-subtitle">
+                Status verifikasi pengajuan instruktur internal DPD RI
+              </p>
+            </div>
           </div>
-          <div className="modal-footer border-0">
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
+
+          <div className="instructor-modal-body">
+            <div className="status-indicator-card pending">
+              <div className="status-pill-row">
+                <span className="status-pill status-pill-pending">
+                  <span className="status-dot-pulse"></span>
+                  Sedang Ditinjau Admin
+                </span>
+              </div>
+              <h6 className="status-card-title">Permintaan Anda Dalam Proses Review</h6>
+              <p className="status-card-desc">
+                Tim Biro Kepegawaian & Diklat Sekretariat Jenderal DPD RI sedang memverifikasi profil keahlian Anda.
+              </p>
+            </div>
+
+            <div className="instructor-compact-meta-grid">
+              <div className="compact-meta-item">
+                <span className="meta-label">
+                  <i className="fas fa-calendar-alt text-teal"></i> Tanggal Pengajuan
+                </span>
+                <span className="meta-value">
+                  {existingRequest.request_date
+                    ? new Date(existingRequest.request_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : '-'}
+                </span>
+              </div>
+              <div className="compact-meta-item">
+                <span className="meta-label">
+                  <i className="fas fa-brain text-teal"></i> Bidang Keahlian
+                </span>
+                <span className="meta-value" title={existingRequest.expertise_areas}>
+                  {existingRequest.expertise_areas || '-'}
+                </span>
+              </div>
+            </div>
+
+            <div className="instructor-trust-note mt-2">
+              <i className="fas fa-bell text-teal"></i>
+              <span>Anda akan menerima notifikasi otomatis ketika akun Anda disetujui.</span>
+            </div>
+          </div>
+
+          <div className="instructor-modal-footer">
+            <button
+              type="button"
+              className="btn-modal-cancel w-100"
               onClick={onClose}
             >
               Tutup
@@ -181,61 +215,99 @@ const InstructorRequestModal = ({
     );
   }
 
-  // If user has rejected request (but not reapplying)
+  // State 2: If user has rejected request (but not reapplying yet)
   if (existingRequest && existingRequest.status === 'REJECTED' && !isReapplying) {
     return (
-      <div className="instructor-modal-overlay" onClick={onClose}>
-        <div 
-          className="instructor-modal-content" 
+      <div className="instructor-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+        <div
+          className="instructor-modal-content instructor-modal-status"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="modal-header border-0">
-            <h5 className="modal-title">
-              <i className="fas fa-times-circle text-danger"></i> Permintaan Ditolak
-            </h5>
-            <button 
-              type="button" 
-              className="btn-close" 
-              onClick={onClose}
-              disabled={isSubmitting}
-              aria-label="Close"
-            />
-          </div>
-          <div className="modal-body">
-            <div className="alert alert-warning">
-              <strong>Alasan Penolakan:</strong>
+          <div className="instructor-modal-top-accent"></div>
+
+          <div className="instructor-modal-header">
+            <div className="modal-header-top-row">
+              <span className="instructor-brand-badge">
+                <i className="fas fa-landmark"></i> LMSetjen DPD RI
+              </span>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={onClose}
+                disabled={isSubmitting}
+                aria-label="Tutup"
+              >
+                <i className="fas fa-times"></i>
+              </button>
             </div>
-            <p className="text-muted">
-              {existingRequest.rejection_reason || 'Tidak ada alasan yang diberikan'}
-            </p>
-            <p className="text-muted small mt-3">
-              <strong>Tanggal Review:</strong> {
-                existingRequest.reviewed_date 
-                  ? new Date(existingRequest.reviewed_date).toLocaleDateString('id-ID')
-                  : 'Tanggal tidak tersedia'
-              }
-            </p>
-            {existingRequest.reviewed_by_name && (
-              <p className="text-muted small mt-2">
-                <strong>Ditinjau oleh:</strong> {existingRequest.reviewed_by_name}
+            <div className="modal-header-content">
+              <h5 className="modal-title">
+                <i className="fas fa-circle-exclamation text-rose"></i> Status Pengajuan
+              </h5>
+              <p className="modal-subtitle">
+                Hasil evaluasi permohonan instruktur DPD RI
               </p>
-            )}
-            <div className="alert alert-info mt-3">
-              <i className="fas fa-lightbulb"></i>
-              <span className="ms-2">Anda dapat mendaftar ulang setelah memperbaiki kekurangan yang disebutkan di atas.</span>
             </div>
           </div>
-          <div className="modal-footer border-0">
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
+
+          <div className="instructor-modal-body">
+            <div className="status-indicator-card rejected">
+              <div className="status-pill-row">
+                <span className="status-pill status-pill-rejected">
+                  <i className="fas fa-circle-xmark me-1"></i> Perlu Perbaikan
+                </span>
+              </div>
+              <h6 className="status-card-title">Pengajuan Belum Dapat Disetujui</h6>
+
+              <div className="rejection-feedback-box">
+                <div className="feedback-box-header">
+                  <i className="fas fa-comment-dots text-rose me-1"></i>
+                  <span>Catatan Evaluator:</span>
+                </div>
+                <p className="feedback-box-text">
+                  {existingRequest.rejection_reason || 'Kriteria belum memenuhi standar minimal pengajar internal.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="instructor-compact-meta-grid">
+              <div className="compact-meta-item">
+                <span className="meta-label">
+                  <i className="fas fa-calendar-check text-teal"></i> Tanggal Review
+                </span>
+                <span className="meta-value">
+                  {existingRequest.reviewed_date
+                    ? new Date(existingRequest.reviewed_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : '-'}
+                </span>
+              </div>
+              <div className="compact-meta-item">
+                <span className="meta-label">
+                  <i className="fas fa-user-check text-teal"></i> Ditinjau Oleh
+                </span>
+                <span className="meta-value">
+                  {existingRequest.reviewed_by_name || 'Tim Administrator'}
+                </span>
+              </div>
+            </div>
+
+            <div className="instructor-trust-note mt-2">
+              <i className="fas fa-lightbulb text-amber"></i>
+              <span>Perbaiki catatan di atas dan ajukan kembali permohonan Anda.</span>
+            </div>
+          </div>
+
+          <div className="instructor-modal-footer">
+            <button
+              type="button"
+              className="btn-modal-cancel"
               onClick={onClose}
             >
               Tutup
             </button>
-            <button 
-              type="button" 
-              className="btn btn-primary" 
+            <button
+              type="button"
+              className="btn-modal-submit"
               onClick={() => {
                 // Pre-fill form with previous submission data
                 setFormData({
@@ -247,7 +319,7 @@ const InstructorRequestModal = ({
                 setIsReapplying(true); // Switch to form view
               }}
             >
-              Mendaftar Ulang
+              <i className="fas fa-rotate-left me-1"></i> Mendaftar Ulang
             </button>
           </div>
         </div>
@@ -255,88 +327,115 @@ const InstructorRequestModal = ({
     );
   }
 
-  // Main form for new request
+  // State 3: Main request form (New request or reapplying)
   return (
-    <div className="instructor-modal-overlay" onClick={onClose}>
-      <div 
-        className="instructor-modal-content" 
+    <div className="instructor-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div
+        className="instructor-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header border-0">
-          <h5 className="modal-title">
-            <i className="fas fa-chalkboard-user"></i> Jadilah Instruktur
-          </h5>
-          <button 
-            type="button" 
-            className="btn-close" 
-            onClick={onClose}
-            disabled={isSubmitting}
-            aria-label="Close"
-          />
+        <div className="instructor-modal-top-accent"></div>
+
+        <div className="instructor-modal-header">
+          <div className="modal-header-top-row">
+            <span className="instructor-brand-badge">
+              <i className="fas fa-landmark"></i> LMSetjen DPD RI
+            </span>
+            <button
+              type="button"
+              className="btn-modal-close"
+              onClick={onClose}
+              disabled={isSubmitting}
+              aria-label="Tutup"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+          <div className="modal-header-content">
+            <h5 className="modal-title">
+              <i className="fas fa-chalkboard-teacher text-amber"></i>
+              <span>{isReapplying ? 'Pendaftaran Ulang Instruktur' : 'Pengajuan Instruktur Internal'}</span>
+            </h5>
+            <p className="modal-subtitle">
+              Bagikan kompetensi Anda untuk mendukung pengembangan SDM aparatur DPD RI
+            </p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            <p className="text-muted mb-3">
-              Kami mencari instruktur berbakat untuk berbagi pengetahuan dengan komunitas kami.
-              Isi formulir di bawah untuk mengajukan permohonan Anda.
-            </p>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="instructor-modal-body">
+            {isReapplying && (
+              <div className="instructor-reapply-banner">
+                <i className="fas fa-info-circle"></i>
+                <span>Data sebelumnya telah dimuat. Silakan perbarui sebelum mengajukan kembali.</span>
+              </div>
+            )}
 
-            {/* Expertise Areas */}
-            <div className="mb-3">
-              <label htmlFor="expertise_areas" className="form-label">
-                Bidang Keahlian <span className="text-danger">*</span>
-              </label>
-              <input
-                type="text"
-                className={`form-control ${errors.expertise_areas ? 'is-invalid' : ''}`}
-                id="expertise_areas"
-                name="expertise_areas"
-                placeholder="Contoh: Python, Django, Web Development"
-                value={formData.expertise_areas}
-                onChange={handleInputChange}
-                disabled={isSubmitting}
-              />
-              {errors.expertise_areas && (
-                <div className="invalid-feedback d-block">
-                  {errors.expertise_areas}
+            {/* 2-Column Responsive Grid for Compact Space Utilization */}
+            <div className="instructor-form-grid">
+              {/* Expertise Areas */}
+              <div className="form-group-item">
+                <label htmlFor="expertise_areas" className="form-label">
+                  <i className="fas fa-award text-teal me-1"></i> Bidang Keahlian <span className="text-danger">*</span>
+                </label>
+                <div className="input-with-icon-wrap">
+                  <input
+                    type="text"
+                    className={`form-control ${errors.expertise_areas ? 'is-invalid' : ''}`}
+                    id="expertise_areas"
+                    name="expertise_areas"
+                    placeholder="cth: TI, Legislasi, Keprotokolan"
+                    value={formData.expertise_areas}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                  />
                 </div>
-              )}
-              <small className="text-muted d-block mt-1">
-                Pisahkan dengan koma jika lebih dari satu
-              </small>
+                {errors.expertise_areas ? (
+                  <div className="invalid-feedback d-block">
+                    {errors.expertise_areas}
+                  </div>
+                ) : (
+                  <span className="form-inline-hint">Pisahkan koma jika lebih dari 1</span>
+                )}
+              </div>
+
+              {/* Experience Level */}
+              <div className="form-group-item">
+                <label htmlFor="experience_level" className="form-label">
+                  <i className="fas fa-layer-group text-teal me-1"></i> Pengalaman <span className="text-danger">*</span>
+                </label>
+                <select
+                  className="form-select"
+                  id="experience_level"
+                  name="experience_level"
+                  value={formData.experience_level}
+                  onChange={handleInputChange}
+                  disabled={isSubmitting}
+                >
+                  <option value="BEGINNER">Pemula (0-2 tahun)</option>
+                  <option value="INTERMEDIATE">Menengah (2-5 tahun)</option>
+                  <option value="ADVANCED">Lanjutan (5+ tahun)</option>
+                </select>
+                <span className="form-inline-hint">Tingkat jam terbang di bidang terkait</span>
+              </div>
             </div>
 
-            {/* Experience Level */}
-            <div className="mb-3">
-              <label htmlFor="experience_level" className="form-label">
-                Tingkat Pengalaman <span className="text-danger">*</span>
-              </label>
-              <select
-                className="form-select"
-                id="experience_level"
-                name="experience_level"
-                value={formData.experience_level}
-                onChange={handleInputChange}
-                disabled={isSubmitting}
-              >
-                <option value="BEGINNER">Pemula (0-2 tahun)</option>
-                <option value="INTERMEDIATE">Menengah (2-5 tahun)</option>
-                <option value="ADVANCED">Lanjutan (5+ tahun)</option>
-              </select>
-            </div>
-
-            {/* Bio */}
-            <div className="mb-3">
-              <label htmlFor="bio" className="form-label">
-                Biografi Singkat <span className="text-danger">*</span>
-              </label>
+            {/* Bio & Portfolio Summary */}
+            <div className="form-group-item mt-2">
+              <div className="form-label-row">
+                <label htmlFor="bio" className="form-label mb-0">
+                  <i className="fas fa-file-lines text-teal me-1"></i> Biografi & Ringkasan Portofolio <span className="text-danger">*</span>
+                </label>
+                <span className={`bio-char-counter ${formData.bio.trim().length >= 20 ? 'valid' : ''}`}>
+                  {formData.bio.trim().length} / 20 min
+                </span>
+              </div>
               <textarea
                 className={`form-control ${errors.bio ? 'is-invalid' : ''}`}
                 id="bio"
                 name="bio"
-                rows="4"
-                placeholder="Ceritakan tentang pengalaman Anda, pencapaian, dan motivasi Anda menjadi instruktur..."
+                rows="3"
+                placeholder="Ceritakan ringkasan pengalaman, rekam jejak, dan materi yang ingin Anda ajarkan..."
                 value={formData.bio}
                 onChange={handleInputChange}
                 disabled={isSubmitting}
@@ -346,32 +445,27 @@ const InstructorRequestModal = ({
                   {errors.bio}
                 </div>
               )}
-              <small className="text-muted d-block mt-1">
-                Minimal 20 karakter
-              </small>
             </div>
 
-            <div className="alert alert-light border">
-              <i className="fas fa-shield-alt text-primary"></i>
-              <small className="ms-2 text-muted">
-                Admin kami akan meninjau aplikasi Anda dalam 1-2 hari kerja. 
-                Anda akan menerima notifikasi tentang keputusan.
-              </small>
+            {/* Trust and SLA Note */}
+            <div className="instructor-trust-note">
+              <i className="fas fa-shield-halved text-teal"></i>
+              <span>Ditinjau oleh Admin LMSetjen DPD RI (1-2 hari kerja).</span>
             </div>
           </div>
 
-          <div className="modal-footer border-0">
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
+          <div className="instructor-modal-footer">
+            <button
+              type="button"
+              className="btn-modal-cancel"
               onClick={onClose}
               disabled={isSubmitting}
             >
               Batal
             </button>
-            <button 
-              type="submit" 
-              className="btn btn-primary"
+            <button
+              type="submit"
+              className="btn-modal-submit"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -381,8 +475,8 @@ const InstructorRequestModal = ({
                 </>
               ) : (
                 <>
-                  <i className="fas fa-send me-1"></i>
-                  Kirim Permintaan
+                  <span>{isReapplying ? 'Kirim Ulang Permintaan' : 'Kirim Pengajuan'}</span>
+                  <i className="fas fa-paper-plane ms-2"></i>
                 </>
               )}
             </button>

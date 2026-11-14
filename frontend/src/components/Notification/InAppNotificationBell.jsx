@@ -63,6 +63,15 @@ function InAppNotificationBell() {
     const getAdminNotiMeta = useCallback((item) => {
         const cat = item?.category || '';
         const bType = item?.badge_type || '';
+        if (cat === 'instructor_request' || cat === 'instructor') {
+            return {
+                icon: 'fas fa-chalkboard-teacher',
+                badgeClass: 'badge-teal',
+                label: item?.badge || 'Permintaan Instruktur',
+                dotColor: '#0d9488',
+                isActionable: true
+            };
+        }
         if (cat === 'course' || bType === 'warning') {
             return {
                 icon: 'fas fa-book-reader',

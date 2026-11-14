@@ -2008,6 +2008,17 @@ class AdminInstructorRequestApproveAPIView(APIView):
             
             # Approve the request
             instructor_request.approve(reviewed_by=request.user)
+
+            # Kirim notifikasi in-app kepada pemohon bahwa permohonan telah disetujui
+            try:
+                api_models.Notification.objects.create(
+                    user=instructor_request.user,
+                    type="Course Published",
+                    title="Permohonan Instruktur Disetujui! 🎉",
+                    message="Selamat! Pengajuan Anda untuk menjadi instruktur internal LMSetjen DPD RI telah disetujui oleh Administrator. Anda kini dapat mulai menyusun dan menerbitkan kursus.",
+                )
+            except Exception:
+                pass
             
             # Serialize the updated request
             serializer = api_serializer.AdminInstructorRequestListSerializer(instructor_request)
@@ -2072,6 +2083,17 @@ class AdminInstructorRequestRejectAPIView(APIView):
             
             # Reject the request
             instructor_request.reject(reviewed_by=request.user, reason=rejection_reason)
+
+            # Kirim notifikasi in-app kepada pemohon bahwa permohonan membutuhkan perbaikan
+            try:
+                api_models.Notification.objects.create(
+                    user=instructor_request.user,
+                    type="Exam Rejected",
+                    title="Pembaruan Status Pengajuan Instruktur",
+                    message=f"Pengajuan instruktur Anda membutuhkan penyesuaian: \"{rejection_reason[:120]}\". Anda dapat memperbaiki data dan mendaftar ulang.",
+                )
+            except Exception:
+                pass
             
             # Serialize the updated request
             serializer = api_serializer.AdminInstructorRequestListSerializer(instructor_request)
@@ -2397,6 +2419,10 @@ class AdminHeaderStatsAPIView(generics.GenericAPIView):
                 active=False
             ).count()
 
+            pending_instructor_requests = api_models.InstructorRequest.objects.filter(
+                status='PENDING'
+            ).count()
+
             pending_feedback = 0
             try:
                 pending_feedback = api_models.Feedback.objects.filter(
@@ -2430,7 +2456,31 @@ class AdminHeaderStatsAPIView(generics.GenericAPIView):
                     'time': course.review_submitted_date.strftime('%d %b') if course.review_submitted_date else 'Baru'
                 })
 
-            # 3b. Abuse reports pending review
+            # 3b. Instructor requests awaiting review
+            instructor_requests = api_models.InstructorRequest.objects.filter(
+                status='PENDING'
+            ).select_related('user').order_by('-request_date')
+            pending_instructor_requests = instructor_requests.count()
+
+            for req in instructor_requests[:10]:
+                applicant_name = req.user.full_name if (req.user and req.user.full_name) else (req.user.username if req.user else 'Pengguna')
+                expertise = req.expertise_areas[:35] if req.expertise_areas else 'Keahlian umum'
+                level_map = dict(getattr(api_models.InstructorRequest, 'EXPERIENCE_LEVEL_CHOICES', []))
+                level_display = level_map.get(req.experience_level, req.experience_level or 'Pemula')
+                notifications_list.append({
+                    'id': f'inst_req_{req.id}',
+                    'category': 'instructor_request',
+                    'icon': 'fas fa-chalkboard-teacher',
+                    'color': '#0d9488',
+                    'title': f'Permintaan Instruktur: {applicant_name[:25]}',
+                    'message': f'{expertise} ({level_display}). Menunggu verifikasi admin.',
+                    'link': f'/admin/content-management/?tab=requests&request_id={req.id}',
+                    'badge': 'Permintaan Instruktur',
+                    'badge_type': 'teal',
+                    'time': req.request_date.strftime('%d %b') if req.request_date else 'Baru'
+                })
+
+            # 3c. Abuse reports pending review
             abuse_reports = api_models.ReviewAbuse.objects.filter(
                 status='pending'
             ).select_related('review', 'reported_by').order_by('-reported_at')
@@ -2546,6 +2596,7 @@ class AdminHeaderStatsAPIView(generics.GenericAPIView):
 
             total_alerts = (
                 pending_courses +
+                pending_instructor_requests +
                 pending_reports +
                 pending_testimonials +
                 pending_feedback +
@@ -2564,6 +2615,7 @@ class AdminHeaderStatsAPIView(generics.GenericAPIView):
                 'online_users': online_users,
                 'total_users': total_users,
                 'pending_courses': pending_courses,
+                'pending_instructor_requests': pending_instructor_requests,
                 'pending_reports': pending_reports,
                 'pending_testimonials': pending_testimonials,
                 'pending_feedback': pending_feedback,
