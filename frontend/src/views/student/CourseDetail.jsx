@@ -10653,24 +10653,6 @@ function CourseDetail() {
                                                                 onCertificateGenerated={(cert) => {
                                                                     setExistingCertificate(cert);
                                                                     setCertImageVersion(Date.now());
-
-                                                                    // ✨ Trigger perayaan kelulusan Manta AI (SiManta Floating)
-                                                                    const courseTitle = course?.course?.title || course?.title || 'Pelatihan';
-                                                                    const userName = UserData()?.full_name || UserData()?.username || 'Rekan Pembelajar';
-                                                                    window.dispatchEvent(new CustomEvent('manta-certificate-generated', {
-                                                                        detail: {
-                                                                            courseTitle,
-                                                                            certificate: cert,
-                                                                            userName
-                                                                        }
-                                                                    }));
-                                                                    window.dispatchEvent(new CustomEvent('lms-certificate-issued', {
-                                                                        detail: {
-                                                                            courseTitle,
-                                                                            certificate: cert,
-                                                                            userName
-                                                                        }
-                                                                    }));
                                                                 }}
 
                                                                 isInline={true}

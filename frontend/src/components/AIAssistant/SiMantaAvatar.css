@@ -221,17 +221,29 @@ body:has(.inline-quiz-fullscreen) .simanta-container {
     color: #475569;
 }
 
-/* Balon ucapan selamat penerbitan sertifikat resmi */
+/* Balon ucapan selamat penerbitan sertifikat resmi - lebar hampir setengah halaman */
 .simanta-speech-bubble.simanta-speech-celebration {
-    max-width: 300px;
+    width: min(540px, 46vw);
+    max-width: 560px;
     white-space: normal;
     background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);
     border: 1.5px solid #10b981;
     color: #064e3b;
-    box-shadow: 0 14px 36px rgba(16, 185, 129, 0.32);
-    font-size: 13.5px;
+    box-shadow: 0 16px 42px rgba(16, 185, 129, 0.35);
+    font-size: 14px;
     font-weight: 600;
-    line-height: 1.45;
+    line-height: 1.5;
+    padding: 14px 18px;
+    border-radius: 18px;
+}
+
+@media (max-width: 768px) {
+    .simanta-speech-bubble.simanta-speech-celebration {
+        width: min(340px, 86vw);
+        max-width: 90vw;
+        font-size: 13px;
+        padding: 12px 14px;
+    }
 }
 
 .simanta-speech-bubble.simanta-speech-celebration::after {

@@ -88,24 +88,22 @@ function CertificateTab({
             if (response.data.certificate) {
                 setCertificate(response.data.certificate);
 
-                // ✨ Trigger perayaan Manta AI (SiManta Floating) untuk memberi ucapan selamat
-                const courseTitle = course?.course?.title || course?.title || 'Pelatihan';
-                const userName = UserData()?.full_name || UserData()?.username || 'Rekan Pembelajar';
+                // ✨ Trigger perayaan Manta AI (SiManta Floating) HANYA di saat pertama kali Sertifikat di-Generate
+                const certId = response.data.certificate?.certificate_id || enrollmentId;
+                const celebratedKey = `manta_cert_celebrated_${certId}`;
+                if (!sessionStorage.getItem(celebratedKey)) {
+                    sessionStorage.setItem(celebratedKey, 'true');
+                    const courseTitle = course?.course?.title || course?.title || 'Pelatihan';
+                    const userName = UserData()?.full_name || UserData()?.username || 'Rekan Pembelajar';
 
-                window.dispatchEvent(new CustomEvent('manta-certificate-generated', {
-                    detail: {
-                        courseTitle,
-                        certificate: response.data.certificate,
-                        userName
-                    }
-                }));
-                window.dispatchEvent(new CustomEvent('lms-certificate-issued', {
-                    detail: {
-                        courseTitle,
-                        certificate: response.data.certificate,
-                        userName
-                    }
-                }));
+                    window.dispatchEvent(new CustomEvent('manta-certificate-generated', {
+                        detail: {
+                            courseTitle,
+                            certificate: response.data.certificate,
+                            userName
+                        }
+                    }));
+                }
 
                 // ✨ PHASE 4.225: Generate and upload image (PNG) to server, then notify parent with complete data
                 setTimeout(() => {

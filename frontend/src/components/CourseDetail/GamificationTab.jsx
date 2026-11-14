@@ -218,19 +218,12 @@ const GamificationTab = ({
                                         <div key={game.game_id || idx} className="col-lg-6 col-md-12">
                                             <div className={`game-card-item ${isCurrentlyActive ? "border-primary shadow-sm" : ""}`} style={isCurrentlyActive ? { borderColor: "#0d9488", backgroundColor: "#f0fdfa" } : {}}>
                                                 <div>
-                                                    <div className="d-flex justify-content-between align-items-start mb-2">
-                                                        <div className="d-flex align-items-center gap-2">
-                                                            <div className={`game-card-icon ${meta.iconClass}`}>
-                                                                <i className={meta.icon}></i>
-                                                            </div>
-                                                            <div>
-                                                                <span className={`game-badge ${meta.badgeClass}`}>
-                                                                    {meta.name}
-                                                                </span>
-                                                                <h6 className="fw-bold m-0 mt-1">{game.title}</h6>
-                                                            </div>
-                                                        </div>
-                                                        <div>
+                                                    {/* Baris 1: game-badge di kiri dan badge status kelulusan / poin di kanan pada 1 baris */}
+                                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                                        <span className={`game-badge ${meta.badgeClass}`}>
+                                                            {meta.name}
+                                                        </span>
+                                                        <div className="d-flex align-items-center gap-1">
                                                             {isCurrentlyActive && (
                                                                 <span className="badge bg-teal-subtle text-teal border border-teal-subtle me-1">
                                                                     <i className="fas fa-satellite-dish me-1"></i>Aktif di Player
@@ -238,11 +231,11 @@ const GamificationTab = ({
                                                             )}
                                                             {isPassed ? (
                                                                 <span className="badge bg-success-subtle text-success border border-success-subtle">
-                                                                    <i className="fas fa-check-circle me-1"></i>Lulus (Nilai: {bestScore})
+                                                                    <i className="fas fa-check-circle me-1"></i>Lulus (Poin: {bestScore})
                                                                 </span>
                                                             ) : attemptsUsed > 0 ? (
                                                                 <span className="badge bg-warning-subtle text-warning border border-warning-subtle">
-                                                                    Nilai: {bestScore}
+                                                                    Poin: {bestScore}
                                                                 </span>
                                                             ) : (
                                                                 <span className="badge bg-secondary-subtle text-secondary">
@@ -250,6 +243,14 @@ const GamificationTab = ({
                                                                 </span>
                                                             )}
                                                         </div>
+                                                    </div>
+
+                                                    {/* Baris 2: game-card-icon membungkus icon secara terpusat (vertikal & horizontal) dan judul game */}
+                                                    <div className="d-flex align-items-center gap-2 mb-2">
+                                                        <div className={`game-card-icon ${meta.iconClass}`}>
+                                                            <i className={meta.icon}></i>
+                                                        </div>
+                                                        <h6 className="fw-bold m-0 mt-1">{game.title}</h6>
                                                     </div>
 
                                                     <p className="text-muted small mt-2 mb-3" style={{ minHeight: "36px", whiteSpace: "pre-line", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>
