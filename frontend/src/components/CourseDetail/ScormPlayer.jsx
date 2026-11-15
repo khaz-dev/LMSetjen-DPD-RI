@@ -29,6 +29,22 @@ const ScormPlayer = ({
   const targetCourseId = courseId || course?.course?.id || course?.id;
   const targetVariantItemId = variantItem?.variant_item_id || variantItem?.id;
 
+  const initialLessonCompletedRef = useRef(false);
+  const hasTriggeredAutoNextRef = useRef(false);
+
+  // ✨ Sinkronkan status fullscreen dengan browser API
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setFullscreen(Boolean(document.fullscreenElement || document.webkitFullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
   const playerSrc = moduleId 
     ? `/modules/${moduleId}/player/?course_id=${targetCourseId || ''}&variant_item_id=${targetVariantItemId || ''}`
     : (variantItem?.learning_module_info?.player_url || variantItem?.file);
@@ -49,6 +65,12 @@ const ScormPlayer = ({
     });
   }, [variantItem, course]);
 
+  // Track initial completion status so Auto-Next is triggered only when newly completed in this session
+  useEffect(() => {
+    initialLessonCompletedRef.current = isLessonAlreadyCompleted();
+    hasTriggeredAutoNextRef.current = false;
+  }, [targetVariantItemId, isLessonAlreadyCompleted]);
+
   // Callback to sync SCORM status to backend
   const handleTrackingSync = useCallback(async (cmiPayload) => {
     if (!moduleId) return;
@@ -65,15 +87,35 @@ const ScormPlayer = ({
         const status = response.data.lesson_status.toLowerCase();
         setLessonStatus(status);
 
-        const alreadyDone = isLessonAlreadyCompleted();
-        if ((status === "completed" || status === "passed") && !alreadyDone && handleMarkLessonAsCompleted) {
-          handleMarkLessonAsCompleted(variantItem?.variant_item_id || variantItem?.id, true);
-          Toast().fire({
-            icon: "success",
-            title: "Modul Berhasil Diselesaikan!",
-            text: "Progress belajar dan sertifikat Anda telah diperbarui secara otomatis.",
-            timer: 3500
-          });
+        const wasDone = isLessonAlreadyCompleted();
+        if (status === "completed" || status === "passed") {
+          if (variantItem) variantItem.is_completed = true;
+
+          const isNewlyDone = !initialLessonCompletedRef.current || !wasDone || response.data?.is_newly_completed;
+          if (isNewlyDone && !hasTriggeredAutoNextRef.current) {
+            hasTriggeredAutoNextRef.current = true;
+            if (handleMarkLessonAsCompleted) {
+              handleMarkLessonAsCompleted(targetVariantItemId, true, targetCourseId);
+            }
+            if (fetchCourseDetail) {
+              fetchCourseDetail(true);
+            }
+            Toast().fire({
+              target: document.fullscreenElement || containerRef.current || 'body',
+              icon: "success",
+              title: "Modul Berhasil Diselesaikan!",
+              text: "Progress belajar dan sertifikat Anda telah diperbarui secara otomatis.",
+              timer: 3500
+            });
+            // ✨ Picu dialog Auto-Next melanjutkan materi pembelajaran selanjutnya
+            window.dispatchEvent(new CustomEvent('lessonCompletedSuccess', {
+              detail: {
+                variantItemId: targetVariantItemId,
+                courseId: targetCourseId,
+                isAutoComplete: true
+              }
+            }));
+          }
         }
       }
     } catch (err) {
@@ -188,10 +230,26 @@ const ScormPlayer = ({
         }
 
         if (status === 'completed' || status === 'passed') {
+          const wasDone = isLessonAlreadyCompleted();
           if (variantItem) variantItem.is_completed = true;
-          const alreadyDone = isLessonAlreadyCompleted();
-          if (!alreadyDone && handleMarkLessonAsCompleted) {
-            handleMarkLessonAsCompleted(targetVariantItemId, true, targetCourseId);
+
+          const isNewlyDone = !initialLessonCompletedRef.current || !wasDone || event.data?.wasAlreadyCompleted === false;
+          if (isNewlyDone && !hasTriggeredAutoNextRef.current) {
+            hasTriggeredAutoNextRef.current = true;
+            if (handleMarkLessonAsCompleted) {
+              handleMarkLessonAsCompleted(targetVariantItemId, true, targetCourseId);
+            }
+            if (fetchCourseDetail) {
+              fetchCourseDetail(true);
+            }
+            // ✨ Picu dialog Auto-Next melanjutkan materi pembelajaran selanjutnya
+            window.dispatchEvent(new CustomEvent('lessonCompletedSuccess', {
+              detail: {
+                variantItemId: targetVariantItemId,
+                courseId: targetCourseId,
+                isAutoComplete: true
+              }
+            }));
           } else if (fetchCourseDetail) {
             fetchCourseDetail(true);
           }
@@ -199,6 +257,9 @@ const ScormPlayer = ({
       } else if (event.data?.type === 'SCORM_MODULE_RESET') {
         // Reset modul — JANGAN update skor di sidebar, hanya refresh data course di background
         // agar is_completed / completed_lesson tetap sinkron dengan backend tanpa mengubah badge skor
+        initialLessonCompletedRef.current = false;
+        hasTriggeredAutoNextRef.current = false;
+        setLessonStatus('incomplete');
         if (fetchCourseDetail) {
           fetchCourseDetail(true);
         }

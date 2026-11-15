@@ -2,7 +2,9 @@ import Swal from "sweetalert2";
 import "./toast-mobile.css";
 
 function Toast(){
+    const currentFullscreenTarget = (typeof document !== 'undefined' && (document.fullscreenElement || document.webkitFullscreenElement)) || 'body';
     const Toast = Swal.mixin({
+        target: currentFullscreenTarget,
         toast: true,
         position: 'top-end',
         showConfirmButton: false,
@@ -77,7 +79,9 @@ function Toast(){
 
 // Enhanced logout confirmation dialog with compact styling
 function LogoutConfirmation() {
+    const currentFullscreenTarget = (typeof document !== 'undefined' && (document.fullscreenElement || document.webkitFullscreenElement)) || 'body';
     return Swal.fire({
+        target: currentFullscreenTarget,
         title: 'Konfirmasi Logout',
         html: `
             <div style="color: #475569; font-size: 0.86rem; line-height: 1.45; margin-bottom: 0.25rem;">
@@ -103,7 +107,9 @@ function LogoutConfirmation() {
 
 // Delete confirmation dialog with compact styling
 function DeleteConfirmation({ title = "Konfirmasi Penghapusan", text = "Apakah Anda yakin ingin menghapus item ini? Tindakan ini tidak dapat dibatalkan." }) {
+    const currentFullscreenTarget = (typeof document !== 'undefined' && (document.fullscreenElement || document.webkitFullscreenElement)) || 'body';
     return Swal.fire({
+        target: currentFullscreenTarget,
         title: title,
         html: `<div style="text-align: center; color: #475569; font-size: 0.86rem; line-height: 1.45; margin-bottom: 0.25rem;">
                 ${text}

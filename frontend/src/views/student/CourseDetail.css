@@ -13115,7 +13115,7 @@ body.quiz-taking-active footer {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    z-index: 9999999 !important;
+    z-index: 2147483647 !important;
     padding: 1.25rem !important;
     box-sizing: border-box !important;
     pointer-events: auto !important;
@@ -13309,4 +13309,147 @@ body.quiz-taking-active footer {
     box-shadow: 0 6px 16px rgba(13, 148, 136, 0.45) !important;
     transform: translateY(-1.5px) !important;
     color: #ffffff !important;
+}
+
+/* ==========================================================================
+   ✨ FULLSCREEN STYLING FOR KUIS, PRE-TEST, & POST-TEST
+   ========================================================================== */
+
+.quiz-fullscreen-toggle-btn {
+    border-radius: 8px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    padding: 0.35rem 0.65rem !important;
+    color: #475569 !important;
+    border-color: #cbd5e1 !important;
+    background: #f8fafc !important;
+    transition: all 0.2s ease !important;
+}
+
+.quiz-fullscreen-toggle-btn:hover {
+    color: #0f172a !important;
+    border-color: #0d9488 !important;
+    background: #f0fdfa !important;
+}
+
+/* Container in Native Browser Fullscreen Mode */
+.inline-quiz-fullscreen:fullscreen,
+.inline-quiz-fullscreen:-webkit-full-screen {
+    width: 100vw !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #f1f5f9 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 2rem 1.25rem !important;
+    box-sizing: border-box !important;
+    z-index: 2147483640 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Centered content card in Fullscreen - Height wraps content & vertically centered */
+.inline-quiz-fullscreen:fullscreen .quiz-start-screen-inline,
+.inline-quiz-fullscreen:-webkit-full-screen .quiz-start-screen-inline {
+    width: 100% !important;
+    max-width: 860px !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: max-content !important;
+    margin: auto !important;
+    justify-content: flex-start !important;
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.9) !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 1.75rem 2rem !important;
+    box-sizing: border-box !important;
+    gap: 0.75rem !important;
+}
+
+/* Tighten header & intro spacing in fullscreen start screen */
+.inline-quiz-fullscreen:fullscreen .quiz-start-screen-inline .quiz-intro-header,
+.inline-quiz-fullscreen:-webkit-full-screen .quiz-start-screen-inline .quiz-intro-header {
+    margin-bottom: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.inline-quiz-fullscreen:fullscreen .quiz-start-screen-inline .quiz-intro,
+.inline-quiz-fullscreen:-webkit-full-screen .quiz-start-screen-inline .quiz-intro {
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.85rem !important;
+}
+
+.inline-quiz-fullscreen:fullscreen .quiz-start-screen-inline .quiz-info-cards,
+.inline-quiz-fullscreen:-webkit-full-screen .quiz-start-screen-inline .quiz-info-cards {
+    margin: 0 !important;
+    gap: 10px !important;
+}
+
+.inline-quiz-fullscreen:fullscreen .quiz-start-screen-inline .quiz-rules,
+.inline-quiz-fullscreen:-webkit-full-screen .quiz-start-screen-inline .quiz-rules {
+    margin: 0 !important;
+    padding: 0.75rem 1rem !important;
+}
+
+.inline-quiz-fullscreen:fullscreen .quiz-start-screen-inline .quiz-start-actions,
+.inline-quiz-fullscreen:-webkit-full-screen .quiz-start-screen-inline .quiz-start-actions {
+    margin-top: 0.5rem !important;
+    padding-top: 0.75rem !important;
+    border-top: 1px solid #f1f5f9 !important;
+}
+
+/* Active & Result screens in Fullscreen */
+.inline-quiz-fullscreen:fullscreen .quiz-active-screen-inline,
+.inline-quiz-fullscreen:-webkit-full-screen .quiz-active-screen-inline,
+.inline-quiz-fullscreen:fullscreen .quiz-result-screen-inline,
+.inline-quiz-fullscreen:-webkit-full-screen .quiz-result-screen-inline {
+    width: 100% !important;
+    max-width: 860px !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: max-content !important;
+    margin: auto !important;
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.9) !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 1.75rem 2rem !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure integrity unreadable cover fills the entire fullscreen window */
+.inline-quiz-fullscreen:fullscreen .quiz-integrity-unreadable-cover,
+.inline-quiz-fullscreen:-webkit-full-screen .quiz-integrity-unreadable-cover {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    z-index: 2147483646 !important;
+}
+
+@media (max-width: 768px) {
+    .inline-quiz-fullscreen:fullscreen,
+    .inline-quiz-fullscreen:-webkit-full-screen {
+        padding: 1rem 0.5rem !important;
+    }
+
+    .inline-quiz-fullscreen:fullscreen .quiz-start-screen-inline,
+    .inline-quiz-fullscreen:-webkit-full-screen .quiz-start-screen-inline,
+    .inline-quiz-fullscreen:fullscreen .quiz-active-screen-inline,
+    .inline-quiz-fullscreen:-webkit-full-screen .quiz-active-screen-inline,
+    .inline-quiz-fullscreen:fullscreen .quiz-result-screen-inline,
+    .inline-quiz-fullscreen:-webkit-full-screen .quiz-result-screen-inline {
+        padding: 1.15rem 1rem !important;
+        border-radius: 12px !important;
+    }
 }

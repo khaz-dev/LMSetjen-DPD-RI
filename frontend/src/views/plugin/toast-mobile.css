@@ -25,12 +25,20 @@
 
 .module-player-page-container .swal2-container,
 :fullscreen .swal2-container,
+:-webkit-full-screen .swal2-container,
+.swal2-container.swal2-top-end,
+.swal2-container {
+    z-index: 2147483647 !important;
+}
+
+.module-player-page-container .swal2-container,
+:fullscreen .swal2-container,
 :-webkit-full-screen .swal2-container {
     position: absolute !important;
     inset: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    z-index: 99999 !important;
+    z-index: 2147483647 !important;
 }
 
 /* Ensure toast container is ALWAYS completely transparent with NO backdrop blur */

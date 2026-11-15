@@ -94,6 +94,20 @@ const VideoPlayerUnggah = forwardRef(({
             setIsPlaying(false);
         }
     }, [variantItem?.file]);
+
+    // ✨ Sinkronkan status fullscreen dengan Fullscreen API browser
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            const isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+            setIsFullscreen(isFs);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        };
+    }, []);
     
     const containerRef = useRef(null);
     const mouseInactiveTimer = useRef(null);
@@ -680,6 +694,10 @@ const VideoPlayerUnggah = forwardRef(({
                             onPause={handleVideoPause}
                             onFocus={handleVideoFocus}
                             onKeyDown={handleVideoKeyDown}
+                            onDoubleClick={(e) => {
+                                e.preventDefault();
+                                handleFullscreen();
+                            }}
                             muted={false}
                             autoPlay={autoplay && (!seekPosition || seekPosition <= 0)}
                             tabIndex={allowVideoAccess ? 0 : -1}

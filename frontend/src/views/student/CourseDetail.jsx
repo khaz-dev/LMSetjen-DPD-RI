@@ -170,6 +170,7 @@ function CourseDetail() {
     const [autoNextPrompt, setAutoNextPrompt] = useState(null);
     const autoNextTimerRef = useRef(null);
     const lastTriggeredAutoNextRef = useRef(null);
+    const shouldRestoreFullscreenRef = useRef(false);
 
     // ✨ Intelligent Auto-Focus & Auto-Resume State (6-tier priority on page load/refresh)
     const [certificateCheckCompleted, setCertificateCheckCompleted] = useState(false);
@@ -331,6 +332,41 @@ function CourseDetail() {
     const [quizResumeData, setQuizResumeData] = useState(null);
 
     const inlineQuizContainerRef = useRef(null);  // ✨ PHASE 4.225+: Ref for inline quiz container
+
+    // ✨ Fullscreen Support untuk Kuis, Pre-Test, dan Post-Test
+    const [isQuizFullscreen, setIsQuizFullscreen] = useState(false);
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+            setIsQuizFullscreen(Boolean(fsEl && inlineQuizContainerRef.current && (fsEl === inlineQuizContainerRef.current || inlineQuizContainerRef.current.contains(fsEl))));
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        };
+    }, []);
+
+    const toggleQuizFullscreen = useCallback(() => {
+        if (!inlineQuizContainerRef.current) return;
+        const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+        if (fsEl) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(err => console.warn('Exit fullscreen error:', err));
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        } else {
+            const target = inlineQuizContainerRef.current;
+            if (target.requestFullscreen) {
+                target.requestFullscreen().catch(err => console.warn('Request fullscreen error:', err));
+            } else if (target.webkitRequestFullscreen) {
+                target.webkitRequestFullscreen();
+            }
+        }
+    }, []);
 
 
 
@@ -1058,8 +1094,11 @@ function CourseDetail() {
                 const vCount = quizViolationsRef.current;
                 setQuizViolations(vCount);
 
+                const fsTarget = document.fullscreenElement || document.webkitFullscreenElement || 'body';
+
                 if (vCount === 1) {
                     Swal.fire({
+                        target: fsTarget,
                         icon: 'warning',
                         title: '⚠️ Peringatan Integritas (1/3)',
                         html: '<p class="fw-semibold">Anda terdeteksi meninggalkan halaman atau berpindah tab ujian!</p><div class="alert alert-warning py-2 text-start small mb-0"><strong>Integritas Akademik:</strong> Membuka tab atau aplikasi lain selama ujian dilarang.<br><strong>Toleransi tersisa: 2 kali lagi.</strong> Jika mencapai 3 kali, ujian akan otomatis dihentikan dan diserahkan ke sistem.</div>',
@@ -1069,6 +1108,7 @@ function CourseDetail() {
                     });
                 } else if (vCount === 2) {
                     Swal.fire({
+                        target: fsTarget,
                         icon: 'error',
                         title: '🚨 Peringatan Keras Integritas (2/3)!',
                         html: '<p class="text-danger fw-bold">Anda meninggalkan jendela ujian untuk kedua kalinya!</p><div class="alert alert-danger py-2 text-start small mb-0"><strong>PERINGATAN TERAKHIR:</strong> Jika Anda berpindah tab atau meminimalisir jendela sekali lagi, ujian akan <strong>OTOMATIS TERKUNCI & DISERAHKAN</strong> ke sistem apa adanya.</div>',
@@ -1079,6 +1119,7 @@ function CourseDetail() {
                 } else if (vCount >= 3) {
                     isSubmittingQuizRef.current = true;
                     Swal.fire({
+                        target: fsTarget,
                         icon: 'error',
                         title: '⛔ Ujian Terkunci Otomatis (3/3)',
                         html: '<p class="fw-bold text-danger">Batas toleransi perpindahan jendela (3x) telah terlampaui.</p><p class="text-muted small">Demi menjamin validitas dan integritas peringkat, ujian Anda telah dihentikan dan diserahkan secara otomatis ke sistem.</p>',
@@ -1845,6 +1886,31 @@ function CourseDetail() {
         }));
 
     };
+
+    // ✨ Fullscreen Continuity: Pertahankan mode fullscreen saat berpindah antar materi pembelajaran
+    useEffect(() => {
+        if (shouldRestoreFullscreenRef.current && variantItem) {
+            shouldRestoreFullscreenRef.current = false;
+            // Jika elemen sebelumnya unmount dan browser keluar dari fullscreen, aktifkan kembali di container baru
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const timer = setTimeout(() => {
+                    const playerEl = videoPlayerContainerRef.current?.querySelector('.video-player-video-container') ||
+                                     videoPlayerContainerRef.current?.querySelector('.non-video-media-viewer') ||
+                                     videoPlayerContainerRef.current?.querySelector('.pdf-viewer-player-container') ||
+                                     videoPlayerContainerRef.current?.querySelector('.pptx-viewer-player') ||
+                                     videoPlayerContainerRef.current;
+                    if (playerEl) {
+                        if (playerEl.requestFullscreen) {
+                            playerEl.requestFullscreen().catch(() => {});
+                        } else if (playerEl.webkitRequestFullscreen) {
+                            playerEl.webkitRequestFullscreen().catch(() => {});
+                        }
+                    }
+                }, 200);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [variantItem?.variant_item_id]);
 
     // Quick resume helper to jump straight to current pending lesson
 
@@ -3575,6 +3641,15 @@ function CourseDetail() {
 
     const handleQuizClose = () => {
 
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            try {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            } catch (e) {
+                // Ignore exit fullscreen error
+            }
+        }
+
         setQuizShow(false);
 
         setSelectedQuiz(null);
@@ -3853,6 +3928,11 @@ function CourseDetail() {
             autoNextTimerRef.current = null;
         }
 
+        const wasInFullscreen = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+        if (wasInFullscreen) {
+            shouldRestoreFullscreenRef.current = true;
+        }
+
         const itemToPlay = targetItemParam || autoNextPrompt?.nextItem;
         setAutoNextPrompt(null);
 
@@ -3970,6 +4050,7 @@ function CourseDetail() {
         if (!nextItem) return;
 
         let currentTitle = "Pelajaran Selesai";
+        let isScorm = false;
         if (course?.curriculum) {
             for (const sec of course.curriculum) {
                 const found = (sec.variant_items || []).find(it =>
@@ -3977,12 +4058,15 @@ function CourseDetail() {
                 );
                 if (found) {
                     currentTitle = found.title;
+                    if (found.file_type === 'scorm' || found.file_type === 'h5p' || found.learning_module_info) {
+                        isScorm = true;
+                    }
                     break;
                 }
             }
         }
 
-        startAutoNextCountdown(currentTitle, nextItem, 'lesson');
+        startAutoNextCountdown(currentTitle, nextItem, isScorm ? 'scorm' : 'lesson');
     }, [course, findNextCurriculumItem, startAutoNextCountdown]);
 
     // Pemicu auto-next untuk kuis reguler yang baru selesai
@@ -4217,7 +4301,9 @@ function CourseDetail() {
                                 ? 'Post-Test Berhasil Diselesaikan!'
                                 : autoNextPrompt.type === 'quiz'
                                     ? 'Kuis Berhasil Diselesaikan!'
-                                    : 'Pelajaran Selesai!'}
+                                    : autoNextPrompt.type === 'scorm'
+                                        ? 'Modul Pembelajaran Selesai!'
+                                        : 'Pelajaran Selesai!'}
                     </h4>
                     <p className="auto-next-center-subtitle text-truncate px-2">
                         {autoNextPrompt.currentItemTitle}
@@ -9221,6 +9307,18 @@ function CourseDetail() {
 
                                                                     </div>
 
+                                                                    <div className="quiz-header-actions ms-auto ps-2">
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 quiz-fullscreen-toggle-btn shadow-sm"
+                                                                            onClick={toggleQuizFullscreen}
+                                                                            title={isQuizFullscreen ? "Keluar Layar Penuh (ESC)" : "Layar Penuh"}
+                                                                        >
+                                                                            <i className={`fas ${isQuizFullscreen ? "fa-compress" : "fa-expand"}`}></i>
+                                                                            <span className="d-none d-sm-inline">{isQuizFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}</span>
+                                                                        </button>
+                                                                    </div>
+
                                                                 </div>
 
                                                                 <div className="quiz-intro">
@@ -9479,6 +9577,18 @@ function CourseDetail() {
 
                                                                 </div>
 
+                                                                <div className="quiz-header-actions ms-auto ps-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 quiz-fullscreen-toggle-btn shadow-sm"
+                                                                        onClick={toggleQuizFullscreen}
+                                                                        title={isQuizFullscreen ? "Keluar Layar Penuh (ESC)" : "Layar Penuh"}
+                                                                    >
+                                                                        <i className={`fas ${isQuizFullscreen ? "fa-compress" : "fa-expand"}`}></i>
+                                                                        <span className="d-none d-sm-inline">{isQuizFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}</span>
+                                                                    </button>
+                                                                </div>
+
                                                             </div>
 
 
@@ -9659,7 +9769,7 @@ function CourseDetail() {
 
                                                             <div className="quiz-result-screen-inline">
 
-                                                                <div className="quiz-result-header-top">
+                                                                <div className="quiz-result-header-top d-flex align-items-center justify-content-between flex-wrap gap-2">
 
                                                                     <div className="quiz-result-header-content d-flex align-items-center gap-2">
 
@@ -9689,6 +9799,18 @@ function CourseDetail() {
 
                                                                         </div>
 
+                                                                    </div>
+
+                                                                    <div className="quiz-header-actions ms-auto ps-2">
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 quiz-fullscreen-toggle-btn shadow-sm"
+                                                                            onClick={toggleQuizFullscreen}
+                                                                            title={isQuizFullscreen ? "Keluar Layar Penuh (ESC)" : "Layar Penuh"}
+                                                                        >
+                                                                            <i className={`fas ${isQuizFullscreen ? "fa-compress" : "fa-expand"}`}></i>
+                                                                            <span className="d-none d-sm-inline">{isQuizFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}</span>
+                                                                        </button>
                                                                     </div>
 
                                                                 </div>

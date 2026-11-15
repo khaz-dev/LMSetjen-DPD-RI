@@ -51,6 +51,40 @@ const NonVideoMediaViewer = forwardRef(({
     const maxTimeWatchedRef = useRef(0);
     const onProgressRef = useRef(onProgress);
     const progressStoppedRef = useRef(false);
+    const viewerRef = useRef(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    // ✨ Sinkronkan status fullscreen dengan browser
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            const isFs = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+            setIsFullscreen(isFs);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        };
+    }, []);
+
+    const toggleFullscreen = () => {
+        const target = viewerRef.current;
+        if (!target) return;
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            if (target.requestFullscreen) {
+                target.requestFullscreen().catch(() => {});
+            } else if (target.webkitRequestFullscreen) {
+                target.webkitRequestFullscreen().catch(() => {});
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen().catch(() => {});
+            }
+        }
+    };
 
     useEffect(() => {
         onProgressRef.current = onProgress;
@@ -502,7 +536,7 @@ const NonVideoMediaViewer = forwardRef(({
     else if (isExternalLink) typeBadge = { icon: 'fas fa-external-link-alt', label: 'Tautan Materi Pembelajaran', color: '#7c3aed' };
 
     return (
-        <div className="video-player-inline non-video-media-viewer" style={{ minHeight: '440px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <div ref={viewerRef} className={`video-player-inline non-video-media-viewer ${isFullscreen ? 'is-fullscreen' : ''}`} style={{ minHeight: '440px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
             {/* Header Eksekutif Setjen DPD RI */}
             <div className="video-player-header">
                 <div className="video-player-header-left">
@@ -577,6 +611,16 @@ const NonVideoMediaViewer = forwardRef(({
                             )}
                         </button>
                     )}
+                    {/* Fullscreen Toggle Button */}
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-link text-muted p-1"
+                        onClick={toggleFullscreen}
+                        title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+                    >
+                        <i className={`fas fa-${isFullscreen ? 'compress' : 'expand'}`}></i>
+                    </button>
+
                     {onClose && (
                         <button
                             type="button"

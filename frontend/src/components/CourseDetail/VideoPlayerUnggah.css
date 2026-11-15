@@ -551,3 +551,23 @@
     pointer-events: auto;
     cursor: not-allowed;
 }
+
+/* ✨ Fullscreen Mode for Multi-Format Learning Materials (Audio, PPTX, PDF, etc) */
+.non-video-media-viewer:fullscreen,
+.non-video-media-viewer:-webkit-full-screen,
+.non-video-media-viewer.is-fullscreen:fullscreen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    background: #0f172a !important;
+    border-radius: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.non-video-media-viewer:fullscreen .video-player-header,
+.non-video-media-viewer:-webkit-full-screen .video-player-header {
+    border-radius: 0 !important;
+    background: #1e293b !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}

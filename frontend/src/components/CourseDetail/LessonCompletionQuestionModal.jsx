@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import useAxios from '../../utils/useAxios';
 import Toast from '../../views/plugin/Toast';
 import Swal from 'sweetalert2';
@@ -8,6 +9,7 @@ import './LessonCompletionQuestionModal.css';
 // ✨ PHASE 11.158: Bright mode, positioned in video player, no skip button
 // ✨ PHASE 11.170: When answer is wrong, unlock video access to let user rewatch
 // ✨ PHASE 11.171: Add "Pelajaran Kembali" button to close modal and access video
+// ✨ Fullscreen Support: Render seamlessly inside document.fullscreenElement via React Portal
 // Displayed when student finishes watching a lesson (100%)
 // Student MUST answer correctly to mark lesson as complete - NO SKIP OPTION
 const LessonCompletionQuestionModal = ({ 
@@ -25,6 +27,24 @@ const LessonCompletionQuestionModal = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [hasAnsweredWrong, setHasAnsweredWrong] = useState(false); // ✨ PHASE 11.171: Track if user answered wrong to show back button
 
+    // ✨ Deteksi dan pantau elemen fullscreen aktif (video / audio / pptx / pdf / content container)
+    const [fullscreenTarget, setFullscreenTarget] = useState(
+        () => document.fullscreenElement || document.webkitFullscreenElement || null
+    );
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            const fsEl = document.fullscreenElement || document.webkitFullscreenElement || null;
+            setFullscreenTarget(fsEl);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        };
+    }, []);
+
     if (!question) return null;
 
     // ✨ PHASE 11.158: Remove onCancel from accepting as prop - user can only answer or rewatch video
@@ -32,6 +52,8 @@ const LessonCompletionQuestionModal = ({
 
     const handleSubmitAnswer = async () => {
         if (!question) return;
+
+        const targetElement = document.fullscreenElement || document.webkitFullscreenElement || document.querySelector('.video-player-container') || 'body';
 
         let answer = null;
         let answerChoiceId = null;
@@ -41,6 +63,7 @@ const LessonCompletionQuestionModal = ({
         if (question.question_type === 'multiple_choice') {
             if (!selectedAnswer) {
                 Toast().fire({
+                    target: targetElement,
                     icon: 'warning',
                     title: 'Pilihan diperlukan',
                     text: 'Silakan pilih salah satu jawaban'
@@ -51,6 +74,7 @@ const LessonCompletionQuestionModal = ({
         } else if (question.question_type === 'multi_select') {
             if (selectedMultiAnswers.length === 0) {
                 Toast().fire({
+                    target: targetElement,
                     icon: 'warning',
                     title: 'Pilihan diperlukan',
                     text: 'Silakan pilih minimal satu jawaban'
@@ -61,6 +85,7 @@ const LessonCompletionQuestionModal = ({
         } else if (['short_answer', 'fill_in_blank'].includes(question.question_type)) {
             if (!shortAnswer.trim()) {
                 Toast().fire({
+                    target: targetElement,
                     icon: 'warning',
                     title: 'Jawaban diperlukan',
                     text: 'Silakan masukkan jawaban Anda'
@@ -83,57 +108,63 @@ const LessonCompletionQuestionModal = ({
 
             const response = await API.post('/lesson-completion-question/answer/', payload);
 
-            const targetElement = document.fullscreenElement || document.querySelector('.video-player-container') || 'body';
-
             if (response.data.is_correct) {
-                // Answer is correct - show success and call callback
-                // ✨ Target fullscreenElement agar popup terlihat dalam mode fullscreen
+                // ✨ URUTAN BARU SESUAI PERMINTAAN:
+                // Langkah 1: Terlebih dahulu munculkan dialog bahwa jawaban peserta BENAR
                 Swal.fire({
                     target: targetElement,
                     icon: 'success',
                     title: 'Jawaban Benar!',
-                    text: 'Selamat! Anda berhasil menjawab pertanyaan. Pelajaran telah ditandai sebagai selesai.',
+                    text: 'Selamat! Jawaban Anda pada pertanyaan penyelesaian sudah tepat.',
                     allowOutsideClick: false,
                     customClass: {
-                        confirmButton: 'btn btn-success'
+                        confirmButton: 'btn btn-success px-4 py-2 fw-semibold'
                     },
                     buttonsStyling: false,
-                    confirmButtonText: 'Terima Kasih'
+                    confirmButtonText: '<i class="fas fa-check me-1"></i> Lanjutkan'
                 }).then(() => {
-                    // ✨ PHASE 11.202: Dispatch event to trigger course data refresh
-                    // This ensures the lesson completion status is updated in the UI
-                    window.dispatchEvent(new CustomEvent('lessonAnsweredCorrectly', { 
-                        detail: { variantItemId: variantItemId } 
-                    }));
-                    
+                    // Tutup modal pertanyaan
                     if (onAnswerCorrect) {
                         onAnswerCorrect();
                     }
+
+                    // Langkah 2: Munculkan notifikasi bahwa pembelajaran tersebut selesai
+                    Toast().fire({
+                        icon: 'success',
+                        title: 'Materi Pembelajaran Selesai!',
+                        text: 'Progres belajar Anda telah tercatat 100%.',
+                        timer: 3000
+                    });
+
+                    // Langkah 3: Setelah notifikasi selesai, barulah picu dialog konfirmasi otomatis lanjut ke materi berikutnya
+                    setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('lessonAnsweredCorrectly', { 
+                            detail: { variantItemId: variantItemId } 
+                        }));
+                    }, 1200);
                 });
             } else {
-                // Answer is incorrect - allow retry AND unlock video access
-                // ✨ PHASE 11.170: Call onAnswerWrong callback to disable overlay blocker
-                // ✨ PHASE 11.171: Mark that user answered wrong so "Pelajaran Kembali" button appears
+                // ✨ Jawaban salah: Berikan feedback belum tepat dan minta peserta mengulang kembali jawaban yang benar
                 setHasAnsweredWrong(true);
                 
                 if (onAnswerWrong) {
                     onAnswerWrong();
                 }
                 
-                // ✨ Target fullscreenElement agar popup terlihat dalam mode fullscreen
+                // Target fullscreenElement agar popup terlihat dalam mode fullscreen
                 Swal.fire({
                     target: targetElement,
                     icon: 'error',
-                    title: 'Jawaban Salah',
-                    text: 'Silakan coba lagi. Anda sekarang dapat mengakses video kembali untuk mempelajari ulang sebelum menjawab.',
+                    title: 'Jawaban Belum Tepat',
+                    text: 'Jawaban Anda belum tepat. Silakan beri jawaban yang benar untuk menyelesaikan materi ini, atau Anda dapat meninjau materi kembali.',
                     customClass: {
-                        confirmButton: 'btn btn-primary'
+                        confirmButton: 'btn btn-primary px-4 py-2 fw-semibold'
                     },
                     buttonsStyling: false,
-                    confirmButtonText: 'Coba Lagi'
+                    confirmButtonText: '<i class="fas fa-redo me-1"></i> Coba Lagi'
                 });
                 
-                // Reset form for retry
+                // Reset form untuk pengisian ulang
                 setSelectedAnswer(null);
                 setSelectedMultiAnswers([]);
                 setShortAnswer('');
@@ -143,6 +174,7 @@ const LessonCompletionQuestionModal = ({
         } catch (error) {
             console.error('Error submitting answer:', error);
             Toast().fire({
+                target: targetElement,
                 icon: 'error',
                 title: 'Gagal',
                 text: error.response?.data?.error || 'Terjadi kesalahan saat mengirim jawaban'
@@ -158,8 +190,8 @@ const LessonCompletionQuestionModal = ({
         return false;
     };
 
-    return (
-        <div className="lesson-completion-modal-overlay">
+    const modalContent = (
+        <div className={`lesson-completion-modal-overlay ${fullscreenTarget ? 'is-fullscreen' : ''}`}>
             <div className="lesson-completion-modal lesson-completion-modal-card">
                 {/* Header */}
                 <div className="lcm-header">
@@ -338,6 +370,12 @@ const LessonCompletionQuestionModal = ({
             </div>
         </div>
     );
+
+    if (fullscreenTarget) {
+        return createPortal(modalContent, fullscreenTarget);
+    }
+
+    return modalContent;
 };
 
 export default React.memo(LessonCompletionQuestionModal);
