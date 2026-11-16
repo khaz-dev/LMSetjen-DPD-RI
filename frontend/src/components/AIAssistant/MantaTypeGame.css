@@ -711,4 +711,529 @@
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
 }
 
+/* 🔒 JAM KERJA RESTRICTION & GLOSARIUM BANNER */
+.mantatype-schedule-lock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.mantatype-lock-message-box {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    max-width: 540px;
+    color: #cbd5e1;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.mantatype-lock-hours-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.lock-hour-card {
+    background: rgba(2, 6, 23, 0.6);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.lock-hour-card .hour-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.lock-hour-card .hour-val {
+    font-size: 0.95rem;
+    color: #38bdf8;
+    font-weight: 700;
+    font-family: monospace;
+}
+
+/* 💡 GLOSARIUM EDUKATIF BANNER DI HUD BAWAH */
+.mantatype-glosarium-banner {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(2, 132, 199, 0.25);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    padding: 6px 18px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #e2e8f0;
+    max-width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 10;
+    pointer-events: none;
+    animation: mantatypeFadeIn 0.3s ease-out;
+}
+
+.mantatype-glosarium-banner .glosarium-label {
+    color: #38bdf8;
+    font-weight: 700;
+}
+
+.mantatype-glosarium-banner .glosarium-word {
+    color: #fef08a;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.mantatype-glosarium-banner .glosarium-sep {
+    color: #64748b;
+}
+
+.mantatype-glosarium-banner .glosarium-meaning {
+    color: #cbd5e1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 🏎️ SPEEDOMETER WPM NEON GAUGE */
+.mantatype-hud-item.speedometer-item {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 3px 10px;
+    border-radius: 10px;
+}
+
+.mantatype-wpm-gauge {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.mantatype-wpm-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    color: #38bdf8;
+    line-height: 1;
+}
+
+.mantatype-wpm-unit {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.mantatype-wpm-tier-pill {
+    font-size: 0.62rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 10px;
+    margin-left: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.mantatype-wpm-tier-pill.tier-emerald {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+.mantatype-wpm-tier-pill.tier-cyan {
+    background: rgba(6, 182, 212, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.mantatype-wpm-tier-pill.tier-amber {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    animation: mantatypePulseGlow 1.5s infinite;
+}
+
+.mantatype-wpm-tier-pill.tier-magenta {
+    background: rgba(236, 72, 153, 0.25);
+    color: #f472b6;
+    border: 1px solid rgba(244, 114, 182, 0.6);
+    box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+    animation: mantatypePulseGlow 1s infinite;
+}
+
+/* ❄️ ARUS TENANG ACTIVE HUD ITEM */
+.mantatype-hud-item.slowmo-active-item {
+    background: rgba(6, 182, 212, 0.25);
+    border: 1px solid #38bdf8;
+    color: #e0f2fe;
+    padding: 3px 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+/* 🔊 AUDIO SETTINGS POPOVER */
+.mantatype-audio-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.mantatype-audio-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 240px;
+    background: #0b1528;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 12px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
+    z-index: 1050;
+    overflow: hidden;
+    animation: mantatypeFadeIn 0.2s ease-out;
+}
+
+.audio-popover-head {
+    background: rgba(15, 23, 42, 0.85);
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.audio-popover-head h6 {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #e2e8f0;
+}
+
+.close-popover-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.audio-popover-body {
+    padding: 10px 14px;
+}
+
+.audio-slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.slider-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+.audio-slider-group input[type="range"] {
+    width: 100%;
+    accent-color: #38bdf8;
+    height: 4px;
+    border-radius: 2px;
+    background: #1e293b;
+    outline: none;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   🎁 INTEGRASI LEVELING ASN & HADIAH XP HARIAN LMS SETJEN DPD RI
+   ========================================================================== */
+
+/* 1. Header ASN Level Chip */
+.mantatype-user-badge-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    backdrop-filter: blur(8px);
+    font-size: 0.75rem;
+}
+
+.user-level-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 0.72rem;
+    border: 1px solid currentColor;
+}
+
+.user-xp-counter {
+    color: #facc15;
+    font-weight: 700;
+    font-family: monospace;
+}
+
+.daily-reward-pill {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.daily-reward-pill.claimed {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.daily-reward-pill.ready {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.3), rgba(245, 158, 11, 0.3));
+    color: #fde047;
+    border: 1px solid rgba(234, 179, 8, 0.6);
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.3);
+}
+
+/* 2. Menu Rule Highlight */
+.mantatype-rule-item.highlight-rule {
+    border-color: rgba(234, 179, 8, 0.45);
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(15, 23, 42, 0.8) 100%);
+}
+
+.mantatype-rule-item.highlight-rule strong {
+    color: #fde047;
+}
+
+/* 3. Panel Hadiah XP Harian Game Over */
+.mantatype-reward-integration-panel {
+    margin: 12px 0 16px;
+    width: 100%;
+}
+
+.mantatype-daily-reward-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.daily-reward-icon {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.daily-reward-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.reward-status-tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.reward-status-tag.ready {
+    background: rgba(234, 179, 8, 0.2);
+    color: #fde047;
+    border: 1px solid rgba(234, 179, 8, 0.5);
+}
+
+.reward-status-tag.success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.reward-status-tag.done {
+    background: rgba(56, 189, 248, 0.2);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.reward-status-tag.locked {
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+    border: 1px solid rgba(100, 116, 139, 0.4);
+}
+
+.reward-status-tag.guest {
+    background: rgba(139, 92, 246, 0.2);
+    color: #c4b5fd;
+    border: 1px solid rgba(139, 92, 246, 0.4);
+}
+
+.reward-points-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.reward-points-badge.gold {
+    background: #eab308;
+    color: #020617;
+}
+
+.reward-points-badge.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+.reward-points-badge.locked {
+    background: rgba(148, 163, 184, 0.15);
+    color: #64748b;
+}
+
+.reward-title {
+    margin: 4px 0 3px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.reward-desc {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    line-height: 1.45;
+}
+
+/* Card Themes */
+.mantatype-daily-reward-card.ready {
+    border-color: rgba(234, 179, 8, 0.5);
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(15, 23, 42, 0.85) 100%);
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.15);
+}
+
+.mantatype-daily-reward-card.claimed {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.85) 100%);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+
+.mantatype-daily-reward-card.already-done {
+    border-color: rgba(56, 189, 248, 0.3);
+    background: rgba(15, 23, 42, 0.7);
+}
+
+.mantatype-daily-reward-card.locked {
+    border-color: rgba(100, 116, 139, 0.3);
+    background: rgba(15, 23, 42, 0.5);
+}
+
+/* Tombol Klaim XP */
+.mantatype-btn-claim-xp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 18px;
+    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+    color: #0f172a;
+    font-weight: 800;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);
+    transition: all 0.2s ease;
+}
+
+.mantatype-btn-claim-xp:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(234, 179, 8, 0.6);
+    background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+}
+
+.mantatype-btn-claim-xp:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.reward-level-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: #cbd5e1;
+}
+
+.reward-level-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.75rem;
+}
+
+.reward-next-hint {
+    color: #94a3b8;
+    font-size: 0.72rem;
+}
+
+.user-level-tag-mini {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.pulse-bounce {
+    animation: pulseBounce 1.5s infinite;
+}
+
+@keyframes pulseBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15) rotate(5deg); }
+}
+
+
+
+
 

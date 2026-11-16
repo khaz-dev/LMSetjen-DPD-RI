@@ -427,7 +427,8 @@ def get_user_gamification_data(user: Any) -> Dict[str, Any]:
         {"id": "jp_champion", "title": "Ksatria 20 JP ASN", "category": "Mandat Regulasi", "icon": "fas fa-trophy", "color": "#eab308", "description": "Memenuhi target tahunan minimal 20 JP sesuai standar LAN RI.", "is_unlocked": False, "progress": "0/20 JP", "progress_pct": 0},
         {"id": "manta_explorer", "title": "Penjelajah Pengetahuan", "category": "Keaktifan AI", "icon": "fas fa-compass", "color": "#0d9488", "description": "Berdiskusi aktif dan menggali materi bersama Asisten AI Manta.", "is_unlocked": True, "progress": "Aktif & Terbuka", "progress_pct": 100},
         {"id": "flashcard_master", "title": "Maestro Active Recall", "category": "Metode Belajar", "icon": "fas fa-layer-group", "color": "#8b5cf6", "description": "Menguji daya ingat konsep kunci dengan Flashcard & Self-Quiz Manta.", "is_unlocked": True, "progress": "Siap Digunakan", "progress_pct": 100},
-        {"id": "multi_course", "title": "Multitalenta Parlemen", "category": "Keberagaman", "icon": "fas fa-crown", "color": "#ec4899", "description": "Menyelesaikan 3 kursus pelatihan atau lebih di lingkungan Setjen DPD RI.", "is_unlocked": False, "progress": "0/3 Kursus", "progress_pct": 0}
+        {"id": "multi_course", "title": "Multitalenta Parlemen", "category": "Keberagaman", "icon": "fas fa-crown", "color": "#ec4899", "description": "Menyelesaikan 3 kursus pelatihan atau lebih di lingkungan Setjen DPD RI.", "is_unlocked": False, "progress": "0/3 Kursus", "progress_pct": 0},
+        {"id": "mantatype_master", "title": "Jagoan Ketik Manta", "category": "Literasi Digital", "icon": "fas fa-keyboard", "color": "#06b6d4", "description": "Menaklukkan Wave 3+ pada MantaType dan mengklaim bonus XP harian ke profil LMS.", "is_unlocked": False, "progress": "Perlu Wave 3", "progress_pct": 0}
     ]
 
     if not user or not getattr(user, 'is_authenticated', False):
@@ -661,6 +662,23 @@ def get_user_gamification_data(user: Any) -> Dict[str, Any]:
             "is_unlocked": certificates_count >= 3,
             "progress": f"{min(3, certificates_count)}/3 Kursus",
             "progress_pct": min(100, int((certificates_count / 3.0) * 100))
+        },
+        {
+            "id": "mantatype_master",
+            "title": "Jagoan Ketik Manta",
+            "category": "Literasi Digital",
+            "icon": "fas fa-keyboard",
+            "color": "#06b6d4",
+            "description": "Menaklukkan Wave 3+ pada MantaType dan mengklaim bonus XP harian ke profil LMS.",
+            "is_unlocked": bool(api_models.MantaTypeDailyReward.objects.filter(user=user).exists()),
+            "progress": (
+                "Lencana Diraih" if api_models.MantaTypeDailyReward.objects.filter(user=user).exists()
+                else f"Wave {min(3, api_models.MantaTypeLeaderboard.objects.filter(user=user).order_by('-wave_reached').values_list('wave_reached', flat=True).first() or 0)}/3"
+            ),
+            "progress_pct": (
+                100 if api_models.MantaTypeDailyReward.objects.filter(user=user).exists()
+                else min(100, int(((api_models.MantaTypeLeaderboard.objects.filter(user=user).order_by('-wave_reached').values_list('wave_reached', flat=True).first() or 0) / 3.0) * 100))
+            )
         }
     ]
 

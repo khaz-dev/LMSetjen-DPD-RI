@@ -2046,7 +2046,7 @@ function Profile() {
                                                     target_jp: 20,
                                                     jp_progress_pct: 0,
                                                     unlocked_count: 2,
-                                                    total_badges: 8,
+                                                    total_badges: 9,
                                                     badges: []
                                                 };
 
@@ -2183,7 +2183,7 @@ function Profile() {
                                                             <div>
                                                                 <h6 className="fw-bold mb-0 text-dark fs-6">
                                                                     <i className="fas fa-medal text-warning me-2"></i>
-                                                                    Galeri 8 Lencana Prestasi (Milestone Badges)
+                                                                    Galeri {g.total_badges || 9} Lencana Prestasi (Milestone Badges)
                                                                 </h6>
                                                                 <span className="text-muted small">
                                                                     Setiap lencana mencerminkan tahapan kemahiran, kedisiplinan, dan dedikasi belajar Anda.

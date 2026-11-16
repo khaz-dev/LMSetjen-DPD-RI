@@ -5,6 +5,7 @@ import Footer from "../partials/Footer";
 import SystemDocumentation from "./SystemDocumentation";
 import SystemTestAdmin from "./SystemTestAdmin";
 import SystemVersioningAdmin from "./SystemVersioningAdmin";
+import SystemMantaTypeAdmin from "./SystemMantaTypeAdmin";
 import apiInstance from "../../utils/axios";
 import dayjs, { moment } from "../../utils/dayjs";
 import "./SystemAdmin.css";
@@ -20,6 +21,7 @@ function SystemAdmin() {
         const tab = searchParams.get("tab");
         if (tab === "diagnostics" || tab === "system-test" || tab === "test") return "diagnostics";
         if (tab === "versioning" || tab === "version" || tab === "updates" || tab === "changelog" || tab === "update-log") return "versioning";
+        if (tab === "mantatype" || tab === "game" || tab === "wordbank") return "mantatype";
         return "docs";
     });
 
@@ -100,6 +102,19 @@ function SystemAdmin() {
             description: "Pusat verifikasi dialog toast, latency server, dan pengujian komponen antarmuka sistem",
             component: (
                 <SystemTestAdmin
+                    isEmbedded={true}
+                    refreshTrigger={refreshTrigger}
+                />
+            )
+        },
+        {
+            id: "mantatype",
+            label: "MantaType & Gamifikasi AI",
+            icon: "fas fa-gamepad",
+            badge: <span className="tab-badge tab-badge-neutral">Bank Kata & Kontrol</span>,
+            description: "Pengaturan saklar On/Off, jam kerja kedinasan MantaType, dan manajemen Bank Kosakata dinamis",
+            component: (
+                <SystemMantaTypeAdmin
                     isEmbedded={true}
                     refreshTrigger={refreshTrigger}
                 />

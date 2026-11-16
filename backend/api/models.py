@@ -1,5 +1,6 @@
 import os
 import zipfile
+import datetime
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -4674,7 +4675,7 @@ class StudentPoints(models.Model):
                 red.delete()
 
         # 5. Hitung total aktual StudentPoints dari PointsAuditLog
-        valid_activities = ['course_completion', 'quiz_score', 'rating_given', 'platform_testimonial']
+        valid_activities = ['course_completion', 'quiz_score', 'rating_given', 'platform_testimonial', 'points_earned', 'mantatype_reward']
         valid_logs = PointsAuditLog.objects.filter(
             user=user,
             points_type='student',
@@ -5017,6 +5018,7 @@ class PointsAuditLog(models.Model):
             ('course_published', 'Course Published'),
             ('student_enrollment', 'Student Enrollment'),
             ('platform_testimonial', 'Platform Testimonial'),
+            ('mantatype_reward', 'MantaType Game Reward'),
         ]
     )
     
@@ -5585,6 +5587,113 @@ class MantaTypeLeaderboard(models.Model):
 
     def __str__(self):
         return f"{self.player_name} - Skor: {self.score} (Wave {self.wave_reached})"
+
+
+class MantaTypeDailyReward(models.Model):
+    """
+    🎁 Catatan Klaim Bonus XP Harian MantaType Arcade
+    Menghubungkan pencapaian MantaType dengan sistem perolehan poin (StudentPoints),
+    jenjang kompetensi (Leveling ASN), dan profil pegawai LMS Setjen DPD RI.
+    Dibatasi 1 kali klaim per hari kalender per pengguna.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mantatype_daily_rewards")
+    claim_date = models.DateField(default=timezone.now, db_index=True)
+    points_awarded = models.PositiveIntegerField(default=50)
+    score = models.PositiveIntegerField(default=0)
+    words_typed = models.PositiveIntegerField(default=0)
+    accuracy = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
+    wpm = models.PositiveIntegerField(default=0)
+    wave_reached = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Klaim Reward Harian MantaType"
+        verbose_name_plural = "Klaim Reward Harian MantaType"
+        unique_together = ('user', 'claim_date')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.points_awarded} XP ({self.claim_date})"
+
+
+class MantaTypeSetting(models.Model):
+    """
+    ⚙️ Pengaturan Global & Jam Operasional MantaType Arcade
+    Dapat diatur langsung oleh Admin di https://lms.dpd.go.id/admin/system/
+    """
+    is_enabled = models.BooleanField(default=True, help_text="Status aktif MantaType secara global")
+    restrict_to_break_hours = models.BooleanField(
+        default=True, 
+        help_text="Batasi akses MantaType hanya di luar jam kerja (jam istirahat & di luar jam kantor)"
+    )
+    work_start = models.TimeField(default=datetime.time(8, 0), help_text="Jam mulai jam dinas kantor")
+    break_start = models.TimeField(default=datetime.time(12, 0), help_text="Jam mulai istirahat siang")
+    break_end = models.TimeField(default=datetime.time(13, 0), help_text="Jam selesai istirahat siang")
+    after_work_start = models.TimeField(default=datetime.time(16, 30), help_text="Jam selesai jam dinas kantor")
+    allow_weekend = models.BooleanField(default=True, help_text="Izinkan akses bebas 24 jam pada hari Sabtu dan Minggu")
+    daily_play_limit = models.PositiveIntegerField(default=5, help_text="Batas sesi bermain harian per pengguna (0 jika tanpa batas)")
+    offline_custom_message = models.TextField(
+        blank=True, 
+        null=True, 
+        default="Saat ini MantaType sedang tidak dapat diakses sesuai jadwal jam kerja kedinasan.",
+        help_text="Pesan ramah jika MantaType sedang di luar jam operasional"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Pengaturan MantaType"
+        verbose_name_plural = "Pengaturan MantaType"
+
+    def __str__(self):
+        return f"Pengaturan MantaType (Aktif: {self.is_enabled})"
+
+    @classmethod
+    def get_settings(cls):
+        settings_obj, _ = cls.objects.get_or_create(id=1)
+        return settings_obj
+
+
+class MantaTypeWord(models.Model):
+    """
+    📚 Bank Kosakata Dinamis MantaType Arcade
+    Dapat dikelola (CRUD & Bulk Import) oleh Admin
+    """
+    DIFFICULTY_CHOICES = (
+        ('easy', 'Wave 1: Mudah (3-4 Huruf)'),
+        ('medium', 'Wave 2-3: Menengah (5-7 Huruf)'),
+        ('hard', 'Wave 4+: Mahir (8+ Huruf)'),
+    )
+
+    CATEGORY_CHOICES = (
+        ('berakhlak', 'Core Values BerAKHLAK'),
+        ('keparlemenan', 'Keparlemenan DPD RI'),
+        ('lms', 'LMS & Literasi Digital'),
+        ('umum', 'Kosakata Umum / Budaya Kerja'),
+    )
+
+    word = models.CharField(max_length=60, unique=True, db_index=True, help_text="Kata utuh tanpa spasi")
+    difficulty = models.CharField(max_length=15, choices=DIFFICULTY_CHOICES, default='easy', db_index=True)
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='umum')
+    meaning = models.CharField(max_length=255, blank=True, null=True, help_text="Penjelasan/arti edukatif singkat")
+    is_active = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Kosakata MantaType"
+        verbose_name_plural = "Bank Kosakata MantaType"
+        ordering = ['difficulty', 'word']
+
+    def clean(self):
+        if self.word:
+            self.word = self.word.strip().replace(' ', '').upper()
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.word} ({self.difficulty}) - {self.category}"
 
 
 class SystemRelease(models.Model):

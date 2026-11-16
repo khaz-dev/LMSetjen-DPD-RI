@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import apiInstance from '../../utils/axios';
 import UserData from '../../views/plugin/UserData';
+import Toast from '../../views/plugin/Toast';
 import './MantaTypeGame.css';
 
 // Import sprite Manta untuk aktor utama
@@ -24,7 +25,7 @@ const WORD_BANK = {
         'SENATOR', 'SIDANG', 'KOMITE', 'PLENO', 'DAERAH', 'BELAJAR', 'KURSUS',
         'MATERI', 'LENCANA', 'INOVASI', 'DIGITAL', 'PORTAL', 'SCORM', 'VIDEO',
         'HARMONIS', 'LOYAL', 'ADAPTIF', 'AMANAH', 'SINERGI', 'DISIPLIN', 'KINERJA',
-        'MAGER', 'GABUT', 'SOLID!!', 'LOGIS', 'NALAR', 'OPINI', 'SAHIH',
+        'MAGER', 'GABUT', 'SOLID', 'LOGIS', 'NALAR', 'OPINI', 'SAHIH',
         'JUARA', 'DIKSI', 'FASID', 'ANOMALI', 'INOVASI', 'EMPIRIS', 'SENATOR'
     ],
     // Wave 4+: Kata-kata panjang, nilai BerAKHLAK, tata kelola & tantangan tinggi (8 - 14 huruf)
@@ -40,23 +41,52 @@ const WORD_BANK = {
     ]
 };
 
+// ============================================================================
+// 🔄 BANK KATA DINAMIS (Dapat diubah Admin tanpa rebuild/redeploy)
+// ============================================================================
+let DYNAMIC_WORD_BANK = {
+    easy: [...WORD_BANK.easy],
+    medium: [...WORD_BANK.medium],
+    hard: [...WORD_BANK.hard]
+};
+let DYNAMIC_WORD_MEANINGS = {};
+
+export const updateActiveWordBank = (backendWords, backendMeanings) => {
+    if (backendWords) {
+        if (Array.isArray(backendWords.easy) && backendWords.easy.length > 0) {
+            DYNAMIC_WORD_BANK.easy = backendWords.easy;
+        }
+        if (Array.isArray(backendWords.medium) && backendWords.medium.length > 0) {
+            DYNAMIC_WORD_BANK.medium = backendWords.medium;
+        }
+        if (Array.isArray(backendWords.hard) && backendWords.hard.length > 0) {
+            DYNAMIC_WORD_BANK.hard = backendWords.hard;
+        }
+    }
+    if (backendMeanings && typeof backendMeanings === 'object') {
+        DYNAMIC_WORD_MEANINGS = { ...backendMeanings };
+    }
+};
+
 // Ambil kata acak berdasarkan tingkat kesulitan / wave
 const getRandomWord = (wave) => {
-    let pool = WORD_BANK.easy;
+    let pool = DYNAMIC_WORD_BANK.easy;
     const roll = Math.random();
 
     if (wave >= 4) {
-        if (roll < 0.5) pool = WORD_BANK.hard;
-        else if (roll < 0.85) pool = WORD_BANK.medium;
-        else pool = WORD_BANK.easy;
+        if (roll < 0.5) pool = DYNAMIC_WORD_BANK.hard;
+        else if (roll < 0.85) pool = DYNAMIC_WORD_BANK.medium;
+        else pool = DYNAMIC_WORD_BANK.easy;
     } else if (wave >= 2) {
-        if (roll < 0.55) pool = WORD_BANK.medium;
-        else if (roll < 0.85) pool = WORD_BANK.easy;
-        else pool = WORD_BANK.hard;
+        if (roll < 0.55) pool = DYNAMIC_WORD_BANK.medium;
+        else if (roll < 0.85) pool = DYNAMIC_WORD_BANK.easy;
+        else pool = DYNAMIC_WORD_BANK.hard;
     } else {
-        if (roll < 0.75) pool = WORD_BANK.easy;
-        else pool = WORD_BANK.medium;
+        if (roll < 0.75) pool = DYNAMIC_WORD_BANK.easy;
+        else pool = DYNAMIC_WORD_BANK.medium;
     }
+
+    if (!pool || pool.length === 0) pool = WORD_BANK.easy;
 
     const word = pool[Math.floor(Math.random() * pool.length)];
     // Jaminan: Hapus spasi jika ada agar tidak macet di tengah permainan
@@ -70,6 +100,8 @@ class ArcadeAudioEngine {
     constructor() {
         this.ctx = null;
         this.isMuted = false;
+        this.bgmVolume = 0.5;
+        this.sfxVolume = 0.8;
         this.bgmPlaying = false;
         this.bgmTimer = null;
         this.droneOsc = null;
@@ -77,6 +109,47 @@ class ArcadeAudioEngine {
         this.bgmGain = null;
         this.bgmFilter = null;
         this.bgmStep = 0;
+
+        try {
+            const saved = localStorage.getItem('mantatype_audio_volumes');
+            if (saved) {
+                const p = JSON.parse(saved);
+                if (typeof p.bgm === 'number') this.bgmVolume = p.bgm;
+                if (typeof p.sfx === 'number') this.sfxVolume = p.sfx;
+                if (typeof p.muted === 'boolean') this.isMuted = p.muted;
+            }
+        } catch (_) {}
+    }
+
+    setBgmVolume(val) {
+        this.bgmVolume = Math.max(0, Math.min(1, val));
+        if (this.bgmGain && this.ctx) {
+            this.bgmGain.gain.setValueAtTime(this.isMuted ? 0 : 0.08 * this.bgmVolume, this.ctx.currentTime);
+        }
+        this.saveAudioConfig();
+    }
+
+    setSfxVolume(val) {
+        this.sfxVolume = Math.max(0, Math.min(1, val));
+        this.saveAudioConfig();
+    }
+
+    setMuted(muted) {
+        this.isMuted = muted;
+        if (this.bgmGain && this.ctx) {
+            this.bgmGain.gain.setValueAtTime(muted ? 0 : 0.08 * this.bgmVolume, this.ctx.currentTime);
+        }
+        this.saveAudioConfig();
+    }
+
+    saveAudioConfig() {
+        try {
+            localStorage.setItem('mantatype_audio_volumes', JSON.stringify({
+                bgm: this.bgmVolume,
+                sfx: this.sfxVolume,
+                muted: this.isMuted
+            }));
+        } catch (_) {}
     }
 
     init() {
@@ -102,7 +175,7 @@ class ArcadeAudioEngine {
 
         try {
             this.bgmGain = this.ctx.createGain();
-            this.bgmGain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+            this.bgmGain.gain.setValueAtTime(0.08 * this.bgmVolume, this.ctx.currentTime);
             this.bgmGain.connect(this.ctx.destination);
 
             this.bgmFilter = this.ctx.createBiquadFilter();
@@ -150,7 +223,7 @@ class ArcadeAudioEngine {
                     osc.frequency.setValueAtTime(freq, noteTime);
 
                     noteGain.gain.setValueAtTime(0.0001, noteTime);
-                    noteGain.gain.exponentialRampToValueAtTime(0.05, noteTime + 0.02);
+                    noteGain.gain.exponentialRampToValueAtTime(0.05 * this.bgmVolume, noteTime + 0.02);
                     noteGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + stepDuration * 0.9);
 
                     osc.connect(noteGain);
@@ -167,7 +240,7 @@ class ArcadeAudioEngine {
                         sonarOsc.frequency.setValueAtTime(780, noteTime);
                         sonarOsc.frequency.exponentialRampToValueAtTime(1100, noteTime + 0.12);
 
-                        sonarGain.gain.setValueAtTime(0.02, noteTime);
+                        sonarGain.gain.setValueAtTime(0.02 * this.bgmVolume, noteTime);
                         sonarGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.3);
 
                         sonarOsc.connect(sonarGain);
@@ -215,7 +288,7 @@ class ArcadeAudioEngine {
             osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.45, this.ctx.currentTime + 0.06);
 
-            gain.gain.setValueAtTime(0.09, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.09 * this.sfxVolume, this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
 
             osc.connect(gain);
@@ -238,13 +311,93 @@ class ArcadeAudioEngine {
                 osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.03);
                 osc.frequency.exponentialRampToValueAtTime(freq * 1.25, this.ctx.currentTime + i * 0.03 + 0.12);
 
-                gain.gain.setValueAtTime(0.12, this.ctx.currentTime + i * 0.03);
+                gain.gain.setValueAtTime(0.12 * this.sfxVolume, this.ctx.currentTime + i * 0.03);
                 gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.03 + 0.15);
 
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
                 osc.start(this.ctx.currentTime + i * 0.03);
                 osc.stop(this.ctx.currentTime + i * 0.03 + 0.15);
+            });
+        } catch (_) { }
+    }
+
+    // 💥 POWER-UP: EMP BOMB BLAST
+    playEmpBomb() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.45);
+
+            gain.gain.setValueAtTime(0.28 * this.sfxVolume, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.45);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.45);
+
+            const chord = [880, 1108, 1318, 1760];
+            chord.forEach((freq, idx) => {
+                const hOsc = this.ctx.createOscillator();
+                const hGain = this.ctx.createGain();
+                hOsc.type = 'sine';
+                hOsc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.04);
+                hGain.gain.setValueAtTime(0.12 * this.sfxVolume, this.ctx.currentTime + idx * 0.04);
+                hGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.04 + 0.25);
+                hOsc.connect(hGain);
+                hGain.connect(this.ctx.destination);
+                hOsc.start(this.ctx.currentTime + idx * 0.04);
+                hOsc.stop(this.ctx.currentTime + idx * 0.04 + 0.25);
+            });
+        } catch (_) { }
+    }
+
+    // ❄️ POWER-UP: SLOW-MO ARUS TENANG
+    playSlowMo() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+            const freqs = [1046, 1318, 1567, 2093];
+            freqs.forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.05);
+                gain.gain.setValueAtTime(0.15 * this.sfxVolume, this.ctx.currentTime + idx * 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.05 + 0.35);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime + idx * 0.05);
+                osc.stop(this.ctx.currentTime + idx * 0.05 + 0.35);
+            });
+        } catch (_) { }
+    }
+
+    // 💚 POWER-UP: HEAL +1 NYAWA
+    playHeal() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+            const freqs = [523, 659, 784, 1046];
+            freqs.forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.06);
+                gain.gain.setValueAtTime(0.15 * this.sfxVolume, this.ctx.currentTime + idx * 0.06);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.06 + 0.28);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime + idx * 0.06);
+                osc.stop(this.ctx.currentTime + idx * 0.06 + 0.28);
             });
         } catch (_) { }
     }
@@ -260,7 +413,7 @@ class ArcadeAudioEngine {
             osc.frequency.setValueAtTime(140, this.ctx.currentTime);
             osc.frequency.setValueAtTime(110, this.ctx.currentTime + 0.05);
 
-            gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.08 * this.sfxVolume, this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.09);
 
             osc.connect(gain);
@@ -281,7 +434,7 @@ class ArcadeAudioEngine {
             osc.frequency.setValueAtTime(260, this.ctx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.28);
 
-            gain.gain.setValueAtTime(0.16, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.16 * this.sfxVolume, this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.28);
 
             osc.connect(gain);
@@ -303,13 +456,110 @@ class ArcadeAudioEngine {
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.12);
 
-                gain.gain.setValueAtTime(0.14, this.ctx.currentTime + idx * 0.12);
+                gain.gain.setValueAtTime(0.14 * this.sfxVolume, this.ctx.currentTime + idx * 0.12);
                 gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.12 + 0.2);
 
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
                 osc.start(this.ctx.currentTime + idx * 0.12);
                 osc.stop(this.ctx.currentTime + idx * 0.12 + 0.2);
+            });
+        } catch (_) { }
+    }
+
+    // 🎖️ FANFARE BONUS XP & LEVEL UP PEGAWAI
+    playLevelUpFanfare() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+            const notes = [
+                { f: 523.25, t: 0.00, d: 0.14 },
+                { f: 659.25, t: 0.12, d: 0.14 },
+                { f: 783.99, t: 0.24, d: 0.18 },
+                { f: 1046.50, t: 0.38, d: 0.50 }
+            ];
+            notes.forEach(n => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(n.f, this.ctx.currentTime + n.t);
+                gain.gain.setValueAtTime(0.22 * this.sfxVolume, this.ctx.currentTime + n.t);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + n.t + n.d);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime + n.t);
+                osc.stop(this.ctx.currentTime + n.t + n.d);
+            });
+        } catch (_) { }
+    }
+
+    // 🚨 ALARM SIRENE KEDATANGAN BOS APEX
+    playBossAlarm() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+            [0, 0.45].forEach(delay => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(140, this.ctx.currentTime + delay);
+                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + delay + 0.35);
+                gain.gain.setValueAtTime(0.24 * this.sfxVolume, this.ctx.currentTime + delay);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + delay + 0.35);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime + delay);
+                osc.stop(this.ctx.currentTime + delay + 0.35);
+            });
+        } catch (_) { }
+    }
+
+    // 💥 BENTURAN SERANGAN KE PERISAI BOS
+    playBossHit() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(240, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.22);
+            gain.gain.setValueAtTime(0.22 * this.sfxVolume, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.22);
+        } catch (_) { }
+    }
+
+    // 🏆 FANFARE KEMENANGAN TOTAL MENAKLUKKAN BOS
+    playBossDefeated() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+            const notes = [
+                { f: 392.00, t: 0.00, d: 0.16 },
+                { f: 523.25, t: 0.14, d: 0.16 },
+                { f: 659.25, t: 0.28, d: 0.16 },
+                { f: 783.99, t: 0.42, d: 0.22 },
+                { f: 1046.50, t: 0.60, d: 0.65 }
+            ];
+            notes.forEach(n => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(n.f, this.ctx.currentTime + n.t);
+                gain.gain.setValueAtTime(0.28 * this.sfxVolume, this.ctx.currentTime + n.t);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + n.t + n.d);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(this.ctx.currentTime + n.t);
+                osc.stop(this.ctx.currentTime + n.t + n.d);
             });
         } catch (_) { }
     }
@@ -594,6 +844,456 @@ const drawViper = (ctx, en, now) => {
 };
 
 // ============================================================================
+// 🦑 RENDER APEX BOSS WAVE 5: KRAKEN REGULASI
+// ============================================================================
+const drawKrakenBoss = (ctx, boss, now) => {
+    const pulse = Math.sin(now * 0.004) * 6;
+    const bodyW = boss.size * 1.3 + pulse;
+    const bodyH = boss.size * 1.5;
+
+    // Tentakel Kolosal Berliuk
+    const tentacleCount = 6;
+    for (let i = 0; i < tentacleCount; i++) {
+        const isUpper = i < 3;
+        const tIndex = isUpper ? i : (i - 3);
+        const sign = isUpper ? -1 : 1;
+        const phase = now * 0.003 + i * 1.1;
+
+        const startX = -bodyW * 0.2;
+        const startY = sign * (25 + tIndex * 24);
+
+        const cp1x = startX - 50 - Math.sin(phase) * 35;
+        const cp1y = startY + sign * (40 + Math.cos(phase) * 30);
+        const cp2x = startX - 120 - Math.cos(phase) * 45;
+        const cp2y = startY + sign * (20 + Math.sin(phase) * 35);
+        const endX = startX - 190 - Math.sin(phase + 1) * 30;
+        const endY = startY + sign * (55 + Math.cos(phase + 1) * 40);
+
+        // Tentacle Shadow / Outer Glow
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endX, endY);
+        ctx.strokeStyle = '#581c87';
+        ctx.lineWidth = 18 - tIndex * 2.5;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        ctx.strokeStyle = '#a855f7';
+        ctx.lineWidth = 10 - tIndex * 1.5;
+        ctx.stroke();
+
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Suction cups
+        for (let s = 1; s <= 4; s++) {
+            const ratio = s / 5;
+            const sx = startX + (endX - startX) * ratio + Math.sin(phase + s) * 12;
+            const sy = startY + (endY - startY) * ratio + Math.cos(phase + s) * 12;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#22d3ee';
+            ctx.shadowColor = '#22d3ee';
+            ctx.shadowBlur = 8;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+        ctx.restore();
+    }
+
+    // Kepala Gurita Raksasa (Mantle Dome)
+    ctx.save();
+    const domeGrad = ctx.createRadialGradient(-15, -15, 10, 0, 0, bodyW);
+    domeGrad.addColorStop(0, '#7e22ce');
+    domeGrad.addColorStop(0.5, '#581c87');
+    domeGrad.addColorStop(0.9, '#3b0764');
+    domeGrad.addColorStop(1, '#020617');
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, bodyW * 0.9, bodyH * 0.85, 0, 0, Math.PI * 2);
+    ctx.fillStyle = domeGrad;
+    ctx.shadowColor = '#a855f7';
+    ctx.shadowBlur = 24;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#c084fc';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Bio-rune Pattern Lines
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+    ctx.lineWidth = 2;
+    for (let r = 0; r < 4; r++) {
+        ctx.beginPath();
+        const rx = -bodyW * 0.4 + r * 22;
+        ctx.arc(rx, 0, 24 + r * 6, -Math.PI * 0.4, Math.PI * 0.4);
+        ctx.stroke();
+    }
+
+    // Mata Raksasa Predator Kraken
+    [-bodyH * 0.28, bodyH * 0.28].forEach(ey => {
+        // Outer socket
+        ctx.beginPath();
+        ctx.arc(-bodyW * 0.42, ey, 14, 0, Math.PI * 2);
+        ctx.fillStyle = '#1e1b4b';
+        ctx.fill();
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Glowing Iris
+        ctx.beginPath();
+        ctx.arc(-bodyW * 0.42, ey, 10, 0, Math.PI * 2);
+        ctx.fillStyle = '#f97316';
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 16;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Slit Pupil
+        ctx.beginPath();
+        ctx.ellipse(-bodyW * 0.43, ey, 3, 9, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#0f172a';
+        ctx.fill();
+    });
+
+    // Hit Flash Overlay
+    if (boss.hitFlash > 0) {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, bodyW * 0.9, bodyH * 0.85, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${boss.hitFlash * 0.75})`;
+        ctx.fill();
+    }
+    ctx.restore();
+};
+
+// ============================================================================
+// 🦈 RENDER APEX BOSS WAVE 10: MEGALODON BIROKRASI
+// ============================================================================
+const drawMegalodonBoss = (ctx, boss, now) => {
+    const tailWiggle = Math.sin(now * 0.006) * 14;
+    const bodyLen = boss.size * 2.2;
+    const bodyHeight = boss.size * 0.95;
+
+    ctx.save();
+    // Cyber-Plated Gold & Crimson Body Gradient
+    const bodyGrad = ctx.createLinearGradient(0, -bodyHeight, 0, bodyHeight);
+    bodyGrad.addColorStop(0, '#f59e0b');
+    bodyGrad.addColorStop(0.3, '#b45309');
+    bodyGrad.addColorStop(0.7, '#78350f');
+    bodyGrad.addColorStop(1, '#e11d48');
+
+    // Body Contour
+    ctx.beginPath();
+    ctx.moveTo(-bodyLen * 0.65, 0);
+    ctx.quadraticCurveTo(-bodyLen * 0.2, -bodyHeight * 1.1, bodyLen * 0.4, -bodyHeight * 0.45);
+    ctx.lineTo(bodyLen * 0.85 + tailWiggle * 0.5, -bodyHeight * 0.25);
+    ctx.lineTo(bodyLen * 0.85 + tailWiggle * 0.5, bodyHeight * 0.25);
+    ctx.quadraticCurveTo(-bodyLen * 0.1, bodyHeight * 1.1, -bodyLen * 0.65, 0);
+    ctx.closePath();
+    ctx.fillStyle = bodyGrad;
+    ctx.shadowColor = '#f59e0b';
+    ctx.shadowBlur = 24;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#fde047';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Giant Armored Dorsal Fin
+    ctx.beginPath();
+    ctx.moveTo(-bodyLen * 0.1, -bodyHeight * 0.9);
+    ctx.lineTo(-bodyLen * 0.35, -bodyHeight * 1.9);
+    ctx.quadraticCurveTo(-bodyLen * 0.05, -bodyHeight * 1.5, bodyLen * 0.2, -bodyHeight * 0.7);
+    ctx.closePath();
+    ctx.fillStyle = '#b45309';
+    ctx.fill();
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Massive Caudal Tail Fin
+    const tailX = bodyLen * 0.85 + tailWiggle;
+    ctx.beginPath();
+    ctx.moveTo(bodyLen * 0.7, 0);
+    ctx.lineTo(tailX + 32, -bodyHeight * 1.4);
+    ctx.quadraticCurveTo(tailX + 12, 0, tailX + 32, bodyHeight * 1.4);
+    ctx.closePath();
+    ctx.fillStyle = '#ca8a04';
+    ctx.fill();
+    ctx.strokeStyle = '#fde047';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Pectoral Heavy Cyber Fin
+    ctx.beginPath();
+    ctx.moveTo(-bodyLen * 0.15, bodyHeight * 0.25);
+    ctx.lineTo(-bodyLen * 0.45, bodyHeight * 1.25);
+    ctx.lineTo(0, bodyHeight * 0.55);
+    ctx.closePath();
+    ctx.fillStyle = '#ca8a04';
+    ctx.fill();
+    ctx.stroke();
+
+    // Glowing Gills Laser Reactor
+    for (let g = 0; g < 4; g++) {
+        ctx.beginPath();
+        const gx = -bodyLen * 0.25 - g * 7;
+        ctx.moveTo(gx, -bodyHeight * 0.35);
+        ctx.lineTo(gx - 4, bodyHeight * 0.35);
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#22d3ee';
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+    }
+
+    // Razor-Sharp Teeth Array
+    ctx.fillStyle = '#ffffff';
+    for (let t = 0; t < 6; t++) {
+        const tx = -bodyLen * 0.6 + t * 9;
+        ctx.beginPath();
+        ctx.moveTo(tx, -4);
+        ctx.lineTo(tx + 4, 8);
+        ctx.lineTo(tx + 8, -4);
+        ctx.fill();
+    }
+
+    // Apex Crimson Predator Eye
+    ctx.beginPath();
+    ctx.arc(-bodyLen * 0.48, -bodyHeight * 0.22, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#ef4444';
+    ctx.shadowColor = '#ef4444';
+    ctx.shadowBlur = 18;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-bodyLen * 0.50, -bodyHeight * 0.22, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hit Flash Overlay
+    if (boss.hitFlash > 0) {
+        ctx.beginPath();
+        ctx.moveTo(-bodyLen * 0.65, 0);
+        ctx.quadraticCurveTo(-bodyLen * 0.2, -bodyHeight * 1.1, bodyLen * 0.4, -bodyHeight * 0.45);
+        ctx.lineTo(bodyLen * 0.85 + tailWiggle * 0.5, -bodyHeight * 0.25);
+        ctx.lineTo(bodyLen * 0.85 + tailWiggle * 0.5, bodyHeight * 0.25);
+        ctx.quadraticCurveTo(-bodyLen * 0.1, bodyHeight * 1.1, -bodyLen * 0.65, 0);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(255, 255, 255, ${boss.hitFlash * 0.75})`;
+        ctx.fill();
+    }
+    ctx.restore();
+};
+
+// ============================================================================
+// 🏷️ RENDER GOLDEN APEX WORD BADGE KHUSUS BOS
+// ============================================================================
+const drawBossWordBadge = (ctx, boss) => {
+    const fullWord = boss.word;
+    const typedPart = fullWord.substring(0, boss.typedIndex);
+    const remainingPart = fullWord.substring(boss.typedIndex);
+
+    ctx.font = '900 22px "Plus Jakarta Sans", system-ui, sans-serif';
+    const totalWidth = ctx.measureText(fullWord).width;
+    const badgePadding = 20;
+    const badgeWidth = Math.max(totalWidth + badgePadding * 2, 220);
+    const badgeHeight = 44;
+    const badgeY = -boss.size - 55;
+
+    ctx.save();
+
+    // Tag Gelar Bos Emas
+    const headerTag = `👑 TARGET APEX BOS: ${boss.name.toUpperCase()}`;
+    ctx.font = '800 11px "Plus Jakarta Sans", system-ui, sans-serif';
+    const tagW = ctx.measureText(headerTag).width + 18;
+    ctx.fillStyle = 'rgba(234, 179, 8, 0.35)';
+    ctx.strokeStyle = '#fde047';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-tagW / 2, badgeY - 22, tagW, 18, 5);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#fde047';
+    ctx.textAlign = 'center';
+    ctx.fillText(headerTag, 0, badgeY - 8);
+    ctx.textAlign = 'left';
+
+    // Golden Box Outer Glow
+    ctx.shadowColor = '#facc15';
+    ctx.shadowBlur = 24;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.96)';
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+    ctx.roundRect(-badgeWidth / 2, badgeY, badgeWidth, badgeHeight, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    // Triangle Pointer ke Bos
+    ctx.beginPath();
+    ctx.moveTo(-10, badgeY + badgeHeight);
+    ctx.lineTo(10, badgeY + badgeHeight);
+    ctx.lineTo(0, badgeY + badgeHeight + 10);
+    ctx.closePath();
+    ctx.fillStyle = '#facc15';
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    let cursorX = -badgeWidth / 2 + badgePadding;
+    const textBaselineY = badgeY + 31;
+    ctx.font = '900 22px "Plus Jakarta Sans", system-ui, sans-serif';
+
+    // Bagian yang SUDAH diketik (Hijau Neon Emas)
+    if (typedPart.length > 0) {
+        ctx.fillStyle = '#34d399';
+        ctx.shadowColor = '#34d399';
+        ctx.shadowBlur = 14;
+        ctx.fillText(typedPart, cursorX, textBaselineY);
+        ctx.shadowBlur = 0;
+
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cursorX, textBaselineY + 4);
+        ctx.lineTo(cursorX + ctx.measureText(typedPart).width, textBaselineY + 4);
+        ctx.stroke();
+
+        cursorX += ctx.measureText(typedPart).width;
+    }
+
+    // Bagian yang BELUM diketik (Emas Kuning Terang)
+    ctx.fillStyle = '#fde047';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 5;
+    ctx.fillText(remainingPart, cursorX, textBaselineY);
+    ctx.shadowBlur = 0;
+
+    // Crosshair Target di atas Badge
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, badgeY - 12, 6, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+// ============================================================================
+// 📊 RENDER BOSS HEALTH BAR & STATUS PLATE DI ATAS CANVAS
+// ============================================================================
+const drawBossHUD = (ctx, boss, width) => {
+    ctx.save();
+    const hudW = 440;
+    const hudH = 50;
+    const hudX = (width - hudW) / 2;
+    const hudY = 16;
+
+    // Outer Plate Glassmorphism
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.strokeStyle = 'rgba(234, 179, 8, 0.6)';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(234, 179, 8, 0.3)';
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.roundRect(hudX, hudY, hudW, hudH, 10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Boss Name & Title
+    ctx.font = '800 12px "Plus Jakarta Sans", system-ui, sans-serif';
+    ctx.fillStyle = '#fde047';
+    const bossLabel = `${boss.type === 'KRAKEN' ? '🦑' : '🦈'} APEX BOSS: ${boss.name.toUpperCase()} [${boss.title}]`;
+    ctx.fillText(bossLabel, hudX + 16, hudY + 18);
+
+    // HP Text on Right
+    ctx.font = '700 11px monospace';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.textAlign = 'right';
+    ctx.fillText(`PERISAI: ${boss.hp}/${boss.maxHp}`, hudX + hudW - 16, hudY + 18);
+    ctx.textAlign = 'left';
+
+    // Segmented Health Bar
+    const barX = hudX + 16;
+    const barY = hudY + 26;
+    const barW = hudW - 32;
+    const barH = 14;
+
+    const gap = 4;
+    const segW = (barW - (boss.maxHp - 1) * gap) / boss.maxHp;
+
+    for (let s = 0; s < boss.maxHp; s++) {
+        const sx = barX + s * (segW + gap);
+        ctx.beginPath();
+        ctx.roundRect(sx, barY, segW, barH, 3);
+        if (s < boss.hp) {
+            const grad = ctx.createLinearGradient(sx, barY, sx, barY + barH);
+            grad.addColorStop(0, '#facc15');
+            grad.addColorStop(0.5, '#f59e0b');
+            grad.addColorStop(1, '#b45309');
+            ctx.fillStyle = grad;
+            ctx.shadowColor = '#f59e0b';
+            ctx.shadowBlur = 8;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        } else {
+            ctx.fillStyle = 'rgba(51, 65, 85, 0.6)';
+            ctx.fill();
+        }
+    }
+    ctx.restore();
+};
+
+// ============================================================================
+// ⚠️ RENDER BANNER PERINGATAN KEDATANGAN BOS APEX
+// ============================================================================
+const drawBossWarningBanner = (ctx, timer, width, height, bossName) => {
+    ctx.save();
+    const flash = Math.sin(timer * 0.15) > 0;
+    const bannerH = 90;
+    const bannerY = (height - bannerH) / 2;
+
+    // Red/Gold Strobe Background
+    ctx.fillStyle = flash ? 'rgba(185, 28, 28, 0.88)' : 'rgba(15, 23, 42, 0.92)';
+    ctx.strokeStyle = flash ? '#facc15' : '#ef4444';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = flash ? '#facc15' : '#ef4444';
+    ctx.shadowBlur = 30;
+    ctx.fillRect(0, bannerY, width, bannerH);
+    ctx.strokeRect(0, bannerY, width, bannerH);
+    ctx.shadowBlur = 0;
+
+    // Hazard Stripes Top & Bottom
+    ctx.fillStyle = flash ? '#facc15' : '#ef4444';
+    ctx.fillRect(0, bannerY, width, 5);
+    ctx.fillRect(0, bannerY + bannerH - 5, width, 5);
+
+    // Alert Typography
+    ctx.font = '900 24px "Plus Jakarta Sans", system-ui, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚠️ PERINGATAN KEDALAMAN LAUT EKSTRIM! ⚠️', width / 2, bannerY + 38);
+
+    ctx.font = '800 16px "Plus Jakarta Sans", system-ui, sans-serif';
+    ctx.fillStyle = '#fde047';
+    ctx.fillText(`APEX PREDATOR MENDEKAT: ${bossName ? bossName.toUpperCase() : 'BOS LAUT DALAM'}!`, width / 2, bannerY + 68);
+    ctx.textAlign = 'left';
+
+    ctx.restore();
+};
+
+// ============================================================================
 // 🏷️ RENDER WORD BADGE YANG BESAR, JELAS, & MUDAH DIBACA
 // ============================================================================
 const drawWordBadge = (ctx, en) => {
@@ -610,12 +1310,50 @@ const drawWordBadge = (ctx, en) => {
     const badgeY = -en.size - 32;
 
     ctx.save();
+
+    // 🌟 Render Mini Tag Power-up jika musuh memiliki power-up
+    if (en.powerup) {
+        let tagText = '💣 EMP BOM';
+        let tagColor = '#f59e0b';
+        let tagBg = 'rgba(245, 158, 11, 0.35)';
+
+        if (en.powerup === 'SLOW') {
+            tagText = '❄️ ARUS TENANG';
+            tagColor = '#38bdf8';
+            tagBg = 'rgba(56, 189, 248, 0.35)';
+        } else if (en.powerup === 'HEAL') {
+            tagText = '💚 +1 NYAWA';
+            tagColor = '#34d399';
+            tagBg = 'rgba(52, 211, 153, 0.35)';
+        }
+
+        ctx.font = '800 10px "Plus Jakarta Sans", system-ui, sans-serif';
+        const tagW = ctx.measureText(tagText).width + 14;
+        ctx.fillStyle = tagBg;
+        ctx.strokeStyle = tagColor;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(-tagW / 2, badgeY - 18, tagW, 16, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = tagColor;
+        ctx.textAlign = 'center';
+        ctx.fillText(tagText, 0, badgeY - 6);
+        ctx.textAlign = 'left';
+    }
+
     // Shadow & Contrast Pill Box
-    ctx.shadowColor = en.isTargeted ? 'rgba(56, 189, 248, 0.85)' : 'rgba(0, 0, 0, 0.7)';
-    ctx.shadowBlur = en.isTargeted ? 14 : 6;
+    let strokeColor = en.isTargeted ? '#38bdf8' : 'rgba(148, 163, 184, 0.45)';
+    if (en.powerup === 'BOMB') strokeColor = en.isTargeted ? '#fbbf24' : '#f59e0b';
+    else if (en.powerup === 'SLOW') strokeColor = en.isTargeted ? '#67e8f9' : '#0ea5e9';
+    else if (en.powerup === 'HEAL') strokeColor = en.isTargeted ? '#6ee7b7' : '#10b981';
+
+    ctx.shadowColor = en.isTargeted ? strokeColor : 'rgba(0, 0, 0, 0.7)';
+    ctx.shadowBlur = en.isTargeted ? 16 : (en.powerup ? 10 : 6);
     ctx.fillStyle = en.isTargeted ? 'rgba(8, 14, 28, 0.96)' : 'rgba(15, 23, 42, 0.92)';
-    ctx.strokeStyle = en.isTargeted ? '#38bdf8' : 'rgba(148, 163, 184, 0.45)';
-    ctx.lineWidth = en.isTargeted ? 2.5 : 1.5;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = en.isTargeted ? 2.5 : (en.powerup ? 2 : 1.5);
 
     // Rounded Box
     ctx.beginPath();
@@ -706,6 +1444,19 @@ const spawnEnemy = (width, height, currentWave, initialX = null) => {
         size = 24;
     }
 
+    // 🌟 Power-up Roll (22% kemungkinan mendapat power-up khusus)
+    let powerup = null;
+    const pRoll = Math.random();
+    if (pRoll < 0.22) {
+        if (pRoll < 0.08) {
+            powerup = 'BOMB';
+        } else if (pRoll < 0.16) {
+            powerup = 'SLOW';
+        } else {
+            powerup = 'HEAL';
+        }
+    }
+
     const marginY = 70;
     const safeHeight = Math.max(height - marginY * 2, 90);
     const y = marginY + Math.random() * safeHeight;
@@ -723,7 +1474,8 @@ const spawnEnemy = (width, height, currentWave, initialX = null) => {
         color,
         size,
         wiggle: Math.random() * Math.PI * 2,
-        isTargeted: false
+        isTargeted: false,
+        powerup // 'BOMB' | 'SLOW' | 'HEAL' | null
     };
 };
 
@@ -775,6 +1527,23 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
     const [scoreSubmitted, setScoreSubmitted] = useState(false);
     const [playerRankInfo, setPlayerRankInfo] = useState(null);
 
+    // 🔒 Jadwal Jam Kerja & Glosarium Edukatif
+    const [lockInfo, setLockInfo] = useState({ is_accessible: true, message: '', schedule: null });
+    const [lastLearnedWord, setLastLearnedWord] = useState(null);
+    const [isLoadingConfig, setIsLoadingConfig] = useState(false);
+
+    // 🏎️ Realtime WPM Speedometer, Power-up & Audio Controls
+    const [liveWpm, setLiveWpm] = useState(0);
+    const [slowMoRemaining, setSlowMoRemaining] = useState(0);
+    const [showAudioPopover, setShowAudioPopover] = useState(false);
+    const [bgmVolume, setBgmVolume] = useState(() => audio.bgmVolume);
+    const [sfxVolume, setSfxVolume] = useState(() => audio.sfxVolume);
+
+    // 🎁 Integrasi Leveling & Hadiah XP Harian Pegawai LMS Setjen DPD RI
+    const [userRewardStatus, setUserRewardStatus] = useState(null);
+    const [isClaimingReward, setIsClaimingReward] = useState(false);
+    const [claimRewardResult, setClaimRewardResult] = useState(null);
+
     const gameLoopRef = useRef({
         manta: {
             x: 90,
@@ -790,10 +1559,17 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
         torpedoes: [],
         bubbles: [],
         targetEnemy: null,
+        boss: null,
+        bossWarningTimer: 0,
         lastSpawnTime: 0,
         spawnInterval: 2800,
         startTime: 0,
         screenShake: 0,
+        slowMoTimer: 0,
+        shockwave: null,
+        floatingTexts: [],
+        recentKeystrokes: [],
+        lastWpmUpdate: 0,
         waveNotice: null,
         stats: {
             score: 0,
@@ -827,7 +1603,36 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
         };
     }, [isOpen]);
 
-    // Muat Sprite & Leaderboard Awal
+    // Muat Konfigurasi Dinamis & Aturan Jam Kerja
+    const fetchGameConfig = async () => {
+        setIsLoadingConfig(true);
+        try {
+            const res = await apiInstance.get('manta-game/config/');
+            if (res.data?.status === 'success') {
+                updateActiveWordBank(res.data.words, res.data.word_meanings);
+                const isAccessible = Boolean(res.data.is_accessible && res.data.is_enabled);
+                setLockInfo({
+                    is_accessible: isAccessible,
+                    message: res.data.access_message,
+                    schedule: res.data.schedule_info
+                });
+                if (res.data.user_reward_status) {
+                    setUserRewardStatus(res.data.user_reward_status);
+                }
+                if (!isAccessible) {
+                    setGameState('LOCKED');
+                } else {
+                    setGameState(prev => prev === 'LOCKED' ? 'MENU' : prev);
+                }
+            }
+        } catch (err) {
+            console.warn('Gagal memuat konfigurasi MantaType, menggunakan fallback statis:', err);
+        } finally {
+            setIsLoadingConfig(false);
+        }
+    };
+
+    // Muat Sprite Awal
     useEffect(() => {
         const imgIdle = new Image();
         imgIdle.src = mantaIdleWebp;
@@ -836,13 +1641,14 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
         const imgHappy = new Image();
         imgHappy.src = mantaHappyWebp;
         mantaHappyImgRef.current = imgHappy;
-
-        fetchLeaderboard();
     }, []);
 
-    // Hentikan BGM saat modal ditutup
+    // Inisialisasi saat Modal Terbuka
     useEffect(() => {
-        if (!isOpen) {
+        if (isOpen) {
+            fetchGameConfig();
+            fetchLeaderboard();
+        } else {
             audio.stopBGM();
         }
     }, [isOpen]);
@@ -850,7 +1656,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
     const handleToggleMute = () => {
         const nextMute = !isMuted;
         setIsMuted(nextMute);
-        audio.isMuted = nextMute;
+        audio.setMuted(nextMute);
         if (nextMute) {
             audio.stopBGM();
         } else {
@@ -961,6 +1767,11 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
     }, []);
 
     const startGame = () => {
+        if (!lockInfo.is_accessible) {
+            setGameState('LOCKED');
+            return;
+        }
+
         audio.init();
         audio.startBGM();
 
@@ -992,10 +1803,17 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
             torpedoes: [],
             bubbles: initBubbles(width, height),
             targetEnemy: null,
+            boss: null,
+            bossWarningTimer: 0,
             lastSpawnTime: now,
             spawnInterval: 2800,
             startTime: now,
             screenShake: 0,
+            slowMoTimer: 0,
+            shockwave: null,
+            floatingTexts: [],
+            recentKeystrokes: [],
+            lastWpmUpdate: now,
             waveNotice: { text: '🌊 WAVE 1: KEDALAMAN 50M', timer: 120 },
             stats: {
                 score: 0,
@@ -1019,9 +1837,69 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
         setTotalKeystrokes(0);
         setCombo(0);
         setMaxCombo(0);
+        setLiveWpm(0);
+        setSlowMoRemaining(0);
         setScoreSubmitted(false);
         setPlayerRankInfo(null);
+        setClaimRewardResult(null);
         setGameState('PLAYING');
+    };
+
+    // 🎁 Klaim Hadiah Bonus XP Harian Pegawai LMS Setjen DPD RI
+    const handleClaimDailyReward = async () => {
+        if (!currentUser) return;
+        setIsClaimingReward(true);
+        try {
+            const g = gameLoopRef.current;
+            const durationMin = Math.max(0.2, (Date.now() - (g.startTime || Date.now())) / 60000);
+            const calcWpm = Math.round((wordsTyped || g.stats.wordsTyped) / durationMin);
+            const accuracyVal = totalKeystrokes > 0 ? (correctKeystrokes / totalKeystrokes) * 100 : 100;
+
+            const payload = {
+                score: score || g.stats.score,
+                words_typed: wordsTyped || g.stats.wordsTyped,
+                accuracy: parseFloat(accuracyVal.toFixed(2)),
+                wpm: liveWpm || calcWpm,
+                wave_reached: wave || g.stats.wave
+            };
+
+            const res = await apiInstance.post('manta-game/claim-reward/', payload);
+            if (res.data?.status === 'success') {
+                setClaimRewardResult(res.data);
+                audio.playLevelUpFanfare();
+                setUserRewardStatus(prev => ({
+                    ...prev,
+                    has_claimed_today: true,
+                    claimed_today_points: res.data.points_awarded,
+                    current_xp: res.data.gamification?.total_xp ?? ((prev?.current_xp || 0) + res.data.points_awarded),
+                    current_level: res.data.gamification?.level ?? prev?.current_level,
+                    current_level_name: res.data.gamification?.level_name ?? prev?.current_level_name,
+                    current_level_color: res.data.gamification?.level_color ?? prev?.current_level_color,
+                    current_level_icon: res.data.gamification?.level_icon ?? prev?.current_level_icon,
+                }));
+                Toast().fire({
+                    icon: 'success',
+                    title: 'Bonus XP Terklaim!',
+                    text: res.data.message
+                });
+            }
+        } catch (err) {
+            console.error('Error claiming MantaType daily reward:', err);
+            const errMsg = err.response?.data?.message || 'Gagal mengklaim bonus XP harian.';
+            Toast().fire({
+                icon: err.response?.data?.status === 'already_claimed' ? 'info' : 'warning',
+                title: 'Info Klaim XP',
+                text: errMsg
+            });
+            if (err.response?.data?.status === 'already_claimed') {
+                setUserRewardStatus(prev => ({
+                    ...prev,
+                    has_claimed_today: true
+                }));
+            }
+        } finally {
+            setIsClaimingReward(false);
+        }
     };
 
     const fireSonarProjectile = (g, target) => {
@@ -1038,10 +1916,147 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
         });
     };
 
+    // 👑 INISIASI PERTARUNGAN BOS APEX (WAVE 5: KRAKEN & WAVE 10: MEGALODON)
+    const startBossBattle = (g, waveNum, width, height) => {
+        g.enemies = [];
+        g.targetEnemy = null;
+
+        audio.playBossAlarm();
+        g.screenShake = 1.8;
+        g.bossWarningTimer = 160;
+
+        const isKraken = waveNum === 5;
+        const bossWords = isKraken
+            ? ['INTEGRITAS', 'PARLEMEN', 'AKUNTABEL', 'REFORMASI']
+            : ['TRANSPARANSI', 'PROFESIONAL', 'KOLABORATIF', 'KEBIJAKAN', 'LEGISLASI', 'KELEMBAGAAN'];
+
+        g.boss = {
+            isBoss: true,
+            wave: waveNum,
+            type: isKraken ? 'KRAKEN' : 'MEGALODON',
+            name: isKraken ? 'Kraken Regulasi' : 'Megalodon Birokrasi',
+            title: isKraken ? 'Penjaga Palung Regulasi' : 'Apex Sovereign Birokrasi',
+            words: bossWords,
+            currentWordIndex: 0,
+            word: bossWords[0],
+            typedIndex: 0,
+            hp: bossWords.length,
+            maxHp: bossWords.length,
+            bonusScore: isKraken ? 1000 : 2500,
+            x: width + 140,
+            targetX: width * 0.74,
+            y: height / 2,
+            baseY: height / 2,
+            speed: 0.16,
+            size: isKraken ? 75 : 90,
+            wiggle: 0,
+            isTargeted: true,
+            hitFlash: 0,
+            shake: 0
+        };
+        g.targetEnemy = g.boss;
+    };
+
     const defeatEnemy = (g, target) => {
         audio.playWordExplode();
         g.manta.isHappy = true;
         setTimeout(() => { if (g.manta) g.manta.isHappy = false; }, 600);
+
+        // 👑 APEX BOSS HIT & DEFEAT LOGIC
+        if (target.isBoss) {
+            target.hp--;
+            target.hitFlash = 1.0;
+            target.shake = 12;
+            audio.playBossHit();
+
+            for (let i = 0; i < 20; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = Math.random() * 5 + 2;
+                g.particles.push({
+                    x: target.x - 20,
+                    y: target.y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    radius: Math.random() * 4 + 2,
+                    color: target.type === 'KRAKEN' ? '#c084fc' : '#fbbf24',
+                    alpha: 1.0,
+                    decay: 0.03
+                });
+            }
+
+            g.stats.score += 250;
+            g.stats.wordsTyped++;
+            setScore(g.stats.score);
+            setWordsTyped(g.stats.wordsTyped);
+
+            if (target.hp > 0) {
+                target.currentWordIndex++;
+                target.word = target.words[target.currentWordIndex];
+                target.typedIndex = 0;
+                target.isTargeted = true;
+                g.targetEnemy = target;
+
+                g.floatingTexts.push({
+                    text: `💥 HIT! PERISAI BOS: ${target.hp}/${target.maxHp}`,
+                    x: target.x - 30,
+                    y: target.y - 70,
+                    color: '#f59e0b',
+                    life: 60,
+                    vy: -1.2,
+                    scale: 1.2
+                });
+                return;
+            } else {
+                audio.playBossDefeated();
+                g.screenShake = 2.4;
+                g.stats.score += target.bonusScore;
+                setScore(g.stats.score);
+
+                if (g.stats.lives < 3) {
+                    g.stats.lives++;
+                    setLives(g.stats.lives);
+                }
+
+                for (let i = 0; i < 50; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const spd = Math.random() * 7 + 2;
+                    g.particles.push({
+                        x: target.x,
+                        y: target.y,
+                        vx: Math.cos(angle) * spd,
+                        vy: Math.sin(angle) * spd,
+                        radius: Math.random() * 6 + 3,
+                        color: ['#facc15', '#f59e0b', '#ec4899', '#38bdf8', '#34d399', '#ffffff'][i % 6],
+                        alpha: 1.0,
+                        decay: Math.random() * 0.02 + 0.015
+                    });
+                }
+
+                g.floatingTexts.push({
+                    text: `🏆 ${target.name.toUpperCase()} DITAKLUKKAN! +${target.bonusScore.toLocaleString('id-ID')} POIN!`,
+                    x: target.x - 60,
+                    y: target.y - 80,
+                    color: '#facc15',
+                    life: 120,
+                    vy: -0.8,
+                    scale: 1.5
+                });
+
+                g.boss = null;
+                g.targetEnemy = null;
+
+                g.stats.wave++;
+                g.stats.depth += 50;
+                setWave(g.stats.wave);
+                setDepth(g.stats.depth);
+                g.waveNotice = {
+                    text: `🌊 WAVE ${g.stats.wave}: KEDALAMAN ${g.stats.depth}M! SELAMAT!`,
+                    timer: 120
+                };
+                g.lastSpawnTime = performance.now();
+                return;
+            }
+        }
 
         for (let i = 0; i < 22; i++) {
             const angle = Math.random() * Math.PI * 2;
@@ -1070,10 +2085,18 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
         if (g.stats.wordsTyped % 8 === 0) {
             g.stats.wave++;
             g.spawnInterval = Math.max(1200, 2800 - (g.stats.wave - 1) * 280);
-            g.waveNotice = {
-                text: `🌊 WAVE ${g.stats.wave}: KEDALAMAN ${g.stats.depth}M!`,
-                timer: 100
-            };
+
+            // 👑 AKTIVASI PERTARUNGAN BOS EPISODIK (WAVE 5 & WAVE 10)
+            if (g.stats.wave === 5 || g.stats.wave === 10) {
+                const canvas = canvasRef.current;
+                const rect = canvas ? canvas.getBoundingClientRect() : { width: 900, height: 540 };
+                startBossBattle(g, g.stats.wave, rect.width || 900, rect.height || 540);
+            } else {
+                g.waveNotice = {
+                    text: `🌊 WAVE ${g.stats.wave}: KEDALAMAN ${g.stats.depth}M!`,
+                    timer: 100
+                };
+            }
         }
 
         setScore(g.stats.score);
@@ -1081,8 +2104,95 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
         setWave(g.stats.wave);
         setDepth(g.stats.depth);
 
-        g.enemies = g.enemies.filter(en => en.id !== target.id);
-        g.targetEnemy = null;
+        // 💡 Glosarium Edukatif ASN
+        const meaning = DYNAMIC_WORD_MEANINGS[target.word];
+        if (meaning) {
+            setLastLearnedWord({ word: target.word, meaning });
+        }
+
+        // 🌟 EKSEKUSI POWER-UP ITEM
+        if (target.powerup === 'BOMB') {
+            audio.playEmpBomb();
+            g.screenShake = 1.3;
+            g.shockwave = { x: target.x, y: target.y, radius: 10, maxRadius: 850, alpha: 1.0 };
+            g.waveNotice = { text: '💥 EMP BIO-SONAR BLAST: SAPU BERSIH MUSUH!', timer: 80 };
+
+            // Musuh lain yang ada di layar dihancurkan dan beri bonus skor
+            const otherEnemies = g.enemies.filter(en => en.id !== target.id);
+            otherEnemies.forEach(other => {
+                for (let i = 0; i < 14; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const spd = Math.random() * 4 + 1.5;
+                    g.particles.push({
+                        x: other.x,
+                        y: other.y,
+                        vx: Math.cos(angle) * spd,
+                        vy: Math.sin(angle) * spd,
+                        radius: Math.random() * 4 + 2,
+                        color: '#f59e0b',
+                        alpha: 1.0,
+                        decay: 0.03
+                    });
+                }
+            });
+            const bonus = otherEnemies.length * 60;
+            g.stats.score += bonus;
+            g.stats.wordsTyped += otherEnemies.length;
+            setScore(g.stats.score);
+            setWordsTyped(g.stats.wordsTyped);
+            g.enemies = [];
+            g.targetEnemy = null;
+        } else if (target.powerup === 'SLOW') {
+            audio.playSlowMo();
+            g.slowMoTimer = 8.0;
+            setSlowMoRemaining(8);
+            g.waveNotice = { text: '❄️ ARUS TENANG: KECEPATAN MUSUH MELAMBAT 50%!', timer: 80 };
+            g.enemies = g.enemies.filter(en => en.id !== target.id);
+            g.targetEnemy = null;
+        } else if (target.powerup === 'HEAL') {
+            audio.playHeal();
+            if (g.stats.lives < 3) {
+                g.stats.lives++;
+                setLives(g.stats.lives);
+            }
+            g.waveNotice = { text: '💚 +1 NYAWA: TERUMBU KARANG MEMULIHKAN MANTA!', timer: 80 };
+            g.enemies = g.enemies.filter(en => en.id !== target.id);
+            g.targetEnemy = null;
+        } else {
+            g.enemies = g.enemies.filter(en => en.id !== target.id);
+            g.targetEnemy = null;
+        }
+    };
+
+    // 🏎️ Helper Kecepatan WPM Tier
+    const getWpmTier = (wpm) => {
+        if (wpm >= 85) return { label: 'Senator Speed! 🔥', class: 'tier-magenta' };
+        if (wpm >= 55) return { label: 'Turbo ⚡', class: 'tier-amber' };
+        if (wpm >= 30) return { label: 'Kilas 🌊', class: 'tier-cyan' };
+        return { label: 'Santai 🐚', class: 'tier-emerald' };
+    };
+
+    // 💬 Helper Efek Teks Kombo Bergaya Komik
+    const triggerComboEffect = (g) => {
+        let comboText = '';
+        if (g.stats.combo === 5) comboText = 'BAGUS! 5x';
+        else if (g.stats.combo === 10) comboText = 'MANTAP! 10x 🔥';
+        else if (g.stats.combo === 15) comboText = 'LUAR BIASA! 15x ⚡';
+        else if (g.stats.combo === 20) comboText = 'MENYALA ABANGKU! 20x 💥';
+        else if (g.stats.combo === 30) comboText = 'SENATOR SPEED! 30x 🚀';
+        else if (g.stats.combo >= 40 && g.stats.combo % 10 === 0) comboText = `LEGENDA DPD RI! ${g.stats.combo}x 👑`;
+
+        if (comboText) {
+            g.floatingTexts = g.floatingTexts || [];
+            g.floatingTexts.push({
+                text: comboText,
+                x: g.manta.x + 85,
+                y: g.manta.y - 30,
+                vy: -1.2,
+                alpha: 1.0,
+                color: ['#fef08a', '#38bdf8', '#34d399', '#f472b6', '#c084fc'][Math.floor(Math.random() * 5)]
+            });
+        }
     };
 
     // 🔒 2. Input Keyboard & Penanganan Anti-Macet Spasi
@@ -1132,12 +2242,46 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
         g.stats.totalKeys++;
         setTotalKeystrokes(g.stats.totalKeys);
 
+        // Catat timestamp keystroke untuk perhitungan Live WPM
+        (g.recentKeystrokes = g.recentKeystrokes || []).push(performance.now());
+
         // Helper untuk memajukan spasi otomatis jika ada di tengah kata
         const advanceSpaces = (target) => {
             while (target && target.typedIndex < target.word.length && target.word[target.typedIndex] === ' ') {
                 target.typedIndex++;
             }
         };
+
+        // 👑 APEX BOSS TYPING LOCK: Jika ada Bos, input pemain otomatis menarget Bos
+        if (g.boss) {
+            const target = g.boss;
+            advanceSpaces(target);
+            const expectedChar = target.word[target.typedIndex];
+
+            if (key === expectedChar || (expectedChar === ' ' && rawKey === ' ')) {
+                target.typedIndex++;
+                advanceSpaces(target);
+                g.stats.correctKeys++;
+                g.stats.combo++;
+                if (g.stats.combo > g.stats.maxCombo) g.stats.maxCombo = g.stats.combo;
+                setCorrectKeystrokes(g.stats.correctKeys);
+                setCombo(g.stats.combo);
+                setMaxCombo(g.stats.maxCombo);
+
+                triggerComboEffect(g);
+                fireSonarProjectile(g, target);
+                audio.playKeyHit(g.stats.combo);
+
+                if (target.typedIndex >= target.word.length) {
+                    defeatEnemy(g, target);
+                }
+            } else {
+                g.stats.combo = 0;
+                setCombo(0);
+                audio.playWrongKey();
+            }
+            return;
+        }
 
         if (!g.targetEnemy) {
             const candidates = g.enemies.filter(en => {
@@ -1161,6 +2305,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                 setCombo(g.stats.combo);
                 setMaxCombo(g.stats.maxCombo);
 
+                triggerComboEffect(g);
                 audio.playKeyHit(g.stats.combo);
 
                 if (chosen.typedIndex >= chosen.word.length) {
@@ -1187,6 +2332,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                 setCombo(g.stats.combo);
                 setMaxCombo(g.stats.maxCombo);
 
+                triggerComboEffect(g);
                 fireSonarProjectile(g, target);
                 audio.playKeyHit(g.stats.combo);
 
@@ -1304,7 +2450,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
 
             // 5. UPDATE GAME LOGIC (Saat PLAYING)
             if (gameState === 'PLAYING') {
-                if (now - g.lastSpawnTime > g.spawnInterval) {
+                if (!g.boss && now - g.lastSpawnTime > g.spawnInterval) {
                     g.enemies.push(spawnEnemy(width, height, g.stats.wave));
                     g.lastSpawnTime = now;
                 }
@@ -1327,9 +2473,15 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                 });
                 g.torpedoes = g.torpedoes.filter(tp => tp.progress < 1.0);
 
+                // Hitung durasi Arus Tenang (Slow-Mo) jika aktif
+                if (g.slowMoTimer > 0) {
+                    g.slowMoTimer -= dt;
+                }
+                const speedMultiplier = g.slowMoTimer > 0 ? 0.45 : 1.0;
+
                 for (let i = g.enemies.length - 1; i >= 0; i--) {
                     const en = g.enemies[i];
-                    en.x -= en.speed;
+                    en.x -= en.speed * speedMultiplier;
                     en.wiggle += 0.05;
                     en.y = en.baseY + Math.sin(en.wiggle) * 10;
 
@@ -1364,6 +2516,38 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                         g.particles.splice(i, 1);
                     }
                 }
+
+                // Update Logika Gerak & Benturan Bos Kolosal
+                if (g.boss) {
+                    const boss = g.boss;
+                    boss.x -= boss.speed * speedMultiplier;
+                    boss.wiggle += 0.04;
+                    boss.y = boss.baseY + Math.sin(boss.wiggle) * 16;
+
+                    if (boss.shake > 0) boss.shake = Math.max(0, boss.shake - dt * 2.5);
+                    if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 3.5);
+
+                    if (boss.x <= g.manta.x + 65) {
+                        audio.playLifeLost();
+                        g.screenShake = 1.3;
+                        g.stats.lives--;
+                        g.stats.combo = 0;
+                        setLives(g.stats.lives);
+                        setCombo(0);
+                        // Terpental mundur sedikit untuk memberi ruang napas
+                        boss.x = Math.min(width - 160, boss.x + 140);
+
+                        if (g.stats.lives <= 0) {
+                            audio.playGameOver();
+                            audio.stopBGM();
+                            setGameState('GAMEOVER');
+                        }
+                    }
+                }
+
+                if (g.bossWarningTimer > 0) {
+                    g.bossWarningTimer -= dt;
+                }
             }
 
             // 6. GAMBAR PARTIKEL LEDAKAN
@@ -1376,6 +2560,62 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                 ctx.fill();
                 ctx.restore();
             });
+
+            // 6.5. GAMBAR SHOCKWAVE EMP LEDAKAN
+            if (g.shockwave && g.shockwave.alpha > 0) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(g.shockwave.x, g.shockwave.y, g.shockwave.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(251, 191, 36, ${g.shockwave.alpha})`;
+                ctx.lineWidth = 10 * g.shockwave.alpha;
+                ctx.shadowColor = '#f59e0b';
+                ctx.shadowBlur = 25;
+                ctx.stroke();
+                ctx.restore();
+
+                g.shockwave.radius += dt * 950;
+                g.shockwave.alpha -= dt * 1.6;
+                if (g.shockwave.alpha <= 0) g.shockwave = null;
+            }
+
+            // 6.6. GAMBAR EFEK ARUS TENANG (ICY FROST VIGNETTE)
+            if (g.slowMoTimer > 0) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(6, 182, 212, 0.08)';
+                ctx.fillRect(0, 0, width, height);
+                ctx.strokeStyle = 'rgba(103, 232, 249, 0.35)';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(4, 4, width - 8, height - 8);
+                ctx.restore();
+            }
+
+            // 6.7. GAMBAR FLOATING COMBO TEXTS
+            if (g.floatingTexts && g.floatingTexts.length > 0) {
+                g.floatingTexts.forEach(ft => {
+                    ctx.save();
+                    ctx.font = '900 22px "Plus Jakarta Sans", system-ui, sans-serif';
+                    ctx.fillStyle = ft.color;
+                    ctx.shadowColor = ft.color;
+                    ctx.shadowBlur = 14;
+                    ctx.globalAlpha = Math.max(0, ft.alpha);
+                    ctx.textAlign = 'center';
+                    ctx.fillText(ft.text, ft.x, ft.y);
+                    ctx.restore();
+
+                    ft.y += ft.vy;
+                    ft.alpha -= dt * 0.9;
+                });
+                g.floatingTexts = g.floatingTexts.filter(ft => ft.alpha > 0);
+            }
+
+            // Hitung Kecepatan Ketik Realtime (Live WPM) secara berkala
+            if (now - (g.lastWpmUpdate || 0) > 300) {
+                g.recentKeystrokes = (g.recentKeystrokes || []).filter(t => now - t < 5000);
+                const currentInstantWpm = Math.round((g.recentKeystrokes.length / 5) * 12);
+                setLiveWpm(currentInstantWpm);
+                setSlowMoRemaining(g.slowMoTimer > 0 ? Math.ceil(g.slowMoTimer) : 0);
+                g.lastWpmUpdate = now;
+            }
 
             // 7. GAMBAR AKTOR UTAMA: MANTA
             const m = g.manta;
@@ -1421,8 +2661,41 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                 ctx.restore();
             });
 
-            // 9. Garis Laser Sonar ke Target Terkunci
-            if (g.targetEnemy) {
+            // 8.5. GAMBAR KARAKTER BOS KOLOSAL (JIKA ADA)
+            if (g.boss) {
+                ctx.save();
+                ctx.translate(g.boss.x, g.boss.y);
+
+                if (g.boss.type === 'KRAKEN') {
+                    drawKrakenBoss(ctx, g.boss, now);
+                } else if (g.boss.type === 'MEGALODON') {
+                    drawMegalodonBoss(ctx, g.boss, now);
+                }
+
+                drawBossWordBadge(ctx, g.boss);
+                ctx.restore();
+
+                // Gambar Boss HUD di bagian atas layar
+                drawBossHUD(ctx, g.boss, width);
+            }
+
+            // Peringatan Boss Masuk (Warning Banner Strobe)
+            if (g.bossWarningTimer > 0 && g.boss) {
+                drawBossWarningBanner(ctx, g.boss, width, height, now);
+            }
+
+            // 9. Garis Laser Sonar ke Target Terkunci atau Bos
+            if (g.boss) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.75)';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([8, 4]);
+                ctx.beginPath();
+                ctx.moveTo(g.manta.x + 35, g.manta.y);
+                ctx.lineTo(g.boss.x - 30, g.boss.y);
+                ctx.stroke();
+                ctx.restore();
+            } else if (g.targetEnemy) {
                 ctx.save();
                 ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
                 ctx.lineWidth = 2;
@@ -1488,6 +2761,36 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                             <span className="mantatype-title">MantaType</span>
                             <span className="mantatype-version-pill">Arcade Edition</span>
                         </div>
+                        {currentUser && userRewardStatus && (
+                            <div
+                                className="mantatype-user-badge-chip"
+                                title={`Jenjang Kompetensi ASN: ${userRewardStatus.current_level_name} (${userRewardStatus.current_xp} XP)`}
+                            >
+                                <span
+                                    className="user-level-tag"
+                                    style={{
+                                        backgroundColor: `${userRewardStatus.current_level_color || '#10b981'}33`,
+                                        color: userRewardStatus.current_level_color || '#10b981',
+                                        borderColor: userRewardStatus.current_level_color || '#10b981'
+                                    }}
+                                >
+                                    <i className={userRewardStatus.current_level_icon || 'fas fa-seedling'}></i>
+                                    Lv.{userRewardStatus.current_level} {userRewardStatus.current_level_name}
+                                </span>
+                                <span className="user-xp-counter">
+                                    ⚡ {userRewardStatus.current_xp?.toLocaleString('id-ID')} XP
+                                </span>
+                                {userRewardStatus.has_claimed_today ? (
+                                    <span className="daily-reward-pill claimed" title="XP Harian telah diklaim hari ini">
+                                        ✅ XP Hari Ini
+                                    </span>
+                                ) : (
+                                    <span className="daily-reward-pill ready animate-pulse" title="Bonus +50 XP harian siap diklaim di Wave 3+">
+                                        🎁 +50 XP Harian
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* HUD STATISTIK GAME DI HEADER */}
@@ -1505,6 +2808,27 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                                 <span className="mantatype-hud-label">WAVE</span>
                                 <span className="mantatype-hud-value wave">Lv.{wave}</span>
                             </div>
+
+                            {/* 🏎️ Speedometer WPM Neon Gauge */}
+                            <div className="mantatype-hud-item speedometer-item">
+                                <span className="mantatype-hud-label">KECEPATAN</span>
+                                <div className="mantatype-wpm-gauge">
+                                    <span className="mantatype-wpm-val">{liveWpm}</span>
+                                    <span className="mantatype-wpm-unit">WPM</span>
+                                    <span className={`mantatype-wpm-tier-pill ${getWpmTier(liveWpm).class}`}>
+                                        {getWpmTier(liveWpm).label}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* ❄️ Indikator Arus Tenang Aktif */}
+                            {slowMoRemaining > 0 && (
+                                <div className="mantatype-hud-item slowmo-active-item animate-pulse">
+                                    <span>❄️</span>
+                                    <span>ARUS TENANG {slowMoRemaining}s</span>
+                                </div>
+                            )}
+
                             <div className="mantatype-hud-item">
                                 <span className="mantatype-hud-label">NYAWA</span>
                                 <span className="mantatype-hud-lives">
@@ -1525,15 +2849,79 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
 
                     {/* TOMBOL AKSI ATAS */}
                     <div className="mantatype-header-actions">
-                        {/* Audio Mute / Unmute */}
-                        <button
-                            className={`mantatype-btn-icon ${!isMuted ? 'active-audio' : ''}`}
-                            onClick={handleToggleMute}
-                            title={isMuted ? 'Nyalakan Musik & Suara Bawah Air' : 'Matikan Suara'}
-                            aria-label="Toggle Audio"
-                        >
-                            {isMuted ? '🔇' : '🔊'}
-                        </button>
+                        {/* Audio Settings Popover Toggle */}
+                        <div className="mantatype-audio-wrapper">
+                            <button
+                                className={`mantatype-btn-icon ${!isMuted ? 'active-audio' : ''}`}
+                                onClick={() => setShowAudioPopover(!showAudioPopover)}
+                                title="Pengaturan Audio & Musik Bawah Air"
+                                aria-label="Toggle Audio Settings"
+                            >
+                                {isMuted ? '🔇' : '🔊'}
+                            </button>
+
+                            {showAudioPopover && (
+                                <div className="mantatype-audio-popover">
+                                    <div className="audio-popover-head">
+                                        <h6>🔊 Audio Bawah Air</h6>
+                                        <button 
+                                            type="button" 
+                                            className="close-popover-btn"
+                                            onClick={() => setShowAudioPopover(false)}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                    <div className="audio-popover-body">
+                                        <div className="audio-slider-group mb-2">
+                                            <div className="slider-label-row">
+                                                <span>🎵 Musik BGM</span>
+                                                <span className="text-teal fw-bold">{Math.round(bgmVolume * 100)}%</span>
+                                            </div>
+                                            <input 
+                                                type="range" 
+                                                min="0" 
+                                                max="1" 
+                                                step="0.05"
+                                                value={bgmVolume}
+                                                onChange={(e) => {
+                                                    const v = parseFloat(e.target.value);
+                                                    setBgmVolume(v);
+                                                    audio.setBgmVolume(v);
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="audio-slider-group mb-3">
+                                            <div className="slider-label-row">
+                                                <span>💥 Efek Suara (SFX)</span>
+                                                <span className="text-teal fw-bold">{Math.round(sfxVolume * 100)}%</span>
+                                            </div>
+                                            <input 
+                                                type="range" 
+                                                min="0" 
+                                                max="1" 
+                                                step="0.05"
+                                                value={sfxVolume}
+                                                onChange={(e) => {
+                                                    const v = parseFloat(e.target.value);
+                                                    setSfxVolume(v);
+                                                    audio.setSfxVolume(v);
+                                                }}
+                                            />
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            className={`btn btn-sm ${isMuted ? 'btn-danger' : 'btn-outline-info'} w-100 fw-bold`}
+                                            onClick={handleToggleMute}
+                                        >
+                                            {isMuted ? '🔇 Buka Suara (Unmute)' : '🔊 Senyapkan Suara (Mute)'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Fullscreen Toggle */}
                         <button
@@ -1579,6 +2967,76 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                 <div className="mantatype-canvas-container">
                     <canvas ref={canvasRef} className="mantatype-canvas" />
 
+                    {/* 💡 Glosarium Edukatif Banner */}
+                    {lastLearnedWord && gameState === 'PLAYING' && (
+                        <div className="mantatype-glosarium-banner">
+                            <span className="glosarium-label">💡 Glosarium:</span>
+                            <strong className="glosarium-word">{lastLearnedWord.word}</strong>
+                            <span className="glosarium-sep">&bull;</span>
+                            <span className="glosarium-meaning">{lastLearnedWord.meaning}</span>
+                        </div>
+                    )}
+
+                    {/* OVERLAY LAYAR TERKUNCI JAM KERJA KEDINASAN */}
+                    {gameState === 'LOCKED' && (
+                        <div className="mantatype-screen-overlay">
+                            <div className="mantatype-card-menu text-center">
+                                <div className="mantatype-menu-hero">
+                                    <img src={mantaIdleWebp} alt="Manta" className="mantatype-hero-avatar" />
+                                    <h1 className="mantatype-menu-title" style={{ fontSize: '1.6rem' }}>
+                                        MantaType Sedang Ditutup
+                                    </h1>
+                                    <div className="mantatype-schedule-lock-badge">
+                                        <span>🔒</span>
+                                        <span>Jadwal Jam Kerja Kedinasan Setjen DPD RI</span>
+                                    </div>
+                                </div>
+
+                                <div className="mantatype-lock-message-box">
+                                    <p className="mb-0">
+                                        {lockInfo?.message || "Saat ini sedang jam dinas aktif. Mari fokus pada tugas negara dan kursus kompetensi terlebih dahulu."}
+                                    </p>
+                                    {lockInfo?.schedule && (
+                                        <div className="mantatype-lock-hours-grid">
+                                            <div className="lock-hour-card">
+                                                <span className="hour-label">Jam Istirahat Siang</span>
+                                                <span className="hour-val">{lockInfo.schedule.break_start} - {lockInfo.schedule.break_end} WIB</span>
+                                            </div>
+                                            <div className="lock-hour-card">
+                                                <span className="hour-label">Selesai Jam Dinas</span>
+                                                <span className="hour-val">{lockInfo.schedule.after_work_start}+ WIB</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="mantatype-menu-buttons">
+                                    {onSwitchToChat && (
+                                        <button
+                                            className="mantatype-btn-primary pulse-btn"
+                                            onClick={() => {
+                                                audio.stopBGM();
+                                                onClose();
+                                                onSwitchToChat();
+                                            }}
+                                        >
+                                            💬 Ngobrol dengan Manta AI Saja
+                                        </button>
+                                    )}
+                                    <button
+                                        className="mantatype-btn-secondary"
+                                        onClick={() => {
+                                            audio.stopBGM();
+                                            onClose();
+                                        }}
+                                    >
+                                        ✕ Kembali ke LMS
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* OVERLAY LAYAR MENU UTAMA (START SCREEN) */}
                     {gameState === 'MENU' && (
                         <div className="mantatype-screen-overlay">
@@ -1611,6 +3069,20 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                                         <div>
                                             <strong>Pertahankan 3 Nyawa</strong>
                                             <p>Jangan biarkan predator laut menabrak Manta!</p>
+                                        </div>
+                                    </div>
+                                    <div className="mantatype-rule-item highlight-rule">
+                                        <span className="mantatype-rule-icon">🎖️</span>
+                                        <div>
+                                            <strong>Bonus XP Leveling ASN (+50 XP Harian)</strong>
+                                            <p>Raih minimal Wave 3 untuk mengklaim bonus XP harian dan menaikkan tingkat kompetensi ASN Anda!</p>
+                                        </div>
+                                    </div>
+                                    <div className="mantatype-rule-item boss-rule" style={{ borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.08)' }}>
+                                        <span className="mantatype-rule-icon">🦑</span>
+                                        <div>
+                                            <strong style={{ color: '#fbbf24' }}>Epic Boss Battles (Wave 5 & 10)</strong>
+                                            <p>Hadapi <em>Kraken Regulasi</em> di Wave 5 dan apex predator <em>Megalodon Birokrasi</em> di Wave 10! Taklukkan rantai kata perisai untuk merebut ribuan skor bonus &amp; pemulihan nyawa.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1687,6 +3159,116 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                                         <span className="stat-label">WAVE TERTINGGI</span>
                                         <span className="stat-num">Wave {wave}</span>
                                     </div>
+                                </div>
+
+                                {/* 🎁 KARTU INTEGRASI HADIAH XP HARIAN & LEVELING ASN */}
+                                <div className="mantatype-reward-integration-panel">
+                                    {currentUser ? (
+                                        claimRewardResult ? (
+                                            /* Berhasil klaim pada sesi ini */
+                                            <div className="mantatype-daily-reward-card claimed">
+                                                <div className="daily-reward-icon">🎉</div>
+                                                <div className="daily-reward-info">
+                                                    <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                        <span className="reward-status-tag success">XP BERHASIL DIKLAIM</span>
+                                                        <span className="reward-points-badge">+{claimRewardResult.points_awarded} XP</span>
+                                                    </div>
+                                                    <p className="reward-desc mb-2">{claimRewardResult.message}</p>
+                                                    {claimRewardResult.gamification && (
+                                                        <div className="reward-level-box">
+                                                            <div className="reward-level-pill" style={{ backgroundColor: claimRewardResult.gamification.level_color || '#10b981' }}>
+                                                                <i className={claimRewardResult.gamification.level_icon || 'fas fa-seedling'}></i>
+                                                                <span>Level {claimRewardResult.gamification.level}: {claimRewardResult.gamification.level_name}</span>
+                                                            </div>
+                                                            <span className="reward-xp-now">Total: <strong>{claimRewardResult.gamification.total_xp?.toLocaleString('id-ID')} XP</strong></span>
+                                                            {claimRewardResult.gamification.remaining_xp > 0 && (
+                                                                <span className="reward-next-hint">Menuju {claimRewardResult.gamification.next_level_name}: tersisa {claimRewardResult.gamification.remaining_xp} XP lagi</span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : userRewardStatus?.has_claimed_today ? (
+                                            /* Sudah klaim hari ini sebelumnya */
+                                            <div className="mantatype-daily-reward-card already-done">
+                                                <div className="daily-reward-icon">✅</div>
+                                                <div className="daily-reward-info">
+                                                    <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                        <span className="reward-status-tag done">XP HARIAN TERCATAT</span>
+                                                        <span className="reward-points-badge secondary">+{userRewardStatus.claimed_today_points || 50} XP</span>
+                                                    </div>
+                                                    <p className="reward-desc mb-1">
+                                                        Anda telah berhasil mengklaim jatah bonus XP harian MantaType untuk hari ini. Silakan kembali esok hari untuk bonus berikutnya!
+                                                    </p>
+                                                    <div className="reward-level-box compact">
+                                                        <span className="user-level-tag-mini" style={{ color: userRewardStatus.current_level_color }}>
+                                                            <i className={userRewardStatus.current_level_icon || 'fas fa-seedling'}></i> Level {userRewardStatus.current_level}: {userRewardStatus.current_level_name} ({userRewardStatus.current_xp} XP)
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (wave >= 3 || score >= 1000) ? (
+                                            /* Memenuhi syarat & Belum klaim hari ini -> TOMBOL KLAIM AKTIF */
+                                            <div className="mantatype-daily-reward-card ready animate-glow">
+                                                <div className="daily-reward-icon pulse-bounce">🎁</div>
+                                                <div className="daily-reward-info">
+                                                    <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                        <span className="reward-status-tag ready">HADIAH HARIAN TERBUKA</span>
+                                                        <span className="reward-points-badge gold">+{wave >= 5 ? 75 : 50} XP</span>
+                                                    </div>
+                                                    <h4 className="reward-title">Misi Ketangkasan Wave {wave} Berhasil!</h4>
+                                                    <p className="reward-desc mb-2">
+                                                        Pencapaian Anda memenuhi syarat ({wave >= 5 ? 'Wave 5+ Bonus Maksimal' : 'Wave 3+'}). Klaim bonus XP untuk menaikkan jenjang kompetensi ASN Anda di LMS Setjen DPD RI.
+                                                    </p>
+                                                    <button
+                                                        type="button"
+                                                        className="mantatype-btn-claim-xp"
+                                                        onClick={handleClaimDailyReward}
+                                                        disabled={isClaimingReward}
+                                                    >
+                                                        {isClaimingReward ? (
+                                                            <>
+                                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                                Menyinkronkan ke Akun LMS...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <i className="fas fa-bolt me-2"></i>
+                                                                Klaim +{wave >= 5 ? 75 : 50} XP ke Akun LMS Sekarang 🚀
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            /* Belum memenuhi syarat */
+                                            <div className="mantatype-daily-reward-card locked">
+                                                <div className="daily-reward-icon">🔒</div>
+                                                <div className="daily-reward-info">
+                                                    <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                        <span className="reward-status-tag locked">BONUS HARIAN TERKUNCI</span>
+                                                        <span className="reward-points-badge locked">+50 XP</span>
+                                                    </div>
+                                                    <p className="reward-desc mb-0">
+                                                        Raih minimal <strong>Wave 3</strong> atau <strong>Skor 1.000</strong> dalam satu sesi untuk membuka klaim bonus +50 XP harian ke profil pegawai Anda. (Pencapaian sesi ini: Wave {wave}, Skor {score}).
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )
+                                    ) : (
+                                        /* Mode Tamu (Guest) */
+                                        <div className="mantatype-daily-reward-card guest">
+                                            <div className="daily-reward-icon">💡</div>
+                                            <div className="daily-reward-info">
+                                                <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                    <span className="reward-status-tag guest">AKUN PEGAWAI DPD RI</span>
+                                                </div>
+                                                <p className="reward-desc mb-0">
+                                                    Masuk dengan akun LMS Setjen DPD RI untuk mengonversi skor ketangkasan MantaType menjadi XP resmi, lencana digital, dan menaikkan jenjang kompetensi ASN Anda!
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {!scoreSubmitted ? (

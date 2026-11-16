@@ -343,7 +343,22 @@ urlpatterns = [
     path("ai/milestones/", api_views.AIMantaMilestonesAPIView.as_view(), name="ai-manta-milestones"),
 
     # 🎮 MantaType Arcade Typing Game Endpoints
+    path("manta-game/config/", api_views.MantaTypePublicConfigAPIView.as_view(), name="manta-game-config"),
+    path("manta-game/config", api_views.MantaTypePublicConfigAPIView.as_view()),
     path("manta-game/leaderboard/", api_views.MantaTypeLeaderboardAPIView.as_view(), name="manta-game-leaderboard"),
     path("manta-game/leaderboard", api_views.MantaTypeLeaderboardAPIView.as_view()),
+    path("manta-game/claim-reward/", api_views.MantaTypeClaimRewardAPIView.as_view(), name="manta-game-claim-reward"),
+    path("manta-game/claim-reward", api_views.MantaTypeClaimRewardAPIView.as_view()),
+
+    # 🎮 MantaType Admin Management Endpoints (System Console)
+    path("admin/mantatype/settings/", api_views.MantaTypeAdminSettingAPIView.as_view(), name="admin-mantatype-settings"),
+    path("admin/mantatype/settings", api_views.MantaTypeAdminSettingAPIView.as_view()),
+    path("admin/mantatype/words/", api_views.MantaTypeAdminWordListCreateAPIView.as_view(), name="admin-mantatype-words"),
+    path("admin/mantatype/words", api_views.MantaTypeAdminWordListCreateAPIView.as_view()),
+    path("admin/mantatype/words/<int:pk>/", api_views.MantaTypeAdminWordDetailAPIView.as_view(), name="admin-mantatype-word-detail"),
+    path("admin/mantatype/words/bulk/", api_views.MantaTypeAdminWordBulkCreateAPIView.as_view(), name="admin-mantatype-words-bulk"),
+    path("admin/mantatype/words/bulk", api_views.MantaTypeAdminWordBulkCreateAPIView.as_view()),
+    path("admin/mantatype/reset-leaderboard/", api_views.MantaTypeAdminResetLeaderboardAPIView.as_view(), name="admin-mantatype-reset-leaderboard"),
+    path("admin/mantatype/reset-leaderboard", api_views.MantaTypeAdminResetLeaderboardAPIView.as_view()),
 ]
 

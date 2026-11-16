@@ -3562,7 +3562,9 @@ class StudentPointsBreakdownAPIView(APIView):
             'course_completion',
             'quiz_score',
             'rating_given',
-            'platform_testimonial'
+            'platform_testimonial',
+            'points_earned',
+            'mantatype_reward'
         ]
         
         from django.utils import timezone
@@ -3632,6 +3634,8 @@ class StudentPointsBreakdownAPIView(APIView):
                 disp = "Ulasan & Rating Kursus"
             elif log.activity_type == 'platform_testimonial':
                 disp = "Testimoni Platform"
+            elif log.activity_type in ['mantatype_reward', 'points_earned']:
+                disp = "Hadiah MantaType Arcade"
                 
             clean_desc = (log.description or '').strip()
             if not clean_desc:
@@ -3662,6 +3666,10 @@ class StudentPointsBreakdownAPIView(APIView):
             'rating_given': {
                 'points': sum(l.points_awarded for l in all_logs if l.activity_type in ['rating_given', 'platform_testimonial']),
                 'count': sum(1 for l in all_logs if l.activity_type in ['rating_given', 'platform_testimonial'])
+            },
+            'mantatype_reward': {
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type in ['mantatype_reward', 'points_earned']),
+                'count': sum(1 for l in all_logs if l.activity_type in ['mantatype_reward', 'points_earned'])
             }
         }
         
@@ -3690,6 +3698,12 @@ class StudentPointsBreakdownAPIView(APIView):
                 'title': 'Memberikan Ulasan & Rating',
                 'points_text': '+50 Poin',
                 'description': 'Diberikan saat Anda memberikan ulasan serta rating bintang terhadap kursus yang diikuti.'
+            },
+            {
+                'key': 'mantatype_reward',
+                'title': 'Bonus Harian MantaType Arcade',
+                'points_text': '+50 s/d +75 Poin',
+                'description': 'Diberikan harian setelah menuntaskan minimal Wave 3 atau Skor 1.000 pada permainan arcade MantaType.'
             }
         ]
         

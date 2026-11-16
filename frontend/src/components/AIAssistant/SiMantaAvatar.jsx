@@ -429,6 +429,7 @@ const SiMantaAvatar = () => {
         }
     });
     const [isGameOpen, setIsGameOpen] = useState(false); // Mini Game Arcade MantaType
+    const [mantaTypeConfig, setMantaTypeConfig] = useState({ is_enabled: true, is_accessible: true }); // Status Jadwal & On/Off
     const [isActionMenuOpen, setIsActionMenuOpen] = useState(false); // Balon Menu Aksi Cepat (Chat vs Game)
     const [isMinimized, setIsMinimized] = useState(() => {
         try {
@@ -932,6 +933,23 @@ const SiMantaAvatar = () => {
             img.src = src;
         });
     }, []);
+
+    // Cek status & jadwal operasional MantaType dari backend
+    useEffect(() => {
+        let isMounted = true;
+        apiInstance.get('manta-game/config/')
+            .then(res => {
+                if (isMounted && res.data?.status === 'success') {
+                    setMantaTypeConfig({
+                        is_enabled: res.data.is_enabled ?? true,
+                        is_accessible: res.data.is_accessible ?? true,
+                        message: res.data.access_message || ''
+                    });
+                }
+            })
+            .catch(() => {});
+        return () => { isMounted = false; };
+    }, [isActionMenuOpen]);
 
     // Pilih sprite/emote berdasarkan status aktif Manta
     const getCurrentSprite = useCallback(() => {
@@ -1566,17 +1584,25 @@ const SiMantaAvatar = () => {
                                         </small>
                                     </div>
                                 </button>
-                                <button 
-                                    className="simanta-action-menu-btn game-btn"
-                                    onClick={handleOpenGame}
-                                >
-                                    <span className="simanta-action-icon">🎮</span>
-                                    <div className="simanta-action-text">
-                                        <strong>Mainkan MantaType</strong>
-                                        <small>Game arcade ketangkasan mengetik</small>
-                                    </div>
-                                    <span className="simanta-game-new-tag">BARU!</span>
-                                </button>
+                                {mantaTypeConfig.is_enabled && (
+                                    <button 
+                                        className="simanta-action-menu-btn game-btn"
+                                        onClick={handleOpenGame}
+                                    >
+                                        <span className="simanta-action-icon">🎮</span>
+                                        <div className="simanta-action-text">
+                                            <strong>Mainkan MantaType</strong>
+                                            <small>
+                                                {!mantaTypeConfig.is_accessible 
+                                                    ? 'Terkunci (Jam Kerja Kedinasan)' 
+                                                    : 'Game arcade ketangkasan mengetik'}
+                                            </small>
+                                        </div>
+                                        <span className={`simanta-game-new-tag ${!mantaTypeConfig.is_accessible ? 'locked-tag' : ''}`}>
+                                            {!mantaTypeConfig.is_accessible ? 'JAM KERJA' : 'BARU!'}
+                                        </span>
+                                    </button>
+                                )}
                             </div>
                             <div className="simanta-action-menu-arrow" />
                         </div>
@@ -1692,14 +1718,16 @@ const SiMantaAvatar = () => {
                                 {isChatExpanded ? '🗗' : '⛶'}
                             </button>
                             {/* Tombol Pintasan Mini Game MantaType Arcade */}
-                            <button
-                                className="simanta-chat-header-btn simanta-game-shortcut-btn"
-                                onClick={handleOpenGame}
-                                title="Mainkan Mini Game MantaType Arcade"
-                                aria-label="Mainkan Mini Game MantaType Arcade"
-                            >
-                                🎮
-                            </button>
+                            {mantaTypeConfig.is_enabled && (
+                                <button
+                                    className="simanta-chat-header-btn simanta-game-shortcut-btn"
+                                    onClick={handleOpenGame}
+                                    title={!mantaTypeConfig.is_accessible ? "MantaType Terkunci (Jam Kerja Kedinasan)" : "Mainkan Mini Game MantaType Arcade"}
+                                    aria-label="Mainkan Mini Game MantaType Arcade"
+                                >
+                                    🎮
+                                </button>
+                            )}
                             {/* Tombol Obrolan Baru (Reset Chat) */}
                             <button
                                 className="simanta-chat-header-btn"

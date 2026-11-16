@@ -591,5 +591,29 @@ class MantaTypeLeaderboardAdmin(admin.ModelAdmin):
 admin.site.register(models.MantaTypeLeaderboard, MantaTypeLeaderboardAdmin)
 
 
+class MantaTypeDailyRewardAdmin(admin.ModelAdmin):
+    list_display = ('user', 'claim_date', 'points_awarded', 'wave_reached', 'score', 'wpm', 'created_at')
+    list_filter = ('claim_date', 'wave_reached')
+    search_fields = ('user__username', 'user__email', 'user__full_name')
+    readonly_fields = ('created_at',)
+
+admin.site.register(models.MantaTypeDailyReward, MantaTypeDailyRewardAdmin)
+
+
+class MantaTypeSettingAdmin(admin.ModelAdmin):
+    list_display = ('id', 'is_enabled', 'restrict_to_break_hours', 'work_start', 'break_start', 'break_end', 'after_work_start', 'allow_weekend', 'updated_at')
+
+admin.site.register(models.MantaTypeSetting, MantaTypeSettingAdmin)
+
+
+class MantaTypeWordAdmin(admin.ModelAdmin):
+    list_display = ('word', 'difficulty', 'category', 'is_active', 'meaning')
+    list_filter = ('difficulty', 'category', 'is_active')
+    search_fields = ('word', 'meaning')
+
+admin.site.register(models.MantaTypeWord, MantaTypeWordAdmin)
+
+
+
 
 

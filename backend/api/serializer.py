@@ -4180,3 +4180,59 @@ class SystemReleaseSerializer(serializers.ModelSerializer):
         return "Tim Pengembang DPD RI"
 
 
+# =====================================================================
+# 🎮 MantaType Arcade Typing Game Serializers
+# =====================================================================
+
+class MantaTypeSettingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = api_models.MantaTypeSetting
+        fields = '__all__'
+
+
+class MantaTypeWordSerializer(serializers.ModelSerializer):
+    difficulty_display = serializers.CharField(source='get_difficulty_display', read_only=True)
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+
+    class Meta:
+        model = api_models.MantaTypeWord
+        fields = [
+            'id',
+            'word',
+            'difficulty',
+            'difficulty_display',
+            'category',
+            'category_display',
+            'meaning',
+            'is_active',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'difficulty_display', 'category_display']
+
+
+class MantaTypeDailyRewardSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = api_models.MantaTypeDailyReward
+        fields = [
+            'id',
+            'user',
+            'user_name',
+            'username',
+            'claim_date',
+            'points_awarded',
+            'score',
+            'words_typed',
+            'accuracy',
+            'wpm',
+            'wave_reached',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'claim_date', 'user_name', 'username']
+
+
+
+

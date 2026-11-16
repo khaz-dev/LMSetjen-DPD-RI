@@ -399,6 +399,11 @@ body:has(.inline-quiz-fullscreen) .simanta-container {
     box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
 }
 
+.simanta-game-new-tag.locked-tag {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    box-shadow: 0 2px 6px rgba(100, 116, 139, 0.3);
+}
+
 .simanta-action-menu-arrow {
     position: absolute;
     bottom: -7px;
