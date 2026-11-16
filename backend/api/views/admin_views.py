@@ -480,7 +480,7 @@ class AdminUserManagementAPIView(generics.ListAPIView):
         # were being queried for each user in the list
         from django.db.models import Count, Case, When, Q
         
-        queryset = User.objects.annotate(
+        queryset = User.objects.select_related('profile').annotate(
             # ✨ SPRINT 1: Pre-calculate enrollment count for students
             _enrollment_count=Case(
                 When(is_student=True, then=Count('enrolledcourse', distinct=True)),
@@ -514,7 +514,9 @@ class AdminUserManagementAPIView(generics.ListAPIView):
             'is_admin',
             'is_active',
             'last_login',
-            'date_joined'
+            'date_joined',
+            'profile__image',
+            'profile__phone'
         ).order_by('-date_joined')
         
         # Apply filtering if provided
@@ -568,7 +570,7 @@ class AdminUserManagementAllAPIView(generics.ListAPIView):
         # Use annotations to prevent N+1 queries
         from django.db.models import Count, Case, When, Q
         
-        queryset = User.objects.annotate(
+        queryset = User.objects.select_related('profile').annotate(
             _enrollment_count=Case(
                 When(is_student=True, then=Count('enrolledcourse', distinct=True)),
                 default=0
@@ -600,7 +602,9 @@ class AdminUserManagementAllAPIView(generics.ListAPIView):
             'is_admin',
             'is_active',
             'last_login',
-            'date_joined'
+            'date_joined',
+            'profile__image',
+            'profile__phone'
         ).order_by('-date_joined')
         
         # Apply filtering if provided
@@ -1574,86 +1578,7 @@ class AdminTagDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-def compare_users_data(external_user, existing_user):
-    """
-    Compare external user data with existing user to determine if changed.
-    
-    Args:
-        external_user: External API user data (dict)
-        existing_user: Django User model instance
-    
-    Returns:
-        bool: True if user data has changed, False if identical
-    """
-    # Fields to compare
-    fields_to_compare = {
-        'full_name': 'name',
-        'email': 'email',
-        'nip': 'nip',
-        'golongan': 'golongan',
-        'kelas_jabatan': 'kelas_jabatan',
-        'jenis_jabatan': 'jenis_jabatan',
-        'external_status': 'status'
-    }
-    
-    for db_field, ext_field in fields_to_compare.items():
-        external_value = external_user.get(ext_field)
-        existing_value = getattr(existing_user, db_field, None)
-        
-        # Handle status field conversion
-        if db_field == 'external_status':
-            external_value = external_user.get(ext_field, '').upper()
-            existing_value = existing_user.external_status or ''
-        
-        # Compare values
-        if str(external_value or '').strip() != str(existing_value or '').strip():
-            return True
-    
-    return False
-
-
-def categorize_users_for_sync(users_data):
-    """
-    Categorize external users into NEW, CHANGED, and UNCHANGED.
-    
-    Args:
-        users_data: List of external user data dicts
-    
-    Returns:
-        dict: Contains 'new', 'changed', 'unchanged' categorized user lists and counts
-    """
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    
-    categorized = {
-        'new': [],
-        'changed': [],
-        'unchanged': []
-    }
-    
-    for user_data in users_data:
-        external_id = user_data.get('id')
-        email = user_data.get('email')
-        
-        try:
-            # Try to find user by external_id first
-            existing_user = User.objects.get(external_id=external_id)
-        except User.DoesNotExist:
-            try:
-                # Try to find by email
-                existing_user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                # User not in system - NEW
-                categorized['new'].append(user_data)
-                continue
-        
-        # User exists - check if changed
-        if compare_users_data(user_data, existing_user):
-            categorized['changed'].append(user_data)
-        else:
-            categorized['unchanged'].append(user_data)
-    
-    return categorized
+from api.views.sync_ai import compare_users_data, categorize_users_for_sync
 
 
 

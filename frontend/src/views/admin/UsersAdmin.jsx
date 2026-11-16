@@ -21,8 +21,27 @@ import {
     COUNTRIES_LIST,
     INDONESIA_PROVINCES_AND_CITIES,
 } from "../../data/onboardingData";
+import { getValidProfileImageUrl } from "../../utils/imageUtils";
 import "./UsersAdmin.css";
 import "../../styles/PasswordInput.css";
+
+// Helper to resolve user avatar safely from multiple potential image fields
+const resolveUserAvatar = (user) => {
+    if (!user) return null;
+    const rawImage = user.image || user.profile_image || user.profile?.image;
+    if (!rawImage || typeof rawImage !== "string") return null;
+    let url = rawImage.trim();
+    if (!url || ["default-user.jpg", "default.jpg", "placeholder.jpg"].includes(url)) {
+        return null;
+    }
+    // If relative path without leading slash or /media/
+    if (!url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("data:image/")) {
+        if (!url.startsWith("/")) {
+            url = `/media/${url}`;
+        }
+    }
+    return getValidProfileImageUrl(url, null);
+};
 
 function UsersAdmin() {
     const [users, setUsers] = useState([]);
@@ -1294,9 +1313,32 @@ function UsersAdmin() {
                                             </td>
                                             <td className="col-user">
                                                 <div className="user-profile-compact">
-                                                    <div className="avatar-compact user-avatar-compact">
-                                                        {(user.full_name || user.username || "U").charAt(0).toUpperCase()}
-                                                    </div>
+                                                    {(() => {
+                                                        const avatarUrl = resolveUserAvatar(user);
+                                                        return (
+                                                            <div className="avatar-compact user-avatar-compact">
+                                                                {avatarUrl ? (
+                                                                    <img 
+                                                                        src={avatarUrl} 
+                                                                        alt={user.full_name || user.username || "Avatar"} 
+                                                                        className="user-avatar-img"
+                                                                        onError={(e) => {
+                                                                            e.currentTarget.style.display = 'none';
+                                                                            if (e.currentTarget.nextElementSibling) {
+                                                                                e.currentTarget.nextElementSibling.style.display = 'inline-flex';
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                ) : null}
+                                                                <span 
+                                                                    className="user-avatar-initials"
+                                                                    style={{ display: avatarUrl ? 'none' : 'inline-flex' }}
+                                                                >
+                                                                    {(user.full_name || user.username || "U").charAt(0).toUpperCase()}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })()}
                                                     <div className="user-texts">
                                                         <div className="user-name-line" title={user.full_name}>
                                                             {user.full_name || "-"}
@@ -1538,10 +1580,33 @@ function UsersAdmin() {
                                         <div className="user-details-view-compact">
                                             {/* User Identity Hero Card */}
                                             <div className="view-hero-card">
-                                                <div className="view-hero-avatar">
-                                                    {selectedUser?.user_info?.full_name ? selectedUser.user_info.full_name.charAt(0).toUpperCase() : "U"}
-                                                    <span className={`hero-status-dot ${selectedUser?.user_info?.is_active ? "active" : "inactive"}`} title={selectedUser?.user_info?.is_active ? "Akun Aktif" : "Akun Nonaktif"}></span>
-                                                </div>
+                                                {(() => {
+                                                    const heroAvatarUrl = resolveUserAvatar(selectedUser?.user_info || selectedUser);
+                                                    return (
+                                                        <div className="view-hero-avatar">
+                                                            {heroAvatarUrl ? (
+                                                                <img 
+                                                                    src={heroAvatarUrl} 
+                                                                    alt={selectedUser?.user_info?.full_name || "Avatar"} 
+                                                                    className="view-hero-avatar-img"
+                                                                    onError={(e) => {
+                                                                        e.currentTarget.style.display = 'none';
+                                                                        if (e.currentTarget.nextElementSibling) {
+                                                                            e.currentTarget.nextElementSibling.style.display = 'inline-flex';
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            ) : null}
+                                                            <span 
+                                                                className="view-hero-avatar-initials"
+                                                                style={{ display: heroAvatarUrl ? 'none' : 'inline-flex' }}
+                                                            >
+                                                                {selectedUser?.user_info?.full_name ? selectedUser.user_info.full_name.charAt(0).toUpperCase() : "U"}
+                                                            </span>
+                                                            <span className={`hero-status-dot ${selectedUser?.user_info?.is_active ? "active" : "inactive"}`} title={selectedUser?.user_info?.is_active ? "Akun Aktif" : "Akun Nonaktif"}></span>
+                                                        </div>
+                                                    );
+                                                })()}
                                                 <div className="view-hero-info">
                                                     <div className="view-hero-name-row">
                                                         <h3 className="view-hero-name">{selectedUser?.user_info?.full_name || "Nama Tidak Disediakan"}</h3>
@@ -2189,199 +2254,239 @@ function UsersAdmin() {
             </main>
 
             {/* Sync Progress Modal */}
-            {(() => {
-                return syncProgress.show;
-            })() && (
-                <div className="sync-modal">
+            {syncProgress.show && (
+                <div 
+                    className="sync-modal"
+                    role="dialog"
+                    aria-modal="true"
+                    onMouseDown={(e) => {
+                        if (e.target === e.currentTarget && !syncing) {
+                            closeSyncProgress();
+                        }
+                    }}
+                >
                     <div className="sync-progress-modal">
                         {/* Modal Header */}
                         <div className={`sync-progress-header ${syncProgress.status}`}>
-                            <div className={`sync-header-icon ${syncing ? "spinning" : ""}`}>
-                                {syncProgress.status === "initializing" && <FaSpinner />}
-                                {syncProgress.status === "syncing" && <MdSync />}
-                                {syncProgress.status === "completed" && <FaCheck />}
-                                {syncProgress.status === "error" && <FaTimes />}
-                                {syncProgress.status === "cancelled" && <FaTimes />}
+                            <div className="sync-header-left">
+                                <div className={`sync-header-icon ${syncing ? "spinning" : ""}`}>
+                                    {syncProgress.status === "initializing" && <FaSpinner />}
+                                    {syncProgress.status === "syncing" && <MdSync />}
+                                    {syncProgress.status === "completed" && <FaCheck />}
+                                    {syncProgress.status === "error" && <FaTimes />}
+                                    {syncProgress.status === "cancelled" && <FaTimes />}
+                                </div>
+                                <div className="sync-header-text">
+                                    <div className="sync-header-title-row">
+                                        <h3>
+                                            {syncProgress.status === "initializing" && "Inisialisasi Sinkronisasi"}
+                                            {syncProgress.status === "syncing" && "Sinkronisasi Berjalan"}
+                                            {syncProgress.status === "completed" && "Sinkronisasi Selesai"}
+                                            {syncProgress.status === "error" && "Sinkronisasi Gagal"}
+                                            {syncProgress.status === "cancelled" && "Sinkronisasi Dibatalkan"}
+                                        </h3>
+                                        <span className={`sync-status-badge ${syncProgress.status}`}>
+                                            {syncProgress.status === "initializing" && "Koneksi"}
+                                            {syncProgress.status === "syncing" && "Proses"}
+                                            {syncProgress.status === "completed" && "Sukses"}
+                                            {syncProgress.status === "error" && "Error"}
+                                            {syncProgress.status === "cancelled" && "Batal"}
+                                        </span>
+                                    </div>
+                                    <p>{syncProgress.message}</p>
+                                </div>
                             </div>
-                            <div className="sync-header-text">
-                                <h3>
-                                    {syncProgress.status === "initializing" && "Menginisialisasi Sinkronisasi..."}
-                                    {syncProgress.status === "syncing" && "Sinkronisasi Data..."}
-                                    {syncProgress.status === "completed" && "Sinkronisasi Selesai!"}
-                                    {syncProgress.status === "error" && "Sinkronisasi Gagal"}
-                                    {syncProgress.status === "cancelled" && "Sinkronisasi Dibatalkan"}
-                                </h3>
-                                <p>{syncProgress.message}</p>
-                            </div>
+                            {!syncing && (
+                                <button 
+                                    type="button"
+                                    className="sync-header-close-btn" 
+                                    onClick={closeSyncProgress}
+                                    title="Tutup"
+                                    aria-label="Tutup modal sinkronisasi"
+                                >
+                                    <FaTimes />
+                                </button>
+                            )}
                         </div>
 
                         {/* Modal Body */}
                         <div className="sync-progress-body">
-                            {/* Page Progress Display - Show during fetching */}
-                            {(syncProgress.status === "syncing" || syncProgress.status === "initializing") && 
-                             syncProgress.totalPages > 0 && syncProgress.currentPage > 0 && (
-                                <div className="sync-page-progress">
-                                    <div className="page-progress-label">
-                                        Fetching page {syncProgress.currentPage}/{syncProgress.totalPages}...
+                            {/* Initializing State Banner - Prevents awkward empty white space */}
+                            {syncProgress.status === "initializing" && (
+                                <div className="sync-initializing-box">
+                                    <div className="sync-initializing-pulse">
+                                        <FaSpinner className="fa-spin" />
+                                    </div>
+                                    <div className="sync-initializing-info">
+                                        <span className="sync-initializing-title">Menghubungkan ke API Eksternal...</span>
+                                        <span className="sync-initializing-sub">Mengunduh data dan memverifikasi perubahan akun pengguna</span>
                                     </div>
                                 </div>
                             )}
-                            
-                            {/* Show stats during syncing and after completion */}
-                            {(syncProgress.status === "syncing" || syncProgress.status === "completed") && (
-                                <>
-                                    {/* Comparison Results - Show after comparison complete */}
-                                    {syncProgress.comparisonComplete && (
-                                        <div className="sync-comparison-results">
-                                            <div className="comparison-title">Data Comparison Results</div>
-                                            <div className="comparison-breakdown">
-                                                <div className="comparison-item new">
-                                                    <div className="comparison-label">New Users</div>
-                                                    <div className="comparison-value">{syncProgress.new}</div>
-                                                    <div className="comparison-desc">Not in system</div>
-                                                </div>
-                                                <div className="comparison-item changed">
-                                                    <div className="comparison-label">Updated Users</div>
-                                                    <div className="comparison-value">{syncProgress.changed}</div>
-                                                    <div className="comparison-desc">Data changed</div>
-                                                </div>
-                                                <div className="comparison-item unchanged">
-                                                    <div className="comparison-label">Unchanged</div>
-                                                    <div className="comparison-value">{syncProgress.unchanged}</div>
-                                                    <div className="comparison-desc">Skipped</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Statistics Grid - Processing Results */}
-                                    <div className="sync-stats">
-                                        <div className="sync-stat-item created">
-                                            <div className="sync-stat-label">Dibuat</div>
-                                            <div className="sync-stat-value">{syncProgress.created}</div>
-                                        </div>
-                                        <div className="sync-stat-item updated">
-                                            <div className="sync-stat-label">Diperbarui</div>
-                                            <div className="sync-stat-value">{syncProgress.updated}</div>
-                                        </div>
-                                        <div className="sync-stat-item failed">
-                                            <div className="sync-stat-label">Gagal</div>
-                                            <div className="sync-stat-value">{syncProgress.failed}</div>
-                                        </div>
-                                        <div className="sync-stat-item total">
-                                            <div className="sync-stat-label">Total Data Eksternal</div>
-                                            <div className="sync-stat-value">{syncProgress.total}</div>
-                                        </div>
-                                        <div className="sync-stat-item total">
-                                            <div className="sync-stat-label">Pengguna Sistem Saat Ini</div>
-                                            <div className="sync-stat-value">{stats.total_users}</div>
-                                        </div>
-                                        <div className="sync-stat-item updated">
-                                            <div className="sync-stat-label">Total Diproses</div>
-                                            <div className="sync-stat-value">{syncProgress.created + syncProgress.updated + syncProgress.failed}</div>
-                                        </div>
-                                    </div>
 
-                                    {/* Progress Bar (only show during syncing) */}
-                                    {syncing && (
-                                        <div className="sync-progress-bar-container">
-                                            <div className="sync-progress-label">
-                                                <span>Syncing in progress...</span>
-                                                <span className="sync-progress-percentage">
-                                                    {syncProgress.total > 0 
-                                                        ? Math.round(((syncProgress.created + syncProgress.updated) / syncProgress.total) * 100)
-                                                        : 0}%
+                            {/* Progress Bar (during syncing) */}
+                            {syncing && (
+                                <div className="sync-progress-bar-container">
+                                    <div className="sync-progress-label">
+                                        <div className="sync-progress-label-left">
+                                            <span>Progress Eksekusi</span>
+                                            {syncProgress.totalPages > 0 && syncProgress.currentPage > 0 && (
+                                                <span className="sync-page-pill">
+                                                    Hal {syncProgress.currentPage}/{syncProgress.totalPages}
                                                 </span>
-                                            </div>
-                                            <div className="sync-progress-bar-track">
-                                                <div 
-                                                    className="sync-progress-bar-fill"
-                                                    style={{
-                                                        width: syncProgress.total > 0 
-                                                            ? `${Math.round(((syncProgress.created + syncProgress.updated) / syncProgress.total) * 100)}%`
-                                                            : "0%"
-                                                    }}
-                                                ></div>
-                                            </div>
+                                            )}
                                         </div>
-                                    )}
-                                </>
+                                        <span className="sync-progress-percentage">
+                                            {syncProgress.total > 0 
+                                                ? Math.min(100, Math.round(((syncProgress.created + syncProgress.updated + syncProgress.failed) / syncProgress.total) * 100))
+                                                : 0}%
+                                        </span>
+                                    </div>
+                                    <div className="sync-progress-bar-track">
+                                        <div 
+                                            className="sync-progress-bar-fill"
+                                            style={{
+                                                width: syncProgress.total > 0 
+                                                    ? `${Math.min(100, Math.round(((syncProgress.created + syncProgress.updated + syncProgress.failed) / syncProgress.total) * 100))}%`
+                                                    : "0%"
+                                            }}
+                                        ></div>
+                                    </div>
+                                </div>
                             )}
 
-                            {/* Success Status Message */}
+                            {/* Compact Feedback Banner for Completed / Error / Cancelled */}
                             {syncProgress.status === "completed" && (
-                                <div className="sync-status-message">
-                                    <div className="sync-status-icon success">
+                                <div className="sync-banner success">
+                                    <div className="sync-banner-icon">
                                         <FaCheck />
                                     </div>
-                                    <h4>Successfully Synced!</h4>
-                                    <p>
-                                        Data sinkronisasi mengambil total data dari sumber eksternal,
-                                        sedangkan kartu "Total Pengguna" menampilkan jumlah akun di database LMS.
-                                        {syncProgress.created > 0 && ` ${syncProgress.created} new user(s) created.`}
-                                        {syncProgress.updated > 0 && ` ${syncProgress.updated} user(s) updated.`}
-                                    </p>
+                                    <div className="sync-banner-content">
+                                        <div className="sync-banner-title">Data Berhasil Disinkronkan</div>
+                                        <div className="sync-banner-desc">
+                                            {syncProgress.created > 0 && `${syncProgress.created} akun baru dibuat. `}
+                                            {syncProgress.updated > 0 && `${syncProgress.updated} akun diperbarui. `}
+                                            {syncProgress.created === 0 && syncProgress.updated === 0 && "Semua data akun telah mutakhir dengan sistem eksternal."}
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
-                            {/* Error Status Message */}
                             {syncProgress.status === "error" && (
-                                <div className="sync-status-message">
-                                    <div className="sync-status-icon error">
+                                <div className="sync-banner error">
+                                    <div className="sync-banner-icon">
                                         <FaTimes />
                                     </div>
-                                    <h4>Sync Failed</h4>
-                                    <p>An error occurred while syncing user data. Please try again.</p>
+                                    <div className="sync-banner-content">
+                                        <div className="sync-banner-title">Sinkronisasi Mengalami Kendala</div>
+                                        <div className="sync-banner-desc">
+                                            {syncProgress.message || "Terjadi kesalahan saat menyinkronkan data pengguna."}
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
-                            {/* Cancelled Status Message */}
                             {syncProgress.status === "cancelled" && (
-                                <div className="sync-status-message">
-                                    <div className="sync-status-icon cancelled">
+                                <div className="sync-banner cancelled">
+                                    <div className="sync-banner-icon">
                                         <FaTimes />
                                     </div>
-                                    <h4>Sync Cancelled</h4>
-                                    <p>The sync operation was cancelled before completion.</p>
+                                    <div className="sync-banner-content">
+                                        <div className="sync-banner-title">Sinkronisasi Dibatalkan</div>
+                                        <div className="sync-banner-desc">
+                                            Operasi sinkronisasi data telah dihentikan atas permintaan pengguna.
+                                        </div>
+                                    </div>
                                 </div>
+                            )}
+
+                            {/* Metric Grid - High-density 4-tile Dashboard */}
+                            {(syncProgress.status === "syncing" || syncProgress.status === "completed" || syncProgress.total > 0) && (
+                                <>
+                                    <div className="sync-metrics-grid">
+                                        <div className="sync-metric-card created">
+                                            <div className="sync-metric-header">
+                                                <span className="sync-metric-label">Dibuat</span>
+                                                <span className="sync-metric-badge">Baru</span>
+                                            </div>
+                                            <div className="sync-metric-val">{syncProgress.created}</div>
+                                        </div>
+
+                                        <div className="sync-metric-card updated">
+                                            <div className="sync-metric-header">
+                                                <span className="sync-metric-label">Diperbarui</span>
+                                                <span className="sync-metric-badge">Update</span>
+                                            </div>
+                                            <div className="sync-metric-val">{syncProgress.updated}</div>
+                                        </div>
+
+                                        <div className="sync-metric-card failed">
+                                            <div className="sync-metric-header">
+                                                <span className="sync-metric-label">Gagal</span>
+                                                <span className="sync-metric-badge">Error</span>
+                                            </div>
+                                            <div className="sync-metric-val">{syncProgress.failed}</div>
+                                        </div>
+
+                                        <div className="sync-metric-card total">
+                                            <div className="sync-metric-header">
+                                                <span className="sync-metric-label">Sumber</span>
+                                                <span className="sync-metric-badge">Total</span>
+                                            </div>
+                                            <div className="sync-metric-val">{syncProgress.total}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Secondary Details Chip Row */}
+                                    <div className="sync-summary-strip">
+                                        <div className="sync-summary-chip">
+                                            <span className="chip-label">LMS Saat Ini:</span>
+                                            <span className="chip-value">{stats.total_users}</span>
+                                        </div>
+                                        <div className="sync-summary-chip">
+                                            <span className="chip-label">Diproses:</span>
+                                            <span className="chip-value">{syncProgress.created + syncProgress.updated + syncProgress.failed}</span>
+                                        </div>
+                                        {syncProgress.comparisonComplete && syncProgress.unchanged > 0 && (
+                                            <div className="sync-summary-chip">
+                                                <span className="chip-label">Tidak Berubah:</span>
+                                                <span className="chip-value">{syncProgress.unchanged}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
                             )}
 
                             {/* Error List */}
                             {syncProgress.errors && syncProgress.errors.length > 0 && (
                                 <div className="sync-errors">
-                                    <h4>
+                                    <div className="sync-errors-header">
                                         <FaTimes />
-                                        Errors Encountered ({syncProgress.errors.length})
-                                    </h4>
-                                    {syncProgress.errors.slice(0, 5).map((error, index) => (
-                                        <div key={index} className="sync-error-item">
-                                            <FaTimes />
-                                            <span>
-                                                {typeof error === "string" ? (
-                                                    error
-                                                ) : (
-                                                    <>
-                                                        {error.external_id && (
-                                                            <>ID: {error.external_id} | </>
-                                                        )}
-                                                        {error.name && (
-                                                            <>Name: {error.name} | </>
-                                                        )}
-                                                        {error.email && (
-                                                            <>Email: {error.email} | </>
-                                                        )}
-                                                        {error.error ? error.error : (error.errors ? JSON.stringify(error.errors) : "Kesalahan tidak diketahui")}
-                                                    </>
-                                                )}
-                                            </span>
-                                        </div>
-                                    ))}
-                                    {syncProgress.errors.length > 5 && (
-                                        <div className="sync-error-item">
-                                            <FaTimes />
-                                            <span>...and {syncProgress.errors.length - 5} more errors</span>
-                                        </div>
-                                    )}
+                                        <span>Daftar Kendala ({syncProgress.errors.length})</span>
+                                    </div>
+                                    <div className="sync-errors-list">
+                                        {syncProgress.errors.slice(0, 4).map((error, index) => (
+                                            <div key={index} className="sync-error-item">
+                                                <span className="sync-error-bullet">•</span>
+                                                <span className="sync-error-text">
+                                                    {typeof error === "string" ? (
+                                                        error
+                                                    ) : (
+                                                        <>
+                                                            {error.external_id && <strong>ID: {error.external_id} | </strong>}
+                                                            {error.name && <span>{error.name} | </span>}
+                                                            {error.error ? error.error : (error.errors ? JSON.stringify(error.errors) : "Kesalahan tidak diketahui")}
+                                                        </>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        ))}
+                                        {syncProgress.errors.length > 4 && (
+                                            <div className="sync-error-item more">
+                                                <span>...dan {syncProgress.errors.length - 4} kesalahan lainnya</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
 
@@ -2389,27 +2494,30 @@ function UsersAdmin() {
                             <div className="sync-actions">
                                 {syncing && (
                                     <button 
+                                        type="button"
                                         className="sync-action-btn cancel"
                                         onClick={cancelSync}
                                     >
                                         <FaTimes />
-                                        Cancel Sync
+                                        <span>Batal</span>
                                     </button>
                                 )}
                                 
                                 {!syncing && syncProgress.status === "completed" && (
                                     <button 
+                                        type="button"
                                         className="sync-action-btn done"
                                         onClick={closeSyncProgress}
                                     >
                                         <FaCheck />
-                                        Done
+                                        <span>Selesai</span>
                                     </button>
                                 )}
                                 
                                 {!syncing && (syncProgress.status === "error" || syncProgress.status === "cancelled") && (
                                     <>
                                         <button 
+                                            type="button"
                                             className="sync-action-btn retry"
                                             onClick={() => {
                                                 closeSyncProgress();
@@ -2417,13 +2525,15 @@ function UsersAdmin() {
                                             }}
                                         >
                                             <MdSync />
-                                            Retry
+                                            <span>Coba Lagi</span>
                                         </button>
                                         <button 
-                                            className="sync-action-btn done"
+                                            type="button"
+                                            className="sync-action-btn close"
                                             onClick={closeSyncProgress}
                                         >
-                                            Close
+                                            <FaTimes />
+                                            <span>Tutup</span>
                                         </button>
                                     </>
                                 )}

@@ -71,6 +71,83 @@ from drf_yasg import openapi
 from api.views.helpers import _SYNC_STATE, reset_sync_state, update_sync_state, get_sync_state, csrf_failure, generate_tokens_with_role
 
 
+def compare_users_data(external_user, existing_user):
+    """
+    Compare external user data with existing user to determine if changed.
+    
+    Args:
+        external_user: External API user data (dict)
+        existing_user: Django User model instance
+    
+    Returns:
+        bool: True if user data has changed, False if identical
+    """
+    fields_to_compare = {
+        'full_name': 'name',
+        'email': 'email',
+        'nip': 'nip',
+        'golongan': 'golongan',
+        'kelas_jabatan': 'kelas_jabatan',
+        'jenis_jabatan': 'jenis_jabatan',
+        'external_status': 'status'
+    }
+    
+    for db_field, ext_field in fields_to_compare.items():
+        external_value = external_user.get(ext_field)
+        existing_value = getattr(existing_user, db_field, None)
+        
+        # Handle status field conversion
+        if db_field == 'external_status':
+            external_value = str(external_user.get(ext_field, '') or '').strip().upper()
+            existing_value = str(existing_user.external_status or '').strip().upper()
+        
+        # Compare values
+        if str(external_value or '').strip() != str(existing_value or '').strip():
+            return True
+    
+    return False
+
+
+def categorize_users_for_sync(users_data):
+    """
+    Categorize external users into NEW, CHANGED, and UNCHANGED.
+    
+    Args:
+        users_data: List of external user data dicts
+    
+    Returns:
+        dict: Contains 'new', 'changed', 'unchanged' categorized user lists and counts
+    """
+    categorized = {
+        'new': [],
+        'changed': [],
+        'unchanged': []
+    }
+    
+    for user_data in users_data:
+        external_id = user_data.get('id')
+        email = user_data.get('email')
+        
+        existing_user = None
+        if external_id is not None and str(external_id).strip() != '':
+            existing_user = User.objects.filter(external_id=str(external_id).strip()).first()
+        
+        if not existing_user and email is not None and str(email).strip() != '':
+            existing_user = User.objects.filter(email__iexact=str(email).strip()).first()
+        
+        if not existing_user:
+            categorized['new'].append(user_data)
+            continue
+        
+        # User exists - check if changed
+        if compare_users_data(user_data, existing_user):
+            categorized['changed'].append(user_data)
+        else:
+            categorized['unchanged'].append(user_data)
+    
+    return categorized
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class SyncExternalUsersAPIView(APIView):
     """

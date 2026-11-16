@@ -178,6 +178,7 @@ class UserSerializer(serializers.ModelSerializer):
     enrollment_count = serializers.IntegerField(read_only=True, source='_enrollment_count')
     course_count = serializers.IntegerField(read_only=True, source='_course_count')
     phone = serializers.CharField(source='profile.phone', read_only=True, allow_null=True, required=False)
+    image = serializers.SerializerMethodField()
     is_super_admin = serializers.SerializerMethodField()
     
     class Meta:
@@ -188,6 +189,7 @@ class UserSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'full_name',
+            'image',
             'phone',
             'role',
             'is_internal',
@@ -212,6 +214,31 @@ class UserSerializer(serializers.ModelSerializer):
             'enrollment_count',
             'course_count'
         ]
+    
+    def get_image(self, obj):
+        try:
+            profile = getattr(obj, 'profile', None)
+            if profile and profile.image:
+                try:
+                    url = profile.image.url
+                except Exception:
+                    url = str(profile.image)
+                if not url:
+                    return None
+                url_str = str(url).strip()
+                if not url_str or url_str in ('default-user.jpg', 'default.jpg', 'placeholder.jpg', '/media/default-user.jpg'):
+                    return None
+                if url_str.startswith('http://') or url_str.startswith('https://') or url_str.startswith('data:image/'):
+                    return url_str
+                if not url_str.startswith('/'):
+                    url_str = f"/media/{url_str}"
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(url_str)
+                return url_str
+        except Exception:
+            return None
+        return None
     
     def get_is_super_admin(self, obj):
         try:
