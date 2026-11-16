@@ -515,8 +515,7 @@ class AdminUserManagementAPIView(generics.ListAPIView):
             'is_active',
             'last_login',
             'date_joined',
-            'profile__image',
-            'profile__phone'
+            'profile__image'
         ).order_by('-date_joined')
         
         # Apply filtering if provided
@@ -603,8 +602,7 @@ class AdminUserManagementAllAPIView(generics.ListAPIView):
             'is_active',
             'last_login',
             'date_joined',
-            'profile__image',
-            'profile__phone'
+            'profile__image'
         ).order_by('-date_joined')
         
         # Apply filtering if provided
