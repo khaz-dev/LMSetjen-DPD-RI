@@ -268,39 +268,8 @@ class MantaTypePublicConfigAPIView(generics.GenericAPIView):
             is_accessible, access_msg = check_is_accessible(setting)
             now = timezone.localtime(timezone.now())
 
-            # Ambil status klaim hadiah harian jika user login
-            user = request.user if request.user and request.user.is_authenticated else None
-            user_reward_info = {
-                "is_authenticated": bool(user),
-                "has_claimed_today": False,
-                "claimed_today_points": 0,
-                "current_level": 1,
-                "current_level_name": "Aparatur Pratama",
-                "current_level_color": "#10b981",
-                "current_level_icon": "fas fa-seedling",
-                "current_xp": 0,
-                "daily_base_xp": 50,
-                "streak_days": 0,
-            }
-
-            if user:
-                today = now.date()
-                claim = api_models.MantaTypeDailyReward.objects.filter(user=user, claim_date=today).first()
-                if claim:
-                    user_reward_info["has_claimed_today"] = True
-                    user_reward_info["claimed_today_points"] = claim.points_awarded
-
-                try:
-                    from api.views.ai_assistant import get_user_gamification_data
-                    g_data = get_user_gamification_data(user)
-                    user_reward_info["current_level"] = g_data.get("level", 1)
-                    user_reward_info["current_level_name"] = g_data.get("level_name", "Aparatur Pratama")
-                    user_reward_info["current_level_color"] = g_data.get("level_color", "#10b981")
-                    user_reward_info["current_level_icon"] = g_data.get("level_icon", "fas fa-seedling")
-                    user_reward_info["current_xp"] = g_data.get("xp", 0)
-                    user_reward_info["streak_days"] = g_data.get("streak_days", 0)
-                except Exception as g_err:
-                    logger.warning(f"Error fetching gamification data for MantaType: {g_err}")
+            # Poin XP dari MantaType dinonaktifkan (fokus murni arcade & leaderboard)
+            user_reward_info = None
 
             # Ambil kosakata aktif dari database
             words_qs = api_models.MantaTypeWord.objects.filter(is_active=True).values(
@@ -1208,126 +1177,15 @@ class MantaTypeAdminResetLeaderboardAPIView(generics.GenericAPIView):
 
 class MantaTypeClaimRewardAPIView(generics.GenericAPIView):
     """
-    🎁 Endpoint Klaim Bonus XP Harian MantaType
-    Menghubungkan pencapaian bermain MantaType langsung ke akun profil pegawai LMS Setjen DPD RI:
-    - Menambah StudentPoints (+50 XP, atau +75 XP jika Wave 5+)
-    - Mencatat histori ke PointsAuditLog (activity_type='mantatype_reward')
-    - Mencatat timeline ke ActivityLog (activity_type='points_earned')
-    - Memicu pembukaan Lencana Milestone 'Jagoan Ketik Manta'
-    - Memberikan respons progres level kompetensi ASN terbaru
+    🎁 Endpoint Klaim Bonus XP Harian MantaType (DINONAKTIFKAN).
+    Poin bermain MantaType tidak lagi dijadikan XP tambahan / ranking peserta di LMS Setjen DPD RI.
     """
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        user = request.user
-        if not user or not user.is_authenticated:
-            return Response({
-                "status": "error",
-                "message": "Anda harus login dengan akun pegawai LMS Setjen DPD RI untuk mengklaim bonus XP."
-            }, status=status.HTTP_401_UNAUTHORIZED)
-
-        data = request.data or {}
-        score = int(data.get("score", 0))
-        words_typed = int(data.get("words_typed", 0))
-        accuracy = float(data.get("accuracy", 100.0))
-        wpm = int(data.get("wpm", 0))
-        wave_reached = int(data.get("wave_reached", 1))
-
-        # 1. Validasi Syarat Minimal (Minimal Wave 3 atau Skor >= 1000)
-        if wave_reached < 3 and score < 1000:
-            return Response({
-                "status": "error",
-                "message": "Syarat belum terpenuhi. Raih minimal Wave 3 atau Skor 1.000 untuk mengklaim bonus XP harian.",
-                "wave_reached": wave_reached,
-                "score": score,
-                "min_required_wave": 3,
-                "min_required_score": 1000
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # 2. Validasi Batas Klaim Harian (1x per hari kalender WIB)
-        now = timezone.localtime(timezone.now())
-        today = now.date()
-
-        existing_claim = api_models.MantaTypeDailyReward.objects.filter(user=user, claim_date=today).first()
-        if existing_claim:
-            return Response({
-                "status": "already_claimed",
-                "message": f"Anda sudah mengklaim bonus XP harian MantaType (+{existing_claim.points_awarded} XP) hari ini. Silakan kembali lagi besok!",
-                "claimed_at": existing_claim.created_at.strftime("%H:%M WIB"),
-                "points_awarded": existing_claim.points_awarded
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # 3. Hitung Poin yang Diberikan (Base 50 XP, bonus +25 jika Wave 5+)
-        points_awarded = 75 if wave_reached >= 5 else 50
-
-        # 4. Tambahkan ke StudentPoints
-        try:
-            api_models.StudentPoints.add_points(
-                user=user,
-                points=points_awarded,
-                category='mantatype_reward',
-                description=f"Bonus Harian MantaType Arcade: Skor {score:,}, WPM {wpm}, Wave {wave_reached}"
-            )
-        except Exception as pts_err:
-            logger.error(f"Error awarding StudentPoints in MantaType: {pts_err}", exc_info=True)
-
-        # 5. Simpan Record MantaTypeDailyReward
-        daily_reward = api_models.MantaTypeDailyReward.objects.create(
-            user=user,
-            claim_date=today,
-            points_awarded=points_awarded,
-            score=score,
-            words_typed=words_typed,
-            accuracy=round(accuracy, 2),
-            wpm=wpm,
-            wave_reached=wave_reached
-        )
-
-        # 6. Catat ke ActivityLog
-        try:
-            api_models.ActivityLog.objects.create(
-                user=user,
-                activity_type='points_earned',
-                title="Bonus Harian MantaType Arcade",
-                description=f"Meraih bonus {points_awarded} XP pada arcade MantaType (Skor: {score:,}, Wave {wave_reached}).",
-                points_awarded=points_awarded,
-                metadata={
-                    'source': 'mantatype',
-                    'score': score,
-                    'words_typed': words_typed,
-                    'accuracy': accuracy,
-                    'wpm': wpm,
-                    'wave_reached': wave_reached,
-                    'claim_date': str(today)
-                }
-            )
-        except Exception as act_err:
-            logger.warning(f"Error creating ActivityLog for MantaType: {act_err}")
-
-        # 7. Ambil status gamifikasi dan leveling terbaru
-        gamification_data = {}
-        try:
-            from api.views.ai_assistant import get_user_gamification_data
-            gamification_data = get_user_gamification_data(user)
-        except Exception as g_err:
-            logger.warning(f"Error getting gamification data: {g_err}")
-
         return Response({
-            "status": "success",
-            "message": f"🎉 Selamat! Bonus +{points_awarded} XP berhasil ditambahkan ke profil akun LMS Setjen DPD RI Anda!",
-            "points_awarded": points_awarded,
-            "claim_date": today.strftime("%d %B %Y"),
-            "gamification": {
-                "total_xp": gamification_data.get("xp", 0),
-                "level": gamification_data.get("level", 1),
-                "level_name": gamification_data.get("level_name", "Aparatur Pratama"),
-                "level_icon": gamification_data.get("level_icon", "fas fa-seedling"),
-                "level_color": gamification_data.get("level_color", "#10b981"),
-                "next_level_name": gamification_data.get("next_level_name", "Aparatur Muda"),
-                "remaining_xp": gamification_data.get("remaining_xp", 0),
-                "xp_progress_pct": gamification_data.get("xp_progress_pct", 0),
-            }
-        }, status=status.HTTP_201_CREATED)
+            "status": "disabled",
+            "message": "Poin XP dari game MantaType telah dinonaktifkan. MantaType kini berfokus pada ketangkasan mengetik dan Papan Peringkat (Ranked)."
+        }, status=status.HTTP_200_OK)
 
 

@@ -54,35 +54,56 @@
     transition: all 0.25s ease-in-out;
 }
 
-/* MODE FULLSCREEN */
+/* MODE FULLSCREEN (MENJAGA RASIO 16:10 AGAR TIDAK STRETCHED / TERDISTORSI) */
+:fullscreen,
+::backdrop {
+    background-color: #010614 !important;
+}
+
+.mantatype-modal:fullscreen,
 .mantatype-modal.mantatype-fullscreen {
-    max-width: 100vw;
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
-    border: none;
-    padding: 0;
-    margin: 0;
+    position: fixed !important;
+    inset: 0 !important;
+    margin: auto !important;
+    /* Jaga aspek rasio 16:10 proporsional di segala resolusi layar */
+    width: min(98vw, calc(98vh * (16 / 10))) !important;
+    height: min(98vh, calc(98vw * (10 / 16))) !important;
+    max-width: min(98vw, calc(98vh * (16 / 10))) !important;
+    max-height: min(98vh, calc(98vw * (10 / 16))) !important;
+    aspect-ratio: 16 / 10;
+    border-radius: 18px !important;
+    border: 2px solid rgba(56, 189, 248, 0.45) !important;
+    box-shadow: 0 0 70px rgba(0, 0, 0, 0.95), 0 0 35px rgba(14, 165, 233, 0.3) !important;
+    background: #021327 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
 }
 
 /* ============================================================================
    HEADER ARCADE
    ============================================================================ */
 .mantatype-header {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 20px;
+    padding: 10px 16px;
     background: rgba(2, 19, 39, 0.95);
     border-bottom: 1px solid rgba(56, 189, 248, 0.2);
-    z-index: 10;
-    gap: 12px;
+    z-index: 1000;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: visible;
 }
 
 .mantatype-header-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .mantatype-logo-badge {
@@ -119,17 +140,20 @@
 .mantatype-hud {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 10px;
     background: rgba(15, 23, 42, 0.75);
-    padding: 6px 18px;
+    padding: 4px 12px;
     border-radius: 30px;
     border: 1px solid rgba(56, 189, 248, 0.25);
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 .mantatype-hud-item {
     display: flex;
     flex-direction: column;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .mantatype-hud-label {
@@ -182,9 +206,36 @@
 
 /* TOMBOL AKSI HEADER */
 .mantatype-header-actions {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    z-index: 1005;
+    flex-shrink: 0;
+}
+
+.mantatype-btn-pause {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+}
+
+.mantatype-btn-pause:hover {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #ffffff;
+}
+
+.mantatype-btn-resume {
+    background: rgba(52, 211, 153, 0.15);
+    border-color: rgba(52, 211, 153, 0.4);
+    color: #34d399;
+}
+
+.mantatype-btn-resume:hover {
+    background: #10b981;
+    border-color: #10b981;
+    color: #ffffff;
 }
 
 .mantatype-btn-icon {
@@ -206,7 +257,7 @@
     background: rgba(56, 189, 248, 0.25);
     border-color: #38bdf8;
     color: #ffffff;
-    transform: translateY(-1px);
+    transform: scale(1.05);
 }
 
 .mantatype-btn-switch {
@@ -245,8 +296,13 @@
 
 .mantatype-btn-close:hover {
     background: #ef4444;
+    border-color: #ef4444;
     color: #ffffff;
-    transform: rotate(90deg);
+    transform: scale(1.05);
+}
+
+.mantatype-btn-close:active {
+    transform: scale(0.95);
 }
 
 /* ============================================================================
@@ -582,6 +638,46 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
+}
+
+/* AUTO-SUBMIT RANKED BADGES */
+.mantatype-auto-rank-badge {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+    text-align: left;
+}
+
+.mantatype-auto-rank-badge.loading {
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #bae6fd;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.mantatype-auto-rank-badge.top10 {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.22), rgba(245, 158, 11, 0.3));
+    border: 2px solid #facc15;
+    box-shadow: 0 0 25px rgba(250, 204, 21, 0.35);
+}
+
+.mantatype-auto-rank-badge.logged {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.badge-icon-col {
+    font-size: 2.2rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.badge-text-col {
+    flex: 1;
 }
 
 /* ============================================================================
@@ -1028,18 +1124,19 @@
 .mantatype-audio-wrapper {
     position: relative;
     display: inline-block;
+    z-index: 1010;
 }
 
 .mantatype-audio-popover {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 12px);
     right: 0;
-    width: 240px;
+    width: 260px;
     background: #0b1528;
-    border: 1px solid rgba(56, 189, 248, 0.35);
-    border-radius: 12px;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
-    z-index: 1050;
+    border: 1px solid rgba(56, 189, 248, 0.55);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(56, 189, 248, 0.35);
+    z-index: 999999 !important;
     overflow: hidden;
     animation: mantatypeFadeIn 0.2s ease-out;
 }
@@ -1358,6 +1455,133 @@
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.15) rotate(5deg); }
 }
+
+/* ============================================================================
+   ⏱️ COUNTDOWN OVERLAY ARCADE (3.. 2.. 1.. MENYELAM!)
+   ============================================================================ */
+.mantatype-countdown-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 50;
+    background: radial-gradient(circle, rgba(2, 6, 23, 0.4) 0%, rgba(2, 6, 23, 0.75) 100%);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.mantatype-countdown-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: mantatypeCountdownPulse 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.mantatype-countdown-text {
+    font-size: 6.8rem;
+    font-weight: 900;
+    font-family: 'Arial Black', Impact, sans-serif;
+    color: #38bdf8;
+    text-shadow: 0 0 30px rgba(56, 189, 248, 0.9),
+                 0 0 60px rgba(56, 189, 248, 0.55),
+                 0 4px 15px rgba(0, 0, 0, 0.9);
+    line-height: 1;
+    letter-spacing: 2px;
+}
+
+.mantatype-countdown-text.go {
+    font-size: 5rem;
+    color: #34d399;
+    text-shadow: 0 0 35px rgba(52, 211, 153, 0.9),
+                 0 0 75px rgba(52, 211, 153, 0.6),
+                 0 4px 15px rgba(0, 0, 0, 0.9);
+}
+
+.mantatype-countdown-subtext {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-top: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 6px 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes mantatypeCountdownPulse {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    40% {
+        transform: scale(1.18);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(0.97);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ============================================================================
+   ⏸️ KARTU JEDA PERMAINAN (PAUSED CARD)
+   ============================================================================ */
+.mantatype-card-paused {
+    max-width: 440px !important;
+    text-align: center;
+    border-color: rgba(56, 189, 248, 0.45) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.25) !important;
+}
+
+.mantatype-paused-icon {
+    font-size: 2.5rem;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5));
+}
+
+.mantatype-paused-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+    width: 100%;
+}
+
+.mantatype-paused-stat-item {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 12px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.paused-stat-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.paused-stat-value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-family: 'Courier New', monospace;
+    margin-top: 2px;
+}
+
 
 
 

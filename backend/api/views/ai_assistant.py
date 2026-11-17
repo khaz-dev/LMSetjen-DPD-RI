@@ -669,14 +669,14 @@ def get_user_gamification_data(user: Any) -> Dict[str, Any]:
             "category": "Literasi Digital",
             "icon": "fas fa-keyboard",
             "color": "#06b6d4",
-            "description": "Menaklukkan Wave 3+ pada MantaType dan mengklaim bonus XP harian ke profil LMS.",
-            "is_unlocked": bool(api_models.MantaTypeDailyReward.objects.filter(user=user).exists()),
+            "description": "Menaklukkan minimal Wave 3 pada game arcade MantaType Setjen DPD RI.",
+            "is_unlocked": bool(api_models.MantaTypeLeaderboard.objects.filter(user=user, wave_reached__gte=3).exists()),
             "progress": (
-                "Lencana Diraih" if api_models.MantaTypeDailyReward.objects.filter(user=user).exists()
+                "Lencana Diraih" if api_models.MantaTypeLeaderboard.objects.filter(user=user, wave_reached__gte=3).exists()
                 else f"Wave {min(3, api_models.MantaTypeLeaderboard.objects.filter(user=user).order_by('-wave_reached').values_list('wave_reached', flat=True).first() or 0)}/3"
             ),
             "progress_pct": (
-                100 if api_models.MantaTypeDailyReward.objects.filter(user=user).exists()
+                100 if api_models.MantaTypeLeaderboard.objects.filter(user=user, wave_reached__gte=3).exists()
                 else min(100, int(((api_models.MantaTypeLeaderboard.objects.filter(user=user).order_by('-wave_reached').values_list('wave_reached', flat=True).first() or 0) / 3.0) * 100))
             )
         }
