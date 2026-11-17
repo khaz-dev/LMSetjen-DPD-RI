@@ -115,28 +115,42 @@ body:has(.rankings-page-wrapper)::after {
 
 /* Inner Layout in stuck mode */
 .rankings-hero-section.is-stuck .rankings-hero-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  text-align: left;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1rem !important;
+  text-align: left !important;
+  min-height: 38px;
+}
+
+.rankings-hero-section.is-stuck .rankings-hero-branding {
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
 }
 
 .rankings-hero-section.is-stuck .badge-rankings-pill,
 .rankings-hero-section.is-stuck .rankings-hero-subtitle {
+  display: none !important;
   max-height: 0 !important;
   opacity: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
-  transform: translateY(-6px) !important;
   pointer-events: none !important;
 }
 
 .rankings-hero-section.is-stuck .rankings-hero-title {
   font-size: 1.05rem !important;
-  margin-bottom: 0 !important;
-  white-space: nowrap;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
 }
 
 .rankings-hero-section.is-stuck .rankings-tab-switch {
@@ -150,9 +164,9 @@ body:has(.rankings-page-wrapper)::after {
 
 @media (max-width: 768px) {
   .rankings-hero-section.is-stuck .rankings-hero-inner {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.4rem;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
   }
 }
 
@@ -345,4 +359,34 @@ body:has(.rankings-page-wrapper)::after {
   border-color: #f59e0b !important;
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35) !important;
   transform: translateY(-1px);
+}
+
+/* Custom Outline Teal Button (Centered Icon & Label) */
+.btn-outline-teal {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.25rem;
+  color: #0f766e !important;
+  border: 1.5px solid #0d9488 !important;
+  background-color: transparent !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  line-height: 1.25 !important;
+  text-decoration: none !important;
+  vertical-align: middle !important;
+}
+
+.btn-outline-teal:hover {
+  background-color: #0d9488 !important;
+  color: #ffffff !important;
+  border-color: #0d9488 !important;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25) !important;
+  transform: translateY(-1px);
+}
+
+.btn-outline-teal i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }

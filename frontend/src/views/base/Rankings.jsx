@@ -206,8 +206,12 @@ function Rankings() {
                   </div>
                 </div>
                 <div className="flex-shrink-0">
-                  <Link to="/student/profile/" className="btn btn-sm btn-outline-teal rounded-pill px-3 py-1 fw-semibold">
-                    <i className="fas fa-id-card me-1"></i> Buka Profil & Lencana Saya
+                  <Link 
+                    to="/student/profile/" 
+                    className="btn btn-sm btn-outline-teal rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center justify-content-center"
+                  >
+                    <i className="fas fa-id-card me-2"></i>
+                    <span>Buka Profil & Lencana Saya</span>
                   </Link>
                 </div>
               </div>
