@@ -358,6 +358,10 @@ urlpatterns = [
     path("admin/mantatype/words/<int:pk>/", api_views.MantaTypeAdminWordDetailAPIView.as_view(), name="admin-mantatype-word-detail"),
     path("admin/mantatype/words/bulk/", api_views.MantaTypeAdminWordBulkCreateAPIView.as_view(), name="admin-mantatype-words-bulk"),
     path("admin/mantatype/words/bulk", api_views.MantaTypeAdminWordBulkCreateAPIView.as_view()),
+    path("admin/mantatype/words/export/", api_views.MantaTypeAdminWordExportAPIView.as_view(), name="admin-mantatype-words-export"),
+    path("admin/mantatype/words/export", api_views.MantaTypeAdminWordExportAPIView.as_view()),
+    path("admin/mantatype/words/import/", api_views.MantaTypeAdminWordImportAPIView.as_view(), name="admin-mantatype-words-import"),
+    path("admin/mantatype/words/import", api_views.MantaTypeAdminWordImportAPIView.as_view()),
     path("admin/mantatype/reset-leaderboard/", api_views.MantaTypeAdminResetLeaderboardAPIView.as_view(), name="admin-mantatype-reset-leaderboard"),
     path("admin/mantatype/reset-leaderboard", api_views.MantaTypeAdminResetLeaderboardAPIView.as_view()),
 ]

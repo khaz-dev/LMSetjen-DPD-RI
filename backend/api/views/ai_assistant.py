@@ -5442,42 +5442,73 @@ class MantaTypeLeaderboardAPIView(APIView):
 
     def get(self, request):
         try:
-            top_scores = api_models.MantaTypeLeaderboard.objects.all().order_by(
+            season_info = None
+            try:
+                from api.views.mantatype_views import check_and_perform_auto_season_reset, get_manta_season_info
+                check_and_perform_auto_season_reset()
+                season_info = get_manta_season_info()
+            except Exception as e_season:
+                logger.warning(f"Error checking season reset: {e_season}")
+
+            from api.models import MantaTypeSetting
+            setting = MantaTypeSetting.get_settings()
+            current_season = getattr(setting, 'season_number', 1)
+
+            # 1. Seasonal Top 10 (Current Season)
+            seasonal_qs = api_models.MantaTypeLeaderboard.objects.filter(
+                season_number=current_season
+            ).order_by('-score', '-accuracy', '-wpm', 'created_at')[:10]
+
+            # 2. Lifetime Top 10 (All-time Hall of Fame)
+            lifetime_qs = api_models.MantaTypeLeaderboard.objects.all().order_by(
                 '-score', '-accuracy', '-wpm', 'created_at'
             )[:10]
 
-            leaderboard_data = []
-            for rank, entry in enumerate(top_scores, start=1):
-                avatar = entry.avatar_url or ""
-                if not avatar and entry.user:
-                    try:
-                        from userauths.models import Profile
-                        prof = Profile.objects.filter(user=entry.user).first()
-                        if prof and prof.image:
-                            avatar = request.build_absolute_uri(prof.image.url) if hasattr(request, 'build_absolute_uri') else prof.image.url
-                    except Exception:
-                        pass
+            from userauths.models import Profile
 
-                leaderboard_data.append({
-                    "id": entry.id,
-                    "rank": rank,
-                    "player_name": entry.player_name,
-                    "avatar_url": avatar,
-                    "score": entry.score,
-                    "words_typed": entry.words_typed,
-                    "accuracy": float(entry.accuracy),
-                    "wpm": entry.wpm,
-                    "wave_reached": entry.wave_reached,
-                    "is_guest": entry.is_guest,
-                    "created_at": entry.created_at.strftime("%d %b %Y %H:%M"),
-                })
+            def serialize_entries(qs):
+                result = []
+                for rank, entry in enumerate(qs, start=1):
+                    avatar = entry.avatar_url or ""
+                    if not avatar and entry.user:
+                        try:
+                            prof = Profile.objects.filter(user=entry.user).first()
+                            if prof and prof.image:
+                                avatar = request.build_absolute_uri(prof.image.url) if hasattr(request, 'build_absolute_uri') else prof.image.url
+                        except Exception:
+                            pass
+                    result.append({
+                        "id": entry.id,
+                        "rank": rank,
+                        "player_name": entry.player_name,
+                        "avatar_url": avatar,
+                        "score": entry.score,
+                        "words_typed": entry.words_typed,
+                        "accuracy": float(entry.accuracy),
+                        "wpm": entry.wpm,
+                        "wave_reached": entry.wave_reached,
+                        "is_guest": entry.is_guest,
+                        "season_number": getattr(entry, 'season_number', 1),
+                        "season_label": getattr(entry, 'season_label', "") or f"Musim #{getattr(entry, 'season_number', 1)}",
+                        "created_at": entry.created_at.strftime("%d %b %Y %H:%M"),
+                    })
+                return result
 
-            total_entries = api_models.MantaTypeLeaderboard.objects.count()
+            seasonal_data = serialize_entries(seasonal_qs)
+            lifetime_data = serialize_entries(lifetime_qs)
+
+            total_seasonal = api_models.MantaTypeLeaderboard.objects.filter(season_number=current_season).count()
+            total_lifetime = api_models.MantaTypeLeaderboard.objects.count()
 
             return Response({
                 "status": "success",
-                "leaderboard": leaderboard_data,
-                "total_entries": total_entries,
+                "leaderboard": seasonal_data,
+                "seasonal_leaderboard": seasonal_data,
+                "lifetime_leaderboard": lifetime_data,
+                "total_entries": total_seasonal,
+                "total_seasonal_entries": total_seasonal,
+                "total_lifetime_entries": total_lifetime,
+                "season_info": season_info,
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -5486,6 +5517,8 @@ class MantaTypeLeaderboardAPIView(APIView):
                 "status": "error",
                 "message": "Gagal mengambil data papan peringkat MantaType.",
                 "leaderboard": [],
+                "seasonal_leaderboard": [],
+                "lifetime_leaderboard": [],
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def post(self, request):
@@ -5531,6 +5564,20 @@ class MantaTypeLeaderboardAPIView(APIView):
                 cleaned = re.sub(r'[^\w\s\-\.]', '', raw_player_name)
                 player_name = cleaned[:25].strip() if cleaned else "Pelaut Manta"
 
+            # Cek dan jalankan reset musim otomatis jika siklus 3 bulan telah berganti
+            season_info = None
+            try:
+                from api.views.mantatype_views import check_and_perform_auto_season_reset, get_manta_season_info
+                check_and_perform_auto_season_reset()
+                season_info = get_manta_season_info()
+            except Exception as e_season:
+                logger.warning(f"Error checking season reset on score submit: {e_season}")
+
+            from api.models import MantaTypeSetting
+            setting = MantaTypeSetting.get_settings()
+            current_season = getattr(setting, 'season_number', 1)
+            season_label = (season_info.get("season_name") if season_info else None) or f"Musim #{current_season}"
+
             # Save entry
             new_entry = api_models.MantaTypeLeaderboard.objects.create(
                 user=user,
@@ -5542,59 +5589,88 @@ class MantaTypeLeaderboardAPIView(APIView):
                 wpm=wpm,
                 wave_reached=wave_reached,
                 is_guest=is_guest,
+                season_number=current_season,
+                season_label=season_label,
             )
 
-            # Hitung peringkat pemain saat ini
-            higher_scores_count = api_models.MantaTypeLeaderboard.objects.filter(
+            # Hitung peringkat musiman (Seasonal Rank)
+            higher_seasonal_count = api_models.MantaTypeLeaderboard.objects.filter(
+                Q(season_number=current_season) &
+                (
+                    Q(score__gt=score) |
+                    Q(score=score, accuracy__gt=accuracy) |
+                    Q(score=score, accuracy=accuracy, wpm__gt=wpm) |
+                    Q(score=score, accuracy=accuracy, wpm=wpm, created_at__lt=new_entry.created_at)
+                )
+            ).count()
+            current_seasonal_rank = higher_seasonal_count + 1
+
+            # Hitung peringkat sepanjang masa (Lifetime Rank)
+            higher_lifetime_count = api_models.MantaTypeLeaderboard.objects.filter(
                 Q(score__gt=score) |
                 Q(score=score, accuracy__gt=accuracy) |
                 Q(score=score, accuracy=accuracy, wpm__gt=wpm) |
                 Q(score=score, accuracy=accuracy, wpm=wpm, created_at__lt=new_entry.created_at)
             ).count()
+            current_lifetime_rank = higher_lifetime_count + 1
 
-            current_rank = higher_scores_count + 1
-            is_top_10 = current_rank <= 10
+            # Get Top 10 Seasonal & Lifetime Leaderboard
+            seasonal_qs = api_models.MantaTypeLeaderboard.objects.filter(
+                season_number=current_season
+            ).order_by('-score', '-accuracy', '-wpm', 'created_at')[:10]
 
-            # Get Top 10 Leaderboard
-            top_scores = api_models.MantaTypeLeaderboard.objects.all().order_by(
+            lifetime_qs = api_models.MantaTypeLeaderboard.objects.all().order_by(
                 '-score', '-accuracy', '-wpm', 'created_at'
             )[:10]
 
-            leaderboard_data = []
-            for rank, entry in enumerate(top_scores, start=1):
-                avatar = entry.avatar_url or ""
-                if not avatar and entry.user:
-                    try:
-                        prof = Profile.objects.filter(user=entry.user).first()
-                        if prof and prof.image:
-                            avatar = request.build_absolute_uri(prof.image.url) if hasattr(request, 'build_absolute_uri') else prof.image.url
-                    except Exception:
-                        pass
+            def serialize_entries(qs):
+                result = []
+                for rank, entry in enumerate(qs, start=1):
+                    avatar = entry.avatar_url or ""
+                    if not avatar and entry.user:
+                        try:
+                            prof = Profile.objects.filter(user=entry.user).first()
+                            if prof and prof.image:
+                                avatar = request.build_absolute_uri(prof.image.url) if hasattr(request, 'build_absolute_uri') else prof.image.url
+                        except Exception:
+                            pass
+                    result.append({
+                        "id": entry.id,
+                        "rank": rank,
+                        "player_name": entry.player_name,
+                        "avatar_url": avatar,
+                        "score": entry.score,
+                        "words_typed": entry.words_typed,
+                        "accuracy": float(entry.accuracy),
+                        "wpm": entry.wpm,
+                        "wave_reached": entry.wave_reached,
+                        "is_guest": entry.is_guest,
+                        "season_number": getattr(entry, 'season_number', 1),
+                        "season_label": getattr(entry, 'season_label', "") or f"Musim #{getattr(entry, 'season_number', 1)}",
+                        "created_at": entry.created_at.strftime("%d %b %Y %H:%M"),
+                        "is_current_player": entry.id == new_entry.id
+                    })
+                return result
 
-                leaderboard_data.append({
-                    "id": entry.id,
-                    "rank": rank,
-                    "player_name": entry.player_name,
-                    "avatar_url": avatar,
-                    "score": entry.score,
-                    "words_typed": entry.words_typed,
-                    "accuracy": float(entry.accuracy),
-                    "wpm": entry.wpm,
-                    "wave_reached": entry.wave_reached,
-                    "is_guest": entry.is_guest,
-                    "created_at": entry.created_at.strftime("%d %b %Y %H:%M"),
-                    "is_current_player": entry.id == new_entry.id
-                })
+            seasonal_data = serialize_entries(seasonal_qs)
+            lifetime_data = serialize_entries(lifetime_qs)
 
             return Response({
                 "status": "success",
                 "message": "Skor MantaType berhasil disimpan!",
                 "entry_id": new_entry.id,
-                "current_rank": current_rank,
-                "is_top_10": is_top_10,
+                "current_rank": current_seasonal_rank,
+                "player_seasonal_rank": current_seasonal_rank,
+                "player_lifetime_rank": current_lifetime_rank,
+                "is_top_10": current_seasonal_rank <= 10 or current_lifetime_rank <= 10,
+                "is_seasonal_top_10": current_seasonal_rank <= 10,
+                "is_lifetime_top_10": current_lifetime_rank <= 10,
                 "player_name": player_name,
                 "score": score,
-                "leaderboard": leaderboard_data,
+                "leaderboard": seasonal_data,
+                "seasonal_leaderboard": seasonal_data,
+                "lifetime_leaderboard": lifetime_data,
+                "season_info": season_info,
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:

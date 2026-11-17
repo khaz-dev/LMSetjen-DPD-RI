@@ -5578,6 +5578,8 @@ class MantaTypeLeaderboard(models.Model):
     wpm = models.PositiveIntegerField(default=0)
     wave_reached = models.PositiveIntegerField(default=1)
     is_guest = models.BooleanField(default=False)
+    season_number = models.PositiveIntegerField(default=1, db_index=True, help_text="Nomor musim saat skor dicatat")
+    season_label = models.CharField(max_length=60, blank=True, default="", help_text="Label musim, misal: Musim Triwulan IV 2026")
     created_at = models.DateTimeField(default=timezone.now, db_index=True)
 
     class Meta:
@@ -5637,6 +5639,24 @@ class MantaTypeSetting(models.Model):
         null=True, 
         default="Saat ini MantaType sedang tidak dapat diakses sesuai jadwal jam kerja kedinasan.",
         help_text="Pesan ramah jika MantaType sedang di luar jam operasional"
+    )
+    # 🏆 Reset Musim Papan Peringkat (Per 3 Bulan / Triwulan)
+    auto_season_reset = models.BooleanField(
+        default=True,
+        help_text="Reset otomatis papan peringkat setiap pergantian musim 3 bulan (Triwulan)"
+    )
+    season_interval_months = models.PositiveIntegerField(
+        default=3,
+        help_text="Durasi periode musim dalam bulan (default: 3 bulan)"
+    )
+    last_season_reset_at = models.DateTimeField(
+        null=True, 
+        blank=True, 
+        help_text="Waktu pencatatan reset musim terakhir"
+    )
+    season_number = models.PositiveIntegerField(
+        default=1,
+        help_text="Nomor musim kompetisi MantaType saat ini"
     )
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -1,14 +1,14 @@
 import Swal from "sweetalert2";
 import "./toast-mobile.css";
 
-function Toast(){
+function Toast(iconOrConfig, maybeTitle){
     const currentFullscreenTarget = (typeof document !== 'undefined' && (document.fullscreenElement || document.webkitFullscreenElement)) || 'body';
-    const Toast = Swal.mixin({
+    const toastInstance = Swal.mixin({
         target: currentFullscreenTarget,
         toast: true,
         position: 'top-end',
         showConfirmButton: false,
-        timer: 2500,
+        timer: 3000,
         timerProgressBar: true,
         didOpen: (toast) => {
             toast.addEventListener('mouseenter', Swal.stopTimer);
@@ -74,7 +74,18 @@ function Toast(){
         animation: true
     });
 
-    return Toast;
+    if (typeof iconOrConfig === 'string' && maybeTitle) {
+        return toastInstance.fire({
+            icon: iconOrConfig,
+            title: maybeTitle
+        });
+    }
+
+    if (typeof iconOrConfig === 'object' && iconOrConfig !== null) {
+        return toastInstance.fire(iconOrConfig);
+    }
+
+    return toastInstance;
 }
 
 // Enhanced logout confirmation dialog with compact styling

@@ -1581,6 +1581,10 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const [leaderboard, setLeaderboard] = useState([]);
+    const [seasonalLeaderboard, setSeasonalLeaderboard] = useState([]);
+    const [lifetimeLeaderboard, setLifetimeLeaderboard] = useState([]);
+    const [rankedViewType, setRankedViewType] = useState('seasonal'); // 'seasonal' | 'lifetime'
+    const [seasonInfo, setSeasonInfo] = useState(null);
     const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
     const [guestPlayerName, setGuestPlayerName] = useState('');
     const [isSubmittingScore, setIsSubmittingScore] = useState(false);
@@ -1732,18 +1736,32 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
         setIsLoadingLeaderboard(true);
         try {
             const res = await apiInstance.get('manta-game/leaderboard/');
-            if (res.data?.leaderboard) {
-                setLeaderboard(res.data.leaderboard);
+            if (res.data) {
+                const seasonal = res.data.seasonal_leaderboard || res.data.leaderboard || [];
+                const lifetime = res.data.lifetime_leaderboard || res.data.leaderboard || [];
+                setSeasonalLeaderboard(seasonal);
+                setLifetimeLeaderboard(lifetime);
+                setLeaderboard(seasonal);
+                if (res.data.season_info) {
+                    setSeasonInfo(res.data.season_info);
+                }
                 try {
-                    localStorage.setItem('mantatype_local_leaderboard', JSON.stringify(res.data.leaderboard));
+                    localStorage.setItem('mantatype_local_seasonal_leaderboard', JSON.stringify(seasonal));
+                    localStorage.setItem('mantatype_local_lifetime_leaderboard', JSON.stringify(lifetime));
                 } catch (_) { }
             }
         } catch (err) {
             console.warn('Leaderboard fallback ke localStorage:', err);
             try {
-                const localData = localStorage.getItem('mantatype_local_leaderboard');
-                if (localData) {
-                    setLeaderboard(JSON.parse(localData));
+                const localSeasonal = localStorage.getItem('mantatype_local_seasonal_leaderboard') || localStorage.getItem('mantatype_local_leaderboard');
+                const localLifetime = localStorage.getItem('mantatype_local_lifetime_leaderboard');
+                if (localSeasonal) {
+                    const parsed = JSON.parse(localSeasonal);
+                    setSeasonalLeaderboard(parsed);
+                    setLeaderboard(parsed);
+                }
+                if (localLifetime) {
+                    setLifetimeLeaderboard(JSON.parse(localLifetime));
                 }
             } catch (_) { }
         } finally {
@@ -1773,11 +1791,22 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
             };
 
             const res = await apiInstance.post('manta-game/leaderboard/', payload);
-            if (res.data?.leaderboard) {
-                setLeaderboard(res.data.leaderboard);
+            if (res.data) {
+                const seasonal = res.data.seasonal_leaderboard || res.data.leaderboard || [];
+                const lifetime = res.data.lifetime_leaderboard || [];
+                setSeasonalLeaderboard(seasonal);
+                setLifetimeLeaderboard(lifetime);
+                setLeaderboard(seasonal);
+                if (res.data.season_info) {
+                    setSeasonInfo(res.data.season_info);
+                }
                 setPlayerRankInfo({
-                    rank: res.data.current_rank,
-                    is_top_10: res.data.is_top_10
+                    rank: res.data.current_rank || res.data.player_seasonal_rank,
+                    seasonalRank: res.data.player_seasonal_rank,
+                    lifetimeRank: res.data.player_lifetime_rank,
+                    isTop10: res.data.is_top_10,
+                    isSeasonalTop10: res.data.is_seasonal_top_10,
+                    isLifetimeTop10: res.data.is_lifetime_top_10
                 });
             }
             setScoreSubmitted(true);
@@ -1793,15 +1822,20 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                 wpm: wpm,
                 wave_reached: g.wave,
                 is_guest: !currentUser,
+                season_number: 1,
+                season_label: 'Musim Aktif',
                 created_at: 'Baru saja'
             };
             const updated = [fallbackEntry, ...leaderboard]
                 .sort((a, b) => b.score - a.score)
                 .slice(0, 10)
                 .map((item, idx) => ({ ...item, rank: idx + 1 }));
+            setSeasonalLeaderboard(updated);
+            setLifetimeLeaderboard(updated);
             setLeaderboard(updated);
             try {
-                localStorage.setItem('mantatype_local_leaderboard', JSON.stringify(updated));
+                localStorage.setItem('mantatype_local_seasonal_leaderboard', JSON.stringify(updated));
+                localStorage.setItem('mantatype_local_lifetime_leaderboard', JSON.stringify(updated));
             } catch (_) { }
             setScoreSubmitted(true);
             setPlayerRankInfo({ rank: 1, is_top_10: true });
@@ -3455,69 +3489,139 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                     )}
 
                     {/* OVERLAY LAYAR PAPAN PERINGKAT PENUH (RANKED VIEW) */}
-                    {gameState === 'RANKED' && (
-                        <div className="mantatype-screen-overlay">
-                            <div className="mantatype-card-ranked">
-                                <div className="mantatype-ranked-head">
-                                    <h2>🏆 MantaType Ranked Hall of Fame</h2>
-                                    <p>Peringkat 10 Pengetik Tercepat & Tertangguh di LMS Setjen DPD RI</p>
-                                </div>
+                    {gameState === 'RANKED' && (() => {
+                        const activeList = rankedViewType === 'seasonal' ? seasonalLeaderboard : lifetimeLeaderboard;
+                        return (
+                            <div className="mantatype-screen-overlay">
+                                <div className="mantatype-card-ranked">
+                                    <div className="mantatype-ranked-head">
+                                        <h2>🏆 MantaType Ranked Hall of Fame</h2>
+                                        <p>Peringkat 10 Pengetik Tercepat & Tertangguh di LMS Setjen DPD RI</p>
 
-                                <div className="mantatype-table-wrapper large">
-                                    <table className="mantatype-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Peringkat</th>
-                                                <th>Pemain</th>
-                                                <th>Skor</th>
-                                                <th>Kata</th>
-                                                <th>WPM</th>
-                                                <th>Akurasi</th>
-                                                <th>Wave</th>
-                                                <th>Waktu</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {leaderboard.length === 0 ? (
+                                        {/* 2 Jenis Ranked: Seasonal Ranked vs Lifetime Ranked */}
+                                        <div className="mantatype-ranked-tabs">
+                                            <button
+                                                type="button"
+                                                className={`ranked-tab-btn ${rankedViewType === 'seasonal' ? 'active' : ''}`}
+                                                onClick={() => setRankedViewType('seasonal')}
+                                            >
+                                                <i className="fas fa-calendar-alt me-1"></i>
+                                                <span>Seasonal Ranked</span>
+                                                <span className="ranked-tab-badge">
+                                                    {seasonInfo?.quarter_label || 'Triwulan'}
+                                                </span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`ranked-tab-btn ${rankedViewType === 'lifetime' ? 'active gold' : ''}`}
+                                                onClick={() => setRankedViewType('lifetime')}
+                                            >
+                                                <i className="fas fa-crown me-1 text-warning"></i>
+                                                <span>Lifetime Ranked</span>
+                                                <span className="ranked-tab-badge gold">Sepanjang Masa</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Mode Banner Info */}
+                                        {rankedViewType === 'seasonal' ? (
+                                            <div className="ranked-mode-banner seasonal">
+                                                <div className="banner-left">
+                                                    <i className="fas fa-hourglass-half text-teal me-2"></i>
+                                                    <span>
+                                                        <strong>{seasonInfo?.season_name || "Musim Triwulan Aktif"}</strong>
+                                                        {seasonInfo?.days_left !== undefined && (
+                                                            <span className="ms-2 opacity-75">
+                                                                ({seasonInfo.days_left} Hari tersisa menuju reset triwulan)
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                                <div className="banner-badge">Di-reset per 3 Bulan</div>
+                                            </div>
+                                        ) : (
+                                            <div className="ranked-mode-banner lifetime">
+                                                <div className="banner-left">
+                                                    <i className="fas fa-infinity text-warning me-2"></i>
+                                                    <span>
+                                                        <strong>Hall of Fame Abadi (Lifetime)</strong>
+                                                        <span className="ms-2 opacity-75">
+                                                            Rekor pengetik legendaris yang tidak pernah di-reset
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <div className="banner-badge gold">Permanen</div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="mantatype-table-wrapper large">
+                                        <table className="mantatype-table">
+                                            <thead>
                                                 <tr>
-                                                    <td colSpan="8" className="text-center py-4">
-                                                        {isLoadingLeaderboard ? 'Sedang menyinkronkan data...' : 'Belum ada skor yang tercatat.'}
-                                                    </td>
+                                                    <th>Peringkat</th>
+                                                    <th>Pemain</th>
+                                                    {rankedViewType === 'lifetime' && <th>Musim</th>}
+                                                    <th>Skor</th>
+                                                    <th>Kata</th>
+                                                    <th>WPM</th>
+                                                    <th>Akurasi</th>
+                                                    <th>Wave</th>
+                                                    <th>Waktu</th>
                                                 </tr>
-                                            ) : (
-                                                leaderboard.map((row, idx) => (
-                                                    <tr key={row.id || idx}>
-                                                        <td className="rank-cell">
-                                                            {idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : `#${idx + 1}`}
+                                            </thead>
+                                            <tbody>
+                                                {activeList.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={rankedViewType === 'lifetime' ? 9 : 8} className="text-center py-4">
+                                                            {isLoadingLeaderboard 
+                                                                ? 'Sedang menyinkronkan data peringkat...' 
+                                                                : (rankedViewType === 'seasonal' 
+                                                                    ? 'Belum ada catatan skor di musim ini. Jadilah yang pertama!' 
+                                                                    : 'Belum ada catatan skor abadi yang tersimpan.')}
                                                         </td>
-                                                        <td className="player-cell">
-                                                            <span className="player-name">{row.player_name}</span>
-                                                            {!row.is_guest && <span className="auth-badge">ASN DPD</span>}
-                                                        </td>
-                                                        <td className="score-cell bold">{row.score}</td>
-                                                        <td>{row.words_typed}</td>
-                                                        <td>{row.wpm} WPM</td>
-                                                        <td>{row.accuracy}%</td>
-                                                        <td>Wave {row.wave_reached}</td>
-                                                        <td className="time-cell">{row.created_at}</td>
                                                     </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                ) : (
+                                                    activeList.map((row, idx) => (
+                                                        <tr key={row.id || idx}>
+                                                            <td className="rank-cell">
+                                                                {idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : `#${idx + 1}`}
+                                                            </td>
+                                                            <td className="player-cell">
+                                                                <span className="player-name">{row.player_name}</span>
+                                                                {!row.is_guest && <span className="auth-badge">ASN DPD</span>}
+                                                            </td>
+                                                            {rankedViewType === 'lifetime' && (
+                                                                <td>
+                                                                    <span className="season-chip">
+                                                                        {row.season_label || `Musim #${row.season_number || 1}`}
+                                                                    </span>
+                                                                </td>
+                                                            )}
+                                                            <td className="score-cell bold">{row.score.toLocaleString()}</td>
+                                                            <td>{row.words_typed}</td>
+                                                            <td>{row.wpm} WPM</td>
+                                                            <td>{row.accuracy}%</td>
+                                                            <td>Wave {row.wave_reached}</td>
+                                                            <td className="time-cell">{row.created_at}</td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
 
-                                <div className="mantatype-menu-buttons">
-                                    <button className="mantatype-btn-primary" onClick={startGame}>
-                                        🚀 Mainkan Sekarang
-                                    </button>
-                                    <button className="mantatype-btn-secondary" onClick={() => setGameState('MENU')}>
-                                        Kembali
-                                    </button>
+                                    <div className="mantatype-menu-buttons">
+                                        <button className="mantatype-btn-primary" onClick={startGame}>
+                                            🚀 Mainkan Sekarang
+                                        </button>
+                                        <button className="mantatype-btn-secondary" onClick={() => setGameState('MENU')}>
+                                            Kembali
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        );
+                    })()}
                 </div>
             </div>
         </div>
