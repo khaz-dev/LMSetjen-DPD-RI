@@ -5,12 +5,16 @@
 
 .mantatype-overlay {
     position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     inset: 0;
-    z-index: 999999;
+    z-index: 9999999 !important;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(2, 6, 23, 0.82);
+    background: rgba(2, 6, 23, 0.88);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     animation: mantatypeFadeIn 0.25s ease-out;
@@ -32,6 +36,7 @@
 /* KOTAK MODAL PERMAINAN */
 .mantatype-modal {
     position: relative;
+    z-index: 10000000 !important;
     width: 100%;
     max-width: 1040px;
     height: min(720px, 94vh);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import apiInstance from '../../utils/axios';
 import UserData from '../../views/plugin/UserData';
 import Toast from '../../views/plugin/Toast';
@@ -100,8 +101,8 @@ class ArcadeAudioEngine {
     constructor() {
         this.ctx = null;
         this.isMuted = false;
-        this.bgmVolume = 0.5;
-        this.sfxVolume = 0.8;
+        this.bgmVolume = 0.65;
+        this.sfxVolume = 0.85;
         this.bgmPlaying = false;
         this.bgmTimer = null;
         this.droneOsc = null;
@@ -124,7 +125,9 @@ class ArcadeAudioEngine {
     setBgmVolume(val) {
         this.bgmVolume = Math.max(0, Math.min(1, val));
         if (this.bgmGain && this.ctx) {
-            this.bgmGain.gain.setValueAtTime(this.isMuted ? 0 : 0.08 * this.bgmVolume, this.ctx.currentTime);
+            try {
+                this.bgmGain.gain.setValueAtTime(this.isMuted ? 0 : 0.32 * this.bgmVolume, this.ctx.currentTime);
+            } catch (_) {}
         }
         this.saveAudioConfig();
     }
@@ -137,7 +140,9 @@ class ArcadeAudioEngine {
     setMuted(muted) {
         this.isMuted = muted;
         if (this.bgmGain && this.ctx) {
-            this.bgmGain.gain.setValueAtTime(muted ? 0 : 0.08 * this.bgmVolume, this.ctx.currentTime);
+            try {
+                this.bgmGain.gain.setValueAtTime(muted ? 0 : 0.32 * this.bgmVolume, this.ctx.currentTime);
+            } catch (_) {}
         }
         this.saveAudioConfig();
     }
@@ -162,107 +167,153 @@ class ArcadeAudioEngine {
         if (this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume().catch(() => { });
         }
+        return this.ctx;
     }
 
-    // 🌊 AMBIENT OCEAN BGM (PROCEDURAL RETRO UNDERWATER LOOP)
+    // 🌊 AMBIENT OCEAN BGM (AQUATIC SYNTH RETRO ARCADE LOOP)
     startBGM() {
-        if (this.isMuted || this.bgmPlaying) return;
+        if (this.isMuted) return;
         this.init();
         if (!this.ctx) return;
 
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+        }
+
+        if (this.bgmPlaying) return;
         this.bgmPlaying = true;
         this.bgmStep = 0;
 
         try {
+            // Master BGM Gain (Terdengar Jelas, Hangat, & Lembut)
             this.bgmGain = this.ctx.createGain();
-            this.bgmGain.gain.setValueAtTime(0.08 * this.bgmVolume, this.ctx.currentTime);
+            this.bgmGain.gain.setValueAtTime(0.32 * this.bgmVolume, this.ctx.currentTime);
             this.bgmGain.connect(this.ctx.destination);
 
+            // Submerged Acoustic Lowpass Filter (Nuansa Bawah Air yang Jernih)
             this.bgmFilter = this.ctx.createBiquadFilter();
             this.bgmFilter.type = 'lowpass';
-            this.bgmFilter.frequency.setValueAtTime(500, this.ctx.currentTime);
+            this.bgmFilter.frequency.setValueAtTime(1350, this.ctx.currentTime);
+            this.bgmFilter.Q.setValueAtTime(1.2, this.ctx.currentTime);
             this.bgmFilter.connect(this.bgmGain);
 
-            // Sub-Bass Ocean Drone (55Hz)
+            // Ambient Water Drone Pad (A2 110Hz Warm Sine)
             this.droneOsc = this.ctx.createOscillator();
             this.droneOsc.type = 'sine';
-            this.droneOsc.frequency.setValueAtTime(55, this.ctx.currentTime);
+            this.droneOsc.frequency.setValueAtTime(110, this.ctx.currentTime);
 
             this.droneGain = this.ctx.createGain();
-            this.droneGain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+            this.droneGain.gain.setValueAtTime(0.12, this.ctx.currentTime);
 
             this.droneOsc.connect(this.droneGain);
             this.droneGain.connect(this.bgmFilter);
             this.droneOsc.start();
 
-            // Tangga Nada Pentatonik Aquatik
-            const notes = [
-                130.81, 155.56, 174.61, 196.00, 233.08,
-                261.63, 311.13, 349.23, 392.00, 466.16, 523.25
+            // Tangga Nada Pentatonik Aquatik (F Major / D Minor Pentatonic)
+            const melodyNotes = [
+                146.83, 174.61, 196.00, 220.00, 261.63,
+                293.66, 349.23, 392.00, 440.00, 523.25, 587.33
             ];
 
-            const sequence = [
-                0, 3, 5, 7, 5, 3, 8, 7,
-                1, 4, 6, 8, 6, 4, 9, 7
+            // Melodi riak air 16 langkah
+            const melodySeq = [
+                5, 7, 8, 7, 5, 6, 7, 9,
+                8, 7, 5, 7, 6, 5, 4, 5
             ];
 
-            const stepDuration = 0.24;
+            // Bassline pengiring bawah laut (D2, F2, G2, A2)
+            const bassNotes = [
+                73.42, 87.31, 98.00, 110.00
+            ];
+            const bassSeq = [
+                0, 0, 1, 1, 2, 2, 3, 3,
+                0, 0, 1, 1, 2, 2, 3, 3
+            ];
 
-            const scheduleBGM = () => {
+            const stepDuration = 0.22;
+            let nextNoteTime = this.ctx.currentTime + 0.05;
+            const scheduleAheadTime = 0.28;
+
+            const scheduler = () => {
                 if (!this.bgmPlaying || !this.ctx || this.isMuted) return;
-                const now = this.ctx.currentTime;
 
-                for (let i = 0; i < 4; i++) {
-                    const noteIdx = sequence[this.bgmStep % sequence.length];
-                    const freq = notes[noteIdx % notes.length];
-                    const noteTime = now + i * stepDuration;
+                if (nextNoteTime < this.ctx.currentTime) {
+                    nextNoteTime = this.ctx.currentTime + 0.05;
+                }
 
-                    const osc = this.ctx.createOscillator();
-                    const noteGain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, noteTime);
+                while (nextNoteTime < this.ctx.currentTime + scheduleAheadTime) {
+                    const step = this.bgmStep;
+                    const noteTime = nextNoteTime;
 
-                    noteGain.gain.setValueAtTime(0.0001, noteTime);
-                    noteGain.gain.exponentialRampToValueAtTime(0.05 * this.bgmVolume, noteTime + 0.02);
-                    noteGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + stepDuration * 0.9);
+                    // 1. Melodi Arpeggio Lembut (Triangle Wave)
+                    const mIdx = melodySeq[step % melodySeq.length];
+                    const mFreq = melodyNotes[mIdx % melodyNotes.length];
 
-                    osc.connect(noteGain);
-                    noteGain.connect(this.bgmFilter);
+                    const mOsc = this.ctx.createOscillator();
+                    const mGain = this.ctx.createGain();
+                    mOsc.type = 'triangle';
+                    mOsc.frequency.setValueAtTime(mFreq, noteTime);
 
-                    osc.start(noteTime);
-                    osc.stop(noteTime + stepDuration);
+                    mGain.gain.setValueAtTime(0.0001, noteTime);
+                    mGain.gain.exponentialRampToValueAtTime(0.24, noteTime + 0.025);
+                    mGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + stepDuration * 0.90);
 
-                    // Sonar ping aksen setiap 8 step
-                    if (this.bgmStep % 8 === 0) {
-                        const sonarOsc = this.ctx.createOscillator();
-                        const sonarGain = this.ctx.createGain();
-                        sonarOsc.type = 'sine';
-                        sonarOsc.frequency.setValueAtTime(780, noteTime);
-                        sonarOsc.frequency.exponentialRampToValueAtTime(1100, noteTime + 0.12);
+                    mOsc.connect(mGain);
+                    mGain.connect(this.bgmFilter);
+                    mOsc.start(noteTime);
+                    mOsc.stop(noteTime + stepDuration);
 
-                        sonarGain.gain.setValueAtTime(0.02 * this.bgmVolume, noteTime);
-                        sonarGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.3);
+                    // 2. Bassline Denyut Bawah Laut (Tiap 2 step)
+                    if (step % 2 === 0) {
+                        const bIdx = bassSeq[(step / 2) % bassSeq.length];
+                        const bFreq = bassNotes[bIdx % bassNotes.length];
 
-                        sonarOsc.connect(sonarGain);
-                        sonarGain.connect(this.bgmGain);
-                        sonarOsc.start(noteTime);
-                        sonarOsc.stop(noteTime + 0.3);
+                        const bOsc = this.ctx.createOscillator();
+                        const bGain = this.ctx.createGain();
+                        bOsc.type = 'triangle';
+                        bOsc.frequency.setValueAtTime(bFreq, noteTime);
+
+                        bGain.gain.setValueAtTime(0.0001, noteTime);
+                        bGain.gain.exponentialRampToValueAtTime(0.20, noteTime + 0.03);
+                        bGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + stepDuration * 1.8);
+
+                        bOsc.connect(bGain);
+                        bGain.connect(this.bgmFilter);
+                        bOsc.start(noteTime);
+                        bOsc.stop(noteTime + stepDuration * 1.9);
+                    }
+
+                    // 3. Sonar Radar Ping Bawah Laut (Aksen setiap 8 step)
+                    if (step % 8 === 0) {
+                        const pingOsc = this.ctx.createOscillator();
+                        const pingGain = this.ctx.createGain();
+                        pingOsc.type = 'sine';
+                        pingOsc.frequency.setValueAtTime(880, noteTime);
+                        pingOsc.frequency.exponentialRampToValueAtTime(1320, noteTime + 0.14);
+
+                        pingGain.gain.setValueAtTime(0.08, noteTime);
+                        pingGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.38);
+
+                        pingOsc.connect(pingGain);
+                        pingGain.connect(this.bgmGain);
+                        pingOsc.start(noteTime);
+                        pingOsc.stop(noteTime + 0.4);
                     }
 
                     this.bgmStep++;
+                    nextNoteTime += stepDuration;
                 }
-
-                this.bgmTimer = setTimeout(scheduleBGM, stepDuration * 4 * 1000 - 30);
             };
 
-            scheduleBGM();
+            // Lookahead scheduler interval 60ms yang stabil
+            this.bgmTimer = setInterval(scheduler, 60);
         } catch (_) { }
     }
 
     stopBGM() {
         this.bgmPlaying = false;
         if (this.bgmTimer) {
-            clearTimeout(this.bgmTimer);
+            clearInterval(this.bgmTimer);
             this.bgmTimer = null;
         }
         if (this.droneOsc) {
@@ -272,7 +323,9 @@ class ArcadeAudioEngine {
         if (this.bgmGain && this.ctx) {
             try {
                 this.bgmGain.gain.setValueAtTime(0, this.ctx.currentTime);
+                this.bgmGain.disconnect();
             } catch (_) { }
+            this.bgmGain = null;
         }
     }
 
@@ -1258,11 +1311,18 @@ const drawBossHUD = (ctx, boss, width) => {
 // ============================================================================
 // ⚠️ RENDER BANNER PERINGATAN KEDATANGAN BOS APEX
 // ============================================================================
-const drawBossWarningBanner = (ctx, timer, width, height, bossName) => {
+// ⚠️ RENDER BANNER PERINGATAN KEDATANGAN BOS APEX
+// ============================================================================
+const drawBossWarningBanner = (ctx, boss, width, height, now) => {
+    if (!boss) return;
     ctx.save();
-    const flash = Math.sin(timer * 0.15) > 0;
+    const flash = Math.sin((now || performance.now()) * 0.015) > 0;
     const bannerH = 90;
     const bannerY = (height - bannerH) / 2;
+
+    const bossName = typeof boss === 'string'
+        ? boss
+        : (boss.name ? String(boss.name) : 'BOS LAUT DALAM');
 
     // Red/Gold Strobe Background
     ctx.fillStyle = flash ? 'rgba(185, 28, 28, 0.88)' : 'rgba(15, 23, 42, 0.92)';
@@ -1287,7 +1347,7 @@ const drawBossWarningBanner = (ctx, timer, width, height, bossName) => {
 
     ctx.font = '800 16px "Plus Jakarta Sans", system-ui, sans-serif';
     ctx.fillStyle = '#fde047';
-    ctx.fillText(`APEX PREDATOR MENDEKAT: ${bossName ? bossName.toUpperCase() : 'BOS LAUT DALAM'}!`, width / 2, bannerY + 68);
+    ctx.fillText(`APEX PREDATOR MENDEKAT: ${bossName.toUpperCase()}!`, width / 2, bannerY + 68);
     ctx.textAlign = 'left';
 
     ctx.restore();
@@ -1517,7 +1577,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
     const [totalKeystrokes, setTotalKeystrokes] = useState(0);
     const [combo, setCombo] = useState(0);
     const [maxCombo, setMaxCombo] = useState(0);
-    const [isMuted, setIsMuted] = useState(false);
+    const [isMuted, setIsMuted] = useState(() => audio.isMuted);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     const [leaderboard, setLeaderboard] = useState([]);
@@ -1646,6 +1706,9 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
     // Inisialisasi saat Modal Terbuka
     useEffect(() => {
         if (isOpen) {
+            setIsMuted(audio.isMuted);
+            setBgmVolume(audio.bgmVolume);
+            setSfxVolume(audio.sfxVolume);
             fetchGameConfig();
             fetchLeaderboard();
         } else {
@@ -1923,7 +1986,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
 
         audio.playBossAlarm();
         g.screenShake = 1.8;
-        g.bossWarningTimer = 160;
+        g.bossWarningTimer = 3.5;
 
         const isKraken = waveNum === 5;
         const bossWords = isKraken
@@ -2219,12 +2282,15 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
 
         if (gameState !== 'PLAYING') {
             if (e.key === 'Escape' && gameState === 'PAUSED') {
+                audio.init();
+                audio.startBGM();
                 setGameState('PLAYING');
             }
             return;
         }
 
         if (e.key === 'Escape') {
+            audio.stopBGM();
             setGameState('PAUSED');
             return;
         }
@@ -2238,6 +2304,15 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
         }
 
         e.preventDefault();
+
+        // Jamin AudioContext aktif dan BGM mengalun saat bermain
+        if (audio.ctx && audio.ctx.state === 'suspended') {
+            audio.ctx.resume().catch(() => {});
+        }
+        if (!audio.bgmPlaying && !audio.isMuted) {
+            audio.startBGM();
+        }
+
         const g = gameLoopRef.current;
         g.stats.totalKeys++;
         setTotalKeystrokes(g.stats.totalKeys);
@@ -2739,7 +2814,7 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
 
     const accuracyVal = totalKeystrokes > 0 ? ((correctKeystrokes / totalKeystrokes) * 100).toFixed(1) : '100.0';
 
-    return (
+    const modalContent = (
         <div
             className="mantatype-overlay"
             role="dialog"
@@ -3112,7 +3187,11 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
                                 <h2 className="mantatype-paused-title">⏸️ Permainan Dijeda</h2>
                                 <p className="mantatype-paused-desc">Tarik nafas sejenak di kedalaman laut!</p>
                                 <div className="mantatype-menu-buttons">
-                                    <button className="mantatype-btn-primary" onClick={() => setGameState('PLAYING')}>
+                                    <button className="mantatype-btn-primary" onClick={() => {
+                                        audio.init();
+                                        audio.startBGM();
+                                        setGameState('PLAYING');
+                                    }}>
                                         ▶️ Lanjutkan Mengetik
                                     </button>
                                     <button className="mantatype-btn-secondary" onClick={startGame}>
@@ -3443,6 +3522,12 @@ const MantaTypeGame = ({ isOpen, onClose, onSwitchToChat }) => {
             </div>
         </div>
     );
+
+    if (typeof document !== 'undefined') {
+        return createPortal(modalContent, document.body);
+    }
+
+    return modalContent;
 };
 
 export default MantaTypeGame;
