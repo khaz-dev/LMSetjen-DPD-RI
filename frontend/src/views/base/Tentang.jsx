@@ -1,15 +1,91 @@
-import React, { memo, useState, useEffect, useMemo } from "react";
+import React, { memo, useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
-import useStickyHero from "../../hooks/useStickyHero";
 import "./Tentang.css";
 
 function Tentang() {
   const [activeSection, setActiveSection] = useState("apa-itu-lms");
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedEmail, setCopiedEmail] = useState(false);
-  const { isScrolled, headerHeight } = useStickyHero(55);
+  const [headerHeight, setHeaderHeight] = useState(60);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [expandedHeroHeight, setExpandedHeroHeight] = useState(220);
+  const heroRef = useRef(null);
+
+  // Measure actual BaseHeader height dynamically
+  useEffect(() => {
+    const measureHeader = () => {
+      const headerEl = document.querySelector('.base-header');
+      if (headerEl) {
+        setHeaderHeight(headerEl.offsetHeight);
+      }
+    };
+    measureHeader();
+
+    const headerEl = document.querySelector('.base-header');
+    let observer = null;
+    if (headerEl && window.ResizeObserver) {
+      observer = new ResizeObserver(measureHeader);
+      observer.observe(headerEl);
+    }
+    window.addEventListener('resize', measureHeader);
+    return () => {
+      if (observer) observer.disconnect();
+      window.removeEventListener('resize', measureHeader);
+    };
+  }, []);
+
+  // Observe natural expanded height of hero
+  useEffect(() => {
+    const updateExpandedHeight = () => {
+      if (heroRef.current && !isScrolled) {
+        const height = heroRef.current.offsetHeight;
+        if (height > 100) {
+          setExpandedHeroHeight(height);
+        }
+      }
+    };
+
+    updateExpandedHeight();
+
+    let observer = null;
+    if (heroRef.current && window.ResizeObserver) {
+      observer = new ResizeObserver(() => {
+        if (!isScrolled) {
+          updateExpandedHeight();
+        }
+      });
+      observer.observe(heroRef.current);
+    }
+
+    window.addEventListener('resize', updateExpandedHeight);
+    return () => {
+      if (observer) observer.disconnect();
+      window.removeEventListener('resize', updateExpandedHeight);
+    };
+  }, [isScrolled]);
+
+  // High-precision scroll listener with exact zero-gap threshold calculation
+  useEffect(() => {
+    const STUCK_HERO_HEIGHT = 56;
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const threshold = Math.max(50, expandedHeroHeight - headerHeight - STUCK_HERO_HEIGHT);
+          const shouldBeStuck = window.scrollY >= threshold;
+          setIsScrolled((prev) => (prev !== shouldBeStuck ? shouldBeStuck : prev));
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [expandedHeroHeight, headerHeight]);
 
   // Sections definition for Table of Contents & Navigation
   const sections = useMemo(() => [
@@ -79,17 +155,25 @@ function Tentang() {
   return (
     <div 
       className="tentang-page-wrapper"
-      style={{ '--header-height': `${headerHeight}px` }}
+      style={{ 
+        '--header-height': `${headerHeight}px`,
+        '--hero-expanded-height': `${expandedHeroHeight}px`,
+        '--stuck-hero-height': '56px'
+      }}
     >
       <BaseHeader />
 
       {/* HERO SLOT ANCHOR PREVENTS LAYOUT SHIFT */}
       <div 
-        className="tentang-hero-slot"
-        style={{ '--header-height': `${headerHeight}px` }}
+        className={`tentang-hero-slot ${isScrolled ? 'is-stuck' : ''}`}
+        style={{ 
+          '--header-height': `${headerHeight}px`,
+          '--hero-expanded-height': `${expandedHeroHeight}px`,
+          minHeight: isScrolled ? `${expandedHeroHeight}px` : 'auto'
+        }}
       >
         {/* COMPACT HERO HEADER WITH STICKY SCROLL BEHAVIOR */}
-        <header className={`tentang-hero ${isScrolled ? 'is-stuck' : ''}`} role="banner">
+        <header ref={heroRef} className={`tentang-hero ${isScrolled ? 'is-stuck' : ''}`} role="banner">
           <div className="container">
             <div className="tentang-hero-content">
               {/* Breadcrumb & Top badge */}

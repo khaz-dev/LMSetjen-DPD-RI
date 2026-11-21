@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
 import { userGuideContent } from './userGuideData';
-import useStickyHero from '../../hooks/useStickyHero';
 import useSystemVersion from '../../hooks/useSystemVersion';
 import './UserGuide.css';
 
@@ -14,7 +13,10 @@ function UserGuide() {
     const [openTrouble, setOpenTrouble] = useState({ 0: true, 1: true });
     const [openFaq, setOpenFaq] = useState({ 0: true });
     const [activeSection, setActiveSection] = useState('getting-started');
-    const { isScrolled, headerHeight } = useStickyHero(55);
+    const [headerHeight, setHeaderHeight] = useState(60);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [expandedSlotHeight, setExpandedSlotHeight] = useState(290);
+    const slotRef = useRef(null);
     const { version: liveVersion } = useSystemVersion();
 
     // Ensure body background is properly tinted for silhouette layer
@@ -26,20 +28,82 @@ function UserGuide() {
         };
     }, []);
 
-    // Track coordinator slot height to prevent any layout shift during sticky transition
-    const slotRef = useRef(null);
-    const [slotHeight, setSlotHeight] = useState(215);
-
+    // Measure actual BaseHeader height dynamically
     useEffect(() => {
-        const updateSlotHeight = () => {
-            if (slotRef.current && !isScrolled) {
-                setSlotHeight(slotRef.current.offsetHeight);
+        const measureHeader = () => {
+            const headerEl = document.querySelector('.base-header');
+            if (headerEl) {
+                setHeaderHeight(headerEl.offsetHeight);
             }
         };
-        updateSlotHeight();
-        window.addEventListener('resize', updateSlotHeight);
-        return () => window.removeEventListener('resize', updateSlotHeight);
+        measureHeader();
+
+        const headerEl = document.querySelector('.base-header');
+        let observer = null;
+        if (headerEl && window.ResizeObserver) {
+            observer = new ResizeObserver(measureHeader);
+            observer.observe(headerEl);
+        }
+        window.addEventListener('resize', measureHeader);
+        return () => {
+            if (observer) observer.disconnect();
+            window.removeEventListener('resize', measureHeader);
+        };
+    }, []);
+
+    // Observe natural expanded height of hero + filter strip slot
+    useEffect(() => {
+        const updateExpandedHeight = () => {
+            if (slotRef.current && !isScrolled) {
+                const height = slotRef.current.offsetHeight;
+                if (height > 150) {
+                    setExpandedSlotHeight(height);
+                }
+            }
+        };
+
+        updateExpandedHeight();
+
+        let observer = null;
+        if (slotRef.current && window.ResizeObserver) {
+            observer = new ResizeObserver(() => {
+                if (!isScrolled) {
+                    updateExpandedHeight();
+                }
+            });
+            observer.observe(slotRef.current);
+        }
+
+        window.addEventListener('resize', updateExpandedHeight);
+        return () => {
+            if (observer) observer.disconnect();
+            window.removeEventListener('resize', updateExpandedHeight);
+        };
     }, [isScrolled, language]);
+
+    // High-precision scroll listener with exact zero-gap threshold calculation
+    useEffect(() => {
+        const STUCK_HERO_HEIGHT = 56;
+        const STUCK_FILTER_HEIGHT = 52;
+        const totalStuck = STUCK_HERO_HEIGHT + STUCK_FILTER_HEIGHT;
+
+        let ticking = false;
+        const handleScroll = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const threshold = Math.max(60, expandedSlotHeight - headerHeight - totalStuck);
+                    const shouldBeStuck = window.scrollY >= threshold;
+                    setIsScrolled((prev) => (prev !== shouldBeStuck ? shouldBeStuck : prev));
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll();
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [expandedSlotHeight, headerHeight]);
 
     const handlePrint = () => {
         window.print();
@@ -49,8 +113,8 @@ function UserGuide() {
         setActiveSection(sectionId);
         const element = document.getElementById(sectionId);
         if (element) {
-            // Offset for: BaseHeader (headerHeight) + stuck hero (56px) + stuck filter strip (58px) + margin clearance (16px)
-            const headerOffset = (headerHeight || 60) + 56 + 58 + 16;
+            // Offset for: BaseHeader (headerHeight) + stuck hero (56px) + stuck filter strip (52px) + margin clearance (16px)
+            const headerOffset = (headerHeight || 60) + 56 + 52 + 16;
             const elementPosition = element.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
             window.scrollTo({
@@ -156,15 +220,21 @@ function UserGuide() {
 
             <div 
                 className="user-guide-page user-guide-compact-wrapper"
-                style={{ '--header-height': `${headerHeight}px` }}
+                style={{ 
+                    '--header-height': `${headerHeight}px`,
+                    '--hero-expanded-height': `${expandedSlotHeight}px`,
+                    '--stuck-hero-height': '56px',
+                    '--stuck-filter-height': '52px'
+                }}
             >
                 {/* Hero & Subnav Filter Coordinator Slot prevents layout shift and eliminates gap */}
                 <div 
                     ref={slotRef}
-                    className="guide-hero-slot"
+                    className={`guide-hero-slot ${isScrolled ? 'is-stuck' : ''}`}
                     style={{ 
                         '--header-height': `${headerHeight}px`,
-                        minHeight: isScrolled ? `${slotHeight}px` : 'auto'
+                        '--hero-expanded-height': `${expandedSlotHeight}px`,
+                        minHeight: isScrolled ? `${expandedSlotHeight}px` : 'auto'
                     }}
                 >
                     {/* Compact Hero Header with Sticky Scroll Behavior */}

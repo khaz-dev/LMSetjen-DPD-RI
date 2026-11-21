@@ -62,9 +62,14 @@ body:has(.capaian-page-wrapper)::after {
    -------------------------------------------------------------------------- */
 /* Hero Slot anchor: guarantees space in document flow so fixing hero causes 0 layout shift */
 .capaian-hero-slot {
-  min-height: 220px;
+  min-height: var(--hero-expanded-height, 220px);
   position: relative;
   width: 100%;
+  margin-bottom: 0 !important;
+}
+
+.capaian-hero-slot.is-stuck {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%);
 }
 
 .capaian-hero {
@@ -75,9 +80,9 @@ body:has(.capaian-page-wrapper)::after {
   box-shadow: 0 4px 20px -2px rgba(6, 60, 55, 0.3);
   overflow: hidden;
   width: 100%;
-  transition: background 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              padding 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 /* Stuck Mode: Fixed under BaseHeader navbar with High-End Glassmorphism */
@@ -87,9 +92,11 @@ body:has(.capaian-page-wrapper)::after {
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
-  height: 56px !important;
+  height: var(--stuck-hero-height, 56px) !important;
+  min-height: var(--stuck-hero-height, 56px) !important;
+  max-height: var(--stuck-hero-height, 56px) !important;
   z-index: 1020 !important;
-  padding: 0.55rem 0 !important;
+  padding: 0 !important;
   margin: 0 !important;
   display: flex !important;
   align-items: center !important;
@@ -102,10 +109,14 @@ body:has(.capaian-page-wrapper)::after {
 
 .capaian-hero.is-stuck .container {
   width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .capaian-hero.is-stuck .capaian-hero-content {
   width: 100% !important;
+  height: 100% !important;
   display: flex !important;
   align-items: center !important;
   margin: 0 !important;
@@ -139,13 +150,12 @@ body:has(.capaian-page-wrapper)::after {
   width: 100%;
   height: 2px;
   border-radius: 0;
-  background: linear-gradient(90deg, 
-      transparent 0%, 
-      rgba(45, 212, 191, 0.25) 10%, 
-      #2dd4bf 50%, 
-      rgba(45, 212, 191, 0.25) 90%, 
-      transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(45, 212, 191, 0.25) 10%,
+      #2dd4bf 50%,
+      rgba(45, 212, 191, 0.25) 90%,
+      transparent 100%);
   box-shadow: 0 0 12px #2dd4bf;
   pointer-events: none;
   z-index: 10;
@@ -277,8 +287,17 @@ body:has(.capaian-page-wrapper)::after {
 }
 
 @keyframes capaian-pulse-glow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.2); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
 }
 
 /* Title & Subtitle */
@@ -496,6 +515,7 @@ body:has(.capaian-page-wrapper)::after {
 }
 
 @media (max-width: 991.98px) {
+
   .capaian-main-container .capaian-sidebar-col,
   .capaian-main-container .capaian-content-col {
     flex: 0 0 100% !important;
@@ -523,6 +543,7 @@ body:has(.capaian-page-wrapper)::after {
 .capaian-sidebar-sticky::-webkit-scrollbar {
   width: 4px;
 }
+
 .capaian-sidebar-sticky::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
@@ -566,8 +587,8 @@ body:has(.capaian-page-wrapper)::after {
   visibility: hidden;
   transform: translateY(-4px);
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.2s;
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0.2s;
   z-index: 1050;
   display: flex;
   align-items: center;
@@ -733,8 +754,8 @@ body:has(.capaian-page-wrapper)::after {
   visibility: hidden;
   transform: translateY(3px);
   transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.18s;
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0.18s;
   z-index: 1060;
   display: flex;
   align-items: center;
@@ -798,9 +819,20 @@ body:has(.capaian-page-wrapper)::after {
   flex-shrink: 0;
 }
 
-.dot-emerald { background: #10b981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.5); }
-.dot-teal { background: #0d9488; box-shadow: 0 0 6px rgba(13, 148, 136, 0.5); }
-.dot-indigo { background: #6366f1; box-shadow: 0 0 6px rgba(99, 102, 241, 0.5); }
+.dot-emerald {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+}
+
+.dot-teal {
+  background: #0d9488;
+  box-shadow: 0 0 6px rgba(13, 148, 136, 0.5);
+}
+
+.dot-indigo {
+  background: #6366f1;
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.5);
+}
 
 /* --------------------------------------------------------------------------
    4. CONTENT CARDS & METRICS
@@ -905,10 +937,21 @@ body:has(.capaian-page-wrapper)::after {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
 }
 
-.metric-box.border-teal:hover { border-color: #0d9488; }
-.metric-box.border-emerald:hover { border-color: #10b981; }
-.metric-box.border-indigo:hover { border-color: #6366f1; }
-.metric-box.border-amber:hover { border-color: #f59e0b; }
+.metric-box.border-teal:hover {
+  border-color: #0d9488;
+}
+
+.metric-box.border-emerald:hover {
+  border-color: #10b981;
+}
+
+.metric-box.border-indigo:hover {
+  border-color: #6366f1;
+}
+
+.metric-box.border-amber:hover {
+  border-color: #f59e0b;
+}
 
 .metric-icon-wrap {
   width: 44px;
@@ -921,14 +964,37 @@ body:has(.capaian-page-wrapper)::after {
   font-size: 1.35rem;
 }
 
-.bg-teal-subtle { background: #ccfbf1 !important; }
-.text-teal { color: #0d9488 !important; }
-.bg-emerald-subtle { background: #d1fae5 !important; }
-.text-emerald { color: #059669 !important; }
-.bg-indigo-subtle { background: #e0e7ff !important; }
-.text-indigo { color: #4f46e5 !important; }
-.bg-amber-subtle { background: #fef3c7 !important; }
-.text-amber { color: #d97706 !important; }
+.bg-teal-subtle {
+  background: #ccfbf1 !important;
+}
+
+.text-teal {
+  color: #0d9488 !important;
+}
+
+.bg-emerald-subtle {
+  background: #d1fae5 !important;
+}
+
+.text-emerald {
+  color: #059669 !important;
+}
+
+.bg-indigo-subtle {
+  background: #e0e7ff !important;
+}
+
+.text-indigo {
+  color: #4f46e5 !important;
+}
+
+.bg-amber-subtle {
+  background: #fef3c7 !important;
+}
+
+.text-amber {
+  color: #d97706 !important;
+}
 
 .metric-val {
   font-size: 1.65rem;
@@ -1023,10 +1089,21 @@ body:has(.capaian-page-wrapper)::after {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.bg-teal { background: #0d9488 !important; }
-.bg-emerald { background: #10b981 !important; }
-.bg-indigo { background: #6366f1 !important; }
-.bg-amber { background: #f59e0b !important; }
+.bg-teal {
+  background: #0d9488 !important;
+}
+
+.bg-emerald {
+  background: #10b981 !important;
+}
+
+.bg-indigo {
+  background: #6366f1 !important;
+}
+
+.bg-amber {
+  background: #f59e0b !important;
+}
 
 .timeline-line {
   position: absolute;
@@ -1261,9 +1338,11 @@ body:has(.capaian-page-wrapper)::after {
   0% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
   }
+
   70% {
     box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
   }
@@ -1449,8 +1528,13 @@ body:has(.capaian-page-wrapper)::after {
 }
 
 @keyframes metricShimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @media (max-width: 576px) {
@@ -1458,20 +1542,24 @@ body:has(.capaian-page-wrapper)::after {
     flex-direction: column;
     align-items: flex-start;
   }
+
   .capaian-sync-actions {
     width: 100%;
     justify-content: space-between;
   }
+
   .timeline-row {
     flex-direction: column;
     gap: 0.35rem;
   }
+
   .timeline-time-col {
     width: 100%;
     align-items: flex-start;
     flex-direction: row;
     gap: 0.5rem;
   }
+
   .timeline-node-col {
     display: none;
   }

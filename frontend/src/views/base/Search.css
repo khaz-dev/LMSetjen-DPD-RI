@@ -52,13 +52,18 @@ body:has(.search-compact-wrapper)::after {
 /* ==========================================================================
    1. COMPACT HERO SECTION & STICKY HERO SLOT ARCHITECTURE
    ========================================================================== */
-/* Hero Slot anchor: guarantees permanent 274px space in document flow so fixing hero causes 0 layout shift */
+/* Hero Slot anchor: dynamic space matching measured expanded hero height */
 .search-hero-slot {
-    min-height: 274px;
+    min-height: var(--hero-expanded-height, 274px);
     position: relative;
     z-index: 2;
     width: 100%;
     margin-bottom: 0;
+}
+
+/* Seamless backdrop continuation: matches search-main-content so zero seam or silhouette bleed can ever show */
+.search-hero-slot.is-stuck {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%);
 }
 
 /* Container alignment with Main Navigation header-container (1400px width, 1.25rem padding) */
@@ -82,26 +87,37 @@ body:has(.search-compact-wrapper)::after {
     overflow: hidden;
     margin-bottom: 0;
     width: 100%;
-    transition: background 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-                padding 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background 0.2s ease,
+                box-shadow 0.2s ease,
+                border-color 0.2s ease;
 }
 
-/* Stuck Mode: Fixed under BaseHeader navbar with High-End Glassmorphism */
+/* Stuck Mode: Fixed under BaseHeader navbar with High-End Glassmorphism and exact height lock */
 .search-compact-hero.is-stuck {
     position: fixed !important;
     top: var(--header-height, 60px) !important;
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
+    height: var(--stuck-hero-height, 58px) !important;
+    min-height: var(--stuck-hero-height, 58px) !important;
+    max-height: var(--stuck-hero-height, 58px) !important;
     z-index: 1020 !important;
-    padding: 0.55rem 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
     background: linear-gradient(135deg, rgba(6, 60, 55, 0.95) 0%, rgba(13, 148, 136, 0.93) 50%, rgba(15, 118, 110, 0.96) 100%) !important;
     backdrop-filter: blur(18px) saturate(190%) !important;
     -webkit-backdrop-filter: blur(18px) saturate(190%) !important;
     box-shadow: 0 10px 30px -5px rgba(6, 60, 55, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+.search-compact-hero.is-stuck .container {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
 }
 
 /* Luminous Bottom Edge Glow */
@@ -128,42 +144,19 @@ body:has(.search-compact-wrapper)::after {
 .search-compact-hero.is-stuck .search-hero-inner {
     width: 100% !important;
     max-width: 100% !important;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    text-align: left;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1.5rem !important;
+    text-align: left !important;
 }
 
-/* Collapse elements smoothly in stuck mode */
-.search-compact-hero.is-stuck .search-hero-badge {
-    max-height: 0 !important;
-    opacity: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    transform: translateY(-8px) !important;
-    pointer-events: none !important;
-}
-
-.search-compact-hero.is-stuck .search-hero-subtitle {
-    max-height: 0 !important;
-    opacity: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    transform: translateY(-4px) !important;
-    pointer-events: none !important;
-}
-
+/* Clean instant collapse of unused elements in stuck mode to eliminate height lag */
+.search-compact-hero.is-stuck .search-hero-badge,
+.search-compact-hero.is-stuck .search-hero-subtitle,
 .search-compact-hero.is-stuck .search-quick-tags {
-    max-height: 0 !important;
-    opacity: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    transform: translateY(-4px) !important;
-    pointer-events: none !important;
+    display: none !important;
 }
 
 /* Sleek compact title in stuck mode with glowing icon */
@@ -1638,7 +1631,7 @@ input.search-input-field::placeholder {
     }
 
     .search-hero-slot {
-        min-height: 250px;
+        min-height: var(--hero-expanded-height, 250px);
     }
 }
 
@@ -1657,7 +1650,7 @@ input.search-input-field::placeholder {
     }
 
     .search-hero-slot {
-        min-height: 220px;
+        min-height: var(--hero-expanded-height, 220px);
     }
 
     .search-cta-banner {

@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
 import RankedStudents from '../../components/Rankings/RankedStudents';
 import RankedInstructors from '../../components/Rankings/RankedInstructors';
-import useStickyHero from '../../hooks/useStickyHero';
 import './Rankings.css';
 
 /**
@@ -13,10 +12,13 @@ import './Rankings.css';
   */
 function Rankings() {
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'instructors' | 'students'
-  const { isScrolled, headerHeight } = useStickyHero(55);
+  const [headerHeight, setHeaderHeight] = useState(60);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const heroRef = useRef(null);
+  const [expandedHeroHeight, setExpandedHeroHeight] = useState(200);
 
   // Ensure body background is properly tinted for silhouette layer
-  React.useEffect(() => {
+  useEffect(() => {
     const originalBg = document.body.style.backgroundColor;
     document.body.style.backgroundColor = "#f1f5f9";
     return () => {
@@ -24,18 +26,108 @@ function Rankings() {
     };
   }, []);
 
+  // Dynamically track BaseHeader height
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      const headerEl = document.querySelector('.base-header');
+      if (headerEl) {
+        setHeaderHeight(headerEl.offsetHeight);
+      }
+    };
+
+    updateHeaderHeight();
+
+    let ro = null;
+    const headerEl = document.querySelector('.base-header');
+    if (headerEl && window.ResizeObserver) {
+      ro = new ResizeObserver(updateHeaderHeight);
+      ro.observe(headerEl);
+    }
+
+    window.addEventListener("resize", updateHeaderHeight);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", updateHeaderHeight);
+    };
+  }, []);
+
+  // Continuously measure true expanded hero height (adapts to tabs, screen resize, etc.)
+  useEffect(() => {
+    const heroEl = heroRef.current;
+    if (!heroEl) return;
+
+    const updateExpandedHeight = () => {
+      if (!isScrolled && heroEl.offsetHeight > 80) {
+        setExpandedHeroHeight(heroEl.offsetHeight);
+      }
+    };
+
+    updateExpandedHeight();
+
+    let ro = null;
+    if (typeof window !== "undefined" && window.ResizeObserver) {
+      ro = new ResizeObserver(updateExpandedHeight);
+      ro.observe(heroEl);
+    }
+
+    window.addEventListener("resize", updateExpandedHeight);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", updateExpandedHeight);
+    };
+  }, [isScrolled, activeTab]);
+
+  // Dynamic scroll observer for sticky hero with mathematically exact zero-gap alignment
+  useEffect(() => {
+    let ticking = false;
+    const STUCK_HERO_HEIGHT = 58;
+
+    const updateScrollState = () => {
+      // The stuck hero bottom edge in viewport sits at headerHeight + STUCK_HERO_HEIGHT
+      // The top of rankings-content-section in viewport sits at expandedHeroHeight - window.scrollY
+      // They meet seamlessly with 0 gap when:
+      // window.scrollY >= expandedHeroHeight - headerHeight - STUCK_HERO_HEIGHT
+      const threshold = Math.max(60, expandedHeroHeight - headerHeight - STUCK_HERO_HEIGHT);
+      setIsScrolled(window.scrollY >= threshold);
+      ticking = false;
+    };
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateScrollState);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    updateScrollState();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [expandedHeroHeight, headerHeight]);
+
   return (
     <>
       <BaseHeader />
-      <div className="rankings-page-wrapper">
+      <div 
+        className="rankings-page-wrapper"
+        style={{
+          '--header-height': `${headerHeight}px`,
+          '--hero-expanded-height': `${expandedHeroHeight}px`,
+          '--stuck-hero-height': '58px'
+        }}
+      >
         
         {/* Sticky Hero Slot prevents CLS layout shift */}
         <div 
-          className="rankings-hero-slot"
-          style={{ '--header-height': `${headerHeight}px` }}
+          className={`rankings-hero-slot ${isScrolled ? 'is-stuck' : ''}`}
         >
           {/* Hero Header - Compact & Eye-Catching with Sticky Scroll Behavior */}
-          <section className={`rankings-hero-section py-3 py-md-4 ${isScrolled ? 'is-stuck' : ''}`}>
+          <section 
+            ref={heroRef}
+            className={`rankings-hero-section py-3 py-md-4 ${isScrolled ? 'is-stuck' : ''}`}
+          >
             <div className="container">
               <div className="rankings-hero-inner">
                 <div className="rankings-hero-branding">

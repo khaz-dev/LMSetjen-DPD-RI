@@ -51,12 +51,18 @@ body:has(.rankings-page-wrapper)::after {
   padding-right: 1.25rem !important;
 }
 
-/* Hero Slot anchor: guarantees space in document flow so fixing hero causes 0 layout shift */
+/* Hero Slot anchor: dynamic space matching measured expanded hero height */
 .rankings-hero-slot {
-  min-height: 200px;
+  min-height: var(--hero-expanded-height, 200px);
   position: relative;
   z-index: 2;
   width: 100%;
+  margin-bottom: 0;
+}
+
+/* Seamless backdrop continuation: matches rankings-content-section so zero seam or silhouette bleed can ever show */
+.rankings-hero-slot.is-stuck {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(240, 253, 250, 0.58) 100%);
 }
 
 /* Compact & Eye-Catching Hero Section */
@@ -67,9 +73,10 @@ body:has(.rankings-page-wrapper)::after {
   position: relative;
   overflow: hidden;
   width: 100%;
-  transition: background 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              padding 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 0;
+  transition: background 0.2s ease,
+              box-shadow 0.2s ease,
+              border-color 0.2s ease;
 }
 
 .rankings-hero-inner {
@@ -77,20 +84,32 @@ body:has(.rankings-page-wrapper)::after {
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Stuck Mode: Fixed under BaseHeader navbar with High-End Glassmorphism */
+/* Stuck Mode: Fixed under BaseHeader navbar with High-End Glassmorphism and exact height lock */
 .rankings-hero-section.is-stuck {
   position: fixed !important;
   top: var(--header-height, 60px) !important;
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
+  height: var(--stuck-hero-height, 58px) !important;
+  min-height: var(--stuck-hero-height, 58px) !important;
+  max-height: var(--stuck-hero-height, 58px) !important;
   z-index: 1020 !important;
-  padding: 0.55rem 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
   background: linear-gradient(135deg, rgba(6, 60, 55, 0.95) 0%, rgba(13, 148, 136, 0.93) 50%, rgba(15, 118, 110, 0.96) 100%) !important;
   backdrop-filter: blur(18px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(18px) saturate(190%) !important;
   box-shadow: 0 10px 30px -5px rgba(6, 60, 55, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+.rankings-hero-section.is-stuck .container {
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 /* Luminous Bottom Edge Glow */
@@ -115,6 +134,9 @@ body:has(.rankings-page-wrapper)::after {
 
 /* Inner Layout in stuck mode */
 .rankings-hero-section.is-stuck .rankings-hero-inner {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -132,15 +154,10 @@ body:has(.rankings-page-wrapper)::after {
   min-width: 0 !important;
 }
 
+/* Clean instant collapse of unused elements in stuck mode to eliminate height lag */
 .rankings-hero-section.is-stuck .badge-rankings-pill,
 .rankings-hero-section.is-stuck .rankings-hero-subtitle {
   display: none !important;
-  max-height: 0 !important;
-  opacity: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  pointer-events: none !important;
 }
 
 .rankings-hero-section.is-stuck .rankings-hero-title {

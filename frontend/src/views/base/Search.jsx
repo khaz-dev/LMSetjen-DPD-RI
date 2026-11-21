@@ -46,6 +46,8 @@ function Search() {
     // Header height measurement & sticky hero state
     const [headerHeight, setHeaderHeight] = useState(60);
     const [isScrolled, setIsScrolled] = useState(false);
+    const heroRef = useRef(null);
+    const [expandedHeroHeight, setExpandedHeroHeight] = useState(274);
 
     const searchInputRef = useRef(null);
     const [searchParams, setSearchParams] = useSearchParams();
@@ -89,53 +91,63 @@ function Search() {
         };
     }, []);
 
-    // Scroll listener with RAF and magnetic snap
+    // Continuously measure true expanded hero height (adapts to category tags loading & screen resizes)
+    useEffect(() => {
+        const heroEl = heroRef.current;
+        if (!heroEl) return;
+
+        const updateExpandedHeight = () => {
+            if (!isScrolled && heroEl.offsetHeight > 100) {
+                setExpandedHeroHeight(heroEl.offsetHeight);
+            }
+        };
+
+        updateExpandedHeight();
+
+        let ro = null;
+        if (typeof window !== "undefined" && window.ResizeObserver) {
+            ro = new ResizeObserver(() => {
+                updateExpandedHeight();
+            });
+            ro.observe(heroEl);
+        }
+
+        window.addEventListener("resize", updateExpandedHeight);
+        return () => {
+            if (ro) ro.disconnect();
+            window.removeEventListener("resize", updateExpandedHeight);
+        };
+    }, [isScrolled, categories.length]);
+
+    // Dynamic scroll observer for sticky hero with mathematically exact zero-gap alignment
     useEffect(() => {
         let ticking = false;
-        let snapTimeout = null;
-        let isSnapping = false;
+        const STUCK_HERO_HEIGHT = 58;
 
-        const SNAP_STUCK_Y = 75;
-        const SNAP_MIDPOINT = 38;
-
-        const performSnap = () => {
-            if (isSnapping) return;
-            const currentY = window.scrollY;
-            // Only trigger snap if user stopped scrolling in the transition zone
-            if (currentY > 6 && currentY < SNAP_STUCK_Y) {
-                isSnapping = true;
-                const targetY = currentY >= SNAP_MIDPOINT ? SNAP_STUCK_Y : 0;
-                window.scrollTo({
-                    top: targetY,
-                    behavior: 'smooth'
-                });
-                setTimeout(() => {
-                    isSnapping = false;
-                }, 300);
-            }
+        const updateScrollState = () => {
+            // The stuck hero bottom edge sits at headerHeight + STUCK_HERO_HEIGHT
+            // The top of main-content in viewport sits at expandedHeroHeight - window.scrollY
+            // They meet seamlessly with 0 gap when:
+            // window.scrollY >= expandedHeroHeight - headerHeight - STUCK_HERO_HEIGHT
+            const threshold = Math.max(60, expandedHeroHeight - headerHeight - STUCK_HERO_HEIGHT);
+            setIsScrolled(window.scrollY >= threshold);
+            ticking = false;
         };
 
         const handleScroll = () => {
             if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    const scrollY = window.scrollY;
-                    setIsScrolled(scrollY >= 55);
-                    ticking = false;
-                });
+                window.requestAnimationFrame(updateScrollState);
                 ticking = true;
             }
-
-            // Magnetic snap debounce: automatically snaps if user scrolls slowly and stops in-between
-            clearTimeout(snapTimeout);
-            snapTimeout = setTimeout(performSnap, 80);
         };
 
         window.addEventListener("scroll", handleScroll, { passive: true });
+        updateScrollState();
+
         return () => {
             window.removeEventListener("scroll", handleScroll);
-            clearTimeout(snapTimeout);
         };
-    }, []);
+    }, [expandedHeroHeight, headerHeight]);
 
     // Fetch courses from API
     const fetchCourse = async () => {
@@ -573,12 +585,19 @@ function Search() {
 
             <div 
                 className="search-compact-wrapper"
-                style={{ '--header-height': `${headerHeight}px` }}
+                style={{ 
+                    '--header-height': `${headerHeight}px`,
+                    '--hero-expanded-height': `${expandedHeroHeight}px`,
+                    '--stuck-hero-height': '58px'
+                }}
             >
                 {/* Hero Slot acts as a permanent layout placeholder */}
-                <div className="search-hero-slot">
+                <div className={`search-hero-slot ${isScrolled ? 'is-stuck' : ''}`}>
                     {/* Compact & Eye-Catching Hero Section */}
-                    <section className={`search-compact-hero ${isScrolled ? 'is-stuck' : ''}`}>
+                    <section 
+                        ref={heroRef}
+                        className={`search-compact-hero ${isScrolled ? 'is-stuck' : ''}`}
+                    >
                         <div className="container">
                             <div className="search-hero-inner">
                                 {/* Top Badge & Header */}
