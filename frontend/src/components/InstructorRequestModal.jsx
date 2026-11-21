@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import apiInstance from '../utils/axios';
 import Toast from '../views/plugin/Toast';
 import './InstructorRequestModal.css';
@@ -32,12 +33,32 @@ const InstructorRequestModal = ({
   const [errors, setErrors] = useState({});
   const [isReapplying, setIsReapplying] = useState(false);
 
-  // Reset reapply flag when modal closes or existing request changes
+  // Reset reapply flag and manage body scroll lock & Escape key
   useEffect(() => {
     if (!show) {
       setIsReapplying(false);
+      return;
     }
-  }, [show]);
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !isSubmitting) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [show, isSubmitting, onClose]);
+
+  const renderPortal = (content) => {
+    return typeof document !== 'undefined' ? createPortal(content, document.body) : null;
+  };
 
   if (!show) {
     return null;
@@ -127,7 +148,7 @@ const InstructorRequestModal = ({
 
   // State 1: If user has existing pending request
   if (existingRequest && existingRequest.status === 'PENDING') {
-    return (
+    return renderPortal(
       <div className="instructor-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
         <div
           className="instructor-modal-content instructor-modal-status"
@@ -217,7 +238,7 @@ const InstructorRequestModal = ({
 
   // State 2: If user has rejected request (but not reapplying yet)
   if (existingRequest && existingRequest.status === 'REJECTED' && !isReapplying) {
-    return (
+    return renderPortal(
       <div className="instructor-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
         <div
           className="instructor-modal-content instructor-modal-status"
@@ -328,7 +349,7 @@ const InstructorRequestModal = ({
   }
 
   // State 3: Main request form (New request or reapplying)
-  return (
+  return renderPortal(
     <div className="instructor-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div
         className="instructor-modal-content"

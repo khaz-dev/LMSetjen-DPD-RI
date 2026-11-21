@@ -1,25 +1,32 @@
 /* Coming Soon Modal Styles */
 
 .coming-soon-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  backdrop-filter: blur(4px);
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 2147483647 !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+  padding: 1rem !important;
+  margin: 0 !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
 }
 
 .coming-soon-modal-overlay.show {
-  opacity: 1;
-  pointer-events: auto;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .coming-soon-modal-content {
@@ -30,6 +37,9 @@
   width: 90%;
   animation: slideUp 0.3s ease;
   overflow: hidden;
+  margin: auto !important;
+  position: relative !important;
+  z-index: 2147483647 !important;
 }
 
 @keyframes slideUp {

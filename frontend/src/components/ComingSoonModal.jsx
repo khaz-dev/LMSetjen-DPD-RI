@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Toast from '../views/plugin/Toast';
 import './ComingSoonModal.css';
 
@@ -18,8 +19,26 @@ export const useComingSoon = (featureName = 'Fitur') => {
 };
 
 const ComingSoonModal = ({ featureName = 'Fitur', onClose }) => {
-  return (
-    <div className="coming-soon-modal-overlay" onClick={onClose}>
+  // Lock body scroll and handle Escape key
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
+  const modalContent = (
+    <div className="coming-soon-modal-overlay show" onClick={onClose}>
       <div className="coming-soon-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="coming-soon-modal-header">
           <h3>Segera Hadir!</h3>
@@ -47,6 +66,8 @@ const ComingSoonModal = ({ featureName = 'Fitur', onClose }) => {
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
 };
 
 export default ComingSoonModal;

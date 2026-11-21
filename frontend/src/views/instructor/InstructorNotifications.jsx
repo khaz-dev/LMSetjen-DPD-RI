@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import BaseHeader from '../partials/BaseHeader';
 import Footer from '../partials/Footer';
@@ -36,6 +37,25 @@ function InstructorNotifications() {
     const [pointsData, setPointsData] = useState(null);
     const [loadingPoints, setLoadingPoints] = useState(false);
     const [showPointsModal, setShowPointsModal] = useState(false);
+
+    // Lock body scroll and handle Escape key when points modal is open
+    useEffect(() => {
+        if (!showPointsModal) return;
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setShowPointsModal(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.body.style.overflow = originalOverflow;
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [showPointsModal]);
 
     // Activity type options - comprehensive list with category and icon mappings
     const activityTypes = [
@@ -782,9 +802,9 @@ function InstructorNotifications() {
                             </div>
 
                             {/* =========================================================================
-                                4. MODAL RINCIAN POIN & GAMIFIKASI (Enhanced & Compact)
+                                4. MODAL RINCIAN POIN & GAMIFIKASI (Enhanced & Compact - Portaled to document.body)
                                 ========================================================================= */}
-                            {showPointsModal && (
+                            {showPointsModal && typeof document !== 'undefined' && createPortal(
                                 <div className="points-modal-overlay" onClick={() => setShowPointsModal(false)}>
                                     <div className="points-modal-card" onClick={(e) => e.stopPropagation()}>
                                         <div className="points-modal-header">
@@ -896,7 +916,8 @@ function InstructorNotifications() {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div>,
+                                document.body
                             )}
 
                         </div>

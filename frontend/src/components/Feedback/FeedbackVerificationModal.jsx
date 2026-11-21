@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './FeedbackVerificationModal.css';
 import Toast from '../../views/plugin/Toast';
 import useAxios from '../../utils/useAxios';
@@ -21,14 +22,29 @@ const FeedbackVerificationModal = ({ isOpen, onClose, feedbackData, onSuccess })
     const [dotStates, setDotStates] = useState([false, false, false, false]); // Track which dots clicked
     const [showSummary, setShowSummary] = useState(true);
 
-    // Reset state when modal opens
+    // Reset state & lock body scroll when modal opens
     useEffect(() => {
         if (isOpen) {
             setVerificationState(0);
             setDotStates([false, false, false, false]);
             setShowSummary(true);
+
+            const originalOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+
+            const handleKeyDown = (e) => {
+                if (e.key === 'Escape' && !isSubmitting) {
+                    onClose();
+                }
+            };
+            window.addEventListener('keydown', handleKeyDown);
+
+            return () => {
+                document.body.style.overflow = originalOverflow;
+                window.removeEventListener('keydown', handleKeyDown);
+            };
         }
-    }, [isOpen]);
+    }, [isOpen, isSubmitting, onClose]);
 
     // Handle dot click - must be clicked in sequence
     const handleDotClick = (index) => {
@@ -126,7 +142,7 @@ const FeedbackVerificationModal = ({ isOpen, onClose, feedbackData, onSuccess })
 
     const summary = getFeedbackSummary();
 
-    return (
+    const modalContent = (
         <>
             {/* Backdrop */}
             <div className="verification-modal-backdrop" onClick={onClose}></div>
@@ -239,6 +255,8 @@ const FeedbackVerificationModal = ({ isOpen, onClose, feedbackData, onSuccess })
             </div>
         </>
     );
+
+    return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
 };
 
 export default FeedbackVerificationModal;

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { switchRole } from '../utils/roleUtils';
 import Toast from '../views/plugin/Toast';
 import './RoleSelectionModal.css';
@@ -27,6 +28,25 @@ const RoleSelectionModal = ({
 }) => {
   const [selectedRole, setSelectedRole] = useState(currentRole);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Lock body scroll and handle Escape key when modal is open
+  useEffect(() => {
+    if (!show || !roles || roles.length === 0) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !isLoading) {
+        onCancel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [show, roles, isLoading, onCancel]);
 
   if (!show || !roles || roles.length === 0) {
     return null;
@@ -117,7 +137,7 @@ const RoleSelectionModal = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div className="role-selection-modal-overlay" onClick={onCancel}>
       <div 
         className="role-selection-modal-content" 
@@ -203,6 +223,8 @@ const RoleSelectionModal = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
 };
 
 export default React.memo(RoleSelectionModal);

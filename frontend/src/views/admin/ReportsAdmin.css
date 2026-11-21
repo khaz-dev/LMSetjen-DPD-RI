@@ -855,18 +855,24 @@ input.search-input:focus {
    MODERN DETAIL MODAL
    ======================================== */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1050;
-    padding: 1rem;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 2147483647 !important;
+    padding: 1rem !important;
+    margin: 0 !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
 }
 
 .modern-detail-modal {
@@ -878,6 +884,9 @@ input.search-input:focus {
     max-height: 90vh;
     display: flex;
     flex-direction: column;
+    margin: auto !important;
+    position: relative !important;
+    z-index: 2147483647 !important;
     animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
 }

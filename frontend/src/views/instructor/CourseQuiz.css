@@ -1165,19 +1165,24 @@
    ================================ */
 
 .quiz-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1050;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    padding: 1rem;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 2147483647 !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    padding: 1rem !important;
+    margin: 0 !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
     animation: quizModalFadeIn 0.2s ease-out;
 }
 
@@ -1193,6 +1198,9 @@
     width: 100%;
     max-width: 590px;
     max-height: 92vh;
+    margin: auto !important;
+    position: relative !important;
+    z-index: 2147483647 !important;
     display: flex;
     flex-direction: column;
     overflow: hidden;

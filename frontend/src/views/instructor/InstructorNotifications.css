@@ -1023,31 +1023,43 @@
    5. GAMIFICATION POINTS MODAL (Compact & Polished)
    ========================================================================== */
 .points-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(5px);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.25rem;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    z-index: 2147483647 !important; /* Topmost possible z-index */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1.25rem !important;
+    margin: 0 !important;
+    overflow-y: auto !important;
     animation: fadeInModal 0.2s ease;
+    box-sizing: border-box !important;
 }
 
 .points-modal-card {
-    background: #ffffff;
-    border-radius: 18px;
-    width: 100%;
-    max-width: 640px;
-    max-height: 85vh;
-    overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.28);
-    display: flex;
-    flex-direction: column;
+    background: #ffffff !important;
+    border-radius: 18px !important;
+    width: 100% !important;
+    max-width: 640px !important;
+    max-height: 85vh !important;
+    overflow: hidden !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: auto !important; /* Perfect vertical & horizontal centering */
+    position: relative !important;
+    z-index: 2147483647 !important;
+    transform: none !important;
 }
 
 .points-modal-header {

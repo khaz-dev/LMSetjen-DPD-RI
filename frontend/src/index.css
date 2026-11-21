@@ -1238,3 +1238,53 @@ body.module-player-active {
   margin-top: 0 !important;
   margin: 0 !important;
 }
+
+/* ==========================================================================
+   7. GLOBAL MODAL CENTERING & TOPMOST STACKING RULES
+   Guarantees that points-modal-card and all modal dialogs appear dead-center
+   vertically & horizontally on the active viewport, and on the topmost z-layer
+   so no header, sidebar, floating widget, or other elements can ever overlap them.
+   ========================================================================== */
+.points-modal-overlay,
+.modal-overlay-modern,
+.modal-overlay,
+.instructor-modal-overlay,
+.role-selection-modal-overlay,
+.coming-soon-modal-overlay,
+.fdb-modal-overlay,
+.ace-modal-overlay,
+.quiz-modal-overlay,
+.icl-print-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 2147483647 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.points-modal-card,
+.instructor-modal-content,
+.role-selection-modal-content,
+.coming-soon-modal-content,
+.fdb-modal-container,
+.ace-modal-container,
+.modern-detail-modal,
+.rejection-modal,
+.quiz-modal,
+.user-admin-modal-content,
+.modal-content-modern {
+  margin: auto !important;
+  position: relative !important;
+  z-index: 2147483647 !important;
+  transform: none;
+}
