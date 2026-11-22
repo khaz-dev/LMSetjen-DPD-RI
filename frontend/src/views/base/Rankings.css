@@ -407,3 +407,40 @@ body:has(.rankings-page-wrapper)::after {
   justify-content: center;
   line-height: 1;
 }
+
+/* Custom Outline Success Button for Instructor Profile Link */
+.btn-outline-success {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.25rem;
+  color: #15803d !important;
+  border: 1.5px solid #16a34a !important;
+  background-color: transparent !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  line-height: 1.25 !important;
+  text-decoration: none !important;
+  vertical-align: middle !important;
+}
+
+.btn-outline-success:hover {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25) !important;
+  transform: translateY(-1px);
+}
+
+.btn-outline-success i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Gamification Role Toggle Pills */
+.card-gamification-tabs button {
+  font-size: 0.78rem;
+  transition: all 0.2s ease-in-out;
+}
+

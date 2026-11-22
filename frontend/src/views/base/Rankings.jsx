@@ -12,10 +12,20 @@ import './Rankings.css';
   */
 function Rankings() {
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'instructors' | 'students'
+  const [gamificationTab, setGamificationTab] = useState('student'); // 'student' | 'instructor'
   const [headerHeight, setHeaderHeight] = useState(60);
   const [isScrolled, setIsScrolled] = useState(false);
   const heroRef = useRef(null);
   const [expandedHeroHeight, setExpandedHeroHeight] = useState(200);
+
+  // Auto-sync gamification tab when main filter changes
+  useEffect(() => {
+    if (activeTab === 'instructors') {
+      setGamificationTab('instructor');
+    } else if (activeTab === 'students') {
+      setGamificationTab('student');
+    }
+  }, [activeTab]);
 
   // Ensure body background is properly tinted for silhouette layer
   useEffect(() => {
@@ -303,114 +313,245 @@ function Rankings() {
             <div className="card border-0 shadow-sm rounded-4 p-3 p-md-4 mt-2" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f0fdfa 100%)', borderColor: '#ccfbf1' }}>
               <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
                 <div className="d-flex align-items-center gap-3">
-                  <div className="rule-icon-box" style={{ background: '#ccfbf1', color: '#0f766e', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <i className="fas fa-trophy fs-5"></i>
+                  <div 
+                    className="rule-icon-box" 
+                    style={{ 
+                      background: gamificationTab === 'instructor' ? '#dcfce7' : '#ccfbf1', 
+                      color: gamificationTab === 'instructor' ? '#15803d' : '#0f766e', 
+                      width: '48px', 
+                      height: '48px', 
+                      borderRadius: '12px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center' 
+                    }}
+                  >
+                    <i className={`${gamificationTab === 'instructor' ? 'fas fa-chalkboard-user' : 'fas fa-trophy'} fs-5`}></i>
                   </div>
                   <div>
-                    <h6 className="fw-bold mb-0 text-dark fs-6">Jenjang Level Kompetensi ASN & Milestone Badges Manta AI</h6>
+                    <h6 className="fw-bold mb-0 text-dark fs-6">
+                      {gamificationTab === 'instructor' 
+                        ? 'Jenjang Reputasi Widyaiswara & Teaching Milestone Badges'
+                        : 'Jenjang Level Kompetensi ASN & Milestone Badges Manta AI'}
+                    </h6>
                     <span className="small text-muted" style={{ fontSize: '0.8rem' }}>
-                      Sistem ranking terintegrasi secara otomatis dengan kurva level ASN, Study Streak, dan 8 Lencana Prestasi belajar.
+                      {gamificationTab === 'instructor'
+                        ? 'Sistem ranking terintegrasi secara otomatis dengan 5 tingkat reputasi pengajar, evaluasi kepuasan peserta, dan 8 Lencana Pengajaran.'
+                        : 'Sistem ranking terintegrasi secara otomatis dengan kurva level ASN, Study Streak, dan 8 Lencana Prestasi belajar.'}
                     </span>
                   </div>
                 </div>
                 <div className="flex-shrink-0">
-                  <Link 
-                    to="/student/profile/" 
-                    className="btn btn-sm btn-outline-teal rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center justify-content-center"
+                  {gamificationTab === 'instructor' ? (
+                    <Link 
+                      to="/instructor/profile/" 
+                      className="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center justify-content-center shadow-xs"
+                    >
+                      <i className="fas fa-chalkboard-user me-2"></i>
+                      <span>Buka Profil Pengajar Saya</span>
+                    </Link>
+                  ) : (
+                    <Link 
+                      to="/student/profile/" 
+                      className="btn btn-sm btn-outline-teal rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center justify-content-center shadow-xs"
+                    >
+                      <i className="fas fa-id-card me-2"></i>
+                      <span>Buka Profil & Lencana Saya</span>
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {/* Role Switcher Tabs inside Card */}
+              <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div className="card-gamification-tabs d-inline-flex p-1 rounded-pill bg-white border shadow-xs" role="tablist">
+                  <button
+                    type="button"
+                    className={`btn btn-sm rounded-pill px-3 py-1 fw-bold ${
+                      gamificationTab === 'student' 
+                        ? 'btn-success text-white shadow-xs' 
+                        : 'text-secondary border-0 bg-transparent'
+                    }`}
+                    onClick={() => setGamificationTab('student')}
                   >
-                    <i className="fas fa-id-card me-2"></i>
-                    <span>Buka Profil & Lencana Saya</span>
-                  </Link>
+                    <i className="fas fa-graduation-cap me-1"></i> Pembelajar ASN (Peserta)
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn-sm rounded-pill px-3 py-1 fw-bold ${
+                      gamificationTab === 'instructor' 
+                        ? 'btn-success text-white shadow-xs' 
+                        : 'text-secondary border-0 bg-transparent'
+                    }`}
+                    onClick={() => setGamificationTab('instructor')}
+                  >
+                    <i className="fas fa-chalkboard-user me-1"></i> Widyaiswara / Pengajar (Instruktur)
+                  </button>
                 </div>
+                <span className="badge bg-white text-muted border px-3 py-1 small rounded-pill shadow-xs">
+                  <i className="fas fa-circle-info me-1 text-teal"></i>
+                  {gamificationTab === 'student' ? 'Standar 6 Tingkat Kompetensi ASN' : 'Standar 5 Jenjang Pengajar Parlemen'}
+                </span>
               </div>
 
-              {/* 6 Level Progression Tier Pills */}
-              <div className="mb-3">
-                <small className="fw-bold text-muted text-uppercase d-block mb-2" style={{ fontSize: '0.72rem' }}>
-                  6 Tingkatan Level Pembelajar ASN (Dikalibrasi Berimbang):
-                </small>
-                <div className="row g-2">
-                  <div className="col-6 col-md-4 col-lg-2">
-                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
-                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#10b981', fontSize: '0.65rem' }}>
-                        <i className="fas fa-seedling me-1"></i> Level 1
-                      </span>
-                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Pratama</div>
-                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>0 – 249 XP</small>
+              {/* Level Progression Tier Pills */}
+              {gamificationTab === 'student' ? (
+                /* 6 Level Progression Tier Pills for Students */
+                <div className="mb-3">
+                  <small className="fw-bold text-muted text-uppercase d-block mb-2" style={{ fontSize: '0.72rem' }}>
+                    6 Tingkatan Level Pembelajar ASN (Dikalibrasi Berimbang):
+                  </small>
+                  <div className="row g-2">
+                    <div className="col-6 col-md-4 col-lg-2">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#10b981', fontSize: '0.65rem' }}>
+                          <i className="fas fa-seedling me-1"></i> Level 1
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Pratama</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>0 – 249 XP</small>
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-6 col-md-4 col-lg-2">
-                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
-                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#0ea5e9', fontSize: '0.65rem' }}>
-                        <i className="fas fa-shield-halved me-1"></i> Level 2
-                      </span>
-                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Muda</div>
-                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>250 – 599 XP</small>
+                    <div className="col-6 col-md-4 col-lg-2">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#0ea5e9', fontSize: '0.65rem' }}>
+                          <i className="fas fa-shield-halved me-1"></i> Level 2
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Muda</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>250 – 599 XP</small>
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-6 col-md-4 col-lg-2">
-                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
-                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#6366f1', fontSize: '0.65rem' }}>
-                        <i className="fas fa-gem me-1"></i> Level 3
-                      </span>
-                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Madya</div>
-                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>600 – 1.199 XP</small>
+                    <div className="col-6 col-md-4 col-lg-2">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#6366f1', fontSize: '0.65rem' }}>
+                          <i className="fas fa-gem me-1"></i> Level 3
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Madya</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>600 – 1.199 XP</small>
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-6 col-md-4 col-lg-2">
-                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
-                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#8b5cf6', fontSize: '0.65rem' }}>
-                        <i className="fas fa-medal me-1"></i> Level 4
-                      </span>
-                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Utama</div>
-                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>1.200 – 2.499 XP</small>
+                    <div className="col-6 col-md-4 col-lg-2">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#8b5cf6', fontSize: '0.65rem' }}>
+                          <i className="fas fa-medal me-1"></i> Level 4
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Aparatur Utama</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>1.200 – 2.499 XP</small>
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-6 col-md-4 col-lg-2">
-                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
-                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#f59e0b', fontSize: '0.65rem' }}>
-                        <i className="fas fa-crown me-1"></i> Level 5
-                      </span>
-                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Ksatria Parlemen</div>
-                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>2.500 – 4.499 XP</small>
+                    <div className="col-6 col-md-4 col-lg-2">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#f59e0b', fontSize: '0.65rem' }}>
+                          <i className="fas fa-crown me-1"></i> Level 5
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Ksatria Parlemen</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>2.500 – 4.499 XP</small>
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-6 col-md-4 col-lg-2">
-                    <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
-                      <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#eab308', fontSize: '0.65rem' }}>
-                        <i className="fas fa-trophy me-1"></i> Level 6
-                      </span>
-                      <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Pakar Reformasi</div>
-                      <small className="text-muted" style={{ fontSize: '0.68rem' }}>4.500+ XP</small>
+                    <div className="col-6 col-md-4 col-lg-2">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#eab308', fontSize: '0.65rem' }}>
+                          <i className="fas fa-trophy me-1"></i> Level 6
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Pakar Reformasi</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>4.500+ XP</small>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* 5 Level Progression Tier Pills for Instructors */
+                <div className="mb-3">
+                  <small className="fw-bold text-muted text-uppercase d-block mb-2" style={{ fontSize: '0.72rem' }}>
+                    5 Tingkat Jenjang Widyaiswara & Pengajar DPD RI (Berdasarkan Reputasi & Dampak):
+                  </small>
+                  <div className="row g-2">
+                    <div className="col-6 col-md-4 col-lg">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#0ea5e9', fontSize: '0.65rem' }}>
+                          <i className="fas fa-chalkboard-user me-1"></i> Level 1
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Widyaiswara Pratama</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>0 – 249 Poin</small>
+                      </div>
+                    </div>
+                    <div className="col-6 col-md-4 col-lg">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#10b981', fontSize: '0.65rem' }}>
+                          <i className="fas fa-award me-1"></i> Level 2
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Fasilitator Terampil</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>250 – 599 Poin</small>
+                      </div>
+                    </div>
+                    <div className="col-6 col-md-4 col-lg">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#6366f1', fontSize: '0.65rem' }}>
+                          <i className="fas fa-gem me-1"></i> Level 3
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Mentor Teladan</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>600 – 1.199 Poin</small>
+                      </div>
+                    </div>
+                    <div className="col-6 col-md-4 col-lg">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#8b5cf6', fontSize: '0.65rem' }}>
+                          <i className="fas fa-medal me-1"></i> Level 4
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Pakar Kurikulum Parlemen</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>1.200 – 2.499 Poin</small>
+                      </div>
+                    </div>
+                    <div className="col-12 col-md-4 col-lg">
+                      <div className="p-2 rounded-3 bg-white border text-center h-100 shadow-xs">
+                        <span className="badge rounded-pill text-white mb-1" style={{ backgroundColor: '#f59e0b', fontSize: '0.65rem' }}>
+                          <i className="fas fa-crown me-1"></i> Level 5
+                        </span>
+                        <div className="fw-bold text-dark small" style={{ fontSize: '0.75rem' }}>Maestro Widyaiswara DPD RI</div>
+                        <small className="text-muted" style={{ fontSize: '0.68rem' }}>2.500+ Poin</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-              {/* 8 Badges Mention */}
-              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top">
-                <small className="text-muted" style={{ fontSize: '0.75rem' }}>
-                  <i className="fas fa-certificate text-teal me-1"></i>
-                  <strong>8 Lencana Prestasi Manta:</strong> Langkah Perdana • Pembelajar Tangguh • Jawara Evaluasi • Lulusan Kompeten • Ksatria 20 JP • Penjelajah Pengetahuan • Maestro Recall • Multitalenta Parlemen
-                </small>
-                <button 
-                  type="button" 
-                  className="btn btn-link btn-sm p-0 text-decoration-none fw-semibold text-teal" 
-                  style={{ fontSize: '0.75rem' }}
-                  onClick={() => {
-                    const prompt = 'Apa saja lencana prestasi yang sudah saya raih?';
-                    if (typeof window !== 'undefined') {
-                      if (typeof window.openMantaChat === 'function') {
-                        window.openMantaChat(prompt);
-                      } else {
-                        window.dispatchEvent(new CustomEvent('manta_open_chat', { detail: { prompt } }));
-                        window.dispatchEvent(new CustomEvent('manta-open-chat', { detail: { prompt, query: prompt } }));
+              {/* 8 Badges Mention & Manta AI Interaction */}
+              <div className="d-flex align-items-center justify-content-between gap-3 pt-2 border-top">
+                <div className="flex-grow-1 min-w-0">
+                  <small className="text-muted d-block" style={{ fontSize: '0.75rem', lineHeight: '1.45' }}>
+                    <i className="fas fa-certificate text-teal me-1"></i>
+                    {gamificationTab === 'instructor' ? (
+                      <>
+                        <strong>8 Lencana Prestasi Pengajaran:</strong> Inisiator Modul • Pencetak Talenta ASN • Widyaiswara Bintang Lima • Jangkauan Parlemen Luas • Arsitek Kurikulum • Inovator E-Learning • Kolaborator AI Manta • Pemberdaya Kompetensi ASN
+                      </>
+                    ) : (
+                      <>
+                        <strong>8 Lencana Prestasi Manta:</strong> Langkah Perdana • Pembelajar Tangguh • Jawara Evaluasi • Lulusan Kompeten • Ksatria 20 JP • Penjelajah Pengetahuan • Maestro Recall • Multitalenta Parlemen
+                      </>
+                    )}
+                  </small>
+                </div>
+                <div className="flex-shrink-0 text-nowrap ms-auto">
+                  <button 
+                    type="button" 
+                    className="btn btn-link btn-sm p-0 text-decoration-none fw-semibold text-teal d-inline-flex align-items-center" 
+                    style={{ fontSize: '0.75rem' }}
+                    onClick={() => {
+                      const prompt = gamificationTab === 'instructor'
+                        ? 'Apa saja lencana pengajaran dan capaian widyaiswara yang sudah saya raih?'
+                        : 'Apa saja lencana prestasi yang sudah saya raih?';
+                      if (typeof window !== 'undefined') {
+                        if (typeof window.openMantaChat === 'function') {
+                          window.openMantaChat(prompt);
+                        } else {
+                          window.dispatchEvent(new CustomEvent('manta_open_chat', { detail: { prompt } }));
+                          window.dispatchEvent(new CustomEvent('manta-open-chat', { detail: { prompt, query: prompt } }));
+                        }
                       }
-                    }
-                  }}
-                >
-                  <i className="fas fa-comment-dots me-1"></i> Tanya Manta AI
-                </button>
+                    }}
+                  >
+                    <i className="fas fa-comment-dots me-1"></i> Tanya Manta AI
+                  </button>
+                </div>
               </div>
             </div>
 
