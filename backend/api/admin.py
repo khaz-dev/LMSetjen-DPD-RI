@@ -341,7 +341,7 @@ class InstructorPointsAdmin(admin.ModelAdmin):
     Admin interface for InstructorPoints ranking system.
     
     Points are automatically awarded via Django signals when:
-    - Course published: 50 points
+    - Course published: 100 points
     - Student enrollment: 10 points per student
     - Rating received: 10-50 points per rating
     

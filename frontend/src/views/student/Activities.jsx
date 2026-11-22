@@ -151,6 +151,8 @@ function Activities() {
                     params.append('success', filters.success);
                 }
 
+                params.append('page', page);
+                params.append('page_size', pageSize);
                 params.append('limit', pageSize);
                 params.append('offset', (page - 1) * pageSize);
 
@@ -393,7 +395,7 @@ function Activities() {
                                         </div>
                                         <div className="act-stat-chip-info">
                                             <span className="act-stat-chip-val">{pointsData?.summary?.quiz_score?.count || 0}</span>
-                                            <span className="act-stat-chip-lbl">Kuis & Ujian Lulus</span>
+                                            <span className="act-stat-chip-lbl">Kuis Lulus (Kursus)</span>
                                         </div>
                                     </div>
                                     <div className="act-stat-chip">
@@ -868,7 +870,7 @@ function Activities() {
                                                     </div>
                                                     <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1">
                                                         <i className="fas fa-trophy text-warning"></i>
-                                                        <span>Kuis & Ujian: <strong>{pointsData?.summary?.quiz_score?.count || 0}</strong> ({pointsData?.summary?.quiz_score?.points || 0} pt)</span>
+                                                        <span>Kuis & Ujian: <strong>{pointsData?.summary?.quiz_score?.count || 0}</strong> (Peringkat Kursus)</span>
                                                     </div>
                                                     <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1">
                                                         <i className="fas fa-star text-info"></i>

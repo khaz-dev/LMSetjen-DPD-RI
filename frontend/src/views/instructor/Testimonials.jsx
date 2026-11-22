@@ -187,7 +187,7 @@ function Testimonials() {
                                             </span>
                                         ) : currentTestimonial.status === 'approved' ? (
                                             <span className="badge rounded-pill badge-status-approved">
-                                                <i className="fas fa-check-circle me-1"></i> Disetujui (+50 Poin)
+                                                <i className="fas fa-check-circle me-1"></i> Disetujui (+20 Poin)
                                             </span>
                                         ) : currentTestimonial.status === 'pending' ? (
                                             <span className="badge rounded-pill badge-status-pending">
@@ -220,7 +220,7 @@ function Testimonials() {
                                                                 <strong className="text-success">Testimoni Anda Telah Disetujui & Tampil di Beranda!</strong>
                                                             </div>
                                                             <p className="small text-muted mb-0">
-                                                                Terima kasih telah memberikan ulasan. Testimoni ini dipublikasikan pada halaman utama portal LMSetjen DPD RI dan Anda telah memperoleh reward <strong>+50 Poin Instruktur</strong>.
+                                                                Terima kasih telah memberikan ulasan. Testimoni ini dipublikasikan pada halaman utama portal LMSetjen DPD RI dan Anda telah memperoleh reward <strong>+20 Poin Instruktur</strong>.
                                                             </p>
                                                         </div>
                                                     ) : currentTestimonial.status === 'pending' ? (
@@ -387,10 +387,10 @@ function Testimonials() {
                                                 <div className="points-highlight-box p-3 rounded mb-3">
                                                     <div className="d-flex align-items-center justify-content-between mb-1">
                                                         <span className="fw-semibold text-dark small">Reward Testimoni Platform</span>
-                                                        <span className="badge badge-points-reward">+50 Poin</span>
+                                                        <span className="badge badge-points-reward">+20 Poin</span>
                                                     </div>
                                                     <p className="small text-muted mb-0">
-                                                        Saat testimoni disetujui Admin, Anda otomatis mendapatkan <strong>50 Poin</strong> yang berkontribusi langsung pada akumulasi skor & peringkat Anda di Leaderboard Instruktur.
+                                                        Saat testimoni disetujui Admin, Anda otomatis mendapatkan <strong>20 Poin</strong> yang berkontribusi langsung pada akumulasi skor & peringkat Anda di Leaderboard Instruktur.
                                                     </p>
                                                 </div>
 

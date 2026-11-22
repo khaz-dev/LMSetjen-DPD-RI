@@ -786,11 +786,8 @@
     border-radius: 5px;
 }
 
-/* Points Pill (Gold) */
+/* Points Pill (Instructor: Gold, Student: Blue) */
 .act-pill-points {
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
     font-size: 0.72rem;
     font-weight: 700;
     padding: 0.15rem 0.5rem;
@@ -800,8 +797,26 @@
     gap: 0.25rem;
 }
 
-.act-pill-points i {
+.act-pill-points.instructor-points,
+.act-pill-points:not(.student-points) {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.act-pill-points.instructor-points i,
+.act-pill-points:not(.student-points) i {
     color: #d97706;
+}
+
+.act-pill-points.student-points {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.act-pill-points.student-points i {
+    color: #0284c7;
 }
 
 /* Status Pill */
@@ -1238,4 +1253,30 @@
         margin-left: 0;
         width: 100%;
     }
+}
+
+/* ==========================================================================
+   PENDING ACTION BANNER (INTEGRITY VERIFICATION)
+   ========================================================================== */
+.pending-action-banner {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 1px solid #fde68a !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.08);
+}
+
+.pending-action-banner .pending-banner-icon {
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+}
+
+.pending-action-banner .btn-warning {
+    background: #f59e0b;
+    border-color: #d97706;
+    color: #1e293b;
+    transition: all 0.2s ease;
+}
+
+.pending-action-banner .btn-warning:hover {
+    background: #d97706;
+    color: #ffffff;
+    transform: translateY(-1px);
 }

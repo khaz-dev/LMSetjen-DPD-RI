@@ -4402,8 +4402,9 @@ class StudentPoints(models.Model):
     ✨ PHASE 10.1: Ranking system integration
     Points awarded for:
     - Course completion: 100 points
-    - Quiz passed: 0-100 points (based on score %)
-    - Course rating: 50 points
+    - Course rating: 15 points
+    - Platform testimonial: 20 points
+    (Quiz mastery points are allocated to Course-specific Leaderboard)
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_points')
     
@@ -4516,7 +4517,7 @@ class StudentPoints(models.Model):
              persis sama dengan PointsAuditLog sehingga total poin di timeline tepat sama dengan StudentPoints.lifetime_points.
         """
         from collections import defaultdict
-        from django.db.models import Max
+        from django.db.models import Max, Q
         now = timezone.now()
         current_year = now.year
         current_month = now.month
@@ -4557,47 +4558,19 @@ class StudentPoints(models.Model):
             else:
                 seen_courses.add(c_log.course_id)
 
-        # 2. Kuis & Ujian: hanya skor tertinggi per kuis dari QuizAttempt yang lulus
-        passed_attempts = QuizAttempt.objects.filter(user=user, is_passed=True).select_related('quiz')
-        quiz_ids = set(passed_attempts.values_list('quiz_id', flat=True))
+        # 2. Pembersihan Poin Non-Global: Kuis, MantaType, & Mini-Game Kursus
+        # Sesuai kebijakan tata kelola kompetensi ASN Setjen DPD RI:
+        # - Kelulusan Kuis/Ujian difokuskan murni untuk pemeringkatan dalam kursus (Course Leaderboard).
+        # - Poin mini game edukasi kursus (TTS, Anagram, Word Search, dsb) dialokasikan untuk Course Leaderboard.
+        # - MantaType difokuskan murni untuk permainan arcade ketangkasan (tidak menambah XP global).
+        # Hapus seluruh audit log kuis, mantatype, dan points_earned siswa agar tidak masuk ke akumulasi StudentPoints global.
+        PointsAuditLog.objects.filter(
+            user=user,
+            points_type='student',
+            activity_type__in=['quiz_score', 'mantatype_reward', 'points_earned']
+        ).delete()
 
-        for q_id in quiz_ids:
-            best_score = QuizAttempt.objects.filter(user=user, quiz_id=q_id, is_passed=True).aggregate(Max('score'))['score__max']
-            if best_score is not None and best_score > 0:
-                score_pts = min(max(int(best_score), 0), 100)
-                q_obj = Quiz.objects.filter(id=q_id).first()
-                q_title = q_obj.title if q_obj else f"Quiz #{q_id}"
-                pal_qs = PointsAuditLog.objects.filter(
-                    user=user,
-                    points_type='student',
-                    activity_type='quiz_score',
-                    quiz_id=q_id
-                ).order_by('-points_awarded', '-awarded_at')
-
-                if pal_qs.exists():
-                    primary = pal_qs.first()
-                    if primary.points_awarded != score_pts:
-                        primary.points_awarded = score_pts
-                        primary.save(update_fields=['points_awarded'])
-                    for red in pal_qs[1:]:
-                        red.delete()
-                else:
-                    PointsAuditLog.objects.create(
-                        user=user,
-                        points_type='student',
-                        activity_type='quiz_score',
-                        points_awarded=score_pts,
-                        quiz_id=q_id,
-                        course_id=q_obj.course_id if q_obj else None,
-                        description=f"Quiz score {score_pts}% on: {q_title}"
-                    )
-
-        # Hapus audit log kuis yang kuis/attempt-nya sudah dihapus atau tidak lulus
-        for q_log in PointsAuditLog.objects.filter(user=user, points_type='student', activity_type='quiz_score'):
-            if q_log.quiz_id not in quiz_ids:
-                q_log.delete()
-
-        # 3. Ulasan / Rating Kursus: dari Review aktif siswa per kursus
+        # 3. Ulasan / Rating Kursus: dari Review aktif siswa per kursus (+15 Poin)
         active_course_reviews = Review.objects.filter(
             user=user,
             active=True,
@@ -4619,11 +4592,19 @@ class StudentPoints(models.Model):
                         user=user,
                         points_type='student',
                         activity_type='rating_given',
-                        points_awarded=50,
+                        points_awarded=15,
                         course_id=rev.course_id,
                         review_id=rev.id,
                         description=f"Gave {rev.rating}* rating on: {c_title}"
                     )
+                else:
+                    # Sinkronkan poin ulasan lama ke bobot baru (+15 Poin)
+                    PointsAuditLog.objects.filter(
+                        user=user,
+                        points_type='student',
+                        activity_type='rating_given',
+                        course_id=rev.course_id
+                    ).exclude(points_awarded=15).update(points_awarded=15)
 
         # Hapus audit log ulasan yang review-nya dihapus atau dinonaktifkan
         for r_log in PointsAuditLog.objects.filter(user=user, points_type='student', activity_type='rating_given', course_id__isnull=False):
@@ -4638,7 +4619,7 @@ class StudentPoints(models.Model):
             else:
                 seen_reviews.add(r_log.course_id)
 
-        # 4. Testimoni Platform: maksimal 1 per siswa dari Review aktif testimoni
+        # 4. Testimoni Platform: maksimal 1 per siswa dari Review aktif testimoni (+20 Poin)
         active_testi = Review.objects.filter(
             user=user,
             active=True,
@@ -4656,8 +4637,8 @@ class StudentPoints(models.Model):
         if active_testi:
             if testi_logs.exists():
                 primary = testi_logs.first()
-                if primary.points_awarded != 50:
-                    primary.points_awarded = 50
+                if primary.points_awarded != 20:
+                    primary.points_awarded = 20
                     primary.save(update_fields=['points_awarded'])
                 for red in testi_logs[1:]:
                     red.delete()
@@ -4666,7 +4647,7 @@ class StudentPoints(models.Model):
                     user=user,
                     points_type='student',
                     activity_type='platform_testimonial',
-                    points_awarded=50,
+                    points_awarded=20,
                     review_id=active_testi.id,
                     description=f"Review: {active_testi.rating}* on [PLATFORM TESTIMONIAL as student]"
                 )
@@ -4675,7 +4656,7 @@ class StudentPoints(models.Model):
                 red.delete()
 
         # 5. Hitung total aktual StudentPoints dari PointsAuditLog
-        valid_activities = ['course_completion', 'quiz_score', 'rating_given', 'platform_testimonial', 'points_earned', 'mantatype_reward']
+        valid_activities = ['course_completion', 'rating_given', 'platform_testimonial']
         valid_logs = PointsAuditLog.objects.filter(
             user=user,
             points_type='student',
@@ -4700,16 +4681,27 @@ class StudentPoints(models.Model):
 
         # 6. Sinkronisasi ActivityLog agar konsisten 100% dengan StudentPoints
         try:
-            # a. Nol-kan poin pada aktivitas yang bukan perolehan poin gamifikasi
+            # a. Nol-kan poin pada aktivitas yang bukan perolehan poin gamifikasi global resmi platform
             non_point_types = [
                 'lesson_completed', 'lesson_started', 'video_watched', 'video_completed',
                 'enrollment', 'question_asked', 'question_answered', 'search_query',
-                'content_liked', 'wishlist_added', 'discussion_participated'
+                'content_liked', 'wishlist_added', 'discussion_participated',
+                'quiz_attempted', 'quiz_passed', 'quiz_failed', 'points_earned'
             ]
             ActivityLog.objects.filter(
                 user=user,
+                role_at_time='student',
                 activity_type__in=non_point_types,
                 points_awarded__gt=0
+            ).update(points_awarded=0)
+
+            # Nol-kan seluruh poin MantaType dari ActivityLog
+            ActivityLog.objects.filter(
+                user=user,
+                role_at_time='student'
+            ).filter(
+                Q(title__icontains='MantaType') |
+                Q(description__icontains='MantaType')
             ).update(points_awarded=0)
 
             # b. Deduplikasi lesson_completed berulang
@@ -4780,38 +4772,15 @@ class StudentPoints(models.Model):
                 role_at_time='student'
             ).exclude(course_id__in=valid_cert_courses).update(points_awarded=0)
 
-            # e. Sinkronkan ActivityLog Kuis: hanya attempt dengan skor tertinggi yang memegang poin
-            for q_id in quiz_ids:
-                best_att = QuizAttempt.objects.filter(user=user, quiz_id=q_id, is_passed=True).order_by('-score', '-date_attempted').first()
-                if best_att and best_att.score > 0:
-                    best_pts = min(max(int(best_att.score), 0), 100)
-                    att_logs = ActivityLog.objects.filter(
-                        user=user,
-                        quiz_id=q_id,
-                        role_at_time='student',
-                        activity_type__in=['quiz_passed', 'quiz_attempted']
-                    ).order_by('-activity_date')
-
-                    matched = False
-                    for al in att_logs:
-                        if al.metadata.get('quiz_attempt_id') == best_att.id and not matched:
-                            if al.points_awarded != best_pts:
-                                al.points_awarded = best_pts
-                                al.save(update_fields=['points_awarded'])
-                            matched = True
-                        else:
-                            if al.points_awarded != 0:
-                                al.points_awarded = 0
-                                al.save(update_fields=['points_awarded'])
-
-            # Nol-kan kuis yang attempt-nya dihapus
+            # e. Nol-kan poin ActivityLog Kuis (kuis khusus digunakan di Course Leaderboard, bukan poin global platform)
             ActivityLog.objects.filter(
                 user=user,
-                activity_type__in=['quiz_passed', 'quiz_attempted'],
-                role_at_time='student'
-            ).exclude(quiz_id__in=quiz_ids).update(points_awarded=0)
+                activity_type__in=['quiz_passed', 'quiz_attempted', 'quiz_failed'],
+                role_at_time='student',
+                points_awarded__gt=0
+            ).update(points_awarded=0)
 
-            # f. Sinkronkan ActivityLog Ulasan Kursus
+            # f. Sinkronkan ActivityLog Ulasan Kursus (+15 Poin)
             for c_id in reviewed_course_ids:
                 r_obj = active_course_reviews.filter(course_id=c_id, role='student').first()
                 if r_obj:
@@ -4823,8 +4792,8 @@ class StudentPoints(models.Model):
                     ).order_by('activity_date')
                     if r_logs.exists():
                         primary = r_logs.first()
-                        if primary.points_awarded != 50:
-                            primary.points_awarded = 50
+                        if primary.points_awarded != 15:
+                            primary.points_awarded = 15
                             primary.save(update_fields=['points_awarded'])
                         for red in r_logs[1:]:
                             if red.points_awarded != 0:
@@ -4840,7 +4809,7 @@ class StudentPoints(models.Model):
                             title=f"Posting Review: {c_title}",
                             description=f"Memberikan ulasan {r_obj.rating}/5 bintang untuk {c_title}",
                             success=True,
-                            points_awarded=50,
+                            points_awarded=15,
                             activity_date=r_obj.date,
                             metadata={'review_id': r_obj.id, 'course_id': c_id, 'rating': r_obj.rating}
                         )
@@ -4852,7 +4821,7 @@ class StudentPoints(models.Model):
                 role_at_time='student'
             ).exclude(course_id__in=reviewed_course_ids).update(points_awarded=0)
 
-            # g. Sinkronkan ActivityLog Testimoni Platform
+            # g. Sinkronkan ActivityLog Testimoni Platform (+20 Poin)
             if active_testi:
                 t_logs = ActivityLog.objects.filter(
                     user=user,
@@ -4861,8 +4830,8 @@ class StudentPoints(models.Model):
                 ).order_by('activity_date')
                 if t_logs.exists():
                     primary = t_logs.first()
-                    if primary.points_awarded != 50:
-                        primary.points_awarded = 50
+                    if primary.points_awarded != 20:
+                        primary.points_awarded = 20
                         primary.save(update_fields=['points_awarded'])
                     for red in t_logs[1:]:
                         if red.points_awarded != 0:
@@ -4876,7 +4845,7 @@ class StudentPoints(models.Model):
                         title="Kirim Testimoni Platform",
                         description=f"Mengirimkan testimoni platform ({active_testi.rating}/5 bintang)",
                         success=True,
-                        points_awarded=50,
+                        points_awarded=20,
                         activity_date=active_testi.date,
                         metadata={'review_id': active_testi.id, 'rating': active_testi.rating}
                     )
@@ -4989,6 +4958,39 @@ class InstructorPoints(models.Model):
             logging.getLogger(__name__).warning(f"Error creating instructor PointsAuditLog: {e}")
         
         return obj
+    
+    @classmethod
+    def reconcile_points(cls, user):
+        """
+        Recalculate and synchronize InstructorPoints for a user based on valid PointsAuditLog records.
+        """
+        now = timezone.now()
+        obj, _ = cls.objects.get_or_create(user=user)
+        
+        VALID_ACTS = [
+            'course_published',
+            'student_enrollment',
+            'student_rating',
+            'platform_testimonial',
+            'student_completion',
+            'qa_answer',
+            'exam_verification',
+        ]
+        
+        logs = PointsAuditLog.objects.filter(
+            user=user,
+            points_type='instructor',
+            activity_type__in=VALID_ACTS
+        )
+        
+        obj.lifetime_points = sum(l.points_awarded for l in logs)
+        obj.yearly_points = sum(l.points_awarded for l in logs.filter(awarded_at__year=now.year))
+        obj.yearly_year = now.year
+        obj.monthly_points = sum(l.points_awarded for l in logs.filter(awarded_at__year=now.year, awarded_at__month=now.month))
+        obj.monthly_year = now.year
+        obj.monthly_month = now.month
+        obj.save()
+        return obj
 
 
 class PointsAuditLog(models.Model):
@@ -5019,6 +5021,9 @@ class PointsAuditLog(models.Model):
             ('student_enrollment', 'Student Enrollment'),
             ('platform_testimonial', 'Platform Testimonial'),
             ('mantatype_reward', 'MantaType Game Reward'),
+            ('student_completion', 'Student Course Completion'),
+            ('qa_answer', 'Q&A Discussion Answer'),
+            ('exam_verification', 'Exam Integrity Verification'),
         ]
     )
     
@@ -5118,6 +5123,8 @@ class ActivityLog(models.Model):
         ('grade_recorded', 'Berikan Nilai'),
         ('exam_verified', 'Pengesahan Integritas Ujian'),
         ('exam_reset', 'Reset Ujian Post-Test'),
+        ('grades_exported', 'Ekspor Rekapitulasi Nilai & Pelatihan'),
+        ('resource_uploaded', 'Unggah Modul / Berkas Materi'),
         # ✨ Reviews & Testimonials
         ('review_updated', 'Update Review'),
         ('review_deleted', 'Hapus Review'),

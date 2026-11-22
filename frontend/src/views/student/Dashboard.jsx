@@ -876,7 +876,7 @@ function Dashboard() {
                                             </Link>
                                         </div>
                                         <div className="dash-section-body p-2">
-                                            <ActivityDisplay maxDisplay={4} showViewAll={false} variant="compact" showFilters={false} showPagination={false} />
+                                            <ActivityDisplay maxDisplay={5} showViewAll={false} variant="compact" showFilters={false} showPagination={false} />
                                         </div>
                                     </div>
                                 </div>

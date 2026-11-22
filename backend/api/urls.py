@@ -157,6 +157,7 @@ urlpatterns = [
     path("teacher/course-order-list/<teacher_id>/", api_views.TeacherCourseOrdersListAPIView.as_view()),
     path("teacher/question-answer-list/<teacher_id>/", api_views.TeacherQuestionAnswerListAPIView.as_view()),
     path("teacher/noti-list/<teacher_id>/", api_views.TeacherNotificationListAPIView.as_view()),
+    path("teacher/pending-verifications/<teacher_id>/", api_views.TeacherPendingVerificationsAPIView.as_view(), name="teacher-pending-verifications"),
     path("teacher/noti-detail/<teacher_id>/<noti_id>", api_views.TeacherNotificationDetailAPIView.as_view()),
     path("teacher/noti-mark-all-read/<teacher_id>/", api_views.TeacherNotificationMarkAllReadAPIView.as_view()),
     path("teacher/course-create/", api_views.CourseCreateAPIView.as_view()),

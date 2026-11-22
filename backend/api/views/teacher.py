@@ -1293,6 +1293,33 @@ class InstructorActivityPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
 
+    def get_page_size(self, request):
+        if 'page_size' in request.query_params:
+            return super().get_page_size(request)
+        # Fallback support for 'limit' query parameter
+        if 'limit' in request.query_params:
+            try:
+                limit = int(request.query_params['limit'])
+                if limit > 0:
+                    return min(limit, self.max_page_size)
+            except (ValueError, TypeError):
+                pass
+        return super().get_page_size(request)
+
+    def get_page_number(self, request, paginator):
+        if self.page_query_param in request.query_params:
+            return super().get_page_number(request, paginator)
+        # Fallback support for 'offset' query parameter when 'page' is not provided
+        if 'offset' in request.query_params:
+            try:
+                offset = int(request.query_params['offset'])
+                limit = self.get_page_size(request) or self.page_size
+                if limit > 0 and offset >= 0:
+                    return (offset // limit) + 1
+            except (ValueError, TypeError):
+                pass
+        return super().get_page_number(request, paginator)
+
 class InstructorActivitiesAPIView(generics.ListAPIView):
     """
     PHASE 53+: Hybrid Aktivitas Terbaru - Student + Instructor Activities
@@ -1355,7 +1382,33 @@ class InstructorActivitiesAPIView(generics.ListAPIView):
         role_filter = self.request.query_params.get('role')
         if role_filter and role_filter in ['student', 'instructor', 'admin', 'system']:
             queryset = queryset.filter(role_at_time=role_filter)
-        
+
+        # Filter by points awarded
+        has_points = self.request.query_params.get('has_points')
+        if has_points and has_points.lower() == 'true':
+            queryset = queryset.filter(points_awarded__gt=0)
+
+        # Filter by actionable (exam / integrity / quiz pending)
+        actionable = self.request.query_params.get('actionable')
+        if actionable and actionable.lower() == 'true':
+            queryset = queryset.filter(
+                Q(activity_type__in=['quiz_attempted', 'quiz_passed', 'exam_verified', 'grade_recorded']) |
+                Q(title__icontains='ujian') |
+                Q(description__icontains='ujian') |
+                Q(title__icontains='integritas')
+            )
+
+        # Filter by search keyword
+        search = self.request.query_params.get('search')
+        if search:
+            search = search.strip()
+            queryset = queryset.filter(
+                Q(title__icontains=search) |
+                Q(description__icontains=search) |
+                Q(course__title__icontains=search) |
+                Q(user__full_name__icontains=search)
+            )
+
         return queryset.order_by('-activity_date')
 
 
@@ -1565,7 +1618,7 @@ class InstructorPointsBreakdownAPIView(APIView):
                 if not has_audit:
                     api_models.InstructorPoints.add_points(
                         target_user,
-                        50,
+                        100,
                         'course_published',
                         course_id=pub_course.id,
                         description=f"Publikasi Kursus: {pub_course.title}"
@@ -1578,7 +1631,10 @@ class InstructorPointsBreakdownAPIView(APIView):
             'course_published',
             'student_enrollment',
             'student_rating',
-            'platform_testimonial'
+            'platform_testimonial',
+            'student_completion',
+            'qa_answer',
+            'exam_verification',
         ]
         
         from django.utils import timezone
@@ -1671,6 +1727,10 @@ class InstructorPointsBreakdownAPIView(APIView):
                 'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'course_published'),
                 'count': sum(1 for l in all_logs if l.activity_type == 'course_published')
             },
+            'student_completion': {
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'student_completion'),
+                'count': sum(1 for l in all_logs if l.activity_type == 'student_completion')
+            },
             'student_enrollment': {
                 'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'student_enrollment'),
                 'count': sum(1 for l in all_logs if l.activity_type == 'student_enrollment')
@@ -1678,6 +1738,14 @@ class InstructorPointsBreakdownAPIView(APIView):
             'student_rating': {
                 'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'student_rating' and 'testimonial' not in (l.description or '').lower()),
                 'count': sum(1 for l in all_logs if l.activity_type == 'student_rating' and 'testimonial' not in (l.description or '').lower())
+            },
+            'exam_verification': {
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'exam_verification'),
+                'count': sum(1 for l in all_logs if l.activity_type == 'exam_verification')
+            },
+            'qa_answer': {
+                'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'qa_answer'),
+                'count': sum(1 for l in all_logs if l.activity_type == 'qa_answer')
             },
             'platform_testimonial': {
                 'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'platform_testimonial' or (l.activity_type == 'student_rating' and 'testimonial' in (l.description or '').lower())),
@@ -1696,8 +1764,14 @@ class InstructorPointsBreakdownAPIView(APIView):
             {
                 'key': 'course_published',
                 'title': 'Publikasi Kursus Baru',
-                'points_text': '+50 Poin',
+                'points_text': '+100 Poin',
                 'description': 'Diberikan otomatis setiap kursus Anda berhasil dipublikasikan untuk peserta.'
+            },
+            {
+                'key': 'student_completion',
+                'title': 'Kelulusan Peserta Kursus',
+                'points_text': '+20 Poin / Peserta Lulus',
+                'description': 'Diberikan setiap kali peserta berhasil menyelesaikan kursus Anda dan meraih sertifikat kompetensi.'
             },
             {
                 'key': 'student_enrollment',
@@ -1712,9 +1786,21 @@ class InstructorPointsBreakdownAPIView(APIView):
                 'description': 'Diberikan saat peserta memberikan ulasan pada kursus Anda (1★ = 10 pt, 2★ = 20 pt, 3★ = 30 pt, 4★ = 40 pt, 5★ = 50 pt).'
             },
             {
+                'key': 'exam_verification',
+                'title': 'Pengesahan Integritas Ujian',
+                'points_text': '+5 Poin',
+                'description': 'Diberikan saat Anda memverifikasi dan mengesahkan rekaman integritas hasil ujian peserta.'
+            },
+            {
+                'key': 'qa_answer',
+                'title': 'Menjawab Diskusi Q&A',
+                'points_text': '+5 Poin (Maks 30 pt/hari)',
+                'description': 'Diberikan saat Anda aktif membimbing dan menjawab pertanyaan peserta di ruang diskusi materi.'
+            },
+            {
                 'key': 'platform_contribution',
                 'title': 'Testimoni & Kontribusi Platform',
-                'points_text': '+50 Poin',
+                'points_text': '+20 Poin',
                 'description': 'Diberikan sebagai apresiasi kontribusi testimoni dan feedback instruktur pada platform.'
             }
         ]
@@ -1820,13 +1906,36 @@ class TeacherVerifyStudentIntegrityAPIView(APIView):
                             message=f"Anda telah memverifikasi dan mengesahkan integritas hasil ujian peserta {target_student.full_name} pada materi '{course.title}'.",
                             seen=False
                         )
+                    # Award +5 points to the instructor for exam verification
+                    already_awarded = api_models.PointsAuditLog.objects.filter(
+                        user=user,
+                        points_type='instructor',
+                        activity_type='exam_verification',
+                        course_id=course.id,
+                        description__icontains=f"User #{target_student.id}"
+                    ).exists()
+                    if not already_awarded:
+                        inst_pts, _ = api_models.InstructorPoints.objects.get_or_create(
+                            user=user,
+                            defaults={'teacher': teacher}
+                        )
+                        inst_pts.add_points(
+                            user,
+                            5,
+                            'exam_verification',
+                            course_id=course.id,
+                            description=f"Pengesahan integritas ujian peserta: {target_student.full_name} (User #{target_student.id}) pada {course.title}"
+                        )
+                        api_models.InstructorPoints.reconcile_points(user)
+
                     api_models.ActivityLog.objects.create(
                         user=user,
                         activity_type='grade_recorded',
                         role_at_time='instructor',
                         course=course,
                         title=f"Mengesahkan Ujian Peserta: {target_student.full_name}",
-                        description=f"Memverifikasi integritas ujian {target_student.full_name} untuk kursus {course.title}.",
+                        description=f"Memverifikasi integritas ujian {target_student.full_name} untuk kursus {course.title} (+5 Poin).",
+                        points_awarded=5,
                         success=True,
                         metadata={'student_name': target_student.full_name, 'student_id': target_student.id, 'action': 'approve', 'course_id': course.id}
                     )
@@ -1976,6 +2085,63 @@ class TeacherNotificationMarkAllReadAPIView(APIView):
             return Response({"success": True, "updated_count": updated}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TeacherPendingVerificationsAPIView(APIView):
+    """
+    GET /api/v1/teacher/pending-verifications/<teacher_id>/
+    
+    Mengambil daftar ujian peserta yang menunggu verifikasi integritas oleh instruktur
+    (integrity_status='pending_review' and manual_integrity_approved=False).
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request, teacher_id):
+        user = request.user
+        teacher = api_models.Teacher.objects.filter(id=teacher_id).first()
+        if not teacher:
+            teacher = api_models.Teacher.objects.filter(user=user).first()
+
+        if not teacher:
+            return Response({"pending_count": 0, "results": []}, status=status.HTTP_200_OK)
+
+        is_staff = getattr(user, 'is_staff', False) or getattr(user, 'is_admin', False)
+        if teacher.user != user and not is_staff:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Akses ditolak.")
+
+        # Ambil kursus yang diampu instruktur ini
+        courses = api_models.Course.objects.filter(teacher=teacher)
+        
+        # Ambil peserta yang berstatus pending_review integritas ujian
+        pending_enrollments = api_models.EnrolledCourse.objects.filter(
+            course__in=courses,
+            integrity_status='pending_review',
+            manual_integrity_approved=False
+        ).select_related('user', 'course', 'user__profile').order_by('-date')
+
+        results = []
+        for e in pending_enrollments:
+            std = e.user
+            results.append({
+                'enrollment_id': e.id,
+                'user_id': std.id if std else None,
+                'student_name': std.full_name or std.username if std else "Peserta",
+                'student_email': std.email if std else "",
+                'student_image': std.profile.image.url if (std and hasattr(std, 'profile') and std.profile and std.profile.image) else None,
+                'course_id': e.course.course_id or str(e.course.id),
+                'course_title': e.course.title,
+                'integrity_status': e.integrity_status,
+                'integrity_notes': e.integrity_notes or "Terdeteksi anomali pada rekaman ujian post-test",
+                'date': e.date,
+                'evaluation_url': f"/instructor/courses/{e.course.course_id or e.course.id}/evaluation/"
+            })
+
+        return Response({
+            "pending_count": len(results),
+            "results": results
+        }, status=status.HTTP_200_OK)
 
 
 class TeacherCourseExportRecapAPIView(APIView):
@@ -2298,6 +2464,26 @@ class TeacherCourseExportRecapAPIView(APIView):
         clean_title = "".join(c for c in course.title if c.isalnum() or c in (' ', '_', '-')).strip().replace(' ', '_')[:35]
         timestamp = timezone.now().strftime("%Y%m%d_%H%M")
         filename = f"Rekapitulasi_Pelatihan_{clean_title}_{timestamp}.xlsx"
+
+        # ✨ PHASE 65: Catat Log Ekspor Rekapitulasi Nilai & Kehadiran Excel
+        try:
+            api_models.ActivityLog.objects.create(
+                user=request.user,
+                activity_type='grades_exported',
+                role_at_time='instructor',
+                course=course,
+                title=f"Ekspor Rekap Nilai: {course.title}",
+                description=f"Mengunduh rekapitulasi nilai dan kehadiran pelatihan '{course.title}' ke format Excel ({filename}).",
+                success=True,
+                metadata={
+                    'course_id': str(course.id),
+                    'course_title': course.title,
+                    'filename': filename,
+                    'exported_at': str(timezone.now())
+                }
+            )
+        except Exception as log_e:
+            print(f"[ActivityLog] Error logging grade export: {log_e}")
 
         response = HttpResponse(
             output.getvalue(),

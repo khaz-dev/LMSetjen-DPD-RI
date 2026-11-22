@@ -73,6 +73,8 @@ function InstructorActivityDisplay({
         { value: 'student_unenrolled', label: 'Hapus Peserta', icon: 'fa-user-minus', color: 'danger', category: 'pengajar', badge: 'Mengajar' },
         { value: 'announcement_posted', label: 'Posting Pengumuman', icon: 'fa-bullhorn', color: 'warning', category: 'pengajar', badge: 'Mengajar' },
         { value: 'grade_recorded', label: 'Berikan Nilai', icon: 'fa-award', color: 'purple', category: 'pengajar', badge: 'Mengajar' },
+        { value: 'grades_exported', label: 'Ekspor Rekap Nilai', icon: 'fa-file-excel', color: 'success', category: 'pengajar', badge: 'Laporan' },
+        { value: 'resource_uploaded', label: 'Unggah Modul / Materi', icon: 'fa-file-arrow-up', color: 'teal', category: 'pengajar', badge: 'Materi' },
     ];
 
     // Fetch activities from API

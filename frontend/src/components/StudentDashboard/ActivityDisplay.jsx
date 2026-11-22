@@ -8,14 +8,14 @@ import './ActivityDisplay.css';
  * ✨ PHASE 65: ActivityDisplay Component (Compact & Modern Redesign)
  * Shows user's recent activities from API with streamlined layout matching InstructorActivityDisplay
  * 
- * @param {number} maxDisplay - Maximum number of activities to display per page (default: 4)
+ * @param {number} maxDisplay - Maximum number of activities to display per page (default: 5)
  * @param {boolean} showViewAll - Whether to show "View All" button (default: false)
  * @param {string} variant - Display variant: "compact" for dashboard, "full" for full page (default: "compact")
  * @param {boolean} showFilters - Whether to show filter controls (default: false)
  * @param {boolean} showPagination - Whether to show pagination controls (default: false)
  */
 function ActivityDisplay({
-    maxDisplay = 4,
+    maxDisplay = 5,
     showViewAll = false,
     variant = "compact",
     showFilters = false,
@@ -46,6 +46,7 @@ function ActivityDisplay({
         { value: 'question_asked', label: 'Buat Pertanyaan', icon: 'fa-circle-question', color: 'secondary' },
         { value: 'question_answered', label: 'Jawab Pertanyaan', icon: 'fa-comments', color: 'teal' },
         { value: 'review_posted', label: 'Posting Review', icon: 'fa-star', color: 'amber' },
+        { value: 'testimonial_posted', label: 'Kirim Testimoni', icon: 'fa-heart', color: 'rose' },
         { value: 'points_earned', label: 'Dapatkan Poin', icon: 'fa-coins', color: 'amber' },
         { value: 'search_query', label: 'Cari Kursus', icon: 'fa-magnifying-glass', color: 'secondary' },
         { value: 'content_liked', label: 'Sukai Konten', icon: 'fa-heart', color: 'danger' },
@@ -57,6 +58,7 @@ function ActivityDisplay({
         const fetchActivities = async () => {
             try {
                 setLoading(true);
+                const limitVal = maxDisplay || 5;
                 const params = new URLSearchParams();
 
                 if (filters.activity_type) {
@@ -65,16 +67,19 @@ function ActivityDisplay({
                 if (filters.success) {
                     params.append('success', filters.success);
                 }
-                params.append('limit', maxDisplay);
-                params.append('offset', (page - 1) * maxDisplay);
+                params.append('limit', limitVal);
+                params.append('page_size', limitVal);
+                params.append('page', page);
+                params.append('offset', (page - 1) * limitVal);
 
                 const response = await useAxios.get(
                     `student/activities/?${params.toString()}`
                 );
 
                 if (response.data) {
-                    setActivities(response.data.results || []);
-                    setTotalCount(response.data.count || 0);
+                    const rawList = Array.isArray(response.data) ? response.data : (response.data.results || []);
+                    setActivities(rawList.slice(0, limitVal));
+                    setTotalCount(response.data.count || rawList.length);
                 }
             } catch (error) {
                 // Silently handle fetch errors
@@ -181,7 +186,7 @@ function ActivityDisplay({
             {/* Activities List */}
             <div className="activities-list">
                 {activities.length > 0 ? (
-                    activities.map((activity) => {
+                    activities.slice(0, maxDisplay || 5).map((activity) => {
                         const actType = getActivityIcon(activity.activity_type);
 
                         // ✨ Sleek compact variant matching Instructor Dashboard

@@ -27,11 +27,21 @@ function InstructorNotifications() {
     });
     const [activeTab, setActiveTab] = useState('all'); // 'all' | 'teaching' | 'student' | 'points'
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [courses, setCourses] = useState([]);
+    const [pendingVerifications, setPendingVerifications] = useState([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
     const [totalCount, setTotalCount] = useState(0);
     const isCollapsed = useInstructorSidebarCollapse();
+
+    // Debounce search input to avoid excessive API requests
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     // Points breakdown state
     const [pointsData, setPointsData] = useState(null);
@@ -72,6 +82,9 @@ function InstructorNotifications() {
         { value: 'quiz_deleted', label: 'Hapus Kuis', icon: 'fa-trash-can', color: 'rose', role: 'instructor' },
         { value: 'announcement_posted', label: 'Posting Pengumuman', icon: 'fa-bullhorn', color: 'amber', role: 'instructor' },
         { value: 'grade_recorded', label: 'Berikan Nilai', icon: 'fa-award', color: 'indigo', role: 'instructor' },
+        { value: 'grades_exported', label: 'Ekspor Rekap Nilai', icon: 'fa-file-excel', color: 'emerald', role: 'instructor' },
+        { value: 'resource_uploaded', label: 'Unggah Modul / Materi', icon: 'fa-file-arrow-up', color: 'teal', role: 'instructor' },
+        { value: 'exam_verified', label: 'Pengesahan Integritas Ujian', icon: 'fa-shield-halved', color: 'indigo', role: 'instructor' },
         { value: 'student_enrolled_manual', label: 'Daftar Peserta Manual', icon: 'fa-user-plus', color: 'emerald', role: 'instructor' },
         { value: 'student_unenrolled', label: 'Hapus Peserta', icon: 'fa-user-minus', color: 'rose', role: 'instructor' },
         { value: 'testimonial_posted', label: 'Kirim Testimoni', icon: 'fa-heart', color: 'amber', role: 'instructor' },
@@ -115,8 +128,22 @@ function InstructorNotifications() {
         }
     };
 
+    const fetchPendingVerifications = async () => {
+        const teacherId = UserData()?.teacher_id;
+        if (!teacherId) return;
+        try {
+            const res = await useAxios.get(`teacher/pending-verifications/${teacherId}/`);
+            if (res.data) {
+                setPendingVerifications(res.data.results || []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch pending verifications:', err);
+        }
+    };
+
     useEffect(() => {
         fetchPointsBreakdown();
+        fetchPendingVerifications();
     }, []);
 
     // Fetch instructor courses
@@ -163,7 +190,19 @@ function InstructorNotifications() {
                 if (filters.role) {
                     params.append('role', filters.role);
                 }
+                if (activeTab === 'points') {
+                    params.append('has_points', 'true');
+                    params.append('role', 'instructor');
+                } else if (activeTab === 'actionable') {
+                    params.append('actionable', 'true');
+                }
+                if (debouncedSearch.trim()) {
+                    params.append('search', debouncedSearch.trim());
+                }
 
+                // Standard DRF PageNumberPagination & LimitOffsetPagination compatibility
+                params.append('page', page);
+                params.append('page_size', pageSize);
                 params.append('limit', pageSize);
                 params.append('offset', (page - 1) * pageSize);
 
@@ -181,20 +220,22 @@ function InstructorNotifications() {
         };
 
         fetchActivities();
-    }, [filters, page, pageSize]);
+    }, [filters, page, pageSize, activeTab, debouncedSearch]);
 
     // Tab switcher
     const handleTabChange = (tab) => {
         setActiveTab(tab);
         setPage(1);
         if (tab === 'all') {
+            setFilters(prev => ({ ...prev, role: '', activity_type: '' }));
+        } else if (tab === 'actionable') {
             setFilters(prev => ({ ...prev, role: '' }));
         } else if (tab === 'teaching') {
-            setFilters(prev => ({ ...prev, role: 'instructor' }));
+            setFilters(prev => ({ ...prev, role: 'instructor', activity_type: '' }));
         } else if (tab === 'student') {
-            setFilters(prev => ({ ...prev, role: 'student' }));
+            setFilters(prev => ({ ...prev, role: 'student', activity_type: '' }));
         } else if (tab === 'points') {
-            setFilters(prev => ({ ...prev, role: '' }));
+            setFilters(prev => ({ ...prev, role: 'instructor', activity_type: '' }));
         }
     };
 
@@ -265,7 +306,17 @@ function InstructorNotifications() {
         let result = activities;
 
         if (activeTab === 'points') {
-            result = result.filter(a => Number(a.points_awarded) > 0);
+            result = result.filter(a => Number(a.points_awarded) > 0 && a.role_at_time === 'instructor');
+        } else if (activeTab === 'actionable') {
+            result = result.filter(a => 
+                a.activity_type === 'quiz_attempted' || 
+                a.activity_type === 'quiz_passed' || 
+                a.activity_type === 'exam_verified' ||
+                a.activity_type === 'grade_recorded' ||
+                (a.title || '').toLowerCase().includes('ujian') ||
+                (a.description || '').toLowerCase().includes('ujian') ||
+                (a.title || '').toLowerCase().includes('integritas')
+            );
         }
 
         if (searchTerm.trim()) {
@@ -422,6 +473,59 @@ function InstructorNotifications() {
                             </div>
 
                             {/* =========================================================================
+                                1.5. PERLU TINDAKAN BANNER (Ujian Menunggu Pengesahan Integritas)
+                                ========================================================================= */}
+                            {pendingVerifications.length > 0 && (
+                                <div className="pending-action-banner mb-3 p-3 rounded-4 shadow-sm">
+                                    <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-2 pb-2 border-bottom border-warning-subtle">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <div className="pending-banner-icon bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px' }}>
+                                                <i className="fas fa-triangle-exclamation"></i>
+                                            </div>
+                                            <div>
+                                                <h6 className="fw-bold mb-0 text-dark">
+                                                    Perlu Tindakan Instruktur ({pendingVerifications.length} Ujian Menunggu Pengesahan)
+                                                </h6>
+                                                <small className="text-muted" style={{ fontSize: '0.82rem' }}>
+                                                    Peserta di bawah ini memerlukan peninjauan verifikasi integritas oleh Anda sebelum sertifikat kompetensi dapat diterbitkan.
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <span className="badge bg-danger rounded-pill px-3 py-1">
+                                            {pendingVerifications.length} Antrean
+                                        </span>
+                                    </div>
+
+                                    <div className="d-flex flex-column gap-2 mt-2">
+                                        {pendingVerifications.map((item) => (
+                                            <div key={item.enrollment_id} className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center p-2 px-3 rounded-3 bg-white border border-warning-subtle gap-2">
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <div className="avatar-chip bg-teal-subtle text-teal rounded-circle d-flex align-items-center justify-content-center fw-bold" style={{ width: '32px', height: '32px', fontSize: '0.85rem' }}>
+                                                        {item.student_name ? item.student_name.charAt(0).toUpperCase() : 'P'}
+                                                    </div>
+                                                    <div>
+                                                        <span className="fw-bold text-dark d-block small">{item.student_name}</span>
+                                                        <small className="text-muted d-block" style={{ fontSize: '0.78rem' }}>
+                                                            <i className="fas fa-book-bookmark me-1 text-teal"></i>{item.course_title}
+                                                            <span className="mx-1">•</span>
+                                                            <span className="text-danger fw-semibold">{item.integrity_notes}</span>
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <Link
+                                                    to={item.evaluation_url}
+                                                    className="btn btn-sm btn-warning text-dark fw-bold px-3 py-1 rounded-pill text-nowrap"
+                                                    style={{ fontSize: '0.8rem' }}
+                                                >
+                                                    <i className="fas fa-shield-halved me-1"></i>Tinjau & Sahkan
+                                                </Link>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* =========================================================================
                                 2. INTEGRATED CONTROL TOOLBAR (Compact, Filter & Search In One)
                                 ========================================================================= */}
                             <div className="act-toolbar-card">
@@ -436,6 +540,19 @@ function InstructorNotifications() {
                                             <i className="fas fa-layer-group"></i>
                                             <span>Semua</span>
                                             <span className="act-tab-count">{totalCount}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`act-tab-btn ${activeTab === 'actionable' ? 'active' : ''}`}
+                                            onClick={() => handleTabChange('actionable')}
+                                        >
+                                            <i className={`fas fa-clipboard-check ${pendingVerifications.length > 0 ? 'text-danger' : 'text-primary'}`}></i>
+                                            <span>Perlu Tindakan</span>
+                                            {pendingVerifications.length > 0 && (
+                                                <span className="badge bg-danger rounded-pill px-2 py-0 ms-1" style={{ fontSize: '0.7rem' }}>
+                                                    {pendingVerifications.length}
+                                                </span>
+                                            )}
                                         </button>
                                         <button
                                             type="button"
@@ -471,13 +588,19 @@ function InstructorNotifications() {
                                             className="act-search-input"
                                             placeholder="Cari aktivitas, materi, peserta..."
                                             value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            onChange={(e) => {
+                                                setSearchTerm(e.target.value);
+                                                setPage(1);
+                                            }}
                                         />
                                         {searchTerm && (
                                             <button
                                                 type="button"
                                                 className="act-search-clear"
-                                                onClick={() => setSearchTerm('')}
+                                                onClick={() => {
+                                                    setSearchTerm('');
+                                                    setPage(1);
+                                                }}
                                                 title="Hapus pencarian"
                                             >
                                                 <i className="fas fa-times"></i>
@@ -635,9 +758,12 @@ function InstructorNotifications() {
                                                                 </span>
 
                                                                 {isPointsAwarded && (
-                                                                    <span className="act-pill-points">
+                                                                    <span
+                                                                        className={`act-pill-points ${activity.role_at_time === 'instructor' ? 'instructor-points' : 'student-points'}`}
+                                                                        title={activity.role_at_time === 'instructor' ? 'Poin diperoleh instruktur' : `Poin diperoleh peserta (${activity.user_name || 'Peserta'})`}
+                                                                    >
                                                                         <i className="fas fa-coins"></i>
-                                                                        +{activity.points_awarded} Poin
+                                                                        +{activity.points_awarded} Poin {activity.role_at_time === 'instructor' ? 'Instruktur' : 'Peserta'}
                                                                     </span>
                                                                 )}
 
@@ -860,12 +986,16 @@ function InstructorNotifications() {
                                                         <span>Publikasi Kursus: <strong>{pointsData?.summary?.course_published?.count || 0}</strong> ({pointsData?.summary?.course_published?.points || 0} pt)</span>
                                                     </div>
                                                     <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1">
-                                                        <i className="fas fa-heart text-warning"></i>
-                                                        <span>Testimoni Platform: <strong>{pointsData?.summary?.platform_testimonial?.count || 0}</strong> ({pointsData?.summary?.platform_testimonial?.points || 0} pt)</span>
+                                                        <i className="fas fa-graduation-cap text-success"></i>
+                                                        <span>Kelulusan Peserta: <strong>{pointsData?.summary?.student_completion?.count || 0}</strong> ({pointsData?.summary?.student_completion?.points || 0} pt)</span>
                                                     </div>
                                                     <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1">
                                                         <i className="fas fa-user-graduate text-info"></i>
                                                         <span>Peserta Terdaftar: <strong>{pointsData?.summary?.student_enrollment?.count || 0}</strong> ({pointsData?.summary?.student_enrollment?.points || 0} pt)</span>
+                                                    </div>
+                                                    <div className="badge bg-white text-dark border p-2 d-flex align-items-center gap-1">
+                                                        <i className="fas fa-heart text-warning"></i>
+                                                        <span>Testimoni Platform: <strong>{pointsData?.summary?.platform_testimonial?.count || 0}</strong> ({pointsData?.summary?.platform_testimonial?.points || 0} pt)</span>
                                                     </div>
                                                 </div>
                                             </div>

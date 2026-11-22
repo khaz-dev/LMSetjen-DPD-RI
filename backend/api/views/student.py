@@ -3560,11 +3560,8 @@ class StudentPointsBreakdownAPIView(APIView):
         # Valid student point activity types in accordance with platform gamification rules
         VALID_STUDENT_ACTIVITIES = [
             'course_completion',
-            'quiz_score',
             'rating_given',
-            'platform_testimonial',
-            'points_earned',
-            'mantatype_reward'
+            'platform_testimonial'
         ]
         
         from django.utils import timezone
@@ -3659,17 +3656,14 @@ class StudentPointsBreakdownAPIView(APIView):
                 'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'course_completion'),
                 'count': sum(1 for l in all_logs if l.activity_type == 'course_completion')
             },
-            'quiz_score': {
-                'points': sum(l.points_awarded for l in all_logs if l.activity_type == 'quiz_score'),
-                'count': sum(1 for l in all_logs if l.activity_type == 'quiz_score')
-            },
             'rating_given': {
                 'points': sum(l.points_awarded for l in all_logs if l.activity_type in ['rating_given', 'platform_testimonial']),
                 'count': sum(1 for l in all_logs if l.activity_type in ['rating_given', 'platform_testimonial'])
             },
-            'mantatype_reward': {
-                'points': sum(l.points_awarded for l in all_logs if l.activity_type in ['mantatype_reward', 'points_earned']),
-                'count': sum(1 for l in all_logs if l.activity_type in ['mantatype_reward', 'points_earned'])
+            'quiz_score': {
+                'points': 0,
+                'count': api_models.QuizAttempt.objects.filter(user=target_user, is_passed=True).values('quiz_id').distinct().count(),
+                'note': 'Skor kelulusan kuis dialokasikan khusus pada Papan Peringkat Kursus (Course Leaderboard)'
             }
         }
         
@@ -3685,25 +3679,25 @@ class StudentPointsBreakdownAPIView(APIView):
                 'key': 'course_completion',
                 'title': 'Menyelesaikan Kursus Penuh',
                 'points_text': '+100 Poin',
-                'description': 'Diberikan otomatis setelah menyelesaikan seluruh modul dan materi pada kursus.'
-            },
-            {
-                'key': 'quiz_score',
-                'title': 'Kelulusan Kuis & Ujian',
-                'points_text': '+25 s/d +100 Poin',
-                'description': 'Diberikan berdasarkan pencapaian skor nilai kuis dan tes kompetensi.'
+                'description': 'Diberikan otomatis setelah menyelesaikan seluruh modul materi dan meraih sertifikat kelulusan kursus.'
             },
             {
                 'key': 'rating_given',
-                'title': 'Memberikan Ulasan & Rating',
-                'points_text': '+50 Poin',
-                'description': 'Diberikan saat Anda memberikan ulasan serta rating bintang terhadap kursus yang diikuti.'
+                'title': 'Memberikan Ulasan & Evaluasi Kursus',
+                'points_text': '+15 Poin',
+                'description': 'Diberikan saat memberikan evaluasi & ulasan bintang konstruktif terhadap kursus yang telah diikuti (maksimal 1x per kursus).'
             },
             {
-                'key': 'mantatype_reward',
-                'title': 'Bonus Harian MantaType Arcade',
-                'points_text': '+50 s/d +75 Poin',
-                'description': 'Diberikan harian setelah menuntaskan minimal Wave 3 atau Skor 1.000 pada permainan arcade MantaType.'
+                'key': 'platform_testimonial',
+                'title': 'Testimoni Platform LMS Setjen DPD RI',
+                'points_text': '+20 Poin',
+                'description': 'Diberikan saat memberikan testimoni apresiasi platform yang telah disetujui (maksimal 1x per peserta).'
+            },
+            {
+                'key': 'quiz_score',
+                'title': 'Kelulusan Kuis & Ujian (Peringkat Kursus)',
+                'points_text': 'Peringkat Kursus',
+                'description': 'Kelulusan kuis diperhitungkan khusus dalam Papan Peringkat Kursus (Course Leaderboard) guna menjaga keadilan kompetensi.'
             }
         ]
         
@@ -3733,6 +3727,42 @@ class StudentPointsBreakdownAPIView(APIView):
 
 # ==================== PHASE 53: ACTIVITY LOG API VIEWS ====================
 
+class StudentActivityPagination(PageNumberPagination):
+    """
+    Pagination class for student activities supporting page, page_size, limit, and offset query parameters.
+    """
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+    def get_page_size(self, request):
+        if 'limit' in request.query_params:
+            try:
+                limit_val = int(request.query_params['limit'])
+                if limit_val > 0:
+                    return min(limit_val, self.max_page_size)
+            except (ValueError, TypeError):
+                pass
+        return super().get_page_size(request)
+
+    def get_page_number(self, request, paginator):
+        page = request.query_params.get(self.page_query_param)
+        if page is not None:
+            return page
+
+        # Support offset-based pagination requests
+        if 'offset' in request.query_params:
+            try:
+                offset = int(request.query_params.get('offset', 0))
+                page_size = self.get_page_size(request) or self.page_size
+                calculated_page = (offset // page_size) + 1
+                return calculated_page
+            except (ValueError, TypeError):
+                pass
+
+        return 1
+
+
 class StudentActivityListAPIView(generics.ListAPIView):
     """
     PHASE 53: List activities for the current student
@@ -3741,7 +3771,7 @@ class StudentActivityListAPIView(generics.ListAPIView):
     """
     serializer_class = api_serializer.ActivityLogListSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
+    pagination_class = StudentActivityPagination
     
     def get_queryset(self):
         """Filter activities for current student"""
@@ -4018,18 +4048,8 @@ class StudentCourseGameSubmitAPIView(APIView):
                 points_awarded=points_awarded
             )
 
-            # Award student ranking points
-            if points_awarded > 0:
-                try:
-                    api_models.StudentPoints.add_points(
-                        user=user,
-                        points=points_awarded,
-                        category='points_earned',
-                        course_id=game.course.course_id,
-                        description=f"Menyelesaikan mini game {game.title} ({game.get_game_type_display()})"
-                    )
-                except Exception as e:
-                    print(f"Error adding student points: {e}")
+            # Poin mini-game edukasi dialokasikan khusus pada Papan Peringkat Kursus (Course Leaderboard)
+            # melalui record CourseGameAttempt (tidak menambah poin global platform)
 
             today_attempts = attempts_count + 1
             attempts_left = max(0, game.max_attempts - today_attempts)

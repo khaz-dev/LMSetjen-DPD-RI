@@ -134,6 +134,27 @@ class UploadElearningModuleAPIView(APIView):
                     except Exception as e:
                         print(f"[SCORM] Manifest title parse warning: {e}")
 
+            # ✨ PHASE 65: Catat Log Unggah Modul E-Learning SCORM/H5P
+            try:
+                api_models.ActivityLog.objects.create(
+                    user=request.user,
+                    activity_type='resource_uploaded',
+                    role_at_time='instructor',
+                    course=learning_module.course,
+                    title=f"Unggah Modul Interaktif: {learning_module.judul}",
+                    description=f"Mengunggah paket materi interaktif {learning_module.get_module_type_display()} '{learning_module.judul}'",
+                    success=True,
+                    metadata={
+                        'module_id': learning_module.id,
+                        'module_type': learning_module.module_type,
+                        'judul': learning_module.judul,
+                        'course_id': str(learning_module.course.id) if learning_module.course else None,
+                        'course_title': learning_module.course.title if learning_module.course else None
+                    }
+                )
+            except Exception as log_e:
+                print(f"[ActivityLog] Error logging elearning module upload: {log_e}")
+
             serializer = LearningModuleSerializer(learning_module, context={'request': request})
             return Response({
                 "message": f"Modul {learning_module.get_module_type_display()} berhasil diunggah dan diekstrak.",

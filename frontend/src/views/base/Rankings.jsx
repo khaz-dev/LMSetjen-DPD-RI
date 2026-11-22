@@ -229,21 +229,33 @@ function Rankings() {
                   </div>
                   <ul className="list-unstyled mb-3 rule-points-list small">
                     <li className="d-flex align-items-center justify-content-between py-2 border-bottom">
-                      <span><i className="fas fa-quote-left text-teal me-2"></i>Testimoni Platform Disetujui Admin</span>
-                      <span className="badge bg-success-subtle text-success fw-bold">+50 Poin</span>
+                      <span><i className="fas fa-rocket text-primary me-2"></i>Mempublikasikan Kursus Baru</span>
+                      <span className="badge bg-primary-subtle text-primary fw-bold">+100 Poin</span>
+                    </li>
+                    <li className="d-flex align-items-center justify-content-between py-2 border-bottom">
+                      <span><i className="fas fa-graduation-cap text-emerald me-2"></i>Kelulusan Peserta Kursus</span>
+                      <span className="badge bg-success-subtle text-success fw-bold">+20 Poin / Lulus</span>
+                    </li>
+                    <li className="d-flex align-items-center justify-content-between py-2 border-bottom">
+                      <span><i className="fas fa-user-graduate text-success me-2"></i>Pendaftaran Peserta Baru</span>
+                      <span className="badge bg-success-subtle text-success fw-bold">+10 Poin / Peserta</span>
                     </li>
                     <li className="d-flex align-items-center justify-content-between py-2 border-bottom">
                       <span><i className="fas fa-star text-warning me-2"></i>Menerima Rating Bintang dari Peserta</span>
                       <span className="badge bg-warning-subtle text-warning-emphasis fw-bold">10 - 50 Poin</span>
                     </li>
                     <li className="d-flex align-items-center justify-content-between py-2 border-bottom">
-                      <span><i className="fas fa-rocket text-primary me-2"></i>Mempublikasikan Kursus Baru</span>
-                      <span className="badge bg-primary-subtle text-primary fw-bold">+100 Poin</span>
+                      <span><i className="fas fa-comments text-info me-2"></i>Bimbingan & Jawaban Diskusi Q&A</span>
+                      <span className="badge bg-info-subtle text-info fw-bold">+5 Poin</span>
+                    </li>
+                    <li className="d-flex align-items-center justify-content-between py-2 border-bottom">
+                      <span><i className="fas fa-quote-left text-teal me-2"></i>Testimoni Platform Disetujui Admin</span>
+                      <span className="badge bg-teal-subtle text-teal fw-bold">+20 Poin</span>
                     </li>
                   </ul>
                   <div className="mt-auto pt-1">
                     <Link to="/instructor/testimonials/" className="btn btn-sm btn-rankings-action-teal w-100">
-                      <i className="fas fa-feather-pointed me-2"></i>Tulis Testimoni Instruktur (+50 Poin)
+                      <i className="fas fa-feather-pointed me-2"></i>Tulis Testimoni Instruktur (+20 Poin)
                     </Link>
                   </div>
                 </div>
@@ -262,16 +274,20 @@ function Rankings() {
                   </div>
                   <ul className="list-unstyled mb-3 rule-points-list small">
                     <li className="d-flex align-items-center justify-content-between py-2 border-bottom">
-                      <span><i className="fas fa-check-circle text-success me-2"></i>Menyelesaikan Seluruh Kursus</span>
+                      <span><i className="fas fa-graduation-cap text-success me-2"></i>Menyelesaikan Kursus & Raih Sertifikat</span>
                       <span className="badge bg-success-subtle text-success fw-bold">+100 Poin</span>
                     </li>
                     <li className="d-flex align-items-center justify-content-between py-2 border-bottom">
-                      <span><i className="fas fa-certificate text-warning me-2"></i>Memperoleh Sertifikat Kompetensi</span>
-                      <span className="badge bg-warning-subtle text-warning-emphasis fw-bold">+50 Poin</span>
+                      <span><i className="fas fa-star text-warning me-2"></i>Ulasan Kursus Konstruktif</span>
+                      <span className="badge bg-warning-subtle text-warning-emphasis fw-bold">+15 Poin</span>
                     </li>
                     <li className="d-flex align-items-center justify-content-between py-2 border-bottom">
-                      <span><i className="fas fa-clipboard-check text-info me-2"></i>Lulus Kuis & Ujian Pelajaran</span>
-                      <span className="badge bg-info-subtle text-info-emphasis fw-bold">+25 Poin</span>
+                      <span><i className="fas fa-quote-left text-teal me-2"></i>Testimoni Platform Disetujui</span>
+                      <span className="badge bg-teal-subtle text-teal fw-bold">+20 Poin</span>
+                    </li>
+                    <li className="d-flex align-items-center justify-content-between py-2 border-bottom">
+                      <span><i className="fas fa-trophy text-info me-2"></i>Kelulusan Kuis & Ujian Materi</span>
+                      <span className="badge bg-info-subtle text-info-emphasis fw-bold">Peringkat Kursus</span>
                     </li>
                   </ul>
                   <div className="mt-auto pt-1">
