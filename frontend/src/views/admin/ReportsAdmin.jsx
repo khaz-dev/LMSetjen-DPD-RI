@@ -4,6 +4,7 @@ import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
 import ReviewAbuseReportsTab from "./AdminReportsTabs/ReviewAbuseReportsTab";
 import QAReportsTab from "./AdminReportsTabs/QAReportsTab";
+import ForumReportsTab from "./AdminReportsTabs/ForumReportsTab";
 import FeedbackAdminDashboard from "../../components/Feedback/FeedbackAdminDashboard";
 import apiInstance from "../../utils/axios";
 import dayjs, { moment } from "../../utils/dayjs";
@@ -23,6 +24,7 @@ function ReportsAdmin() {
 
     const [activeTab, setActiveTab] = useState(() => {
         const tab = searchParams.get("tab");
+        if (tab === "forum-reports" || tab === "forum") return "forum-reports";
         if (tab === "qa-reports") return "qa-reports";
         if (tab === "feedback" || tab === "user-feedback") return "feedback";
         return "abuse-reports";
@@ -40,7 +42,9 @@ function ReportsAdmin() {
             return;
         }
 
-        if (tab === "feedback" || tab === "user-feedback") {
+        if (tab === "forum-reports" || tab === "forum") {
+            if (activeTab !== "forum-reports") setActiveTab("forum-reports");
+        } else if (tab === "feedback" || tab === "user-feedback") {
             if (activeTab !== "feedback") setActiveTab("feedback");
         } else if (tab === "qa-reports") {
             if (activeTab !== "qa-reports") setActiveTab("qa-reports");
@@ -61,6 +65,8 @@ function ReportsAdmin() {
         abusePending: 0,
         qaTotal: 0,
         qaPending: 0,
+        forumTotal: 0,
+        forumPending: 0,
         feedbackTotal: 0,
         feedbackOpen: 0,
         loading: true
@@ -70,10 +76,11 @@ function ReportsAdmin() {
     const fetchSummaryStats = useCallback(async () => {
         try {
             setIsRefreshing(true);
-            const [abuseRes, qaQRes, qaMRes, fbStatsRes] = await Promise.allSettled([
+            const [abuseRes, qaQRes, qaMRes, forumRes, fbStatsRes] = await Promise.allSettled([
                 apiInstance.get("/admin/abuse-reports/"),
                 apiInstance.get("/admin/qa-reports/?type=question"),
                 apiInstance.get("/admin/qa-reports/?type=message"),
+                apiInstance.get("/admin/forum-reports/"),
                 apiInstance.get("/feedback/stats/")
             ]);
 
@@ -95,6 +102,16 @@ function ReportsAdmin() {
             qaTotal = combinedQA.length;
             qaPending = combinedQA.filter(r => r.status === "pending").length;
 
+            let forumTotal = 0;
+            let forumPending = 0;
+            if (forumRes.status === "fulfilled" && forumRes.value?.data) {
+                const list = forumRes.value.data.results || forumRes.value.data;
+                if (Array.isArray(list)) {
+                    forumTotal = list.length;
+                    forumPending = list.filter(r => r.status === "pending").length;
+                }
+            }
+
             let feedbackTotal = 0;
             let feedbackOpen = 0;
             if (fbStatsRes.status === "fulfilled" && fbStatsRes.value?.data) {
@@ -107,6 +124,8 @@ function ReportsAdmin() {
                 abusePending,
                 qaTotal,
                 qaPending,
+                forumTotal,
+                forumPending,
                 feedbackTotal,
                 feedbackOpen,
                 loading: false
@@ -179,6 +198,23 @@ function ReportsAdmin() {
             )
         },
         {
+            id: "forum-reports",
+            label: "Forum Pembelajaran",
+            icon: "fas fa-chalkboard-user",
+            badge: stats.loading ? null : (
+                <span className={`tab-badge ${stats.forumPending > 0 ? "tab-badge-pending" : "tab-badge-neutral"}`}>
+                    {stats.forumPending > 0 ? `${stats.forumPending} Perlu Reviu` : stats.forumTotal}
+                </span>
+            ),
+            description: "Kelola rumpun keahlian forum, moderasi laporan pelanggaran etika diskusi, dan audit seluruh topik Forum Pembelajaran",
+            component: (
+                <ForumReportsTab
+                    refreshTrigger={refreshTrigger}
+                    onMutationSuccess={handleMutationSuccess}
+                />
+            )
+        },
+        {
             id: "feedback",
             label: "Masukan Pengguna",
             icon: "fas fa-envelope-open-text",
@@ -197,7 +233,7 @@ function ReportsAdmin() {
         }
     ];
 
-    const totalPendingCount = stats.abusePending + stats.qaPending + stats.feedbackOpen;
+    const totalPendingCount = stats.abusePending + stats.qaPending + stats.forumPending + stats.feedbackOpen;
     const currentTabObj = tabs.find(t => t.id === activeTab) || tabs[0];
 
     return (

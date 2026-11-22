@@ -3389,6 +3389,8 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
     course_slug = serializers.CharField(source='course.slug', read_only=True)
     course_pk = serializers.IntegerField(source='course.id', read_only=True)
     course_image = serializers.SerializerMethodField(read_only=True)
+    enrollment_id = serializers.SerializerMethodField(read_only=True)
+    user_enrolled = serializers.SerializerMethodField(read_only=True)
 
     # Solved & Instructor status
     has_instructor_reply = serializers.SerializerMethodField(read_only=True)
@@ -3397,13 +3399,31 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
         model = api_models.Question_Answer
         fields = [
             'id', 'qa_id', 'course', 'course_title', 'course_slug', 'course_pk', 'course_image',
+            'enrollment_id', 'user_enrolled',
             'title', 'user', 'user_id',
             'profile', 'variant', 'variant_item',
             'date', 'messages', 'replies_count', 'likes_count', 'user_liked',
             'is_solved', 'has_instructor_reply', 'video_timestamp', 'is_pinned',
             'file', 'file_name'
         ]
-        read_only_fields = ['id', 'qa_id', 'date', 'messages', 'replies_count', 'has_instructor_reply']
+        read_only_fields = ['id', 'qa_id', 'date', 'messages', 'replies_count', 'has_instructor_reply', 'enrollment_id', 'user_enrolled']
+
+    def get_enrollment_id(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            try:
+                enr = api_models.EnrolledCourse.objects.filter(
+                    user=request.user,
+                    course=obj.course
+                ).first()
+                if enr:
+                    return enr.enrollment_id
+            except Exception:
+                pass
+        return None
+
+    def get_user_enrolled(self, obj):
+        return bool(self.get_enrollment_id(obj))
     
     def get_course_image(self, obj):
         try:
@@ -4326,12 +4346,25 @@ class ForumCategorySerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'topics_count', 'posts_count']
 
+    def create(self, validated_data):
+        from django.utils.text import slugify
+        if not validated_data.get('slug'):
+            base_slug = slugify(validated_data.get('name', 'rumpun'))
+            slug = base_slug
+            counter = 1
+            while api_models.ForumCategory.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            validated_data['slug'] = slug
+        return super().create(validated_data)
+
 
 class ForumTopicMessageSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source='user.id', read_only=True)
     profile = serializers.SerializerMethodField(read_only=True)
     likes_count = serializers.IntegerField(read_only=True)
     user_liked = serializers.SerializerMethodField(read_only=True)
+    user_report = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = api_models.ForumTopicMessage
@@ -4348,10 +4381,11 @@ class ForumTopicMessageSerializer(serializers.ModelSerializer):
             'file_name',
             'likes_count',
             'user_liked',
+            'user_report',
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'message_id', 'created_at', 'updated_at', 'likes_count', 'user_liked', 'profile']
+        read_only_fields = ['id', 'message_id', 'created_at', 'updated_at', 'likes_count', 'user_liked', 'user_report', 'profile']
 
     def get_profile(self, obj):
         try:
@@ -4370,6 +4404,24 @@ class ForumTopicMessageSerializer(serializers.ModelSerializer):
                 if request and image_url and not image_url.startswith(('http://', 'https://')):
                     image_url = request.build_absolute_uri(image_url)
 
+                is_internal = bool(
+                    getattr(obj.user, 'is_internal', False) or 
+                    getattr(obj.user, 'user_type', '') == 'INTERNAL' or 
+                    obj.user.is_staff or 
+                    obj.user.is_superuser or 
+                    (obj.user.email and obj.user.email.lower().endswith('@dpd.go.id'))
+                )
+
+                role_badges = []
+                if obj.user.is_superuser or obj.user.is_staff or getattr(obj.user, 'is_admin', False):
+                    role_badges.append({'key': 'admin', 'label': 'Administrator', 'color': 'red'})
+                if getattr(obj.user, 'is_instructor', False):
+                    role_badges.append({'key': 'instructor', 'label': 'Instruktur', 'color': 'teal'})
+                if is_internal:
+                    role_badges.append({'key': 'internal', 'label': 'Setjen DPD RI', 'color': 'indigo'})
+                elif getattr(obj.user, 'user_type', '') == 'ASN':
+                    role_badges.append({'key': 'asn', 'label': 'ASN Mitra', 'color': 'blue'})
+
                 return {
                     'user_id': obj.user.id,
                     'full_name': obj.user.full_name or obj.user.username or 'Anonim',
@@ -4379,7 +4431,8 @@ class ForumTopicMessageSerializer(serializers.ModelSerializer):
                     'user_type': getattr(obj.user, 'user_type', 'UMUM'),
                     'is_staff': bool(obj.user.is_staff or obj.user.is_superuser),
                     'is_instructor': bool(getattr(obj.user, 'is_instructor', False)),
-                    'is_internal': bool(getattr(obj.user, 'is_internal', False)),
+                    'is_internal': is_internal,
+                    'role_badges': role_badges,
                 }
         except Exception:
             pass
@@ -4391,6 +4444,216 @@ class ForumTopicMessageSerializer(serializers.ModelSerializer):
             return api_models.ForumTopicMessageLike.objects.filter(message=obj, user=request.user).exists()
         return False
 
+    def get_user_report(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            try:
+                report = api_models.ForumReport.objects.filter(
+                    reporter=request.user,
+                    message=obj
+                ).order_by('-created_at').first()
+                if report:
+                    return {
+                        'id': report.id,
+                        'reason': report.reason,
+                        'reason_display': report.get_reason_display(),
+                        'description': report.description,
+                        'status': report.status,
+                        'status_display': report.get_status_display(),
+                        'admin_notes': report.admin_notes,
+                        'created_at': report.created_at,
+                        'updated_at': report.updated_at,
+                    }
+            except Exception:
+                pass
+        return None
+
+
+class ForumPollOptionSerializer(serializers.ModelSerializer):
+    votes_count = serializers.IntegerField(read_only=True)
+    percentage = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = api_models.ForumPollOption
+        fields = ['id', 'option_text', 'order', 'votes_count', 'percentage']
+
+    def get_percentage(self, obj):
+        total = obj.poll.total_votes
+        if total == 0:
+            return 0
+        return round((obj.votes.count() / total) * 100, 1)
+
+
+class ForumPollSerializer(serializers.ModelSerializer):
+    options = serializers.SerializerMethodField(read_only=True)
+    total_votes = serializers.IntegerField(read_only=True)
+    user_voted_option_id = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = api_models.ForumPoll
+        fields = ['id', 'question', 'is_closed', 'total_votes', 'options', 'user_voted_option_id', 'created_at']
+
+    def get_options(self, obj):
+        total = obj.total_votes
+        options_data = []
+        for opt in obj.options.all().order_by('order', 'id'):
+            v_count = opt.votes.count()
+            pct = round((v_count / total) * 100, 1) if total > 0 else 0
+            options_data.append({
+                'id': opt.id,
+                'option_text': opt.option_text,
+                'votes_count': v_count,
+                'percentage': pct,
+            })
+        return options_data
+
+    def get_user_voted_option_id(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            vote = api_models.ForumPollVote.objects.filter(poll=obj, user=request.user).first()
+            if vote:
+                return vote.option_id
+        return None
+
+
+class ForumReportSerializer(serializers.ModelSerializer):
+    reporter_name = serializers.CharField(source='reporter.full_name', read_only=True)
+
+    class Meta:
+        model = api_models.ForumReport
+        fields = [
+            'id', 'reporter', 'reporter_name', 'topic', 'message',
+            'reason', 'description', 'status', 'admin_notes', 'created_at'
+        ]
+        read_only_fields = ['id', 'reporter', 'status', 'admin_notes', 'created_at']
+
+
+class AdminForumReportSerializer(serializers.ModelSerializer):
+    reporter_details = serializers.SerializerMethodField(read_only=True)
+    reason_display = serializers.CharField(source='get_reason_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    target_type = serializers.SerializerMethodField(read_only=True)
+    topic_details = serializers.SerializerMethodField(read_only=True)
+    message_details = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = api_models.ForumReport
+        fields = [
+            'id', 'reporter', 'reporter_details', 'topic', 'topic_details',
+            'message', 'message_details', 'target_type',
+            'reason', 'reason_display', 'description',
+            'status', 'status_display', 'admin_notes',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'reporter', 'created_at', 'updated_at']
+
+    def get_reporter_details(self, obj):
+        if not obj.reporter:
+            return None
+        profile = getattr(obj.reporter, 'profile', None)
+        image_url = None
+        if profile and profile.image:
+            try:
+                image_url = profile.image.url
+            except Exception:
+                image_url = None
+        full_name = getattr(obj.reporter, 'full_name', '') or obj.reporter.get_full_name() or obj.reporter.username
+        return {
+            'id': obj.reporter.id,
+            'username': obj.reporter.username,
+            'full_name': full_name,
+            'email': obj.reporter.email,
+            'avatar': image_url
+        }
+
+    def get_target_type(self, obj):
+        return 'message' if obj.message_id else 'topic'
+
+    def get_topic_details(self, obj):
+        topic = obj.topic
+        if not topic and obj.message:
+            topic = getattr(obj.message, 'topic', None)
+        if not topic:
+            return None
+        
+        user_profile = getattr(topic.user, 'profile', None) if topic.user else None
+        avatar_url = None
+        if user_profile and user_profile.image:
+            try:
+                avatar_url = user_profile.image.url
+            except Exception:
+                avatar_url = None
+
+        category_title = 'Umum'
+        if topic.category:
+            category_title = getattr(topic.category, 'title', None) or getattr(topic.category, 'name', 'Umum')
+
+        author_name = 'Anonim'
+        author_email = ''
+        if topic.user:
+            author_name = getattr(topic.user, 'full_name', '') or topic.user.get_full_name() or topic.user.username
+            author_email = topic.user.email
+
+        try:
+            replies_count = getattr(topic, 'replies_count', None) or topic.replies.count()
+        except Exception:
+            replies_count = 0
+
+        return {
+            'id': topic.id,
+            'topic_id': topic.topic_id,
+            'title': topic.title,
+            'content': topic.content,
+            'category_id': topic.category_id,
+            'category_title': category_title,
+            'is_pinned': topic.is_pinned,
+            'is_locked': topic.is_locked,
+            'author_id': topic.user_id,
+            'author_name': author_name,
+            'author_email': author_email,
+            'author_avatar': avatar_url,
+            'replies_count': replies_count,
+            'created_at': topic.created_at
+        }
+
+    def get_message_details(self, obj):
+        msg = obj.message
+        if not msg:
+            return None
+
+        user_profile = getattr(msg.user, 'profile', None) if msg.user else None
+        avatar_url = None
+        if user_profile and user_profile.image:
+            try:
+                avatar_url = user_profile.image.url
+            except Exception:
+                avatar_url = None
+
+        author_name = 'Anonim'
+        author_email = ''
+        if msg.user:
+            author_name = getattr(msg.user, 'full_name', '') or msg.user.get_full_name() or msg.user.username
+            author_email = msg.user.email
+
+        file_url = None
+        if msg.file:
+            try:
+                file_url = msg.file.url
+            except Exception:
+                file_url = None
+
+        return {
+            'id': msg.id,
+            'message_id': msg.message_id,
+            'message': msg.message,
+            'author_id': msg.user_id,
+            'author_name': author_name,
+            'author_email': author_email,
+            'author_avatar': avatar_url,
+            'file_attachment': file_url,
+            'created_at': msg.created_at
+        }
+
 
 class ForumTopicSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source='user.id', read_only=True)
@@ -4400,6 +4663,10 @@ class ForumTopicSerializer(serializers.ModelSerializer):
     replies_count = serializers.IntegerField(read_only=True)
     likes_count = serializers.IntegerField(read_only=True)
     user_liked = serializers.SerializerMethodField(read_only=True)
+    bookmarks_count = serializers.IntegerField(read_only=True)
+    user_bookmarked = serializers.SerializerMethodField(read_only=True)
+    poll = serializers.SerializerMethodField(read_only=True)
+    user_report = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = api_models.ForumTopic
@@ -4414,15 +4681,20 @@ class ForumTopicSerializer(serializers.ModelSerializer):
             'title',
             'content',
             'views_count',
+            'visibility',
             'is_pinned',
             'is_solved',
             'is_locked',
             'file',
             'file_name',
+            'poll',
             'replies',
             'replies_count',
             'likes_count',
             'user_liked',
+            'bookmarks_count',
+            'user_bookmarked',
+            'user_report',
             'created_at',
             'updated_at',
         ]
@@ -4435,9 +4707,13 @@ class ForumTopicSerializer(serializers.ModelSerializer):
             'replies_count',
             'likes_count',
             'user_liked',
+            'bookmarks_count',
+            'user_bookmarked',
+            'user_report',
             'profile',
             'category_detail',
             'replies',
+            'poll',
         ]
 
     def get_replies(self, obj):
@@ -4462,6 +4738,24 @@ class ForumTopicSerializer(serializers.ModelSerializer):
                 if request and image_url and not image_url.startswith(('http://', 'https://')):
                     image_url = request.build_absolute_uri(image_url)
 
+                is_internal = bool(
+                    getattr(obj.user, 'is_internal', False) or 
+                    getattr(obj.user, 'user_type', '') == 'INTERNAL' or 
+                    obj.user.is_staff or 
+                    obj.user.is_superuser or 
+                    (obj.user.email and obj.user.email.lower().endswith('@dpd.go.id'))
+                )
+
+                role_badges = []
+                if obj.user.is_superuser or obj.user.is_staff or getattr(obj.user, 'is_admin', False):
+                    role_badges.append({'key': 'admin', 'label': 'Administrator', 'color': 'red'})
+                if getattr(obj.user, 'is_instructor', False):
+                    role_badges.append({'key': 'instructor', 'label': 'Instruktur', 'color': 'teal'})
+                if is_internal:
+                    role_badges.append({'key': 'internal', 'label': 'Setjen DPD RI', 'color': 'indigo'})
+                elif getattr(obj.user, 'user_type', '') == 'ASN':
+                    role_badges.append({'key': 'asn', 'label': 'ASN Mitra', 'color': 'blue'})
+
                 return {
                     'user_id': obj.user.id,
                     'full_name': obj.user.full_name or obj.user.username or 'Anonim',
@@ -4471,7 +4765,8 @@ class ForumTopicSerializer(serializers.ModelSerializer):
                     'user_type': getattr(obj.user, 'user_type', 'UMUM'),
                     'is_staff': bool(obj.user.is_staff or obj.user.is_superuser),
                     'is_instructor': bool(getattr(obj.user, 'is_instructor', False)),
-                    'is_internal': bool(getattr(obj.user, 'is_internal', False)),
+                    'is_internal': is_internal,
+                    'role_badges': role_badges,
                 }
         except Exception:
             pass
@@ -4482,6 +4777,43 @@ class ForumTopicSerializer(serializers.ModelSerializer):
         if request and request.user and request.user.is_authenticated:
             return api_models.ForumTopicLike.objects.filter(topic=obj, user=request.user).exists()
         return False
+
+    def get_user_bookmarked(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            return api_models.ForumTopicBookmark.objects.filter(topic=obj, user=request.user).exists()
+        return False
+
+    def get_poll(self, obj):
+        poll = getattr(obj, 'poll', None)
+        if poll:
+            return ForumPollSerializer(poll, context=self.context).data
+        return None
+
+    def get_user_report(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            try:
+                report = api_models.ForumReport.objects.filter(
+                    reporter=request.user,
+                    topic=obj,
+                    message__isnull=True
+                ).order_by('-created_at').first()
+                if report:
+                    return {
+                        'id': report.id,
+                        'reason': report.reason,
+                        'reason_display': report.get_reason_display(),
+                        'description': report.description,
+                        'status': report.status,
+                        'status_display': report.get_status_display(),
+                        'admin_notes': report.admin_notes,
+                        'created_at': report.created_at,
+                        'updated_at': report.updated_at,
+                    }
+            except Exception:
+                pass
+        return None
 
 
 

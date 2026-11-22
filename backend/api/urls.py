@@ -100,12 +100,21 @@ urlpatterns = [
 
     # Forum Pembelajaran & Aggregated Course Discussions Endpoints
     path("forum/categories/", api_views.ForumCategoryListAPIView.as_view()),
+    path("forum/leaderboard/", api_views.ForumLeaderboardAPIView.as_view()),
     path("forum/topics/", api_views.ForumTopicListCreateAPIView.as_view()),
     path("forum/topics/<str:topic_id>/", api_views.ForumTopicDetailAPIView.as_view()),
+    path("forum/topics/<str:topic_id>/toggle-pin/", api_views.ForumTopicTogglePinAPIView.as_view()),
+    path("forum/topics/<str:topic_id>/toggle-lock/", api_views.ForumTopicToggleLockAPIView.as_view()),
     path("forum/topics/<str:topic_id>/reply/", api_views.ForumTopicReplyCreateAPIView.as_view()),
     path("forum/topics/<str:topic_id>/like/", api_views.ForumTopicLikeToggleAPIView.as_view()),
+    path("forum/topics/<str:topic_id>/bookmark/", api_views.ForumTopicBookmarkToggleAPIView.as_view()),
+    path("forum/messages/<str:message_id>/", api_views.ForumTopicMessageDetailAPIView.as_view()),
     path("forum/messages/<str:message_id>/like/", api_views.ForumTopicReplyLikeToggleAPIView.as_view()),
     path("forum/messages/<str:message_id>/toggle-solution/", api_views.ForumTopicToggleSolutionAPIView.as_view()),
+    path("forum/polls/<int:poll_id>/vote/", api_views.ForumPollVoteAPIView.as_view()),
+    path("forum/polls/<int:poll_id>/toggle-close/", api_views.ForumPollToggleCloseAPIView.as_view()),
+    path("forum/reports/", api_views.ForumReportCreateAPIView.as_view()),
+    path("forum/reports/<int:pk>/cancel/", api_views.ForumReportCancelAPIView.as_view()),
     path("student/course-discussions-all/", api_views.StudentAggregatedCourseDiscussionsAPIView.as_view()),
 
     # Student Quiz Endpoints
@@ -166,6 +175,13 @@ urlpatterns = [
     # ✨ PHASE 7.16: Admin Routes - Q&A Reports
     path("admin/qa-reports/", api_views.AdminQAReportsListAPIView.as_view()),  # List all Q&A reports
     path("admin/qa-reports/<int:report_id>/", api_views.AdminQAReportDetailAPIView.as_view()),  # Review/update Q&A report
+    # Admin Routes - Forum Pembelajaran Moderation Reports
+    path("admin/forum-reports/", api_views.AdminForumReportsListAPIView.as_view()),
+    path("admin/forum-reports/<int:report_id>/", api_views.AdminForumReportDetailAPIView.as_view()),
+    # Admin Routes - Forum Pembelajaran Categories & Topics Management
+    path("admin/forum/categories/", api_views.AdminForumCategoryListCreateAPIView.as_view()),
+    path("admin/forum/categories/<int:id>/", api_views.AdminForumCategoryDetailAPIView.as_view()),
+    path("admin/forum/topics/", api_views.AdminForumTopicListAPIView.as_view()),
     path("teacher/best-course-earning/<teacher_id>/", api_views.TeacherBestSellingCourseAPIView.as_view({'get': 'list'})),
     path("teacher/course-order-list/<teacher_id>/", api_views.TeacherCourseOrdersListAPIView.as_view()),
     path("teacher/question-answer-list/<teacher_id>/", api_views.TeacherQuestionAnswerListAPIView.as_view()),

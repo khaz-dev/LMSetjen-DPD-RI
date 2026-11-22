@@ -92,6 +92,8 @@ NOTI_TYPE = (
     ("AI JP Target Reminder", "AI JP Target Reminder"),
     ("AI Microlearning Digest", "AI Microlearning Digest"),
     ("AI Flashcard Challenge", "AI Flashcard Challenge"),
+    ("Forum Reply", "Forum Reply"),
+    ("Forum Solution", "Forum Solution"),
 )
 
 # ✨ PHASE 4.18: Video source types for course intro videos
@@ -5846,6 +5848,17 @@ class ForumTopic(models.Model):
     is_pinned = models.BooleanField(default=False, help_text="Pinned topic will appear at the top")
     is_solved = models.BooleanField(default=False, help_text="Marked as solved when an answer resolves the question")
     is_locked = models.BooleanField(default=False, help_text="Locked topic cannot receive new replies")
+    FORUM_VISIBILITY_CHOICES = (
+        ('public', 'Publik (Semua Pengguna)'),
+        ('internal_setjen', 'Khusus Pegawai Setjen DPD RI'),
+    )
+    visibility = models.CharField(
+        max_length=30,
+        choices=FORUM_VISIBILITY_CHOICES,
+        default='public',
+        db_index=True,
+        help_text="Visibilitas topik: publik atau khusus internal Setjen DPD RI"
+    )
     file = models.FileField(upload_to="forum_attachments/", null=True, blank=True)
     file_name = models.CharField(max_length=255, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -5871,6 +5884,10 @@ class ForumTopic(models.Model):
     @property
     def likes_count(self):
         return self.likes.count()
+
+    @property
+    def bookmarks_count(self):
+        return self.bookmarks.count()
 
 
 class ForumTopicMessage(models.Model):
@@ -5901,6 +5918,10 @@ class ForumTopicMessage(models.Model):
     @property
     def likes_count(self):
         return self.likes.count()
+
+    @property
+    def bookmarks_count(self):
+        return self.bookmarks.count()
 
 
 class ForumTopicLike(models.Model):
@@ -5933,6 +5954,115 @@ class ForumTopicMessageLike(models.Model):
 
     def __str__(self):
         return f"{self.user.username} liked message {self.message.message_id}"
+
+
+class ForumTopicBookmark(models.Model):
+    """
+    Bookmark / Simpan Topik Favorit Forum Pembelajaran oleh Pengguna
+    """
+    topic = models.ForeignKey(ForumTopic, on_delete=models.CASCADE, related_name='bookmarks')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forum_topic_bookmarks')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('topic', 'user')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} bookmarked topic {self.topic.topic_id}"
+
+
+class ForumReport(models.Model):
+    """
+    Pelaporan topik atau balasan forum yang melanggar etika ASN, spam, atau hoaks
+    """
+    REPORT_REASON_CHOICES = (
+        ('spam', 'Spam / Iklan Tidak Relevan'),
+        ('inappropriate', 'Bahasa Tidak Pantas / Pelanggaran Etika ASN'),
+        ('misleading', 'Informasi Menyesatkan / Hoaks'),
+        ('harassment', 'Pelecehan / Ujaran Kebencian'),
+        ('other', 'Lainnya'),
+    )
+    REPORT_STATUS_CHOICES = (
+        ('pending', 'Menunggu Tinjauan'),
+        ('reviewed', 'Telah Ditinjau'),
+        ('resolved', 'Terselesaikan (Tindakan Diambil)'),
+        ('dismissed', 'Ditolak (Tidak Melanggar)'),
+    )
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forum_reports_filed')
+    topic = models.ForeignKey(ForumTopic, on_delete=models.CASCADE, null=True, blank=True, related_name='reports')
+    message = models.ForeignKey(ForumTopicMessage, on_delete=models.CASCADE, null=True, blank=True, related_name='reports')
+    reason = models.CharField(max_length=50, choices=REPORT_REASON_CHOICES)
+    description = models.TextField(null=True, blank=True, help_text="Catatan atau rincian tambahan dari pelapor")
+    status = models.CharField(max_length=20, choices=REPORT_STATUS_CHOICES, default='pending')
+    admin_notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        target = f"Topik #{self.topic.topic_id}" if self.topic else f"Balasan #{self.message.message_id}"
+        return f"Laporan {self.get_reason_display()} pada {target} oleh {self.reporter.username}"
+
+
+class ForumPoll(models.Model):
+    """
+    Mini-polling / Jajak Pendapat yang terpasang pada Topik Forum Pembelajaran
+    """
+    topic = models.OneToOneField(ForumTopic, on_delete=models.CASCADE, related_name='poll')
+    question = models.CharField(max_length=500, help_text="Pertanyaan jajak pendapat")
+    is_closed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Poll for Topic {self.topic.topic_id}: {self.question}"
+
+    @property
+    def total_votes(self):
+        return ForumPollVote.objects.filter(poll=self).count()
+
+
+class ForumPollOption(models.Model):
+    """
+    Opsi pilihan pada Mini-polling
+    """
+    poll = models.ForeignKey(ForumPoll, on_delete=models.CASCADE, related_name='options')
+    option_text = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return self.option_text
+
+    @property
+    def votes_count(self):
+        return self.votes.count()
+
+
+class ForumPollVote(models.Model):
+    """
+    Pencatatan suara pemilih (1 suara per user per poll)
+    """
+    poll = models.ForeignKey(ForumPoll, on_delete=models.CASCADE, related_name='votes')
+    option = models.ForeignKey(ForumPollOption, on_delete=models.CASCADE, related_name='votes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forum_poll_votes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('poll', 'user')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} voted on poll {self.poll.id}"
+
 
 
 # Connect the signals
