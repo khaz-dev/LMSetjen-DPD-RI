@@ -5360,7 +5360,7 @@ class AIAssistantSaveNoteAPIView(APIView):
                 course = enrollment.course
 
         enrollment_id = enrollment.enrollment_id if enrollment else None
-        note_url = f"/student/courses/{enrollment_id}/" if enrollment_id else (f"/course-detail/{course.slug}/" if course else "/student/courses/")
+        note_url = f"/student/courses/{enrollment_id}/" if enrollment_id else (f"/course-detail/{course.slug}/" if course else "/student/catatan/")
 
         note_unique_id = f"manta_{uuid.uuid4().hex[:8]}"
 

@@ -1247,12 +1247,37 @@ class NoteSerializer(serializers.ModelSerializer):
     # ✨ PHASE 11.160: Include nested lesson context for filtering
     variant = VariantSerializer(read_only=True)
     variant_item = VariantItemSerializer(read_only=True)
+    course_title = serializers.CharField(source='course.title', read_only=True, allow_null=True)
+    course_slug = serializers.CharField(source='course.slug', read_only=True, allow_null=True)
+    course_image = serializers.SerializerMethodField()
+    enrollment_id = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ['id', 'user', 'user_name', 'course', 'title', 'note', 'color', 'note_id', 'date', 'variant', 'variant_item']
+        fields = [
+            'id', 'user', 'user_name', 'course', 'course_title', 'course_slug', 'course_image',
+            'enrollment_id', 'title', 'note', 'color', 'note_id', 'is_pinned', 'date', 'variant', 'variant_item'
+        ]
         model = api_models.Note
         # ✨ PHASE 9.4: Mark non-editable fields as read-only to fix PUT/PATCH validation
         read_only_fields = ['user', 'course', 'note_id', 'date', 'variant', 'variant_item']
+
+    def get_course_image(self, obj):
+        if obj.course and obj.course.image:
+            try:
+                return obj.course.image.url
+            except Exception:
+                return str(obj.course.image)
+        return None
+
+    def get_enrollment_id(self, obj):
+        if obj.course and obj.user:
+            try:
+                enrolled = api_models.EnrolledCourse.objects.filter(user=obj.user, course=obj.course).first()
+                if enrolled:
+                    return enrolled.enrollment_id
+            except Exception:
+                pass
+        return None
 
 
 

@@ -81,6 +81,9 @@ urlpatterns = [
     path("student/video-progress-delete/<user_id>/<variant_item_id>/", api_views.VideoProgressDeleteAPIView.as_view()),
     path("student/course-note/<user_id>/<enrollment_id>/", api_views.StudentNoteCreateAPIView.as_view()),
     path("student/course-note-detail/<user_id>/<enrollment_id>/<note_id>/", api_views.StudentNoteDetailAPIView.as_view()),
+    # ✨ Student Global Notes Hub API (Both General Notes & Course-linked Notes)
+    path("student/notes/<user_id>/", api_views.StudentAllNotesListCreateAPIView.as_view()),
+    path("student/notes/<user_id>/<note_id>/", api_views.StudentGlobalNoteDetailAPIView.as_view()),
     path("student/rate-course/", api_views.StudentRateCourseCreateAPIView.as_view()),
     path("student/review-detail/<user_id>/<review_id>/", api_views.StudentRateCourseUpdateAPIView.as_view()),
     path("student/wishlist/<user_id>/", api_views.StudentWishListListCreateAPIView.as_view()),

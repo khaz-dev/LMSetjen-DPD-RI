@@ -926,6 +926,191 @@ class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class StudentAllNotesListCreateAPIView(generics.ListCreateAPIView):
+    """
+    Student All Notes API (List & Create)
+    - Lists all notes belonging to the student (both general and course-specific)
+    - Supports filtering by type ('all', 'general', 'course', 'pinned'), course_id, color, search
+    - Creates either general notes or notes linked to a course
+    """
+    serializer_class = api_serializer.NoteSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
+
+    def get_queryset(self):
+        user_id = self.kwargs.get('user_id')
+        if not user_id:
+            return api_models.Note.objects.none()
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return api_models.Note.objects.none()
+
+        qs = api_models.Note.objects.filter(user=user).select_related('course', 'variant', 'variant_item')
+
+        # Filter by note type
+        note_type = self.request.query_params.get('type')
+        if note_type == 'general':
+            qs = qs.filter(course__isnull=True)
+        elif note_type == 'course':
+            qs = qs.filter(course__isnull=False)
+        elif note_type == 'pinned':
+            qs = qs.filter(is_pinned=True)
+
+        # Filter by specific course
+        course_id = self.request.query_params.get('course_id')
+        if course_id:
+            qs = qs.filter(course_id=course_id)
+
+        # Filter by color
+        color = self.request.query_params.get('color')
+        if color:
+            qs = qs.filter(color=color)
+
+        # Real-time search by query
+        search = self.request.query_params.get('search')
+        if search:
+            search = search.strip()
+            qs = qs.filter(
+                Q(title__icontains=search) |
+                Q(note__icontains=search) |
+                Q(course__title__icontains=search)
+            )
+
+        return qs.order_by('-is_pinned', '-date')
+
+    def create(self, request, *args, **kwargs):
+        user_id = self.kwargs.get('user_id') or request.data.get('user_id')
+        title = (request.data.get('title') or '').strip()
+        note = (request.data.get('note') or '').strip()
+        color = request.data.get('color', '#f39c12')
+        is_pinned = request.data.get('is_pinned', False)
+        if isinstance(is_pinned, str):
+            is_pinned = is_pinned.lower() in ['true', '1', 'yes']
+
+        course_id = request.data.get('course_id')
+        variant_id = request.data.get('variant_id')
+        variant_item_id = request.data.get('variant_item_id')
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Pengguna tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not title:
+            return Response({"error": "Judul catatan tidak boleh kosong"}, status=status.HTTP_400_BAD_REQUEST)
+        if not note:
+            return Response({"error": "Konten catatan tidak boleh kosong"}, status=status.HTTP_400_BAD_REQUEST)
+
+        course_obj = None
+        if course_id and str(course_id).strip() not in ['', 'null', 'undefined', '0']:
+            try:
+                course_obj = api_models.Course.objects.filter(id=course_id).first()
+            except Exception:
+                course_obj = None
+
+        variant_obj = None
+        if variant_id and course_obj:
+            try:
+                variant_obj = api_models.Variant.objects.get(variant_id=variant_id, course=course_obj)
+            except api_models.Variant.DoesNotExist:
+                try:
+                    variant_obj = api_models.Variant.objects.get(id=variant_id, course=course_obj)
+                except Exception:
+                    variant_obj = None
+
+        variant_item_obj = None
+        if variant_item_id and variant_obj:
+            try:
+                variant_item_obj = api_models.VariantItem.objects.get(variant_item_id=variant_item_id, variant=variant_obj)
+            except api_models.VariantItem.DoesNotExist:
+                try:
+                    variant_item_obj = api_models.VariantItem.objects.get(id=variant_item_id, variant=variant_obj)
+                except Exception:
+                    variant_item_obj = None
+
+        new_note = api_models.Note.objects.create(
+            user=user,
+            course=course_obj,
+            title=title,
+            note=note,
+            color=color,
+            is_pinned=is_pinned,
+            variant=variant_obj,
+            variant_item=variant_item_obj
+        )
+
+        serializer = self.get_serializer(new_note)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class StudentGlobalNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Student Global Note Detail API
+    - Retrieve, update, or delete any note by note_id (integer id or shortuuid note_id)
+    - Supports toggling is_pinned, updating title, note, color, course
+    """
+    serializer_class = api_serializer.NoteSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    authentication_classes = [JWTAuthentication]
+
+    def get_object(self):
+        user_id = self.kwargs.get('user_id')
+        note_id = self.kwargs.get('note_id')
+
+        if not user_id or not note_id:
+            raise Http404("User ID dan Note ID wajib diisi")
+
+        try:
+            user = User.objects.get(id=user_id)
+            if str(note_id).isdigit():
+                return api_models.Note.objects.select_related('course', 'variant', 'variant_item').get(user=user, id=note_id)
+            return api_models.Note.objects.select_related('course', 'variant', 'variant_item').get(user=user, note_id=note_id)
+        except (User.DoesNotExist, api_models.Note.DoesNotExist):
+            raise Http404("Catatan tidak ditemukan")
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        mutable_data = request.data.dict() if hasattr(request.data, 'dict') else dict(request.data)
+
+        # Handle course linkage update
+        if 'course_id' in mutable_data:
+            course_id = mutable_data.pop('course_id')
+            if course_id in ['', None, 'null', 0, '0', 'undefined']:
+                instance.course = None
+                instance.variant = None
+                instance.variant_item = None
+            else:
+                try:
+                    course_obj = api_models.Course.objects.filter(id=course_id).first()
+                    if course_obj:
+                        instance.course = course_obj
+                except Exception:
+                    pass
+
+        # Handle is_pinned toggle
+        if 'is_pinned' in mutable_data:
+            val = mutable_data.pop('is_pinned')
+            if isinstance(val, str):
+                val = val.lower() in ['true', '1', 'yes']
+            instance.is_pinned = bool(val)
+
+        if 'title' in mutable_data:
+            instance.title = mutable_data.pop('title')
+        if 'note' in mutable_data:
+            instance.note = mutable_data.pop('note')
+        if 'color' in mutable_data:
+            instance.color = mutable_data.pop('color')
+
+        instance.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class StudentRateCourseCreateAPIView(generics.CreateAPIView):
     """
     Student Course Rating/Review API

@@ -1,0 +1,1342 @@
+/* ==========================================================================
+   LMSetjen DPD RI - Catatan Pembelajaran (Student Notes Hub)
+   Ultra-Compact, High-Density, Eye-Catching Redesign
+   Minimizes excessive blank/white space while elevating modern aesthetic
+   ========================================================================== */
+
+:root {
+    --dpd-teal-dark: #064e3b;
+    --dpd-teal: #0f766e;
+    --dpd-teal-hover: #115e59;
+    --dpd-teal-light: #ccfbf1;
+    --dpd-teal-subtle: rgba(15, 118, 110, 0.08);
+    --dpd-emerald: #059669;
+    --dpd-emerald-light: #d1fae5;
+    --dpd-indigo: #4338ca;
+    --dpd-indigo-light: #e0e7ff;
+    --dpd-amber: #d97706;
+    --dpd-amber-light: #fef3c7;
+    --dpd-rose: #e11d48;
+    --dpd-rose-light: #ffe4e6;
+    --dpd-slate: #0f172a;
+    --dpd-gray-dark: #334155;
+    --dpd-gray-muted: #64748b;
+    --dpd-border: #e2e8f0;
+    --dpd-card-bg: #ffffff;
+    --dpd-shadow-xs: 0 1px 3px rgba(15, 23, 42, 0.05);
+    --dpd-shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.04);
+    --dpd-shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+/* ==========================================================================
+   PAGE CONTAINER & BASE LAYOUT (Compact Vertical Padding)
+   ========================================================================== */
+.modern-notes-page {
+    min-height: 100vh;
+    background: transparent;
+    padding-top: 0.5rem !important;
+    padding-bottom: 1.5rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    overflow-x: clip;
+}
+
+.modern-notes-page > .container,
+.modern-notes-page .container {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    position: relative;
+    overflow: visible !important;
+}
+
+/* ==========================================================================
+   LAYOUT ROW & HEADER ALIGNMENT (Flush with student-header-row)
+   ========================================================================== */
+.modern-notes-page .row.student-header-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    position: relative;
+    z-index: 102;
+}
+
+.modern-notes-page .row.student-header-row > [class*="col-"] {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.modern-notes-page .student-header-card {
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Content Row - Exactly 100% width matching student-header-row */
+.modern-notes-page > .container > .row:not(.student-header-row),
+.modern-notes-page .row.mt-0 {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    gap: 0 !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+/* Sticky sidebar column support */
+.modern-notes-page .student-sidebar-column,
+.modern-notes-page .row > .student-sidebar-column {
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: stretch !important;
+    height: auto !important;
+    position: static !important;
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.modern-notes-page .student-sidebar {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: calc(var(--navbar-height, 60px) + 14px) !important;
+    z-index: 99 !important;
+    align-self: flex-start !important;
+}
+
+/* Main Content Column (col-lg-9 col-md-8 col-12) */
+.modern-notes-page .row:has(.student-sidebar-column) > .col-lg-9,
+.modern-notes-page > .container > .row > .col-lg-9,
+.modern-notes-page .col-lg-9.col-md-8.col-12 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden;
+}
+
+.modern-notes-page .sidebar-collapsed-adapted {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: auto !important;
+}
+
+/* ==========================================================================
+   1. ULTRA-COMPACT EXECUTIVE HERO SECTION (Slim, High-Density Banner)
+   ========================================================================== */
+.notes-hero-card {
+    background: linear-gradient(135deg, #064e3b 0%, #0f766e 55%, #115e59 100%);
+    border-radius: 12px;
+    padding: 0.75rem 1.15rem;
+    position: relative;
+    overflow: hidden;
+    color: #ffffff;
+    box-shadow: 0 6px 18px rgba(6, 78, 59, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    margin-bottom: 0.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.notes-hero-accent-shape {
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(204, 251, 241, 0.12) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.notes-hero-left {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1 1 280px;
+    min-width: 240px;
+}
+
+.notes-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 14px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    color: #ccfbf1;
+    width: fit-content;
+    backdrop-filter: blur(8px);
+}
+
+.notes-hero-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.notes-hero-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    color: #fde68a;
+    flex-shrink: 0;
+}
+
+.notes-hero-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+.notes-hero-desc {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.88);
+    margin: 0;
+    line-height: 1.35;
+}
+
+/* Compact Stats Pills on the Right */
+.notes-hero-right {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.notes-hero-stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.3rem 0.6rem;
+    backdrop-filter: blur(8px);
+    transition: all 0.18s ease;
+}
+
+.notes-hero-stat-pill:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.notes-stat-pill-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.notes-stat-pill-icon.icon-amber {
+    background: rgba(245, 158, 11, 0.28);
+    color: #fde68a;
+}
+
+.notes-stat-pill-icon.icon-teal {
+    background: rgba(20, 184, 166, 0.28);
+    color: #ccfbf1;
+}
+
+.notes-stat-pill-icon.icon-blue {
+    background: rgba(59, 130, 246, 0.28);
+    color: #bfdbfe;
+}
+
+.notes-stat-pill-icon.icon-rose {
+    background: rgba(225, 29, 72, 0.28);
+    color: #fecdd3;
+}
+
+.notes-stat-pill-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.notes-stat-pill-num {
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #ffffff;
+}
+
+.notes-stat-pill-text {
+    font-size: 0.64rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+}
+
+/* Compact Hero Action Button */
+.notes-btn-create-compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #f59e0b;
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+    transition: all 0.18s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.notes-btn-create-compact:hover {
+    background: #d97706;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.45);
+}
+
+/* ==========================================================================
+   2. HIGH-DENSITY UNIFIED TOOLBAR (Zero Wasted Space, Double-Decker Flow)
+   ========================================================================== */
+.notes-toolbar-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid var(--dpd-border);
+    padding: 0.55rem 0.85rem;
+    box-shadow: var(--dpd-shadow-xs);
+    margin-bottom: 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Line 1: Filter Pills & Active Count Summary */
+.notes-toolbar-line1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.notes-category-pills {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+}
+
+.notes-pill-btn {
+    border: 1px solid var(--dpd-border);
+    background: #f8fafc;
+    color: var(--dpd-gray-dark);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.22rem 0.55rem;
+    border-radius: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.15s ease;
+    height: 28px;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.notes-pill-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: var(--dpd-slate);
+}
+
+.notes-pill-btn .pill-count {
+    background: rgba(0, 0, 0, 0.06);
+    color: inherit;
+    font-size: 0.68rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.notes-pill-btn.active {
+    background: var(--dpd-teal);
+    border-color: var(--dpd-teal);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(15, 118, 110, 0.2);
+}
+
+.notes-pill-btn.active .pill-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+.notes-toolbar-line1-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    font-size: 0.74rem;
+    color: var(--dpd-gray-muted);
+}
+
+.notes-meta-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 500;
+}
+
+.notes-btn-reset-compact {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: var(--dpd-rose);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.notes-btn-reset-compact:hover {
+    background: #ffe4e6;
+}
+
+/* Line 2: Search Input & Controls in single row */
+.notes-toolbar-line2 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-top: 0.45rem;
+    border-top: 1px dashed var(--dpd-border);
+    flex-wrap: wrap;
+}
+
+.notes-search-box {
+    position: relative;
+    flex: 1 1 220px;
+    max-width: 380px;
+}
+
+.notes-search-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--dpd-gray-muted);
+    font-size: 0.82rem;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.notes-search-input {
+    width: 100%;
+    height: 32px;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    padding-left: 2.35rem !important;
+    padding-right: 1.85rem !important;
+    border-radius: 8px;
+    border: 1px solid var(--dpd-border);
+    background: #f8fafc;
+    font-size: 0.8rem;
+    transition: all 0.18s ease;
+}
+
+.notes-search-input:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: var(--dpd-teal);
+    box-shadow: 0 0 0 2.5px rgba(15, 118, 110, 0.12);
+}
+
+.notes-search-clear {
+    position: absolute;
+    right: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--dpd-gray-muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.15rem;
+}
+
+.notes-search-clear:hover {
+    color: var(--dpd-rose);
+}
+
+.notes-controls-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.notes-compact-select {
+    height: 32px;
+    padding: 0.25rem 1.75rem 0.25rem 0.65rem;
+    border-radius: 8px;
+    border: 1px solid var(--dpd-border);
+    background: #f8fafc;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--dpd-gray-dark);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.notes-compact-select:focus {
+    outline: none;
+    border-color: var(--dpd-teal);
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.12);
+}
+
+.notes-view-switcher {
+    display: inline-flex;
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 2px;
+    border: 1px solid var(--dpd-border);
+}
+
+.notes-view-btn {
+    background: transparent;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dpd-gray-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.notes-view-btn.active {
+    background: #ffffff;
+    color: var(--dpd-teal);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+
+.notes-btn-export-compact {
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: #f8fafc;
+    border: 1px solid var(--dpd-border);
+    color: var(--dpd-gray-dark);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.notes-btn-export-compact:hover {
+    background: var(--dpd-teal-light);
+    color: var(--dpd-teal-dark);
+    border-color: var(--dpd-teal);
+}
+
+/* ==========================================================================
+   3. HIGH-DENSITY NOTE CARDS & GRID
+   ========================================================================== */
+.notes-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.notes-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Note Card Base */
+.note-item-card {
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid var(--dpd-border);
+    box-shadow: var(--dpd-shadow-xs);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-top: 3.5px solid var(--note-accent, #0d9488);
+}
+
+.note-item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--dpd-shadow-md);
+    border-color: #cbd5e1;
+}
+
+.note-item-card.is-pinned {
+    background: linear-gradient(180deg, #fffdf8 0%, #ffffff 100%);
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.12);
+}
+
+/* Card Header */
+.note-card-header {
+    padding: 0.65rem 0.85rem 0.35rem 0.85rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.note-card-title-group {
+    flex: 1;
+    min-width: 0;
+}
+
+.note-badge-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.3rem;
+}
+
+.note-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.12rem 0.45rem;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.note-type-badge.badge-general {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.note-type-badge.badge-course {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.note-type-badge.badge-manta {
+    background: #0f766e;
+    color: #ffffff;
+    border: 1px solid #115e59;
+}
+
+.note-card-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    line-height: 1.3;
+    margin-bottom: 0;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Card Actions */
+.note-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    flex-shrink: 0;
+}
+
+.note-action-icon-btn {
+    background: transparent;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dpd-gray-muted);
+    font-size: 0.76rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.note-action-icon-btn:hover {
+    background: #f1f5f9;
+    color: var(--dpd-slate);
+}
+
+.note-action-icon-btn.btn-pin.pinned {
+    color: #d97706;
+    background: #fef3c7;
+}
+
+.note-action-icon-btn.btn-delete:hover {
+    background: #ffe4e6;
+    color: var(--dpd-rose);
+}
+
+/* Course Metadata context */
+.note-course-meta {
+    padding: 0 0.85rem 0.45rem 0.85rem;
+    font-size: 0.74rem;
+    color: var(--dpd-gray-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.note-course-link {
+    color: var(--dpd-teal);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    width: fit-content;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.note-course-link:hover {
+    text-decoration: underline;
+    color: var(--dpd-teal-dark);
+}
+
+.note-lesson-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #64748b;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Card Body (Snippet) */
+.note-card-body {
+    padding: 0.5rem 0.85rem;
+    flex: 1;
+    background: #fafafa;
+    border-top: 1px dashed #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+}
+
+.note-card-text {
+    font-size: 0.8rem;
+    color: #334155;
+    line-height: 1.5;
+    margin-bottom: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: pre-line;
+}
+
+/* Card Footer */
+.note-card-footer {
+    padding: 0.45rem 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: var(--dpd-gray-muted);
+}
+
+.note-footer-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+}
+
+.note-footer-btns {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.note-btn-pill {
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid var(--dpd-border);
+    background: #ffffff;
+    color: var(--dpd-gray-dark);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    line-height: 1.3;
+}
+
+.note-btn-pill:hover {
+    background: #f1f5f9;
+    color: var(--dpd-slate);
+}
+
+.note-btn-pill.btn-primary-soft {
+    background: var(--dpd-teal-light);
+    border-color: #99f6e4;
+    color: var(--dpd-teal-dark);
+}
+
+.note-btn-pill.btn-primary-soft:hover {
+    background: #a7f3d0;
+}
+
+/* ==========================================================================
+   LIST VIEW OVERRIDES (Ultra-Compact Linear Flow with No Horizontal Overflow)
+   ========================================================================== */
+.notes-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-bottom: 1.5rem;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.notes-list-container .note-item-card {
+    flex-direction: row !important;
+    align-items: center !important;
+    border-top: 1px solid var(--dpd-border) !important;
+    border-left: 4.5px solid var(--note-accent, #0d9488) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.notes-list-container .note-card-header {
+    flex: 0 0 35% !important;
+    max-width: 35% !important;
+    min-width: 0 !important;
+    padding: 0.55rem 0.85rem !important;
+    border-right: 1px solid #f1f5f9;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.notes-list-container .note-card-body {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0.55rem 0.85rem !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.notes-list-container .note-card-footer {
+    flex: 0 0 160px !important;
+    max-width: 160px !important;
+    min-width: 0 !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    border: none !important;
+    padding: 0.55rem 0.85rem !important;
+    gap: 0.35rem !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+/* ==========================================================================
+   EMPTY STATE (Compact)
+   ========================================================================== */
+.notes-empty-state {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+    padding: 2.2rem 1.5rem;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.notes-empty-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #fef3c7;
+    color: #d97706;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    margin-bottom: 0.65rem;
+}
+
+.notes-empty-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    margin-bottom: 0.35rem;
+}
+
+.notes-empty-desc {
+    font-size: 0.82rem;
+    color: var(--dpd-gray-muted);
+    max-width: 400px;
+    margin: 0 auto 1rem auto;
+    line-height: 1.45;
+}
+
+/* ==========================================================================
+   MODAL DIALOG STYLES (Compact & Polished)
+   ========================================================================== */
+.notes-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.notes-modal-card {
+    background: #ffffff;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 580px;
+    max-height: 90vh;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25);
+    border: 1px solid var(--dpd-border);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    animation: notesModalFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Sticky Note Paper Modal Aesthetic */
+.note-paper-modal {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: visible !important;
+}
+
+.notes-modal-tape {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+    border-radius: 3px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.notes-color-indicator-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+    flex-shrink: 0;
+}
+
+@keyframes notesModalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.97) translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.notes-modal-header {
+    padding: 0.85rem 1.15rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.notes-modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--dpd-slate);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+}
+
+.notes-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--dpd-gray-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.2rem;
+    border-radius: 5px;
+    transition: all 0.15s ease;
+}
+
+.notes-modal-close:hover {
+    color: var(--dpd-rose);
+    background: #ffe4e6;
+}
+
+.notes-modal-body {
+    padding: 1.15rem;
+    overflow-y: auto;
+}
+
+.notes-form-group {
+    margin-bottom: 0.85rem;
+}
+
+.notes-form-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--dpd-slate);
+    margin-bottom: 0.3rem;
+}
+
+.notes-form-input,
+.notes-form-textarea,
+.notes-form-select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--dpd-border);
+    background: #f8fafc;
+    font-size: 0.84rem;
+    transition: all 0.18s ease;
+}
+
+.notes-form-input:focus,
+.notes-form-textarea:focus,
+.notes-form-select:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: var(--dpd-teal);
+    box-shadow: 0 0 0 2.5px rgba(15, 118, 110, 0.12);
+}
+
+.notes-form-textarea {
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.55;
+}
+
+/* Pin Switch Row - Stick Flush to Left */
+.notes-pin-switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    width: 100%;
+}
+
+.notes-pin-switch-row .form-check.form-switch {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding-left: 0 !important;
+    margin: 0 !important;
+    float: none !important;
+}
+
+.notes-pin-switch-row .form-check-input {
+    float: none !important;
+    margin: 0 !important;
+    width: 2.3em !important;
+    height: 1.25em !important;
+    cursor: pointer;
+    box-shadow: none !important;
+}
+
+.notes-pin-switch-row .form-check-input:checked {
+    background-color: var(--modal-note-color, #f39c12) !important;
+    border-color: var(--modal-note-color, #f39c12) !important;
+}
+
+.notes-pin-switch-row .form-check-label {
+    cursor: pointer;
+    user-select: none;
+    margin-left: 0.55rem !important;
+    font-size: 0.8rem;
+}
+
+/* Paper Pad Notebook Texture */
+.notes-form-textarea.notes-paper-pad {
+    background-color: #fcfdfe;
+    background-image: linear-gradient(#e2e8f0 1px, transparent 1px);
+    background-size: 100% 28px;
+    line-height: 28px;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.86rem;
+    border-left: 4px solid var(--modal-note-color, #f39c12);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.notes-form-textarea.notes-paper-pad:focus {
+    background-color: #ffffff;
+    border-color: var(--modal-note-color, #f39c12);
+    box-shadow: 0 0 0 3px var(--modal-note-light, rgba(243, 156, 18, 0.15));
+}
+
+/* Palette selector */
+.notes-color-palette {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.3rem;
+}
+
+.notes-color-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+    transition: transform 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 0.65rem;
+}
+
+.notes-color-dot:hover {
+    transform: scale(1.15);
+}
+
+.notes-color-dot.active {
+    box-shadow: 0 0 0 2.5px var(--dpd-teal);
+}
+
+/* Modal Footer */
+.notes-modal-footer {
+    padding: 0.75rem 1.15rem;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.notes-btn-secondary {
+    padding: 0.45rem 0.9rem;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid var(--dpd-border);
+    color: var(--dpd-gray-dark);
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.notes-btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+.notes-btn-save {
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    background: var(--dpd-teal);
+    border: 1px solid var(--dpd-teal);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.18s ease;
+}
+
+.notes-btn-save:hover {
+    background: var(--dpd-teal-hover);
+}
+
+/* Detail Modal Content Display */
+.notes-detail-content {
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid var(--dpd-border);
+    padding: 1rem;
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: var(--dpd-slate);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.notes-detail-content.notes-paper-pad {
+    background-color: #fcfdfe;
+    background-image: linear-gradient(#e2e8f0 1px, transparent 1px);
+    background-size: 100% 28px;
+    line-height: 28px;
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--modal-note-color, #0d9488);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 991px) {
+    .notes-hero-card {
+        padding: 0.75rem;
+    }
+    .notes-grid-container {
+        grid-template-columns: 1fr;
+    }
+    .notes-list-container .note-item-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .notes-list-container .note-card-header,
+    .notes-list-container .note-card-footer {
+        flex: auto;
+        border: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .modern-notes-page > .container > .row:not(.student-header-row),
+    .modern-notes-page .row.mt-0 {
+        flex-direction: column !important;
+        flex-wrap: wrap !important;
+    }
+
+    .modern-notes-page .student-sidebar-column,
+    .modern-notes-page .row > .student-sidebar-column {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .modern-notes-page .row:has(.student-sidebar-column) > .col-lg-9,
+    .modern-notes-page > .container > .row > .col-lg-9,
+    .modern-notes-page .col-lg-9.col-md-8.col-12 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 auto !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .notes-toolbar-line1,
+    .notes-toolbar-line2 {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .notes-search-box {
+        max-width: 100%;
+    }
+    .notes-controls-group {
+        justify-content: space-between;
+    }
+    .notes-hero-right {
+        width: 100%;
+    }
+    .notes-hero-stat-pill {
+        flex: 1 1 45%;
+    }
+}

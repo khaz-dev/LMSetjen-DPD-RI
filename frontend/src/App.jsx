@@ -53,6 +53,7 @@ const Rankings = lazy(() => import("./views/base/Rankings"));
 const StudentDashboard = lazy(() => import("./views/student/Dashboard"));
 const StudentCourses = lazy(() => import("./views/student/Courses"));
 const StudentCourseDetail = lazy(() => import("./views/student/CourseDetail"));
+const StudentNotes = lazy(() => import("./views/student/Notes"));
 const StudentTestimonials = lazy(() => import("./views/student/Testimonials"));
 const Wishlist = lazy(() => import("./views/student/Wishlist"));
 const StudentProfile = lazy(() => import("./views/student/Profile"));
@@ -341,6 +342,26 @@ function App() {
                                         </PrivateRoute>
                                     }
                                 />
+                            <Route
+                                path="/student/catatan/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["student"]}>
+                                            <StudentNotes />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/student/notes/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["student"]}>
+                                            <StudentNotes />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
                             <Route
                                 path="/student/wishlist/"
                                 element={

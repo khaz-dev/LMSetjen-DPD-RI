@@ -2420,7 +2420,7 @@ class EnrolledCourse(models.Model):
     
 class Note(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=1000, null=True, blank=True)
     note = models.TextField()
     color = models.CharField(max_length=10, default="#f39c12", help_text="Hex color code for the note")
@@ -2428,10 +2428,11 @@ class Note(models.Model):
     # ✨ PHASE 11.160: Optional lesson/section context for notes
     variant = models.ForeignKey('Variant', on_delete=models.SET_NULL, null=True, blank=True, help_text="Course section (bagian) this note relates to")
     variant_item = models.ForeignKey('VariantItem', on_delete=models.SET_NULL, null=True, blank=True, help_text="Lesson (pelajaran) this note relates to")
+    is_pinned = models.BooleanField(default=False, help_text="Pin note to top of list")
     date = models.DateTimeField(default=timezone.now)   
 
     def __str__(self):
-        return self.title
+        return self.title or f"Note #{self.id}"
     
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
