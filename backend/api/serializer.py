@@ -3309,11 +3309,24 @@ class Question_Answer_MessageSerializer(serializers.ModelSerializer):
         """Get user profile with all details"""
         try:
             if obj.user:
-                profile = obj.user.profile
+                profile = getattr(obj.user, 'profile', None)
+                image_url = None
+                if profile and profile.image:
+                    try:
+                        image_url = profile.image.url
+                    except Exception:
+                        raw_name = getattr(profile.image, 'name', '') or str(profile.image)
+                        if raw_name:
+                            image_url = f"/media/{raw_name}" if not raw_name.startswith(('/media/', 'http://', 'https://')) else raw_name
+                
+                request = self.context.get('request')
+                if request and image_url and not image_url.startswith(('http://', 'https://')):
+                    image_url = request.build_absolute_uri(image_url)
+
                 return {
                     'user_id': obj.user.id,
                     'full_name': obj.user.full_name or 'Anonim',
-                    'image': str(profile.image) if profile and profile.image else None,
+                    'image': image_url,
                     'position_name': profile.position.name if profile and profile.position else None,
                     'organization_unit_name': profile.organization_unit.name if profile and profile.organization_unit else None,
                     'country': profile.country if profile else None,
@@ -3371,13 +3384,20 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
     user_liked = serializers.SerializerMethodField(read_only=True)
     
+    # Course Context (For Forum & Aggregated QA feeds)
+    course_title = serializers.CharField(source='course.title', read_only=True)
+    course_slug = serializers.CharField(source='course.slug', read_only=True)
+    course_pk = serializers.IntegerField(source='course.id', read_only=True)
+    course_image = serializers.SerializerMethodField(read_only=True)
+
     # Solved & Instructor status
     has_instructor_reply = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
         model = api_models.Question_Answer
         fields = [
-            'id', 'qa_id', 'course', 'title', 'user', 'user_id',
+            'id', 'qa_id', 'course', 'course_title', 'course_slug', 'course_pk', 'course_image',
+            'title', 'user', 'user_id',
             'profile', 'variant', 'variant_item',
             'date', 'messages', 'replies_count', 'likes_count', 'user_liked',
             'is_solved', 'has_instructor_reply', 'video_timestamp', 'is_pinned',
@@ -3385,15 +3405,36 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'qa_id', 'date', 'messages', 'replies_count', 'has_instructor_reply']
     
+    def get_course_image(self, obj):
+        try:
+            if obj.course and obj.course.image:
+                return str(obj.course.image)
+        except Exception:
+            pass
+        return None
+    
     def get_profile(self, obj):
         """Get user profile with all details"""
         try:
             if obj.user:
-                profile = obj.user.profile
+                profile = getattr(obj.user, 'profile', None)
+                image_url = None
+                if profile and profile.image:
+                    try:
+                        image_url = profile.image.url
+                    except Exception:
+                        raw_name = getattr(profile.image, 'name', '') or str(profile.image)
+                        if raw_name:
+                            image_url = f"/media/{raw_name}" if not raw_name.startswith(('/media/', 'http://', 'https://')) else raw_name
+                
+                request = self.context.get('request')
+                if request and image_url and not image_url.startswith(('http://', 'https://')):
+                    image_url = request.build_absolute_uri(image_url)
+
                 return {
                     'user_id': obj.user.id,
                     'full_name': obj.user.full_name or 'Anonim',
-                    'image': str(profile.image) if profile and profile.image else None,
+                    'image': image_url,
                     'position_name': profile.position.name if profile and profile.position else None,
                     'organization_unit_name': profile.organization_unit.name if profile and profile.organization_unit else None,
                     'country': profile.country if profile else None,
@@ -4257,6 +4298,191 @@ class MantaTypeDailyRewardSerializer(serializers.ModelSerializer):
             'created_at',
         ]
         read_only_fields = ['id', 'created_at', 'claim_date', 'user_name', 'username']
+
+
+# ============================================================================
+# FORUM PEMBELAJARAN SERIALIZERS
+# ============================================================================
+
+class ForumCategorySerializer(serializers.ModelSerializer):
+    topics_count = serializers.IntegerField(read_only=True)
+    posts_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = api_models.ForumCategory
+        fields = [
+            'id',
+            'name',
+            'slug',
+            'description',
+            'icon',
+            'badge_color',
+            'order',
+            'is_active',
+            'topics_count',
+            'posts_count',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'topics_count', 'posts_count']
+
+
+class ForumTopicMessageSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    profile = serializers.SerializerMethodField(read_only=True)
+    likes_count = serializers.IntegerField(read_only=True)
+    user_liked = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = api_models.ForumTopicMessage
+        fields = [
+            'id',
+            'message_id',
+            'topic',
+            'user',
+            'user_id',
+            'profile',
+            'message',
+            'is_solution',
+            'file',
+            'file_name',
+            'likes_count',
+            'user_liked',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'message_id', 'created_at', 'updated_at', 'likes_count', 'user_liked', 'profile']
+
+    def get_profile(self, obj):
+        try:
+            if obj.user:
+                profile = getattr(obj.user, 'profile', None)
+                image_url = None
+                if profile and profile.image:
+                    try:
+                        image_url = profile.image.url
+                    except Exception:
+                        raw_name = getattr(profile.image, 'name', '') or str(profile.image)
+                        if raw_name:
+                            image_url = f"/media/{raw_name}" if not raw_name.startswith(('/media/', 'http://', 'https://')) else raw_name
+                
+                request = self.context.get('request')
+                if request and image_url and not image_url.startswith(('http://', 'https://')):
+                    image_url = request.build_absolute_uri(image_url)
+
+                return {
+                    'user_id': obj.user.id,
+                    'full_name': obj.user.full_name or obj.user.username or 'Anonim',
+                    'image': image_url,
+                    'position_name': profile.position.name if profile and profile.position else None,
+                    'organization_unit_name': profile.organization_unit.name if profile and profile.organization_unit else None,
+                    'user_type': getattr(obj.user, 'user_type', 'UMUM'),
+                    'is_staff': bool(obj.user.is_staff or obj.user.is_superuser),
+                    'is_instructor': bool(getattr(obj.user, 'is_instructor', False)),
+                    'is_internal': bool(getattr(obj.user, 'is_internal', False)),
+                }
+        except Exception:
+            pass
+        return None
+
+    def get_user_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            return api_models.ForumTopicMessageLike.objects.filter(message=obj, user=request.user).exists()
+        return False
+
+
+class ForumTopicSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    profile = serializers.SerializerMethodField(read_only=True)
+    category_detail = ForumCategorySerializer(source='category', read_only=True)
+    replies = serializers.SerializerMethodField(read_only=True)
+    replies_count = serializers.IntegerField(read_only=True)
+    likes_count = serializers.IntegerField(read_only=True)
+    user_liked = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = api_models.ForumTopic
+        fields = [
+            'id',
+            'topic_id',
+            'category',
+            'category_detail',
+            'user',
+            'user_id',
+            'profile',
+            'title',
+            'content',
+            'views_count',
+            'is_pinned',
+            'is_solved',
+            'is_locked',
+            'file',
+            'file_name',
+            'replies',
+            'replies_count',
+            'likes_count',
+            'user_liked',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = [
+            'id',
+            'topic_id',
+            'views_count',
+            'created_at',
+            'updated_at',
+            'replies_count',
+            'likes_count',
+            'user_liked',
+            'profile',
+            'category_detail',
+            'replies',
+        ]
+
+    def get_replies(self, obj):
+        # Return serialized replies ordered by created_at
+        replies = obj.replies.all().order_by('created_at')
+        return ForumTopicMessageSerializer(replies, many=True, context=self.context).data
+
+    def get_profile(self, obj):
+        try:
+            if obj.user:
+                profile = getattr(obj.user, 'profile', None)
+                image_url = None
+                if profile and profile.image:
+                    try:
+                        image_url = profile.image.url
+                    except Exception:
+                        raw_name = getattr(profile.image, 'name', '') or str(profile.image)
+                        if raw_name:
+                            image_url = f"/media/{raw_name}" if not raw_name.startswith(('/media/', 'http://', 'https://')) else raw_name
+                
+                request = self.context.get('request')
+                if request and image_url and not image_url.startswith(('http://', 'https://')):
+                    image_url = request.build_absolute_uri(image_url)
+
+                return {
+                    'user_id': obj.user.id,
+                    'full_name': obj.user.full_name or obj.user.username or 'Anonim',
+                    'image': image_url,
+                    'position_name': profile.position.name if profile and profile.position else None,
+                    'organization_unit_name': profile.organization_unit.name if profile and profile.organization_unit else None,
+                    'user_type': getattr(obj.user, 'user_type', 'UMUM'),
+                    'is_staff': bool(obj.user.is_staff or obj.user.is_superuser),
+                    'is_instructor': bool(getattr(obj.user, 'is_instructor', False)),
+                    'is_internal': bool(getattr(obj.user, 'is_internal', False)),
+                }
+        except Exception:
+            pass
+        return None
+
+    def get_user_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            return api_models.ForumTopicLike.objects.filter(topic=obj, user=request.user).exists()
+        return False
+
 
 
 

@@ -5798,6 +5798,142 @@ class SystemRelease(models.Model):
         super().save(*args, **kwargs)
 
 
+# ============================================================================
+# FORUM PEMBELAJARAN (COMMUNITY OF PRACTICE / RUMPUN JABATAN & KOMPETENSI)
+# ============================================================================
+
+class ForumCategory(models.Model):
+    """
+    Rumpun Jabatan / Rumpun Kompetensi / Kategori Forum Pembelajaran
+    """
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=150, unique=True)
+    description = models.TextField(null=True, blank=True)
+    icon = models.CharField(max_length=100, default='fas fa-comments', help_text="FontAwesome icon class")
+    badge_color = models.CharField(max_length=50, default='#0d9488', help_text="Badge color hex or CSS class")
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name = "Forum Category"
+        verbose_name_plural = "Forum Categories"
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def topics_count(self):
+        return self.topics.count()
+
+    @property
+    def posts_count(self):
+        return ForumTopicMessage.objects.filter(topic__category=self).count()
+
+
+class ForumTopic(models.Model):
+    """
+    Topik / Thread Diskusi dalam Forum Pembelajaran
+    """
+    topic_id = ShortUUIDField(unique=True, length=8, max_length=25, alphabet="1234567890abcdef")
+    category = models.ForeignKey(ForumCategory, on_delete=models.CASCADE, related_name='topics')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='forum_topics')
+    title = models.CharField(max_length=500)
+    content = models.TextField()
+    views_count = models.PositiveIntegerField(default=0)
+    is_pinned = models.BooleanField(default=False, help_text="Pinned topic will appear at the top")
+    is_solved = models.BooleanField(default=False, help_text="Marked as solved when an answer resolves the question")
+    is_locked = models.BooleanField(default=False, help_text="Locked topic cannot receive new replies")
+    file = models.FileField(upload_to="forum_attachments/", null=True, blank=True)
+    file_name = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_pinned', '-updated_at', '-created_at']
+        indexes = [
+            models.Index(fields=['category']),
+            models.Index(fields=['topic_id']),
+            models.Index(fields=['is_pinned']),
+            models.Index(fields=['is_solved']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"[{self.category.name}] {self.title}"
+
+    @property
+    def replies_count(self):
+        return self.replies.count()
+
+    @property
+    def likes_count(self):
+        return self.likes.count()
+
+
+class ForumTopicMessage(models.Model):
+    """
+    Tanggapan / Balasan pesan pada Topik Forum Pembelajaran
+    """
+    message_id = ShortUUIDField(unique=True, length=8, max_length=25, alphabet="1234567890abcdef")
+    topic = models.ForeignKey(ForumTopic, on_delete=models.CASCADE, related_name='replies')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='forum_replies')
+    message = models.TextField()
+    is_solution = models.BooleanField(default=False, help_text="Designated as the accepted answer/solution")
+    file = models.FileField(upload_to="forum_attachments/", null=True, blank=True)
+    file_name = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['topic']),
+            models.Index(fields=['is_solution']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"Reply to {self.topic.title} by {self.user.username if self.user else 'Anonim'}"
+
+    @property
+    def likes_count(self):
+        return self.likes.count()
+
+
+class ForumTopicLike(models.Model):
+    """
+    Like tracker untuk Topik Forum Pembelajaran
+    """
+    topic = models.ForeignKey(ForumTopic, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forum_topic_likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('topic', 'user')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} liked topic {self.topic.topic_id}"
+
+
+class ForumTopicMessageLike(models.Model):
+    """
+    Like tracker untuk Balasan Topik Forum Pembelajaran
+    """
+    message = models.ForeignKey(ForumTopicMessage, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forum_message_likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('message', 'user')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} liked message {self.message.message_id}"
+
 
 # Connect the signals
 post_save.connect(sync_teacher_with_profile, sender=Teacher)

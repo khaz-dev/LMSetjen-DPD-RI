@@ -793,7 +793,9 @@
 .student-testimonials-page > .container,
 .student-testimonials-page .container,
 .modern-wishlist-page > .container,
-.modern-wishlist-page .container {
+.modern-wishlist-page .container,
+.modern-forum-page > .container,
+.modern-forum-page .container {
     width: 100% !important;
     max-width: 1400px !important;
     margin-left: auto !important;

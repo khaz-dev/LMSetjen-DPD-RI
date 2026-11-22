@@ -146,6 +146,17 @@ function Sidebar() {
                             </Link>
 
                             <Link
+                                className={`student-nav-link modern-nav-link ${isActive("/student/forum") ? "active" : ""}`}
+                                to="/student/forum/"
+                                data-tooltip="Forum"
+                            >
+                                <div className="student-nav-icon nav-icon">
+                                    <i className="fas fa-comments"></i>
+                                </div>
+                                <span className="nav-text">Forum</span>
+                            </Link>
+
+                            <Link
                                 className={`student-nav-link modern-nav-link ${isActive("/student/catatan") ? "active" : ""}`}
                                 to="/student/catatan/"
                                 data-tooltip="Catatan"

@@ -98,6 +98,16 @@ urlpatterns = [
     path("student/question-answer-toggle-pin/<qa_id>/", api_views.QuestionAnswerTogglePinAPIView.as_view()),
     path("student/qa-reports/<course_id>/", api_views.StudentQAReportsAPIView.as_view()),
 
+    # Forum Pembelajaran & Aggregated Course Discussions Endpoints
+    path("forum/categories/", api_views.ForumCategoryListAPIView.as_view()),
+    path("forum/topics/", api_views.ForumTopicListCreateAPIView.as_view()),
+    path("forum/topics/<str:topic_id>/", api_views.ForumTopicDetailAPIView.as_view()),
+    path("forum/topics/<str:topic_id>/reply/", api_views.ForumTopicReplyCreateAPIView.as_view()),
+    path("forum/topics/<str:topic_id>/like/", api_views.ForumTopicLikeToggleAPIView.as_view()),
+    path("forum/messages/<str:message_id>/like/", api_views.ForumTopicReplyLikeToggleAPIView.as_view()),
+    path("forum/messages/<str:message_id>/toggle-solution/", api_views.ForumTopicToggleSolutionAPIView.as_view()),
+    path("student/course-discussions-all/", api_views.StudentAggregatedCourseDiscussionsAPIView.as_view()),
+
     # Student Quiz Endpoints
     path("student/quiz-list/<user_id>/<course_id>/", api_views.StudentQuizListAPIView.as_view()),
     path("student/quiz-detail/<user_id>/<quiz_id>/", api_views.StudentQuizDetailAPIView.as_view()),

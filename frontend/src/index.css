@@ -1224,8 +1224,12 @@ body.is-instructor-portal main > .container {
 
 /* 5. Ensure footer in student and instructor portals attaches seamlessly with no gap */
 body.is-student-portal footer.footer-wrapper,
-body.is-instructor-portal footer.footer-wrapper {
-  margin-top: auto !important;
+body.is-instructor-portal footer.footer-wrapper,
+body.is-student-portal footer.base-footer,
+body.is-instructor-portal footer.base-footer,
+body.is-student-portal .base-footer,
+body.is-instructor-portal .base-footer {
+  margin-top: 0 !important;
   margin-bottom: 0 !important;
   position: relative;
   z-index: 10;

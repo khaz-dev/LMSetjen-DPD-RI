@@ -54,6 +54,7 @@ const StudentDashboard = lazy(() => import("./views/student/Dashboard"));
 const StudentCourses = lazy(() => import("./views/student/Courses"));
 const StudentCourseDetail = lazy(() => import("./views/student/CourseDetail"));
 const StudentNotes = lazy(() => import("./views/student/Notes"));
+const StudentForum = lazy(() => import("./views/student/Forum"));
 const StudentTestimonials = lazy(() => import("./views/student/Testimonials"));
 const Wishlist = lazy(() => import("./views/student/Wishlist"));
 const StudentProfile = lazy(() => import("./views/student/Profile"));
@@ -338,6 +339,26 @@ function App() {
                                         <PrivateRoute>
                                             <RoleRoute allowedRoles={["student"]}>
                                                 <StudentCourseDetail />
+                                            </RoleRoute>
+                                        </PrivateRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/student/forum/"
+                                    element={
+                                        <PrivateRoute>
+                                            <RoleRoute allowedRoles={["student"]}>
+                                                <StudentForum />
+                                            </RoleRoute>
+                                        </PrivateRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/student/forum-diskusi/"
+                                    element={
+                                        <PrivateRoute>
+                                            <RoleRoute allowedRoles={["student"]}>
+                                                <StudentForum />
                                             </RoleRoute>
                                         </PrivateRoute>
                                     }

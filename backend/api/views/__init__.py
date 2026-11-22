@@ -11,3 +11,4 @@ from .ai_assistant import *
 from .common import *
 from .system_version_views import *
 from .mantatype_views import *
+from .forum import *
