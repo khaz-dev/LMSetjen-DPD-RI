@@ -23,6 +23,7 @@ import { ProfileContext } from "../plugin/Context";
 import { useRoles } from "../../utils/useRoles";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import { getValidProfileImageUrl } from "../../utils/imageUtils";
+import mantaHappyWebp from "../../assets/avatar/manta-happy.webp";
 import "./Profile.css";
 
 // Constants
@@ -298,6 +299,194 @@ function Profile() {
         ) score += 10;
         return Math.min(score, 100);
     }, [profileData, uiState.imagePreview]);
+
+    // ========================================================
+    // 🌟 INSTRUCTOR TEACHING GAMIFICATION & REPUTATION ENGINE
+    // ========================================================
+    const teachingGamification = useMemo(() => {
+        const coursesCount = Number(teacherStats?.total_courses || 0);
+        const studentsCount = Number(teacherStats?.total_students || 0);
+        const rating = parseFloat(teacherStats?.total_rating || "5.0") || 5.0;
+
+        // Hitung Instructor Points (IP / Poin Pengajar)
+        // Formula: Kursus Aktif (150 IP) + Peserta Terbimbing (15 IP) + Bonus Rating Kepuasan
+        let points = (coursesCount * 150) + (studentsCount * 15);
+        if (coursesCount > 0) {
+            points += Math.round(rating * 20);
+        }
+
+        // 5 Tingkat Jenjang Reputasi Pengajar Setjen DPD RI
+        let level = 1;
+        let level_name = "Widyaiswara Pratama";
+        let level_icon = "fas fa-chalkboard-user";
+        let level_color = "#0ea5e9";
+        let min_xp = 0;
+        let next_level_xp = 250;
+        let next_level_name = "Fasilitator Terampil";
+        let xp_progress_pct = 0;
+        let remaining_xp = 250;
+
+        if (points < 250) {
+            level = 1;
+            level_name = "Widyaiswara Pratama";
+            level_icon = "fas fa-chalkboard-user";
+            level_color = "#0ea5e9";
+            min_xp = 0;
+            next_level_xp = 250;
+            next_level_name = "Fasilitator Terampil";
+            xp_progress_pct = Math.min(100, Math.round((points / 250) * 100));
+            remaining_xp = Math.max(0, 250 - points);
+        } else if (points < 600) {
+            level = 2;
+            level_name = "Fasilitator Terampil";
+            level_icon = "fas fa-award";
+            level_color = "#10b981";
+            min_xp = 250;
+            next_level_xp = 600;
+            next_level_name = "Mentor Teladan";
+            xp_progress_pct = Math.min(100, Math.round(((points - 250) / 350) * 100));
+            remaining_xp = Math.max(0, 600 - points);
+        } else if (points < 1200) {
+            level = 3;
+            level_name = "Mentor Teladan";
+            level_icon = "fas fa-gem";
+            level_color = "#6366f1";
+            min_xp = 600;
+            next_level_xp = 1200;
+            next_level_name = "Pakar Kurikulum Parlemen";
+            xp_progress_pct = Math.min(100, Math.round(((points - 600) / 600) * 100));
+            remaining_xp = Math.max(0, 1200 - points);
+        } else if (points < 2500) {
+            level = 4;
+            level_name = "Pakar Kurikulum Parlemen";
+            level_icon = "fas fa-medal";
+            level_color = "#8b5cf6";
+            min_xp = 1200;
+            next_level_xp = 2500;
+            next_level_name = "Maestro Widyaiswara DPD RI";
+            xp_progress_pct = Math.min(100, Math.round(((points - 1200) / 1300) * 100));
+            remaining_xp = Math.max(0, 2500 - points);
+        } else {
+            level = 5;
+            level_name = "Maestro Widyaiswara DPD RI";
+            level_icon = "fas fa-crown";
+            level_color = "#f59e0b";
+            min_xp = 2500;
+            next_level_xp = points;
+            next_level_name = "Puncak Reputasi Pengajar";
+            xp_progress_pct = 100;
+            remaining_xp = 0;
+        }
+
+        // 8 Lencana Prestasi Pengajaran (Teaching Milestone Badges)
+        const badges = [
+            {
+                id: "first_course",
+                title: "Inisiator Modul",
+                category: "Penyusunan Materi",
+                icon: "fas fa-book-bookmark",
+                color: "#0ea5e9",
+                description: "Mempublikasikan kursus pelatihan perdana Anda di lingkungan Setjen DPD RI.",
+                is_unlocked: coursesCount >= 1,
+                progress: `${Math.min(1, coursesCount)}/1 Kursus Terbit`,
+                progress_pct: coursesCount >= 1 ? 100 : 0
+            },
+            {
+                id: "talent_builder",
+                title: "Pencetak Talenta ASN",
+                category: "Dampak Pembelajaran",
+                icon: "fas fa-user-graduate",
+                color: "#10b981",
+                description: "Membimbing minimal 10 peserta pelatihan aktif di kelas yang Anda ampu.",
+                is_unlocked: studentsCount >= 10,
+                progress: `${Math.min(10, studentsCount)}/10 Peserta`,
+                progress_pct: Math.min(100, Math.round((studentsCount / 10) * 100))
+            },
+            {
+                id: "five_star",
+                title: "Widyaiswara Bintang Lima",
+                category: "Mutu Pengajaran",
+                icon: "fas fa-star",
+                color: "#f59e0b",
+                description: "Mempertahankan indeks kepuasan peserta minimal 4.8 bintang pada evaluasi kelas.",
+                is_unlocked: coursesCount > 0 && rating >= 4.8,
+                progress: coursesCount > 0 && rating >= 4.8 ? "Rating Prima 4.8+" : (coursesCount > 0 ? `${Number(rating).toFixed(1)}/4.8 ★` : "Perlu Kursus"),
+                progress_pct: coursesCount > 0 && rating >= 4.8 ? 100 : (coursesCount > 0 ? Math.min(99, Math.round((rating / 5) * 100)) : 0)
+            },
+            {
+                id: "broad_community",
+                title: "Jangkauan Parlemen Luas",
+                category: "Skala Edukasi",
+                icon: "fas fa-people-group",
+                color: "#6366f1",
+                description: "Menjangkau lebih dari 30 peserta terdaftar lintas unit kerja atau instansi parlemen.",
+                is_unlocked: studentsCount >= 30,
+                progress: `${Math.min(30, studentsCount)}/30 Peserta`,
+                progress_pct: Math.min(100, Math.round((studentsCount / 30) * 100))
+            },
+            {
+                id: "curriculum_architect",
+                title: "Arsitek Kurikulum",
+                category: "Kaya Materi",
+                icon: "fas fa-layer-group",
+                color: "#8b5cf6",
+                description: "Mengembangkan minimal 2 silabus kursus pelatihan yang aktif dan terstruktur.",
+                is_unlocked: coursesCount >= 2,
+                progress: `${Math.min(2, coursesCount)}/2 Kursus`,
+                progress_pct: Math.min(100, Math.round((coursesCount / 2) * 100))
+            },
+            {
+                id: "digital_innovator",
+                title: "Inovator E-Learning",
+                category: "Metode Interaktif",
+                icon: "fas fa-laptop-code",
+                color: "#06b6d4",
+                description: "Menyediakan media digital interaktif, video materi, dan bank soal evaluasi.",
+                is_unlocked: coursesCount >= 1,
+                progress: coursesCount >= 1 ? "Modul Aktif" : "Perlu 1 Kursus",
+                progress_pct: coursesCount >= 1 ? 100 : 0
+            },
+            {
+                id: "ai_collaborator",
+                title: "Kolaborator AI Manta",
+                category: "Keaktifan Asisten",
+                icon: "fas fa-brain",
+                color: "#ec4899",
+                description: "Memanfaatkan asisten Manta AI untuk konsultasi kurikulum dan penyusunan kuis adaptif.",
+                is_unlocked: true,
+                progress: "Fitur Terbuka",
+                progress_pct: 100
+            },
+            {
+                id: "competency_empowerer",
+                title: "Pemberdaya Kompetensi ASN",
+                category: "Kontribusi Lembaga",
+                icon: "fas fa-landmark",
+                color: "#0f766e",
+                description: "Membimbing minimal 5 peserta hingga tuntas dan berkontribusi pada pemenuhan 20 JP instansi.",
+                is_unlocked: coursesCount >= 1 && studentsCount >= 5,
+                progress: `${Math.min(5, studentsCount)}/5 Peserta Kelas`,
+                progress_pct: Math.min(100, Math.round((studentsCount / 5) * 100))
+            }
+        ];
+
+        const unlocked_count = badges.filter(b => b.is_unlocked).length;
+
+        return {
+            level,
+            level_name,
+            level_icon,
+            level_color,
+            points,
+            next_level_xp,
+            next_level_name,
+            remaining_xp,
+            xp_progress_pct,
+            unlocked_count,
+            total_badges: badges.length,
+            badges
+        };
+    }, [teacherStats]);
 
     // Role Capabilities
     const hasStudentRole = availableRoles?.includes("student") || currentUser?.roles?.includes("student") || currentUser?.is_student;
@@ -977,6 +1166,24 @@ function Profile() {
                                                     <i className="fas fa-layer-group"></i> Gol: {profileData.golongan}
                                                 </span>
                                             )}
+
+                                            {teachingGamification && (
+                                                <button
+                                                    type="button"
+                                                    className="role-tag-pill border-0"
+                                                    style={{
+                                                        backgroundColor: `${teachingGamification.level_color || '#0ea5e9'}22`,
+                                                        color: teachingGamification.level_color || '#0ea5e9',
+                                                        fontWeight: 700,
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    onClick={() => setActiveTab("achievements")}
+                                                    title={`Tingkat Reputasi Pengajar: Level ${teachingGamification.level} (${teachingGamification.level_name}) - ${teachingGamification.points} IP. Klik untuk melihat galeri prestasi pengajar`}
+                                                >
+                                                    <i className={teachingGamification.level_icon || 'fas fa-chalkboard-user'}></i>
+                                                    Level {teachingGamification.level}: {teachingGamification.level_name} ({teachingGamification.points} IP)
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
 
@@ -1106,6 +1313,27 @@ function Profile() {
                                 >
                                     <i className="fas fa-share-nodes"></i>
                                     <span>Media Sosial & Tautan</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className={`profile-tab-btn ${activeTab === "achievements" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("achievements")}
+                                >
+                                    <i className="fas fa-trophy text-warning"></i>
+                                    <span>Prestasi & Lencana Pengajar</span>
+                                    {teachingGamification && (
+                                        <span 
+                                            className="badge rounded-pill text-white ms-1" 
+                                            style={{ 
+                                                backgroundColor: teachingGamification.level_color || '#0ea5e9',
+                                                fontSize: '0.66rem',
+                                                padding: '2px 7px'
+                                            }}
+                                        >
+                                            Lv. {teachingGamification.level}
+                                        </span>
+                                    )}
                                 </button>
                             </div>
 
@@ -2046,6 +2274,334 @@ function Profile() {
                                                     </div>
                                                 ) : null}
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {/* ========================================================
+                                        TAB 5: 🌟 MANTA AI ACHIEVEMENTS & TEACHING MILESTONES (SISI INSTRUKTUR)
+                                        ======================================================== */}
+                                    {activeTab === "achievements" && (
+                                        <div className="tab-pane-content">
+                                            {(() => {
+                                                const g = teachingGamification || {
+                                                    level: 1,
+                                                    level_name: "Widyaiswara Pratama",
+                                                    level_icon: "fas fa-chalkboard-user",
+                                                    level_color: "#0ea5e9",
+                                                    points: 0,
+                                                    next_level_xp: 250,
+                                                    next_level_name: "Fasilitator Terampil",
+                                                    remaining_xp: 250,
+                                                    xp_progress_pct: 0,
+                                                    unlocked_count: 1,
+                                                    total_badges: 8,
+                                                    badges: []
+                                                };
+
+                                                return (
+                                                    <div className="gamification-tab-container">
+                                                        {/* Hero Banner Level Pengajar / Widyaiswara */}
+                                                        <div className="gamification-hero-banner">
+                                                            <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3">
+                                                                <div>
+                                                                    <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                                                        <span 
+                                                                            className="gamification-level-pill"
+                                                                            style={{ backgroundColor: g.level_color || '#0ea5e9' }}
+                                                                        >
+                                                                            <i className={g.level_icon || 'fas fa-chalkboard-user'}></i>
+                                                                            Level {g.level}: {g.level_name}
+                                                                        </span>
+                                                                        <span className="badge bg-white text-dark px-3 py-2 fw-bold" style={{ borderRadius: '9999px' }}>
+                                                                            {g.points?.toLocaleString('id-ID')} IP (Instructor Points)
+                                                                        </span>
+                                                                        <span className="badge bg-warning text-dark px-3 py-2 fw-bold" style={{ borderRadius: '9999px' }}>
+                                                                            <i className="fas fa-graduation-cap me-1"></i> Portofolio Pengajaran
+                                                                        </span>
+                                                                    </div>
+                                                                    <h4 className="fw-bold text-white mb-1">
+                                                                        Prestasi & Dedikasi Pengajaran Widyaiswara DPD RI
+                                                                    </h4>
+                                                                    <p className="text-white-50 mb-0 small">
+                                                                        Sistem apresiasi terintegrasi Manta AI untuk mengukur kontribusi kurikulum, jangkauan alumni, dan dampak pembelajaran bagi seluruh aparatur Setjen DPD RI.
+                                                                    </p>
+                                                                </div>
+
+                                                                <div className="flex-shrink-0 d-flex gap-2 flex-wrap">
+                                                                    <Link 
+                                                                        to="/instructor/courses/" 
+                                                                        className="btn btn-light btn-sm px-3 py-2 rounded-pill fw-bold text-teal shadow-sm"
+                                                                    >
+                                                                        <i className="fas fa-chalkboard me-1"></i>
+                                                                        Kursus Saya
+                                                                    </Link>
+                                                                    <Link 
+                                                                        to="/instructor/create-course/" 
+                                                                        className="btn btn-outline-light btn-sm px-3 py-2 rounded-pill fw-bold shadow-sm"
+                                                                    >
+                                                                        <i className="fas fa-plus me-1"></i>
+                                                                        Buat Kursus Baru
+                                                                    </Link>
+                                                                    <Link 
+                                                                        to="/rankings/" 
+                                                                        className="btn btn-outline-light btn-sm px-3 py-2 rounded-pill fw-bold shadow-sm"
+                                                                    >
+                                                                        <i className="fas fa-ranking-star me-1"></i>
+                                                                        Peringkat Global
+                                                                    </Link>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* IP Progression Bar */}
+                                                            <div className="p-3 rounded-3" style={{ background: 'rgba(0, 0, 0, 0.22)', backdropFilter: 'blur(6px)' }}>
+                                                                <div className="d-flex justify-content-between align-items-center mb-1 text-white flex-wrap gap-2" style={{ fontSize: '0.8rem' }}>
+                                                                    <span>
+                                                                        Progres Reputasi Pengajar: <strong>{g.xp_progress_pct}%</strong>
+                                                                    </span>
+                                                                    {g.level < 5 ? (
+                                                                        <span>
+                                                                            Menuju <strong>{g.next_level_name}</strong>: tersisa <strong>{g.remaining_xp} IP</strong> lagi
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-warning fw-bold">
+                                                                            <i className="fas fa-crown me-1"></i> Telah Mencapai Puncak Reputasi Widyaiswara DPD RI
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="progress" style={{ height: '8px', borderRadius: '4px', backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
+                                                                    <div 
+                                                                        className="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                                                        role="progressbar" 
+                                                                        style={{ width: `${g.xp_progress_pct}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 4 Pillars Summary Cards (Teaching Stats POV) */}
+                                                        <div className="row g-3 mb-4">
+                                                            <div className="col-12 col-md-6 col-lg-3">
+                                                                <div className="gamification-stat-card">
+                                                                    <div className="d-flex align-items-center gap-3">
+                                                                        <div className="stat-icon-wrapper" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+                                                                            <i className="fas fa-book-open"></i>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Modul & Kursus</span>
+                                                                            <h5 className="fw-bold mb-0 text-dark">
+                                                                                {teacherStats?.total_courses ?? 0} Kursus Aktif
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <small className="text-muted d-block mt-2" style={{ fontSize: '0.74rem' }}>
+                                                                        Materi pelatihan resmi yang Anda ampu dan publikasikan di LMS.
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="col-12 col-md-6 col-lg-3">
+                                                                <div className="gamification-stat-card">
+                                                                    <div className="d-flex align-items-center gap-3">
+                                                                        <div className="stat-icon-wrapper" style={{ background: '#dcfce7', color: '#16a34a' }}>
+                                                                            <i className="fas fa-users-viewfinder"></i>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Jangkauan Peserta</span>
+                                                                            <h5 className="fw-bold mb-0 text-dark">
+                                                                                {teacherStats?.total_students ?? 0} Peserta
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <small className="text-muted d-block mt-2" style={{ fontSize: '0.74rem' }}>
+                                                                        Aparatur yang telah terdaftar dan mengikuti kelas bimbingan Anda.
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="col-12 col-md-6 col-lg-3">
+                                                                <div className="gamification-stat-card">
+                                                                    <div className="d-flex align-items-center gap-3">
+                                                                        <div className="stat-icon-wrapper" style={{ background: '#fef3c7', color: '#d97706' }}>
+                                                                            <i className="fas fa-star"></i>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Indeks Kepuasan</span>
+                                                                            <h5 className="fw-bold mb-0 text-dark">
+                                                                                {Number(teacherStats?.total_rating || 5).toFixed(1)} / 5.0 ★
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <small className="text-muted d-block mt-2" style={{ fontSize: '0.74rem' }}>
+                                                                        Evaluasi mutu materi dan efektivitas pengajaran dari para peserta.
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="col-12 col-md-6 col-lg-3">
+                                                                <div className="gamification-stat-card" style={{ borderColor: '#ddd6fe', background: '#faf5ff' }}>
+                                                                    <div className="d-flex align-items-center gap-3">
+                                                                        <div className="stat-icon-wrapper" style={{ background: '#ede9fe', color: '#7c3aed' }}>
+                                                                            <i className="fas fa-award"></i>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Lencana Pengajar</span>
+                                                                            <h5 className="fw-bold mb-0 text-purple" style={{ color: '#6d28d9' }}>
+                                                                                {g.unlocked_count} / {g.total_badges} Terbuka
+                                                                            </h5>
+                                                                        </div>
+                                                                    </div>
+                                                                    <small className="text-muted d-block mt-2" style={{ fontSize: '0.74rem' }}>
+                                                                        Tersisa {Math.max(0, g.total_badges - g.unlocked_count)} lencana widyaiswara untuk dilengkapi.
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Section Header: Teaching Milestone Badges */}
+                                                        <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                                                            <div>
+                                                                <h6 className="fw-bold mb-0 text-dark fs-6">
+                                                                    <i className="fas fa-medal text-warning me-2"></i>
+                                                                    Galeri {g.total_badges || 8} Lencana Pengajaran (Teaching Milestone Badges)
+                                                                </h6>
+                                                                <span className="text-muted small">
+                                                                    Setiap lencana mencerminkan pencapaian kemahiran kurikulum, jangkauan alumni peserta, dan mutu materi ajar Anda.
+                                                                </span>
+                                                            </div>
+                                                            <span className="badge bg-light text-dark border px-3 py-1">
+                                                                {g.unlocked_count} dari {g.total_badges} Terbuka
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Badges Grid */}
+                                                        <div className="milestones-grid mb-4">
+                                                            {(g.badges || []).map((b) => (
+                                                                <div 
+                                                                    key={b.id} 
+                                                                    className={`milestone-badge-card ${b.is_unlocked ? 'unlocked' : 'locked'}`}
+                                                                >
+                                                                    <div className="d-flex align-items-start gap-3 mb-2">
+                                                                        <div 
+                                                                            className="badge-icon-box"
+                                                                            style={{ 
+                                                                                background: b.is_unlocked ? `${b.color}15` : '#f1f5f9',
+                                                                                color: b.is_unlocked ? b.color : '#94a3b8' 
+                                                                            }}
+                                                                        >
+                                                                            <i className={b.icon}></i>
+                                                                        </div>
+                                                                        <div className="flex-grow-1 min-w-0">
+                                                                            <div className="d-flex align-items-center justify-content-between gap-1">
+                                                                                <span 
+                                                                                    className="badge px-2 py-0" 
+                                                                                    style={{ 
+                                                                                        fontSize: '0.65rem', 
+                                                                                        backgroundColor: b.is_unlocked ? `${b.color}20` : '#e2e8f0', 
+                                                                                        color: b.is_unlocked ? b.color : '#64748b' 
+                                                                                    }}
+                                                                                >
+                                                                                    {b.category}
+                                                                                </span>
+                                                                                {b.is_unlocked ? (
+                                                                                    <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-0" style={{ fontSize: '0.65rem' }}>
+                                                                                        <i className="fas fa-check-circle me-1"></i> Terbuka
+                                                                                    </span>
+                                                                                ) : (
+                                                                                    <span className="badge bg-secondary-subtle text-muted border px-2 py-0" style={{ fontSize: '0.65rem' }}>
+                                                                                        <i className="fas fa-lock me-1"></i> Terkunci
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            <h6 className="fw-bold mb-1 text-dark mt-1 text-truncate" title={b.title}>
+                                                                                {b.title}
+                                                                            </h6>
+                                                                            <p className="text-muted mb-0" style={{ fontSize: '0.73rem', lineHeight: '1.3' }}>
+                                                                                {b.description}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="mt-auto pt-2 border-top">
+                                                                        <div className="d-flex justify-content-between text-muted" style={{ fontSize: '0.68rem' }}>
+                                                                            <span>Kriteria Pencapaian:</span>
+                                                                            <strong className={b.is_unlocked ? "text-success" : "text-dark"}>{b.progress}</strong>
+                                                                        </div>
+                                                                        <div className="progress mt-1" style={{ height: '4px' }}>
+                                                                            <div 
+                                                                                className={`progress-bar ${b.is_unlocked ? 'bg-success' : 'bg-primary'}`}
+                                                                                style={{ width: `${b.progress_pct}%` }}
+                                                                            ></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* Manta AI Consult Card - Instructor Focus */}
+                                                        <div className="manta-consult-card d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+                                                            <div className="d-flex align-items-center gap-3">
+                                                                <div 
+                                                                    className="rounded-circle border border-teal d-flex align-items-center justify-content-center overflow-hidden flex-shrink-0 shadow-xs"
+                                                                    style={{ 
+                                                                        width: '54px', 
+                                                                        height: '54px', 
+                                                                        background: 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
+                                                                        padding: '2px'
+                                                                    }}
+                                                                >
+                                                                    <img 
+                                                                        src={mantaHappyWebp} 
+                                                                        alt="Manta AI"
+                                                                        width="48"
+                                                                        height="48"
+                                                                        style={{ objectFit: 'contain' }}
+                                                                        onError={(e) => { e.currentTarget.src = "/images/avatar/manta-happy.png"; }}
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <h6 className="fw-bold mb-1 text-teal-dark fs-6">
+                                                                        Konsultasikan Kurikulum & Kualitas Pengajaran dengan Manta AI 🌊
+                                                                    </h6>
+                                                                    <p className="text-muted mb-0 small">
+                                                                        Butuh inspirasi silabus kursus, format evaluasi kuis, metode microlearning, atau panduan peningkatan mutu kelas? Asisten Widyaiswara Manta siap mendampingi Anda 24/7.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex-shrink-0 d-flex gap-2 flex-wrap">
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-teal btn-sm rounded-pill px-3 py-2 fw-semibold shadow-xs"
+                                                                    onClick={() => {
+                                                                        const prompt = 'Halo Manta, saya instruktur di LMS Setjen DPD RI. Bagaimana tips meningkatkan keterlibatan peserta dan kualitas modul pembelajaran yang saya ampu?';
+                                                                        if (typeof window !== 'undefined') {
+                                                                            if (typeof window.openMantaChat === 'function') {
+                                                                                window.openMantaChat(prompt);
+                                                                            } else {
+                                                                                window.dispatchEvent(new CustomEvent('manta_open_chat', { detail: { prompt } }));
+                                                                                window.dispatchEvent(new CustomEvent('manta-open-chat', { detail: { prompt, query: prompt } }));
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <i className="fas fa-comment-dots me-1"></i> Tanya Asisten Widyaiswara
+                                                                </button>
+                                                                <Link 
+                                                                    to="/instructor/courses/" 
+                                                                    className="btn btn-outline-teal btn-sm rounded-pill px-3 py-2 fw-semibold"
+                                                                >
+                                                                    <i className="fas fa-book-open me-1"></i> Kelola Kursus
+                                                                </Link>
+                                                                <Link 
+                                                                    to="/instructor/create-course/" 
+                                                                    className="btn btn-outline-teal btn-sm rounded-pill px-3 py-2 fw-semibold"
+                                                                >
+                                                                    <i className="fas fa-plus me-1"></i> Buat Kursus
+                                                                </Link>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     )}
 
