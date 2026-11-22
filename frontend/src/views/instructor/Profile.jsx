@@ -2330,24 +2330,24 @@ function Profile() {
                                                                 <div className="flex-shrink-0 d-flex gap-2 flex-wrap">
                                                                     <Link 
                                                                         to="/instructor/courses/" 
-                                                                        className="btn btn-light btn-sm px-3 py-2 rounded-pill fw-bold text-teal shadow-sm"
+                                                                        className="btn btn-light btn-sm px-3 py-2 rounded-pill fw-bold text-teal shadow-sm d-inline-flex align-items-center justify-content-center"
                                                                     >
                                                                         <i className="fas fa-chalkboard me-1"></i>
-                                                                        Kursus Saya
+                                                                        <span>Kursus Saya</span>
                                                                     </Link>
                                                                     <Link 
                                                                         to="/instructor/create-course/" 
-                                                                        className="btn btn-outline-light btn-sm px-3 py-2 rounded-pill fw-bold shadow-sm"
+                                                                        className="btn btn-outline-light btn-sm px-3 py-2 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center justify-content-center"
                                                                     >
                                                                         <i className="fas fa-plus me-1"></i>
-                                                                        Buat Kursus Baru
+                                                                        <span>Buat Kursus Baru</span>
                                                                     </Link>
                                                                     <Link 
                                                                         to="/rankings/" 
-                                                                        className="btn btn-outline-light btn-sm px-3 py-2 rounded-pill fw-bold shadow-sm"
+                                                                        className="btn btn-outline-light btn-sm px-3 py-2 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center justify-content-center"
                                                                     >
                                                                         <i className="fas fa-ranking-star me-1"></i>
-                                                                        Peringkat Global
+                                                                        <span>Peringkat Global</span>
                                                                     </Link>
                                                                 </div>
                                                             </div>
@@ -2570,7 +2570,7 @@ function Profile() {
                                                             <div className="flex-shrink-0 d-flex gap-2 flex-wrap">
                                                                 <button
                                                                     type="button"
-                                                                    className="btn btn-teal btn-sm rounded-pill px-3 py-2 fw-semibold shadow-xs"
+                                                                    className="btn btn-teal btn-sm rounded-pill px-3 py-2 fw-semibold shadow-xs d-inline-flex align-items-center justify-content-center"
                                                                     onClick={() => {
                                                                         const prompt = 'Halo Manta, saya instruktur di LMS Setjen DPD RI. Bagaimana tips meningkatkan keterlibatan peserta dan kualitas modul pembelajaran yang saya ampu?';
                                                                         if (typeof window !== 'undefined') {
@@ -2583,19 +2583,22 @@ function Profile() {
                                                                         }
                                                                     }}
                                                                 >
-                                                                    <i className="fas fa-comment-dots me-1"></i> Tanya Asisten Widyaiswara
+                                                                    <i className="fas fa-comment-dots me-1"></i>
+                                                                    <span>Tanya Asisten Widyaiswara</span>
                                                                 </button>
                                                                 <Link 
                                                                     to="/instructor/courses/" 
-                                                                    className="btn btn-outline-teal btn-sm rounded-pill px-3 py-2 fw-semibold"
+                                                                    className="btn btn-outline-teal btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center justify-content-center"
                                                                 >
-                                                                    <i className="fas fa-book-open me-1"></i> Kelola Kursus
+                                                                    <i className="fas fa-book-open me-1"></i>
+                                                                    <span>Kelola Kursus</span>
                                                                 </Link>
                                                                 <Link 
                                                                     to="/instructor/create-course/" 
-                                                                    className="btn btn-outline-teal btn-sm rounded-pill px-3 py-2 fw-semibold"
+                                                                    className="btn btn-outline-teal btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center justify-content-center"
                                                                 >
-                                                                    <i className="fas fa-plus me-1"></i> Buat Kursus
+                                                                    <i className="fas fa-plus me-1"></i>
+                                                                    <span>Buat Kursus</span>
                                                                 </Link>
                                                             </div>
                                                         </div>

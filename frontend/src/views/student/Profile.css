@@ -208,3 +208,23 @@
     border-radius: 16px;
     padding: 20px 24px;
 }
+
+/* Ensure perfect vertical alignment for icons and text inside hero & consult buttons */
+.gamification-hero-banner .btn,
+.manta-consult-card .btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1.25 !important;
+    vertical-align: middle;
+}
+
+.gamification-hero-banner .btn i,
+.manta-consult-card .btn i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: 0;
+}
+

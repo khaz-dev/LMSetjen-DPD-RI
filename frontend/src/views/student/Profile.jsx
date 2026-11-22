@@ -2079,10 +2079,10 @@ function Profile() {
                                                                 <div className="flex-shrink-0">
                                                                     <Link 
                                                                         to="/rankings/" 
-                                                                        className="btn btn-light btn-sm px-3 py-2 rounded-pill fw-bold text-teal shadow-sm"
+                                                                        className="btn btn-light btn-sm px-3 py-2 rounded-pill fw-bold text-teal shadow-sm d-inline-flex align-items-center justify-content-center"
                                                                     >
                                                                         <i className="fas fa-ranking-star me-2"></i>
-                                                                        Lihat Peringkat Global
+                                                                        <span>Lihat Peringkat Global</span>
                                                                     </Link>
                                                                 </div>
                                                             </div>
@@ -2291,7 +2291,7 @@ function Profile() {
                                                             <div className="flex-shrink-0 d-flex gap-2">
                                                                 <button
                                                                     type="button"
-                                                                    className="btn btn-teal btn-sm rounded-pill px-3 py-2 fw-semibold shadow-xs"
+                                                                    className="btn btn-teal btn-sm rounded-pill px-3 py-2 fw-semibold shadow-xs d-inline-flex align-items-center justify-content-center"
                                                                     onClick={() => {
                                                                         const prompt = 'Bagaimana status pemenuhan 20 JP dan lencana saya?';
                                                                         if (typeof window !== 'undefined') {
@@ -2304,13 +2304,15 @@ function Profile() {
                                                                         }
                                                                     }}
                                                                 >
-                                                                    <i className="fas fa-comment-dots me-1"></i> Tanya Manta AI
+                                                                    <i className="fas fa-comment-dots me-1"></i>
+                                                                    <span>Tanya Manta AI</span>
                                                                 </button>
                                                                 <Link 
                                                                     to="/search/" 
-                                                                    className="btn btn-outline-teal btn-sm rounded-pill px-3 py-2 fw-semibold"
+                                                                    className="btn btn-outline-teal btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center justify-content-center"
                                                                 >
-                                                                    <i className="fas fa-book-open me-1"></i> Cari Pelatihan
+                                                                    <i className="fas fa-book-open me-1"></i>
+                                                                    <span>Cari Pelatihan</span>
                                                                 </Link>
                                                             </div>
                                                         </div>
