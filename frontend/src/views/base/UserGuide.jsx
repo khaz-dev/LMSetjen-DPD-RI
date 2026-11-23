@@ -281,7 +281,7 @@ function UserGuide() {
                                         <i className="fas fa-search search-icon"></i>
                                         <input
                                             type="text"
-                                            className="search-input"
+                                            className="search-input guide-search-input"
                                             placeholder={language === 'en' ? 'Search topics, features, steps, or questions...' : 'Cari topik panduan, fitur, langkah, atau pertanyaan...'}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}

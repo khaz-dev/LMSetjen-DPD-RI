@@ -328,8 +328,7 @@
 
 .header-container .search-container .search-input,
 .base-header .search-container .search-input,
-.search-container .search-input,
-.search-input {
+.search-container .search-input {
     flex: 1 !important;
     border: none !important;
     background: transparent !important;
@@ -347,8 +346,7 @@
 
 .header-container .search-container .search-input:focus,
 .base-header .search-container .search-input:focus,
-.search-container .search-input:focus,
-.search-input:focus {
+.search-container .search-input:focus {
     outline: none !important;
     border: none !important;
     box-shadow: none !important;
@@ -358,8 +356,7 @@
 
 .header-container .search-container .search-input::placeholder,
 .base-header .search-container .search-input::placeholder,
-.search-container .search-input::placeholder,
-.search-input::placeholder {
+.search-container .search-input::placeholder {
     color: #94a3b8 !important;
     user-select: none !important;
 }
