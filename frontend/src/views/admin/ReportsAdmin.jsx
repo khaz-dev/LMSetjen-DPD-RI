@@ -13,6 +13,33 @@ import dayjs, { moment } from "../../utils/dayjs";
 import "./ReportsAdmin.css";
 
 /**
+ * Helper to resolve and normalize tab parameter
+ */
+const resolveReportsTab = (tabParam) => {
+    if (!tabParam) return "course-evaluations";
+    const t = String(tabParam).toLowerCase().trim();
+    if (t === "asn-audit" || t === "asn" || t === "audit-asn" || t === "audit" || t === "kompetensi-asn" || t === "kompetensi") {
+        return "asn-audit";
+    }
+    if (t === "course-evaluations" || t === "course-evaluation" || t === "evaluasi" || t === "courses") {
+        return "course-evaluations";
+    }
+    if (t === "forum-reports" || t === "forum") {
+        return "forum-reports";
+    }
+    if (t === "qa-reports" || t === "qa" || t === "tanya-jawab") {
+        return "qa-reports";
+    }
+    if (t === "feedback" || t === "user-feedback" || t === "masukan") {
+        return "feedback";
+    }
+    if (t === "abuse-reports" || t === "abuse" || t === "ulasan") {
+        return "abuse-reports";
+    }
+    return "course-evaluations";
+};
+
+/**
  * ✨ PHASE 4.210 / 11.3: Content Moderation & User Feedback Center
  * Dedicated to Community & Content Moderation:
  * 1. Course Review Abuse Reports
@@ -25,41 +52,28 @@ function ReportsAdmin() {
     const navigate = useNavigate();
 
     const [activeTab, setActiveTab] = useState(() => {
-        const tab = searchParams.get("tab");
-        if (tab === "course-evaluations" || tab === "course-evaluation" || tab === "evaluasi" || tab === "courses") return "course-evaluations";
-        if (tab === "forum-reports" || tab === "forum") return "forum-reports";
-        if (tab === "qa-reports") return "qa-reports";
-        if (tab === "feedback" || tab === "user-feedback") return "feedback";
-        if (tab === "abuse-reports") return "abuse-reports";
-        return "course-evaluations";
+        return resolveReportsTab(searchParams.get("tab"));
     });
 
     // Check if query is meant for System Diagnostics Center or sync tab
     useEffect(() => {
-        const tab = searchParams.get("tab");
-        if (tab === "system-test" || tab === "diagnostics") {
+        const rawTab = searchParams.get("tab");
+        if (rawTab === "system-test" || rawTab === "diagnostics") {
             navigate("/admin/system/?tab=diagnostics", { replace: true });
             return;
         }
-        if (tab === "documentation" || tab === "docs") {
+        if (rawTab === "documentation" || rawTab === "docs") {
             navigate("/admin/system/?tab=docs", { replace: true });
             return;
         }
 
-        if (tab === "course-evaluations" || tab === "course-evaluation" || tab === "evaluasi" || tab === "courses") {
-            if (activeTab !== "course-evaluations") setActiveTab("course-evaluations");
-        } else if (tab === "forum-reports" || tab === "forum") {
-            if (activeTab !== "forum-reports") setActiveTab("forum-reports");
-        } else if (tab === "feedback" || tab === "user-feedback") {
-            if (activeTab !== "feedback") setActiveTab("feedback");
-        } else if (tab === "qa-reports") {
-            if (activeTab !== "qa-reports") setActiveTab("qa-reports");
-        } else if (tab === "abuse-reports") {
-            if (activeTab !== "abuse-reports") setActiveTab("abuse-reports");
-        } else if (!tab) {
-            setSearchParams({ tab: activeTab }, { replace: true });
+        const resolved = resolveReportsTab(rawTab);
+        setActiveTab((prev) => (prev !== resolved ? resolved : prev));
+
+        if (!rawTab) {
+            setSearchParams({ tab: resolved }, { replace: true });
         }
-    }, [searchParams, navigate, activeTab, setSearchParams]);
+    }, [searchParams, navigate, setSearchParams]);
 
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -160,8 +174,9 @@ function ReportsAdmin() {
 
     // Tab selection handler ensuring state and query params stay synchronized
     const handleTabSelect = (tabId) => {
-        setActiveTab(tabId);
-        setSearchParams({ tab: tabId }, { replace: true });
+        const validId = resolveReportsTab(tabId);
+        setActiveTab(validId);
+        setSearchParams({ tab: validId }, { replace: true });
     };
 
     // Manual refresh action

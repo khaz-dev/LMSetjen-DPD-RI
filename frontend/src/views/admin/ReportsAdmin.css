@@ -256,10 +256,16 @@
 
 .reports-tabs-content {
     padding: 1.25rem;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
 }
 
 .reports-tab-pane {
     display: none;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
 }
 
 .reports-tab-pane.active {

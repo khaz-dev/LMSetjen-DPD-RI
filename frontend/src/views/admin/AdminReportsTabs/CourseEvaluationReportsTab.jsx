@@ -346,7 +346,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
         // Search query
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase().trim();
-            result = result.filter(c => 
+            result = result.filter(c =>
                 c.title?.toLowerCase().includes(q) ||
                 c.teacher?.full_name?.toLowerCase().includes(q) ||
                 c.category?.title?.toLowerCase().includes(q)
@@ -390,7 +390,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
             setIsExportingExcel(true);
             const now = new Date();
             const dateStr = now.toISOString().slice(0, 10);
-            
+
             const response = await apiInstance.get(
                 `admin/course-evaluations-export-excel/?search=${encodeURIComponent(searchQuery)}`,
                 { responseType: "blob" }
@@ -534,7 +534,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
             {/* Interactive KPI Metrics Grid */}
             <div className="course-eval-kpi-grid">
                 {/* 1. Total Courses Card */}
-                <div 
+                <div
                     className={`kpi-card interactive-kpi ${healthFilter === "all" ? "active" : ""}`}
                     onClick={() => { setHealthFilter("all"); setCategoryFilter("all"); }}
                     title="Total kursus terpublikasi aktif (Klik untuk setel ulang filter ke semua kursus)"
@@ -552,7 +552,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                 </div>
 
                 {/* 2. Participation & Completions Card */}
-                <div 
+                <div
                     className="kpi-card"
                     title="Total pegawai terdaftar dan akumulasi JP ASN yang telah disalurkan"
                 >
@@ -569,7 +569,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                 </div>
 
                 {/* 3. Average Rating Card */}
-                <div 
+                <div
                     className="kpi-card"
                     title="Rata-rata rating evaluasi kepuasan peserta (skala 5)"
                 >
@@ -589,7 +589,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                 </div>
 
                 {/* 4. Overall Completion Rate Card */}
-                <div 
+                <div
                     className="kpi-card"
                     title="Efektivitas pembelajaran dan kelulusan platform"
                 >
@@ -779,13 +779,16 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                         <div className="d-flex align-items-center gap-2">
                             <i className="fas fa-clipboard-check text-teal"></i>
                             <span className="fw-bold text-dark small">Daftar Kursus & Evaluasi Mutu Pembelajaran</span>
+                            <span className="badge bg-light text-muted border d-none d-md-inline-flex align-items-center gap-1" style={{ fontSize: "0.68rem" }}>
+                                <i className="fas fa-arrows-left-right text-teal"></i> Geser horizontal untuk melihat kolom lengkap
+                            </span>
                         </div>
                         <span className="text-muted small">
                             Menampilkan <strong>{filteredCourses.length}</strong> dari {courses.length} Kursus
                         </span>
                     </div>
 
-                    <div className="table-responsive">
+                    <div className="table-responsive course-eval-table-scroll">
                         <table className="table course-eval-table align-middle">
                             <thead>
                                 <tr>
@@ -809,7 +812,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                                         src={getImageUrl(c.image)}
                                                         alt={c.title}
                                                         onError={(e) => {
-                                                             e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
+                                                            e.target.src = "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png";
                                                         }}
                                                     />
                                                 </div>
@@ -857,7 +860,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                                 <div className="progress-micro">
                                                     <div
                                                         className="progress-micro-bar bg-teal"
-                                                        style={{ 
+                                                        style={{
                                                             width: `${Math.min(100, c.completion_rate || 0)}%`,
                                                             backgroundColor: "#0d9488"
                                                         }}
@@ -889,8 +892,8 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                                 <span className="jp-badge-pill mb-1">
                                                     {getCourseJP(c)} JP
                                                 </span>
-                                                <div 
-                                                    className="distributed-jp-text" 
+                                                <div
+                                                    className="distributed-jp-text"
                                                     title={`Total JP yang tersalurkan kepada ${c.completed_count || 0} pegawai yang lulus`}
                                                 >
                                                     <i className="fas fa-award text-teal me-1"></i>
@@ -1564,7 +1567,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                                                             type="checkbox"
                                                                             className="form-check-input mt-0"
                                                                             checked={isChecked}
-                                                                            onChange={() => {}}
+                                                                            onChange={() => { }}
                                                                             onClick={(e) => e.stopPropagation()}
                                                                             onChangeCapture={() => handleToggleLearner(lr.user_id)}
                                                                         />

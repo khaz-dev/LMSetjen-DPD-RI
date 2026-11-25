@@ -76,15 +76,12 @@ const ASNCompetencyAuditTab = ({ refreshTrigger }) => {
     // Client-side filtering
     const filteredRecords = useMemo(() => {
         return records.filter((rec) => {
-            // Status match
             if (statusFilter !== "all" && rec.status.toLowerCase() !== statusFilter.toLowerCase()) {
                 return false;
             }
-            // Unit match
             if (unitFilter !== "all" && rec.unit_kerja.toLowerCase() !== unitFilter.toLowerCase()) {
                 return false;
             }
-            // Search query match
             if (searchQuery.trim()) {
                 const sq = searchQuery.toLowerCase().trim();
                 const matchName = (rec.full_name || "").toLowerCase().includes(sq);
@@ -134,45 +131,56 @@ const ASNCompetencyAuditTab = ({ refreshTrigger }) => {
         }, 200);
     };
 
+    // Helper: User Initials
+    const getInitials = (name) => {
+        if (!name) return "AS";
+        const parts = name.trim().split(/\s+/);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        return name.slice(0, 2).toUpperCase();
+    };
+
+    // Distribution percentages for mini bar
+    const totalCount = kpi.total_asn || 1;
+    const compliantPct = Math.round(((kpi.compliant_count || 0) / totalCount) * 100);
+    const inProgressPct = Math.round(((kpi.in_progress_count || 0) / totalCount) * 100);
+    const nonCompliantPct = Math.max(0, 100 - compliantPct - inProgressPct);
+
     return (
-        <div className="asn-audit-container">
-            {/* 1. Official Hero Banner & Regulation Context */}
-            <div className="asn-audit-hero-card no-print">
-                <div className="asn-audit-hero-header">
-                    <div>
-                        <div className="asn-audit-badge-group mb-2">
-                            <span className="asn-badge-law">
-                                <i className="fas fa-balance-scale me-1"></i>
-                                UU NO. 20 TAHUN 2023 PASAL 49
-                            </span>
-                            <span className="asn-badge-lan">
-                                <i className="fas fa-certificate me-1"></i>
-                                PERATURAN LAN RI NO. 10 TAHUN 2018
-                            </span>
-                            <span className="asn-badge-bureau">
-                                <i className="fas fa-landmark me-1"></i>
-                                BIRO OKK SETJEN DPD RI
-                            </span>
+        <div className="asn-audit-compact-wrapper">
+            {/* 1. Sleek Executive Command Bar */}
+            <div className="asn-compact-hero no-print">
+                <div className="asn-hero-flex">
+                    <div className="asn-hero-brand">
+                        <div className="asn-hero-emblem">
+                            <i className="fas fa-balance-scale"></i>
                         </div>
-                        <h4 className="asn-audit-hero-title">
-                            Audit Capaian Pengembangan Kompetensi Tahunan Pegawai ASN
-                        </h4>
-                        <p className="asn-audit-hero-subtitle">
-                            Monev kepatuhan kewajiban dan hak pengembangan diri minimal <strong>20 Jam Pelajaran (JP)</strong> per tahun (1 JP = 45 menit / 2.700 detik).
-                        </p>
+                        <div className="asn-hero-text">
+                            <div className="asn-hero-title-row">
+                                <h4 className="asn-hero-title">Audit Capaian Kompetensi Tahunan ASN</h4>
+                                <span className="asn-law-chip">
+                                    <i className="fas fa-gavel me-1"></i>UU 20/2023 Pasal 49
+                                </span>
+                                <span className="asn-lan-chip">
+                                    <i className="fas fa-certificate me-1"></i>Perka LAN 10/2018
+                                </span>
+                            </div>
+                            <p className="asn-hero-sub">
+                                Standar Wajib Min. <strong>20 JP/Pegawai/Tahun</strong> (1 JP = 45 Menit / 2.700 Detik) &bull; Biro OKK Setjen DPD RI
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="asn-audit-hero-controls">
-                        <div className="asn-year-select-wrapper">
-                            <span className="asn-year-label">
-                                <i className="fas fa-calendar-alt me-1 text-teal"></i>
-                                Tahun Anggaran:
-                            </span>
+                    <div className="asn-hero-actions">
+                        <div className="asn-year-box">
+                            <i className="fas fa-calendar-alt"></i>
                             <select
-                                className="asn-year-select"
+                                className="asn-year-select-compact"
                                 value={selectedYear}
                                 onChange={handleYearChange}
                                 disabled={loading}
+                                title="Pilih Tahun Anggaran Audit"
                             >
                                 {availableYears.map((yr) => (
                                     <option key={yr} value={yr}>
@@ -184,162 +192,204 @@ const ASNCompetencyAuditTab = ({ refreshTrigger }) => {
 
                         <button
                             type="button"
-                            className="btn-asn-audit-excel"
+                            className="btn-hero-action btn-hero-excel"
                             onClick={handleExportExcel}
                             disabled={exporting || loading}
-                            title="Unduh file Excel multi-sheet resmi"
+                            title="Unduh rekapitulasi lengkap Excel (.xlsx) resmi"
                         >
                             <i className={exporting ? "fas fa-spinner fa-spin" : "fas fa-file-excel"}></i>
-                            <span>{exporting ? "Mengunduh..." : "Ekspor Excel (.xlsx)"}</span>
+                            <span>{exporting ? "Unduh..." : "Ekspor (.xlsx)"}</span>
                         </button>
 
                         <button
                             type="button"
-                            className="btn-asn-audit-print"
+                            className="btn-hero-action btn-hero-print"
                             onClick={handlePrint}
                             disabled={loading}
-                            title="Cetak Berita Acara & Rekapitulasi Audit Resmi"
+                            title="Format cetak dokumen resmi Berita Acara"
                         >
                             <i className="fas fa-print"></i>
-                            <span>Cetak Berita Acara</span>
+                            <span>Berita Acara</span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* 2. Executive KPI Cards */}
-            <div className="asn-kpi-grid no-print">
-                <div className="asn-kpi-card">
-                    <div className="asn-kpi-icon icon-teal">
-                        <i className="fas fa-award"></i>
-                    </div>
-                    <div className="asn-kpi-info">
-                        <div className="asn-kpi-title">Akumulasi JP Disalurkan</div>
-                        <div className="asn-kpi-num">
-                            {Number(kpi.total_jp_earned || 0).toLocaleString("id-ID")} <span style={{ fontSize: "0.95rem", color: "#0d9488" }}>JP</span>
+            {/* 2. Compact Integrated Metric Ribbon */}
+            <div className="asn-metric-ribbon no-print">
+                <div className="asn-ribbon-grid">
+                    {/* Metrik 1: Total JP */}
+                    <div className="asn-ribbon-item">
+                        <div className="asn-ribbon-icon bg-teal-subtle">
+                            <i className="fas fa-graduation-cap"></i>
                         </div>
-                        <div className="asn-kpi-sub">
-                            Rata-rata <strong>{kpi.avg_jp_per_asn || 0} JP</strong> per ASN terdaftar
+                        <div className="asn-ribbon-data">
+                            <span className="asn-ribbon-label">Total JP Disalurkan</span>
+                            <div className="asn-ribbon-val-row">
+                                <span className="asn-ribbon-val text-teal">
+                                    {Number(kpi.total_jp_earned || 0).toLocaleString("id-ID")}
+                                </span>
+                                <span className="badge bg-light text-teal border border-teal-subtle asn-ribbon-badge">
+                                    Rata-rata {kpi.avg_jp_per_asn || 0} JP
+                                </span>
+                            </div>
+                            <span className="asn-ribbon-subtext">
+                                Dari {kpi.total_certificates_issued || 0} sertifikat sah terverifikasi
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Metrik 2: Memenuhi Target 20 JP */}
+                    <div className="asn-ribbon-item">
+                        <div className="asn-ribbon-icon bg-green-subtle">
+                            <i className="fas fa-check-double"></i>
+                        </div>
+                        <div className="asn-ribbon-data">
+                            <span className="asn-ribbon-label">Memenuhi Syarat (≥ 20 JP)</span>
+                            <div className="asn-ribbon-val-row">
+                                <span className="asn-ribbon-val text-success">
+                                    {kpi.compliant_count || 0}
+                                </span>
+                                <span className="badge bg-success-subtle text-success asn-ribbon-badge">
+                                    {kpi.compliance_rate || 0}% Kepatuhan
+                                </span>
+                            </div>
+                            <span className="asn-ribbon-subtext">
+                                Target 20 JP tahunan terpenuhi penuh
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Metrik 3: Sedang Berjalan */}
+                    <div className="asn-ribbon-item">
+                        <div className="asn-ribbon-icon bg-amber-subtle">
+                            <i className="fas fa-hourglass-half"></i>
+                        </div>
+                        <div className="asn-ribbon-data">
+                            <span className="asn-ribbon-label">Sedang Berjalan (1-19 JP)</span>
+                            <div className="asn-ribbon-val-row">
+                                <span className="asn-ribbon-val text-warning">
+                                    {kpi.in_progress_count || 0}
+                                </span>
+                                <span className="badge bg-warning-subtle text-warning asn-ribbon-badge">
+                                    {inProgressPct}% Pegawai
+                                </span>
+                            </div>
+                            <span className="asn-ribbon-subtext">
+                                Telah mulai mengumpulkan jam pelatihan
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Metrik 4: Belum Memulai */}
+                    <div className="asn-ribbon-item">
+                        <div className="asn-ribbon-icon bg-red-subtle">
+                            <i className="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div className="asn-ribbon-data">
+                            <span className="asn-ribbon-label">Belum Memulai (0 JP)</span>
+                            <div className="asn-ribbon-val-row">
+                                <span className="asn-ribbon-val text-danger">
+                                    {kpi.non_compliant_count || 0}
+                                </span>
+                                <span className="badge bg-danger-subtle text-danger asn-ribbon-badge">
+                                    {nonCompliantPct}% At-Risk
+                                </span>
+                            </div>
+                            <span className="asn-ribbon-subtext">
+                                Perlu intervensi & pendorongan diklat
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                <div className="asn-kpi-card">
-                    <div className="asn-kpi-icon icon-green">
-                        <i className="fas fa-check-circle"></i>
+                {/* Multi-segment Distribution Bar */}
+                <div className="asn-distribution-strip">
+                    <div className="asn-strip-header">
+                        <span>Distribusi Kepatuhan Kompetensi ASN {selectedYear} ({kpi.total_asn} Pegawai)</span>
+                        <span>
+                            <strong className="text-success">{compliantPct}% Memenuhi</strong> &bull;{" "}
+                            <strong className="text-warning">{inProgressPct}% Proses</strong> &bull;{" "}
+                            <strong className="text-danger">{nonCompliantPct}% Belum</strong>
+                        </span>
                     </div>
-                    <div className="asn-kpi-info">
-                        <div className="asn-kpi-title">Memenuhi Syarat (≥ 20 JP)</div>
-                        <div className="asn-kpi-num text-success">
-                            {Number(kpi.compliant_count || 0).toLocaleString("id-ID")}{" "}
-                            <span style={{ fontSize: "0.9rem", color: "#10b981" }}>({kpi.compliance_rate || 0}%)</span>
-                        </div>
-                        <div className="asn-kpi-sub">
-                            Telah mencapai target tahunan ASN
-                        </div>
-                    </div>
-                </div>
-
-                <div className="asn-kpi-card">
-                    <div className="asn-kpi-icon icon-amber">
-                        <i className="fas fa-hourglass-half"></i>
-                    </div>
-                    <div className="asn-kpi-info">
-                        <div className="asn-kpi-title">Sedang Berjalan (1 - 19 JP)</div>
-                        <div className="asn-kpi-num text-warning">
-                            {Number(kpi.in_progress_count || 0).toLocaleString("id-ID")}{" "}
-                            <span style={{ fontSize: "0.9rem", color: "#64748b" }}>Pegawai</span>
-                        </div>
-                        <div className="asn-kpi-sub">
-                            Dalam proses penambahan jam pelatihan
-                        </div>
-                    </div>
-                </div>
-
-                <div className="asn-kpi-card">
-                    <div className="asn-kpi-icon icon-red">
-                        <i className="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div className="asn-kpi-info">
-                        <div className="asn-kpi-title">Belum Memulai (0 JP)</div>
-                        <div className="asn-kpi-num text-danger">
-                            {Number(kpi.non_compliant_count || 0).toLocaleString("id-ID")}{" "}
-                            <span style={{ fontSize: "0.9rem", color: "#64748b" }}>Pegawai</span>
-                        </div>
-                        <div className="asn-kpi-sub">
-                            Perlu pendorongan kepatuhan (At-Risk)
-                        </div>
+                    <div className="asn-strip-bar">
+                        <div className="asn-segment-compliant" style={{ width: `${compliantPct}%` }} title={`Memenuhi Syarat: ${kpi.compliant_count} Pegawai (${compliantPct}%)`}></div>
+                        <div className="asn-segment-progress" style={{ width: `${inProgressPct}%` }} title={`Sedang Berjalan: ${kpi.in_progress_count} Pegawai (${inProgressPct}%)`}></div>
+                        <div className="asn-segment-risk" style={{ width: `${nonCompliantPct}%` }} title={`Belum Memulai: ${kpi.non_compliant_count} Pegawai (${nonCompliantPct}%)`}></div>
                     </div>
                 </div>
             </div>
 
-            {/* 3. Sub-Navigation Tabs */}
-            <div className="asn-audit-nav-tabs no-print">
-                <button
-                    type="button"
-                    className={`asn-audit-tab-btn ${activeSubTab === "transcripts" ? "active" : ""}`}
-                    onClick={() => setActiveSubTab("transcripts")}
-                >
-                    <i className="fas fa-users-viewfinder"></i>
-                    <span>Transkrip Audit Pegawai ({filteredRecords.length})</span>
-                </button>
-                <button
-                    type="button"
-                    className={`asn-audit-tab-btn ${activeSubTab === "units" ? "active" : ""}`}
-                    onClick={() => setActiveSubTab("units")}
-                >
-                    <i className="fas fa-sitemap"></i>
-                    <span>Rekapitulasi per Unit Kerja ({byUnitKerja.length})</span>
-                </button>
-                <button
-                    type="button"
-                    className={`asn-audit-tab-btn ${activeSubTab === "minute" ? "active" : ""}`}
-                    onClick={() => setActiveSubTab("minute")}
-                >
-                    <i className="fas fa-file-contract"></i>
-                    <span>Berita Acara & Dokumen Cetak</span>
-                </button>
-            </div>
+            {/* 3. Main Data Card with Integrated Header Bar & Filter Cluster */}
+            <div className="asn-main-card no-print">
+                {/* Card Header Bar (Subnav + Filters in One Row) */}
+                <div className="asn-card-header-bar">
+                    <div className="asn-subnav-group">
+                        <button
+                            type="button"
+                            className={`asn-subnav-btn ${activeSubTab === "transcripts" ? "active" : ""}`}
+                            onClick={() => setActiveSubTab("transcripts")}
+                        >
+                            <i className="fas fa-users-viewfinder"></i>
+                            <span>Transkrip Pegawai</span>
+                            <span className="asn-subnav-badge">{filteredRecords.length}</span>
+                        </button>
+                        <button
+                            type="button"
+                            className={`asn-subnav-btn ${activeSubTab === "units" ? "active" : ""}`}
+                            onClick={() => setActiveSubTab("units")}
+                        >
+                            <i className="fas fa-sitemap"></i>
+                            <span>Rekapitulasi Unit</span>
+                            <span className="asn-subnav-badge">{byUnitKerja.length}</span>
+                        </button>
+                        <button
+                            type="button"
+                            className={`asn-subnav-btn ${activeSubTab === "minute" ? "active" : ""}`}
+                            onClick={() => setActiveSubTab("minute")}
+                        >
+                            <i className="fas fa-file-contract"></i>
+                            <span>Berita Acara Resmi</span>
+                        </button>
+                    </div>
 
-            {/* TAB CONTENT 1: TRANSKRIP AUDIT PEGAWAI */}
-            {activeSubTab === "transcripts" && (
-                <div className="d-flex flex-column gap-3 no-print">
-                    {/* Toolbar & Filters */}
-                    <div className="asn-audit-toolbar">
-                        <div className="asn-audit-search-box">
-                            <i className="fas fa-search text-muted"></i>
-                            <input
-                                type="text"
-                                className="asn-audit-search-input"
-                                placeholder="Cari nama, NIP, atau jabatan..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            {searchQuery && (
-                                <button
-                                    type="button"
-                                    className="btn btn-sm text-muted p-0 ms-1 border-0 bg-transparent"
-                                    onClick={() => setSearchQuery("")}
-                                >
-                                    <i className="fas fa-times"></i>
-                                </button>
-                            )}
-                        </div>
+                    {/* Integrated Search and Filter cluster (Active on Transcripts & Units) */}
+                    {activeSubTab === "transcripts" && (
+                        <div className="asn-filter-cluster">
+                            <div className="asn-search-pill">
+                                <i className="fas fa-search"></i>
+                                <input
+                                    type="text"
+                                    className="asn-search-input-compact"
+                                    placeholder="Cari nama, NIP, jabatan..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm text-muted p-0 border-0 bg-transparent"
+                                        onClick={() => setSearchQuery("")}
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                )}
+                            </div>
 
-                        <div className="asn-audit-filter-group">
                             <select
-                                className="asn-audit-filter-select"
+                                className="asn-select-compact"
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
-                                <option value="all">Semua Status Kepatuhan</option>
-                                <option value="memenuhi_syarat">Memenuhi Syarat (≥ 20 JP)</option>
-                                <option value="sedang_berjalan">Sedang Berjalan (1 - 19 JP)</option>
+                                <option value="all">Semua Status</option>
+                                <option value="memenuhi_syarat">Memenuhi (≥ 20 JP)</option>
+                                <option value="sedang_berjalan">Berjalan (1-19 JP)</option>
                                 <option value="belum_memulai">Belum Memulai (0 JP)</option>
                             </select>
 
                             <select
-                                className="asn-audit-filter-select"
+                                className="asn-select-compact"
                                 value={unitFilter}
                                 onChange={(e) => setUnitFilter(e.target.value)}
                             >
@@ -351,35 +401,48 @@ const ASNCompetencyAuditTab = ({ refreshTrigger }) => {
                                 ))}
                             </select>
                         </div>
-                    </div>
+                    )}
 
-                    {/* Table */}
-                    <div className="asn-audit-table-card">
+                    {/* Horizontal Scroll Hint Indicator */}
+                    {activeSubTab !== "minute" && (
+                        <div className="d-none d-lg-flex align-items-center ms-auto">
+                            <span className="badge bg-light text-muted border py-1 px-2 d-inline-flex align-items-center gap-1" style={{ fontSize: "0.68rem" }}>
+                                <i className="fas fa-arrows-left-right text-teal"></i> Geser horizontal untuk melihat kolom lengkap
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Sub-Tab 1: Transkrip Audit Pegawai Table */}
+                {activeSubTab === "transcripts" && (
+                    <>
                         {loading ? (
-                            <div className="text-center py-5">
-                                <div className="spinner-border text-teal mb-3" role="status">
-                                    <span className="visually-hidden">Memuat data audit...</span>
+                            <div className="text-center py-4">
+                                <div className="spinner-border spinner-border-sm text-teal mb-2" role="status">
+                                    <span className="visually-hidden">Memuat...</span>
                                 </div>
-                                <div className="fw-semibold text-dark">Memuat transkrip audit kompetensi ASN...</div>
+                                <div className="text-muted small">Memuat transkrip audit kompetensi ASN...</div>
                             </div>
                         ) : filteredRecords.length === 0 ? (
                             <div className="text-center py-5">
-                                <i className="fas fa-user-slash text-muted fa-3x mb-3"></i>
-                                <div className="fw-semibold text-dark">Tidak ada data pegawai yang sesuai filter</div>
-                                <div className="text-muted small">Coba ubah kata kunci pencarian atau filter status.</div>
+                                <i className="fas fa-user-slash text-muted fa-2x mb-2"></i>
+                                <div className="fw-semibold text-dark small">Tidak ada data pegawai yang sesuai filter</div>
+                                <div className="text-muted" style={{ fontSize: "0.72rem" }}>
+                                    Coba ubah kata kunci pencarian atau sesuaikan filter status/unit kerja.
+                                </div>
                             </div>
                         ) : (
-                            <div className="table-responsive">
-                                <table className="asn-audit-table">
+                            <div className="table-responsive asn-table-scroll-wrapper">
+                                <table className="asn-table-compact">
                                     <thead>
                                         <tr>
-                                            <th style={{ width: "45px" }} className="text-center">No</th>
+                                            <th style={{ width: "38px" }} className="text-center">No</th>
                                             <th>Pegawai ASN</th>
                                             <th>Unit Kerja & Jabatan</th>
-                                            <th className="text-center" style={{ width: "95px" }}>Sertifikat</th>
-                                            <th className="text-center" style={{ width: "110px" }}>Capaian JP</th>
-                                            <th style={{ width: "140px" }}>Progress Target</th>
-                                            <th className="text-center" style={{ width: "160px" }}>Status Audit</th>
+                                            <th className="text-center" style={{ width: "90px" }}>Sertifikat</th>
+                                            <th className="text-center" style={{ width: "95px" }}>Capaian</th>
+                                            <th style={{ width: "120px" }}>Target 20 JP</th>
+                                            <th className="text-center" style={{ width: "145px" }}>Status Kepatuhan</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -388,56 +451,61 @@ const ASNCompetencyAuditTab = ({ refreshTrigger }) => {
                                             const isInProgress = r.status === "SEDANG_BERJALAN";
                                             return (
                                                 <tr key={r.user_id || idx}>
-                                                    <td className="text-center text-muted fw-semibold">{idx + 1}</td>
+                                                    <td className="text-center text-muted fw-semibold" style={{ fontSize: "0.74rem" }}>
+                                                        {idx + 1}
+                                                    </td>
                                                     <td>
-                                                        <div className="fw-bold text-dark">{r.full_name}</div>
-                                                        <div className="text-muted" style={{ fontSize: "0.74rem" }}>
-                                                            NIP: {r.nip} &bull; {r.email}
+                                                        <div className="asn-user-cell">
+                                                            <div className="asn-avatar-circle">
+                                                                {getInitials(r.full_name)}
+                                                            </div>
+                                                            <div className="asn-user-meta">
+                                                                <span className="asn-user-name" title={r.full_name}>
+                                                                    {r.full_name}
+                                                                </span>
+                                                                <span className="asn-user-sub">
+                                                                    NIP: {r.nip}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td>
-                                                        <div className="fw-semibold text-dark" style={{ fontSize: "0.82rem" }}>
-                                                            {r.unit_kerja}
-                                                        </div>
-                                                        <div className="text-muted" style={{ fontSize: "0.74rem" }}>
-                                                            {r.jabatan} {r.golongan !== "-" ? `(${r.golongan})` : ""}
+                                                        <div className="asn-unit-cell">
+                                                            <span className="asn-unit-name" title={r.unit_kerja}>
+                                                                {r.unit_kerja}
+                                                            </span>
+                                                            <span className="asn-unit-pos" title={r.jabatan}>
+                                                                {r.jabatan} {r.golongan !== "-" ? `(${r.golongan})` : ""}
+                                                            </span>
                                                         </div>
                                                     </td>
                                                     <td className="text-center">
-                                                        <span className="badge bg-light text-dark border">
+                                                        <span className="badge bg-light text-dark border" style={{ fontSize: "0.72rem" }}>
                                                             {r.certificates_count} Lembar
                                                         </span>
                                                     </td>
                                                     <td className="text-center">
-                                                        <span className="fw-bold text-teal" style={{ fontSize: "0.95rem" }}>
+                                                        <span className="fw-bold text-teal" style={{ fontSize: "0.86rem" }}>
                                                             {r.total_jp} JP
                                                         </span>
-                                                        <div className="text-muted" style={{ fontSize: "0.68rem" }}>
-                                                            Target 20 JP
-                                                        </div>
                                                     </td>
                                                     <td>
-                                                        <div className="asn-progress-wrap">
-                                                            <div className="d-flex justify-content-between align-items-center" style={{ fontSize: "0.68rem" }}>
-                                                                <span className="fw-semibold">{r.fulfillment_pct}%</span>
-                                                                {r.gap_jp > 0 ? (
-                                                                    <span className="text-muted">Kurang {r.gap_jp} JP</span>
-                                                                ) : (
-                                                                    <span className="text-success fw-bold">Tercapai</span>
-                                                                )}
-                                                            </div>
-                                                            <div className="asn-progress-bar-bg">
+                                                        <div className="asn-mini-progress" title={`Capaian ${r.total_jp} dari target 20 JP (${r.fulfillment_pct}%)`}>
+                                                            <div className="asn-mini-bar-bg">
                                                                 <div
-                                                                    className={`asn-progress-bar-fill ${isCompliant ? "fill-green" : isInProgress ? "fill-amber" : "fill-red"}`}
+                                                                    className={`asn-mini-bar-fill ${isCompliant ? "bg-success" : isInProgress ? "bg-warning" : "bg-danger"}`}
                                                                     style={{ width: `${Math.min(100, r.fulfillment_pct)}%` }}
                                                                 ></div>
                                                             </div>
+                                                            <span className="asn-mini-pct">
+                                                                {r.fulfillment_pct}%
+                                                            </span>
                                                         </div>
                                                     </td>
                                                     <td className="text-center">
-                                                        <span className={`asn-status-tag ${isCompliant ? "tag-compliant" : isInProgress ? "tag-inprogress" : "tag-noncompliant"}`}>
-                                                            <i className={`fas ${isCompliant ? "fa-check-circle" : isInProgress ? "fa-clock" : "fa-times-circle"}`}></i>
-                                                            {isCompliant ? "Memenuhi Syarat" : isInProgress ? "Sedang Berjalan" : "Belum Memulai"}
+                                                        <span className={`asn-pill ${isCompliant ? "pill-compliant" : isInProgress ? "pill-progress" : "pill-risk"}`}>
+                                                            <span className="asn-pill-dot"></span>
+                                                            <span>{isCompliant ? "Memenuhi Syarat" : isInProgress ? "Sedang Berjalan" : "Belum Memulai"}</span>
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -447,84 +515,91 @@ const ASNCompetencyAuditTab = ({ refreshTrigger }) => {
                                 </table>
                             </div>
                         )}
-                    </div>
-                </div>
-            )}
-
-            {/* TAB CONTENT 2: REKAPITULASI UNIT KERJA */}
-            {activeSubTab === "units" && (
-                <div className="asn-audit-table-card no-print">
-                    <div className="p-3 border-bottom d-flex align-items-center justify-content-between">
-                        <div>
-                            <h6 className="fw-bold text-dark mb-0">
-                                <i className="fas fa-sitemap me-2 text-teal"></i>
-                                Pemeringkatan Kepatuhan Pengembangan Kompetensi per Unit Kerja
-                            </h6>
-                            <span className="text-muted small">
-                                Berdasarkan persentase pegawai yang telah memenuhi standar 20 JP pada Tahun Anggaran {selectedYear}.
+                        <div className="asn-table-footer">
+                            <span>
+                                Menampilkan <strong>{filteredRecords.length}</strong> dari <strong>{records.length}</strong> pegawai ASN terdaftar
+                            </span>
+                            <span>
+                                Standar Audit: Min. 20 JP / Tahun Anggaran {selectedYear}
                             </span>
                         </div>
-                    </div>
+                    </>
+                )}
 
-                    <div className="table-responsive">
-                        <table className="asn-audit-table">
-                            <thead>
-                                <tr>
-                                    <th style={{ width: "45px" }} className="text-center">Peringkat</th>
-                                    <th>Unit Kerja / Satuan Organisasi</th>
-                                    <th className="text-center" style={{ width: "120px" }}>Total Pegawai</th>
-                                    <th className="text-center" style={{ width: "130px" }}>JP Tersalurkan</th>
-                                    <th className="text-center" style={{ width: "120px" }}>Rata-rata JP</th>
-                                    <th className="text-center" style={{ width: "140px" }}>Lulus Target (≥ 20 JP)</th>
-                                    <th style={{ width: "160px" }}>Tingkat Kepatuhan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {byUnitKerja.map((u, idx) => (
-                                    <tr key={u.unit_kerja || idx}>
-                                        <td className="text-center fw-bold text-dark">{idx + 1}</td>
-                                        <td>
-                                            <div className="fw-bold text-dark">{u.unit_kerja}</div>
-                                        </td>
-                                        <td className="text-center">
-                                            <span className="badge bg-light text-dark border">
-                                                {u.total_pegawai} Pegawai
-                                            </span>
-                                        </td>
-                                        <td className="text-center fw-bold text-teal">
-                                            {u.total_jp} JP
-                                        </td>
-                                        <td className="text-center fw-semibold">
-                                            {u.avg_jp} JP
-                                        </td>
-                                        <td className="text-center">
-                                            <span className="badge bg-success-subtle text-success border border-success-subtle">
-                                                {u.compliant_count} Pegawai
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="asn-progress-wrap">
-                                                <div className="d-flex justify-content-between align-items-center" style={{ fontSize: "0.72rem" }}>
-                                                    <span className="fw-bold text-dark">{u.compliance_rate}%</span>
-                                                    <span className="text-muted">{u.compliant_count}/{u.total_pegawai}</span>
-                                                </div>
-                                                <div className="asn-progress-bar-bg">
-                                                    <div
-                                                        className={`asn-progress-bar-fill ${u.compliance_rate >= 70 ? "fill-green" : u.compliance_rate >= 35 ? "fill-amber" : "fill-red"}`}
-                                                        style={{ width: `${Math.min(100, u.compliance_rate)}%` }}
-                                                    ></div>
-                                                </div>
-                                            </div>
-                                        </td>
+                {/* Sub-Tab 2: Rekapitulasi per Unit Kerja */}
+                {activeSubTab === "units" && (
+                    <>
+                        <div className="table-responsive asn-table-scroll-wrapper">
+                            <table className="asn-table-compact">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: "38px" }} className="text-center">No</th>
+                                        <th>Unit Kerja / Satuan Organisasi</th>
+                                        <th className="text-center" style={{ width: "100px" }}>Pegawai</th>
+                                        <th className="text-center" style={{ width: "110px" }}>JP Tersalurkan</th>
+                                        <th className="text-center" style={{ width: "95px" }}>Rata-rata</th>
+                                        <th className="text-center" style={{ width: "135px" }}>Lulus Target (≥20 JP)</th>
+                                        <th style={{ width: "130px" }}>Tingkat Kepatuhan</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
+                                </thead>
+                                <tbody>
+                                    {byUnitKerja.map((u, idx) => (
+                                        <tr key={u.unit_kerja || idx}>
+                                            <td className="text-center fw-bold text-muted" style={{ fontSize: "0.74rem" }}>
+                                                {idx + 1}
+                                            </td>
+                                            <td>
+                                                <div className="fw-bold text-dark" style={{ fontSize: "0.82rem" }}>
+                                                    {u.unit_kerja}
+                                                </div>
+                                            </td>
+                                            <td className="text-center">
+                                                <span className="badge bg-light text-dark border" style={{ fontSize: "0.72rem" }}>
+                                                    {u.total_pegawai} ASN
+                                                </span>
+                                            </td>
+                                            <td className="text-center fw-bold text-teal" style={{ fontSize: "0.84rem" }}>
+                                                {u.total_jp} JP
+                                            </td>
+                                            <td className="text-center fw-semibold text-dark" style={{ fontSize: "0.82rem" }}>
+                                                {u.avg_jp} JP
+                                            </td>
+                                            <td className="text-center">
+                                                <span className="badge bg-success-subtle text-success border border-success-subtle" style={{ fontSize: "0.72rem" }}>
+                                                    {u.compliant_count} Pegawai
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="asn-mini-progress">
+                                                    <div className="asn-mini-bar-bg">
+                                                        <div
+                                                            className={`asn-mini-bar-fill ${u.compliance_rate >= 70 ? "bg-success" : u.compliance_rate >= 35 ? "bg-warning" : "bg-danger"}`}
+                                                            style={{ width: `${Math.min(100, u.compliance_rate)}%` }}
+                                                        ></div>
+                                                    </div>
+                                                    <span className="asn-mini-pct fw-bold">
+                                                        {u.compliance_rate}%
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="asn-table-footer">
+                            <span>
+                                Total <strong>{byUnitKerja.length}</strong> unit kerja / satuan organisasi
+                            </span>
+                            <span>
+                                Diurutkan berdasarkan persentase kepatuhan target 20 JP
+                            </span>
+                        </div>
+                    </>
+                )}
+            </div>
 
-            {/* TAB CONTENT 3: BERITA ACARA & FORMAT CETAK RESMI */}
+            {/* TAB CONTENT 3: BERITA ACARA RESMI (Format Cetak Formal A4) */}
             {activeSubTab === "minute" && (
                 <div className="asn-print-sheet">
                     {/* Kop Surat Resmi */}
@@ -553,14 +628,14 @@ const ASNCompetencyAuditTab = ({ refreshTrigger }) => {
                         </p>
                     </div>
 
-                    <p style={{ fontSize: "0.85rem", lineHeight: "1.6", textAlign: "justify" }}>
+                    <p style={{ fontSize: "0.82rem", lineHeight: "1.55", textAlign: "justify" }}>
                         Berdasarkan ketentuan <strong>Undang-Undang Nomor 20 Tahun 2023 tentang Aparatur Sipil Negara Pasal 49</strong> serta <strong>Peraturan Lembaga Administrasi Negara (LAN RI) Nomor 10 Tahun 2018 tentang Pengembangan Kompetensi Pegawai Negeri Sipil</strong>, setiap Pegawai ASN berhak dan wajib melaksanakan pengembangan kompetensi minimal <strong>20 (dua puluh) Jam Pelajaran (JP)</strong> per tahun (1 JP = 45 menit / 2.700 detik).
                     </p>
 
-                    <h6 className="fw-bold mt-4 mb-2" style={{ fontSize: "0.88rem" }}>
+                    <h6 className="fw-bold mt-3 mb-2" style={{ fontSize: "0.84rem" }}>
                         I. RINGKASAN REKAPITULASI CAPAIAN KOMPETENSI SISTEM E-LEARNING
                     </h6>
-                    <table className="table table-bordered table-sm" style={{ fontSize: "0.82rem" }}>
+                    <table className="table table-bordered table-sm" style={{ fontSize: "0.78rem" }}>
                         <tbody>
                             <tr>
                                 <td style={{ width: "40%", fontWeight: "600" }}>Tahun Anggaran Audit</td>
@@ -601,10 +676,10 @@ const ASNCompetencyAuditTab = ({ refreshTrigger }) => {
                         </tbody>
                     </table>
 
-                    <h6 className="fw-bold mt-4 mb-2" style={{ fontSize: "0.88rem" }}>
+                    <h6 className="fw-bold mt-3 mb-2" style={{ fontSize: "0.84rem" }}>
                         II. PENGESAHAN HASIL AUDIT KOMPETENSI
                     </h6>
-                    <p style={{ fontSize: "0.82rem", lineHeight: "1.5" }}>
+                    <p style={{ fontSize: "0.78rem", lineHeight: "1.5" }}>
                         Demikian Berita Acara Audit ini diterbitkan secara sah melalui platform pembelajaran resmi Corporate University Sekretariat Jenderal DPD RI untuk digunakan sebagai laporan resmi pertanggungjawaban pengembangan kompetensi pegawai kepada pimpinan dan instansi pembina (LAN RI & BKN).
                     </p>
 
@@ -628,14 +703,14 @@ const ASNCompetencyAuditTab = ({ refreshTrigger }) => {
                         </div>
                     </div>
 
-                    <div className="text-center mt-4 no-print">
+                    <div className="text-center mt-3 no-print">
                         <button
                             type="button"
-                            className="btn btn-primary"
+                            className="btn btn-sm btn-primary"
                             onClick={() => window.print()}
                         >
                             <i className="fas fa-print me-2"></i>
-                            Cetak Halaman Ini
+                            Cetak Dokumen Berita Acara Ini
                         </button>
                     </div>
                 </div>

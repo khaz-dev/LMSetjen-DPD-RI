@@ -1,480 +1,760 @@
 /* ==============================================================================
-   ASN COMPETENCY ANNUAL AUDIT TAB STYLES (UU ASN No. 20/2023 & Perka LAN 10/2018)
-   Sekretariat Jenderal Dewan Perwakilan Daerah Republik Indonesia (Setjen DPD RI)
+   ASN COMPETENCY ANNUAL AUDIT TAB - HIGH DENSITY & EYE-CATCHING REDESIGN
+   Platform: LMSetjen DPD RI (UU ASN No. 20/2023 & Perka LAN 10/2018)
+   Zero-Waste Layout • Compact • High Usability • Setjen DPD RI Brand Colors
    ============================================================================== */
 
-.asn-audit-container {
+.asn-audit-compact-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    padding-bottom: 3rem;
+    gap: 0.85rem;
+    padding-bottom: 2rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
-/* 1. Official Header & Regulation Card */
-.asn-audit-hero-card {
-    background: linear-gradient(135deg, #002b49 0%, #001f35 100%);
-    border: 1px solid rgba(13, 148, 136, 0.3);
-    border-radius: 12px;
-    padding: 1.5rem 1.75rem;
+/* 1. Sleek Executive Command Bar */
+.asn-compact-hero {
+    background: linear-gradient(135deg, #002b49 0%, #001f35 60%, #073859 100%);
+    border: 1px solid rgba(13, 148, 136, 0.4);
+    border-radius: 10px;
+    padding: 0.85rem 1.25rem;
     color: #ffffff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 3px 12px rgba(0, 43, 73, 0.15);
     position: relative;
     overflow: hidden;
 }
 
-.asn-audit-hero-card::after {
+.asn-compact-hero::after {
     content: "";
     position: absolute;
-    right: -20px;
-    bottom: -20px;
-    width: 180px;
-    height: 180px;
-    background: radial-gradient(circle, rgba(13, 148, 136, 0.15) 0%, transparent 70%);
+    right: -30px;
+    top: -30px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(13, 148, 136, 0.25) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
 }
 
-.asn-audit-hero-header {
+.asn-hero-flex {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     flex-wrap: wrap;
-    margin-bottom: 1.25rem;
 }
 
-.asn-audit-badge-group {
+.asn-hero-brand {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    gap: 0.85rem;
+    min-width: 0;
 }
 
-.asn-badge-law {
-    background: rgba(13, 148, 136, 0.25);
-    border: 1px solid #0d9488;
-    color: #5eead4;
-    padding: 0.25rem 0.65rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-}
-
-.asn-badge-lan {
-    background: rgba(197, 160, 89, 0.2);
-    border: 1px solid #c5a059;
-    color: #fde047;
-    padding: 0.25rem 0.65rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-}
-
-.asn-badge-bureau {
+.asn-hero-emblem {
+    width: 38px;
+    height: 38px;
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e2e8f0;
-    padding: 0.25rem 0.65rem;
-    font-size: 0.72rem;
-    font-weight: 600;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-}
-
-.asn-audit-hero-title {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0.25rem 0;
-}
-
-.asn-audit-hero-subtitle {
-    font-size: 0.85rem;
-    color: #cbd5e1;
-    margin: 0;
-    line-height: 1.45;
-}
-
-.asn-audit-hero-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.asn-year-select-wrapper {
-    display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(13, 148, 136, 0.5);
     border-radius: 8px;
-    padding: 0.35rem 0.75rem;
-    gap: 0.5rem;
-}
-
-.asn-year-label {
-    font-size: 0.78rem;
-    color: #cbd5e1;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.asn-year-select {
-    background: transparent;
-    color: #ffffff;
-    border: none;
-    font-size: 0.88rem;
-    font-weight: 700;
-    cursor: pointer;
-    outline: none;
-}
-
-.asn-year-select option {
-    background: #002b49;
-    color: #ffffff;
-}
-
-.btn-asn-audit-excel {
-    background: #0d9488;
-    color: #ffffff;
-    border: none;
-    padding: 0.5rem 1rem;
-    font-size: 0.82rem;
-    font-weight: 600;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.btn-asn-audit-excel:hover:not(:disabled) {
-    background: #0f766e;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
-}
-
-.btn-asn-audit-print {
-    background: rgba(255, 255, 255, 0.12);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 0.5rem 1rem;
-    font-size: 0.82rem;
-    font-weight: 600;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.btn-asn-audit-print:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-}
-
-/* 2. KPI Cards */
-.asn-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 1rem;
-}
-
-.asn-kpi-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 1.15rem;
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.asn-kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-}
-
-.asn-kpi-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #5eead4;
     font-size: 1.15rem;
     flex-shrink: 0;
 }
 
-.asn-kpi-icon.icon-teal {
-    background: #f0fdfa;
-    color: #0d9488;
-}
-
-.asn-kpi-icon.icon-green {
-    background: #ecfdf5;
-    color: #10b981;
-}
-
-.asn-kpi-icon.icon-amber {
-    background: #fffbeb;
-    color: #f59e0b;
-}
-
-.asn-kpi-icon.icon-red {
-    background: #fef2f2;
-    color: #ef4444;
-}
-
-.asn-kpi-info {
-    flex: 1;
+.asn-hero-text {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
 }
 
-.asn-kpi-title {
-    font-size: 0.75rem;
-    color: #64748b;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.25rem;
-}
-
-.asn-kpi-num {
-    font-size: 1.45rem;
-    font-weight: 700;
-    color: #0f172a;
-    line-height: 1.2;
-}
-
-.asn-kpi-sub {
-    font-size: 0.74rem;
-    color: #64748b;
-    margin-top: 0.25rem;
-}
-
-/* 3. Sub-Nav Tabs */
-.asn-audit-nav-tabs {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 0;
-    margin-top: 0.5rem;
-}
-
-.asn-audit-tab-btn {
-    background: transparent;
-    border: none;
-    border-bottom: 3px solid transparent;
-    padding: 0.65rem 1.15rem;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #64748b;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-bottom: -2px;
-}
-
-.asn-audit-tab-btn:hover {
-    color: #0d9488;
-}
-
-.asn-audit-tab-btn.active {
-    color: #0d9488;
-    border-bottom-color: #0d9488;
-    font-weight: 700;
-}
-
-/* 4. Filter Toolbar */
-.asn-audit-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-}
-
-.asn-audit-search-box {
-    display: flex;
-    align-items: center;
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 0.35rem 0.75rem;
-    width: 280px;
-    max-width: 100%;
-}
-
-.asn-audit-search-input {
-    border: none;
-    background: transparent;
-    font-size: 0.84rem;
-    color: #1e293b;
-    outline: none;
-    width: 100%;
-    margin-left: 0.5rem;
-}
-
-.asn-audit-filter-group {
+.asn-hero-title-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
 }
 
-.asn-audit-filter-select {
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 0.35rem 0.65rem;
-    font-size: 0.82rem;
-    color: #334155;
-    outline: none;
-    cursor: pointer;
-}
-
-/* 5. Audit Table */
-.asn-audit-table-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.asn-audit-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.84rem;
-}
-
-.asn-audit-table th {
-    background: #f8fafc;
-    color: #475569;
-    font-weight: 700;
-    padding: 0.85rem 1rem;
-    border-bottom: 2px solid #e2e8f0;
-    text-align: left;
+.asn-hero-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: -0.2px;
     white-space: nowrap;
 }
 
-.asn-audit-table td {
-    padding: 0.85rem 1rem;
+.asn-law-chip {
+    background: rgba(13, 148, 136, 0.22);
+    border: 1px solid rgba(13, 148, 136, 0.6);
+    color: #5eead4;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    letter-spacing: 0.3px;
+}
+
+.asn-lan-chip {
+    background: rgba(197, 160, 89, 0.2);
+    border: 1px solid rgba(197, 160, 89, 0.6);
+    color: #fde047;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    letter-spacing: 0.3px;
+}
+
+.asn-hero-sub {
+    font-size: 0.76rem;
+    color: #cbd5e1;
+    margin: 0.15rem 0 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Hero Controls */
+.asn-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.asn-year-box {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 0.25rem 0.6rem;
+    gap: 0.4rem;
+}
+
+.asn-year-box i {
+    font-size: 0.75rem;
+    color: #5eead4;
+}
+
+.asn-year-select-compact {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+}
+
+.asn-year-select-compact option {
+    background: #002b49;
+    color: #ffffff;
+}
+
+.btn-hero-action {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-hero-excel {
+    background: #0d9488;
+    color: #ffffff;
+    border: 1px solid #14b8a6;
+}
+
+.btn-hero-excel:hover:not(:disabled) {
+    background: #0f766e;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.4);
+}
+
+.btn-hero-print {
+    background: rgba(255, 255, 255, 0.12);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.btn-hero-print:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+/* 2. Compact Integrated Metric Ribbon */
+.asn-metric-ribbon {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.75rem 1rem 0.6rem 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.asn-ribbon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    align-items: center;
+}
+
+@media (max-width: 991px) {
+    .asn-ribbon-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 575px) {
+    .asn-ribbon-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.asn-ribbon-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.35rem 0.5rem;
+    border-right: 1px solid #f1f5f9;
+}
+
+.asn-ribbon-item:last-child {
+    border-right: none;
+}
+
+.asn-ribbon-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.asn-ribbon-icon.bg-teal-subtle {
+    background: #f0fdfa;
+    color: #0d9488;
+    border: 1px solid #ccfbf1;
+}
+
+.asn-ribbon-icon.bg-green-subtle {
+    background: #ecfdf5;
+    color: #10b981;
+    border: 1px solid #a7f3d0;
+}
+
+.asn-ribbon-icon.bg-amber-subtle {
+    background: #fffbeb;
+    color: #f59e0b;
+    border: 1px solid #fde68a;
+}
+
+.asn-ribbon-icon.bg-red-subtle {
+    background: #fef2f2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+}
+
+.asn-ribbon-data {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.asn-ribbon-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #64748b;
+    margin-bottom: 0.1rem;
+    white-space: nowrap;
+}
+
+.asn-ribbon-val-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+}
+
+.asn-ribbon-val {
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #0f172a;
+}
+
+.asn-ribbon-val.text-teal {
+    color: #0d9488;
+}
+
+.asn-ribbon-val.text-success {
+    color: #10b981;
+}
+
+.asn-ribbon-val.text-warning {
+    color: #d97706;
+}
+
+.asn-ribbon-val.text-danger {
+    color: #ef4444;
+}
+
+.asn-ribbon-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.1rem 0.4rem;
+    border-radius: 9999px;
+}
+
+.asn-ribbon-subtext {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-top: 0.1rem;
+    white-space: nowrap;
+}
+
+/* Multi-segment Compliance Distribution Strip */
+.asn-distribution-strip {
+    margin-top: 0.65rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.asn-strip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.3rem;
+}
+
+.asn-strip-bar {
+    display: flex;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: #e2e8f0;
+}
+
+.asn-segment-compliant {
+    background: #10b981;
+    transition: width 0.3s ease;
+}
+
+.asn-segment-progress {
+    background: #f59e0b;
+    transition: width 0.3s ease;
+}
+
+.asn-segment-risk {
+    background: #ef4444;
+    transition: width 0.3s ease;
+}
+
+/* 3. Unified Data Card with Integrated Header Tabs & Filter Bar */
+.asn-main-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* Guaranteed Horizontal Scrollable Container */
+.asn-main-card .table-responsive,
+.asn-main-card .asn-table-scroll-wrapper {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    margin: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+/* Custom Sleek Scrollbar for ASN Table */
+.asn-main-card .table-responsive::-webkit-scrollbar,
+.asn-main-card .asn-table-scroll-wrapper::-webkit-scrollbar {
+    height: 7px;
+}
+
+.asn-main-card .table-responsive::-webkit-scrollbar-track,
+.asn-main-card .asn-table-scroll-wrapper::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+}
+
+.asn-main-card .table-responsive::-webkit-scrollbar-thumb,
+.asn-main-card .asn-table-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+    border: 1px solid #f1f5f9;
+}
+
+.asn-main-card .table-responsive::-webkit-scrollbar-thumb:hover,
+.asn-main-card .asn-table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #0d9488;
+}
+
+.asn-card-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+
+/* Sub-nav segment buttons */
+.asn-subnav-group {
+    display: inline-flex;
+    background: #e2e8f0;
+    padding: 2px;
+    border-radius: 6px;
+}
+
+.asn-subnav-btn {
+    border: none;
+    background: transparent;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+}
+
+.asn-subnav-btn:hover {
+    color: #0f172a;
+}
+
+.asn-subnav-btn.active {
+    background: #ffffff;
+    color: #0d9488;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.asn-subnav-badge {
+    background: rgba(13, 148, 136, 0.15);
+    color: #0d9488;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.05rem 0.35rem;
+    border-radius: 10px;
+}
+
+/* Inline Filter & Search Controls */
+.asn-filter-cluster {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.asn-search-pill {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.25rem 0.55rem;
+    width: 210px;
+    height: 30px;
+    transition: border-color 0.15s ease;
+}
+
+.asn-search-pill:focus-within {
+    border-color: #0d9488;
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
+}
+
+.asn-search-pill i {
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+.asn-search-input-compact {
+    border: none;
+    background: transparent;
+    font-size: 0.78rem;
+    color: #1e293b;
+    outline: none;
+    width: 100%;
+    margin-left: 0.35rem;
+    padding: 0;
+}
+
+.asn-select-compact {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.76rem;
+    font-weight: 500;
+    color: #334155;
+    height: 30px;
+    outline: none;
+    cursor: pointer;
+    max-width: 170px;
+}
+
+.asn-select-compact:focus {
+    border-color: #0d9488;
+}
+
+/* 4. High-Density Compact Table */
+.asn-table-compact {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.asn-table-compact th {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid #cbd5e1;
+    white-space: nowrap;
+}
+
+.asn-table-compact td {
+    padding: 0.5rem 0.75rem;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
     color: #1e293b;
 }
 
-.asn-audit-table tbody tr:hover {
-    background: #f8fafc;
+.asn-table-compact tbody tr {
+    transition: background-color 0.1s ease;
 }
 
-.asn-status-tag {
-    display: inline-flex;
+.asn-table-compact tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* User cell compact presentation */
+.asn-user-cell {
+    display: flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.65rem;
-    border-radius: 9999px;
-    font-size: 0.72rem;
+    gap: 0.6rem;
+}
+
+.asn-avatar-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #e0f2fe;
+    color: #0369a1;
     font-weight: 700;
-    letter-spacing: 0.2px;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid #bae6fd;
+}
+
+.asn-user-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.asn-user-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.asn-user-sub {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-top: 0.1rem;
     white-space: nowrap;
 }
 
-.asn-status-tag.tag-compliant {
-    background: #ecfdf5;
-    color: #059669;
-    border: 1px solid #a7f3d0;
-}
-
-.asn-status-tag.tag-inprogress {
-    background: #fffbeb;
-    color: #d97706;
-    border: 1px solid #fde68a;
-}
-
-.asn-status-tag.tag-noncompliant {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-}
-
-.asn-progress-wrap {
+/* Unit and Position column */
+.asn-unit-cell {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    width: 120px;
+    min-width: 0;
 }
 
-.asn-progress-bar-bg {
-    width: 100%;
-    height: 6px;
+.asn-unit-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.asn-unit-pos {
+    font-size: 0.68rem;
+    color: #64748b;
+    margin-top: 0.1rem;
+    white-space: nowrap;
+}
+
+/* Progress micro bar */
+.asn-mini-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 105px;
+}
+
+.asn-mini-bar-bg {
+    flex: 1;
+    height: 5px;
     background: #e2e8f0;
     border-radius: 3px;
     overflow: hidden;
 }
 
-.asn-progress-bar-fill {
+.asn-mini-bar-fill {
     height: 100%;
     border-radius: 3px;
-    transition: width 0.3s ease;
 }
 
-.asn-progress-bar-fill.fill-green {
+.asn-mini-pct {
+    font-size: 0.68rem;
+    font-weight: 700;
+    width: 28px;
+    text-align: right;
+    color: #475569;
+}
+
+/* Status pills */
+.asn-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.18rem 0.55rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.asn-pill-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.asn-pill.pill-compliant {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.asn-pill.pill-compliant .asn-pill-dot {
     background: #10b981;
 }
 
-.asn-progress-bar-fill.fill-amber {
+.asn-pill.pill-progress {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.asn-pill.pill-progress .asn-pill-dot {
     background: #f59e0b;
 }
 
-.asn-progress-bar-fill.fill-red {
+.asn-pill.pill-risk {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.asn-pill.pill-risk .asn-pill-dot {
     background: #ef4444;
 }
 
-/* 6. Printable Official Minute Sheet (Berita Acara) */
+/* Table Footer / Summary Count */
+.asn-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.85rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.74rem;
+    color: #64748b;
+}
+
+/* 5. Printable Official Minute Sheet (Berita Acara) */
 .asn-print-sheet {
     background: #ffffff;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
-    padding: 2.5rem;
+    padding: 2rem;
     color: #0f172a;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-    max-width: 900px;
-    margin: 0 auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-width: 860px;
+    margin: 0.5rem auto;
 }
 
 .asn-print-kop {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.25rem;
     border-bottom: 3px double #0f172a;
-    padding-bottom: 1.25rem;
-    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .asn-print-logo {
-    width: 75px;
-    height: 75px;
+    width: 65px;
+    height: 65px;
     object-fit: contain;
 }
 
@@ -484,7 +764,7 @@
 }
 
 .asn-print-kop-institution {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 800;
     letter-spacing: 0.5px;
     margin: 0;
@@ -492,25 +772,25 @@
 }
 
 .asn-print-kop-bureau {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: #0d9488;
     margin: 0.15rem 0;
 }
 
 .asn-print-kop-address {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: #64748b;
     margin: 0;
 }
 
 .asn-print-doc-title {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
 .asn-print-doc-title h5 {
-    font-size: 1.05rem;
+    font-size: 0.98rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -519,32 +799,32 @@
 }
 
 .asn-print-doc-title p {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: #475569;
-    margin: 0.25rem 0 0 0;
+    margin: 0.2rem 0 0 0;
 }
 
 .asn-print-signatures {
     display: flex;
     justify-content: space-between;
-    margin-top: 3rem;
+    margin-top: 2.5rem;
     padding-top: 1rem;
 }
 
 .asn-print-sig-col {
     text-align: center;
-    width: 260px;
+    width: 240px;
 }
 
 .asn-print-sig-title {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-weight: 700;
     color: #334155;
-    margin-bottom: 4rem;
+    margin-bottom: 3.5rem;
 }
 
 .asn-print-sig-name {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 800;
     text-decoration: underline;
     color: #0f172a;
@@ -552,7 +832,7 @@
 }
 
 .asn-print-sig-nip {
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     color: #64748b;
     margin-top: 0.15rem;
 }

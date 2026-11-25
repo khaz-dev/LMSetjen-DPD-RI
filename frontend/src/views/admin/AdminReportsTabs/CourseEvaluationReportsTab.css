@@ -6,6 +6,8 @@
 
 .course-evaluation-tab-container {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 /* KPI Grid Adjustments */
@@ -155,6 +157,9 @@
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .course-eval-table-header {
@@ -166,9 +171,50 @@
     align-items: center;
 }
 
+/* Guaranteed Horizontal Scrollable Container */
+.course-eval-table-wrapper .table-responsive,
+.course-eval-table-wrapper .course-eval-table-scroll {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    margin: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+/* Custom Sleek Scrollbar for Table */
+.course-eval-table-wrapper .table-responsive::-webkit-scrollbar,
+.course-eval-table-wrapper .course-eval-table-scroll::-webkit-scrollbar {
+    height: 7px;
+}
+
+.course-eval-table-wrapper .table-responsive::-webkit-scrollbar-track,
+.course-eval-table-wrapper .course-eval-table-scroll::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+}
+
+.course-eval-table-wrapper .table-responsive::-webkit-scrollbar-thumb,
+.course-eval-table-wrapper .course-eval-table-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+    border: 1px solid #f1f5f9;
+}
+
+.course-eval-table-wrapper .table-responsive::-webkit-scrollbar-thumb:hover,
+.course-eval-table-wrapper .course-eval-table-scroll::-webkit-scrollbar-thumb:hover {
+    background: #0d9488;
+}
+
 .course-eval-table {
     margin-bottom: 0;
     width: 100%;
+    min-width: 1220px;
+    border-collapse: collapse;
 }
 
 .course-eval-table th {
