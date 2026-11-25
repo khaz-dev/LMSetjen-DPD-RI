@@ -7,6 +7,7 @@ import useAxios from "../../utils/useAxios";
 import Toast from "../plugin/Toast";
 import Swal from "sweetalert2";
 import { getImageUrl, getLevelText } from "../../utils/courseUtils";
+import { getCourseHealth } from "./AdminReportsTabs/CourseEvaluationReportsTab";
 import "./AdminCourseEvaluation.css";
 
 /**
@@ -25,9 +26,9 @@ function AdminCourseEvaluation() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Smart return navigation (defaults to Content Management if not accessed from Reports/Evaluation)
-    const returnUrl = location.state?.from || "/admin/content-management/?tab=courses";
-    const returnLabel = location.state?.fromLabel || "Kelola Konten Kursus";
+    // Smart return navigation (defaults to Course Evaluations if not accessed from another source)
+    const returnUrl = location.state?.from || "/admin/reports/?tab=course-evaluations";
+    const returnLabel = location.state?.fromLabel || "Evaluasi Kursus";
 
     // Data States
     const [data, setData] = useState(null);
@@ -97,6 +98,134 @@ function AdminCourseEvaluation() {
     const quizzes = data?.quizzes || [];
     const unitKerjaList = data?.unit_kerja_list || [];
     const evaluation = data?.evaluation || {};
+
+    // Course Health calculation consistent with Monev indicator
+    const healthCourseObj = useMemo(() => {
+        return {
+            enrolled_count: metrics.total_enrolled || 0,
+            completed_count: metrics.completed_count || 0,
+            completion_rate: metrics.completion_rate || 0,
+            average_rating: evaluation?.average_rating || 0
+        };
+    }, [metrics, evaluation]);
+
+    const courseHealth = useMemo(() => {
+        return getCourseHealth(healthCourseObj);
+    }, [healthCourseObj]);
+
+    // Learning Nudge Modal State & Handlers
+    const [showNudgeModal, setShowNudgeModal] = useState(false);
+    const [nudgeData, setNudgeData] = useState(null);
+    const [nudgeLoading, setNudgeLoading] = useState(false);
+    const [nudgeSending, setNudgeSending] = useState(false);
+    const [nudgeTitle, setNudgeTitle] = useState("");
+    const [nudgeMessage, setNudgeMessage] = useState("");
+    const [selectedLearnerIds, setSelectedLearnerIds] = useState([]);
+    const [nudgeLearnerSearch, setNudgeLearnerSearch] = useState("");
+
+    const handleOpenNudge = useCallback(async (singleUserId = null) => {
+        setShowNudgeModal(true);
+        setNudgeLoading(true);
+        setNudgeData(null);
+        setSelectedLearnerIds([]);
+        setNudgeLearnerSearch("");
+
+        const courseId = course.course_id || course_id;
+        try {
+            const res = await useAxios.get(`admin/course/${courseId}/nudge-learners/`);
+            if (res.data) {
+                setNudgeData(res.data);
+                setNudgeTitle(res.data.default_title || "");
+                setNudgeMessage(res.data.default_message || "");
+                if (singleUserId) {
+                    setSelectedLearnerIds([singleUserId]);
+                } else {
+                    const allIds = (res.data.learners || []).map(l => l.user_id);
+                    setSelectedLearnerIds(allIds);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching nudge recipients:", err);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal memuat peserta pengingat",
+                text: err.response?.data?.error || "Terjadi kesalahan server"
+            });
+        } finally {
+            setNudgeLoading(false);
+        }
+    }, [course.course_id, course_id]);
+
+    const handleCloseNudge = useCallback(() => {
+        setShowNudgeModal(false);
+        setNudgeData(null);
+        setNudgeSending(false);
+    }, []);
+
+    const handleSendNudge = useCallback(async () => {
+        if (selectedLearnerIds.length === 0) {
+            Toast().fire({
+                icon: "warning",
+                title: "Pilih minimal 1 peserta untuk dikirimkan pengingat"
+            });
+            return;
+        }
+
+        const courseId = course.course_id || course_id;
+        setNudgeSending(true);
+        try {
+            const payload = {
+                title: nudgeTitle,
+                message: nudgeMessage,
+                user_ids: selectedLearnerIds
+            };
+            const res = await useAxios.post(`admin/course/${courseId}/nudge-learners/`, payload);
+            if (res.data?.success) {
+                Toast().fire({
+                    icon: "success",
+                    title: "Pengingat Berhasil Dikirim!",
+                    text: res.data.message || `Notifikasi telah dikirim ke ${res.data.sent_count} peserta.`
+                });
+                handleCloseNudge();
+            }
+        } catch (err) {
+            console.error("Error sending learning nudge:", err);
+            Toast().fire({
+                icon: "error",
+                title: "Gagal mengirim pengingat belajar",
+                text: err.response?.data?.error || "Terjadi kesalahan server"
+            });
+        } finally {
+            setNudgeSending(false);
+        }
+    }, [course.course_id, course_id, selectedLearnerIds, nudgeTitle, nudgeMessage, handleCloseNudge]);
+
+    const filteredNudgeLearners = useMemo(() => {
+        if (!nudgeData?.learners) return [];
+        if (!nudgeLearnerSearch.trim()) return nudgeData.learners;
+        const q = nudgeLearnerSearch.toLowerCase();
+        return nudgeData.learners.filter(l =>
+            (l.full_name && l.full_name.toLowerCase().includes(q)) ||
+            (l.nip && l.nip.toLowerCase().includes(q)) ||
+            (l.unit_kerja && l.unit_kerja.toLowerCase().includes(q)) ||
+            (l.email && l.email.toLowerCase().includes(q))
+        );
+    }, [nudgeData, nudgeLearnerSearch]);
+
+    const handleToggleSelectAllLearners = () => {
+        if (!nudgeData?.learners) return;
+        if (selectedLearnerIds.length === nudgeData.learners.length) {
+            setSelectedLearnerIds([]);
+        } else {
+            setSelectedLearnerIds(nudgeData.learners.map(l => l.user_id));
+        }
+    };
+
+    const handleToggleLearner = (userId) => {
+        setSelectedLearnerIds(prev =>
+            prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+        );
+    };
 
     // =========================================================================
     // EXAM RESET HANDLER (UAT Skenario 5 Step 3)
@@ -459,6 +588,11 @@ function AdminCourseEvaluation() {
                                     <span className="ace-badge ace-badge-teal">
                                         <i className="fas fa-landmark"></i> Setjen DPD RI
                                     </span>
+                                    {/* Indikator Kesehatan Kursus */}
+                                    <span className={`ace-badge ace-badge-health badge-health-${courseHealth.status}`} title={courseHealth.tooltip}>
+                                        <i className={`fas ${courseHealth.icon}`}></i>
+                                        <span>Mutu: {courseHealth.label}</span>
+                                    </span>
                                     <span className={`ace-badge ${course.platform_status === "Published" ? "ace-badge-published" : "ace-badge-draft"}`}>
                                         <i className={`fas ${course.platform_status === "Published" ? "fa-circle-check" : "fa-clock"}`}></i>
                                         {course.platform_status === "Published" ? "Terpublikasi" : "Draf / Review"}
@@ -490,6 +624,17 @@ function AdminCourseEvaluation() {
                             </div>
 
                             <div className="ace-header-actions">
+                                {/* Tombol Nudge Cepat */}
+                                <button
+                                    type="button"
+                                    className="ace-btn ace-btn-nudge"
+                                    onClick={() => handleOpenNudge()}
+                                    title="Kirim Pengingat Belajar (Nudge) ke Peserta Belum Lulus"
+                                >
+                                    <i className="fas fa-paper-plane"></i>
+                                    <span>Kirim Nudge Belajar</span>
+                                </button>
+
                                 <button
                                     type="button"
                                     className="ace-btn ace-btn-excel"
@@ -886,6 +1031,16 @@ function AdminCourseEvaluation() {
                                                 <i className="fas fa-file-csv"></i>
                                                 <span>CSV</span>
                                             </button>
+
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-warning text-dark d-inline-flex align-items-center gap-1 fw-semibold"
+                                                onClick={() => handleOpenNudge()}
+                                                title="Kirim Pengingat Belajar (Nudge) ke Seluruh Peserta Belum Lulus"
+                                            >
+                                                <i className="fas fa-paper-plane"></i>
+                                                <span>Kirim Nudge Belajar</span>
+                                            </button>
                                         </div>
                                     </div>
 
@@ -946,6 +1101,7 @@ function AdminCourseEvaluation() {
                                                         <th style={{ textAlign: "center", minWidth: "90px" }}>Bobot JP</th>
                                                         <th style={{ textAlign: "center", minWidth: "130px" }}>Status Kelulusan</th>
                                                         <th style={{ minWidth: "160px" }}>Nomor Sertifikat</th>
+                                                        <th style={{ width: "90px", textAlign: "center" }}>Aksi Monev</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1044,6 +1200,23 @@ function AdminCourseEvaluation() {
                                                                         </span>
                                                                     ) : (
                                                                         <span className="text-muted small">-</span>
+                                                                    )}
+                                                                </td>
+                                                                <td style={{ textAlign: "center" }}>
+                                                                    {!isPassed ? (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="ace-btn-nudge-table"
+                                                                            onClick={() => handleOpenNudge(s.user_id)}
+                                                                            title={`Kirim Pengingat Belajar ke ${s.full_name || s.username}`}
+                                                                        >
+                                                                            <i className="fas fa-paper-plane"></i>
+                                                                            <span>Nudge</span>
+                                                                        </button>
+                                                                    ) : (
+                                                                        <span className="text-success small fw-semibold" title="Peserta telah lulus">
+                                                                            <i className="fas fa-check-circle me-1"></i>Tuntas
+                                                                        </span>
                                                                     )}
                                                                 </td>
                                                             </tr>
@@ -1463,6 +1636,223 @@ function AdminCourseEvaluation() {
                             >
                                 <i className="fas fa-rotate-right"></i>
                                 <span>Reset Percobaan Ujian Ini (Exam Reset)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL KIRIM PENGINGAT BELAJAR (LEARNING NUDGE) */}
+            {showNudgeModal && (
+                <div className="nudge-modal-overlay" onClick={handleCloseNudge}>
+                    <div className="nudge-modal-container" onClick={(e) => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="nudge-modal-header">
+                            <div>
+                                <h5 className="nudge-modal-title">
+                                    <i className="fas fa-paper-plane"></i>
+                                    <span>Kirim Pengingat Belajar (Learning Nudge)</span>
+                                </h5>
+                                <div className="text-white-50 small mt-1">
+                                    {course.title || "Pelatihan ASN"} &bull; {course.category || "Umum"}
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                className="nudge-modal-close"
+                                onClick={handleCloseNudge}
+                                title="Tutup"
+                            >
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="nudge-modal-body">
+                            {nudgeLoading ? (
+                                <div className="text-center py-5">
+                                    <div className="spinner-border text-warning mb-3" role="status" style={{ width: "2.5rem", height: "2.5rem" }}>
+                                        <span className="visually-hidden">Memuat...</span>
+                                    </div>
+                                    <div className="fw-semibold text-dark">Memuat data target penerima pengingat...</div>
+                                    <div className="text-muted small">Menghitung peserta aktif yang belum menuntaskan pelatihan</div>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Stats Strip */}
+                                    <div className="nudge-stats-strip">
+                                        <div className="nudge-stat-box">
+                                            <div className="num text-dark">{nudgeData?.stats?.total_enrolled || 0}</div>
+                                            <div className="lbl">Total Terdaftar</div>
+                                        </div>
+                                        <div className="nudge-stat-box">
+                                            <div className="num text-success">{nudgeData?.stats?.completed_count || 0}</div>
+                                            <div className="lbl">Sudah Lulus</div>
+                                        </div>
+                                        <div className="nudge-stat-box" style={{ background: "#fffbeb", borderColor: "#fde68a" }}>
+                                            <div className="num text-warning">{nudgeData?.stats?.uncompleted_count || 0}</div>
+                                            <div className="lbl fw-bold text-dark">Target Belum Lulus</div>
+                                        </div>
+                                    </div>
+
+                                    {nudgeData?.stats?.uncompleted_count === 0 ? (
+                                        <div className="alert alert-success d-flex align-items-center gap-2 mb-3">
+                                            <i className="fas fa-check-circle fa-lg"></i>
+                                            <div>
+                                                <strong>Luar Biasa! Seluruh Peserta Telah Lulus</strong>
+                                                <div className="small">Tidak ada peserta yang berstatus in-progress pada kursus ini. Semua target JP telah terpenuhi.</div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Form Editor Pesan */}
+                                            <div className="mb-3">
+                                                <label className="form-label fw-bold text-dark small mb-1">
+                                                    Judul Notifikasi Resmi
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    className="form-control form-control-sm"
+                                                    value={nudgeTitle}
+                                                    onChange={(e) => setNudgeTitle(e.target.value)}
+                                                    placeholder="Contoh: 💡 Pengingat Monev: Lanjutkan Pelatihan..."
+                                                />
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <label className="form-label fw-bold text-dark small mb-1">
+                                                    Isi Pesan Notifikasi ASN
+                                                </label>
+                                                <textarea
+                                                    className="form-control form-control-sm"
+                                                    rows={3}
+                                                    value={nudgeMessage}
+                                                    onChange={(e) => setNudgeMessage(e.target.value)}
+                                                    placeholder="Tulis pesan pengingat resmi dari Administrator SDM..."
+                                                ></textarea>
+                                                <div className="d-flex align-items-center justify-content-between mt-1">
+                                                    <span className="text-muted" style={{ fontSize: "0.72rem" }}>
+                                                        Gunakan variabel dinamis:
+                                                    </span>
+                                                    <div className="nudge-pill-chips">
+                                                        <code onClick={() => setNudgeMessage(prev => prev + " {nama}")} title="Klik untuk sisipkan nama peserta">{"{nama}"}</code>
+                                                        <code onClick={() => setNudgeMessage(prev => prev + " {progress}")} title="Klik untuk sisipkan persentase progres">{"{progress}"}</code>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Target Learners List */}
+                                            <div>
+                                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                                    <label className="form-label fw-bold text-dark small mb-0">
+                                                        Pilih Penerima Pengingat ({selectedLearnerIds.length} dari {nudgeData?.learners?.length || 0} dipilih)
+                                                    </label>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-link btn-sm text-decoration-none p-0 text-teal"
+                                                        style={{ fontSize: "0.74rem" }}
+                                                        onClick={handleToggleSelectAllLearners}
+                                                    >
+                                                        {selectedLearnerIds.length === (nudgeData?.learners?.length || 0) ? "Batal Pilih Semua" : "Pilih Semua Peserta"}
+                                                    </button>
+                                                </div>
+
+                                                <div className="nudge-learners-wrapper">
+                                                    <div className="nudge-learners-toolbar">
+                                                        <div className="input-group input-group-sm" style={{ maxWidth: "260px" }}>
+                                                            <span className="input-group-text bg-white border-end-0">
+                                                                <i className="fas fa-search text-muted" style={{ fontSize: "0.75rem" }}></i>
+                                                            </span>
+                                                            <input
+                                                                type="text"
+                                                                className="form-control border-start-0"
+                                                                placeholder="Cari nama, NIP, atau unit kerja..."
+                                                                value={nudgeLearnerSearch}
+                                                                onChange={(e) => setNudgeLearnerSearch(e.target.value)}
+                                                                style={{ fontSize: "0.75rem" }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-muted" style={{ fontSize: "0.72rem" }}>
+                                                            {filteredNudgeLearners.length} peserta ditemukan
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="nudge-learners-list">
+                                                        {filteredNudgeLearners.length === 0 ? (
+                                                            <div className="text-center py-4 text-muted small">
+                                                                Tidak ada data peserta yang cocok dengan pencarian
+                                                            </div>
+                                                        ) : (
+                                                            filteredNudgeLearners.map((lr) => {
+                                                                const isChecked = selectedLearnerIds.includes(lr.user_id);
+                                                                return (
+                                                                    <div
+                                                                        key={lr.user_id}
+                                                                        className="nudge-learner-item"
+                                                                        onClick={() => handleToggleLearner(lr.user_id)}
+                                                                        style={{ cursor: "pointer" }}
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="form-check-input mt-0"
+                                                                            checked={isChecked}
+                                                                            onChange={() => {}}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            onChangeCapture={() => handleToggleLearner(lr.user_id)}
+                                                                        />
+                                                                        <div className="flex-grow-1 min-w-0">
+                                                                            <div className="d-flex align-items-center justify-content-between">
+                                                                                <span className="fw-semibold text-dark text-truncate" style={{ fontSize: "0.78rem" }}>
+                                                                                    {lr.full_name}
+                                                                                </span>
+                                                                                <span className="badge bg-light text-dark border ms-2" style={{ fontSize: "0.7rem" }}>
+                                                                                    Progres: {lr.progress_pct}%
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="text-muted text-truncate" style={{ fontSize: "0.71rem" }}>
+                                                                                NIP: {lr.nip || "-"} &bull; {lr.unit_kerja || "-"}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="nudge-modal-footer">
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-secondary"
+                                onClick={handleCloseNudge}
+                                disabled={nudgeSending}
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-send-nudge"
+                                onClick={handleSendNudge}
+                                disabled={nudgeSending || nudgeLoading || selectedLearnerIds.length === 0}
+                            >
+                                {nudgeSending ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Mengirim Pengingat...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="fas fa-paper-plane"></i>
+                                        <span>Kirim ke {selectedLearnerIds.length} Pegawai</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

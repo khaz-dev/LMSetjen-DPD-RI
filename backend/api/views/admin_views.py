@@ -3581,6 +3581,213 @@ class AdminResetQuizAttemptAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class AdminCourseNudgeLearnersAPIView(APIView):
+    """
+    ✨ PHASE 5.4: Admin Learning Nudge Intervention API
+    Memungkinkan Administrator SDM Setjen DPD RI mengirimkan notifikasi pengingat belajar (nudge)
+    secara proaktif kepada pegawai yang terdaftar namun belum menyelesaikan kursus (in-progress).
+    - GET: Mengambil daftar peserta yang belum selesai beserta progres saat ini untuk preview.
+    - POST: Mengirimkan notifikasi In-App 'AI Learning Nudge' ke peserta terpilih atau seluruh peserta belum lulus,
+            disertai pencatatan audit trail di ActivityLog.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def _get_course_and_related(self, course_id):
+        course = None
+        if str(course_id).isdigit():
+            course = api_models.Course.objects.filter(id=int(course_id)).first()
+        if not course:
+            course = api_models.Course.objects.filter(course_id=str(course_id)).first()
+        if not course:
+            course = api_models.Course.objects.filter(slug=str(course_id)).first()
+        if not course:
+            return None, set()
+        related_course_ids = course.get_related_course_ids() if hasattr(course, 'get_related_course_ids') else {course.id}
+        return course, related_course_ids
+
+    def get(self, request, course_id):
+        user = request.user
+        is_admin_or_staff = getattr(user, 'is_staff', False) or getattr(user, 'is_admin', False)
+        if not is_admin_or_staff:
+            return Response({"error": "Akses ditolak. Fitur ini khusus Administrator Setjen DPD RI."}, status=status.HTTP_403_FORBIDDEN)
+
+        course, related_course_ids = self._get_course_and_related(course_id)
+        if not course:
+            return Response({"error": f"Kursus dengan ID '{course_id}' tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+        certified_user_ids = set(
+            api_models.Certificate.objects.filter(course_id__in=related_course_ids).values_list('user_id', flat=True)
+        )
+
+        enrollments = api_models.EnrolledCourse.objects.filter(
+            course_id__in=related_course_ids
+        ).select_related('user', 'user__profile').order_by('date')
+
+        total_enrolled = enrollments.count()
+        uncompleted_learners = []
+        completed_count = 0
+
+        # Hitung bobot JP kursus
+        total_jp = 0
+        try:
+            lectures = course.lectures() if callable(getattr(course, 'lectures', None)) else getattr(course, 'lectures', [])
+            total_sec = sum(l.content_duration_seconds for l in lectures if hasattr(l, 'content_duration_seconds') and l.content_duration_seconds)
+            total_jp = max(1, (total_sec + 2699) // 2700) if total_sec else 2
+        except Exception:
+            total_jp = 2
+
+        for enr in enrollments:
+            if not enr.user:
+                continue
+            
+            is_certified = enr.user_id in certified_user_ids
+            pct = 100 if is_certified else enr.completion_percentage()
+
+            if is_certified or pct >= 100:
+                completed_count += 1
+            else:
+                prof = getattr(enr.user, 'profile', None)
+                unit_name = "-"
+                nip_val = getattr(enr.user, 'nip', None) or (getattr(prof, 'nip', None) if prof else None) or "-"
+                jabatan_val = "-"
+                if prof:
+                    org_unit = getattr(prof, 'organization_unit', None)
+                    if org_unit:
+                        unit_name = getattr(org_unit, 'name', str(org_unit))
+                    pos = getattr(prof, 'position', None)
+                    if pos:
+                        jabatan_val = getattr(pos, 'name', str(pos))
+
+                user_full_name = enr.user.get_full_name() or getattr(enr.user, 'full_name', '') or enr.user.username
+
+                uncompleted_learners.append({
+                    "enrollment_id": enr.enrollment_id,
+                    "user_id": enr.user.id,
+                    "full_name": user_full_name,
+                    "email": enr.user.email,
+                    "nip": nip_val,
+                    "unit_kerja": unit_name,
+                    "jabatan": jabatan_val,
+                    "progress_pct": pct,
+                    "date_enrolled": enr.date.strftime("%d %b %Y") if enr.date else "-"
+                })
+
+        default_title = f"💡 Pengingat Monev: Lanjutkan Pelatihan '{course.title[:45]}'"
+        default_message = (
+            f"Halo Rekan ASN, Administrator Bagian Pengembangan Kapasitas SDM Setjen DPD RI "
+            f"mengingatkan Anda untuk melanjutkan pelatihan '{course.title}'. "
+            f"Selesaikan materi modul dan evaluasi kuis untuk memenuhi pemenuhan Jam Pelajaran (JP) ASN."
+        )
+
+        return Response({
+            "course": {
+                "id": course.id,
+                "course_id": course.course_id,
+                "title": course.title,
+                "category": course.category.title if course.category else "-",
+                "total_jp": total_jp,
+            },
+            "stats": {
+                "total_enrolled": total_enrolled,
+                "completed_count": completed_count,
+                "uncompleted_count": len(uncompleted_learners)
+            },
+            "default_title": default_title,
+            "default_message": default_message,
+            "learners": uncompleted_learners
+        }, status=status.HTTP_200_OK)
+
+    def post(self, request, course_id):
+        user = request.user
+        is_admin_or_staff = getattr(user, 'is_staff', False) or getattr(user, 'is_admin', False)
+        if not is_admin_or_staff:
+            return Response({"error": "Akses ditolak. Fitur ini khusus Administrator Setjen DPD RI."}, status=status.HTTP_403_FORBIDDEN)
+
+        course, related_course_ids = self._get_course_and_related(course_id)
+        if not course:
+            return Response({"error": f"Kursus dengan ID '{course_id}' tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+        title = request.data.get('title', '').strip() or f"💡 Pengingat Monev: Lanjutkan Pelatihan '{course.title[:45]}'"
+        message_template = request.data.get('message', '').strip() or (
+            f"Halo Rekan ASN, Administrator Bagian Pengembangan Kapasitas SDM Setjen DPD RI "
+            f"mengingatkan Anda untuk melanjutkan pelatihan '{course.title}'. "
+            f"Selesaikan materi modul dan evaluasi kuis untuk memenuhi target Jam Pelajaran (JP) pengembangan kompetensi Anda."
+        )
+        target_user_ids = request.data.get('user_ids', []) # optional filter list
+
+        certified_user_ids = set(
+            api_models.Certificate.objects.filter(course_id__in=related_course_ids).values_list('user_id', flat=True)
+        )
+
+        enrollments = api_models.EnrolledCourse.objects.filter(
+            course_id__in=related_course_ids
+        ).select_related('user', 'user__profile')
+
+        if target_user_ids and isinstance(target_user_ids, list):
+            target_user_ids_set = set(int(uid) for uid in target_user_ids if str(uid).isdigit())
+            enrollments = enrollments.filter(user_id__in=target_user_ids_set)
+
+        sent_count = 0
+        now = timezone.now()
+
+        for enr in enrollments:
+            if not enr.user or enr.user_id in certified_user_ids:
+                continue
+
+            pct = enr.completion_percentage()
+            if pct >= 100:
+                continue
+
+            # Format customized message if placeholder exists
+            personalized_msg = message_template
+            user_name = enr.user.get_full_name() or getattr(enr.user, 'full_name', '') or enr.user.username
+            if "{nama}" in personalized_msg:
+                personalized_msg = personalized_msg.replace("{nama}", user_name)
+            if "{progress}" in personalized_msg:
+                personalized_msg = personalized_msg.replace("{progress}", f"{pct}%")
+
+            # Create notification
+            api_models.Notification.objects.create(
+                user=enr.user,
+                course=course,
+                type="AI Learning Nudge",
+                title=title,
+                message=personalized_msg,
+                seen=False,
+                date=now
+            )
+            sent_count += 1
+
+        # Record into ActivityLog
+        admin_name = getattr(user, 'full_name', '') or user.get_full_name() or user.username
+        api_models.ActivityLog.objects.create(
+            user=user,
+            activity_type='announcement_posted',
+            role_at_time='admin',
+            course=course,
+            title=f"Kirim Pengingat Belajar: {course.title[:50]}",
+            description=f"Administrator SDM {admin_name} mengirimkan pengingat belajar (nudge) kepada {sent_count} peserta aktif pada kursus '{course.title}'.",
+            success=True,
+            metadata={
+                'action': 'learning_nudge',
+                'course_id': course.id,
+                'course_title': course.title,
+                'sent_count': sent_count,
+                'title': title,
+                'message': message_template,
+                'timestamp': now.isoformat()
+            }
+        )
+
+        return Response({
+            "success": True,
+            "message": f"Pengingat belajar berhasil dikirimkan kepada {sent_count} peserta.",
+            "sent_count": sent_count,
+            "course_title": course.title
+        }, status=status.HTTP_200_OK)
+
+
 class AdminCourseEvaluationsSummaryAPIView(APIView):
     """
     ✨ PHASE 5.3: Admin Course Evaluations Summary API
@@ -3607,14 +3814,13 @@ class AdminCourseEvaluationsSummaryAPIView(APIView):
             )
 
         search_query = request.query_params.get('search', '').strip()
-        status_filter = request.query_params.get('status', 'all').strip()
         category_id = request.query_params.get('category', '').strip()
 
-        # Query all primary courses (excluding published version duplicates)
-        courses_qs = api_models.Course.objects.filter(is_published_version=False).select_related('teacher', 'teacher__user', 'category')
-
-        if status_filter and status_filter.lower() not in ['all', 'semua']:
-            courses_qs = courses_qs.filter(platform_status__iexact=status_filter)
+        # Query only primary courses that are published (100% Monitoring & Evaluasi Kursus Publish)
+        courses_qs = api_models.Course.objects.filter(
+            is_published_version=False,
+            platform_status__iexact='Published'
+        ).select_related('teacher', 'teacher__user', 'category')
 
         if search_query:
             courses_qs = courses_qs.filter(
@@ -3636,6 +3842,7 @@ class AdminCourseEvaluationsSummaryAPIView(APIView):
         total_students_sum = 0
         total_completed_sum = 0
         total_reviews_sum = 0
+        total_distributed_jp_sum = 0
         rating_values = []
 
         for c in courses_qs:
@@ -3673,9 +3880,11 @@ class AdminCourseEvaluationsSummaryAPIView(APIView):
                 except Exception:
                     total_jp = 2
 
+                distributed_jp = completed_count * total_jp
                 total_students_sum += enrolled_count
                 total_completed_sum += completed_count
                 total_reviews_sum += rev_count
+                total_distributed_jp_sum += distributed_jp
 
                 # Safe teacher info
                 teacher_name = "Instruktur Tidak Ditemukan"
@@ -3714,6 +3923,7 @@ class AdminCourseEvaluationsSummaryAPIView(APIView):
                     "quizzes_count": quizzes_count,
                     "attempts_count": attempts_count,
                     "total_jp": total_jp,
+                    "distributed_jp": distributed_jp,
                     "date": c.date.strftime("%Y-%m-%d") if c.date else None,
                 })
             except Exception as item_err:
@@ -3726,6 +3936,7 @@ class AdminCourseEvaluationsSummaryAPIView(APIView):
             "total_courses": len(course_items),
             "total_students_enrolled": total_students_sum,
             "total_completions": total_completed_sum,
+            "total_distributed_jp": total_distributed_jp_sum,
             "overall_completion_rate": round((total_completed_sum / total_students_sum * 100), 1) if total_students_sum > 0 else 0,
             "average_rating": overall_avg_rating,
             "total_reviews": total_reviews_sum,
@@ -3758,18 +3969,18 @@ class AdminCourseEvaluationsExportExcelAPIView(APIView):
         if not is_admin:
             return Response({'error': 'Akses ditolak. Memerlukan hak akses Administrator.'}, status=status.HTTP_403_FORBIDDEN)
 
-        status_filter = request.GET.get('status', 'all')
         search_query = request.GET.get('search', '').strip()
 
+        # Export strictly published courses (Monitoring & Evaluasi Kursus Publish)
         courses_qs = api_models.Course.objects.filter(
-            is_published_version=True
+            is_published_version=False,
+            platform_status__iexact='Published'
         ).select_related('teacher', 'teacher__user', 'category').order_by('-date')
 
         if not courses_qs.exists():
-            courses_qs = api_models.Course.objects.all().select_related('teacher', 'teacher__user', 'category').order_by('-date')
-
-        if status_filter != 'all':
-            courses_qs = courses_qs.filter(platform_status__iexact=status_filter)
+            courses_qs = api_models.Course.objects.filter(
+                platform_status__iexact='Published'
+            ).select_related('teacher', 'teacher__user', 'category').order_by('-date')
 
         if search_query:
             courses_qs = courses_qs.filter(
@@ -3856,6 +4067,7 @@ class AdminCourseEvaluationsExportExcelAPIView(APIView):
             "Kategori",
             "Tingkat",
             "Bobot JP",
+            "Total JP Tersalurkan",
             "Status Platform",
             "Peserta Terdaftar",
             "Peserta Lulus",
@@ -3880,6 +4092,7 @@ class AdminCourseEvaluationsExportExcelAPIView(APIView):
         total_students_sum = 0
         total_completed_sum = 0
         total_reviews_sum = 0
+        total_distributed_jp_sum = 0
         rating_values = []
 
         for idx, c in enumerate(courses_qs, start=1):
@@ -3908,14 +4121,17 @@ class AdminCourseEvaluationsExportExcelAPIView(APIView):
                 except Exception:
                     total_jp = 2
 
+                distributed_jp = completed_count * total_jp
                 total_students_sum += enrolled_count
                 total_completed_sum += completed_count
                 total_reviews_sum += rev_count
+                total_distributed_jp_sum += distributed_jp
 
                 teacher_name = "Instruktur Tidak Ditemukan"
                 if c.teacher:
                     teacher_name = c.teacher.full_name or (c.teacher.user.full_name if c.teacher.user else "") or "Instruktur"
 
+                distributed_jp = completed_count * total_jp
                 fill_row = fill_alt if idx % 2 == 0 else fill_white
 
                 row_values = [
@@ -3926,7 +4142,8 @@ class AdminCourseEvaluationsExportExcelAPIView(APIView):
                     c.category.title if c.category else "Umum",
                     getattr(c, 'level', 'Beginner') or "Beginner",
                     total_jp,
-                    c.platform_status or "Draft",
+                    distributed_jp,
+                    c.platform_status or "Published",
                     enrolled_count,
                     completed_count,
                     completion_rate,
@@ -3944,9 +4161,9 @@ class AdminCourseEvaluationsExportExcelAPIView(APIView):
                     cell.border = border_thin
 
                     # Alignments
-                    if col_idx in [1, 2, 6, 7, 8, 16]:
+                    if col_idx in [1, 2, 6, 7, 8, 9, 17]:
                         cell.alignment = align_center
-                    elif col_idx in [9, 10, 11, 12, 13, 14, 15]:
+                    elif col_idx in [10, 11, 12, 13, 14, 15, 16]:
                         cell.alignment = align_right
                     else:
                         cell.alignment = align_left
@@ -3959,27 +4176,29 @@ class AdminCourseEvaluationsExportExcelAPIView(APIView):
 
         # Summary Row
         summary_row = current_row
-        ws.merge_cells(start_row=summary_row, start_column=1, end_row=summary_row, end_column=8)
+        ws.merge_cells(start_row=summary_row, start_column=1, end_row=summary_row, end_column=7)
         sum_label_cell = ws.cell(row=summary_row, column=1, value="TOTAL & RATA-RATA KESELURUHAN")
         sum_label_cell.font = Font(name="Calibri", size=10, bold=True, color="0F766E")
         sum_label_cell.alignment = align_right
 
-        ws.cell(row=summary_row, column=9, value=total_students_sum).font = Font(name="Calibri", size=10, bold=True)
-        ws.cell(row=summary_row, column=10, value=total_completed_sum).font = Font(name="Calibri", size=10, bold=True)
+        ws.cell(row=summary_row, column=8, value=total_distributed_jp_sum).font = Font(name="Calibri", size=10, bold=True)
+        ws.cell(row=summary_row, column=9, value="-").alignment = align_center
+        ws.cell(row=summary_row, column=10, value=total_students_sum).font = Font(name="Calibri", size=10, bold=True)
+        ws.cell(row=summary_row, column=11, value=total_completed_sum).font = Font(name="Calibri", size=10, bold=True)
         overall_comp_rate = round((total_completed_sum / total_students_sum * 100), 1) if total_students_sum > 0 else 0
-        ws.cell(row=summary_row, column=11, value=overall_comp_rate).font = Font(name="Calibri", size=10, bold=True)
+        ws.cell(row=summary_row, column=12, value=overall_comp_rate).font = Font(name="Calibri", size=10, bold=True)
         overall_avg_rating = round(sum(rating_values) / len(rating_values), 2) if rating_values else 0.0
-        ws.cell(row=summary_row, column=12, value=overall_avg_rating).font = Font(name="Calibri", size=10, bold=True)
-        ws.cell(row=summary_row, column=13, value=total_reviews_sum).font = Font(name="Calibri", size=10, bold=True)
-        ws.cell(row=summary_row, column=14, value="-").alignment = align_center
+        ws.cell(row=summary_row, column=13, value=overall_avg_rating).font = Font(name="Calibri", size=10, bold=True)
+        ws.cell(row=summary_row, column=14, value=total_reviews_sum).font = Font(name="Calibri", size=10, bold=True)
         ws.cell(row=summary_row, column=15, value="-").alignment = align_center
         ws.cell(row=summary_row, column=16, value="-").alignment = align_center
+        ws.cell(row=summary_row, column=17, value="-").alignment = align_center
 
-        for c_idx in range(1, 17):
+        for c_idx in range(1, 18):
             c_cell = ws.cell(row=summary_row, column=c_idx)
             c_cell.fill = fill_summary
             c_cell.border = border_total
-            if c_idx in [9, 10, 11, 12, 13]:
+            if c_idx in [8, 10, 11, 12, 13, 14]:
                 c_cell.alignment = align_right
 
         ws.row_dimensions[summary_row].height = 24

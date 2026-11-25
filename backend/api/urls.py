@@ -202,6 +202,7 @@ urlpatterns = [
     path("admin/course-direct-edit/<course_id>/", api_views.AdminCourseDirectEditAPIView.as_view(), name="admin-course-direct-edit"),
     # ✨ PHASE 5.2: Admin Course Evaluation & Exam Verification (UAT Skenario 5)
     path("admin/course/<course_id>/evaluation/", api_views.AdminCourseEvaluationAPIView.as_view(), name="admin-course-evaluation"),
+    path("admin/course/<course_id>/nudge-learners/", api_views.AdminCourseNudgeLearnersAPIView.as_view(), name="admin-course-nudge-learners"),
     path("admin/course-evaluations-summary/", api_views.AdminCourseEvaluationsSummaryAPIView.as_view(), name="admin-course-evaluations-summary"),
     path("admin/course-evaluations-export-excel/", api_views.AdminCourseEvaluationsExportExcelAPIView.as_view(), name="admin-course-evaluations-export-excel"),
     path("admin/reset-exam-attempt/", api_views.AdminResetQuizAttemptAPIView.as_view(), name="admin-reset-exam-attempt"),

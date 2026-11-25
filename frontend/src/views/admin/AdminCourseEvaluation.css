@@ -127,6 +127,44 @@
     font-weight: 700;
 }
 
+/* Course Health Status Badges */
+.ace-badge-health {
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ace-badge-health.badge-health-healthy {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.ace-badge-health.badge-health-warning {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.ace-badge-health.badge-health-critical {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+}
+
+.ace-badge-health.badge-health-dormant {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+}
+
+.ace-badge-health.badge-health-new {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
 .ace-course-title {
     font-size: 1.25rem;
     font-weight: 700;
@@ -1290,5 +1328,232 @@
         width: 100%;
         justify-content: space-between;
     }
+}
+
+/* ==========================================================================
+   PROACTIVE MONEV: LEARNING NUDGE STYLING (ADMIN EVALUATION PAGE)
+   ========================================================================== */
+.ace-btn-nudge {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    color: #ffffff;
+    border: none;
+}
+
+.ace-btn-nudge:hover {
+    background: linear-gradient(135deg, #b45309, #92400e);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+    transform: translateY(-1px);
+}
+
+.ace-btn-nudge-table {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #b45309;
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.ace-btn-nudge-table:hover {
+    color: #ffffff;
+    background-color: #f59e0b;
+    border-color: #d97706;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25);
+}
+
+/* Nudge Reminder Modal Styling */
+.nudge-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1060;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.nudge-modal-container {
+    background: #ffffff;
+    width: 100%;
+    max-width: 740px;
+    max-height: 90vh;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.nudge-modal-header {
+    background: linear-gradient(135deg, #78350f, #b45309, #d97706);
+    color: #ffffff;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nudge-modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.nudge-modal-close {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #ffffff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.nudge-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.nudge-modal-body {
+    padding: 1.25rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.nudge-stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.15rem;
+}
+
+.nudge-stat-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    text-align: center;
+}
+
+.nudge-stat-box .num {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.nudge-stat-box .lbl {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.nudge-pill-chips {
+    display: inline-flex;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+}
+
+.nudge-pill-chips code {
+    font-size: 0.72rem;
+    padding: 0.15rem 0.4rem;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    color: #0f766e;
+    cursor: pointer;
+}
+
+.nudge-learners-wrapper {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 0.75rem;
+}
+
+.nudge-learners-toolbar {
+    background: #f8fafc;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.nudge-learners-list {
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.nudge-learner-item {
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: background 0.1s ease;
+}
+
+.nudge-learner-item:last-child {
+    border-bottom: none;
+}
+
+.nudge-learner-item:hover {
+    background: #fafaf9;
+}
+
+.nudge-modal-footer {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.btn-send-nudge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 1.15rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #d97706, #b45309);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+}
+
+.btn-send-nudge:hover:not(:disabled) {
+    background: linear-gradient(135deg, #b45309, #92400e);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(217, 119, 6, 0.35);
+}
+
+.btn-send-nudge:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
