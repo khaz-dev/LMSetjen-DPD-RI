@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import useAxios from "../../../utils/useAxios";
 import UserData from "../../plugin/UserData";
-import { getImageUrl, getCourseCurriculumSummary, getFeatureIconDisplay } from "../../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary, getFeatureIconDisplay, calculateCourseJP } from "../../../utils/courseUtils";
 import { getMediaUrl } from "../../../utils/constants";
 import { calculateTotalDuration } from "../../../utils/durationUtils";
 
@@ -231,10 +231,12 @@ const CourseSidebar = ({
     // Derive smart features if course.features is empty
     const durationData = calculateTotalDuration(course?.lectures || []);
     const { sectionsCount, lessonsCount } = getCourseCurriculumSummary(course);
+    const totalJP = calculateCourseJP(course);
     const smartFeatures = (course?.features && course.features.length > 0)
         ? course.features
         : [
-            { id: 'f1', icon: 'fas fa-video', text: `${lessonsCount || 1} Materi Pembelajaran`, highlight: true },
+            { id: 'f0', icon: 'fas fa-award', text: `${totalJP} Jam Pelatihan (UU No. 20/2023)`, highlight: true },
+            { id: 'f1', icon: 'fas fa-video', text: `${lessonsCount || 1} Materi Pembelajaran`, highlight: false },
             { id: 'f2', icon: 'fas fa-clock', text: durationData?.withJP || 'Waktu Fleksibel', highlight: false },
             { id: 'f3', icon: 'fas fa-layer-group', text: `${sectionsCount || 1} Modul Terstruktur`, highlight: false },
             { id: 'f4', icon: 'fas fa-certificate', text: 'Sertifikat Kelulusan Resmi', highlight: true },
@@ -265,6 +267,25 @@ const CourseSidebar = ({
                         className="position-absolute top-0 start-0 w-100 h-100"
                         style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)' }}
                     />
+
+                    {/* Badge Bobot JP */}
+                    <div
+                        className="position-absolute top-0 start-0 m-2 badge"
+                        style={{
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                            color: 'white',
+                            padding: '0.35rem 0.7rem',
+                            borderRadius: '8px',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            letterSpacing: '0.03em',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                            zIndex: 2
+                        }}
+                        title="Bobot Jam Pelatihan (1 JP = 45 menit / UU ASN No. 20/2023 Pasal 49)"
+                    >
+                        <i className="fas fa-award me-1"></i>{totalJP} JP
+                    </div>
 
                     {/* Play Button Overlay - Only render if course has a valid video */}
                     {Boolean(

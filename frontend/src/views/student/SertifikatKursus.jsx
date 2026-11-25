@@ -249,6 +249,14 @@ function SertifikatKursus() {
         ? formatDate(certificates[0]?.date || certificates[0]?.created_at)
         : "-";
 
+    // Total accumulated Jam Pelatihan (JP) earned
+    const totalEarnedJP = useMemo(() => {
+        return certificates.reduce((sum, cert) => {
+            const rawJP = cert.total_jam_pelatihan || (cert.course && cert.course.total_jam_pelatihan) || 2;
+            return sum + (Number(rawJP) || 0);
+        }, 0);
+    }, [certificates]);
+
     if (!userData?.user_id) {
         return (
             <div className="container mt-5">
@@ -310,6 +318,16 @@ function SertifikatKursus() {
                                             <div className="cert-stat-chip-text">
                                                 <span className="cert-stat-chip-val">100%</span>
                                                 <span className="cert-stat-chip-lbl">Terverifikasi</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="cert-stat-chip">
+                                            <div className="cert-stat-chip-icon bg-warning-subtle text-warning">
+                                                <i className="fas fa-award"></i>
+                                            </div>
+                                            <div className="cert-stat-chip-text">
+                                                <span className="cert-stat-chip-val">{totalEarnedJP} JP</span>
+                                                <span className="cert-stat-chip-lbl">Total Akumulasi JP</span>
                                             </div>
                                         </div>
 
@@ -585,6 +603,10 @@ function SertifikatKursus() {
                                                         <span className={`cert-level-badge ${levelInfo.tone}`}>
                                                             <i className={`fas ${levelInfo.icon} me-1`}></i>
                                                             {levelInfo.label}
+                                                        </span>
+                                                        <span className="cert-category-badge bg-warning-subtle text-warning-emphasis border-warning-subtle fw-semibold" title="Beban Pembelajaran ASN (UU No. 20/2023 Pasal 49)">
+                                                            <i className="fas fa-award text-warning me-1"></i>
+                                                            {cert.total_jam_pelatihan || (cert.course?.total_jam_pelatihan) || 2} JP
                                                         </span>
                                                         {cert.course_category && (
                                                             <span className="cert-category-badge" title={cert.course_category}>

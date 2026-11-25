@@ -137,6 +137,37 @@ KNOWLEDGE_BASE = [
         ]
     },
     {
+        "id": "asn_jam_pelatihan",
+        "keywords": [
+            "apa itu jp", "jam pelatihan", "jam pelajaran", "20 jp", "aturan 20 jp",
+            "kewajiban 20 jp", "syarat jp", "berapa jam 1 jp", "standar jp", "regulasi jp",
+            "uu 20 2023", "uu asn 2023", "uu asn no 20", "pasal 49", "hak kompetensi asn", "skp jp",
+            "pemenuhan jp", "target jp", "kejar jp", "bobot jp", "hitung jp"
+        ],
+        "regex": r"\b(apa\s+itu\s+(jp|jam\s*pelatihan|20\s*jp)|aturan\s*20\s*jp|kewajiban\s*(20\s*jp|jp)|1\s*jp\s*berapa|uu\s*(no\s*\.?)?\s*20(\s*tahun\s*2023)?|pasal\s*49|hak\s*pengembangan\s*kompetensi|bobot\s*jp)\b",
+        "reply": (
+            "🎯 **Ketentuan & Regulasi Jam Pelatihan (JP) ASN Setjen DPD RI:**\n\n"
+            "Berdasarkan **Undang-Undang No. 20 Tahun 2023 tentang Aparatur Sipil Negara (UU ASN) Pasal 49**, "
+            "setiap Pegawai ASN memiliki hak dan kewajiban untuk melakukan pengembangan kompetensi secara berkelanjutan "
+            "minimal **20 Jam Pelajaran (JP)** per tahun anggaran.\n\n"
+            "**Ketentuan Pokok:**\n"
+            "• **Standar 1 JP:** Setara dengan **45 menit** pembelajaran daring (*e-learning*), modul interaktif SCORM, atau paparan materi mandiri.\n"
+            "• **Integrasi SKP & Kepegawaian:** Perolehan JP dari sertifikat resmi LMS Setjen DPD RI diakui sebagai bukti dukung Sasaran Kinerja Pegawai (SKP) dan rekam jejak kompetensi di Biro Organisasi, Keanggotaan, dan Kepegawaian.\n"
+            "• **Fleksibilitas Belajar:** Pegawai dapat memenuhi target 20 JP secara mandiri melalui berbagai pelatihan tematik keparlemenan, kepemimpinan, dan teknis di LMS.\n\n"
+            "👉 Ketik *'Cek JP saya'* untuk melihat akumulasi Jam Pelatihan Anda saat ini dan rencana belajar mingguan dari Manta!"
+        ),
+        "suggestions": [
+            "Bagaimana status pemenuhan 20 JP saya?",
+            "Rekomendasi kursus pemenuhan target JP",
+            "Panduan unduh sertifikat kelulusan"
+        ],
+        "actions": [
+            {"label": "🎯 Cek Target 20 JP Saya", "query": "Bagaimana status pemenuhan 20 JP saya?", "type": "query"},
+            {"label": "🔍 Katalog Kursus Ber-JP", "url": "/search/", "type": "route"},
+            {"label": "📜 Sertifikat Saya", "url": "/student/sertifikat/", "type": "route"}
+        ]
+    },
+    {
         "id": "sso_and_account",
         "keywords": [
             "sso", "login", "masuk", "akun", "kata sandi", "password", "lupa sandi",
@@ -3620,12 +3651,17 @@ class AIAssistantChatAPIView(APIView):
     def _calculate_course_jp(self, course: api_models.Course) -> int:
         """
         Menghitung bobot Jam Pelajaran (JP) resmi e-learning untuk kursus LMS Setjen DPD RI
-        berdasarkan standar LAN RI (1 JP = 45 menit e-learning / pembelajaran mandiri).
+        berdasarkan standar UU ASN No. 20/2023 Pasal 49 (1 JP = 45 menit / 2700 detik e-learning).
         """
         if not course:
-            return 2
+            return 1
 
         try:
+            # 1. Prioritas konfigurasi eksplisit total_jam_pelatihan
+            if getattr(course, 'total_jam_pelatihan', None) and int(course.total_jam_pelatihan) > 0:
+                return int(course.total_jam_pelatihan)
+
+            # 2. Hitung dari durasi total materi kurikulum (1 JP = 2700 detik / 45 menit)
             total_seconds = 0
             lectures = api_models.VariantItem.objects.filter(variant__course=course)
             lecture_count = lectures.count()
@@ -3636,19 +3672,16 @@ class AIAssistantChatAPIView(APIView):
                     total_seconds += item.duration_seconds
 
             if total_seconds > 0:
-                minutes = total_seconds / 60.0
-                calc_jp = max(2, round(minutes / 45.0))
-                return min(12, int(calc_jp))
+                calc_jp = max(1, math.ceil(total_seconds / 2700.0))
+                return min(24, int(calc_jp))
 
-            # Hitung berdasarkan level & jumlah modul
-            if course.level == "Advanced":
-                return max(4, min(8, round(lecture_count * 1.2 + 2)))
-            elif course.level == "Intermediate":
-                return max(3, min(6, round(lecture_count * 1.0 + 1)))
-            else:
-                return max(2, min(4, round(lecture_count * 0.8 + 1)))
+            # 3. Estimasi berdasarkan jumlah materi & level jika durasi belum terdata
+            if lecture_count > 0:
+                return max(1, math.ceil(lecture_count / 4.0))
+
+            return 1
         except Exception:
-            return 2
+            return 1
 
     def _handle_asn_jp_tracker(self, user_ctx: Dict[str, Any], norm_query: str) -> Dict[str, Any]:
         """
@@ -3668,10 +3701,10 @@ class AIAssistantChatAPIView(APIView):
                 "status": "success",
                 "reply": (
                     f"🎯 **Standar Pemenuhan Kewajiban 20 JP ASN Setjen DPD RI (Tahun {current_year}):**\n\n"
-                    "Berdasarkan **Peraturan LAN RI No. 10 Tahun 2018** tentang Pengembangan Kompetensi PNS, "
-                    "setiap Aparatur Sipil Negara diwajibkan memenuhi hak & kewajiban minimal **20 Jam Pelajaran (JP)** per tahun anggaran.\n\n"
+                    "Berdasarkan **Undang-Undang No. 20 Tahun 2023 tentang Aparatur Sipil Negara (UU ASN) Pasal 49**, "
+                    "setiap Pegawai ASN memiliki hak dan kewajiban untuk melakukan pengembangan kompetensi minimal **20 Jam Pelajaran (JP)** per tahun anggaran.\n\n"
                     "• **Ketentuan JP:** 1 JP setara dengan 45 menit pembelajaran daring / e-learning mandiri.\n"
-                    "• **Pemanfaatan:** Perolehan JP dan sertifikat digital LMS terintegrasi langsung dengan Sasaran Kinerja Pegawai (SKP) dan rekam jejak kompetensi Biro Organisasi Keanggotaan dan Kepegawaian Setjen DPD RI.\n\n"
+                    "• **Pemanfaatan:** Perolehan JP dan sertifikat digital LMS terintegrasi langsung dengan Sasaran Kinerja Pegawai (SKP) dan rekam jejak kompetensi Biro Organisasi, Keanggotaan, dan Kepegawaian Setjen DPD RI.\n\n"
                     "👉 **Silakan masuk menggunakan akun SSO Setjen DPD RI** untuk memantau akumulasi JP Anda secara real-time dan mendapatkan rekomendasi jadwal belajar mingguan dari Manta AI!"
                 ),
                 "source": "asn_jp_tracker",
@@ -5052,6 +5085,9 @@ def sync_manta_proactive_notifications(user: Any) -> int:
         total_jp = 0
         for ce in completed_enrollments:
             c = ce.course
+            if getattr(c, 'total_jam_pelatihan', None) and c.total_jam_pelatihan > 0:
+                total_jp += int(c.total_jam_pelatihan)
+                continue
             dur_secs = 0
             lectures = api_models.VariantItem.objects.filter(variant__course=c)
             for vi in lectures:
@@ -5059,7 +5095,7 @@ def sync_manta_proactive_notifications(user: Any) -> int:
                     dur_secs += vi.duration.total_seconds()
                 elif getattr(vi, 'duration_seconds', None):
                     dur_secs += vi.duration_seconds
-            course_jp = max(2, min(12, round((dur_secs / 60.0) / 45.0))) if dur_secs > 0 else 2
+            course_jp = max(1, math.ceil(dur_secs / 2700.0)) if dur_secs > 0 else 1
             total_jp += course_jp
 
         if total_jp < 20:

@@ -1,6 +1,7 @@
 import React from 'react';
 import QRCode from 'qrcode.react';
 import { moment } from '../../utils/dayjs';
+import { calculateCourseJP } from '../../utils/courseUtils';
 import { LOGO_SETJEN_DPD_BASE64, LOGO_LMSETJEN_DPD_BASE64, TTD_OKK_BASE64, STEMPEL_SEKJEN_BASE64 } from '../../assets/certificateLogos';
 import './ModernCertificateDocument.css';
 
@@ -74,10 +75,12 @@ const ModernCertificateDocument = React.forwardRef(({
     }
 
     // Resolve course title & metadata
-    const courseTitle = course?.course?.title || certificate?.course?.title || 'Program Pelatihan Kompetensi';
-    const totalJP = course?.course?.total_jam_pelatihan || certificate?.course?.total_jam_pelatihan || 2;
-    const categoryName = course?.course?.category?.title || certificate?.course?.category?.title || 'Pelatihan Mandiri Digital';
-    const instructorName = course?.course?.teacher?.full_name || certificate?.instructor_name || 'Fasilitator & Instruktur';
+    const targetCourseObj = certificate?.course || course?.course || certificate || course;
+    const courseTitle = targetCourseObj?.title || certificate?.course_title || 'Program Pelatihan Kompetensi';
+    const computedJP = calculateCourseJP(targetCourseObj);
+    const totalJP = computedJP > 0 ? computedJP : (certificate?.total_jam_pelatihan || 2);
+    const categoryName = targetCourseObj?.category?.title || certificate?.course_category || 'Pelatihan Mandiri Digital';
+    const instructorName = targetCourseObj?.teacher?.full_name || certificate?.instructor_name || 'Fasilitator & Instruktur';
 
     // Resolve certificate ID
     const formattedId = certificate?.formatted_certificate_id || certificate?.certificate_id || 'KP.04/LMS/DPDRI/2026';
@@ -209,8 +212,8 @@ const ModernCertificateDocument = React.forwardRef(({
                         <h3 className="cert-course-title" style={{ color: primaryColor }}>“{courseTitle}”</h3>
                     </div>
                     <div className="cert-meta-badges">
-                        <span className="cert-meta-chip">
-                            <i className="fas fa-clock me-1"></i> Beban Belajar: {totalJP} Jam Pelatihan (JP)
+                        <span className="cert-meta-chip" title="Beban Pembelajaran ASN (UU No. 20/2023 Pasal 49)">
+                            <i className="fas fa-award me-1" style={{ color: accentColor }}></i> Beban Belajar: {totalJP} Jam Pelatihan (JP)
                         </span>
                         <span className="cert-meta-chip">
                             <i className="fas fa-tag me-1"></i> {categoryName}

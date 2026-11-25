@@ -71,6 +71,34 @@ from drf_yasg import openapi
 from api.views.helpers import _SYNC_STATE, reset_sync_state, update_sync_state, get_sync_state, csrf_failure, generate_tokens_with_role
 
 
+def calculate_admin_course_jp(course_obj, related_ids=None):
+    """
+    Menghitung Bobot JP Resmi Kursus sesuai UU ASN No. 20/2023 Pasal 49.
+    1 JP = 45 menit = 2700 detik.
+    Prioritas:
+    1. total_jam_pelatihan eksplisit jika diisi dan > 0
+    2. Total durasi kurikulum VariantItem: math.ceil(total_sec / 2700)
+    3. Minimum default: 1 JP
+    """
+    if not course_obj:
+        return 1
+    explicit_jp = getattr(course_obj, 'total_jam_pelatihan', None)
+    if explicit_jp is not None and int(explicit_jp) > 0:
+        return int(explicit_jp)
+    try:
+        if not related_ids:
+            related_ids = [course_obj.id]
+            if getattr(course_obj, 'parent_course_id', None):
+                related_ids.append(course_obj.parent_course_id)
+        items = api_models.VariantItem.objects.filter(variant__course_id__in=related_ids)
+        total_sec = sum(it.duration.total_seconds() for it in items if it.duration)
+        if total_sec > 0:
+            return max(1, math.ceil(total_sec / 2700))
+    except Exception:
+        pass
+    return 1
+
+
 # ✨ PHASE 4.210: Admin Abuse Reports - List all abuse reports
 class AdminAbuseReportsListAPIView(generics.ListAPIView):
     """
@@ -326,6 +354,12 @@ class AdminCourseDirectEditAPIView(APIView):
             course.language = data['language']
         if 'course_duration' in data and hasattr(course, 'course_duration'):
             course.course_duration = data['course_duration']
+        if 'total_jam_pelatihan' in data:
+            try:
+                raw_jp = data['total_jam_pelatihan']
+                course.total_jam_pelatihan = int(raw_jp) if (raw_jp is not None and str(raw_jp).strip() != "") else 0
+            except (ValueError, TypeError):
+                course.total_jam_pelatihan = 0
         if 'target_audience' in data and data['target_audience']:
             aud = data['target_audience']
             if aud == 'pegawai':
@@ -537,6 +571,8 @@ class AdminCourseDirectEditAPIView(APIView):
                     pub.language = course.language
                 if hasattr(course, 'course_duration') and hasattr(pub, 'course_duration'):
                     pub.course_duration = course.course_duration
+                if hasattr(course, 'total_jam_pelatihan') and hasattr(pub, 'total_jam_pelatihan'):
+                    pub.total_jam_pelatihan = course.total_jam_pelatihan
                 pub.target_audience = course.target_audience
                 pub.category = course.category
                 pub.image = course.image
@@ -591,6 +627,8 @@ class AdminCourseDirectEditAPIView(APIView):
                 parent.language = course.language
             if hasattr(course, 'course_duration') and hasattr(parent, 'course_duration'):
                 parent.course_duration = course.course_duration
+            if hasattr(course, 'total_jam_pelatihan') and hasattr(parent, 'total_jam_pelatihan'):
+                parent.total_jam_pelatihan = course.total_jam_pelatihan
             parent.target_audience = course.target_audience
             parent.category = course.category
             parent.image = course.image
@@ -657,10 +695,16 @@ class AdminSummaryAPIView(generics.RetrieveAPIView):
     
     def get(self, request):
         try:
-            # IsAdminUser permission class already verified access above
-            # Additional verification as backup
-            if not (hasattr(request.user, 'is_admin') and request.user.is_admin) and \
-               not (hasattr(request.user, 'current_role') and request.user.current_role == 'admin'):
+            # Robust Admin verification matching AdminHeaderStats
+            is_admin_user = (
+                getattr(request.user, 'is_admin', False) or
+                getattr(request.user, 'current_role', None) == 'admin' or
+                getattr(request.user, 'role', None) == 'admin' or
+                (hasattr(request.user, 'has_admin_role') and request.user.has_admin_role()) or
+                getattr(request.user, 'is_superuser', False) or
+                getattr(request.user, 'is_staff', False)
+            )
+            if not is_admin_user:
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             # Calculate statistics
@@ -763,6 +807,100 @@ class AdminSummaryAPIView(generics.RetrieveAPIView):
                     completion_rate = (completed_enrollments / total_enrollments) * 100
             except Exception:
                 completion_rate = 0
+
+            # ASN Competency Metrics & Jam Pelatihan (UU ASN No. 20/2023: 1 JP = 45 menit / 2700 detik)
+            course_jp_cache = {}
+            def get_course_jp(course_obj):
+                if not course_obj or not getattr(course_obj, 'id', None):
+                    return 0
+                if course_obj.id in course_jp_cache:
+                    return course_jp_cache[course_obj.id]
+                calculated_jp = calculate_admin_course_jp(course_obj)
+                course_jp_cache[course_obj.id] = calculated_jp
+                return calculated_jp
+
+            # Total catalog JP from published courses
+            total_catalog_jp = 0
+            for pub_c in api_models.Course.objects.filter(is_published_version=True):
+                total_catalog_jp += get_course_jp(pub_c)
+
+            # Earned JP from valid certificates
+            valid_certificates = api_models.Certificate.objects.filter(is_valid=True).select_related('course', 'user')
+            total_jp_earned = 0
+            certified_users_set = set()
+            for cert in valid_certificates:
+                total_jp_earned += get_course_jp(cert.course)
+                if cert.user_id:
+                    certified_users_set.add(cert.user_id)
+
+            total_asn_certified = len(certified_users_set)
+            avg_jp_per_learner = round(total_jp_earned / total_asn_certified, 1) if total_asn_certified > 0 else 0.0
+
+            # Annual current-year compliance stats (UU No. 20/2023 Pasal 49 & Peraturan LAN No. 10/2018)
+            current_year = timezone.now().year
+            curr_year_certs = api_models.Certificate.objects.filter(is_valid=True, date__year=current_year).select_related('course')
+            user_curr_year_jp = {}
+            for c_item in curr_year_certs:
+                if c_item.user_id:
+                    user_curr_year_jp[c_item.user_id] = user_curr_year_jp.get(c_item.user_id, 0) + get_course_jp(c_item.course)
+            
+            compliant_asn_current_year = sum(1 for uid, jp in user_curr_year_jp.items() if jp >= 20)
+            in_progress_asn_current_year = sum(1 for uid, jp in user_curr_year_jp.items() if 0 < jp < 20)
+
+            asn_competency = {
+                'total_jp_earned': total_jp_earned,
+                'total_asn_certified': total_asn_certified,
+                'annual_target_jp': 20,
+                'avg_jp_per_learner': avg_jp_per_learner,
+                'total_catalog_jp': total_catalog_jp,
+                'fulfillment_rate': round(min(100.0, (avg_jp_per_learner / 20.0) * 100), 1) if avg_jp_per_learner > 0 else 0.0,
+                'current_year': current_year,
+                'compliant_asn_current_year': compliant_asn_current_year,
+                'in_progress_asn_current_year': in_progress_asn_current_year,
+                'legal_reference': 'UU No. 20 Tahun 2023 Pasal 49 & Peraturan LAN No. 10 Tahun 2018',
+            }
+
+            # Pending items requiring Admin action
+            review_courses_qs = api_models.Course.objects.filter(
+                is_published_version=False,
+                platform_status='Review'
+            ).select_related('teacher').order_by('-review_submitted_date', '-date')
+
+            pending_courses_count = review_courses_qs.count()
+            pending_courses_list = []
+            for c in review_courses_qs[:8]:
+                is_resub = bool(c.rejection_reason)
+                pending_courses_list.append({
+                    'id': c.id,
+                    'course_id': c.course_id,
+                    'title': c.title or 'Kursus Tanpa Judul',
+                    'teacher': c.teacher.full_name if (c.teacher and c.teacher.full_name) else 'Instruktur',
+                    'is_resubmission': is_resub,
+                    'review_submitted_date': c.review_submitted_date.strftime('%d %b %Y %H:%M') if c.review_submitted_date else 'Baru',
+                    'rejection_reason': c.rejection_reason or '',
+                })
+
+            total_resubmissions = review_courses_qs.filter(rejection_reason__isnull=False).exclude(rejection_reason='').count()
+            total_new_submissions = pending_courses_count - total_resubmissions
+
+            pending_testimonials_count = api_models.Review.objects.filter(active=False).count()
+            pending_instructor_requests_count = api_models.InstructorRequest.objects.filter(status='PENDING').count()
+            pending_abuse_reports_count = 0
+            try:
+                pending_abuse_reports_count = api_models.ReviewAbuse.objects.filter(status='pending').count()
+            except Exception:
+                pending_abuse_reports_count = 0
+
+            pending_actions = {
+                'pending_courses_count': pending_courses_count,
+                'pending_resubmissions_count': total_resubmissions,
+                'pending_new_submissions_count': total_new_submissions,
+                'pending_testimonials_count': pending_testimonials_count,
+                'pending_instructor_requests_count': pending_instructor_requests_count,
+                'pending_abuse_reports_count': pending_abuse_reports_count,
+                'total_pending_action_items': pending_courses_count + pending_testimonials_count + pending_instructor_requests_count + pending_abuse_reports_count,
+                'pending_courses_list': pending_courses_list,
+            }
             
             data = {
                 'total_students': total_students,
@@ -784,6 +922,8 @@ class AdminSummaryAPIView(generics.RetrieveAPIView):
                 'active_teachers_count': active_teachers_count,
                 'total_revenue': float(total_revenue) if total_revenue else 0,
                 'completion_rate': round(completion_rate, 2),
+                'asn_competency': asn_competency,
+                'pending_actions': pending_actions,
                 'top_courses': [
                     {
                         'id': course.id,
@@ -1109,10 +1249,16 @@ class AdminEnrollmentAnalyticsAPIView(generics.RetrieveAPIView):
     
     def get(self, request):
         try:
-            # IsAdminUser permission class already verified access above
-            # Additional verification as backup
-            if not (hasattr(request.user, 'is_admin') and request.user.is_admin) and \
-               not (hasattr(request.user, 'current_role') and request.user.current_role == 'admin'):
+            # Robust Admin verification matching AdminHeaderStats
+            is_admin_user = (
+                getattr(request.user, 'is_admin', False) or
+                getattr(request.user, 'current_role', None) == 'admin' or
+                getattr(request.user, 'role', None) == 'admin' or
+                (hasattr(request.user, 'has_admin_role') and request.user.has_admin_role()) or
+                getattr(request.user, 'is_superuser', False) or
+                getattr(request.user, 'is_staff', False)
+            )
+            if not is_admin_user:
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             from django.utils import timezone
@@ -1192,10 +1338,16 @@ class AdminSystemHealthAPIView(generics.RetrieveAPIView):
     
     def get(self, request):
         try:
-            # IsAdminUser permission class already verified access above
-            # Additional verification as backup
-            if not (hasattr(request.user, 'is_admin') and request.user.is_admin) and \
-               not (hasattr(request.user, 'current_role') and request.user.current_role == 'admin'):
+            # Robust Admin verification matching AdminHeaderStats
+            is_admin_user = (
+                getattr(request.user, 'is_admin', False) or
+                getattr(request.user, 'current_role', None) == 'admin' or
+                getattr(request.user, 'role', None) == 'admin' or
+                (hasattr(request.user, 'has_admin_role') and request.user.has_admin_role()) or
+                getattr(request.user, 'is_superuser', False) or
+                getattr(request.user, 'is_staff', False)
+            )
+            if not is_admin_user:
                 return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
             
             import os
@@ -2738,16 +2890,17 @@ class AdminHeaderStatsAPIView(generics.GenericAPIView):
 
             for course in review_courses[:10]:
                 teacher_name = course.teacher.full_name if (course.teacher and course.teacher.full_name) else 'Instruktur'
+                is_resubmission = bool(course.rejection_reason)
                 notifications_list.append({
                     'id': f'course_{course.id}',
                     'category': 'course',
-                    'icon': 'fas fa-book-reader',
-                    'color': '#f59e0b',
-                    'title': f'Review Kursus: {course.title[:38]}',
-                    'message': f'Diajukan oleh {teacher_name}. Menunggu verifikasi.',
-                    'link': f'/admin/content-management/?tab=courses&course_id={course.id}',
-                    'badge': 'Review Kursus',
-                    'badge_type': 'warning',
+                    'icon': 'fas fa-rotate-left' if is_resubmission else 'fas fa-book-reader',
+                    'color': '#0d9488' if is_resubmission else '#f59e0b',
+                    'title': f'Revisi Diajukan: {course.title[:35]}' if is_resubmission else f'Review Kursus: {course.title[:38]}',
+                    'message': f'Diajukan ulang oleh {teacher_name} setelah perbaikan.' if is_resubmission else f'Diajukan oleh {teacher_name}. Menunggu kurasi & verifikasi.',
+                    'link': f'/admin/review-course/{course.course_id}/',
+                    'badge': 'Revisi Diajukan' if is_resubmission else 'Review Kursus',
+                    'badge_type': 'info' if is_resubmission else 'warning',
                     'time': course.review_submitted_date.strftime('%d %b') if course.review_submitted_date else 'Baru'
                 })
 
@@ -3261,14 +3414,8 @@ class AdminCourseEvaluationAPIView(APIView):
         lb_data = lb_response.data if lb_response.status_code == 200 else {}
         leaderboard = lb_data.get("leaderboard", [])
 
-        # 3. Hitung Bobot JP Kursus
-        total_jp = 0
-        try:
-            lectures = course.lectures() if callable(getattr(course, 'lectures', None)) else getattr(course, 'lectures', [])
-            total_sec = sum(l.content_duration_seconds for l in lectures if hasattr(l, 'content_duration_seconds') and l.content_duration_seconds)
-            total_jp = max(1, (total_sec + 2699) // 2700) if total_sec else 2
-        except Exception:
-            total_jp = 2
+        # 3. Hitung Bobot JP Kursus (UU ASN No. 20/2023 Pasal 49)
+        total_jp = calculate_admin_course_jp(course, related_course_ids)
 
         # 4. Ambil Daftar Kuis & Butir Soal untuk Transparansi Jawaban
         quizzes = api_models.Quiz.objects.filter(course_id__in=related_course_ids, is_active=True).prefetch_related('questions', 'questions__choices')
@@ -3632,14 +3779,8 @@ class AdminCourseNudgeLearnersAPIView(APIView):
         uncompleted_learners = []
         completed_count = 0
 
-        # Hitung bobot JP kursus
-        total_jp = 0
-        try:
-            lectures = course.lectures() if callable(getattr(course, 'lectures', None)) else getattr(course, 'lectures', [])
-            total_sec = sum(l.content_duration_seconds for l in lectures if hasattr(l, 'content_duration_seconds') and l.content_duration_seconds)
-            total_jp = max(1, (total_sec + 2699) // 2700) if total_sec else 2
-        except Exception:
-            total_jp = 2
+        # Hitung bobot JP kursus (UU ASN No. 20/2023 Pasal 49)
+        total_jp = calculate_admin_course_jp(course, related_course_ids)
 
         for enr in enrollments:
             if not enr.user:
@@ -3875,14 +4016,8 @@ class AdminCourseEvaluationsSummaryAPIView(APIView):
                 quizzes_count = api_models.Quiz.objects.filter(course_id__in=related_ids, is_active=True).count()
                 attempts_count = api_models.QuizAttempt.objects.filter(quiz__course_id__in=related_ids).count() if hasattr(api_models, 'QuizAttempt') else 0
 
-                # JP Calculation
-                total_jp = 2
-                try:
-                    lectures = c.lectures() if callable(getattr(c, 'lectures', None)) else getattr(c, 'lectures', [])
-                    total_sec = sum(l.content_duration_seconds for l in lectures if hasattr(l, 'content_duration_seconds') and l.content_duration_seconds)
-                    total_jp = max(1, (total_sec + 2699) // 2700) if total_sec else 2
-                except Exception:
-                    total_jp = 2
+                # JP Calculation (UU ASN No. 20/2023 Pasal 49)
+                total_jp = calculate_admin_course_jp(c, related_ids)
 
                 distributed_jp = completed_count * total_jp
                 total_students_sum += enrolled_count
@@ -4117,13 +4252,8 @@ class AdminCourseEvaluationsExportExcelAPIView(APIView):
                 quizzes_count = api_models.Quiz.objects.filter(course_id__in=related_ids, is_active=True).count()
                 attempts_count = api_models.QuizAttempt.objects.filter(quiz__course_id__in=related_ids).count() if hasattr(api_models, 'QuizAttempt') else 0
 
-                total_jp = 2
-                try:
-                    lectures = c.lectures() if callable(getattr(c, 'lectures', None)) else getattr(c, 'lectures', [])
-                    total_sec = sum(l.content_duration_seconds for l in lectures if hasattr(l, 'content_duration_seconds') and l.content_duration_seconds)
-                    total_jp = max(1, (total_sec + 2699) // 2700) if total_sec else 2
-                except Exception:
-                    total_jp = 2
+                # JP Calculation (UU ASN No. 20/2023 Pasal 49)
+                total_jp = calculate_admin_course_jp(c, related_ids)
 
                 distributed_jp = completed_count * total_jp
                 total_students_sum += enrolled_count
@@ -4229,6 +4359,535 @@ class AdminCourseEvaluationsExportExcelAPIView(APIView):
         output.seek(0)
 
         filename = f"Laporan_Evaluasi_Kursus_Setjen_DPD_RI_{now.strftime('%Y%m%d_%H%M')}.xlsx"
+        response = HttpResponse(
+            output.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+
+# ==============================================================================
+# ✨ PHASE 5.3: AUDIT KOMPETENSI TAHUNAN PEGAWAI ASN (20 JP / TAHUN)
+# Sesuai UU No. 20 Tahun 2023 Pasal 49 & Peraturan LAN RI No. 10 Tahun 2018
+# ==============================================================================
+
+def get_asn_competency_audit_data(target_year=None, search_query='', unit_filter='', status_filter=''):
+    """
+    Kalkulasi Audit Agregat & Transkrip Pengembangan Kompetensi Tahunan ASN (Target: 20 JP).
+    Mengakomodasi ketentuan:
+    - UU ASN No. 20 Tahun 2023 Pasal 49: Kewajiban & Hak Pengembangan Diri
+    - Peraturan LAN RI No. 10 Tahun 2018: Standar Pengembangan Kompetensi Minimal 20 JP per tahun
+    - 1 JP = 45 Menit (2.700 Detik)
+    """
+    if not target_year:
+        target_year = timezone.now().year
+    else:
+        try:
+            target_year = int(target_year)
+        except (ValueError, TypeError):
+            target_year = timezone.now().year
+
+    # 1. Available audit years from certificates
+    cert_years = list(
+        api_models.Certificate.objects.filter(is_valid=True)
+        .dates('date', 'year')
+    )
+    available_years = sorted(list({d.year for d in cert_years} | {target_year, target_year - 1}), reverse=True)
+
+    # 2. Certificates in target_year
+    certs = api_models.Certificate.objects.filter(
+        is_valid=True,
+        date__year=target_year
+    ).select_related('course', 'user', 'user__profile', 'user__profile__organization_unit', 'user__profile__position')
+
+    # Pre-cache course JP
+    course_jp_cache = {}
+    user_jp_map = {}
+    user_certs_count = {}
+    user_cert_courses = {}
+
+    for cert in certs:
+        if not cert.user_id:
+            continue
+        c = cert.course
+        if c.id not in course_jp_cache:
+            course_jp_cache[c.id] = calculate_admin_course_jp(c)
+        jp = course_jp_cache[c.id]
+
+        uid = cert.user_id
+        user_jp_map[uid] = user_jp_map.get(uid, 0) + jp
+        user_certs_count[uid] = user_certs_count.get(uid, 0) + 1
+        if uid not in user_cert_courses:
+            user_cert_courses[uid] = []
+        user_cert_courses[uid].append({
+            'course_title': c.title,
+            'jp': jp,
+            'date': cert.date.strftime('%d-%m-%Y') if cert.date else '-'
+        })
+
+    # 3. All ASN Learners (active students / employees)
+    users_qs = User.objects.filter(is_active=True).select_related(
+        'profile', 'profile__organization_unit', 'profile__position'
+    ).order_by('full_name')
+
+    all_records = []
+    unit_stats = {}
+
+    for u in users_qs:
+        # Determine organization unit
+        unit_name = "Sekretariat Jenderal DPD RI"
+        if hasattr(u, 'profile') and u.profile:
+            if u.profile.organization_unit and u.profile.organization_unit.name:
+                unit_name = u.profile.organization_unit.name
+            elif getattr(u.profile, 'instansi_asal', None):
+                unit_name = u.profile.instansi_asal
+        elif getattr(u, 'instansi_asal', None):
+            unit_name = u.instansi_asal
+
+        pos_name = "Pegawai ASN"
+        if hasattr(u, 'profile') and u.profile and u.profile.position and u.profile.position.name:
+            pos_name = u.profile.position.name
+        elif getattr(u, 'jenis_jabatan', None):
+            pos_name = u.jenis_jabatan
+
+        nip_val = u.nip if u.nip and u.nip.strip() else "-"
+        gol_val = u.golongan if u.golongan and u.golongan.strip() else "-"
+
+        earned_jp = user_jp_map.get(u.id, 0)
+        c_count = user_certs_count.get(u.id, 0)
+        c_list = user_cert_courses.get(u.id, [])
+        gap_jp = max(0, 20 - earned_jp)
+        fulfillment_pct = round(min(100.0, (earned_jp / 20.0) * 100), 1)
+
+        if earned_jp >= 20:
+            c_status = 'MEMENUHI_SYARAT'
+            c_label = 'Memenuhi Syarat (≥ 20 JP)'
+            badge_type = 'success'
+        elif earned_jp > 0:
+            c_status = 'SEDANG_BERJALAN'
+            c_label = 'Sedang Berjalan (1-19 JP)'
+            badge_type = 'warning'
+        else:
+            c_status = 'BELUM_MEMULAI'
+            c_label = 'Belum Memulai (0 JP)'
+            badge_type = 'danger'
+
+        rec = {
+            'user_id': u.id,
+            'nip': nip_val,
+            'full_name': u.full_name or u.username,
+            'email': u.email,
+            'unit_kerja': unit_name,
+            'jabatan': pos_name,
+            'golongan': gol_val,
+            'total_jp': earned_jp,
+            'certificates_count': c_count,
+            'certificates': c_list,
+            'target_jp': 20,
+            'gap_jp': gap_jp,
+            'fulfillment_pct': fulfillment_pct,
+            'status': c_status,
+            'status_label': c_label,
+            'badge_type': badge_type,
+        }
+
+        # Unit aggregation
+        if unit_name not in unit_stats:
+            unit_stats[unit_name] = {
+                'unit_kerja': unit_name,
+                'total_pegawai': 0,
+                'total_jp': 0,
+                'compliant_count': 0,
+                'in_progress_count': 0,
+                'non_compliant_count': 0
+            }
+        u_agg = unit_stats[unit_name]
+        u_agg['total_pegawai'] += 1
+        u_agg['total_jp'] += earned_jp
+        if earned_jp >= 20:
+            u_agg['compliant_count'] += 1
+        elif earned_jp > 0:
+            u_agg['in_progress_count'] += 1
+        else:
+            u_agg['non_compliant_count'] += 1
+
+        all_records.append(rec)
+
+    # Unit breakdown calculations
+    by_unit_kerja = []
+    for u_name, st in unit_stats.items():
+        t_pegawai = st['total_pegawai']
+        c_cnt = st['compliant_count']
+        c_rate = round((c_cnt / t_pegawai * 100), 1) if t_pegawai > 0 else 0.0
+        avg_jp = round(st['total_jp'] / t_pegawai, 1) if t_pegawai > 0 else 0.0
+        by_unit_kerja.append({
+            'unit_kerja': u_name,
+            'total_pegawai': t_pegawai,
+            'total_jp': st['total_jp'],
+            'avg_jp': avg_jp,
+            'compliant_count': c_cnt,
+            'in_progress_count': st['in_progress_count'],
+            'non_compliant_count': st['non_compliant_count'],
+            'compliance_rate': c_rate
+        })
+    by_unit_kerja.sort(key=lambda x: (x['compliance_rate'], x['total_jp']), reverse=True)
+
+    # Global KPI
+    total_asn = len(all_records)
+    total_jp_earned = sum(r['total_jp'] for r in all_records)
+    compliant_count = sum(1 for r in all_records if r['status'] == 'MEMENUHI_SYARAT')
+    in_progress_count = sum(1 for r in all_records if r['status'] == 'SEDANG_BERJALAN')
+    non_compliant_count = sum(1 for r in all_records if r['status'] == 'BELUM_MEMULAI')
+    overall_compliance_rate = round((compliant_count / total_asn * 100), 1) if total_asn > 0 else 0.0
+    overall_avg_jp = round((total_jp_earned / total_asn), 1) if total_asn > 0 else 0.0
+
+    kpi = {
+        'target_year': target_year,
+        'annual_target_jp': 20,
+        'total_asn': total_asn,
+        'total_jp_earned': total_jp_earned,
+        'total_certificates_issued': certs.count(),
+        'compliant_count': compliant_count,
+        'in_progress_count': in_progress_count,
+        'non_compliant_count': non_compliant_count,
+        'compliance_rate': overall_compliance_rate,
+        'avg_jp_per_asn': overall_avg_jp,
+    }
+
+    # Filter records if requested
+    filtered_records = all_records
+    if unit_filter and unit_filter != 'all':
+        filtered_records = [r for r in filtered_records if r['unit_kerja'].lower() == unit_filter.lower()]
+    if status_filter and status_filter != 'all':
+        filtered_records = [r for r in filtered_records if r['status'].lower() == status_filter.lower()]
+    if search_query:
+        sq = search_query.lower()
+        filtered_records = [
+            r for r in filtered_records
+            if sq in r['full_name'].lower() or sq in r['nip'].lower() or sq in r['email'].lower() or sq in r['jabatan'].lower()
+        ]
+
+    # Units list for dropdown filter
+    unit_names = sorted(list(unit_stats.keys()))
+
+    return {
+        'legal_framework': {
+            'uu_asn': 'UU No. 20 Tahun 2023 Pasal 49',
+            'perka_lan': 'Peraturan LAN RI No. 10 Tahun 2018 & SE LAN No. 23/2020',
+            'target_standard': 'Pengembangan Kompetensi ASN Minimal 20 Jam Pelajaran (JP) per Pegawai per Tahun',
+            'jp_standard': '1 JP = 45 Menit (2.700 Detik)',
+            'signatory_institution': 'Sekretariat Jenderal Dewan Perwakilan Daerah Republik Indonesia',
+            'signatory_bureau': 'Biro Organisasi, Keanggotaan, dan Kepegawaian (Biro OKK)'
+        },
+        'year': target_year,
+        'available_years': available_years,
+        'kpi': kpi,
+        'by_unit_kerja': by_unit_kerja,
+        'unit_names': unit_names,
+        'records': filtered_records,
+        'all_records': all_records
+    }
+
+
+class AdminASNCompetencyAuditReportAPIView(APIView):
+    """
+    ✨ Laporan Resmi Audit Kompetensi Tahunan ASN (Target: 20 JP / Tahun)
+    Sesuai UU No. 20 Tahun 2023 Pasal 49 & Peraturan LAN RI No. 10 Tahun 2018
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request):
+        user = request.user
+        is_admin = getattr(user, 'is_admin', False) or getattr(user, 'is_staff', False) or getattr(user, 'role', '') == 'admin'
+        if not is_admin:
+            return Response({'error': 'Akses ditolak. Memerlukan hak akses Administrator.'}, status=status.HTTP_403_FORBIDDEN)
+
+        year = request.GET.get('year')
+        search_query = request.GET.get('search', '').strip()
+        unit_filter = request.GET.get('unit_kerja', '').strip()
+        status_filter = request.GET.get('status', '').strip()
+
+        data = get_asn_competency_audit_data(
+            target_year=year,
+            search_query=search_query,
+            unit_filter=unit_filter,
+            status_filter=status_filter
+        )
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class AdminASNCompetencyAuditExportExcelAPIView(APIView):
+    """
+    ✨ Ekspor Laporan Resmi Rekapitulasi Audit Kompetensi Tahunan ASN ke Excel (.xlsx)
+    Format multi-sheet resmi Setjen DPD RI & Biro OKK.
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request):
+        import io
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+
+        user = request.user
+        is_admin = getattr(user, 'is_admin', False) or getattr(user, 'is_staff', False) or getattr(user, 'role', '') == 'admin'
+        if not is_admin:
+            return Response({'error': 'Akses ditolak. Memerlukan hak akses Administrator.'}, status=status.HTTP_403_FORBIDDEN)
+
+        year = request.GET.get('year')
+        data = get_asn_competency_audit_data(target_year=year)
+        target_year = data['year']
+        kpi = data['kpi']
+        by_unit = data['by_unit_kerja']
+        records = data['all_records']
+        now = timezone.now()
+
+        wb = openpyxl.Workbook()
+        # Sheet 1: Ringkasan Eksekutif & Unit Kerja
+        ws1 = wb.active
+        ws1.title = "Ringkasan Audit Eksekutif"
+        ws1.views.sheetView[0].showGridLines = True
+
+        # Palet Warna Resmi Setjen DPD RI
+        fill_navy = PatternFill(start_color="002B49", end_color="002B49", fill_type="solid")
+        fill_teal = PatternFill(start_color="0D9488", end_color="0D9488", fill_type="solid")
+        fill_light_teal = PatternFill(start_color="F0FDFA", end_color="F0FDFA", fill_type="solid")
+        fill_light_gray = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+        fill_green_soft = PatternFill(start_color="DCFCE7", end_color="DCFCE7", fill_type="solid")
+        fill_amber_soft = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
+        fill_red_soft = PatternFill(start_color="FEE2E2", end_color="FEE2E2", fill_type="solid")
+
+        font_title = Font(name="Arial", size=13, bold=True, color="FFFFFF")
+        font_subtitle = Font(name="Arial", size=10, bold=False, color="FFFFFF")
+        font_sec_hdr = Font(name="Arial", size=11, bold=True, color="002B49")
+        font_tbl_hdr = Font(name="Arial", size=10, bold=True, color="FFFFFF")
+        font_cell = Font(name="Arial", size=10, color="1E293B")
+        font_cell_bold = Font(name="Arial", size=10, bold=True, color="1E293B")
+        font_success = Font(name="Arial", size=10, bold=True, color="15803D")
+        font_warning = Font(name="Arial", size=10, bold=True, color="B45309")
+        font_danger = Font(name="Arial", size=10, bold=True, color="B91C1C")
+
+        align_center = Alignment(horizontal="center", vertical="center")
+        align_left = Alignment(horizontal="left", vertical="center")
+
+        thin_border_side = Side(border_style="thin", color="CBD5E1")
+        border_all = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
+
+        # Header Sheet 1
+        ws1.merge_cells("A1:G1")
+        ws1["A1"] = "SEKRETARIAT JENDERAL DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA"
+        ws1["A1"].font = font_title
+        ws1["A1"].fill = fill_navy
+        ws1["A1"].alignment = align_center
+
+        ws1.merge_cells("A2:G2")
+        ws1["A2"] = f"LAPORAN REKAPITULASI AUDIT PENGEMBANGAN KOMPETENSI TAHUNAN PEGAWAI ASN TAHUN {target_year}"
+        ws1["A2"].font = Font(name="Arial", size=11, bold=True, color="FFFFFF")
+        ws1["A2"].fill = fill_teal
+        ws1["A2"].alignment = align_center
+
+        ws1.merge_cells("A3:G3")
+        ws1["A3"] = "Dasar Hukum: UU No. 20 Tahun 2023 Pasal 49 & Peraturan LAN RI No. 10 Tahun 2018 (Standar Target: Min. 20 JP / Tahun)"
+        ws1["A3"].font = font_subtitle
+        ws1["A3"].fill = fill_navy
+        ws1["A3"].alignment = align_center
+
+        ws1.merge_cells("A4:G4")
+        ws1["A4"] = f"Waktu Ekspor: {now.strftime('%d %B %Y %H:%M:%S WIB')} | Pengesahan: Biro Organisasi Keanggotaan dan Kepegawaian (Biro OKK)"
+        ws1["A4"].font = Font(name="Arial", size=9, italic=True, color="E2E8F0")
+        ws1["A4"].fill = fill_navy
+        ws1["A4"].alignment = align_center
+
+        ws1.row_dimensions[1].height = 24
+        ws1.row_dimensions[2].height = 22
+        ws1.row_dimensions[3].height = 18
+        ws1.row_dimensions[4].height = 18
+
+        # Section 1: KPI
+        ws1.cell(row=6, column=1, value="I. RINGKASAN CAPAIAN KOMPETENSI TAHUNAN").font = font_sec_hdr
+        kpi_rows = [
+            ("Tahun Anggaran Audit", f"Tahun {target_year}", "Tahun kalender evaluasi kepatuhan pengembangan ASN"),
+            ("Standar Hak/Kewajiban Kompetensi", f"{kpi['annual_target_jp']} JP / Pegawai", "1 Jam Pelajaran (JP) = 45 Menit (UU No. 20/2023)"),
+            ("Total Pegawai Terdaftar", f"{kpi['total_asn']} Pegawai", "Jumlah seluruh pegawai ASN terdata dalam sistem"),
+            ("Total Jam Pelatihan (JP) Disalurkan", f"{kpi['total_jp_earned']} JP", "Akumulasi seluruh sertifikat kelulusan sah terbit pada tahun audit"),
+            ("Total Sertifikat Sah Diterbitkan", f"{kpi['total_certificates_issued']} Lembar", "Sertifikat terverifikasi integritas dan kelulusan"),
+            ("Pegawai Memenuhi Syarat (≥ 20 JP)", f"{kpi['compliant_count']} Pegawai ({kpi['compliance_rate']}%)", "Telah mencapai atau melampaui target wajib 20 JP"),
+            ("Pegawai Sedang Berjalan (1 - 19 JP)", f"{kpi['in_progress_count']} Pegawai", "Telah mengikuti pelatihan namun belum mencapai 20 JP"),
+            ("Pegawai Belum Memulai (0 JP)", f"{kpi['non_compliant_count']} Pegawai", "Belum memiliki capaian sertifikat pelatihan pada tahun audit"),
+            ("Rata-rata Capaian JP per Pegawai", f"{kpi['avg_jp_per_asn']} JP", "Rasio total JP terhadap seluruh pegawai"),
+        ]
+
+        curr_r = 7
+        ws1.cell(row=curr_r, column=1, value="INDIKATOR AUDIT").font = font_tbl_hdr
+        ws1.cell(row=curr_r, column=1).fill = fill_teal
+        ws1.cell(row=curr_r, column=2, value="REALISASI").font = font_tbl_hdr
+        ws1.cell(row=curr_r, column=2).fill = fill_teal
+        ws1.cell(row=curr_r, column=3, value="KETERANGAN REGULASI").font = font_tbl_hdr
+        ws1.cell(row=curr_r, column=3).fill = fill_teal
+        ws1.merge_cells(f"C{curr_r}:G{curr_r}")
+        ws1.row_dimensions[curr_r].height = 20
+
+        for idx, (ind, val, desc) in enumerate(kpi_rows, start=1):
+            curr_r += 1
+            ws1.row_dimensions[curr_r].height = 19
+            c_fill = fill_light_teal if idx % 2 == 1 else fill_light_gray
+            c1 = ws1.cell(row=curr_r, column=1, value=ind)
+            c2 = ws1.cell(row=curr_r, column=2, value=val)
+            c3 = ws1.cell(row=curr_r, column=3, value=desc)
+            ws1.merge_cells(f"C{curr_r}:G{curr_r}")
+            for col_i in range(1, 8):
+                cell = ws1.cell(row=curr_r, column=col_i)
+                cell.fill = c_fill
+                cell.border = border_all
+                if col_i == 1:
+                    cell.font = font_cell_bold
+                    cell.alignment = align_left
+                elif col_i == 2:
+                    cell.font = font_cell_bold
+                    cell.alignment = align_center
+                else:
+                    cell.font = font_cell
+                    cell.alignment = align_left
+
+        # Section 2: Rekapitulasi per Unit Kerja
+        curr_r += 2
+        ws1.cell(row=curr_r, column=1, value="II. REKAPITULASI KEPATUHAN KOMPETENSI PER UNIT KERJA").font = font_sec_hdr
+        curr_r += 1
+
+        headers_unit = ["No", "Unit Kerja / Satuan Organisasi", "Jumlah Pegawai", "Total JP Disalurkan", "Rata-rata JP", "Memenuhi Target (≥20 JP)", "% Kepatuhan"]
+        ws1.row_dimensions[curr_r].height = 22
+        for c_idx, h_text in enumerate(headers_unit, start=1):
+            cell = ws1.cell(row=curr_r, column=c_idx, value=h_text)
+            cell.font = font_tbl_hdr
+            cell.fill = fill_navy
+            cell.alignment = align_center
+            cell.border = border_all
+
+        for u_idx, u_row in enumerate(by_unit, start=1):
+            curr_r += 1
+            ws1.row_dimensions[curr_r].height = 19
+            u_fill = fill_light_gray if u_idx % 2 == 0 else PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+            row_vals = [
+                u_idx,
+                u_row['unit_kerja'],
+                u_row['total_pegawai'],
+                f"{u_row['total_jp']} JP",
+                f"{u_row['avg_jp']} JP",
+                f"{u_row['compliant_count']} Pegawai",
+                f"{u_row['compliance_rate']}%"
+            ]
+            for col_i, val in enumerate(row_vals, start=1):
+                cell = ws1.cell(row=curr_r, column=col_i, value=val)
+                cell.fill = u_fill
+                cell.border = border_all
+                cell.font = font_cell_bold if col_i in (2, 7) else font_cell
+                cell.alignment = align_center if col_i != 2 else align_left
+
+        # Sheet 2: Transkrip Audit Pegawai
+        ws2 = wb.create_sheet(title="Transkrip Audit Pegawai")
+        ws2.views.sheetView[0].showGridLines = True
+
+        ws2.merge_cells("A1:K1")
+        ws2["A1"] = f"TRANSKRIP RINCIAN AUDIT KOMPETENSI PEGAWAI ASN SETJEN DPD RI - TAHUN ANGGARAN {target_year}"
+        ws2["A1"].font = font_title
+        ws2["A1"].fill = fill_navy
+        ws2["A1"].alignment = align_center
+
+        ws2.merge_cells("A2:K2")
+        ws2["A2"] = "Standar Target: Minimal 20 JP per Tahun (UU No. 20/2023 Pasal 49 & Peraturan LAN No. 10/2018) | 1 JP = 45 Menit"
+        ws2["A2"].font = font_subtitle
+        ws2["A2"].fill = fill_teal
+        ws2["A2"].alignment = align_center
+
+        ws2.row_dimensions[1].height = 24
+        ws2.row_dimensions[2].height = 20
+
+        headers_emp = [
+            "No", "NIP", "Nama Lengkap Pegawai", "Unit Kerja / Penempatan",
+            "Jabatan", "Golongan", "Jumlah Sertifikat", "Total JP Diperoleh",
+            "Target Tahunan", "Gap JP", "Status Kepatuhan Audit"
+        ]
+        ws2.row_dimensions[4].height = 22
+        for col_idx, h_text in enumerate(headers_emp, start=1):
+            cell = ws2.cell(row=4, column=col_idx, value=h_text)
+            cell.font = font_tbl_hdr
+            cell.fill = fill_navy
+            cell.alignment = align_center
+            cell.border = border_all
+
+        for e_idx, emp in enumerate(records, start=1):
+            r_num = 4 + e_idx
+            ws2.row_dimensions[r_num].height = 19
+            if emp['status'] == 'MEMENUHI_SYARAT':
+                row_fill = fill_green_soft
+                st_font = font_success
+            elif emp['status'] == 'SEDANG_BERJALAN':
+                row_fill = fill_amber_soft
+                st_font = font_warning
+            else:
+                row_fill = fill_red_soft
+                st_font = font_danger
+
+            emp_values = [
+                e_idx,
+                emp['nip'],
+                emp['full_name'],
+                emp['unit_kerja'],
+                emp['jabatan'],
+                emp['golongan'],
+                emp['certificates_count'],
+                emp['total_jp'],
+                20,
+                emp['gap_jp'],
+                emp['status_label']
+            ]
+
+            for c_col, val in enumerate(emp_values, start=1):
+                cell = ws2.cell(row=r_num, column=c_col, value=val)
+                cell.fill = row_fill
+                cell.border = border_all
+                cell.font = st_font if c_col == 11 else (font_cell_bold if c_col in (3, 8) else font_cell)
+                cell.alignment = align_left if c_col in (3, 4, 5) else align_center
+
+        # Auto width for columns
+        for ws in (ws1, ws2):
+            for col in ws.columns:
+                max_len = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    if cell.row < 5:
+                        continue
+                    max_len = max(max_len, len(str(cell.value or '')))
+                ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+
+        ws1.column_dimensions['A'].width = 8
+        ws1.column_dimensions['B'].width = 40
+        ws1.column_dimensions['C'].width = 24
+        ws1.column_dimensions['D'].width = 24
+        ws1.column_dimensions['E'].width = 20
+        ws1.column_dimensions['F'].width = 24
+        ws1.column_dimensions['G'].width = 18
+
+        ws2.column_dimensions['A'].width = 6
+        ws2.column_dimensions['B'].width = 20
+        ws2.column_dimensions['C'].width = 32
+        ws2.column_dimensions['D'].width = 35
+        ws2.column_dimensions['E'].width = 26
+        ws2.column_dimensions['F'].width = 12
+        ws2.column_dimensions['G'].width = 16
+        ws2.column_dimensions['H'].width = 18
+        ws2.column_dimensions['I'].width = 14
+        ws2.column_dimensions['J'].width = 12
+        ws2.column_dimensions['K'].width = 28
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        filename = f"Laporan_Audit_Kompetensi_ASN_Setjen_DPD_RI_{target_year}_{now.strftime('%Y%m%d_%H%M')}.xlsx"
         response = HttpResponse(
             output.getvalue(),
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

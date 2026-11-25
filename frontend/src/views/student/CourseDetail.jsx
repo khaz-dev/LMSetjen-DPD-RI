@@ -38,6 +38,7 @@ import Toast from "../plugin/Toast";
 import { getMediaUrl, DEFAULT_IMAGE_URL } from "../../utils/constants";
 
 import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.9+: Add JP calculation for progress card
+import { calculateCourseJP } from "../../utils/courseUtils";
 
 import "./CourseDetail.css";
 
@@ -5178,46 +5179,9 @@ function CourseDetail() {
 
 
 
-    // ✨ PHASE 4.9+: Calculate total JP (Jam Pelajaran) from curriculum lectures
-
+    // ✨ PHASE 4.9+: Calculate total JP (Jam Pelatihan) from curriculum & course data (UU ASN No. 20/2023)
     const calculateTotalJP = (curriculum) => {
-
-        if (!curriculum || !Array.isArray(curriculum)) return 0;
-
-
-
-        let totalSeconds = 0;
-
-
-
-        // Iterate through all sections in curriculum
-
-        curriculum.forEach(section => {
-
-            const sectionItems = section.variant_items || section.items || [];
-
-
-
-            // Sum up duration of all items
-
-            sectionItems.forEach(item => {
-
-                if (item.content_duration) {
-
-                    totalSeconds += parseDurationToSeconds(item.content_duration);
-
-                }
-
-            });
-
-        });
-
-
-
-        // 1 JP = 45 minutes = 2700 seconds
-
-        return Math.ceil(totalSeconds / 2700);
-
+        return calculateCourseJP(course?.course || course || { curriculum });
     };
 
 
@@ -8993,7 +8957,7 @@ function CourseDetail() {
 
                                                                 <span className="cert-meta-label">Beban Belajar:</span>
 
-                                                                <span className="cert-meta-val">{course?.course?.total_jam_pelatihan || 2} Jam Pelatihan (JP)</span>
+                                                                <span className="cert-meta-val">{calculateCourseJP(course?.course || course)} Jam Pelatihan (JP)</span>
 
                                                             </div>
 

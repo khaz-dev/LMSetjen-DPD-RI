@@ -6,6 +6,7 @@ import ReviewAbuseReportsTab from "./AdminReportsTabs/ReviewAbuseReportsTab";
 import QAReportsTab from "./AdminReportsTabs/QAReportsTab";
 import ForumReportsTab from "./AdminReportsTabs/ForumReportsTab";
 import CourseEvaluationReportsTab from "./AdminReportsTabs/CourseEvaluationReportsTab";
+import ASNCompetencyAuditTab from "./AdminReportsTabs/ASNCompetencyAuditTab";
 import FeedbackAdminDashboard from "../../components/Feedback/FeedbackAdminDashboard";
 import apiInstance from "../../utils/axios";
 import dayjs, { moment } from "../../utils/dayjs";
@@ -190,6 +191,22 @@ function ReportsAdmin() {
                 <CourseEvaluationReportsTab
                     refreshTrigger={refreshTrigger}
                     onMutationSuccess={handleMutationSuccess}
+                />
+            )
+        },
+        {
+            id: "asn-audit",
+            label: "Audit Kompetensi ASN (20 JP)",
+            icon: "fas fa-award",
+            badge: (
+                <span className="tab-badge" style={{ backgroundColor: "rgba(13, 148, 136, 0.15)", color: "#0d9488", border: "1px solid rgba(13, 148, 136, 0.3)" }}>
+                    Target 20 JP
+                </span>
+            ),
+            description: "Audit kepatuhan pengembangan kompetensi tahunan ASN (minimal 20 JP per tahun sesuai UU No. 20/2023 Pasal 49 & Peraturan LAN RI)",
+            component: (
+                <ASNCompetencyAuditTab
+                    refreshTrigger={refreshTrigger}
                 />
             )
         },

@@ -163,6 +163,15 @@
     border: 1px solid #cbd5e1;
 }
 
+/* Jam Pelatihan (JP) Badge */
+.acrd-badge-jp {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.14) 100%) !important;
+    color: #b45309 !important;
+    border: 1px solid rgba(245, 158, 11, 0.35) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em;
+}
+
 /* ==========================================================================
    Hero Banner Card (High-Density, Minimal Padding)
    ========================================================================== */
@@ -815,6 +824,15 @@
     border-color: var(--acrd-teal-border);
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.acrd-stat-tile-jp {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(13, 148, 136, 0.06) 100%) !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.acrd-stat-tile-jp .acrd-stat-val {
+    color: #b45309 !important;
 }
 
 .acrd-stat-val {

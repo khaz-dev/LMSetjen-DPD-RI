@@ -8,7 +8,7 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { WishlistContext } from "../plugin/Context";
 import apiInstance from "../../utils/axios";
-import { getImageUrl, getLevelText } from "../../utils/courseUtils";
+import { getImageUrl, getLevelText, calculateCourseJP } from "../../utils/courseUtils";
 import { parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Calculate JP
 import SEO from "../../components/SEO";
 import TestimonialSection from "../../components/TestimonialSection";
@@ -1363,7 +1363,7 @@ function Index() {
                                 ) : featuredCourses.length > 0 ? (
                                     featuredCourses.slice(0, 6).map((course, index) => {
                                         const theme = getCategoryTheme(course.category?.title, course.category?.slug, index);
-                                        const totalJP = Number(course.total_jam_pelatihan) || calculateTotalJP(course.lectures) || 0;
+                                        const totalJP = calculateCourseJP(course);
                                         const studentCount = Number(course.students?.length) || 0;
                                         const reviewCount = Number(course.reviews?.length) || Number(course.rating_count) || 0;
                                         const ratingVal = course.average_rating ? Number(course.average_rating).toFixed(1) : (reviewCount > 0 ? "5.0" : null);
@@ -1439,8 +1439,11 @@ function Index() {
                                                                 {getLevelText(course.level)}
                                                             </span>
 
-                                                            <span className="course-badge-jp">
-                                                                <i className="fas fa-clock" style={{ fontSize: "0.62rem" }}></i>
+                                                            <span
+                                                                className="course-badge-jp"
+                                                                title={`Bobot: ${totalJP} Jam Pelatihan (Standar UU ASN No. 20/2023 Pasal 49)`}
+                                                            >
+                                                                <i className="fas fa-award" style={{ fontSize: "0.62rem" }}></i>
                                                                 <span>{totalJP} JP</span>
                                                             </span>
                                                         </div>

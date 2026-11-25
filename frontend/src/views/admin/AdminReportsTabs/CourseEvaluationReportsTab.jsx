@@ -2,9 +2,21 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import apiInstance from "../../../utils/axios";
 import Toast from "../../plugin/Toast";
-import { getImageUrl } from "../../../utils/courseUtils";
+import { getImageUrl, calculateCourseJP } from "../../../utils/courseUtils";
 import logoSetjenDPD from "../../../assets/logo/logo-setjen-dpd.png";
 import "./CourseEvaluationReportsTab.css";
+
+const getCourseJP = (c) => {
+    if (!c) return 1;
+    if (c.total_jp && Number(c.total_jp) > 0) return Number(c.total_jp);
+    return calculateCourseJP(c);
+};
+
+const getDistributedJP = (c) => {
+    if (!c) return 0;
+    if (c.distributed_jp !== undefined && c.distributed_jp !== null) return c.distributed_jp;
+    return (c.completed_count || 0) * getCourseJP(c);
+};
 
 /**
  * Menghitung status kesehatan pembelajaran kursus (Monev Health Indicator)
@@ -439,7 +451,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
         const totalCourses = list.length;
         const totalEnrolled = list.reduce((acc, c) => acc + (c.enrolled_count || 0), 0);
         const totalCompleted = list.reduce((acc, c) => acc + (c.completed_count || 0), 0);
-        const totalJP = list.reduce((acc, c) => acc + (c.distributed_jp ?? ((c.completed_count || 0) * (c.total_jp || 2))), 0);
+        const totalJP = list.reduce((acc, c) => acc + getDistributedJP(c), 0);
         const avgCompletion = totalEnrolled > 0 ? Math.round((totalCompleted / totalEnrolled) * 100) : 0;
         const avgScore = totalCourses > 0 ? (list.reduce((acc, c) => acc + (c.average_quiz_score || 0), 0) / totalCourses).toFixed(1) : 0;
         const avgRating = totalCourses > 0 ? (list.reduce((acc, c) => acc + (c.average_rating || 0), 0) / totalCourses).toFixed(1) : 0;
@@ -551,7 +563,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                         <span className="kpi-value">{stats.total_students_enrolled}</span>
                         <span className="kpi-label">Partisipan Terdaftar</span>
                         <span className="kpi-subtext text-success fw-semibold">
-                            {stats.total_completions} Pegawai Lulus &bull; {stats.total_distributed_jp || (stats.total_completions * 2)} JP ASN
+                            {stats.total_completions} Pegawai Lulus &bull; {stats.total_distributed_jp ?? (stats.total_completions * 1)} JP ASN
                         </span>
                     </div>
                 </div>
@@ -875,14 +887,14 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                         <td className="text-center">
                                             <div className="d-flex flex-column align-items-center">
                                                 <span className="jp-badge-pill mb-1">
-                                                    {c.total_jp || 2} JP
+                                                    {getCourseJP(c)} JP
                                                 </span>
                                                 <div 
                                                     className="distributed-jp-text" 
                                                     title={`Total JP yang tersalurkan kepada ${c.completed_count || 0} pegawai yang lulus`}
                                                 >
                                                     <i className="fas fa-award text-teal me-1"></i>
-                                                    <span className="fw-bold text-dark">{c.distributed_jp ?? ((c.completed_count || 0) * (c.total_jp || 2))}</span> JP ASN
+                                                    <span className="fw-bold text-dark">{getDistributedJP(c)}</span> JP ASN
                                                 </div>
                                             </div>
                                         </td>
@@ -980,10 +992,10 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                     </div>
                                     <div className="course-eval-metric-item">
                                         <span className="metric-label">Bobot & Akumulasi JP</span>
-                                        <span className="metric-val text-dark">{c.total_jp || 2} JP</span>
+                                        <span className="metric-val text-dark">{getCourseJP(c)} JP</span>
                                         <span className="distributed-jp-card-hint" title={`Total JP tersalurkan ke ${c.completed_count || 0} lulusan`}>
                                             <i className="fas fa-award text-teal me-1"></i>
-                                            {c.distributed_jp ?? ((c.completed_count || 0) * (c.total_jp || 2))} JP ASN
+                                            {getDistributedJP(c)} JP ASN
                                         </span>
                                     </div>
                                 </div>
@@ -1061,7 +1073,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                         {selectedCourseForSnapshot.teacher?.full_name || "Instruktur Setjen DPD RI"}
                                         <span className="mx-2">&bull;</span>
                                         <i className="fas fa-clock me-1"></i>
-                                        Bobot {selectedCourseForSnapshot.total_jp || 2} JP
+                                        Bobot {getCourseJP(selectedCourseForSnapshot)} JP
                                     </div>
                                 </div>
                             </div>
@@ -1137,10 +1149,10 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                                 <div className="snapshot-stat-card">
                                                     <div className="stat-label">Akumulasi JP Disalurkan</div>
                                                     <div className="stat-value text-primary">
-                                                        {snapshotData?.metrics?.total_jp_issued ?? selectedCourseForSnapshot.distributed_jp ?? ((selectedCourseForSnapshot.completed_count || 0) * (selectedCourseForSnapshot.total_jp || 2))} <span className="stat-sub">JP ASN</span>
+                                                        {snapshotData?.metrics?.total_jp_issued ?? getDistributedJP(selectedCourseForSnapshot)} <span className="stat-sub">JP ASN</span>
                                                     </div>
                                                     <div className="text-muted mt-1" style={{ fontSize: "0.72rem" }}>
-                                                        Bobot {selectedCourseForSnapshot.total_jp || 2} JP per pegawai lulus
+                                                        Bobot {snapshotData?.metrics?.total_jp ?? getCourseJP(selectedCourseForSnapshot)} JP per pegawai lulus
                                                     </div>
                                                 </div>
 
@@ -1740,7 +1752,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                     <tbody>
                                         {filteredCourses.map((c, idx) => {
                                             const h = getCourseHealth(c);
-                                            const distJP = c.distributed_jp ?? ((c.completed_count || 0) * (c.total_jp || 2));
+                                            const distJP = getDistributedJP(c);
                                             return (
                                                 <tr key={c.course_id || c.id || idx}>
                                                     <td className="text-center">{idx + 1}</td>
@@ -1750,7 +1762,7 @@ function CourseEvaluationReportsTab({ refreshTrigger = 0, onMutationSuccess }) {
                                                     <td className="text-center">{c.enrolled_count || 0}</td>
                                                     <td className="text-center">{c.completed_count || 0}</td>
                                                     <td className="text-center fw-bold">{c.completion_rate || 0}%</td>
-                                                    <td className="text-center">{c.total_jp || 2} JP</td>
+                                                    <td className="text-center">{getCourseJP(c)} JP</td>
                                                     <td className="text-center fw-bold text-teal">{distJP} JP</td>
                                                     <td className="text-center">{c.average_quiz_score || "-"}</td>
                                                     <td className="text-center">{(c.average_rating || 0).toFixed(1)} ★</td>

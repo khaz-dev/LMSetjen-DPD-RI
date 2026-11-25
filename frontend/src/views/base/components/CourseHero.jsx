@@ -3,7 +3,7 @@ import dayjs from "../../../utils/dayjs";
 import { Rating } from "react-simple-star-rating";
 import "./CourseHero.css";
 import { Link } from "react-router-dom";
-import { getImageUrl, getCourseCurriculumSummary } from "../../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary, calculateCourseJP } from "../../../utils/courseUtils";
 
 const CourseHero = ({ course }) => {
     if (!course) return null;
@@ -11,6 +11,7 @@ const CourseHero = ({ course }) => {
     const teacherName = course.teacher?.full_name || course.user?.full_name || "Instruktur DPD RI";
     const teacherImage = getImageUrl(course.teacher?.image || course.user?.profile?.image);
     const formattedDate = course.date ? dayjs(course.date).format("DD MMMM YYYY") : null;
+    const totalJP = calculateCourseJP(course);
 
     const [isScrolled, setIsScrolled] = useState(false);
     const [headerHeight, setHeaderHeight] = useState(60);
@@ -161,6 +162,14 @@ const CourseHero = ({ course }) => {
                                     </span>
                                 )}
 
+                                <span
+                                    className="hero-badge hero-badge-jp"
+                                    title="Bobot Pelatihan: Sesuai Standar UU ASN No. 20/2023 Pasal 49 (Hak Pengembangan Pegawai min. 20 JP/tahun)"
+                                >
+                                    <i className="fas fa-award me-1"></i>
+                                    {totalJP} Jam Pelatihan (JP)
+                                </span>
+
                                 {course.featured && (
                                     <span className="hero-badge hero-badge-featured">
                                         <i className="fas fa-bolt me-1"></i>
@@ -246,6 +255,16 @@ const CourseHero = ({ course }) => {
                                     <span>{course.students?.length || 0} Peserta</span>
                                 </div>
 
+                                {/* Jam Pelatihan (JP) */}
+                                <div
+                                    className="d-flex align-items-center small"
+                                    title="Standar UU ASN No. 20/2023 Pasal 49: 1 JP = 45 Menit Pembelajaran"
+                                >
+                                    <i className="fas fa-award me-1 text-warning"></i>
+                                    <span className="text-white fw-semibold">{totalJP} JP</span>
+                                    <span className="text-white-50 ms-1">({totalJP * 45} Menit)</span>
+                                </div>
+
                                 {/* Total Curriculum / Lessons */}
                                 <div className="d-flex align-items-center small">
                                     {(() => {
@@ -288,6 +307,15 @@ const CourseHero = ({ course }) => {
                                     <span>{course.category.title}</span>
                                 </span>
                             )}
+
+                            {/* JP Badge in Stuck Mode */}
+                            <span
+                                className="hero-stuck-jp-chip d-none d-sm-inline-flex"
+                                title={`Bobot: ${totalJP} Jam Pelatihan (Standar UU ASN No. 20/2023)`}
+                            >
+                                <i className="fas fa-award text-warning me-1"></i>
+                                <span>{totalJP} JP</span>
+                            </span>
 
                             {/* Course Title with Ellipsis & Custom Hover Tooltip */}
                             <div className="course-hero-stuck-title-box">

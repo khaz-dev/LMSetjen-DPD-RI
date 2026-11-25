@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminHeader from "../partials/AdminHeader";
 import Footer from "../partials/Footer";
 import apiInstance from "../../utils/axios";
@@ -50,6 +51,7 @@ ChartJS.register(
 );
 
 function DashboardAdmin() {
+    const navigate = useNavigate();
     const { version: liveAppVersion } = useSystemVersion();
     const activeVersion = liveAppVersion || APP_VERSION;
 
@@ -145,6 +147,15 @@ function DashboardAdmin() {
                 ["Tingkat Kelulusan", `${dashboardData?.completion_rate || 0}%`, "Rasio kelulusan peserta sah"],
                 ["Total Kuis", dashboardData?.total_quizzes || 0, `${dashboardData?.total_quiz_attempts || 0} kali dikerjakan`],
                 ["Rating LMS Rata-rata", `${dashboardData?.avg_rating || 0} / 5.0`, `Berdasarkan ${dashboardData?.total_reviews || 0} ulasan`],
+                [""],
+                ["PENGEMBANGAN KOMPETENSI ASN (UU NO. 20 TAHUN 2023 PASAL 49 & PERATURAN LAN NO. 10 TAHUN 2018)", "NILAI", "KETERANGAN"],
+                ["Dasar Regulasi", "UU ASN No. 20/2023 & Perka LAN 10/2018", "Kewajiban & Hak Min. 20 JP / Pegawai / Tahun (1 JP = 45 Menit)"],
+                ["Total Jam Pelatihan (JP) Terakumulasi", `${dashboardData?.asn_competency?.total_jp_earned || 0} JP`, "Berdasarkan sertifikat resmi sah terverifikasi"],
+                ["Pegawai ASN Bersertifikat", `${dashboardData?.asn_competency?.total_asn_certified || 0} Orang`, "Pegawai yang telah menyelesaikan minimal 1 kursus"],
+                ["Rata-rata JP per Pegawai Bersertifikat", `${dashboardData?.asn_competency?.avg_jp_per_learner || 0} JP`, "Terhadap standar 20 JP per pegawai"],
+                ["Pegawai Memenuhi Target (≥ 20 JP)", `${dashboardData?.asn_competency?.compliant_asn_current_year || 0} Orang`, `Capaian tahun anggaran ${dashboardData?.asn_competency?.current_year || new Date().getFullYear()}`],
+                ["Kapasitas Jam Pelatihan Katalog LMS", `${dashboardData?.asn_competency?.total_catalog_jp || 0} JP`, "Akumulasi seluruh kursus aktif terbit"],
+                ["Persentase Capaian Target Tahunan", `${dashboardData?.asn_competency?.fulfillment_rate || 0}%`, "Terhadap standar minimal 20 JP per pegawai"],
                 [""],
                 ["TOP 5 KURSUS TERPOPULER", "INSTRUKTUR", "TOTAL PENDAFTARAN"],
                 ...(dashboardData?.top_courses || []).map((c, i) => [
@@ -376,6 +387,119 @@ function DashboardAdmin() {
                         </div>
                     </div>
 
+                    {/* Executive Quick Action Cards Grid */}
+                    <div className="admin-quick-actions-grid mb-3">
+                        <button
+                            type="button"
+                            className="admin-qa-card"
+                            onClick={() => navigate("/admin/content-management/?tab=courses")}
+                            title="Buka Kurasi Kursus & Telaah Materi"
+                        >
+                            <div className="admin-qa-icon qa-teal">
+                                <i className="fas fa-clipboard-check"></i>
+                            </div>
+                            <div className="admin-qa-info">
+                                <div className="admin-qa-top">
+                                    <span className="admin-qa-title">Telaah Kursus</span>
+                                    {dashboardData?.pending_actions?.pending_courses_count > 0 ? (
+                                        <span className="admin-qa-badge badge-pulse-amber">
+                                            {dashboardData.pending_actions.pending_courses_count} Menunggu
+                                        </span>
+                                    ) : (
+                                        <span className="admin-qa-badge badge-neutral">Katalog Siap</span>
+                                    )}
+                                </div>
+                                <p className="admin-qa-desc">Kurasi materi baru & pengajuan revisi</p>
+                            </div>
+                        </button>
+
+                        <button
+                            type="button"
+                            className="admin-qa-card"
+                            onClick={() => navigate("/admin/content-management/?tab=testimonials")}
+                            title="Buka Moderasi Testimoni Pegawai"
+                        >
+                            <div className="admin-qa-icon qa-amber">
+                                <i className="fas fa-comment-dots"></i>
+                            </div>
+                            <div className="admin-qa-info">
+                                <div className="admin-qa-top">
+                                    <span className="admin-qa-title">Kurasi Testimoni</span>
+                                    {dashboardData?.pending_actions?.pending_testimonials_count > 0 ? (
+                                        <span className="admin-qa-badge badge-pulse-teal">
+                                            {dashboardData.pending_actions.pending_testimonials_count} Tertunda
+                                        </span>
+                                    ) : (
+                                        <span className="admin-qa-badge badge-neutral">Semua Tampil</span>
+                                    )}
+                                </div>
+                                <p className="admin-qa-desc">Moderasi ulasan & testimoni pegawai</p>
+                            </div>
+                        </button>
+
+                        <button
+                            type="button"
+                            className="admin-qa-card"
+                            onClick={() => navigate("/admin/content-management/?tab=requests")}
+                            title="Buka Verifikasi Calon Instruktur"
+                        >
+                            <div className="admin-qa-icon qa-indigo">
+                                <i className="fas fa-chalkboard-user"></i>
+                            </div>
+                            <div className="admin-qa-info">
+                                <div className="admin-qa-top">
+                                    <span className="admin-qa-title">Calon Instruktur</span>
+                                    {dashboardData?.pending_actions?.pending_instructor_requests_count > 0 ? (
+                                        <span className="admin-qa-badge badge-pulse-amber">
+                                            {dashboardData.pending_actions.pending_instructor_requests_count} Pengajuan
+                                        </span>
+                                    ) : (
+                                        <span className="admin-qa-badge badge-neutral">Terverifikasi</span>
+                                    )}
+                                </div>
+                                <p className="admin-qa-desc">Validasi permohonan pengajar ASN</p>
+                            </div>
+                        </button>
+
+                        <button
+                            type="button"
+                            className="admin-qa-card"
+                            onClick={() => navigate("/admin/content-management/?tab=certificate")}
+                            title="Buka Studio Template Sertifikat PPTX"
+                        >
+                            <div className="admin-qa-icon qa-gold">
+                                <i className="fas fa-award"></i>
+                            </div>
+                            <div className="admin-qa-info">
+                                <div className="admin-qa-top">
+                                    <span className="admin-qa-title">Studio Sertifikat</span>
+                                    <span className="admin-qa-badge badge-gold">Template PPTX</span>
+                                </div>
+                                <p className="admin-qa-desc">Desain tata letak & tanda tangan elektronik</p>
+                            </div>
+                        </button>
+
+                        <button
+                            type="button"
+                            className="admin-qa-card"
+                            onClick={() => navigate("/admin/user-management/")}
+                            title="Buka Manajemen Pegawai & Akun ASN"
+                        >
+                            <div className="admin-qa-icon qa-slate">
+                                <i className="fas fa-users-cog"></i>
+                            </div>
+                            <div className="admin-qa-info">
+                                <div className="admin-qa-top">
+                                    <span className="admin-qa-title">Pegawai & Akun ASN</span>
+                                    <span className="admin-qa-badge badge-slate">
+                                        {Number(dashboardData?.total_students || 0).toLocaleString("id-ID")} Akun
+                                    </span>
+                                </div>
+                                <p className="admin-qa-desc">Sinkronisasi data & otorisasi peran</p>
+                            </div>
+                        </button>
+                    </div>
+
                     {/* Compact 8 KPI Metric Cards Grid */}
                     <div className="row g-2 mb-3">
                         {/* 1. Total Peserta */}
@@ -526,6 +650,91 @@ function DashboardAdmin() {
                         </div>
                     </div>
 
+                    {/* ASN Competency & Jam Pelatihan (JP) Strategic Widget (UU ASN No. 20/2023) */}
+                    <div className="admin-asn-competency-card mb-3">
+                        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div className="d-flex align-items-center gap-3 flex-grow-1 me-md-2">
+                                <div className="asn-badge-emblem">
+                                    <i className="fas fa-landmark"></i>
+                                </div>
+                                <div>
+                                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                                        <span className="asn-tag-regulation">
+                                            <i className="fas fa-shield-halved me-1 text-teal"></i>
+                                            UU NO. 20 TAHUN 2023 PASAL 49
+                                        </span>
+                                        <span className="asn-tag-target">
+                                            Target Standar: Min. 20 JP / Pegawai / Tahun
+                                        </span>
+                                    </div>
+                                    <h5 className="asn-competency-title mb-1 mt-1">
+                                        Capaian Akumulasi Jam Pelatihan (JP) Pegawai Setjen DPD RI
+                                    </h5>
+                                    <p className="asn-competency-subtitle mb-0">
+                                        Pengembangan kompetensi terverifikasi melalui penyelesaian modul e-learning dan sertifikasi sah (1 JP = 45 Menit).
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="asn-competency-metrics-group d-flex align-items-center gap-2 gap-sm-3 flex-wrap ms-auto flex-shrink-0">
+                                <div className="asn-stat-box">
+                                    <span className="asn-stat-label">Total JP Terakumulasi</span>
+                                    <div className="asn-stat-value text-teal">
+                                        <i className="fas fa-graduation-cap me-1"></i>
+                                        {Number(dashboardData?.asn_competency?.total_jp_earned || 0).toLocaleString("id-ID")}
+                                        <span className="asn-stat-unit">JP</span>
+                                    </div>
+                                </div>
+
+                                <div className="asn-stat-box">
+                                    <span className="asn-stat-label">Pegawai Bersertifikat</span>
+                                    <div className="asn-stat-value text-dpd-navy">
+                                        <i className="fas fa-user-check me-1"></i>
+                                        {Number(dashboardData?.asn_competency?.total_asn_certified || 0).toLocaleString("id-ID")}
+                                        <span className="asn-stat-unit">Orang</span>
+                                    </div>
+                                </div>
+
+                                <div className="asn-stat-box">
+                                    <span className="asn-stat-label">Rata-rata per Lulusan</span>
+                                    <div className="asn-stat-value text-amber">
+                                        {dashboardData?.asn_competency?.avg_jp_per_learner || 0}
+                                        <span className="asn-stat-unit">/ 20 JP</span>
+                                    </div>
+                                </div>
+
+                                <div className="asn-stat-box d-none d-md-block">
+                                    <span className="asn-stat-label">Kapasitas Katalog</span>
+                                    <div className="asn-stat-value text-indigo">
+                                        {Number(dashboardData?.asn_competency?.total_catalog_jp || 0).toLocaleString("id-ID")}
+                                        <span className="asn-stat-unit">JP</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-asn-explore"
+                                    onClick={() => navigate("/admin/reports/?tab=asn-audit")}
+                                    title="Buka Laporan & Audit Tahunan Pengembangan Kompetensi ASN (Target: 20 JP)"
+                                >
+                                    <i className="fas fa-award me-1"></i>
+                                    <span>Audit 20 JP</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary text-dark bg-white border"
+                                    style={{ fontSize: "0.78rem", fontWeight: "600", padding: "0.35rem 0.65rem", borderRadius: "6px" }}
+                                    onClick={() => navigate("/admin/content-management/?tab=courses")}
+                                    title="Lihat seluruh daftar kursus dan bobot Jam Pelatihan"
+                                >
+                                    <span>Katalog JP</span>
+                                    <i className="fas fa-arrow-right ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Compact Navigation Tabs Bar */}
                     <div className="admin-nav-bar mb-3">
                         <div className="admin-tabs-list">
@@ -599,6 +808,127 @@ function DashboardAdmin() {
                                     {/* Left Column (8 cols): Visual Charts & Top Courses */}
                                     <div className="col-lg-8">
                                         
+                                        {/* Antrean Kurasi Kursus & Tindakan Eksekutif Segera */}
+                                        <div className="admin-card mb-3 admin-pending-queue-card">
+                                            <div className="admin-card-header d-flex justify-content-between align-items-center">
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <span className="admin-queue-icon-pill">
+                                                        <i className="fas fa-clipboard-check text-teal"></i>
+                                                    </span>
+                                                    <h6 className="admin-card-title mb-0">
+                                                        Antrean Kurasi Kursus & Tindakan Eksekutif
+                                                    </h6>
+                                                </div>
+                                                <div className="d-flex align-items-center gap-2">
+                                                    {dashboardData?.pending_actions?.pending_courses_count > 0 ? (
+                                                        <span className="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">
+                                                            <i className="fas fa-clock me-1"></i>
+                                                            {dashboardData.pending_actions.pending_courses_count} Menunggu Kurasi
+                                                        </span>
+                                                    ) : (
+                                                        <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                            <i className="fas fa-check-circle me-1"></i>
+                                                            Antrean Tuntas (0 Menunggu)
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="admin-card-body p-3">
+                                                {dashboardData?.pending_actions?.pending_courses_list?.length > 0 ? (
+                                                    <div className="admin-pending-list">
+                                                        {dashboardData.pending_actions.pending_courses_list.map((courseItem) => (
+                                                            <div key={courseItem.course_id || courseItem.id} className="admin-pending-item d-flex align-items-center justify-content-between p-2 rounded mb-2 border flex-wrap gap-2">
+                                                                <div className="d-flex align-items-center gap-3">
+                                                                    <div className={`pending-type-icon ${courseItem.is_resubmission ? "resubmission" : "new-submission"}`}>
+                                                                        <i className={courseItem.is_resubmission ? "fas fa-rotate-left" : "fas fa-book-reader"}></i>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                                                                            <span className={`badge ${courseItem.is_resubmission ? "bg-info-subtle text-info border border-info-subtle" : "bg-warning-subtle text-warning border border-warning-subtle"}`} style={{ fontSize: "0.68rem" }}>
+                                                                                {courseItem.is_resubmission ? "Revisi Diajukan" : "Review Kursus Baru"}
+                                                                            </span>
+                                                                            <span className="text-muted small">
+                                                                                <i className="far fa-clock me-1"></i>
+                                                                                {courseItem.review_submitted_date}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="fw-semibold text-truncate mt-1" style={{ maxWidth: "450px" }} title={courseItem.title}>
+                                                                            {courseItem.title}
+                                                                        </div>
+                                                                        <div className="text-muted small">
+                                                                            <i className="fas fa-user-circle me-1 text-teal"></i>
+                                                                            Instruktur: {courseItem.teacher}
+                                                                            {courseItem.is_resubmission && courseItem.rejection_reason && (
+                                                                                <span className="text-muted ms-2 fst-italic">
+                                                                                    (Perbaikan catatan sebelumnya)
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="d-flex align-items-center gap-2 ms-auto">
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn btn-sm btn-outline-teal px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1"
+                                                                        onClick={() => navigate(`/admin/review-course/${courseItem.course_id}/`)}
+                                                                    >
+                                                                        <span>Telaah Kursus</span>
+                                                                        <i className="fas fa-chevron-right ms-1"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 py-1">
+                                                        <div className="d-flex align-items-center gap-3">
+                                                            <div className="d-inline-flex align-items-center justify-content-center p-2 rounded-circle bg-success-subtle text-success flex-shrink-0" style={{ width: "42px", height: "42px" }}>
+                                                                <i className="fas fa-check-circle fs-5"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div className="fw-bold text-dpd-navy" style={{ fontSize: "0.9rem" }}>
+                                                                    Katalog Bersih & Terkurasi
+                                                                </div>
+                                                                <p className="text-muted small mb-0">
+                                                                    Tidak ada permohonan publikasi atau revisi kursus yang menunggu telaah administrator saat ini.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-sm btn-light border px-2 py-1 small fw-semibold"
+                                                                onClick={() => navigate("/admin/content-management/?tab=courses")}
+                                                            >
+                                                                <i className="fas fa-book me-1 text-primary"></i>
+                                                                Katalog Kursus
+                                                            </button>
+                                                            {dashboardData?.pending_actions?.pending_testimonials_count > 0 && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-light border px-2 py-1 small fw-semibold text-teal"
+                                                                    onClick={() => navigate("/admin/content-management/?tab=testimonials")}
+                                                                >
+                                                                    <i className="fas fa-comment me-1"></i>
+                                                                    {dashboardData.pending_actions.pending_testimonials_count} Testimoni
+                                                                </button>
+                                                            )}
+                                                            {dashboardData?.pending_actions?.pending_instructor_requests_count > 0 && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-light border px-2 py-1 small fw-semibold text-amber"
+                                                                    onClick={() => navigate("/admin/content-management/?tab=requests")}
+                                                                >
+                                                                    <i className="fas fa-user-plus me-1"></i>
+                                                                    {dashboardData.pending_actions.pending_instructor_requests_count} Calon Instruktur
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
                                         {/* Widget Analisis Tren Pengunjung LMSetjen DPD RI (Jam, Hari, Tanggal, Bulan, Tahun) */}
                                         <div className="mb-3">
                                             <VisitorTrafficWidget mode="compact" defaultGranularity="hourly" />

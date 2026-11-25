@@ -6,7 +6,8 @@ import {
     getLevelBadgeStyle,
     getLevelText,
     getActualCourseStatus,
-    getCourseCurriculumSummary
+    getCourseCurriculumSummary,
+    calculateCourseJP
 } from "../utils/courseUtils.js";
 import { calculateTotalDuration, parseDurationToSeconds } from "../utils/durationUtils";
 import useAxios from "../utils/useAxios";
@@ -39,19 +40,8 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
 
     const progress = calculateProgress();
 
-    // Calculate total JP (Jam Pelajaran) from course lectures (1 JP = 45 mins)
-    const calculateTotalJP = (lectures) => {
-        if (!lectures || !Array.isArray(lectures)) return 0;
-
-        let totalSeconds = 0;
-        lectures.forEach(lecture => {
-            if (lecture.content_duration) {
-                totalSeconds += parseDurationToSeconds(lecture.content_duration);
-            }
-        });
-
-        return Math.ceil(totalSeconds / 2700);
-    };
+    // Calculate total JP (Jam Pelatihan) based on UU ASN No. 20/2023 (1 JP = 45 mins)
+    const totalJP = calculateCourseJP(course);
 
     // Check if this is a published course
     const isPublished = course.is_published_version === true;
@@ -145,7 +135,6 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
         : (typeof course.students === "number" ? course.students : (course.students_count || 0));
     const lecturesCount = lessonsCount || (course.lectures?.length || 0);
     const durationInfo = lecturesCount > 0 ? calculateTotalDuration(course.lectures) : null;
-    const totalJP = lecturesCount > 0 ? calculateTotalJP(course.lectures) : 0;
 
     // ==========================================
     // LIST VIEW MODE (Compact Horizontal Row)
@@ -188,14 +177,21 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                                 <i className="fas fa-folder-open me-1"></i>
                                 {course.category?.title || "Umum"}
                             </span>
+                            <span
+                                className="course-meta-tag jp-tag"
+                                title="Bobot Pelatihan: Sesuai Standar UU ASN No. 20/2023 Pasal 49 (1 JP = 45 menit)"
+                            >
+                                <i className="fas fa-award me-1" style={{ color: "#d97706" }}></i>
+                                {totalJP} JP
+                            </span>
                             <span className="course-meta-tag students-tag">
                                 <i className="fas fa-user-graduate me-1"></i>
                                 {studentsCount} Peserta
                             </span>
-                            {totalJP > 0 && (
+                            {durationInfo?.formatted && durationInfo.formatted !== "0m 0s" && (
                                 <span className="course-meta-tag duration-tag">
                                     <i className="fas fa-clock me-1"></i>
-                                    {durationInfo?.formatted} ({totalJP} JP)
+                                    {durationInfo.formatted}
                                 </span>
                             )}
                             <span className="course-meta-tag date-tag">
@@ -334,23 +330,31 @@ const CourseCard = ({ course, _index, viewMode = "grid" }) => {
                     </div>
 
                     {/* Bottom overlay badge: Duration / JP */}
-                    {totalJP > 0 && (
-                        <div className="course-card-bottom-badge">
-                            <span className="course-jp-chip">
-                                <i className="fas fa-clock me-1"></i>
-                                {durationInfo?.formatted} ({totalJP} JP)
-                            </span>
-                        </div>
-                    )}
+                    <div className="course-card-bottom-badge">
+                        <span
+                            className="course-jp-chip"
+                            title={`Bobot: ${totalJP} Jam Pelatihan (Standar UU ASN No. 20/2023 Pasal 49)`}
+                        >
+                            <i className="fas fa-award me-1 text-warning"></i>
+                            {totalJP} JP{durationInfo?.formatted && durationInfo.formatted !== "0m 0s" ? ` • ${durationInfo.formatted}` : ""}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Content Body */}
                 <div className="course-content">
-                    {/* Meta Row: Category, Students, Date */}
+                    {/* Meta Row: Category, Students, JP, Date */}
                     <div className="course-meta-row">
                         <span className="course-meta-tag category-tag">
                             <i className="fas fa-folder-open me-1"></i>
                             {course.category?.title || "Umum"}
+                        </span>
+                        <span
+                            className="course-meta-tag jp-tag"
+                            title="Bobot: Sesuai Standar UU ASN No. 20/2023 Pasal 49 (1 JP = 45 menit)"
+                        >
+                            <i className="fas fa-award me-1" style={{ color: "#d97706" }}></i>
+                            {totalJP} JP
                         </span>
                         <span className="course-meta-tag students-tag">
                             <i className="fas fa-user-graduate me-1"></i>

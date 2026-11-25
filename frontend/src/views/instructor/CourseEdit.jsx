@@ -37,7 +37,7 @@ import {
     validateAllFields,
     getUnassignedActiveQuizzes
 } from "../../utils/courseEditValidation";
-import { getStatusText } from "../../utils/courseUtils";
+import { getStatusText, calculateCourseJP } from "../../utils/courseUtils";
 import {
     COURSE_LEVELS,
     COURSE_STATUS_OPTIONS,
@@ -84,6 +84,7 @@ function CourseEdit() {
     } = useCourseForm(courseData);
     const { submitCourse, isSubmitting } = useCourseSubmit();
     const unassignedActiveQuizzes = getUnassignedActiveQuizzes(courseData);
+    const calculatedJP = calculateCourseJP(courseData);
 
     // Refs for focusing on error inputs
     const titleRef = useRef(null);
@@ -1167,7 +1168,7 @@ function CourseEdit() {
                                     </div>
 
                                     <div className="row">
-                                        <div className="col-md-4">
+                                        <div className="col-md-3">
                                             <FormField
                                                 ref={categoryRef}
                                                 label="Kategori Kursus"
@@ -1187,7 +1188,7 @@ function CourseEdit() {
                                             />
                                         </div>
 
-                                        <div className="col-md-4">
+                                        <div className="col-md-3">
                                             <FormField
                                                 ref={levelRef}
                                                 label="Level Kursus"
@@ -1207,7 +1208,7 @@ function CourseEdit() {
                                             />
                                         </div>
 
-                                        <div className="col-md-4">
+                                        <div className="col-md-3">
                                             <FormField
                                                 label="Target Peserta & Akses"
                                                 name="target_audience"
@@ -1218,6 +1219,44 @@ function CourseEdit() {
                                                 required
                                                 helpText="Khusus pegawai DPD RI atau umum"
                                             />
+                                        </div>
+
+                                        <div className="col-md-3">
+                                            <div className="form-group mb-0">
+                                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                                    <label className="form-label mb-0" style={{ fontSize: "13px", fontWeight: "600", color: "#334155" }}>
+                                                        <i className="fas fa-award text-warning me-1"></i>Bobot JP (ASN)
+                                                    </label>
+                                                    {calculatedJP > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-link btn-sm p-0 text-teal text-decoration-none fw-semibold"
+                                                            style={{ fontSize: "0.72rem" }}
+                                                            onClick={() => updateCourseData({ total_jam_pelatihan: calculatedJP })}
+                                                            title="Terapkan hitungan kurikulum (1 JP = 45 menit)"
+                                                        >
+                                                            <i className="fas fa-wand-magic-sparkles me-1"></i>
+                                                            Set {calculatedJP} JP
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <div className="input-group input-group-sm">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        className="form-control"
+                                                        name="total_jam_pelatihan"
+                                                        value={courseData?.total_jam_pelatihan !== undefined && courseData?.total_jam_pelatihan !== null ? courseData.total_jam_pelatihan : ""}
+                                                        onChange={handleCourseInputChange}
+                                                        placeholder={String(calculatedJP || 0)}
+                                                        style={{ fontSize: "13px" }}
+                                                    />
+                                                    <span className="input-group-text bg-light text-muted fw-semibold">JP</span>
+                                                </div>
+                                                <div className="form-text text-muted" style={{ fontSize: "11px", marginTop: "4px" }}>
+                                                    UU ASN No. 20/2023. Hitungan materi: <strong>{calculatedJP} JP</strong>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 

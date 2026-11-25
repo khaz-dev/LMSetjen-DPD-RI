@@ -505,6 +505,13 @@ function CertificateValidation() {
                                                         {certificate.instructor_name || 'BPSDM Setjen DPD RI'}
                                                     </span>
                                                 </div>
+                                                <div className="val-sub-item">
+                                                    <span className="val-label">Bobot Pelatihan</span>
+                                                    <span className="val-val font-semibold text-teal" title="Beban Pembelajaran ASN (UU No. 20/2023 Pasal 49)">
+                                                        <i className="fas fa-award text-warning me-1"></i>
+                                                        {certificate.total_jam_pelatihan || 2} Jam Pelatihan (JP)
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

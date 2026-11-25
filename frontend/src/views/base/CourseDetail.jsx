@@ -17,7 +17,7 @@ import CourseDetailLoading from "./components/CourseDetailLoading";
 // Import hooks and utilities
 import { useCourse } from "./hooks/useCourse";
 import { calculateTotalDuration, formatDuration, parseDurationToSeconds } from "../../utils/durationUtils"; // ✨ PHASE 4.77+: Duration formatting
-import { getImageUrl, getCourseCurriculumSummary } from "../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary, calculateCourseJP } from "../../utils/courseUtils";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
@@ -75,6 +75,7 @@ function CourseDetail() {
 
     // Fetch course data from backend
     const { course, isLoading } = useCourse(slug);
+    const totalJP = calculateCourseJP(course);
 
     // Check wishlist status on component mount (skip for teachers)
     useEffect(() => {
@@ -344,10 +345,31 @@ function CourseDetail() {
         switch (activeTab) {
             case "overview":
                 return (
-                    <div className="d-flex flex-column gap-2">
+                    <div className="d-flex flex-column gap-3">
                         {/* 1. Quick Highlight Cards Ribbon */}
-                        <div className="row g-2 g-md-3 mb-1">
-                            <div className="col-6 col-sm-3">
+                        <div className="row g-2 g-md-3 mb-1 row-cols-2 row-cols-sm-3 row-cols-lg-5">
+                            {/* Bobot Jam Pelatihan (JP) Card */}
+                            <div className="col">
+                                <div
+                                    className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100"
+                                    title={`Bobot: ${totalJP} Jam Pelatihan (Standar UU ASN No. 20/2023 Pasal 49: 1 JP = 45 menit / Target min. 20 JP/tahun)`}
+                                    style={{ borderLeft: "3px solid #f59e0b" }}
+                                >
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0"
+                                        style={{ width: "36px", height: "36px", background: "rgba(245, 158, 11, 0.12)" }}
+                                    >
+                                        <i className="fas fa-award" style={{ fontSize: "1rem", color: "#d97706" }}></i>
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Bobot Pelatihan</div>
+                                        <div className="fw-bold text-truncate" style={{ fontSize: "0.85rem", color: "#b45309" }}>
+                                            {totalJP} JP
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col">
                                 <div className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100">
                                     <div
                                         className="rounded-2 d-flex align-items-center justify-content-center text-teal flex-shrink-0"
@@ -363,7 +385,35 @@ function CourseDetail() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="col-6 col-sm-3">
+                            <div className="col">
+                                <div className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-primary flex-shrink-0"
+                                        style={{ width: "36px", height: "36px", background: "rgba(2, 132, 199, 0.1)" }}
+                                    >
+                                        <i className="fas fa-signal" style={{ fontSize: "0.95rem", color: "#0284c7" }}></i>
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Level</div>
+                                        <div className="text-dark fw-bold text-truncate" style={{ fontSize: "0.85rem" }}>{course?.level || "Semua Level"}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col">
+                                <div className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100">
+                                    <div
+                                        className="rounded-2 d-flex align-items-center justify-content-center text-amber flex-shrink-0"
+                                        style={{ width: "36px", height: "36px", background: "rgba(245, 158, 11, 0.1)" }}
+                                    >
+                                        <i className="fas fa-certificate" style={{ fontSize: "0.95rem", color: "#f59e0b" }}></i>
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Sertifikat</div>
+                                        <div className="text-dark fw-bold text-truncate" style={{ fontSize: "0.85rem" }}>Resmi DPD RI</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col">
                                 <div className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100">
                                     <div
                                         className="rounded-2 d-flex align-items-center justify-content-center text-success flex-shrink-0"
@@ -377,34 +427,35 @@ function CourseDetail() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="col-6 col-sm-3">
-                                <div className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100">
-                                    <div
-                                        className="rounded-2 d-flex align-items-center justify-content-center text-amber flex-shrink-0"
-                                        style={{ width: "36px", height: "36px", background: "rgba(245, 158, 11, 0.1)" }}
-                                    >
-                                        <i className="fas fa-certificate" style={{ fontSize: "0.95rem", color: "#f59e0b" }}></i>
+                        </div>
+
+                        {/* ASN Competency Assurance Callout Banner */}
+                        <div
+                            className="p-3 rounded-3 d-flex align-items-center justify-content-between gap-3 border shadow-xs"
+                            style={{
+                                background: "linear-gradient(135deg, rgba(13, 148, 136, 0.06) 0%, rgba(245, 158, 11, 0.06) 100%)",
+                                borderColor: "rgba(13, 148, 136, 0.2)"
+                            }}
+                        >
+                            <div className="d-flex align-items-center gap-3">
+                                <div
+                                    className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                    style={{ width: "36px", height: "36px", background: "rgba(13, 148, 136, 0.15)", color: "#0d9488" }}
+                                >
+                                    <i className="fas fa-scale-balanced" style={{ fontSize: "1rem" }}></i>
+                                </div>
+                                <div>
+                                    <div className="fw-bold text-dark small" style={{ fontSize: "0.85rem" }}>
+                                        Pengembangan Kompetensi ASN Sesuai UU No. 20 Tahun 2023
                                     </div>
-                                    <div className="overflow-hidden">
-                                        <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Sertifikat</div>
-                                        <div className="text-dark fw-bold text-truncate" style={{ fontSize: "0.85rem" }}>Resmi Setjen DPD RI</div>
+                                    <div className="text-muted" style={{ fontSize: "0.76rem" }}>
+                                        Menyelesaikan kursus ini memberikan kontribusi <strong>{totalJP} Jam Pelatihan (JP)</strong> terhadap target tahunan minimal 20 JP ASN (1 JP = 45 menit pembelajaran).
                                     </div>
                                 </div>
                             </div>
-                            <div className="col-6 col-sm-3">
-                                <div className="p-3 rounded-3 bg-white border shadow-xs d-flex align-items-center gap-2 h-100">
-                                    <div
-                                        className="rounded-2 d-flex align-items-center justify-content-center text-primary flex-shrink-0"
-                                        style={{ width: "36px", height: "36px", background: "rgba(2, 132, 199, 0.1)" }}
-                                    >
-                                        <i className="fas fa-award" style={{ fontSize: "0.95rem", color: "#0284c7" }}></i>
-                                    </div>
-                                    <div className="overflow-hidden">
-                                        <div className="text-muted text-uppercase" style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0px" }}>Level</div>
-                                        <div className="text-dark fw-bold text-truncate" style={{ fontSize: "0.85rem" }}>{course?.level || "Semua Level"}</div>
-                                    </div>
-                                </div>
-                            </div>
+                            <span className="badge bg-white text-teal border border-teal-subtle px-2 py-1 rounded-pill small fw-semibold flex-shrink-0 d-none d-md-inline-flex align-items-center gap-1 shadow-2xs">
+                                <i className="fas fa-check-circle text-success"></i> Standar BPSDM
+                            </span>
                         </div>
 
                         {/* 2. Course Description Card */}

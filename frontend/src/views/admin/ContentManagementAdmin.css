@@ -1022,7 +1022,8 @@
 .btn-action-quick-approve,
 .btn-action-quick-reject,
 .btn-action-quick-disable,
-.btn-action-quick-restore {
+.btn-action-quick-restore,
+.btn-action-quick-edit {
     width: 28px;
     height: 28px;
     border-radius: 5px;
@@ -1034,6 +1035,18 @@
     transition: all 0.15s ease;
     padding: 0;
     flex-shrink: 0;
+}
+
+.btn-action-quick-edit {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+}
+.btn-action-quick-edit:hover:not(:disabled) {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
 }
 
 .btn-action-quick-approve {

@@ -374,6 +374,12 @@ class CourseCreateAPIView(APIView):
                 if learning_module_obj and course_type == 'standard':
                     course_type = learning_module_obj.module_type
 
+            # Parse Bobot Jam Pelatihan (JP)
+            raw_jp = request.data.get("total_jam_pelatihan")
+            course_jp = 0
+            if raw_jp is not None and str(raw_jp).strip().isdigit():
+                course_jp = int(raw_jp)
+
             # Create course with Draft status (not published until curriculum is complete)
             course = api_models.Course.objects.create(
                 teacher=teacher,
@@ -387,7 +393,8 @@ class CourseCreateAPIView(APIView):
                 platform_status="Draft",           # Set to Draft for admin/platform review
                 teacher_course_status="Draft",     # Set to Draft - teacher needs to complete curriculum
                 course_type=course_type,
-                learning_module=learning_module_obj
+                learning_module=learning_module_obj,
+                total_jam_pelatihan=course_jp
             )
 
             # Auto-create curriculum for SCORM/H5P course if learning module is attached
@@ -797,6 +804,14 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
             else:
                 print(f"[Course Update] ⏭️  No 'tags' field in request - skipping tag update")
             
+            # Handle explicit total_jam_pelatihan
+            if 'total_jam_pelatihan' in request.data:
+                try:
+                    raw_jp = request.data['total_jam_pelatihan']
+                    course.total_jam_pelatihan = int(raw_jp) if (raw_jp is not None and str(raw_jp).strip() != "") else 0
+                except (ValueError, TypeError):
+                    course.total_jam_pelatihan = 0
+
             # [*] PHASE 4.72: Status automatically set above if published course was edited
             # Published -> Review (set above before serializer.update)
             # Now save the course with updated status
@@ -1218,6 +1233,31 @@ class CoursePublishAPIView(APIView):
             
             published_course, is_new = course.submit_for_publication()
             action_text = "dibuat" if is_new else "diperbarui"
+
+            # ✨ PHASE 4.74: Kirim notifikasi in-app otomatis ke seluruh Administrator platform
+            try:
+                from django.db.models import Q
+                is_resubmission = bool(course.rejection_reason)
+                instructor_name = course.teacher.full_name if (course.teacher and course.teacher.full_name) else (request.user.get_full_name() or request.user.username)
+                notif_title = f"Pengajuan Ulang: {course.title[:45]}" if is_resubmission else f"Pengajuan Kursus: {course.title[:45]}"
+                notif_msg = f"Instruktur {instructor_name} telah {'mengajukan ulang kursus setelah perbaikan catatan revisi' if is_resubmission else 'mengajukan kursus baru'} '{course.title}' untuk ditelaah dan diverifikasi."
+                
+                admin_users = api_models.User.objects.filter(
+                    Q(is_staff=True) | Q(is_superuser=True) | Q(role='admin')
+                ).distinct()
+                
+                for admin_u in admin_users:
+                    api_models.Notification.objects.create(
+                        user=admin_u,
+                        course=course,
+                        type="Course Under Review",
+                        title=notif_title,
+                        message=notif_msg,
+                        seen=False
+                    )
+                print(f"[CoursePublish] Admin notification sent to {admin_users.count()} administrators")
+            except Exception as noti_err:
+                print(f"[CoursePublish] Warning: Failed to create admin notification: {noti_err}")
             
             return Response({
                 "success": True,
@@ -1612,6 +1652,23 @@ class CourseApprovalAPIView(APIView):
                 course.rejection_reason = None
                 course.save()
                 print(f"[Admin Approval] [OK] Synced draft course status to Published")
+
+                # ✨ PHASE 4.36: Kirim notifikasi in-app otomatis ke instruktur
+                try:
+                    if course.teacher and course.teacher.user:
+                        admin_display = user.get_full_name() or user.username
+                        api_models.Notification.objects.create(
+                            teacher=course.teacher,
+                            user=course.teacher.user,
+                            course=course,
+                            type="Course Published",
+                            title=f"Kursus Disetujui & Dipublikasikan! 🎉",
+                            message=f"Selamat! Kursus Anda '{course.title}' telah ditelaah dan disetujui oleh Administrator ({admin_display}). Kursus ini sekarang telah tayang secara resmi di katalog pembelajaran LMSetjen DPD RI.",
+                            seen=False
+                        )
+                        print(f"[Admin Approval] In-app notification sent to instructor: {course.teacher.user.username}")
+                except Exception as noti_err:
+                    print(f"[Admin Approval] Warning: Failed to create approval notification: {noti_err}")
                 
                 print(f"[Admin Approval] [DONE] Course fully approved: {course.title}")
                 
@@ -1633,6 +1690,23 @@ class CourseApprovalAPIView(APIView):
                 course.platform_status = "Rejected"
                 course.rejection_reason = rejection_reason
                 course.save()
+
+                # ✨ PHASE 4.36: Kirim notifikasi catatan revisi in-app otomatis ke instruktur
+                try:
+                    if course.teacher and course.teacher.user:
+                        admin_display = user.get_full_name() or user.username
+                        api_models.Notification.objects.create(
+                            teacher=course.teacher,
+                            user=course.teacher.user,
+                            course=course,
+                            type="Course Rejected",
+                            title=f"Catatan Revisi Kursus: {course.title[:45]}",
+                            message=f"Kursus Anda '{course.title}' telah ditelaah oleh Administrator ({admin_display}) dan memerlukan perbaikan. Catatan revisi: \"{rejection_reason}\". Silakan buka editor kursus untuk memperbarui materi.",
+                            seen=False
+                        )
+                        print(f"[Admin Rejection] In-app notification sent to instructor: {course.teacher.user.username}")
+                except Exception as noti_err:
+                    print(f"[Admin Rejection] Warning: Failed to create rejection notification: {noti_err}")
                 
                 return Response({
                     "success": True,

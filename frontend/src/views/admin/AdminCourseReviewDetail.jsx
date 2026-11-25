@@ -5,7 +5,7 @@ import Toast from "../plugin/Toast";
 import Swal from "sweetalert2";
 import Footer from "../partials/Footer";
 import AdminHeader from "../partials/AdminHeader";
-import { getImageUrl, getLevelText } from "../../utils/courseUtils";
+import { getImageUrl, getLevelText, calculateCourseJP } from "../../utils/courseUtils";
 import { DEFAULT_IMAGE_URL, DEFAULT_AVATAR_URL, getMediaUrl } from "../../utils/constants";
 import PptxRenderer from "../../components/Common/PptxRenderer";
 import PdfRenderer from "../../components/Common/PdfRenderer";
@@ -376,10 +376,8 @@ function AdminCourseReviewDetail() {
             }
         });
 
-        // Calculate JP based on duration or backend total_jam_pelatihan (1 JP = 45 menit / 2700 detik)
-        const calculatedJp = course.total_jam_pelatihan && course.total_jam_pelatihan > 0
-            ? Number(course.total_jam_pelatihan)
-            : (totalDurationSeconds > 0 ? Math.ceil(totalDurationSeconds / 2700) : 0);
+        // Standardized Jam Pelatihan (JP) based on UU ASN No. 20/2023 (1 JP = 45 menit / 2700 detik)
+        const calculatedJp = calculateCourseJP(course);
 
         // Quality & Compliance Checklist
         const compliance = {
@@ -728,9 +726,12 @@ function AdminCourseReviewDetail() {
                                     <span className="badge bg-light text-dark border">
                                         {getLevelText(course.level)}
                                     </span>
-                                    <span className="badge border" style={{ backgroundColor: "#f0fdfa", color: "#0d9488", borderColor: "#ccfbf1" }} title="Standar Jam Pelatihan ASN Setjen DPD RI (1 JP = 45 menit)">
-                                        <i className="fas fa-business-time me-1"></i>
-                                        {liveStats.calculatedJp ? `${liveStats.calculatedJp} JP (Standar Diklat)` : "Microlearning"}
+                                    <span
+                                        className="badge acrd-badge-jp border"
+                                        title="Bobot: Sesuai Standar UU ASN No. 20/2023 Pasal 49 (1 JP = 45 menit / Target min. 20 JP/tahun)"
+                                    >
+                                        <i className="fas fa-award me-1" style={{ color: "#d97706" }}></i>
+                                        {liveStats.calculatedJp} JP (Standar UU ASN)
                                     </span>
                                     <span className="badge bg-light text-muted border">
                                         <i className="fas fa-users text-primary me-1"></i>
@@ -2269,9 +2270,15 @@ function AdminCourseReviewDetail() {
 
                                     <div className="row g-2 acrd-mini-stats">
                                         <div className="col-6">
-                                            <div className="acrd-stat-tile" style={{ background: "#f0fdfa", borderColor: "#ccfbf1" }}>
-                                                <div className="acrd-stat-val text-teal">{liveStats.calculatedJp} JP</div>
-                                                <div className="acrd-stat-lbl">Jam Pelatihan (JP)</div>
+                                            <div
+                                                className="acrd-stat-tile acrd-stat-tile-jp"
+                                                title="Bobot Pembelajaran: Sesuai Standar UU ASN No. 20/2023 Pasal 49 (1 JP = 45 menit)"
+                                            >
+                                                <div className="acrd-stat-val text-amber-emphasis">
+                                                    <i className="fas fa-award me-1" style={{ fontSize: "0.85em", color: "#d97706" }}></i>
+                                                    {liveStats.calculatedJp} JP
+                                                </div>
+                                                <div className="acrd-stat-lbl">Bobot Pelatihan ASN</div>
                                             </div>
                                         </div>
                                         <div className="col-6">
@@ -2312,10 +2319,10 @@ function AdminCourseReviewDetail() {
                                     <div className="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom">
                                         <div className="d-flex align-items-center gap-1">
                                             <i className="fas fa-clipboard-check text-teal"></i>
-                                            <strong className="small text-dark">Kepatuhan Standar Diklat</strong>
+                                            <strong className="small text-dark">Kepatuhan Standar Diklat ASN</strong>
                                         </div>
                                         <span className={`badge ${liveStats.compliancePercent === 100 ? "bg-success" : "bg-warning text-dark"}`} style={{ fontSize: "0.7rem" }}>
-                                            {liveStats.compliancePercent}%
+                                            {liveStats.compliancePercent}% Terpenuhi
                                         </span>
                                     </div>
 
@@ -2339,8 +2346,8 @@ function AdminCourseReviewDetail() {
                                             <span className="fw-semibold">{liveStats.quizzesCount} Kuis</span>
                                         </div>
                                         <div className={`acrd-compliance-item ${liveStats.compliance.hasDuration ? "is-valid" : "is-invalid"}`}>
-                                            <span><i className={`fas ${liveStats.compliance.hasDuration ? "fa-check-circle text-teal" : "fa-times-circle text-danger"} me-1`}></i> Bobot Jam Pelatihan (JP)</span>
-                                            <span className="fw-semibold">{liveStats.calculatedJp} JP</span>
+                                            <span><i className={`fas ${liveStats.compliance.hasDuration ? "fa-check-circle text-teal" : "fa-times-circle text-danger"} me-1`}></i> Bobot Jam Pelatihan (UU ASN)</span>
+                                            <span className="fw-bold" style={{ color: "#b45309" }}>{liveStats.calculatedJp} JP</span>
                                         </div>
                                         <div className={`acrd-compliance-item ${liveStats.compliance.hasTargetAudience ? "is-valid" : "is-invalid"}`}>
                                             <span><i className={`fas ${liveStats.compliance.hasTargetAudience ? "fa-check-circle text-teal" : "fa-times-circle text-danger"} me-1`}></i> Target Sasaran ASN</span>
@@ -2354,6 +2361,9 @@ function AdminCourseReviewDetail() {
                                             <span><i className={`fas ${liveStats.compliance.hasLearningOutcomes ? "fa-check-circle text-teal" : "fa-times-circle text-danger"} me-1`}></i> Capaian Pembelajaran</span>
                                             <span className="fw-semibold">{liveStats.outcomesCount} Poin</span>
                                         </div>
+                                    </div>
+                                    <div className="mt-2 pt-2 border-top text-muted" style={{ fontSize: "0.68rem" }}>
+                                        <i className="fas fa-scale-balanced text-teal me-1"></i> Standar UU ASN No. 20/2023: 1 JP = 45 menit (target min. 20 JP/tahun).
                                     </div>
                                 </div>
 

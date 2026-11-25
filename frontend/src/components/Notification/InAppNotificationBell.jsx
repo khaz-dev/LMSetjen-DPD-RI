@@ -258,7 +258,11 @@ function InAppNotificationBell() {
 
         if (isInstructorMode) {
             // Navigasi Pengajar
-            if (['Exam Review Needed', 'Course Enrollment Completed', 'Exam Verified', 'Exam Rejected', 'Exam Reset'].includes(noti.type) && courseId) {
+            if (['Course Rejected'].includes(noti.type) && courseId) {
+                navigate(`/instructor/courses/${courseId}/edit/`);
+            } else if (noti.type === 'Course Published' && (noti.course_data?.slug || courseId)) {
+                navigate(`/course-detail/${noti.course_data?.slug || courseId}/`);
+            } else if (['Exam Review Needed', 'Course Enrollment Completed', 'Exam Verified', 'Exam Rejected', 'Exam Reset'].includes(noti.type) && courseId) {
                 navigate(`/instructor/courses/${courseId}/evaluation/`);
             } else if (courseId) {
                 navigate(`/instructor/courses/`);
@@ -396,8 +400,20 @@ function InAppNotificationBell() {
             case 'Course Published':
                 return {
                     icon: 'fas fa-rocket',
-                    badgeClass: 'badge-indigo',
+                    badgeClass: 'badge-emerald',
                     label: 'Kursus Terbit'
+                };
+            case 'Course Rejected':
+                return {
+                    icon: 'fas fa-clipboard-xmark',
+                    badgeClass: 'badge-rose',
+                    label: 'Catatan Revisi'
+                };
+            case 'Course Under Review':
+                return {
+                    icon: 'fas fa-clock-rotate-left',
+                    badgeClass: 'badge-amber',
+                    label: 'Telaah Kursus'
                 };
             case 'Course Enrollment Completed':
                 return {

@@ -9,7 +9,7 @@ import Header from "./Partials/Header";
 import useAxios from "../../utils/useAxios";
 import UserData from "../plugin/UserData";
 import { calculateTotalDuration, parseDurationToSeconds, formatDurationWithJP, formatDuration } from "../../utils/durationUtils";
-import { getImageUrl, getCourseCurriculumSummary } from "../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary, calculateCourseJP } from "../../utils/courseUtils";
 import { useSidebarCollapse } from "./Partials/useSidebarCollapse";
 import { usePageCache } from "../../utils/usePageCache";
 import ActivityDisplay from "../../components/StudentDashboard/ActivityDisplay";
@@ -52,8 +52,9 @@ function Dashboard() {
             let courseDurationWithJP = totalDuration.withJP;
 
             // Fallback if lectures duration is 0 but course model has total_jam_pelatihan (JP)
-            if ((!totalDuration || totalDuration.withJP === "0m 0s (0JP)") && course.course?.total_jam_pelatihan > 0) {
-                const jpSecs = course.course.total_jam_pelatihan * 2700;
+            const resolvedJP = calculateCourseJP(course);
+            if ((!totalDuration || totalDuration.withJP === "0m 0s (0JP)" || totalDuration.withJP === "0m 0s (0 JP)") && resolvedJP > 0) {
+                const jpSecs = resolvedJP * 2700;
                 courseDurationFormatted = formatDuration(jpSecs);
                 courseDurationWithJP = formatDurationWithJP(jpSecs);
             }
@@ -248,8 +249,9 @@ function Dashboard() {
                     courseSecs += parseDurationToSeconds(l.duration);
                 }
             });
-            if (courseSecs === 0 && c.course?.total_jam_pelatihan > 0) {
-                courseSecs = c.course.total_jam_pelatihan * 2700;
+            const cJP = calculateCourseJP(c);
+            if (courseSecs === 0 && cJP > 0) {
+                courseSecs = cJP * 2700;
             }
             totalSeconds += courseSecs;
         });

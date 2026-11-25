@@ -31,10 +31,21 @@ function ContentManagementAdmin() {
         loading: true,
     });
 
-    // Update URL when tab changes
+    // Synchronize activeTab when URL searchParams changes (e.g. from Dashboard Quick Actions or browser history)
     useEffect(() => {
-        setSearchParams({ tab: activeTab });
-    }, [activeTab, setSearchParams]);
+        const tabFromUrl = searchParams.get("tab");
+        const normalizedTab = tabFromUrl === "certificates" ? "certificate" : tabFromUrl;
+        const validTabs = ["courses", "testimonials", "materials", "requests", "certificate"];
+        if (normalizedTab && validTabs.includes(normalizedTab)) {
+            setActiveTab(prev => (prev !== normalizedTab ? normalizedTab : prev));
+        }
+    }, [searchParams]);
+
+    // Handle tab selection with URL update
+    const handleSelectTab = (tabId) => {
+        setActiveTab(tabId);
+        setSearchParams({ tab: tabId });
+    };
 
     // Fetch real live metrics across content management modules once or on manual refresh
     const fetchLiveMetrics = useCallback(async () => {
@@ -236,7 +247,7 @@ function ContentManagementAdmin() {
                                     <button
                                         key={tab.id}
                                         className={`cm-tab-button ${activeTab === tab.id ? "active" : ""}`}
-                                        onClick={() => setActiveTab(tab.id)}
+                                        onClick={() => handleSelectTab(tab.id)}
                                     >
                                         <span className="cm-tab-icon">
                                             <i className={tab.icon}></i>

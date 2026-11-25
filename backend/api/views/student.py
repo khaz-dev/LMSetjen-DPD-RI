@@ -3193,6 +3193,16 @@ class CertificateValidationAPIView(APIView):
                     'details': None
                 }, status=status.HTTP_200_OK)
             
+            # Calculate official Jam Pelatihan (JP)
+            cert_course = certificate.course
+            cert_jp = getattr(cert_course, 'total_jam_pelatihan', None)
+            if not cert_jp or int(cert_jp) <= 0:
+                import math
+                total_secs = sum(it.duration.total_seconds() for it in api_models.VariantItem.objects.filter(variant__course=cert_course) if it.duration)
+                cert_jp = math.ceil(total_secs / 2700) if total_secs > 0 else 2
+            else:
+                cert_jp = int(cert_jp)
+
             # Certificate is valid - return full details
             certificate_details = {
                 'certificate_id': certificate.certificate_id,
@@ -3207,6 +3217,7 @@ class CertificateValidationAPIView(APIView):
                 'issued_date': certificate.created_at.strftime('%B %d, %Y'),
                 'course_level': certificate.course.level,
                 'course_category': certificate.course.category.title if certificate.course.category else 'General',
+                'total_jam_pelatihan': cert_jp,
                 'image_file_url': request.build_absolute_uri(f'/api/v1/student/certificate-image/{certificate.certificate_id}/') if certificate.image_file else None
             }
             

@@ -242,6 +242,13 @@ export const useCourseSubmit = () => {
                 formattedData.target_audience = 'internal';
             }
 
+            // Ensure total_jam_pelatihan is sanitized
+            if ('total_jam_pelatihan' in formattedData) {
+                formattedData.total_jam_pelatihan = formattedData.total_jam_pelatihan !== "" && formattedData.total_jam_pelatihan !== null
+                    ? Number(formattedData.total_jam_pelatihan)
+                    : 0;
+            }
+
             // 🎯 PHASE 4.57: CRITICAL FIX - Always include teacher_course_status for status reset detection
             // Even if not explicitly set, ensure it's present so backend can check it
             if (!('teacher_course_status' in formattedData) && courseData?.teacher_course_status) {

@@ -206,6 +206,9 @@ urlpatterns = [
     path("admin/course-evaluations-summary/", api_views.AdminCourseEvaluationsSummaryAPIView.as_view(), name="admin-course-evaluations-summary"),
     path("admin/course-evaluations-export-excel/", api_views.AdminCourseEvaluationsExportExcelAPIView.as_view(), name="admin-course-evaluations-export-excel"),
     path("admin/reset-exam-attempt/", api_views.AdminResetQuizAttemptAPIView.as_view(), name="admin-reset-exam-attempt"),
+    # ✨ PHASE 5.3: Laporan Resmi Audit Kompetensi Tahunan ASN (Target: 20 JP / Tahun - UU ASN No. 20/2023 & Perka LAN)
+    path("admin/asn-competency-audit/", api_views.AdminASNCompetencyAuditReportAPIView.as_view(), name="admin-asn-competency-audit"),
+    path("admin/asn-competency-audit/export-excel/", api_views.AdminASNCompetencyAuditExportExcelAPIView.as_view(), name="admin-asn-competency-audit-export-excel"),
     
     path("teacher/course/variant-delete/<variant_id>/<teacher_id>/<course_id>/", api_views.CourseVariantDeleteAPIView.as_view()),
     path("teacher/course/variant-item-delete/<variant_id>/<variant_item_id>/<teacher_id>/<course_id>/", api_views.CourseVariantItemDeleteAPIVIew.as_view()),

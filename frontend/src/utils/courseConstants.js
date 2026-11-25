@@ -20,7 +20,8 @@ export const DEFAULT_COURSE_DATA = {
   file: "",
   level: "",
   target_audience: "pegawai",
-  category: ""
+  category: "",
+  total_jam_pelatihan: ""
 };
 
 export const DEFAULT_IMAGE_URL = "/images/placeholders/default-course.svg";

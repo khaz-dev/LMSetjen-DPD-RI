@@ -385,6 +385,7 @@ function CourseCreate() {
             intro_video_source: courseData.intro_video_source || "upload", // ✨ PHASE 4.18: Include video source type
             course_type: courseFormat === "elearning" ? (courseData.course_type || "scorm_12") : "standard",
             learning_module_id: courseFormat === "elearning" ? (courseData.learning_module_id || null) : null,
+            total_jam_pelatihan: courseData.total_jam_pelatihan ? Number(courseData.total_jam_pelatihan) : 0,
         };
 
         try {
@@ -792,7 +793,7 @@ function CourseCreate() {
                                                 />
                                             </div>
 
-                                            <div className="col-md-4">
+                                            <div className="col-md-3">
                                                 <FormField
                                                     ref={categoryRef}
                                                     label="Kategori Kursus"
@@ -811,7 +812,7 @@ function CourseCreate() {
                                                 />
                                             </div>
 
-                                            <div className="col-md-4">
+                                            <div className="col-md-3">
                                                 <FormField
                                                     ref={levelRef}
                                                     label="Tingkat Kesulitan"
@@ -830,7 +831,7 @@ function CourseCreate() {
                                                 />
                                             </div>
 
-                                            <div className="col-md-4">
+                                            <div className="col-md-3">
                                                 <FormField
                                                     label="Target Peserta & Akses"
                                                     name="target_audience"
@@ -841,6 +842,33 @@ function CourseCreate() {
                                                     required
                                                     helpText="Khusus pegawai DPD RI atau umum."
                                                 />
+                                            </div>
+
+                                            <div className="col-md-3">
+                                                <div className="form-group mb-0">
+                                                    <label className="form-label d-flex align-items-center justify-content-between mb-1" style={{ fontSize: "13px", fontWeight: "600", color: "#334155" }}>
+                                                        <span>
+                                                            <i className="fas fa-award text-warning me-1"></i>Bobot JP (ASN)
+                                                        </span>
+                                                        <span className="badge bg-light text-muted border px-1.5 py-0.5" style={{ fontSize: "10px" }}>Opsional</span>
+                                                    </label>
+                                                    <div className="input-group input-group-sm">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            className="form-control"
+                                                            name="total_jam_pelatihan"
+                                                            value={courseData.total_jam_pelatihan || ""}
+                                                            onChange={handleCourseInputChange}
+                                                            placeholder="Otomatis"
+                                                            style={{ fontSize: "13px" }}
+                                                        />
+                                                        <span className="input-group-text bg-light text-muted fw-semibold">JP</span>
+                                                    </div>
+                                                    <div className="form-text text-muted" style={{ fontSize: "11px", marginTop: "4px" }}>
+                                                        UU ASN No. 20/2023. Jika kosong, dihitung otomatis dari materi.
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

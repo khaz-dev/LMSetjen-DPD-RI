@@ -82,6 +82,8 @@ NOTI_TYPE = (
     ("New Course Question", "New Course Question"),
     ("Draft", "Draft"),
     ("Course Published", "Course Published"),
+    ("Course Rejected", "Course Rejected"),
+    ("Course Under Review", "Course Under Review"),
     ("Course Enrollment Completed", "Course Enrollment Completed"),
     ("Exam Verified", "Exam Verified"),
     ("Exam Reset", "Exam Reset"),
@@ -294,6 +296,14 @@ class Course(models.Model):
         related_name='assigned_courses',
         verbose_name="Modul E-Learning Utama"
     )
+    # ASN Jam Pelatihan (JP) - UU No. 20 Tahun 2023 Pasal 49
+    total_jam_pelatihan = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        null=True,
+        verbose_name="Total Jam Pelatihan (JP)",
+        help_text="Bobot Jam Pelatihan (JP) resmi ASN (1 JP = 45 menit). Jika 0 atau kosong, dihitung otomatis dari durasi kurikulum."
+    )
 
 
     class Meta:
@@ -398,6 +408,7 @@ class Course(models.Model):
                 
                 # Meta
                 featured=self.featured,
+                total_jam_pelatihan=self.total_jam_pelatihan,
             )
             
             # Copy all course content
@@ -436,6 +447,7 @@ class Course(models.Model):
                 
                 # Meta
                 featured=self.featured,
+                total_jam_pelatihan=self.total_jam_pelatihan,
             )
             
             # Copy all course content
@@ -551,6 +563,7 @@ class Course(models.Model):
             target_course.image = self.image
             target_course.file = self.file
             target_course.featured = self.featured
+            target_course.total_jam_pelatihan = self.total_jam_pelatihan
             # ✨ PHASE 7.5g FIX: Copy category (was missing, causing N/A on published preview)
             target_course.category = self.category
             target_course.save()

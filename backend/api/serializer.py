@@ -1065,15 +1065,35 @@ class CertificateSerializer(serializers.ModelSerializer):
     image_file_url = serializers.SerializerMethodField(read_only=True)  # ✨ PHASE 4.221: Image URL for display
     pdf_file_url = serializers.SerializerMethodField(read_only=True)  # ✨ PHASE 4.220: PDF file URL (kept for download)
     formatted_certificate_id = serializers.SerializerMethodField(read_only=True)  # ✨ PHASE 4.227: Professional certificate ID format
+    total_jam_pelatihan = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = [
             'id', 'course', 'user', 'enrollment', 'certificate_id', 'formatted_certificate_id',
             'validation_token', 'is_valid', 'integrity_status', 'date', 'course_title', 'course_slug', 'course_level',
             'course_category', 'course_image', 'student_name', 'student_nip', 'student_position', 'student_organization_unit',
-            'instructor_name', 'qr_code_url', 'image_file_url', 'pdf_file_url', 'created_at', 'updated_at'
+            'instructor_name', 'qr_code_url', 'image_file_url', 'pdf_file_url', 'total_jam_pelatihan', 'created_at', 'updated_at'
         ]
         model = api_models.Certificate
+
+    def get_total_jam_pelatihan(self, obj):
+        if not obj or not obj.course:
+            return 2
+        course = obj.course
+        explicit_jp = getattr(course, 'total_jam_pelatihan', None)
+        if explicit_jp is not None and int(explicit_jp) > 0:
+            return int(explicit_jp)
+        import math
+        total_seconds = 0
+        curriculum = course.curriculum.all()
+        for variant in curriculum:
+            for item in variant.variant_items.all():
+                if item.duration:
+                    total_seconds += int(item.duration.total_seconds())
+        if total_seconds > 0:
+            return math.ceil(total_seconds / 2700)
+        has_items = api_models.VariantItem.objects.filter(variant__course=course).exists()
+        return 1 if has_items else 1
 
     def get_student_position(self, obj):
         try:
@@ -2026,11 +2046,16 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_total_jam_pelatihan(self, obj):
         """
         ✨ PHASE 4.228: Calculate total JP (Jam Pelajaran) from all course lectures
-        1 JP = 45 minutes = 2700 seconds
+        1 JP = 45 minutes = 2700 seconds (UU ASN No. 20/2023 Pasal 49)
         Formula: Math.ceil(totalSeconds / 2700)
         
         Returns the total hours of training (JP) for the course
         """
+        # Prioritaskan konfigurasi eksplisit total_jam_pelatihan jika tersedia
+        explicit_jp = getattr(obj, 'total_jam_pelatihan', None)
+        if explicit_jp is not None and int(explicit_jp) > 0:
+            return int(explicit_jp)
+
         import math
         total_seconds = 0
         
@@ -2145,6 +2170,7 @@ class CourseEditSerializer(serializers.ModelSerializer):
     approved_by_detail = serializers.SerializerMethodField()
     published_version = serializers.SerializerMethodField()  # ✨ PHASE 4.75: Include published version data
     qa_count = serializers.SerializerMethodField()  # ✨ PHASE 7.13: Add QA count for course detail pages
+    total_jam_pelatihan = serializers.SerializerMethodField()
     # ✨ PHASE 7.5 FIX: Add tags field - convert to full objects in to_representation()
     tags = serializers.PrimaryKeyRelatedField(
         queryset=api_models.Tag.objects.all(),
@@ -2157,9 +2183,24 @@ class CourseEditSerializer(serializers.ModelSerializer):
         # ✨ PHASE 7.13: Added "qa_count" to CourseEditSerializer
         # ✨ PHASE 7.5 FIX: Added "tags" to return saved tags in edit form
         # ✨ PHASE 7.6 FIX: Added "target_audience" and "course_type" for live course review
-        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "course_type", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "games", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approved_by_detail", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
+        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "course_type", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "games", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approved_by_detail", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count", "total_jam_pelatihan"]
         model = api_models.Course
     
+    def get_total_jam_pelatihan(self, obj):
+        explicit_jp = getattr(obj, 'total_jam_pelatihan', None)
+        if explicit_jp is not None and int(explicit_jp) > 0:
+            return int(explicit_jp)
+        import math
+        total_seconds = 0
+        curriculum = obj.curriculum.all()
+        for variant in curriculum:
+            for item in variant.variant_items.all():
+                if item.duration:
+                    total_seconds += int(item.duration.total_seconds())
+        if total_seconds > 0:
+            return math.ceil(total_seconds / 2700)
+        return 0
+
     def get_approved_by_name(self, obj):
         detail = get_approver_detail_for_course(obj)
         return detail["full_name"] if detail else None

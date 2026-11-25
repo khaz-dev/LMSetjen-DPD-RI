@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import apiInstance from "../../utils/axios";
@@ -120,6 +120,7 @@ function AdminCourseEdit() {
     const [level, setLevel] = useState("Beginner");
     const [language, setLanguage] = useState("Bahasa Indonesia");
     const [courseDuration, setCourseDuration] = useState("");
+    const [totalJamPelatihan, setTotalJamPelatihan] = useState("");
     const [targetAudience, setTargetAudience] = useState("internal");
     const [platformStatus, setPlatformStatus] = useState("Published");
 
@@ -386,6 +387,7 @@ function AdminCourseEdit() {
     const [isImporting, setIsImporting] = useState(false);
     const [importError, setImportError] = useState("");
     const [isDragOver, setIsDragOver] = useState(false);
+    const [showQualityDetails, setShowQualityDetails] = useState(false);
 
     // Ensure body has 0px top padding so the unified sticky header docks flush to the very top (0px gap above wrapper)
     useEffect(() => {
@@ -415,6 +417,7 @@ function AdminCourseEdit() {
             setLevel(c.level || "Beginner");
             setLanguage(c.language || "Bahasa Indonesia");
             setCourseDuration(c.course_duration || "");
+            setTotalJamPelatihan(c.total_jam_pelatihan !== undefined && c.total_jam_pelatihan !== null ? c.total_jam_pelatihan : "");
             setTargetAudience(c.target_audience || "internal");
             setPlatformStatus(c.platform_status || "Published");
             setImage(c.image || "");
@@ -1590,6 +1593,66 @@ function AdminCourseEdit() {
         return sum + (sec.items || []).reduce((itemSum, itm) => itemSum + parseDurationToSeconds(itm.duration), 0);
     }, 0);
 
+    // Live Jam Pelatihan (JP) based on curriculum duration (1 JP = 45 menit / 2700 detik - UU ASN No. 20/2023)
+    const liveJamPelatihan = useMemo(() => {
+        if (totalCurriculumSeconds > 0) {
+            return Math.max(1, Math.ceil(totalCurriculumSeconds / 2700));
+        }
+        return Number(course?.total_jam_pelatihan) || 0;
+    }, [totalCurriculumSeconds, course?.total_jam_pelatihan]);
+
+    // Live Curriculum Quality & Completeness Validator
+    const curriculumIssues = useMemo(() => {
+        const issues = [];
+        if (!curriculum || curriculum.length === 0) {
+            issues.push({
+                type: "empty_curriculum",
+                level: "danger",
+                message: "Kurikulum belum memiliki bagian/bab materi sama sekali."
+            });
+            return issues;
+        }
+        curriculum.forEach((sec, sIdx) => {
+            const items = sec.items || sec.variant_items || [];
+            if (items.length === 0) {
+                issues.push({
+                    type: "empty_section",
+                    level: "warning",
+                    sectionIndex: sIdx,
+                    sectionTitle: sec.variant_title,
+                    message: `Bagian ${sIdx + 1} ("${sec.variant_title}") belum memiliki materi pembelajaran.`
+                });
+            }
+            items.forEach((itm, iIdx) => {
+                const isQuiz = itm.content_type === "quiz";
+                const hasFile = Boolean(itm.file || itm.scorm_file || itm.presentation_file);
+                const durStr = String(itm.duration || "").trim();
+                const hasDuration = Boolean(durStr && durStr !== "00:00:00" && durStr !== "0" && durStr !== "0:00");
+                if (!isQuiz && !hasFile) {
+                    issues.push({
+                        type: "missing_media",
+                        level: "danger",
+                        sectionIndex: sIdx,
+                        itemIndex: iIdx,
+                        itemTitle: itm.title || `Materi ${iIdx + 1}`,
+                        message: `Materi "${itm.title || `Materi ${iIdx + 1}`}" di Bagian ${sIdx + 1} belum memiliki media (video/dokumen).`
+                    });
+                }
+                if (!isQuiz && !hasDuration) {
+                    issues.push({
+                        type: "missing_duration",
+                        level: "warning",
+                        sectionIndex: sIdx,
+                        itemIndex: iIdx,
+                        itemTitle: itm.title || `Materi ${iIdx + 1}`,
+                        message: `Materi "${itm.title || `Materi ${iIdx + 1}`}" di Bagian ${sIdx + 1} belum memiliki durasi (kalkulasi JP belum optimal).`
+                    });
+                }
+            });
+        });
+        return issues;
+    }, [curriculum]);
+
     const addSection = () => {
         setCurriculum(prev => [
             ...prev,
@@ -1989,6 +2052,7 @@ function AdminCourseEdit() {
                 level,
                 language,
                 course_duration: courseDuration,
+                total_jam_pelatihan: totalJamPelatihan !== "" ? Number(totalJamPelatihan) : (liveJamPelatihan || 0),
                 target_audience: targetAudience,
                 platform_status: platformStatus,
                 image,
@@ -2041,6 +2105,9 @@ function AdminCourseEdit() {
 
                 if (response.data.course) {
                     setCourse(response.data.course);
+                    if (response.data.course.total_jam_pelatihan !== undefined && response.data.course.total_jam_pelatihan !== null) {
+                        setTotalJamPelatihan(response.data.course.total_jam_pelatihan);
+                    }
                     if (Array.isArray(response.data.course.curriculum)) {
                         setCurriculum(response.data.course.curriculum.map((sec, sIdx) => ({
                             variant_id: sec.variant_id,
@@ -2150,11 +2217,10 @@ function AdminCourseEdit() {
                                 return (
                                     <div key={cIdx} className="col-md-6">
                                         <div
-                                            className={`p-1.5 px-2 rounded-2 border d-flex align-items-center gap-2 transition-all ${
-                                                isChoiceCorrect
-                                                    ? "bg-teal-subtle border-teal text-teal shadow-xs"
-                                                    : "bg-white"
-                                            }`}
+                                            className={`p-1.5 px-2 rounded-2 border d-flex align-items-center gap-2 transition-all ${isChoiceCorrect
+                                                ? "bg-teal-subtle border-teal text-teal shadow-xs"
+                                                : "bg-white"
+                                                }`}
                                             style={{
                                                 borderColor: isChoiceCorrect ? "#0d9488" : "#e2e8f0",
                                                 backgroundColor: isChoiceCorrect ? "rgba(13, 148, 136, 0.08)" : "#ffffff"
@@ -2178,9 +2244,8 @@ function AdminCourseEdit() {
                                                 title="Tandai sebagai jawaban benar"
                                             />
                                             <span
-                                                className={`badge fw-bold ${
-                                                    isChoiceCorrect ? "bg-teal text-white" : "bg-light text-secondary border"
-                                                }`}
+                                                className={`badge fw-bold ${isChoiceCorrect ? "bg-teal text-white" : "bg-light text-secondary border"
+                                                    }`}
                                                 style={{
                                                     width: "22px",
                                                     height: "22px",
@@ -2287,10 +2352,10 @@ function AdminCourseEdit() {
 
                 <div className="ace-topbar-sticky">
                     <div className="ace-topbar-inner container-fluid px-3 px-xl-4 footer-container">
-                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                        <div className="ace-topbar-left d-flex align-items-center gap-2 flex-nowrap">
                             <button
                                 type="button"
-                                className="ace-btn-secondary"
+                                className="ace-btn-secondary flex-shrink-0"
                                 onClick={() => navigate("/admin/content-management/?tab=courses")}
                                 title="Kembali ke Daftar Review Kursus"
                             >
@@ -2298,8 +2363,8 @@ function AdminCourseEdit() {
                                 <span className="d-none d-sm-inline">Kembali</span>
                             </button>
 
-                            <nav aria-label="breadcrumb">
-                                <ol className="ace-breadcrumb">
+                            <nav aria-label="breadcrumb" className="flex-shrink-1 text-truncate">
+                                <ol className="ace-breadcrumb flex-nowrap">
                                     <li className="breadcrumb-item">
                                         <Link to="/admin/content-management/?tab=courses">Content Management</Link>
                                     </li>
@@ -2314,13 +2379,13 @@ function AdminCourseEdit() {
                                 </ol>
                             </nav>
 
-                            <span className="ace-badge-live" title="Perubahan disimpan langsung tanpa siklus pengajuan review ulang">
+                            <span className="ace-badge-live flex-shrink-0" title="Perubahan disimpan langsung tanpa siklus pengajuan review ulang">
                                 <i className="fas fa-bolt text-warning"></i>
                                 <span>Admin Live Editor</span>
                             </span>
 
                             <span
-                                className="ace-badge-status"
+                                className="ace-badge-status flex-shrink-0"
                                 style={{
                                     backgroundColor: isLive ? "#dcfce7" : "#fef3c7",
                                     color: isLive ? "#15803d" : "#b45309",
@@ -2330,25 +2395,44 @@ function AdminCourseEdit() {
                                 <i className={`fas ${isLive ? "fa-check-circle" : "fa-clock"}`}></i>
                                 <span>{course?.platform_status || "Draft"}</span>
                             </span>
+
+                            {/* JP Badge (Standar UU ASN No. 20/2023) */}
+                            <span
+                                className="ace-badge-jp flex-shrink-0"
+                                title="Estimasi Total Jam Pelatihan terhitung dari kurikulum (1 JP = 45 menit / UU ASN)"
+                            >
+                                <i className="fas fa-award text-amber"></i>
+                                <span>{liveJamPelatihan} JP</span>
+                            </span>
                         </div>
 
-                        <div className="d-flex align-items-center gap-2">
+                        <div className="ace-topbar-actions d-flex align-items-center gap-2 flex-nowrap ms-auto flex-shrink-0">
+                            {/* Pintasan Cepat ke Halaman Telaah Kursus */}
+                            <button
+                                type="button"
+                                className="ace-btn-secondary flex-shrink-0"
+                                onClick={() => navigate(`/admin/review-course/${course_id}/`)}
+                                title="Buka Halaman Telaah Lengkap Kursus"
+                            >
+                                <i className="fas fa-clipboard-check text-teal"></i>
+                                <span>Telaah Kursus</span>
+                            </button>
                             {isLive && publicSlug && (
                                 <a
                                     href={`/course-detail/${publicSlug}/`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="ace-btn-secondary"
+                                    className="ace-btn-secondary flex-shrink-0"
                                     title="Buka Halaman Publik Kursus (Tab Baru)"
                                 >
                                     <i className="fas fa-external-link-alt text-teal"></i>
-                                    <span className="d-none d-md-inline">Lihat Publik</span>
+                                    <span>Lihat Publik</span>
                                 </a>
                             )}
 
                             <button
                                 type="button"
-                                className="ace-btn-save"
+                                className="ace-btn-save flex-shrink-0"
                                 onClick={handleDirectSave}
                                 disabled={saving}
                             >
@@ -2499,9 +2583,9 @@ function AdminCourseEdit() {
                                             </div>
                                         </div>
 
-                                        {/* Baris 2: Bahasa, Estimasi Durasi & Sasaran Akses (3 Kolom Kompak) */}
+                                        {/* Baris 2: Bahasa, Bobot JP (ASN), Estimasi Durasi Teks & Sasaran Akses */}
                                         <div className="row g-2 mb-2">
-                                            <div className="col-md-4">
+                                            <div className="col-md-3">
                                                 <label className="ace-form-label">Bahasa Pengantar</label>
                                                 <input
                                                     type="text"
@@ -2511,8 +2595,60 @@ function AdminCourseEdit() {
                                                     placeholder="Contoh: Bahasa Indonesia"
                                                 />
                                             </div>
-                                            <div className="col-md-4">
-                                                <label className="ace-form-label">Estimasi Durasi Belajar</label>
+                                            <div className="col-md-3">
+                                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                                    <label className="ace-form-label mb-0 text-teal fw-semibold">
+                                                        <i className="fas fa-award text-warning me-1"></i>Bobot JP (ASN)
+                                                    </label>
+                                                    {liveJamPelatihan > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-link btn-sm p-0 text-teal text-decoration-none fw-semibold"
+                                                            style={{ fontSize: "0.72rem" }}
+                                                            onClick={() => {
+                                                                setTotalJamPelatihan(liveJamPelatihan);
+                                                                if (!courseDuration) {
+                                                                    setCourseDuration(`${liveJamPelatihan} JP (${formatSecondsToDisplay(totalCurriculumSeconds)})`);
+                                                                }
+                                                            }}
+                                                            title="Terapkan hitungan kurikulum (1 JP = 45 menit)"
+                                                        >
+                                                            <i className="fas fa-wand-magic-sparkles me-1"></i>
+                                                            Set {liveJamPelatihan} JP
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <div className="input-group input-group-sm">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        className="ace-input form-control form-control-sm"
+                                                        value={totalJamPelatihan}
+                                                        onChange={(e) => setTotalJamPelatihan(e.target.value === "" ? "" : Number(e.target.value))}
+                                                        placeholder={String(liveJamPelatihan || 0)}
+                                                    />
+                                                    <span className="input-group-text bg-light text-muted small fw-semibold px-2">JP</span>
+                                                </div>
+                                                <div className="form-text text-muted" style={{ fontSize: "0.68rem", marginTop: "2px" }}>
+                                                    UU ASN No. 20/2023. Hitungan: <strong>{liveJamPelatihan} JP</strong>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-3">
+                                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                                    <label className="ace-form-label mb-0">Label Durasi Teks</label>
+                                                    {liveJamPelatihan > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-link btn-sm p-0 text-teal text-decoration-none fw-semibold"
+                                                            style={{ fontSize: "0.72rem" }}
+                                                            onClick={() => setCourseDuration(`${liveJamPelatihan} JP (${formatSecondsToDisplay(totalCurriculumSeconds)})`)}
+                                                            title="Otomatis sinkronkan durasi dari total durasi kurikulum"
+                                                        >
+                                                            <i className="fas fa-wand-magic-sparkles me-1"></i>
+                                                            Isi Teks
+                                                        </button>
+                                                    )}
+                                                </div>
                                                 <input
                                                     type="text"
                                                     className="ace-input"
@@ -2520,8 +2656,12 @@ function AdminCourseEdit() {
                                                     onChange={(e) => setCourseDuration(e.target.value)}
                                                     placeholder="Contoh: 4 Jam / 8 JP"
                                                 />
+                                                <div className="form-text text-muted" style={{ fontSize: "0.68rem", marginTop: "2px" }}>
+                                                    <i className="fas fa-clock me-1 text-teal"></i>
+                                                    Total kurikulum: <strong>{formatSecondsToDisplay(totalCurriculumSeconds)}</strong>
+                                                </div>
                                             </div>
-                                            <div className="col-md-4">
+                                            <div className="col-md-3">
                                                 <label className="ace-form-label">Sasaran Akses Peserta</label>
                                                 <select
                                                     className="ace-select"
@@ -2531,6 +2671,9 @@ function AdminCourseEdit() {
                                                     <option value="internal">Pegawai Internal DPD RI</option>
                                                     <option value="public">Publik / Umum</option>
                                                 </select>
+                                                <div className="form-text text-muted" style={{ fontSize: "0.68rem", marginTop: "2px" }}>
+                                                    Lingkup hak akses pengguna
+                                                </div>
                                             </div>
                                         </div>
 
@@ -2984,6 +3127,10 @@ function AdminCourseEdit() {
                                         <i className="fas fa-clock text-warning"></i>
                                         <span>Estimasi Durasi: <strong>{formatSecondsToDisplay(totalCurriculumSeconds)}</strong></span>
                                     </div>
+                                    <div className="ace-curriculum-stat-chip ace-stat-chip-jp">
+                                        <i className="fas fa-award text-amber"></i>
+                                        <span>Jam Pelatihan: <strong>{liveJamPelatihan} JP</strong></span>
+                                    </div>
                                     <div className="ace-curriculum-stat-chip">
                                         <i className="fas fa-unlock-alt text-success"></i>
                                         <span>Pratinjau Gratis: <strong>{totalFreePreviewsCount}</strong></span>
@@ -3011,6 +3158,50 @@ function AdminCourseEdit() {
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Quality & Completeness Validation Banner */}
+                            {curriculumIssues.length === 0 ? (
+                                <div className="ace-curriculum-quality-banner ace-quality-valid mb-3">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <i className="fas fa-check-circle text-success fs-6"></i>
+                                        <span className="small">
+                                            <strong>Struktur Kurikulum Lengkap & Valid:</strong> Seluruh {curriculum.length} bagian dan {totalLecturesCount} materi telah memiliki media dan durasi yang terisi ({liveJamPelatihan} JP).
+                                        </span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="ace-curriculum-quality-banner ace-quality-warning mb-3">
+                                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <i className="fas fa-triangle-exclamation text-amber fs-6"></i>
+                                            <span className="small">
+                                                <strong>Catatan Kelengkapan Kurikulum:</strong> Ditemukan <strong>{curriculumIssues.length}</strong> catatan pada materi/bagian yang perlu perhatian.
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-secondary py-0 px-2"
+                                            style={{ fontSize: "0.75rem" }}
+                                            onClick={() => setShowQualityDetails(prev => !prev)}
+                                        >
+                                            {showQualityDetails ? "Sembunyikan Rincian" : "Lihat Rincian"}
+                                            <i className={`fas fa-chevron-${showQualityDetails ? "up" : "down"} ms-1`}></i>
+                                        </button>
+                                    </div>
+                                    {showQualityDetails && (
+                                        <div className="ace-quality-details-list mt-2 pt-2 border-top">
+                                            {curriculumIssues.map((issue, idx) => (
+                                                <div key={idx} className="ace-quality-issue-row d-flex align-items-center gap-2 py-1">
+                                                    <span className={`badge ${issue.level === "danger" ? "bg-danger" : "bg-warning text-dark"}`} style={{ fontSize: "0.68rem" }}>
+                                                        {issue.level === "danger" ? "Penting" : "Saran"}
+                                                    </span>
+                                                    <span className="small text-muted">{issue.message}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* 2. CURRICULUM SECTIONS & LECTURES LIST */}
                             {curriculum.length === 0 ? (
@@ -5226,19 +5417,19 @@ function AdminCourseEdit() {
 
                                             {course?.approved_by_detail || course?.approved_by_name ? (
                                                 <div className="d-flex align-items-center gap-3">
-                                                    <div 
+                                                    <div
                                                         className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm flex-shrink-0"
-                                                        style={{ 
-                                                            width: "44px", 
-                                                            height: "44px", 
+                                                        style={{
+                                                            width: "44px",
+                                                            height: "44px",
                                                             backgroundColor: "#0d9488",
-                                                            overflow: "hidden" 
+                                                            overflow: "hidden"
                                                         }}
                                                     >
                                                         {course?.approved_by_detail?.image ? (
-                                                            <img 
-                                                                src={getImageUrl(course.approved_by_detail.image)} 
-                                                                alt={course.approved_by_detail.full_name} 
+                                                            <img
+                                                                src={getImageUrl(course.approved_by_detail.image)}
+                                                                alt={course.approved_by_detail.full_name}
                                                                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
                                                                 onError={(e) => { e.target.style.display = 'none'; }}
                                                             />
@@ -5295,9 +5486,9 @@ function AdminCourseEdit() {
                                                     <td>
                                                         <code>{course?.slug || "-"}</code>
                                                         {course?.slug && (
-                                                            <a 
-                                                                href={`/course-detail/${course.slug}/`} 
-                                                                target="_blank" 
+                                                            <a
+                                                                href={`/course-detail/${course.slug}/`}
+                                                                target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="ms-2 text-teal small text-decoration-none"
                                                                 title="Buka halaman publik kursus di tab baru"

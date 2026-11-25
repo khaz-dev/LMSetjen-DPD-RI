@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import apiInstance from "../../../utils/axios";
 import Toast from "../../plugin/Toast";
-import { getImageUrl, getCourseCurriculumSummary } from "../../../utils/courseUtils";
+import { getImageUrl, getCourseCurriculumSummary, calculateCourseJP } from "../../../utils/courseUtils";
 
 /**
  * Course Review Tab Component (Redesigned Compact & Live)
@@ -529,7 +529,7 @@ function CourseReviewTab({ onCountsUpdated }) {
                 const submissionType = c.platform_status === "Review" 
                     ? (c.rejection_reason ? "Revisi Diajukan Ulang" : "Pengajuan Baru")
                     : c.platform_status;
-                const jpStr = c.total_jam_pelatihan ? `${c.total_jam_pelatihan} JP` : "Microlearning";
+                const jpStr = `${calculateCourseJP(c)} JP`;
 
                 return [
                     idx + 1,
@@ -976,7 +976,7 @@ function CourseReviewTab({ onCountsUpdated }) {
                 const submissionType = c.platform_status === "Review" 
                     ? (c.rejection_reason ? "Revisi Diajukan Ulang" : "Pengajuan Baru")
                     : c.platform_status;
-                const jpStr = c.total_jam_pelatihan ? `${c.total_jam_pelatihan} JP` : "Microlearning";
+                const jpStr = `${calculateCourseJP(c)} JP`;
 
                 return [
                     idx + 1,
@@ -1490,10 +1490,10 @@ function CourseReviewTab({ onCountsUpdated }) {
                                         {/* JP Badge */}
                                         <span
                                             className="course-card-badge-jp"
-                                            title={`Bobot Pelatihan: ${course.total_jam_pelatihan || 0} Jam Pelatihan (1 JP = 45 menit)`}
+                                            title={`Bobot Pelatihan: ${calculateCourseJP(course)} Jam Pelatihan (1 JP = 45 menit / UU No. 20/2023)`}
                                         >
                                             <i className="fas fa-business-time"></i>
-                                            {course.total_jam_pelatihan ? `${course.total_jam_pelatihan} JP` : "Micro"}
+                                            {calculateCourseJP(course)} JP
                                         </span>
                                     </div>
 
@@ -1554,9 +1554,9 @@ function CourseReviewTab({ onCountsUpdated }) {
 
                                         {/* Micro Metrics Bar */}
                                         <div className="course-card-metrics">
-                                            <div className="course-card-metric-item" title="Bobot Jam Pelatihan (1 JP = 45 menit)">
+                                            <div className="course-card-metric-item" title={`Bobot Jam Pelatihan: ${calculateCourseJP(course)} JP (1 JP = 45 menit / UU No. 20/2023)`}>
                                                 <i className="fas fa-award text-teal" style={{ color: "#0d9488" }}></i>
-                                                <strong style={{ color: "#0f766e" }}>{course.total_jam_pelatihan ? `${course.total_jam_pelatihan} JP` : "- JP"}</strong>
+                                                <strong style={{ color: "#0f766e" }}>{calculateCourseJP(course)} JP</strong>
                                             </div>
                                             <div className="course-card-metric-item" title="Jumlah Bagian Kurikulum">
                                                 <i className="fas fa-layer-group"></i>
@@ -1578,10 +1578,10 @@ function CourseReviewTab({ onCountsUpdated }) {
                                                 type="button"
                                                 className="btn-review-primary"
                                                 onClick={() => handleViewDetails(course)}
-                                                title="Lihat rincian materi, kuis, dan evaluasi kelayakan terbit (Halaman Penuh)"
+                                                title="Lihat rincian materi, kuis, dan evaluasi kelayakan terbit (Halaman Telaah Lengkap)"
                                             >
                                                 <i className="fas fa-clipboard-check"></i>
-                                                <span>Tinjau</span>
+                                                <span>{course.platform_status === "Review" ? (course.rejection_reason ? "Telaah Revisi" : "Telaah Kursus") : "Tinjau"}</span>
                                             </button>
 
                                             {/* Quick Action: Preview Drawer */}
@@ -1760,10 +1760,10 @@ function CourseReviewTab({ onCountsUpdated }) {
                                                 <span
                                                     className="badge border align-self-start"
                                                     style={{ fontSize: "0.68rem", color: "#0d9488", borderColor: "#ccfbf1", backgroundColor: "#f0fdfa" }}
-                                                    title={`Bobot Diklat: ${course.total_jam_pelatihan || 0} Jam Pelatihan`}
+                                                    title={`Bobot Diklat: ${calculateCourseJP(course)} Jam Pelatihan (1 JP = 45 menit / UU No. 20/2023)`}
                                                 >
                                                     <i className="fas fa-business-time me-1"></i>
-                                                    {course.total_jam_pelatihan ? `${course.total_jam_pelatihan} JP` : "Micro"}
+                                                    {calculateCourseJP(course)} JP
                                                 </span>
                                             </div>
                                         </td>
@@ -1842,13 +1842,20 @@ function CourseReviewTab({ onCountsUpdated }) {
                                             <div className="d-flex align-items-center justify-content-end gap-1">
                                                 <button
                                                     type="button"
-                                                    className="btn btn-sm btn-teal py-1 px-2 d-inline-flex align-items-center gap-1 shadow-sm"
-                                                    style={{ fontSize: "0.78rem", fontWeight: 600, backgroundColor: "#0d9488", color: "#ffffff", borderColor: "#0d9488", borderRadius: "6px" }}
+                                                    className="btn btn-sm py-1 px-2 d-inline-flex align-items-center gap-1 shadow-sm"
+                                                    style={{
+                                                        fontSize: "0.78rem",
+                                                        fontWeight: 600,
+                                                        backgroundColor: course.platform_status === "Review" ? (course.rejection_reason ? "#0f766e" : "#0d9488") : "#002B49",
+                                                        color: "#ffffff",
+                                                        borderColor: course.platform_status === "Review" ? "#0d9488" : "#002B49",
+                                                        borderRadius: "6px"
+                                                    }}
                                                     onClick={() => handleViewDetails(course)}
-                                                    title="Tinjau Detail & Kurikulum Kursus (Halaman Penuh)"
+                                                    title="Tinjau Detail & Kurikulum Kursus (Halaman Telaah Lengkap)"
                                                 >
                                                     <i className="fas fa-clipboard-check"></i>
-                                                    <span>Tinjau</span>
+                                                    <span>{course.platform_status === "Review" ? (course.rejection_reason ? "Telaah Revisi" : "Telaah Kursus") : "Tinjau"}</span>
                                                 </button>
 
                                                 {/* Quick Action: Preview Drawer */}
@@ -2008,7 +2015,7 @@ function CourseReviewTab({ onCountsUpdated }) {
                                         </span>
                                         <span className="badge bg-teal text-white shadow-xs" style={{ backgroundColor: "#0d9488" }}>
                                             <i className="fas fa-business-time me-1"></i>
-                                            {previewCourse.total_jam_pelatihan ? `${previewCourse.total_jam_pelatihan} JP` : "Microlearning"}
+                                            {calculateCourseJP(previewCourse)} JP
                                         </span>
                                     </div>
                                 </div>
@@ -2066,9 +2073,9 @@ function CourseReviewTab({ onCountsUpdated }) {
                                                 <div className="col-3">
                                                     <div className="p-2 text-center rounded border bg-white shadow-xs">
                                                         <div className="fw-bold text-teal" style={{ fontSize: "1.05rem", color: "#0d9488" }}>
-                                                            {previewCourse.total_jam_pelatihan ? `${previewCourse.total_jam_pelatihan} JP` : "-"}
+                                                            {calculateCourseJP(previewCourse)} JP
                                                         </div>
-                                                        <div className="text-muted" style={{ fontSize: "0.68rem" }}>Bobot Diklat</div>
+                                                        <div className="text-muted" style={{ fontSize: "0.68rem" }}>Bobot Diklat (UU ASN)</div>
                                                     </div>
                                                 </div>
                                                 <div className="col-3">

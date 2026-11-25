@@ -53,6 +53,7 @@ export const DEFAULT_COURSE_DATA = {
     level: '',
     target_audience: 'pegawai',
     category: '',
+    total_jam_pelatihan: '',
     status: 'Draft'
 };
 

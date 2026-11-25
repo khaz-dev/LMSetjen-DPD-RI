@@ -470,3 +470,73 @@ export const getFeatureIconDisplay = (iconValue) => {
 
     return null;
 };
+
+/**
+ * Standard calculation for Jam Pelatihan (JP) based on UU ASN No. 20/2023
+ * 1 JP = 45 menit (2700 detik)
+ * Hak Pengembangan Kompetensi ASN: minimal 20 JP / tahun (Pasal 49)
+ *
+ * @param {object} courseItem - Course data object
+ * @returns {number} Number of JP (minimum 1 JP)
+ */
+export const calculateCourseJP = (courseItem) => {
+    if (!courseItem) return 1;
+
+    // 1. Explicitly configured total_jam_pelatihan
+    if (courseItem.total_jam_pelatihan && Number(courseItem.total_jam_pelatihan) > 0) {
+        return Number(courseItem.total_jam_pelatihan);
+    }
+
+    let totalSeconds = 0;
+
+    // 2. Calculate from curriculum sections & items
+    if (Array.isArray(courseItem.curriculum)) {
+        courseItem.curriculum.forEach((section) => {
+            const items = section.variant_items || section.items || [];
+            items.forEach((it) => {
+                const dur = it.duration_seconds || it.duration || it.content_duration;
+                if (dur) {
+                    if (typeof dur === "number") {
+                        totalSeconds += dur;
+                    } else if (typeof dur === "string") {
+                        const parts = dur.split(":").map(Number);
+                        if (parts.length === 3) totalSeconds += parts[0] * 3600 + parts[1] * 60 + parts[2];
+                        else if (parts.length === 2) totalSeconds += parts[0] * 60 + parts[1];
+                        else totalSeconds += Number(dur) || 0;
+                    }
+                }
+            });
+        });
+    }
+
+    // 3. Calculate from lectures
+    if (Array.isArray(courseItem.lectures)) {
+        courseItem.lectures.forEach((lec) => {
+            const dur = lec.duration_seconds || lec.content_duration || lec.duration;
+            if (dur) {
+                if (typeof dur === "number") {
+                    totalSeconds += dur;
+                } else if (typeof dur === "string") {
+                    const parts = dur.split(":").map(Number);
+                    if (parts.length === 3) totalSeconds += parts[0] * 3600 + parts[1] * 60 + parts[2];
+                    else if (parts.length === 2) totalSeconds += parts[0] * 60 + parts[1];
+                    else totalSeconds += Number(dur) || 0;
+                }
+            }
+        });
+    }
+
+    // 4. Return converted JP (1 JP = 45 minutes / 2700 seconds)
+    if (totalSeconds > 0) {
+        return Math.max(1, Math.ceil(totalSeconds / 2700));
+    }
+
+    // 5. Fallback based on lesson count (average ~20-30 min per lesson -> ~4 lessons = 1-2 JP)
+    const summary = getCourseCurriculumSummary(courseItem);
+    if (summary.lessonsCount > 0) {
+        return Math.max(1, Math.ceil(summary.lessonsCount / 4));
+    }
+
+    return 1;
+};
+
