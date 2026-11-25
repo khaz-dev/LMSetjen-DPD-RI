@@ -113,6 +113,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 🔒 SECURITY FIX (Mengatasi Temuan Pentest T-01): Proteksi IP allowlist untuk /admin/
+    'api.middleware.AdminAccessControlMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -363,12 +365,12 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-# SSO (Single Sign-On) Nusa DPD Configuration
-# Nusa DPD tidak menerbitkan secret key kepada konsumer, sehingga
-# verifikasi signature tidak dilakukan. Keamanan dijamin melalui:
-#   - Validasi klaim exp (token kadaluarsa ditolak)
-#   - Mekanisme anti-replay (setiap token hanya boleh digunakan satu kali)
+# 🔒 SSO (Single Sign-On) Integration with Nusa DPD & CMB (Mengatasi Pentest K-02 & S-02)
+SSO_SECRET_KEY = env('SSO_SECRET_KEY', default=None)
 SSO_ALGORITHM = env.str('SSO_ALGORITHM', default='HS256')
+SSO_ALLOWED_ISSUERS = env.list('SSO_ALLOWED_ISSUERS', default=['CMB', 'NUSA', 'Nusa DPD', 'setjen.dpd.go.id', 'https://cmb.dpd.go.id'])
+SSO_AUDIENCE = env('SSO_AUDIENCE', default=None)
+SSO_MAX_TOKEN_TTL_SECONDS = env.int('SSO_MAX_TOKEN_TTL_SECONDS', default=3600)  # Max token lifespan in seconds
 
 
 # CORS Configuration for Frontend Integration
@@ -642,6 +644,17 @@ if not DEBUG:
 
 # 6. Content Security Policy (CSP) Headers
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# 6.1 🔒 Admin Panel Access Control (Mengatasi Temuan Pentest T-01)
+# Batasi akses ke /admin/ hanya untuk IP/CIDR yang diizinkan (internal office / VPN)
+admin_allowed_env = env('ADMIN_ALLOWED_IPS', default='')
+if admin_allowed_env:
+    ADMIN_ALLOWED_IPS = [ip.strip() for ip in admin_allowed_env.split(',') if ip.strip()]
+elif not DEBUG:
+    # Default Production: Batasi ke localhost dan subnet internal LAN / VPN Setjen DPD RI
+    ADMIN_ALLOWED_IPS = ['127.0.0.1', 'localhost', '::1', '10.20.30.0/24', '10.0.0.0/8']
+else:
+    ADMIN_ALLOWED_IPS = []
 
 # 7. 🔒 API Request Throttling/Rate Limiting (Mengatasi Pentest T-03)
 # Menggunakan SecureAnonRateThrottle & SecureUserRateThrottle berbasis django-ipware

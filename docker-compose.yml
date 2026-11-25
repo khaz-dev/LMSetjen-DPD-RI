@@ -4,15 +4,16 @@ services:
     image: redis:7-alpine
     container_name: lms_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password} --rename-command CONFIG "" --rename-command MODULE "" --rename-command SLAVEOF "" --rename-command REPLICAOF ""
     volumes:
       - redis_data:/data
+    # 🔒 SECURITY FIX (K-01): Bind strictly to 127.0.0.1 to prevent external LAN exposure
     ports:
-      - "6381:6381"
+      - "127.0.0.1:6381:6381"
     networks:
       - lms_network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_password}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -78,8 +79,9 @@ services:
       - media_files:/app/media
       - static_files:/app/staticfiles
       - backend_logs:/app/logs
+    # 🔒 SECURITY FIX (K-03): Bind backend port to 127.0.0.1 so it is only reachable via reverse proxy
     ports:
-      - "${BACKEND_HOST_PORT:-8001}:8001"
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8001}:8001"
     depends_on:
       redis:
         condition: service_healthy
@@ -113,8 +115,9 @@ services:
       FRONTEND_SITE_URL: ${FRONTEND_SITE_URL:-http://localhost:5174}
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8001}
       VITE_PORT: 5174
+    # 🔒 SECURITY FIX (K-03): Bind frontend port to 127.0.0.1 so it is only reachable via reverse proxy
     ports:
-      - "5174:5174"
+      - "127.0.0.1:5174:5174"
     networks:
       - lms_network
 

@@ -73,28 +73,35 @@ from api.views.helpers import _SYNC_STATE, reset_sync_state, update_sync_state, 
 
 
 # API Root View
+# 🔒 SECURITY FIX (Mengatasi Temuan Pentest T-01):
+# Jangan ekspos peta endpoint (reconnaissance surface) kepada pengguna anonim/publik.
 @method_decorator(csrf_exempt, name='dispatch')
 class APIRootView(APIView):
     """
-    API Root - Welcome page
-    
-    CSRF exempt because:
-    - Public informational endpoint
-    - Read-only GET operations
-    - No state-changing actions
+    API Root - Generic operational status
+    CSRF exempt read-only status endpoint.
+    Katalog endpoint hanya ditampilkan untuk Administrator terotentikasi.
     """
     permission_classes = [AllowAny]
     authentication_classes = []
     
     def get(self, request):
-        """
-        API Root - Welcome page for the LMS Backend API
-        """
+        """API Root - Minimal status for public, detailed catalog only for staff/admin"""
         data = {
-            "message": "Welcome to LMSetjen DPD RI - Learning Management System API",
-            "version": "v1",
+            "name": "LMSetjen DPD RI API",
             "status": "operational",
-            "endpoints": {
+        }
+
+        # 🔒 SECURITY: Sembunyikan seluruh peta endpoint & dokumentasi kecuali untuk Admin terotentikasi
+        if request.user and request.user.is_authenticated and (
+            getattr(request.user, 'is_staff', False) or 
+            getattr(request.user, 'is_superuser', False) or 
+            getattr(request.user, 'is_admin', False) or 
+            getattr(request.user, 'role', '') == 'admin' or 
+            getattr(request.user, 'current_role', '') == 'admin'
+        ):
+            data["version"] = "v1"
+            data["endpoints"] = {
                 "health": request.build_absolute_uri('/api/v1/health/'),
                 "authentication": {
                     "login": request.build_absolute_uri('/api/v1/user/token/'),
@@ -107,16 +114,6 @@ class APIRootView(APIView):
                     "search": request.build_absolute_uri('/api/v1/course/search/'),
                 },
             }
-        }
-
-        # 🔒 SECURITY: Sembunyikan link dokumentasi kecuali untuk Admin terotentikasi
-        if request.user and request.user.is_authenticated and (
-            getattr(request.user, 'is_staff', False) or 
-            getattr(request.user, 'is_superuser', False) or 
-            getattr(request.user, 'is_admin', False) or 
-            getattr(request.user, 'role', '') == 'admin' or 
-            getattr(request.user, 'current_role', '') == 'admin'
-        ):
             data["documentation"] = {
                 "swagger": request.build_absolute_uri('/swagger/'),
                 "redoc": request.build_absolute_uri('/redoc/'),
@@ -129,28 +126,33 @@ class APIRootView(APIView):
 
 
 
-# Health Check API (no authentication required)
+# Health Check API
+# 🔒 SECURITY FIX (Mengatasi Temuan Pentest I-01):
+# Minimalisasi respons health check (jangan bocorkan versi, nama aplikasi internal, dll)
 @method_decorator(csrf_exempt, name='dispatch')
 class HealthCheckAPIView(APIView):
     """
     Health Check API
-    
-    CSRF exempt because:
-    - Monitoring endpoint for infrastructure
-    - Read-only GET operations
-    - No authentication or state changes
+    Minimal status check for container orchestration and internal monitoring.
     """
     permission_classes = [AllowAny]
     authentication_classes = []
     
     def get(self, request):
-        """Simple health check endpoint for monitoring"""
-        return Response({
-            'status': 'healthy',
-            'service': APP_NAME,
-            'version': APP_VERSION,
-            'timestamp': timezone.now().isoformat()
-        }, status=status.HTTP_200_OK)
+        """Minimal health check response without version or metadata disclosure"""
+        allowed_ips = getattr(settings, 'HEALTH_CHECK_ALLOWED_IPS', None)
+        if allowed_ips:
+            try:
+                from api.throttling import get_real_client_ip
+                client_ip = get_real_client_ip(request)
+                from api.middleware import AdminAccessControlMiddleware
+                checker = AdminAccessControlMiddleware(None)
+                if not checker._is_ip_allowed(client_ip, allowed_ips):
+                    return Response({"status": "forbidden"}, status=status.HTTP_403_FORBIDDEN)
+            except Exception:
+                pass
+
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
 
 
 

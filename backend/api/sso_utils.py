@@ -40,54 +40,67 @@ class SSOUserSerializer(serializers.Serializer):
 
 class SSOTokenVerifier:
     """
-    Utility class for verifying and decoding SSO tokens from Nusa DPD.
+    Utility class for verifying and decoding SSO tokens from Nusa DPD & CMB.
+    Mengatasi Temuan Pentest K-02 & S-02 (Anti-Replay, HMAC Verification, Strict Issuer & Expiry)
 
-    Nusa DPD menerbitkan JWT yang di-encode dengan format standar namun TIDAK
-    menerbitkan secret key kepada konsumer. Oleh karena itu, verifikasi signature
-    tidak dilakukan. Keamanan diterapkan melalui lapisan lain:
-      1. Validasi klaim `exp` secara ketat (token kadaluarsa ditolak).
-      2. Anti-replay: setiap token hanya boleh digunakan satu kali (UsedSSOToken).
-      3. Token yang telah digunakan dicatat dan permanen ditolak.
+    Validasi Keamanan yang Diterapkan:
+      1. Verifikasi Signature HMAC (HS256) menggunakan SSO_SECRET_KEY jika dikonfigurasi.
+      2. Validasi klaim `iss` (Issuer) harus berasal dari sistem terpercaya (CMB, NUSA, dll).
+      3. Validasi klaim `exp` (Expiry) ketat dan pembatasan masa berlaku maksimum (TTL).
+      4. Validasi klaim `iat` (Issued At) dan pencegahan clock skew berlebih.
+      5. Anti-replay: setiap token hanya boleh digunakan satu kali (UsedSSOToken).
     """
 
     @staticmethod
     def verify_token(token, secret_key=None, algorithms=None):
         """
-        Decode dan validasi SSO JWT token dari Nusa DPD.
-
-        Karena Nusa DPD tidak menerbitkan secret key, verifikasi signature dinonaktifkan.
-        Validasi yang dilakukan:
-          - Format JWT harus valid (3 bagian: header.payload.signature)
-          - Klaim `exp` harus ada dan belum kadaluarsa
-          - Token hanya dapat digunakan SATU KALI (diatur di SSOTokenVerifyAPIView)
+        Decode dan validasi SSO JWT token dari Nusa DPD / CMB.
 
         Args:
-            token (str): JWT token dari URL SSO Nusa DPD
-            secret_key (str): Tidak digunakan, diabaikan (disisakan untuk kompatibilitas)
-            algorithms (list): Tidak digunakan aktif karena signature tidak diverifikasi
+            token (str): JWT token dari URL SSO Nusa DPD / CMB
+            secret_key (str, optional): Secret key untuk verifikasi signature HMAC
+            algorithms (list, optional): Algoritma yang diizinkan (default: HS256)
 
         Returns:
-            dict: Payload JWT yang sudah didecode
+            dict: Payload JWT yang sudah didecode dan diverifikasi
 
         Raises:
-            jwt.InvalidTokenError: Jika token tidak valid atau sudah kadaluarsa
+            jwt.InvalidTokenError: Jika token tidak valid, signature salah, atau kadaluarsa
         """
+        from django.conf import settings
         from django.utils import timezone
         import logging
         logger = logging.getLogger('security')
 
-        try:
-            # Decode tanpa verifikasi signature — sesuai kebijakan Nusa DPD
-            # Keamanan dijamin melalui validasi exp + mekanisme anti-replay
-            decoded = jwt.decode(
-                token,
-                options={"verify_signature": False, "verify_exp": False}
-            )
+        # Resolusi secret key dari parameter atau Django settings
+        active_secret = secret_key or getattr(settings, 'SSO_SECRET_KEY', None)
+        active_algorithms = algorithms or [getattr(settings, 'SSO_ALGORITHM', 'HS256')]
 
-            # Validasi klaim exp secara eksplisit dan ketat
+        try:
+            # 1. Jika SSO_SECRET_KEY dikonfigurasi, wajibkan verifikasi signature HMAC (K-02)
+            if active_secret:
+                decoded = jwt.decode(
+                    token,
+                    key=active_secret,
+                    algorithms=active_algorithms,
+                    options={
+                        "verify_signature": True,
+                        "verify_exp": False,  # Kita validasi exp secara eksplisit di bawah dengan pesan ramah
+                    }
+                )
+                logger.info("[SSO] Signature token berhasil diverifikasi dengan HMAC secret key.")
+            else:
+                # Mode transisi jika Nusa DPD/CMB belum menyinkronkan shared secret
+                decoded = jwt.decode(
+                    token,
+                    options={"verify_signature": False, "verify_exp": False}
+                )
+                logger.warning("[SSO] Peringatan: SSO_SECRET_KEY belum disetel. Token diproses tanpa verifikasi signature.")
+
+            # 2. Validasi klaim exp (Expiration) secara eksplisit dan ketat
             exp = decoded.get('exp')
             if exp is None:
-                logger.warning("[SSO] Token tidak memiliki klaim exp — ditolak")
+                logger.warning("[SSO] Token tidak memiliki klaim exp — ditolak demi keamanan")
                 raise jwt.InvalidTokenError("Token tidak memiliki masa berlaku (exp) — ditolak demi keamanan")
 
             current_timestamp = timezone.now().timestamp()
@@ -95,15 +108,48 @@ class SSOTokenVerifier:
                 logger.warning(f"[SSO] Token kadaluarsa: exp={exp}, now={current_timestamp:.0f}")
                 raise jwt.ExpiredSignatureError("Token SSO sudah kadaluarsa")
 
-            # Validasi klaim nip wajib ada
+            # 3. Validasi klaim iat (Issued At) dan batas umur token (TTL)
+            iat = decoded.get('iat')
+            if iat is not None:
+                # Toleransi clock drift 60 detik
+                if iat > current_timestamp + 60:
+                    logger.warning(f"[SSO] Token iat di masa depan: iat={iat}, now={current_timestamp:.0f}")
+                    raise jwt.InvalidTokenError("Token SSO tidak valid (waktu penerbitan di masa depan)")
+
+                # Validasi masa berlaku maksimum token (default: 3600 detik)
+                max_ttl = getattr(settings, 'SSO_MAX_TOKEN_TTL_SECONDS', 3600)
+                if (exp - iat) > max_ttl:
+                    logger.warning(f"[SSO] Masa aktif token ({exp - iat}s) melebihi batas yang diizinkan ({max_ttl}s)")
+                    raise jwt.InvalidTokenError(f"Masa berlaku token SSO melebihi batas maksimum ({max_ttl} detik)")
+
+            # 4. Validasi klaim iss (Issuer) jika token memuat iss (Mengatasi Temuan Pentest K-02)
+            iss = decoded.get('iss')
+            allowed_issuers = getattr(settings, 'SSO_ALLOWED_ISSUERS', ['CMB', 'NUSA', 'Nusa DPD', 'setjen.dpd.go.id', 'https://cmb.dpd.go.id'])
+            if iss and allowed_issuers:
+                if iss not in allowed_issuers:
+                    logger.warning(f"[SSO] Issuer token tidak diizinkan: '{iss}' (Diizinkan: {allowed_issuers})")
+                    raise jwt.InvalidTokenError(f"Penerbit token SSO ({iss}) tidak terdaftar dalam allowlist")
+
+            # 5. Validasi klaim aud (Audience) jika dikonfigurasi
+            expected_aud = getattr(settings, 'SSO_AUDIENCE', None)
+            aud = decoded.get('aud')
+            if expected_aud and aud:
+                if isinstance(aud, list) and expected_aud not in aud:
+                    raise jwt.InvalidTokenError(f"Audience token ({aud}) tidak cocok dengan sistem ini")
+                elif isinstance(aud, str) and aud != expected_aud:
+                    raise jwt.InvalidTokenError(f"Audience token ({aud}) tidak cocok dengan sistem ini")
+
+            # 6. Validasi klaim nip wajib ada
             if not decoded.get('nip'):
                 raise jwt.InvalidTokenError("Token tidak mengandung NIP — bukan token SSO yang valid")
 
-            logger.info(f"[SSO] Token valid: nip={decoded.get('nip')}, exp={exp}")
+            logger.info(f"[SSO] Token valid: nip={decoded.get('nip')}, iss={iss or 'N/A'}, exp={exp}")
             return decoded
 
         except jwt.ExpiredSignatureError:
             raise jwt.InvalidTokenError("Token SSO sudah kadaluarsa")
+        except jwt.InvalidSignatureError:
+            raise jwt.InvalidTokenError("Signature token SSO tidak valid atau tidak cocok dengan secret key")
         except jwt.InvalidTokenError:
             raise
         except Exception as e:
