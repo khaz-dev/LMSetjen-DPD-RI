@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import apiInstance from "../../utils/axios";
 import Toast from "../plugin/Toast";
 import Swal from "sweetalert2";
@@ -210,6 +210,11 @@ const getPlatformStatusInfo = (status) => {
 function AdminCourseReviewDetail() {
     const { course_id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Smart return navigation (defaults to Content Management if not from Reports/Evaluation)
+    const returnUrl = location.state?.from || "/admin/content-management/?tab=courses";
+    const returnLabel = location.state?.fromLabel || "Manajemen Konten";
 
     const [loading, setLoading] = useState(true);
     const [course, setCourse] = useState(null);
@@ -253,7 +258,7 @@ function AdminCourseReviewDetail() {
                 title: "Gagal memuat detail kursus",
                 text: error.response?.data?.detail || "Terjadi kesalahan saat memuat data"
             });
-            setTimeout(() => navigate("/admin/content-management/?tab=courses"), 2000);
+            setTimeout(() => navigate(returnUrl), 2000);
         } finally {
             setLoading(false);
         }
@@ -566,10 +571,10 @@ function AdminCourseReviewDetail() {
                             <p className="text-muted mb-4">Kursus dengan ID <strong>{course_id}</strong> tidak ditemukan atau Anda tidak memiliki hak akses.</p>
                             <button
                                 className="btn btn-teal px-4"
-                                onClick={() => navigate("/admin/content-management/?tab=courses")}
+                                onClick={() => navigate(returnUrl)}
                             >
                                 <i className="fas fa-arrow-left me-2"></i>
-                                Kembali ke Daftar Review Kursus
+                                Kembali ke {returnLabel}
                             </button>
                         </div>
                     </div>
@@ -596,8 +601,8 @@ function AdminCourseReviewDetail() {
                             <div className="d-flex align-items-center gap-2">
                                 <button
                                     className="btn btn-sm btn-outline-secondary acrd-back-btn"
-                                    onClick={() => navigate("/admin/content-management/?tab=courses")}
-                                    title="Kembali ke Manajemen Konten"
+                                    onClick={() => navigate(returnUrl)}
+                                    title={`Kembali ke ${returnLabel}`}
                                 >
                                     <i className="fas fa-arrow-left me-1"></i>
                                     Kembali
@@ -605,7 +610,7 @@ function AdminCourseReviewDetail() {
                                 <nav aria-label="breadcrumb" className="d-none d-md-flex align-items-center">
                                     <ol className="breadcrumb mb-0 acrd-breadcrumb align-items-center">
                                         <li className="breadcrumb-item d-inline-flex align-items-center">
-                                            <Link to="/admin/content-management/?tab=courses">Manajemen Konten</Link>
+                                            <Link to={returnUrl}>{returnLabel}</Link>
                                         </li>
                                         <li className="breadcrumb-item d-inline-flex align-items-center">
                                             <span>Review Kursus</span>
@@ -620,17 +625,19 @@ function AdminCourseReviewDetail() {
                             </div>
 
                             <div className="d-flex align-items-center gap-2 flex-wrap">
-                                <a
-                                    href={`/instructor/preview-course/${course.course_id}/`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1.5"
-                                    style={{ fontSize: "0.8rem", padding: "0.3rem 0.65rem" }}
-                                    title="Lihat Pratinjau Menyeluruh dalam Pemutar Peserta/Siswa di Tab Baru"
-                                >
-                                    <i className="fas fa-play-circle"></i>
-                                    <span>Pratinjau Siswa (Penuh)</span>
-                                </a>
+                                {course.platform_status === "Published" && course.slug && (
+                                    <a
+                                        href={`/course-detail/${course.slug}/`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1.5"
+                                        style={{ fontSize: "0.8rem", padding: "0.3rem 0.65rem" }}
+                                        title="Buka halaman publik kursus di tab baru"
+                                    >
+                                        <i className="fas fa-globe"></i>
+                                        <span>Halaman Publik</span>
+                                    </a>
+                                )}
                                 <span className={`acrd-status-pill ${statusInfo.className}`}>
                                     <i className={`${statusInfo.icon} me-1`}></i>
                                     {statusInfo.label}

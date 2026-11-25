@@ -544,18 +544,29 @@ class CourseUpdateAPIView(generics.RetrieveUpdateAPIView):
     authentication_classes = [JWTAuthentication]
 
     def get_object(self):
-        teacher_id = self.kwargs['teacher_id']
+        teacher_id = self.kwargs.get('teacher_id')
         course_id = self.kwargs['course_id']
 
-        teacher = api_models.Teacher.objects.get(id=teacher_id)
-
-        # 🔒 FIX IDOR: Validasi kepemilikan sebelum memproses update
-        is_admin = getattr(self.request.user, 'is_admin', False) or getattr(self.request.user, 'is_staff', False)
-        if teacher.user != self.request.user and not is_admin:
-            from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("Akses ditolak. Anda bukan pemilik kursus ini.")
-
         course = api_models.Course.objects.get(course_id=course_id)
+
+        # 🔒 FIX IDOR: Validasi kepemilikan sebelum memproses update (Admin Setjen DPD RI memiliki akses moderasi)
+        user = self.request.user
+        is_admin = (
+            getattr(user, 'is_admin', False) or 
+            getattr(user, 'is_staff', False) or 
+            getattr(user, 'current_role', '') == 'admin' or 
+            getattr(user, 'role', '') == 'admin'
+        )
+        if not is_admin:
+            try:
+                teacher = api_models.Teacher.objects.get(id=teacher_id)
+            except (api_models.Teacher.DoesNotExist, ValueError):
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Akses ditolak. Instruktur tidak ditemukan.")
+
+            if teacher.user != user or course.teacher != teacher:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Akses ditolak. Anda bukan pemilik kursus ini.")
         
         # [*] PHASE 4.76 CRITICAL FIX: Prevent direct editing of published courses
         # Published courses MUST be edited through their draft copies only
@@ -1140,8 +1151,13 @@ class CoursePublishAPIView(APIView):
         try:
             course = api_models.Course.objects.get(course_id=course_id)
             
-            # 🔒 Validasi kepemilikan kursus
-            is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+            # 🔒 Validasi kepemilikan kursus (Admin diizinkan melakukan moderasi/publikasi)
+            is_admin = (
+                getattr(request.user, 'is_admin', False) or 
+                getattr(request.user, 'is_staff', False) or 
+                getattr(request.user, 'current_role', '') == 'admin' or 
+                getattr(request.user, 'role', '') == 'admin'
+            )
             if course.teacher.user != request.user and not is_admin:
                 return Response(
                     {"success": False, "message": "Akses ditolak. Anda bukan pemilik kursus ini."},
@@ -1265,8 +1281,13 @@ class CourseRestoreAPIView(APIView):
             # Get the draft course to restore
             course = api_models.Course.objects.get(course_id=course_id)
             
-            # 🔒 Validasi kepemilikan kursus
-            is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+            # 🔒 Validasi kepemilikan kursus (Admin diizinkan melakukan moderasi/publikasi)
+            is_admin = (
+                getattr(request.user, 'is_admin', False) or 
+                getattr(request.user, 'is_staff', False) or 
+                getattr(request.user, 'current_role', '') == 'admin' or 
+                getattr(request.user, 'role', '') == 'admin'
+            )
             if course.teacher.user != request.user and not is_admin:
                 return Response(
                     {"success": False, "message": "Akses ditolak. Anda bukan pemilik kursus ini."},
@@ -1383,8 +1404,13 @@ class CourseEditPublishedAPIView(APIView):
             # Get the published course
             course = api_models.Course.objects.get(course_id=course_id)
             
-            # 🔒 Validasi kepemilikan kursus
-            is_admin = getattr(request.user, 'is_admin', False) or getattr(request.user, 'is_staff', False)
+            # 🔒 Validasi kepemilikan kursus (Admin diizinkan melakukan moderasi/publikasi)
+            is_admin = (
+                getattr(request.user, 'is_admin', False) or 
+                getattr(request.user, 'is_staff', False) or 
+                getattr(request.user, 'current_role', '') == 'admin' or 
+                getattr(request.user, 'role', '') == 'admin'
+            )
             if course.teacher.user != request.user and not is_admin:
                 return Response(
                     {"success": False, "message": "Akses ditolak. Anda bukan pemilik kursus ini."},
@@ -1672,16 +1698,22 @@ class CourseVariantDeleteAPIView(generics.DestroyAPIView):
         from rest_framework.exceptions import PermissionDenied, NotFound
 
         try:
-            teacher = api_models.Teacher.objects.get(id=teacher_id)
+            user = self.request.user
+            is_admin = (
+                getattr(user, 'is_admin', False) or 
+                getattr(user, 'is_staff', False) or 
+                getattr(user, 'current_role', '') == 'admin' or 
+                getattr(user, 'role', '') == 'admin'
+            )
+            if is_admin:
+                course = api_models.Course.objects.get(course_id=course_id)
+            else:
+                teacher = api_models.Teacher.objects.get(id=teacher_id)
+                if teacher.user != user:
+                    raise PermissionDenied("Akses ditolak. Anda tidak berhak menghapus modul ini.")
+                course = api_models.Course.objects.get(teacher=teacher, course_id=course_id)
 
-            # 🔒 FIX IDOR: Validasi kepemilikan
-            is_admin = getattr(self.request.user, 'is_admin', False)
-            if teacher.user != self.request.user and not is_admin:
-                raise PermissionDenied("Akses ditolak. Anda tidak berhak menghapus modul ini.")
-
-            course = api_models.Course.objects.get(teacher=teacher, course_id=course_id)
             variant = api_models.Variant.objects.get(variant_id=variant_id, course=course)
-            
             return variant
         except api_models.Teacher.DoesNotExist:
 
@@ -1735,16 +1767,23 @@ class CourseVariantItemDeleteAPIVIew(generics.DestroyAPIView):
         course_id = self.kwargs['course_id']
 
         try:
-            teacher = api_models.Teacher.objects.get(id=teacher_id)
-
             from rest_framework.exceptions import PermissionDenied, NotFound
 
-            # 🔒 FIX IDOR: Validasi kepemilikan
-            is_admin = getattr(self.request.user, 'is_admin', False)
-            if teacher.user != self.request.user and not is_admin:
-                raise PermissionDenied("Akses ditolak. Anda tidak berhak menghapus modul ini.")
+            user = self.request.user
+            is_admin = (
+                getattr(user, 'is_admin', False) or 
+                getattr(user, 'is_staff', False) or 
+                getattr(user, 'current_role', '') == 'admin' or 
+                getattr(user, 'role', '') == 'admin'
+            )
+            if is_admin:
+                course = api_models.Course.objects.get(course_id=course_id)
+            else:
+                teacher = api_models.Teacher.objects.get(id=teacher_id)
+                if teacher.user != user:
+                    raise PermissionDenied("Akses ditolak. Anda tidak berhak menghapus modul ini.")
+                course = api_models.Course.objects.get(teacher=teacher, course_id=course_id)
 
-            course = api_models.Course.objects.get(teacher=teacher, course_id=course_id)
             variant = api_models.Variant.objects.get(variant_id=variant_id, course=course)
             variant_item = api_models.VariantItem.objects.get(variant=variant, variant_item_id=variant_item_id)
             return variant_item

@@ -203,126 +203,97 @@ function CourseReviewTab({ onCountsUpdated }) {
 
     return (
         <div className="cm-courses-tab">
-            {/* Live Stats Ribbon (Clickable Quick Filters) */}
-            <div className="cm-stats-ribbon">
-                <div 
-                    className={`cm-stat-card ${filterStatus === "all" ? "active" : ""}`}
-                    onClick={() => setFilterStatus("all")}
-                    title="Klik untuk melihat semua kursus"
-                >
-                    <div className="cm-stat-icon-wrap stat-all">
-                        <i className="fas fa-layer-group"></i>
+            {/* 1. Header Bar with Module Info on Left and Interactive Stats Ribbon sticking to Right on Same Row */}
+            <div className="cm-compact-header-card mb-3">
+                <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div className="d-flex align-items-center gap-2">
+                        <div className="cm-header-icon-box bg-teal-subtle text-teal">
+                            <i className="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <h3 className="cm-module-title mb-0">Review & Kurasi Kursus</h3>
+                            <p className="cm-module-desc mb-0">Tinjau kelayakan silabus, evaluasi materi pembelajaran, dan persetujuan penerbitan kursus</p>
+                        </div>
                     </div>
-                    <div className="cm-stat-info">
-                        <span className="cm-stat-val">{stats.all}</span>
-                        <span className="cm-stat-name">Total Kursus</span>
-                    </div>
-                </div>
 
-                <div 
-                    className={`cm-stat-card ${filterStatus === "Review" ? "active" : ""}`}
-                    onClick={() => setFilterStatus("Review")}
-                    title="Klik untuk melihat kursus yang menunggu peninjauan"
-                >
-                    <div className="cm-stat-icon-wrap stat-review">
-                        <i className="fas fa-hourglass-half"></i>
-                    </div>
-                    <div className="cm-stat-info">
-                        <span className="cm-stat-val" style={{ color: stats.review > 0 ? "#d97706" : "inherit" }}>
-                            {stats.review}
-                        </span>
-                        <span className="cm-stat-name">Menunggu Review</span>
-                    </div>
-                </div>
+                    {/* Live Stats Ribbon (Interactive High-Density KPI Quick Filters) */}
+                    <div className="cm-stats-ribbon">
+                        <div 
+                            className={`cm-stat-card ${filterStatus === "all" ? "active" : ""}`}
+                            onClick={() => setFilterStatus("all")}
+                            title="Klik untuk melihat semua kursus"
+                        >
+                            <div className="cm-stat-icon-wrap stat-all">
+                                <i className="fas fa-layer-group"></i>
+                            </div>
+                            <div className="cm-stat-info">
+                                <span className="cm-stat-val">{stats.all}</span>
+                                <span className="cm-stat-name">Semua Kursus</span>
+                            </div>
+                        </div>
 
-                <div 
-                    className={`cm-stat-card ${filterStatus === "Published" ? "active" : ""}`}
-                    onClick={() => setFilterStatus("Published")}
-                    title="Klik untuk melihat kursus yang sudah terpublikasi"
-                >
-                    <div className="cm-stat-icon-wrap stat-published">
-                        <i className="fas fa-check-circle"></i>
-                    </div>
-                    <div className="cm-stat-info">
-                        <span className="cm-stat-val" style={{ color: "#15803d" }}>{stats.published}</span>
-                        <span className="cm-stat-name">Terpublikasi</span>
-                    </div>
-                </div>
+                        <div 
+                            className={`cm-stat-card stat-card-review ${filterStatus === "Review" ? "active" : ""} ${stats.review > 0 ? "has-pending" : ""}`}
+                            onClick={() => setFilterStatus("Review")}
+                            title="Klik untuk memfilter kursus yang menunggu reviu admin"
+                        >
+                            <div className="cm-stat-icon-wrap stat-review">
+                                <i className="fas fa-hourglass-half"></i>
+                            </div>
+                            <div className="cm-stat-info">
+                                <span className="cm-stat-val" style={{ color: stats.review > 0 ? "#d97706" : "inherit" }}>
+                                    {stats.review}
+                                </span>
+                                <span className="cm-stat-name">Perlu Review</span>
+                            </div>
+                            {stats.review > 0 && (
+                                <span className="cm-stat-alert-dot" title="Ada kursus menunggu persetujuan"></span>
+                            )}
+                        </div>
 
-                <div 
-                    className={`cm-stat-card ${filterStatus === "Draft" ? "active" : ""}`}
-                    onClick={() => setFilterStatus("Draft")}
-                    title="Klik untuk melihat kursus dalam status draft"
-                >
-                    <div className="cm-stat-icon-wrap stat-draft">
-                        <i className="fas fa-file-signature"></i>
-                    </div>
-                    <div className="cm-stat-info">
-                        <span className="cm-stat-val">{stats.draft}</span>
-                        <span className="cm-stat-name">Draft Instruktur</span>
+                        <div 
+                            className={`cm-stat-card ${filterStatus === "Published" ? "active" : ""}`}
+                            onClick={() => setFilterStatus("Published")}
+                            title="Klik untuk memfilter kursus yang sudah dipublikasikan"
+                        >
+                            <div className="cm-stat-icon-wrap stat-published">
+                                <i className="fas fa-check-circle"></i>
+                            </div>
+                            <div className="cm-stat-info">
+                                <span className="cm-stat-val" style={{ color: "#059669" }}>{stats.published}</span>
+                                <span className="cm-stat-name">Dipublikasi</span>
+                            </div>
+                        </div>
+
+                        <div 
+                            className={`cm-stat-card ${filterStatus === "Rejected" ? "active" : ""}`}
+                            onClick={() => setFilterStatus("Rejected")}
+                            title="Klik untuk memfilter kursus yang ditolak / perlu revisi"
+                        >
+                            <div className="cm-stat-icon-wrap stat-rejected">
+                                <i className="fas fa-times-circle"></i>
+                            </div>
+                            <div className="cm-stat-info">
+                                <span className="cm-stat-val" style={{ color: stats.rejected > 0 ? "#dc2626" : "inherit" }}>
+                                    {stats.rejected}
+                                </span>
+                                <span className="cm-stat-name">Ditolak</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Filter Pills & Controls Toolbar */}
+            {/* Single-Row Unified Executive Control Toolbar */}
             <div className="cm-toolbar-wrapper">
-                {/* Status Filter Pills Row */}
-                <div className="cm-status-pills-row">
-                    <button
-                        className={`cm-status-pill-btn ${filterStatus === "all" ? "active" : ""}`}
-                        onClick={() => setFilterStatus("all")}
-                    >
-                        <i className="fas fa-globe"></i>
-                        <span>Semua</span>
-                        <span className="pill-count">{stats.all}</span>
-                    </button>
-
-                    <button
-                        className={`cm-status-pill-btn pill-review ${filterStatus === "Review" ? "active" : ""} ${stats.review > 0 ? "has-pending" : ""}`}
-                        onClick={() => setFilterStatus("Review")}
-                    >
-                        <i className="fas fa-clock"></i>
-                        <span>Menunggu Review</span>
-                        <span className="pill-count">{stats.review}</span>
-                    </button>
-
-                    <button
-                        className={`cm-status-pill-btn ${filterStatus === "Published" ? "active" : ""}`}
-                        onClick={() => setFilterStatus("Published")}
-                    >
-                        <i className="fas fa-check"></i>
-                        <span>Dipublikasikan</span>
-                        <span className="pill-count">{stats.published}</span>
-                    </button>
-
-                    <button
-                        className={`cm-status-pill-btn ${filterStatus === "Draft" ? "active" : ""}`}
-                        onClick={() => setFilterStatus("Draft")}
-                    >
-                        <i className="fas fa-edit"></i>
-                        <span>Draft</span>
-                        <span className="pill-count">{stats.draft}</span>
-                    </button>
-
-                    <button
-                        className={`cm-status-pill-btn ${filterStatus === "Rejected" ? "active" : ""}`}
-                        onClick={() => setFilterStatus("Rejected")}
-                    >
-                        <i className="fas fa-times"></i>
-                        <span>Ditolak</span>
-                        <span className="pill-count">{stats.rejected}</span>
-                    </button>
-                </div>
-
-                {/* Search, Category, Sorting, View Toggle Bar */}
-                <div className="cm-controls-row">
+                <div className="cm-controls-left">
                     {/* Search Input */}
                     <div className="cm-search-box">
                         <i className="fas fa-search cm-search-icon"></i>
                         <input
                             type="text"
                             className="cm-search-input"
-                            placeholder="Cari judul kursus, nama instruktur, atau kategori..."
+                            placeholder="Cari kursus, instruktur, kategori..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -337,37 +308,56 @@ function CourseReviewTab({ onCountsUpdated }) {
                         )}
                     </div>
 
-                    {/* Category Dropdown */}
-                    <select
-                        className="cm-select-control"
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        title="Filter berdasarkan kategori kursus"
-                    >
-                        <option value="all">Semua Kategori ({categories.length})</option>
-                        {categories.map((cat) => (
-                            <option key={cat.id || cat.slug} value={cat.id || cat.slug}>
-                                {cat.title}
-                            </option>
-                        ))}
-                    </select>
+                    {/* Category Dropdown with Icon */}
+                    <div className="cm-select-wrap">
+                        <i className="fas fa-filter cm-select-icon"></i>
+                        <select
+                            className="cm-select-control"
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            title="Filter kategori"
+                        >
+                            <option value="all">Semua Kategori ({categories.length})</option>
+                            {categories.map((cat) => (
+                                <option key={cat.id || cat.slug} value={cat.id || cat.slug}>
+                                    {cat.title}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                    {/* Sort Order Dropdown */}
-                    <select
-                        className="cm-select-control"
-                        value={sortOrder}
-                        onChange={(e) => setSortOrder(e.target.value)}
-                        title="Urutkan daftar kursus"
+                    {/* Sort Order Dropdown with Icon */}
+                    <div className="cm-select-wrap">
+                        <i className="fas fa-sort-amount-down cm-select-icon"></i>
+                        <select
+                            className="cm-select-control"
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            title="Urutkan daftar kursus"
+                        >
+                            <option value="recent">Terbaru Diajukan</option>
+                            <option value="oldest">Terlama Dibuat</option>
+                            <option value="title_asc">Judul (A-Z)</option>
+                            <option value="title_desc">Judul (Z-A)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="cm-controls-right">
+                    {/* Quick Link to Central Reports & Evaluations Hub */}
+                    <Link
+                        to="/admin/reports/?tab=course-evaluations"
+                        className="btn-cm-quick-link"
+                        title="Buka Pusat Laporan Eksekutif & Evaluasi Mutu Seluruh Kursus"
                     >
-                        <option value="recent">Terbaru Diajukan / Diperbarui</option>
-                        <option value="oldest">Terlama Dibuat</option>
-                        <option value="title_asc">Judul (A-Z)</option>
-                        <option value="title_desc">Judul (Z-A)</option>
-                    </select>
+                        <i className="fas fa-chart-pie"></i>
+                        <span className="d-none d-lg-inline">Pusat Laporan & Evaluasi</span>
+                    </Link>
 
                     {/* View Mode Toggle (Grid vs Table) */}
                     <div className="cm-view-toggle" title="Pilih tampilan">
                         <button
+                            type="button"
                             className={`cm-view-btn ${viewMode === "grid" ? "active" : ""}`}
                             onClick={() => handleSetViewMode("grid")}
                             title="Tampilan Kartu Ringkas"
@@ -375,9 +365,10 @@ function CourseReviewTab({ onCountsUpdated }) {
                             <i className="fas fa-th-large"></i>
                         </button>
                         <button
+                            type="button"
                             className={`cm-view-btn ${viewMode === "table" ? "active" : ""}`}
                             onClick={() => handleSetViewMode("table")}
-                            title="Tampilan Tabel Rapat (Dense Table)"
+                            title="Tampilan Tabel Rapat"
                         >
                             <i className="fas fa-list"></i>
                         </button>
@@ -385,13 +376,13 @@ function CourseReviewTab({ onCountsUpdated }) {
 
                     {/* Refresh Button */}
                     <button
+                        type="button"
                         className="cm-refresh-btn"
                         onClick={() => fetchCourses(true)}
                         disabled={refreshing || loading}
                         title="Segarkan daftar kursus"
                     >
                         <i className={`fas fa-sync-alt ${refreshing ? "fa-spin" : ""}`}></i>
-                        <span>Segarkan</span>
                     </button>
                 </div>
             </div>
@@ -449,15 +440,15 @@ function CourseReviewTab({ onCountsUpdated }) {
                     )}
                 </div>
             ) : viewMode === "grid" ? (
-                /* Compact Grid View (3 Columns on Large Screens) */
-                <div className="row g-3">
+                /* Compact Grid View (4 Columns on Wide Screens, 3 on Large) */
+                <div className="row g-2 g-xl-3">
                     {filteredCourses.map((course) => {
                         const { sectionsCount, lessonsCount, quizzesCount } = getCourseCurriculumSummary(course);
                         const teacherName = course.teacher?.full_name || course.user?.full_name || "Instruktur";
                         const teacherInitial = teacherName.charAt(0).toUpperCase();
 
                         return (
-                            <div key={course.course_id} className="col-xl-4 col-md-6 col-12">
+                            <div key={course.course_id} className="col-xxl-3 col-xl-4 col-md-6 col-12">
                                 <div className="course-card-compact">
                                     {/* Thumbnail Header */}
                                     <div className="course-card-thumb-wrap">
@@ -480,10 +471,16 @@ function CourseReviewTab({ onCountsUpdated }) {
 
                                     {/* Card Body */}
                                     <div className="course-card-body">
-                                        {/* Category Tag */}
-                                        <div className="course-card-cat-tag">
-                                            <i className="fas fa-folder-open me-1"></i>
-                                            {course.category?.title || "Umum"}
+                                        {/* Category & Date Meta Row */}
+                                        <div className="course-card-meta-line">
+                                            <span className="course-card-cat-tag">
+                                                <i className="fas fa-folder-open me-1"></i>
+                                                {course.category?.title || "Umum"}
+                                            </span>
+                                            <span className="course-card-date-compact" title={course.review_submitted_date || course.date}>
+                                                <i className="far fa-clock me-1"></i>
+                                                {formatDate(course.review_submitted_date || course.date)}
+                                            </span>
                                         </div>
 
                                         {/* Course Title */}
@@ -530,43 +527,35 @@ function CourseReviewTab({ onCountsUpdated }) {
                                             </div>
                                         </div>
 
-                                        {/* Submission / Modification Date */}
-                                        <div className="course-card-date">
-                                            <i className="far fa-calendar-alt"></i>
-                                            <span>
-                                                {course.review_submitted_date
-                                                    ? `Diajukan: ${formatDate(course.review_submitted_date)}`
-                                                    : `Diperbarui: ${formatDate(course.date)}`}
-                                            </span>
-                                        </div>
-
                                         {/* Actions */}
                                         <div className="course-card-actions">
                                             <button
+                                                type="button"
                                                 className="btn-review-primary"
                                                 onClick={() => handleViewDetails(course)}
-                                                title="Lihat rincian materi, kuis, dan evaluasi persetujuan"
+                                                title="Lihat rincian materi, kuis, dan evaluasi kelayakan terbit"
                                             >
                                                 <i className="fas fa-clipboard-check"></i>
-                                                <span>Tinjau & Detail</span>
+                                                <span>Tinjau</span>
                                             </button>
 
                                             <Link
-                                                to={`/admin/courses/${course.course_id}/evaluation/`}
+                                                to={`/admin/courses/${course.course_id}/edit/`}
                                                 className="btn-review-evaluation"
-                                                title="Evaluasi efektivitas belajar, ranking, audit ujian, & rekapitulasi JP peserta"
+                                                title="Edit materi, metadata, dan kurikulum kursus langsung ke versi publik"
                                             >
-                                                <i className="fas fa-chart-line"></i>
-                                                <span>Evaluasi Kursus</span>
+                                                <i className="fas fa-edit"></i>
+                                                <span>Edit</span>
                                             </Link>
 
-                                            {course.platform_status === "Published" && (
+                                            {course.platform_status === "Published" && course.slug && (
                                                 <a
-                                                    href={`/instructor/preview-course/${course.course_id}/?view=published`}
+                                                    href={`/course-detail/${course.slug}/`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="btn-review-preview"
-                                                    title="Lihat Pratinjau Terpublikasi"
+                                                    className="btn-review-evaluation px-2"
+                                                    title="Buka Halaman Publik Kursus (Tab Baru)"
+                                                    style={{ backgroundColor: "#f1f5f9", color: "#475569", borderColor: "#cbd5e1" }}
                                                 >
                                                     <i className="fas fa-external-link-alt"></i>
                                                 </a>
@@ -682,23 +671,36 @@ function CourseReviewTab({ onCountsUpdated }) {
                                         <td style={{ textAlign: "right" }}>
                                             <div className="d-flex align-items-center justify-content-end gap-1">
                                                 <button
-                                                    className="btn btn-sm btn-outline-success py-1 px-2"
-                                                    style={{ fontSize: "0.78rem", borderColor: "#0f766e", color: "#0f766e" }}
+                                                    type="button"
+                                                    className="btn btn-sm btn-teal py-1 px-2.5 d-inline-flex align-items-center gap-1 shadow-sm"
+                                                    style={{ fontSize: "0.78rem", fontWeight: 600, backgroundColor: "#0d9488", color: "#ffffff", borderColor: "#0d9488", borderRadius: "6px" }}
                                                     onClick={() => handleViewDetails(course)}
-                                                    title="Tinjau Detail Kursus"
+                                                    title="Tinjau Detail & Kurikulum Kursus"
                                                 >
-                                                    <i className="fas fa-eye me-1"></i>
-                                                    Tinjau
+                                                    <i className="fas fa-clipboard-check"></i>
+                                                    <span>Tinjau</span>
                                                 </button>
                                                 <Link
-                                                    to={`/admin/courses/${course.course_id}/evaluation/`}
-                                                    className="btn btn-sm btn-outline-teal py-1 px-2"
-                                                    style={{ fontSize: "0.78rem", borderColor: "#0d9488", color: "#0d9488" }}
-                                                    title="Evaluasi Kursus & Rekapitulasi JP"
+                                                    to={`/admin/courses/${course.course_id}/edit/`}
+                                                    className="btn btn-sm btn-outline-teal py-1 px-2.5 d-inline-flex align-items-center gap-1 shadow-sm"
+                                                    style={{ fontSize: "0.78rem", fontWeight: 600, borderColor: "#0d9488", color: "#0d9488", borderRadius: "6px" }}
+                                                    title="Edit Kursus & Konten Langsung (Live Update)"
                                                 >
-                                                    <i className="fas fa-chart-line me-1"></i>
-                                                    Evaluasi
+                                                    <i className="fas fa-edit"></i>
+                                                    <span>Edit</span>
                                                 </Link>
+                                                {course.platform_status === "Published" && course.slug && (
+                                                    <a
+                                                        href={`/course-detail/${course.slug}/`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="btn btn-sm btn-light border py-1 px-2 d-inline-flex align-items-center justify-content-center shadow-sm text-secondary"
+                                                        style={{ fontSize: "0.78rem", borderRadius: "6px", height: "28px" }}
+                                                        title="Buka Halaman Publik Kursus (Tab Baru)"
+                                                    >
+                                                        <i className="fas fa-external-link-alt"></i>
+                                                    </a>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

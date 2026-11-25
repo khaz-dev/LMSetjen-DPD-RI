@@ -5,6 +5,7 @@ import Footer from "../partials/Footer";
 import ReviewAbuseReportsTab from "./AdminReportsTabs/ReviewAbuseReportsTab";
 import QAReportsTab from "./AdminReportsTabs/QAReportsTab";
 import ForumReportsTab from "./AdminReportsTabs/ForumReportsTab";
+import CourseEvaluationReportsTab from "./AdminReportsTabs/CourseEvaluationReportsTab";
 import FeedbackAdminDashboard from "../../components/Feedback/FeedbackAdminDashboard";
 import apiInstance from "../../utils/axios";
 import dayjs, { moment } from "../../utils/dayjs";
@@ -24,10 +25,12 @@ function ReportsAdmin() {
 
     const [activeTab, setActiveTab] = useState(() => {
         const tab = searchParams.get("tab");
+        if (tab === "course-evaluations" || tab === "course-evaluation" || tab === "evaluasi" || tab === "courses") return "course-evaluations";
         if (tab === "forum-reports" || tab === "forum") return "forum-reports";
         if (tab === "qa-reports") return "qa-reports";
         if (tab === "feedback" || tab === "user-feedback") return "feedback";
-        return "abuse-reports";
+        if (tab === "abuse-reports") return "abuse-reports";
+        return "course-evaluations";
     });
 
     // Check if query is meant for System Diagnostics Center or sync tab
@@ -42,7 +45,9 @@ function ReportsAdmin() {
             return;
         }
 
-        if (tab === "forum-reports" || tab === "forum") {
+        if (tab === "course-evaluations" || tab === "course-evaluation" || tab === "evaluasi" || tab === "courses") {
+            if (activeTab !== "course-evaluations") setActiveTab("course-evaluations");
+        } else if (tab === "forum-reports" || tab === "forum") {
             if (activeTab !== "forum-reports") setActiveTab("forum-reports");
         } else if (tab === "feedback" || tab === "user-feedback") {
             if (activeTab !== "feedback") setActiveTab("feedback");
@@ -61,6 +66,7 @@ function ReportsAdmin() {
 
     // Live counts across moderation modules
     const [stats, setStats] = useState({
+        coursesTotal: 0,
         abuseTotal: 0,
         abusePending: 0,
         qaTotal: 0,
@@ -76,13 +82,19 @@ function ReportsAdmin() {
     const fetchSummaryStats = useCallback(async () => {
         try {
             setIsRefreshing(true);
-            const [abuseRes, qaQRes, qaMRes, forumRes, fbStatsRes] = await Promise.allSettled([
+            const [abuseRes, qaQRes, qaMRes, forumRes, fbStatsRes, courseEvalRes] = await Promise.allSettled([
                 apiInstance.get("/admin/abuse-reports/"),
                 apiInstance.get("/admin/qa-reports/?type=question"),
                 apiInstance.get("/admin/qa-reports/?type=message"),
                 apiInstance.get("/admin/forum-reports/"),
-                apiInstance.get("/feedback/stats/")
+                apiInstance.get("/feedback/stats/"),
+                apiInstance.get("/admin/course-evaluations-summary/")
             ]);
+
+            let coursesTotal = 0;
+            if (courseEvalRes.status === "fulfilled" && courseEvalRes.value?.data?.stats) {
+                coursesTotal = courseEvalRes.value.data.stats.total_courses || 0;
+            }
 
             let abuseTotal = 0;
             let abusePending = 0;
@@ -120,6 +132,7 @@ function ReportsAdmin() {
             }
 
             setStats({
+                coursesTotal,
                 abuseTotal,
                 abusePending,
                 qaTotal,
@@ -161,8 +174,25 @@ function ReportsAdmin() {
         fetchSummaryStats();
     }, [fetchSummaryStats]);
 
-    // Moderation Tabs definition
+    // Moderation & Evaluation Tabs definition
     const tabs = [
+        {
+            id: "course-evaluations",
+            label: "Evaluasi Kursus",
+            icon: "fas fa-chart-line",
+            badge: stats.loading ? null : (
+                <span className="tab-badge tab-badge-neutral">
+                    {stats.coursesTotal > 0 ? `${stats.coursesTotal} Kursus` : "Semua"}
+                </span>
+            ),
+            description: "Evaluasi mutu pembelajaran, rekapitulasi capaian ujian & JP, serta moderasi kursus Setjen DPD RI",
+            component: (
+                <CourseEvaluationReportsTab
+                    refreshTrigger={refreshTrigger}
+                    onMutationSuccess={handleMutationSuccess}
+                />
+            )
+        },
         {
             id: "abuse-reports",
             label: "Laporan Ulasan",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import apiInstance from "../../../utils/axios";
 import UserData from "../../plugin/UserData";
 import Toast from "../../plugin/Toast";
@@ -14,7 +14,7 @@ const VARIABLE_DICTIONARY = [
     { tag: "{{JUDUL_KURSUS}}", desc: "Judul lengkap program pelatihan / kursus" },
     { tag: "{{NOMOR_SERTIFIKAT}}", desc: "Nomor registrasi resmi sertifikat (KP.04/LMS/...)" },
     { tag: "{{TANGGAL_LULUS}}", desc: "Tanggal kelulusan (Format: 06 November 2026)" },
-    { tag: "{{TOTAL_JP}}", desc: "Total Jam Pelatihan (Contoh: 16)" },
+    { tag: "{{TOTAL_JP}}", desc: "Total Jam Pelatihan (Contoh: 16 JP)" },
     { tag: "{{KATEGORI_KURSUS}}", desc: "Kategori diklat (Contoh: Kepemimpinan / Teknis)" },
     { tag: "{{NAMA_INSTRUKTUR}}", desc: "Nama lengkap fasilitator / instruktur pengampu" },
     { tag: "{{JABATAN_PENANDATANGAN}}", desc: "Jabatan pejabat penandatangan resmi" },
@@ -38,10 +38,16 @@ const COLOR_PRESETS = [
 
 function CertificateDesignTab() {
     const userData = UserData();
-    const [activeSection, setActiveSection] = useState("styling");
+    // Sub-sections: 'visual' (Tata Letak & Visual), 'content' (Kop & Pejabat), 'pptx' (Master PPTX & Background)
+    const [activeSection, setActiveSection] = useState("visual");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [previewScale, setPreviewScale] = useState(0.42);
+    const [previewScale, setPreviewScale] = useState(0.40);
+    const [canvasTheme, setCanvasTheme] = useState("dark"); // 'dark' | 'light'
+    const [varSearchQuery, setVarSearchQuery] = useState("");
+    const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
+
+    const stageContainerRef = useRef(null);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -104,11 +110,7 @@ function CertificateDesignTab() {
         }
     };
 
-    useEffect(() => {
-        fetchConfig();
-    }, []);
-
-    const fetchConfig = async () => {
+    const fetchConfig = useCallback(async () => {
         try {
             setLoading(true);
             const res = await apiInstance.get("/admin/certificate-template-config/");
@@ -127,7 +129,24 @@ function CertificateDesignTab() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchConfig();
+    }, [fetchConfig]);
+
+    // Auto-fit scale calculator based on preview stage width
+    const handleFitScale = useCallback(() => {
+        if (stageContainerRef.current) {
+            const containerWidth = stageContainerRef.current.clientWidth - 28;
+            if (containerWidth > 200) {
+                const fit = Math.min(0.65, Math.max(0.28, +(containerWidth / 1414).toFixed(2)));
+                setPreviewScale(fit);
+                return;
+            }
+        }
+        setPreviewScale(0.40);
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -310,7 +329,6 @@ function CertificateDesignTab() {
             });
         } catch (error) {
             console.error('Gagal mengunduh template PPTX:', error);
-            // Fallback direct URL if blob failed
             try {
                 const base = (apiInstance.defaults.baseURL || '').replace(/\/+$/, '');
                 window.open(`${base}/admin/certificate-template-download-pptx/`, '_blank');
@@ -421,26 +439,58 @@ function CertificateDesignTab() {
         custom_background_url: bgPreview || formData.custom_background_url
     };
 
+    // Filtered variable tags for search
+    const filteredVariables = VARIABLE_DICTIONARY.filter(v => 
+        !varSearchQuery || 
+        v.tag.toLowerCase().includes(varSearchQuery.toLowerCase()) || 
+        v.desc.toLowerCase().includes(varSearchQuery.toLowerCase())
+    );
+
     return (
         <div className="certificate-design-tab-wrapper">
-            {/* Action Bar Header */}
-            <div className="p-3 mb-4 bg-white rounded-3 border d-flex flex-wrap justify-content-between align-items-center gap-3 shadow-sm">
-                <div className="d-flex align-items-center gap-3">
-                    <div className="p-2 bg-teal-subtle text-teal rounded-circle d-flex align-items-center justify-content-center" style={{ width: 44, height: 44 }}>
-                        <i className="fas fa-award fs-5"></i>
+            {/* ✨ COMPACT & EYE-CATCHING STUDIO HEADER TOOLBAR */}
+            <div className="cert-studio-header">
+                <div className="cert-studio-brand">
+                    <div className="cert-studio-icon">
+                        <i className="fas fa-award"></i>
                     </div>
-                    <div>
-                        <h5 className="mb-0 fw-bold text-dark">Studio Desain & Template Sertifikat</h5>
-                        <p className="text-muted small mb-0">Kelola master PowerPoint (.pptx), background kustom, kop lembaga, dan variabel otomatis.</p>
+                    <div className="cert-studio-info">
+                        <div className="cert-studio-title-row">
+                            <h2 className="cert-studio-title">Studio Desain Sertifikat</h2>
+                            <span className="cert-studio-tag">RESMI DPD RI</span>
+                        </div>
+                        <div className="cert-studio-chips">
+                            <span className="cert-chip" title="Standar Internasional ISO 216">
+                                <i className="fas fa-file-pdf text-teal"></i> A4 Landscape (1.414 : 1)
+                            </span>
+                            <span className="cert-chip" title="Resolusi Ultra-HD 2K untuk cetak jernih">
+                                <i className="fas fa-expand text-amber"></i> Ultra-HD 1414×1000px
+                            </span>
+                            <span className="cert-chip" title="Perubahan live langsung tersinkronisasi">
+                                <i className="fas fa-bolt text-teal"></i> Live Sync
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <div className="d-flex gap-2">
+
+                <div className="cert-studio-actions">
                     <button 
                         type="button"
-                        className="btn btn-outline-secondary d-inline-flex align-items-center gap-2"
+                        className="btn cert-btn-ghost text-danger"
+                        onClick={handleResetDefault}
+                        disabled={saving}
+                        title="Kembalikan format ke pengaturan standar resmi DPD RI"
+                    >
+                        <i className="fas fa-undo-alt me-1"></i>
+                        <span>Reset Standar</span>
+                    </button>
+
+                    <button 
+                        type="button"
+                        className="btn cert-btn-outline"
                         onClick={handleDownloadPPTX}
                         disabled={downloadingPptx}
-                        title="Unduh Master PPTX ber-placeholder resmi"
+                        title="Unduh Master PowerPoint (.pptx) dengan 2 slide lengkap"
                     >
                         {downloadingPptx ? (
                             <>
@@ -450,15 +500,17 @@ function CertificateDesignTab() {
                         ) : (
                             <>
                                 <i className="fas fa-file-powerpoint text-danger"></i>
-                                <span>Unduh Master PPTX</span>
+                                <span>Unduh PPTX</span>
                             </>
                         )}
                     </button>
+
                     <button 
                         type="button"
-                        className="btn btn-teal text-white fw-bold d-inline-flex align-items-center gap-2"
+                        className="btn cert-btn-primary"
                         onClick={handleSaveConfig}
                         disabled={saving}
+                        title="Simpan seluruh konfigurasi template sertifikat"
                     >
                         {saving ? (
                             <>
@@ -475,593 +527,767 @@ function CertificateDesignTab() {
                 </div>
             </div>
 
-            <div className="row g-4">
-                {/* LEFT COLUMN: Controls */}
+            {/* ✨ TWO-COLUMN COMPACT STUDIO WORKSPACE */}
+            <div className="row g-3 align-items-start">
+                {/* ========================================================
+                    LEFT COLUMN: COMPACT SEGMENTED SETTINGS CONTROLS
+                    ======================================================== */}
                 <div className="col-xl-6 col-lg-12">
-                    {/* Sub Tab Switcher */}
+                    {/* Modern Segmented Sub-Nav Tabs */}
                     <div className="cert-nav-tabs">
                         <button 
-                            className={`cert-nav-btn ${activeSection === "styling" ? "active" : ""}`}
-                            onClick={() => setActiveSection("styling")}
+                            type="button"
+                            className={`cert-nav-btn ${activeSection === "visual" || activeSection === "styling" ? "active" : ""}`}
+                            onClick={() => setActiveSection("visual")}
                         >
-                            <i className="fas fa-palette"></i> Tata Letak & Styling
+                            <i className="fas fa-palette"></i>
+                            <span>Tata Letak & Visual</span>
                         </button>
                         <button 
-                            className={`cert-nav-btn ${activeSection === "pptx" ? "active" : ""}`}
+                            type="button"
+                            className={`cert-nav-btn ${activeSection === "content" ? "active" : ""}`}
+                            onClick={() => setActiveSection("content")}
+                        >
+                            <i className="fas fa-feather-alt"></i>
+                            <span>Kop & Pejabat</span>
+                        </button>
+                        <button 
+                            type="button"
+                            className={`cert-nav-btn ${activeSection === "pptx" || activeSection === "background" ? "active" : ""}`}
                             onClick={() => setActiveSection("pptx")}
                         >
-                            <i className="fas fa-file-powerpoint"></i> Master PPTX & Variabel
-                        </button>
-                        <button 
-                            className={`cert-nav-btn ${activeSection === "background" ? "active" : ""}`}
-                            onClick={() => setActiveSection("background")}
-                        >
-                            <i className="fas fa-image"></i> Background Grafis
+                            <i className="fas fa-file-powerpoint"></i>
+                            <span>PPTX & Background</span>
+                            {selectedPptx || selectedBg ? (
+                                <span className="cert-nav-pill-dot"></span>
+                            ) : null}
                         </button>
                     </div>
 
-                    {/* SECTION 1: STYLING & TEXT */}
-                    {activeSection === "styling" && (
-                        <>
-                            {/* Card: Palet Warna & Font */}
+                    {/* ----------------------------------------------------
+                        TAB 1: TATA LETAK & VISUAL (Colors, Fonts & Toggles)
+                        ---------------------------------------------------- */}
+                    {(activeSection === "visual" || activeSection === "styling") && (
+                        <div className="cert-tab-content-pane">
+                            {/* Card 1: Palet Warna & Presets */}
                             <div className="cert-card">
-                                <h3 className="cert-card-title">
-                                    <i className="fas fa-paint-brush"></i> Palet Warna & Presets
-                                </h3>
-                                
-                                <div className="mb-3">
-                                    <label className="cert-form-label">Preset Warna Cepat</label>
-                                    <div className="d-flex flex-wrap gap-2 mt-1">
-                                        {COLOR_PRESETS.map((p, idx) => (
-                                            <button 
-                                                key={idx}
-                                                type="button"
-                                                className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2"
-                                                onClick={() => handleColorPreset(p)}
-                                            >
-                                                <span style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: p.primary, border: '1px solid #ccc' }}></span>
-                                                <span style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: p.accent, border: '1px solid #ccc' }}></span>
-                                                <span>{p.label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
+                                <div className="cert-card-header">
+                                    <h3 className="cert-card-title">
+                                        <i className="fas fa-paint-brush text-teal"></i>
+                                        <span>Palet Warna & Gaya Tema</span>
+                                    </h3>
+                                    <span className="cert-card-badge">Desain Global</span>
                                 </div>
 
-                                <div className="row g-3">
-                                    <div className="col-sm-6">
-                                        <label className="cert-form-label">Warna Utama (Primary)</label>
-                                        <div className="color-swatch-group">
-                                            <input 
-                                                type="color" 
-                                                name="primary_color"
-                                                value={formData.primary_color}
-                                                onChange={handleInputChange}
-                                                className="color-swatch-input" 
-                                            />
-                                            <input 
-                                                type="text" 
-                                                name="primary_color"
-                                                value={formData.primary_color}
-                                                onChange={handleInputChange}
-                                                className="form-control cert-input" 
-                                            />
-                                        </div>
-                                        <div className="cert-form-hint">Digunakan untuk teks nama, judul, dan bingkai luar.</div>
-                                    </div>
-
-                                    <div className="col-sm-6">
-                                        <label className="cert-form-label">Warna Aksen (Gold/Highlight)</label>
-                                        <div className="color-swatch-group">
-                                            <input 
-                                                type="color" 
-                                                name="accent_color"
-                                                value={formData.accent_color}
-                                                onChange={handleInputChange}
-                                                className="color-swatch-input" 
-                                            />
-                                            <input 
-                                                type="text" 
-                                                name="accent_color"
-                                                value={formData.accent_color}
-                                                onChange={handleInputChange}
-                                                className="form-control cert-input" 
-                                            />
-                                        </div>
-                                        <div className="cert-form-hint">Digunakan untuk bingkai dalam emas, bintang, dan ornamen.</div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-3">
-                                    <label className="cert-form-label">Kombinasi Tipografi (Font Presets)</label>
-                                    <div className="d-flex flex-wrap gap-2 mt-1">
-                                        {FONT_PRESETS.map((f, idx) => (
-                                            <button 
-                                                key={idx}
-                                                type="button"
-                                                className="btn btn-sm btn-outline-secondary"
-                                                onClick={() => handleFontPreset(f)}
-                                            >
-                                                {f.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Card: Identitas Kop & Judul */}
-                            <div className="cert-card">
-                                <h3 className="cert-card-title">
-                                    <i className="fas fa-landmark"></i> Identitas Kop Lembaga & Teks
-                                </h3>
-
-                                <div className="mb-3">
-                                    <label className="cert-form-label">Kop Lembaga - Tingkat Atas</label>
-                                    <input 
-                                        type="text" 
-                                        name="agency_sup"
-                                        value={formData.agency_sup}
-                                        onChange={handleInputChange}
-                                        className="form-control cert-input" 
-                                    />
-                                </div>
-
-                                <div className="mb-3">
-                                    <label className="cert-form-label">Kop Lembaga - Institusi Utama</label>
-                                    <input 
-                                        type="text" 
-                                        name="agency_main"
-                                        value={formData.agency_main}
-                                        onChange={handleInputChange}
-                                        className="form-control cert-input fw-bold" 
-                                    />
-                                </div>
-
-                                <div className="mb-3">
-                                    <label className="cert-form-label">Kop Lembaga - Pusat / Unit Pengembang</label>
-                                    <input 
-                                        type="text" 
-                                        name="agency_sub"
-                                        value={formData.agency_sub}
-                                        onChange={handleInputChange}
-                                        className="form-control cert-input" 
-                                    />
-                                </div>
-
-                                <div className="row g-3 mb-3">
-                                    <div className="col-sm-6">
-                                        <label className="cert-form-label">Judul Utama Sertifikat</label>
-                                        <input 
-                                            type="text" 
-                                            name="certificate_title"
-                                            value={formData.certificate_title}
-                                            onChange={handleInputChange}
-                                            className="form-control cert-input" 
-                                        />
-                                    </div>
-                                    <div className="col-sm-6">
-                                        <label className="cert-form-label">Sub-Judul Bahasa Inggris</label>
-                                        <input 
-                                            type="text" 
-                                            name="certificate_subtitle"
-                                            value={formData.certificate_subtitle}
-                                            onChange={handleInputChange}
-                                            className="form-control cert-input" 
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="mb-3">
-                                    <label className="cert-form-label">Pernyataan Kelulusan (Statement Text)</label>
-                                    <textarea 
-                                        name="statement_text"
-                                        rows="3"
-                                        value={formData.statement_text}
-                                        onChange={handleInputChange}
-                                        className="form-control cert-input" 
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Card: Penandatangan & Pengesahan */}
-                            <div className="cert-card">
-                                <h3 className="cert-card-title">
-                                    <i className="fas fa-signature"></i> Pejabat Pengesahan & Toggles
-                                </h3>
-
-                                <div className="row g-3 mb-3">
-                                    <div className="col-sm-6">
-                                        <label className="cert-form-label">Jabatan Penandatangan</label>
-                                        <input 
-                                            type="text" 
-                                            name="signatory_title"
-                                            value={formData.signatory_title}
-                                            onChange={handleInputChange}
-                                            className="form-control cert-input" 
-                                        />
-                                    </div>
-                                    <div className="col-sm-6">
-                                        <label className="cert-form-label">Nama Pejabat Penandatangan</label>
-                                        <input 
-                                            type="text" 
-                                            name="signatory_name"
-                                            value={formData.signatory_name}
-                                            onChange={handleInputChange}
-                                            className="form-control cert-input" 
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="row g-3 mb-3">
-                                    <div className="col-sm-6">
-                                        <label className="cert-form-label">Instansi Pejabat</label>
-                                        <input 
-                                            type="text" 
-                                            name="signatory_sub_title"
-                                            value={formData.signatory_sub_title}
-                                            onChange={handleInputChange}
-                                            className="form-control cert-input" 
-                                        />
-                                    </div>
-                                    <div className="col-sm-6">
-                                        <label className="cert-form-label">NIP Pejabat</label>
-                                        <input 
-                                            type="text" 
-                                            name="signatory_nip"
-                                            value={formData.signatory_nip}
-                                            onChange={handleInputChange}
-                                            className="form-control cert-input" 
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="cert-form-label mb-2">
-                                    <i className="fas fa-eye text-teal me-1"></i>
-                                    Visibilitas Elemen Resmi:
-                                </div>
-                                <div className="row g-2">
-                                    <div className="col-sm-6">
-                                        <div className="form-check form-switch cert-switch-item">
-                                            <input 
-                                                className="form-check-input" 
-                                                type="checkbox" 
-                                                id="tabToggleGoldSeal"
-                                                name="show_gold_seal"
-                                                checked={formData.show_gold_seal}
-                                                onChange={handleInputChange}
-                                            />
-                                            <label className="form-check-label" htmlFor="tabToggleGoldSeal">
-                                                <i className="fas fa-certificate text-warning me-1"></i>
-                                                Segel Emas Resmi (Gold Medallion)
-                                            </label>
+                                <div className="cert-card-body">
+                                    {/* Quick Presets */}
+                                    <div className="mb-2">
+                                        <label className="cert-form-label">Preset Tema Cepat:</label>
+                                        <div className="cert-preset-row">
+                                            {COLOR_PRESETS.map((p, idx) => {
+                                                const isActive = formData.primary_color === p.primary && formData.accent_color === p.accent;
+                                                return (
+                                                    <button 
+                                                        key={idx}
+                                                        type="button"
+                                                        className={`cert-preset-chip ${isActive ? 'active' : ''}`}
+                                                        onClick={() => handleColorPreset(p)}
+                                                        title={`Terapkan ${p.label}`}
+                                                    >
+                                                        <span className="cert-dot-dual">
+                                                            <span style={{ backgroundColor: p.primary }}></span>
+                                                            <span style={{ backgroundColor: p.accent }}></span>
+                                                        </span>
+                                                        <span className="cert-preset-text">{p.label}</span>
+                                                        {isActive && <i className="fas fa-check cert-preset-check"></i>}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
-                                    <div className="col-sm-6">
-                                        <div className="form-check form-switch cert-switch-item">
-                                            <input 
-                                                className="form-check-input" 
-                                                type="checkbox" 
-                                                id="tabToggleWatermark"
-                                                name="show_watermark"
-                                                checked={formData.show_watermark}
-                                                onChange={handleInputChange}
-                                            />
-                                            <label className="form-check-label" htmlFor="tabToggleWatermark">
-                                                <i className="fas fa-shield-alt text-teal me-1"></i>
-                                                Watermark Lambang DPD RI
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div className="col-sm-6">
-                                        <div className="form-check form-switch cert-switch-item">
-                                            <input 
-                                                className="form-check-input" 
-                                                type="checkbox" 
-                                                id="tabToggleBpsdm"
-                                                name="show_bpsdm_logo"
-                                                checked={formData.show_bpsdm_logo}
-                                                onChange={handleInputChange}
-                                            />
-                                            <label className="form-check-label" htmlFor="tabToggleBpsdm">
-                                                <i className="fas fa-landmark text-primary me-1"></i>
-                                                Logo Pendamping (LMSetjen DPD RI)
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div className="col-sm-6">
-                                        <div className="form-check form-switch cert-switch-item">
-                                            <input 
-                                                className="form-check-input" 
-                                                type="checkbox" 
-                                                id="tabToggleQr"
-                                                name="show_qr_code"
-                                                checked={formData.show_qr_code}
-                                                onChange={handleInputChange}
-                                            />
-                                            <label className="form-check-label" htmlFor="tabToggleQr">
-                                                <i className="fas fa-qrcode text-dark me-1"></i>
-                                                QR Code Validasi Digital
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </>
-                    )}
 
-                    {/* SECTION 2: PPTX MASTER & VARIABLE DICTIONARY */}
-                    {activeSection === "pptx" && (
-                        <div className="cert-card">
-                            <h3 className="cert-card-title">
-                                <i className="fas fa-file-powerpoint text-danger"></i> Template Master PowerPoint (.pptx)
-                            </h3>
-                            <p className="text-muted small">
-                                Admin dapat mengunduh template PowerPoint resmi Setjen DPD RI, mengedit tata letak, ukuran, dan background sesuka hati di Microsoft PowerPoint, lalu mengunggah kembali file PPTX tersebut ke sistem.
-                            </p>
-
-                            <div className="p-3 bg-light rounded-3 mb-4 border d-flex flex-wrap justify-content-between align-items-center gap-3">
-                                <div>
-                                    <h6 className="mb-1 fw-bold">Unduh Berkas Master PPTX Bawaan</h6>
-                                    <p className="mb-0 text-muted small">Lengkap dengan 2 Slide: Slide Template & Kamus Panduan Teknis.</p>
-                                </div>
-                                <button 
-                                    type="button"
-                                    className="btn btn-teal text-white btn-sm px-3 d-inline-flex align-items-center gap-2"
-                                    onClick={handleDownloadPPTX}
-                                    disabled={downloadingPptx}
-                                >
-                                    {downloadingPptx ? (
-                                        <>
-                                            <span className="spinner-border spinner-border-sm" role="status"></span>
-                                            <span>Mengunduh berkas...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i className="fas fa-download"></i> Unduh (.pptx)
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-
-                            <div className="mb-4">
-                                <h5 className="fw-bold text-dark mb-2">
-                                    <i className="fas fa-tags text-teal me-2"></i> Kamus Variabel Dinamis
-                                </h5>
-                                <p className="text-muted small mb-2">
-                                    Gunakan tag di bawah ini di dalam PowerPoint. Sistem LMS akan otomatis mengganti tag dengan data peserta dan kursus yang bersangkutan:
-                                </p>
-                                <div className="var-dict-grid">
-                                    {VARIABLE_DICTIONARY.map((v, i) => (
-                                        <div className="var-tag-card" key={i}>
-                                            <div>
-                                                <span className="var-tag-code">{v.tag}</span>
-                                                <span className="var-tag-label">{v.desc}</span>
+                                    {/* Custom Color Pickers side by side */}
+                                    <div className="row g-2 mb-2">
+                                        <div className="col-sm-6">
+                                            <label className="cert-form-label">Warna Utama (Primary)</label>
+                                            <div className="cert-color-input-group">
+                                                <input 
+                                                    type="color" 
+                                                    name="primary_color"
+                                                    value={formData.primary_color}
+                                                    onChange={handleInputChange}
+                                                    className="cert-color-picker" 
+                                                    title="Pilih Warna Utama"
+                                                />
+                                                <input 
+                                                    type="text" 
+                                                    name="primary_color"
+                                                    value={formData.primary_color}
+                                                    onChange={handleInputChange}
+                                                    className="form-control form-control-sm cert-input font-monospace" 
+                                                    placeholder="#0d5c3a"
+                                                />
                                             </div>
-                                            <button 
-                                                type="button" 
-                                                className="btn-copy-tag"
-                                                onClick={() => handleCopyTag(v.tag)}
-                                                title="Salin Tag"
-                                            >
-                                                <i className="fas fa-copy"></i>
-                                            </button>
+                                            <div className="cert-form-hint">Teks nama, judul, & bingkai luar</div>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
 
-                            {/* Drag & Drop Upload PPTX */}
-                            <div className="mb-3">
-                                <h5 className="fw-bold text-dark mb-2">
-                                    <i className="fas fa-upload text-teal me-2"></i> Unggah File Master PPTX Baru
-                                </h5>
-                                <input 
-                                    type="file" 
-                                    ref={pptxInputRef}
-                                    accept=".pptx"
-                                    onChange={handlePptxChange}
-                                    style={{ display: 'none' }}
-                                />
-                                <div 
-                                    className={`cert-dropzone ${isDraggingPptx ? 'is-dragging' : ''}`}
-                                    onClick={() => pptxInputRef.current?.click()}
-                                    onDragOver={handlePptxDragOver}
-                                    onDragEnter={handlePptxDragEnter}
-                                    onDragLeave={handlePptxDragLeave}
-                                    onDrop={handlePptxDrop}
-                                    role="button"
-                                    tabIndex={0}
-                                    title="Klik atau Tarik File .pptx ke sini"
-                                >
-                                    <div className="cert-dropzone-icon">
-                                        <i className={`fas ${isDraggingPptx ? 'fa-file-arrow-up fa-bounce' : 'fa-file-powerpoint'} text-danger`}></i>
+                                        <div className="col-sm-6">
+                                            <label className="cert-form-label">Warna Aksen Emas (Accent)</label>
+                                            <div className="cert-color-input-group">
+                                                <input 
+                                                    type="color" 
+                                                    name="accent_color"
+                                                    value={formData.accent_color}
+                                                    onChange={handleInputChange}
+                                                    className="cert-color-picker" 
+                                                    title="Pilih Warna Aksen"
+                                                />
+                                                <input 
+                                                    type="text" 
+                                                    name="accent_color"
+                                                    value={formData.accent_color}
+                                                    onChange={handleInputChange}
+                                                    className="form-control form-control-sm cert-input font-monospace" 
+                                                    placeholder="#c59b27"
+                                                />
+                                            </div>
+                                            <div className="cert-form-hint">Bingkai dalam emas & ornamen</div>
+                                        </div>
                                     </div>
-                                    <h6 className="fw-bold mb-1">
-                                        {isDraggingPptx 
-                                            ? "Lepaskan file PowerPoint (.pptx) di sini..."
-                                            : (selectedPptx ? selectedPptx.name : "Pilih atau Tarik (Drag & Drop) file .pptx hasil editan Anda")}
-                                    </h6>
-                                    <p className="text-muted small mb-0">
-                                        Format file harus berupa Microsoft PowerPoint Presentation (.pptx).
-                                    </p>
+
+                                    {/* Font Presets */}
+                                    <div className="mt-2 pt-2 border-top">
+                                        <label className="cert-form-label mb-1">Kombinasi Tipografi (Font Presets):</label>
+                                        <div className="cert-font-presets-grid">
+                                            {FONT_PRESETS.map((f, idx) => {
+                                                const isActive = formData.title_font === f.title && formData.body_font === f.body;
+                                                return (
+                                                    <button 
+                                                        key={idx}
+                                                        type="button"
+                                                        className={`cert-font-chip ${isActive ? 'active' : ''}`}
+                                                        onClick={() => handleFontPreset(f)}
+                                                    >
+                                                        <i className="fas fa-font me-1"></i>
+                                                        <span>{f.label}</span>
+                                                        {isActive && <i className="fas fa-check ms-auto text-teal"></i>}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {pptxFeedback && (
-                                <div className="alert alert-info mt-3">
-                                    <h6 className="alert-heading fw-bold mb-1">
-                                        <i className="fas fa-check-circle me-1"></i> Validasi Tag PPTX:
-                                    </h6>
-                                    <p className="small mb-1">Tag yang ditemukan di dalam slide:</p>
-                                    <div className="d-flex flex-wrap gap-1">
-                                        {pptxFeedback.found_tags?.map((t, idx) => (
-                                            <span key={idx} className="badge bg-success">{t}</span>
+                            {/* Card 2: Visibilitas Elemen Resmi */}
+                            <div className="cert-card">
+                                <div className="cert-card-header">
+                                    <h3 className="cert-card-title">
+                                        <i className="fas fa-shield-alt text-teal"></i>
+                                        <span>Visibilitas Elemen Resmi</span>
+                                    </h3>
+                                    <span className="cert-card-badge">Keaslian & Pengesahan</span>
+                                </div>
+
+                                <div className="cert-card-body">
+                                    <div className="row g-2">
+                                        <div className="col-sm-6">
+                                            <div className="cert-toggle-box">
+                                                <div className="cert-toggle-meta">
+                                                    <i className="fas fa-certificate text-warning cert-toggle-icon"></i>
+                                                    <div>
+                                                        <div className="cert-toggle-label">Segel Emas Resmi</div>
+                                                        <div className="cert-toggle-sub">Medali garuda embos emas</div>
+                                                    </div>
+                                                </div>
+                                                <div className="form-check form-switch p-0 m-0">
+                                                    <input 
+                                                        className="form-check-input cert-switch" 
+                                                        type="checkbox" 
+                                                        id="toggleGoldSeal"
+                                                        name="show_gold_seal"
+                                                        checked={formData.show_gold_seal}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-sm-6">
+                                            <div className="cert-toggle-box">
+                                                <div className="cert-toggle-meta">
+                                                    <i className="fas fa-shield-alt text-teal cert-toggle-icon"></i>
+                                                    <div>
+                                                        <div className="cert-toggle-label">Watermark Lambang</div>
+                                                        <div className="cert-toggle-sub">Lambang transparan DPD RI</div>
+                                                    </div>
+                                                </div>
+                                                <div className="form-check form-switch p-0 m-0">
+                                                    <input 
+                                                        className="form-check-input cert-switch" 
+                                                        type="checkbox" 
+                                                        id="toggleWatermark"
+                                                        name="show_watermark"
+                                                        checked={formData.show_watermark}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-sm-6">
+                                            <div className="cert-toggle-box">
+                                                <div className="cert-toggle-meta">
+                                                    <i className="fas fa-landmark text-primary cert-toggle-icon"></i>
+                                                    <div>
+                                                        <div className="cert-toggle-label">Logo Pendamping</div>
+                                                        <div className="cert-toggle-sub">Logo LMSetjen DPD RI</div>
+                                                    </div>
+                                                </div>
+                                                <div className="form-check form-switch p-0 m-0">
+                                                    <input 
+                                                        className="form-check-input cert-switch" 
+                                                        type="checkbox" 
+                                                        id="toggleBpsdm"
+                                                        name="show_bpsdm_logo"
+                                                        checked={formData.show_bpsdm_logo}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-sm-6">
+                                            <div className="cert-toggle-box">
+                                                <div className="cert-toggle-meta">
+                                                    <i className="fas fa-qrcode text-dark cert-toggle-icon"></i>
+                                                    <div>
+                                                        <div className="cert-toggle-label">QR Code Validasi</div>
+                                                        <div className="cert-toggle-sub">Token otentikasi digital</div>
+                                                    </div>
+                                                </div>
+                                                <div className="form-check form-switch p-0 m-0">
+                                                    <input 
+                                                        className="form-check-input cert-switch" 
+                                                        type="checkbox" 
+                                                        id="toggleQr"
+                                                        name="show_qr_code"
+                                                        checked={formData.show_qr_code}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ----------------------------------------------------
+                        TAB 2: KOP LEMBAGA, TEKS & PEJABAT
+                        ---------------------------------------------------- */}
+                    {activeSection === "content" && (
+                        <div className="cert-tab-content-pane">
+                            {/* Card 1: Kop Lembaga Resmi (3-Tier) */}
+                            <div className="cert-card">
+                                <div className="cert-card-header">
+                                    <h3 className="cert-card-title">
+                                        <i className="fas fa-landmark text-teal"></i>
+                                        <span>Kop Identitas Lembaga (3-Tier)</span>
+                                    </h3>
+                                    <span className="cert-card-badge">Header Resmi</span>
+                                </div>
+
+                                <div className="cert-card-body">
+                                    <div className="row g-2 mb-2">
+                                        <div className="col-sm-6">
+                                            <label className="cert-form-label">Tingkat Atas (Sup)</label>
+                                            <input 
+                                                type="text" 
+                                                name="agency_sup"
+                                                value={formData.agency_sup}
+                                                onChange={handleInputChange}
+                                                className="form-control form-control-sm cert-input" 
+                                                placeholder="SEKRETARIAT JENDERAL"
+                                            />
+                                        </div>
+                                        <div className="col-sm-6">
+                                            <label className="cert-form-label">Institusi Utama (Main)</label>
+                                            <input 
+                                                type="text" 
+                                                name="agency_main"
+                                                value={formData.agency_main}
+                                                onChange={handleInputChange}
+                                                className="form-control form-control-sm cert-input fw-bold" 
+                                                placeholder="DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="cert-form-label">Biro / Satuan Kerja Pengembang (Sub)</label>
+                                        <input 
+                                            type="text" 
+                                            name="agency_sub"
+                                            value={formData.agency_sub}
+                                            onChange={handleInputChange}
+                                            className="form-control form-control-sm cert-input" 
+                                            placeholder="BIRO ORGANISASI KEANGGOTAAN DAN KEPEGAWAIAN"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 2: Judul Sertifikat & Pernyataan */}
+                            <div className="cert-card">
+                                <div className="cert-card-header">
+                                    <h3 className="cert-card-title">
+                                        <i className="fas fa-heading text-teal"></i>
+                                        <span>Judul Sertifikat & Naskah Kelulusan</span>
+                                    </h3>
+                                    <span className="cert-card-badge">Isi Sertifikat</span>
+                                </div>
+
+                                <div className="cert-card-body">
+                                    <div className="row g-2 mb-2">
+                                        <div className="col-sm-6">
+                                            <label className="cert-form-label">Judul Utama</label>
+                                            <input 
+                                                type="text" 
+                                                name="certificate_title"
+                                                value={formData.certificate_title}
+                                                onChange={handleInputChange}
+                                                className="form-control form-control-sm cert-input fw-semibold" 
+                                                placeholder="SERTIFIKAT KELULUSAN"
+                                            />
+                                        </div>
+                                        <div className="col-sm-6">
+                                            <label className="cert-form-label">Sub-Judul Bahasa Inggris</label>
+                                            <input 
+                                                type="text" 
+                                                name="certificate_subtitle"
+                                                value={formData.certificate_subtitle}
+                                                onChange={handleInputChange}
+                                                className="form-control form-control-sm cert-input fst-italic" 
+                                                placeholder="Certificate of Completion"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="cert-form-label">Naskah Pernyataan Kelulusan (Statement)</label>
+                                        <textarea 
+                                            name="statement_text"
+                                            rows="2"
+                                            value={formData.statement_text}
+                                            onChange={handleInputChange}
+                                            className="form-control form-control-sm cert-input" 
+                                            placeholder="Telah berhasil dan berintegritas menyelesaikan seluruh materi..."
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 3: Pejabat Penandatangan Resmi */}
+                            <div className="cert-card">
+                                <div className="cert-card-header">
+                                    <h3 className="cert-card-title">
+                                        <i className="fas fa-signature text-teal"></i>
+                                        <span>Pejabat Penandatangan Resmi</span>
+                                    </h3>
+                                    <span className="cert-card-badge">Otoritas Valid</span>
+                                </div>
+
+                                <div className="cert-card-body">
+                                    <div className="row g-2 mb-2">
+                                        <div className="col-sm-6">
+                                            <label className="cert-form-label">Jabatan Penandatangan</label>
+                                            <input 
+                                                type="text" 
+                                                name="signatory_title"
+                                                value={formData.signatory_title}
+                                                onChange={handleInputChange}
+                                                className="form-control form-control-sm cert-input" 
+                                                placeholder="Kepala Biro Organisasi Keanggotaan..."
+                                            />
+                                        </div>
+                                        <div className="col-sm-6">
+                                            <label className="cert-form-label">Nama Pejabat</label>
+                                            <input 
+                                                type="text" 
+                                                name="signatory_name"
+                                                value={formData.signatory_name}
+                                                onChange={handleInputChange}
+                                                className="form-control form-control-sm cert-input fw-bold" 
+                                                placeholder="Dr. Fitriani, A.P., M.Si."
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="row g-2">
+                                        <div className="col-sm-6">
+                                            <label className="cert-form-label">Instansi Pejabat</label>
+                                            <input 
+                                                type="text" 
+                                                name="signatory_sub_title"
+                                                value={formData.signatory_sub_title}
+                                                onChange={handleInputChange}
+                                                className="form-control form-control-sm cert-input" 
+                                                placeholder="Sekretariat Jenderal DPD RI"
+                                            />
+                                        </div>
+                                        <div className="col-sm-6">
+                                            <label className="cert-form-label">NIP Pejabat</label>
+                                            <input 
+                                                type="text" 
+                                                name="signatory_nip"
+                                                value={formData.signatory_nip}
+                                                onChange={handleInputChange}
+                                                className="form-control form-control-sm cert-input font-monospace" 
+                                                placeholder="19741017 199311 2 001"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ----------------------------------------------------
+                        TAB 3: MASTER PPTX & BACKGROUND GRAFIS
+                        ---------------------------------------------------- */}
+                    {(activeSection === "pptx" || activeSection === "background") && (
+                        <div className="cert-tab-content-pane">
+                            {/* Card 1: Template Master PPTX & Background Dual Action */}
+                            <div className="cert-card">
+                                <div className="cert-card-header">
+                                    <h3 className="cert-card-title">
+                                        <i className="fas fa-file-powerpoint text-danger"></i>
+                                        <span>Master PowerPoint & Background</span>
+                                    </h3>
+                                    <span className="cert-card-badge">Aset Eksternal</span>
+                                </div>
+
+                                <div className="cert-card-body">
+                                    <div className="row g-2 mb-3">
+                                        {/* Download Quick Box */}
+                                        <div className="col-sm-6">
+                                            <div className="cert-asset-action-box">
+                                                <div className="d-flex align-items-center gap-2 mb-2">
+                                                    <i className="fas fa-file-powerpoint fs-4 text-danger"></i>
+                                                    <div>
+                                                        <div className="fw-bold small">Master PPTX Baku</div>
+                                                        <div className="text-muted" style={{ fontSize: '0.72rem' }}>2 Slide: Template & Kamus</div>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    type="button"
+                                                    className="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-1"
+                                                    onClick={handleDownloadPPTX}
+                                                    disabled={downloadingPptx}
+                                                >
+                                                    <i className="fas fa-download"></i>
+                                                    <span>Unduh Master .PPTX</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Background Preview / Status Box */}
+                                        <div className="col-sm-6">
+                                            <div className="cert-asset-action-box">
+                                                <div className="d-flex align-items-center gap-2 mb-2">
+                                                    <i className="fas fa-image fs-4 text-teal"></i>
+                                                    <div>
+                                                        <div className="fw-bold small">Background Kustom</div>
+                                                        <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                                                            {bgPreview || formData.custom_background_url ? "Terpasang Aktif" : "Bawaan Sistem"}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {bgPreview || formData.custom_background_url ? (
+                                                    <button 
+                                                        type="button" 
+                                                        className="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-1"
+                                                        onClick={handleRemoveCustomBg}
+                                                    >
+                                                        <i className="fas fa-trash-alt"></i>
+                                                        <span>Hapus Background</span>
+                                                    </button>
+                                                ) : (
+                                                    <button 
+                                                        type="button" 
+                                                        className="btn btn-outline-teal btn-sm w-100 d-flex align-items-center justify-content-center gap-1"
+                                                        onClick={() => bgInputRef.current?.click()}
+                                                    >
+                                                        <i className="fas fa-upload"></i>
+                                                        <span>Unggah Gambar</span>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Upload Inputs Hidden */}
+                                    <input 
+                                        type="file" 
+                                        ref={pptxInputRef}
+                                        accept=".pptx"
+                                        onChange={handlePptxChange}
+                                        style={{ display: 'none' }}
+                                    />
+                                    <input 
+                                        type="file" 
+                                        ref={bgInputRef}
+                                        accept="image/png, image/jpeg, image/webp"
+                                        onChange={handleBgChange}
+                                        style={{ display: 'none' }}
+                                    />
+
+                                    {/* Compact Dropzone: PPTX */}
+                                    <div className="mb-2">
+                                        <div className="d-flex justify-content-between align-items-center mb-1">
+                                            <label className="cert-form-label mb-0">Unggah Template PPTX Baru:</label>
+                                            {selectedPptx && (
+                                                <span className="badge bg-success small">
+                                                    <i className="fas fa-check me-1"></i> Terpilih
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div 
+                                            className={`cert-compact-dropzone ${isDraggingPptx ? 'is-dragging' : ''} ${selectedPptx ? 'has-file' : ''}`}
+                                            onClick={() => pptxInputRef.current?.click()}
+                                            onDragOver={handlePptxDragOver}
+                                            onDragEnter={handlePptxDragEnter}
+                                            onDragLeave={handlePptxDragLeave}
+                                            onDrop={handlePptxDrop}
+                                            role="button"
+                                            tabIndex={0}
+                                        >
+                                            <i className={`fas ${selectedPptx ? 'fa-file-circle-check text-success' : 'fa-file-powerpoint text-danger'} cert-compact-icon`}></i>
+                                            <div className="cert-compact-droptext">
+                                                <span className="fw-semibold">
+                                                    {selectedPptx ? selectedPptx.name : "Klik atau Tarik file .pptx ke sini"}
+                                                </span>
+                                                <span className="text-muted small ms-1">(.pptx hasil editan Microsoft PowerPoint)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Compact Dropzone: Background Image */}
+                                    <div>
+                                        <div className="d-flex justify-content-between align-items-center mb-1">
+                                            <label className="cert-form-label mb-0">Unggah Gambar Latar (PNG/JPG):</label>
+                                            {(bgPreview || selectedBg) && (
+                                                <span className="badge bg-teal text-white small">
+                                                    <i className="fas fa-check me-1"></i> Preview Aktif
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div 
+                                            className={`cert-compact-dropzone ${isDraggingBg ? 'is-dragging' : ''} ${selectedBg ? 'has-file' : ''}`}
+                                            onClick={() => bgInputRef.current?.click()}
+                                            onDragOver={handleBgDragOver}
+                                            onDragEnter={handleBgDragEnter}
+                                            onDragLeave={handleBgDragLeave}
+                                            onDrop={handleBgDrop}
+                                            role="button"
+                                            tabIndex={0}
+                                        >
+                                            <i className={`fas ${selectedBg ? 'fa-image text-success' : 'fa-cloud-upload-alt text-teal'} cert-compact-icon`}></i>
+                                            <div className="cert-compact-droptext">
+                                                <span className="fw-semibold">
+                                                    {selectedBg ? selectedBg.name : "Tarik gambar background (Rasio 1.414 | 1414×1000px)"}
+                                                </span>
+                                                <span className="text-muted small ms-1">(PNG, JPG, WebP)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {pptxFeedback && (
+                                        <div className="alert alert-info py-2 px-3 mt-2 mb-0 small">
+                                            <div className="fw-bold mb-1">
+                                                <i className="fas fa-check-circle me-1"></i> Validasi Tag PPTX:
+                                            </div>
+                                            <div className="d-flex flex-wrap gap-1">
+                                                {pptxFeedback.found_tags?.map((t, idx) => (
+                                                    <span key={idx} className="badge bg-success">{t}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Card 2: Kamus Variabel Dinamis PPTX (Searchable & Compact) */}
+                            <div className="cert-card">
+                                <div className="cert-card-header">
+                                    <h3 className="cert-card-title">
+                                        <i className="fas fa-tags text-teal"></i>
+                                        <span>Kamus Variabel Dinamis PPTX</span>
+                                    </h3>
+                                    <span className="badge bg-teal-subtle text-teal font-monospace small">
+                                        {filteredVariables.length} Tag
+                                    </span>
+                                </div>
+
+                                <div className="cert-card-body">
+                                    {/* Search input for variables */}
+                                    <div className="input-group input-group-sm mb-2">
+                                        <span className="input-group-text bg-white border-end-0">
+                                            <i className="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input 
+                                            type="text" 
+                                            className="form-control form-control-sm border-start-0" 
+                                            placeholder="Cari tag variabel (contoh: NIP, SISWA, KURSUS)..."
+                                            value={varSearchQuery}
+                                            onChange={(e) => setVarSearchQuery(e.target.value)}
+                                        />
+                                        {varSearchQuery && (
+                                            <button 
+                                                className="btn btn-outline-secondary btn-sm"
+                                                onClick={() => setVarSearchQuery("")}
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Compact Variable Tag List */}
+                                    <div className="cert-var-tag-list">
+                                        {filteredVariables.map((v, i) => (
+                                            <div 
+                                                className="cert-var-tag-pill" 
+                                                key={i}
+                                                onClick={() => handleCopyTag(v.tag)}
+                                                title={`Klik untuk menyalin: ${v.tag}`}
+                                            >
+                                                <span className="cert-var-code">{v.tag}</span>
+                                                <span className="cert-var-desc">{v.desc}</span>
+                                                <button 
+                                                    type="button" 
+                                                    className="cert-var-copy-btn"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleCopyTag(v.tag);
+                                                    }}
+                                                >
+                                                    <i className="fas fa-copy"></i>
+                                                </button>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     )}
-
-                    {/* SECTION 3: CUSTOM GRAPHIC BACKGROUND */}
-                    {activeSection === "background" && (
-                        <div className="cert-card">
-                            <h3 className="cert-card-title">
-                                <i className="fas fa-image text-primary"></i> Background Grafis Kustom (PNG / JPG)
-                            </h3>
-                            <p className="text-muted small">
-                                Jika Anda mendesain sertifikat secara visual di PowerPoint, Canva, atau Photoshop, Anda dapat mengekspornya menjadi gambar (PNG/JPG resolusi 1414 × 1000 px) dan mengunggahnya sebagai latar belakang sertifikat.
-                            </p>
-
-                            <input 
-                                type="file" 
-                                ref={bgInputRef}
-                                accept="image/png, image/jpeg, image/webp"
-                                onChange={handleBgChange}
-                                style={{ display: 'none' }}
-                            />
-
-                            <div 
-                                className={`cert-dropzone mb-3 ${isDraggingBg ? 'is-dragging' : ''}`}
-                                onClick={() => bgInputRef.current?.click()}
-                                onDragOver={handleBgDragOver}
-                                onDragEnter={handleBgDragEnter}
-                                onDragLeave={handleBgDragLeave}
-                                onDrop={handleBgDrop}
-                                role="button"
-                                tabIndex={0}
-                                title="Klik atau Tarik File Gambar ke sini"
-                            >
-                                <div className="cert-dropzone-icon">
-                                    <i className={`fas ${isDraggingBg ? 'fa-cloud-arrow-down fa-bounce' : 'fa-cloud-upload-alt'} text-teal`}></i>
-                                </div>
-                                <h6 className="fw-bold mb-1">
-                                    {isDraggingBg 
-                                        ? "Lepaskan berkas gambar background di sini..."
-                                        : (selectedBg ? selectedBg.name : "Pilih atau Tarik (Drag & Drop) gambar background kustom")}
-                                </h6>
-                                <p className="text-muted small mb-0">
-                                    Mendukung format PNG, JPG, JPEG, WebP (Rekomendasi rasio: 1.414 | A4 Landscape, 1414 × 1000 px).
-                                </p>
-                            </div>
-
-                            {(bgPreview || formData.custom_background_url) && (
-                                <div className="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
-                                    <div className="d-flex align-items-center gap-3">
-                                        <img 
-                                            src={bgPreview || formData.custom_background_url} 
-                                            alt="Preview Background" 
-                                            style={{ width: 80, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid #cbd5e1' }}
-                                        />
-                                        <div>
-                                            <div className="fw-bold small">Background Aktif Terpasang</div>
-                                            <div className="text-muted" style={{ fontSize: '0.75rem' }}>Gambar ini akan menjadi latar belakang sertifikat di seluruh sistem.</div>
-                                        </div>
-                                    </div>
-                                    <button 
-                                        type="button" 
-                                        className="btn btn-outline-danger btn-sm"
-                                        onClick={handleRemoveCustomBg}
-                                    >
-                                        <i className="fas fa-trash-alt me-1"></i> Hapus
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Card: Reset Actions */}
-                    <div className="cert-card border-danger-subtle">
-                        <div className="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 className="text-danger fw-bold mb-1">
-                                    <i className="fas fa-undo-alt me-1"></i> Kembalikan ke Setelan Pabrik
-                                </h6>
-                                <p className="text-muted small mb-0">
-                                    Reset seluruh format sertifikat kembali ke tata letak dan teks resmi DPD RI bawaan.
-                                </p>
-                            </div>
-                            <button 
-                                type="button" 
-                                className="btn btn-outline-danger btn-sm px-3"
-                                onClick={handleResetDefault}
-                            >
-                                Reset
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
-                {/* RIGHT COLUMN: Real-Time Interactive Live Preview (Light Mode Studio) */}
+                {/* ========================================================
+                    RIGHT COLUMN: REAL-TIME INTERACTIVE LIVE PREVIEW EASEL
+                    ======================================================== */}
                 <div className="col-xl-6 col-lg-12">
                     <div className="cert-preview-easel">
+                        {/* Easel Studio Header Bar */}
                         <div className="cert-preview-header">
-                            <div className="cert-preview-title">
-                                <i className="fas fa-eye text-teal"></i>
-                                <span>Pratinjau Langsung (Live A4 Preview)</span>
-                            </div>
-                            <div className="d-flex align-items-center gap-2">
-                                {/* Interactive ASN vs Public Profile Mode Toggle */}
-                                <div className="btn-group btn-group-sm" role="group">
+                            <div className="cert-preview-title-group">
+                                <div className="cert-preview-title">
+                                    <i className="fas fa-eye text-teal"></i>
+                                    <span>Pratinjau Langsung (A4)</span>
+                                </div>
+
+                                {/* Dynamic Recipient Profile Mode Toggle (ASN vs Public) */}
+                                <div className="cert-mode-pill-toggle">
                                     <button
                                         type="button"
-                                        className={`btn btn-sm ${previewRoleMode === 'asn' ? 'btn-teal text-white fw-semibold' : 'btn-outline-secondary'}`}
+                                        className={`cert-mode-btn ${previewRoleMode === 'asn' ? 'active' : ''}`}
                                         onClick={() => setPreviewRoleMode('asn')}
-                                        title="Pratinjau Profil ASN (NIP & Jabatan Kedinasan)"
+                                        title="Pratinjau Profil ASN (Menampilkan NIP, Jabatan & Satker)"
                                     >
                                         <i className="fas fa-id-badge me-1"></i> ASN (NIP)
                                     </button>
                                     <button
                                         type="button"
-                                        className={`btn btn-sm ${previewRoleMode === 'public' ? 'btn-teal text-white fw-semibold' : 'btn-outline-secondary'}`}
+                                        className={`cert-mode-btn ${previewRoleMode === 'public' ? 'active' : ''}`}
                                         onClick={() => setPreviewRoleMode('public')}
                                         title="Pratinjau Peserta Eksternal / Non-NIP"
                                     >
-                                        <i className="fas fa-user-circle me-1"></i> Non-NIP
+                                        <i className="fas fa-user-circle me-1"></i> Publik (Non-NIP)
                                     </button>
                                 </div>
+                            </div>
 
+                            {/* Studio Controls: Theme Canvas + Zoom Bar + Fullscreen */}
+                            <div className="cert-preview-controls">
+                                {/* Dark/Light Canvas Toggle */}
                                 <button
                                     type="button"
-                                    className="btn btn-sm btn-outline-secondary px-2 py-0"
-                                    onClick={() => setPreviewScale(p => Math.max(0.30, +(p - 0.05).toFixed(2)))}
-                                    title="Perkecil"
+                                    className={`btn btn-sm cert-ctrl-btn ${canvasTheme === 'dark' ? 'active' : ''}`}
+                                    onClick={() => setCanvasTheme(t => t === 'dark' ? 'light' : 'dark')}
+                                    title={canvasTheme === 'dark' ? "Ganti ke Kanvas Terang" : "Ganti ke Studio Kanvas Gelap (Kontras Tinggi)"}
                                 >
-                                    <i className="fas fa-minus small"></i>
+                                    <i className={`fas ${canvasTheme === 'dark' ? 'fa-sun text-warning' : 'fa-moon'}`}></i>
                                 </button>
-                                <input 
-                                    type="range" 
-                                    min="0.30" 
-                                    max="0.75" 
-                                    step="0.02" 
-                                    value={previewScale}
-                                    onChange={(e) => setPreviewScale(parseFloat(e.target.value))}
-                                    style={{ width: 75, cursor: 'pointer' }}
-                                    title="Atur Skala Pratinjau"
-                                />
+
+                                {/* Zoom Controls */}
+                                <div className="cert-zoom-group">
+                                    <button
+                                        type="button"
+                                        className="cert-ctrl-btn"
+                                        onClick={() => setPreviewScale(p => Math.max(0.28, +(p - 0.04).toFixed(2)))}
+                                        title="Perkecil"
+                                    >
+                                        <i className="fas fa-minus"></i>
+                                    </button>
+                                    <input 
+                                        type="range" 
+                                        min="0.28" 
+                                        max="0.65" 
+                                        step="0.02" 
+                                        value={previewScale}
+                                        onChange={(e) => setPreviewScale(parseFloat(e.target.value))}
+                                        className="cert-zoom-slider"
+                                        title="Atur Skala Pratinjau"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="cert-ctrl-btn"
+                                        onClick={() => setPreviewScale(p => Math.min(0.65, +(p + 0.04).toFixed(2)))}
+                                        title="Perbesar"
+                                    >
+                                        <i className="fas fa-plus"></i>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="cert-ctrl-btn cert-ctrl-fit"
+                                        onClick={handleFitScale}
+                                        title="Paskan skala dengan lebar easel (Fit Width)"
+                                    >
+                                        Fit
+                                    </button>
+                                    <span className="cert-zoom-badge">
+                                        {Math.round(previewScale * 100)}%
+                                    </span>
+                                </div>
+
+                                {/* Fullscreen Modal Trigger */}
                                 <button
                                     type="button"
-                                    className="btn btn-sm btn-outline-secondary px-2 py-0"
-                                    onClick={() => setPreviewScale(p => Math.min(0.75, +(p + 0.05).toFixed(2)))}
-                                    title="Perbesar"
+                                    className="btn btn-sm cert-ctrl-btn"
+                                    onClick={() => setIsFullscreenPreview(true)}
+                                    title="Tampilkan Pratinjau Layar Penuh"
                                 >
-                                    <i className="fas fa-plus small"></i>
+                                    <i className="fas fa-expand"></i>
                                 </button>
-                                <button
-                                    type="button"
-                                    className={`btn btn-sm ${previewScale === 0.42 ? 'btn-teal text-white' : 'btn-outline-secondary'} px-2 py-0`}
-                                    onClick={() => setPreviewScale(0.42)}
-                                    title="Paskan dengan Lebar Layar (Fit)"
-                                >
-                                    Fit
-                                </button>
-                                <span className="badge bg-light text-teal border border-teal-subtle font-monospace">
-                                    {Math.round(previewScale * 100)}%
-                                </span>
                             </div>
                         </div>
 
-                        {/* Stage dengan Canvas Light Mode & Scaled Viewport tanpa Over-Scroll */}
-                        <div className="cert-preview-stage">
+                        {/* Stage with High-Contrast Canvas */}
+                        <div 
+                            className={`cert-preview-stage ${canvasTheme === 'dark' ? 'theme-dark' : 'theme-light'}`}
+                            ref={stageContainerRef}
+                        >
                             <div 
                                 className="cert-preview-viewport"
                                 style={{
@@ -1088,32 +1314,91 @@ function CertificateDesignTab() {
                             </div>
                         </div>
 
-                        {/* Light Mode Info Footer */}
-                        <div className="mt-3 p-3 bg-light rounded-3 border border-teal-subtle text-dark small d-flex flex-wrap justify-content-between align-items-center gap-2">
-                            <div>
-                                <div className="fw-bold text-dark d-flex align-items-center gap-2">
-                                    <i className="fas fa-check-circle text-teal"></i>
-                                    <span>Dimensi Standar: A4 Landscape (297 × 210 mm)</span>
-                                </div>
-                                <p className="text-muted small mb-0 mt-1">
-                                    Rasio presisi 1.414 : 1 sesuai standar ISO 216 untuk cetak dan unduh dokumen resmi.
-                                </p>
+                        {/* Streamlined Single-Line Footer Meta */}
+                        <div className="cert-preview-footer-bar">
+                            <div className="cert-footer-meta-item">
+                                <i className="fas fa-check-circle text-teal me-1"></i>
+                                <span>ISO 216 A4 Landscape (297×210 mm)</span>
                             </div>
-                            <div className="d-flex align-items-center gap-2">
-                                <span className="badge bg-teal text-white px-2 py-1">
-                                    <i className="fas fa-file-pdf me-1"></i> A4 Standard
-                                </span>
-                                <span className="badge bg-light text-muted border px-2 py-1">
-                                    Ultra-HD (1414 × 1000 px)
-                                </span>
+                            <div className="cert-footer-badges">
+                                <span className="cert-micro-badge">Rasio 1.414 : 1</span>
+                                <span className="cert-micro-badge">Ultra-HD 2K (1414×1000px)</span>
+                                <span className="cert-micro-badge bg-teal-subtle text-teal">Cetak & PDF Siap</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* ========================================================
+                ✨ FULLSCREEN MODAL PREVIEW (Crisp High-Res Inspection)
+                ======================================================== */}
+            {isFullscreenPreview && (
+                <div className="cert-fullscreen-overlay" onClick={() => setIsFullscreenPreview(false)}>
+                    <div className="cert-fullscreen-dialog" onClick={(e) => e.stopPropagation()}>
+                        <div className="cert-fullscreen-header">
+                            <div className="d-flex align-items-center gap-2">
+                                <i className="fas fa-award text-teal fs-5"></i>
+                                <h5 className="mb-0 text-white fw-bold">Pratinjau Layar Penuh — Sertifikat Resmi Setjen DPD RI</h5>
+                                <span className="badge bg-teal ms-2">A4 Ultra-HD</span>
+                            </div>
+                            <div className="d-flex align-items-center gap-2">
+                                <div className="btn-group btn-group-sm">
+                                    <button
+                                        type="button"
+                                        className={`btn ${previewRoleMode === 'asn' ? 'btn-teal text-white' : 'btn-outline-light'}`}
+                                        onClick={() => setPreviewRoleMode('asn')}
+                                    >
+                                        ASN (NIP)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`btn ${previewRoleMode === 'public' ? 'btn-teal text-white' : 'btn-outline-light'}`}
+                                        onClick={() => setPreviewRoleMode('public')}
+                                    >
+                                        Publik
+                                    </button>
+                                </div>
+                                <button 
+                                    className="btn btn-outline-light btn-sm ms-2"
+                                    onClick={() => setIsFullscreenPreview(false)}
+                                >
+                                    <i className="fas fa-times me-1"></i> Tutup
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="cert-fullscreen-body">
+                            <div 
+                                className="cert-preview-viewport"
+                                style={{
+                                    width: `${Math.round(1414 * 0.75)}px`,
+                                    height: `${Math.round(1000 * 0.75)}px`,
+                                }}
+                            >
+                                <div 
+                                    className="cert-preview-wrapper"
+                                    style={{
+                                        width: 1414,
+                                        height: 1000,
+                                        transform: `scale(0.75)`,
+                                        transformOrigin: '0 0',
+                                    }}
+                                >
+                                    <ModernCertificateDocument 
+                                        certificate={activeDummyCertificate}
+                                        course={dummyCourse}
+                                        userData={userData}
+                                        templateConfig={activePreviewConfig}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
 export default CertificateDesignTab;
-

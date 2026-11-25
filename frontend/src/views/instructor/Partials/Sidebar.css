@@ -1018,7 +1018,9 @@
 .instructor-profile-page > .container,
 .instructor-password-page > .container,
 .qa-bg-section > .container,
-.instructor-testimonials-page > .container {
+.instructor-testimonials-page > .container,
+.icp-wrapper > .container,
+.header-container-aligned {
     width: 100% !important;
     max-width: 1400px !important;
     margin-left: auto !important;

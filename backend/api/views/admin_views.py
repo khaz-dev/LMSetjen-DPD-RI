@@ -221,7 +221,8 @@ class AdminCourseListAPIView(generics.ListAPIView):
         ordering = self.request.query_params.get('ordering', 'recent').strip()
         
         # Only manage parent courses (not published copies)
-        queryset = api_models.Course.objects.filter(is_published_version=False)
+        # Exclude 'Draft' courses as they are instructor-private work-in-progress before formal submission
+        queryset = api_models.Course.objects.filter(is_published_version=False).exclude(platform_status='Draft')
         
         if status_filter and status_filter.lower() not in ['all', 'semua']:
             queryset = queryset.filter(platform_status=status_filter)
@@ -256,12 +257,12 @@ class AdminCourseListAPIView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         
-        base_qs = api_models.Course.objects.filter(is_published_version=False)
+        base_qs = api_models.Course.objects.filter(is_published_version=False).exclude(platform_status='Draft')
         stats = {
             'all': base_qs.count(),
             'review': base_qs.filter(platform_status='Review').count(),
             'published': base_qs.filter(platform_status='Published').count(),
-            'draft': base_qs.filter(platform_status='Draft').count(),
+            'draft': 0,
             'rejected': base_qs.filter(platform_status='Rejected').count(),
             'disabled': base_qs.filter(platform_status='Disabled').count(),
         }
@@ -270,6 +271,300 @@ class AdminCourseListAPIView(generics.ListAPIView):
             'results': serializer.data,
             'stats': stats,
         })
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AdminCourseDirectEditAPIView(APIView):
+    """
+    Direct Course Edit API for Administrators.
+    Bypasses instructor draft/review approval cycles to allow instant, direct-to-live updates 
+    for courses (both parent courses and their published live versions).
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [JWTAuthentication]
+
+    def _get_course(self, course_id):
+        course = api_models.Course.objects.filter(course_id=course_id).first()
+        if not course and str(course_id).isdigit():
+            course = api_models.Course.objects.filter(id=int(course_id)).first()
+        return course
+
+    def get(self, request, course_id):
+        course = self._get_course(course_id)
+        if not course:
+            return Response({"error": f"Course with ID {course_id} not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = api_serializer.CourseEditSerializer(course)
+        categories = api_models.Category.objects.all().values('id', 'title', 'slug')
+        tags = api_models.Tag.objects.all().values('id', 'title', 'slug')
+
+        return Response({
+            "course": serializer.data,
+            "categories": list(categories),
+            "tags": list(tags)
+        }, status=status.HTTP_200_OK)
+
+    def patch(self, request, course_id):
+        return self.put(request, course_id)
+
+    def put(self, request, course_id):
+        course = self._get_course(course_id)
+        if not course:
+            return Response({"error": f"Course with ID {course_id} not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        data = request.data
+        logger.info(f"[Admin Course Direct Edit] Updating course {course.course_id} ({course.title})")
+
+        # 1. Update basic fields
+        if 'title' in data and data['title']:
+            course.title = str(data['title']).strip()
+        if 'description' in data:
+            course.description = data['description']
+        if 'level' in data and data['level']:
+            course.level = data['level']
+        if 'language' in data and data['language']:
+            course.language = data['language']
+        if 'course_duration' in data:
+            course.course_duration = data['course_duration']
+        if 'target_audience' in data and data['target_audience']:
+            aud = data['target_audience']
+            if aud == 'pegawai':
+                aud = 'internal'
+            course.target_audience = aud
+        if 'platform_status' in data and data['platform_status']:
+            course.platform_status = data['platform_status']
+        if 'image' in data:
+            img = data['image']
+            if img in [None, "", "null", "undefined", "No File"]:
+                course.image = None
+            else:
+                course.image = img
+        if 'file' in data:
+            f = data['file']
+            if f in [None, "", "null", "undefined"]:
+                course.file = None
+            else:
+                course.file = f
+        if 'category' in data:
+            cat_val = data['category']
+            if isinstance(cat_val, dict) and 'id' in cat_val:
+                cat_val = cat_val['id']
+            if cat_val and str(cat_val).isdigit():
+                try:
+                    course.category = api_models.Category.objects.get(id=int(cat_val))
+                except api_models.Category.DoesNotExist:
+                    pass
+
+        # 2. Tags
+        if 'tags' in data:
+            tag_ids = data['tags']
+            if isinstance(tag_ids, str):
+                import json
+                try:
+                    tag_ids = json.loads(tag_ids)
+                except Exception:
+                    tag_ids = []
+            if isinstance(tag_ids, list):
+                valid_ids = []
+                for t in tag_ids:
+                    raw_id = t.get('id') if isinstance(t, dict) else t
+                    if raw_id is not None and str(raw_id).isdigit():
+                        valid_ids.append(int(raw_id))
+                course.tags.set(valid_ids)
+
+        # 3. Features, Requirements, Learning Outcomes
+        if 'features' in data and isinstance(data['features'], list):
+            course.features.all().delete()
+            for idx, feat in enumerate(data['features']):
+                if isinstance(feat, dict):
+                    f_text = feat.get('text') or feat.get('title') or ''
+                    f_icon = feat.get('icon') or 'fas fa-check'
+                    f_highlight = bool(feat.get('highlight', False))
+                else:
+                    f_text = str(feat)
+                    f_icon = 'fas fa-check'
+                    f_highlight = False
+
+                if f_text and f_text.strip():
+                    api_models.CourseFeature.objects.create(
+                        course=course,
+                        text=f_text.strip(),
+                        icon=f_icon.strip(),
+                        highlight=f_highlight,
+                        order=idx
+                    )
+
+        if 'requirements' in data and isinstance(data['requirements'], list):
+            course.requirements.all().delete()
+            for idx, req in enumerate(data['requirements']):
+                if isinstance(req, dict):
+                    r_text = req.get('requirement') or req.get('text') or req.get('title') or ''
+                else:
+                    r_text = str(req)
+                if r_text and r_text.strip():
+                    api_models.CourseRequirement.objects.create(
+                        course=course,
+                        requirement=r_text.strip(),
+                        order=idx
+                    )
+
+        if 'learning_outcomes' in data and isinstance(data['learning_outcomes'], list):
+            course.learning_outcomes.all().delete()
+            for idx, out in enumerate(data['learning_outcomes']):
+                if isinstance(out, dict):
+                    o_text = out.get('outcome') or out.get('text') or out.get('title') or ''
+                else:
+                    o_text = str(out)
+                if o_text and o_text.strip():
+                    api_models.CourseLearningOutcome.objects.create(
+                        course=course,
+                        outcome=o_text.strip(),
+                        order=idx
+                    )
+
+        # 4. Curriculum sections & lectures
+        curriculum_updated = False
+        if 'curriculum' in data and isinstance(data['curriculum'], list):
+            curriculum_updated = True
+            current_variants = list(course.curriculum.all())
+            sent_variant_ids = set()
+
+            for sec_idx, sec in enumerate(data['curriculum']):
+                sec_title = sec.get('variant_title') or sec.get('title') or f"Bagian {sec_idx + 1}"
+                sec_id = sec.get('variant_id')
+                sec_order = sec.get('order', sec_idx)
+
+                variant = None
+                if sec_id:
+                    variant = course.curriculum.filter(variant_id=sec_id).first()
+                if not variant:
+                    variant = api_models.Variant.objects.create(
+                        course=course,
+                        title=sec_title,
+                        order=sec_order
+                    )
+                else:
+                    variant.title = sec_title
+                    variant.order = sec_order
+                    variant.save()
+
+                sent_variant_ids.add(variant.variant_id)
+
+                # Process lectures (items) for this section
+                items_data = sec.get('items') or []
+                sent_item_ids = set()
+                for item_idx, itm in enumerate(items_data):
+                    itm_title = itm.get('title') or f"Materi {item_idx + 1}"
+                    itm_id = itm.get('variant_item_id')
+                    itm_desc = itm.get('description', '')
+                    itm_file = itm.get('file', '')
+                    itm_duration = itm.get('duration', '')
+                    itm_preview = bool(itm.get('preview', False))
+                    itm_type = itm.get('content_type', 'video')
+                    quiz_id = itm.get('quiz_id')
+                    quiz_obj = None
+                    if quiz_id:
+                        quiz_obj = api_models.Quiz.objects.filter(quiz_id=quiz_id).first()
+                        if not quiz_obj and str(quiz_id).isdigit():
+                            quiz_obj = api_models.Quiz.objects.filter(id=int(quiz_id)).first()
+                    item_type = 'quiz' if (quiz_obj or itm_type == 'quiz' or itm.get('item_type') == 'quiz') else 'lesson'
+
+                    variant_item = None
+                    if itm_id:
+                        variant_item = variant.variant_items.filter(variant_item_id=itm_id).first()
+                    if not variant_item:
+                        variant_item = api_models.VariantItem.objects.create(
+                            variant=variant,
+                            title=itm_title,
+                            description=itm_desc,
+                            file=itm_file,
+                            duration=itm_duration,
+                            preview=itm_preview,
+                            content_type=itm_type,
+                            item_type=item_type,
+                            quiz=quiz_obj,
+                            order=item_idx
+                        )
+                    else:
+                        variant_item.title = itm_title
+                        variant_item.description = itm_desc
+                        variant_item.file = itm_file
+                        variant_item.duration = itm_duration
+                        variant_item.preview = itm_preview
+                        variant_item.content_type = itm_type
+                        variant_item.item_type = item_type
+                        variant_item.quiz = quiz_obj
+                        variant_item.order = item_idx
+                        variant_item.save()
+
+                    sent_item_ids.add(variant_item.variant_item_id)
+
+                # Delete removed items within this variant
+                variant.variant_items.exclude(variant_item_id__in=sent_item_ids).delete()
+
+            # Delete removed variants
+            course.curriculum.exclude(variant_id__in=sent_variant_ids).delete()
+
+        course.save()
+
+        # 5. Direct Live Sync to Published copy or Parent course
+        if not course.is_published_version:
+            published_copies = course.published_copies.filter(is_published_version=True)
+            for pub in published_copies:
+                pub.title = course.title
+                pub.description = course.description
+                pub.level = course.level
+                pub.language = course.language
+                pub.course_duration = course.course_duration
+                pub.target_audience = course.target_audience
+                pub.category = course.category
+                pub.image = course.image
+                pub.file = course.file
+                if 'platform_status' in data:
+                    pub.platform_status = course.platform_status
+                pub.save()
+                if 'tags' in data:
+                    pub.tags.set(course.tags.all())
+
+                # Sync features, requirements, outcomes
+                pub.features.all().delete()
+                for feat in course.features.all():
+                    api_models.CourseFeature.objects.create(course=pub, title=feat.title)
+                pub.requirements.all().delete()
+                for req in course.requirements.all():
+                    api_models.CourseRequirement.objects.create(course=pub, title=req.title)
+                pub.learning_outcomes.all().delete()
+                for out in course.learning_outcomes.all():
+                    api_models.CourseLearningOutcome.objects.create(course=pub, title=out.title)
+
+                # If curriculum was updated, smart-sync to preserve progress
+                if curriculum_updated:
+                    course._copy_content_to(pub, clear_target=False)
+
+        elif course.parent_course:
+            parent = course.parent_course
+            parent.title = course.title
+            parent.description = course.description
+            parent.level = course.level
+            parent.language = course.language
+            parent.course_duration = course.course_duration
+            parent.target_audience = course.target_audience
+            parent.category = course.category
+            parent.image = course.image
+            parent.file = course.file
+            if 'platform_status' in data:
+                parent.platform_status = course.platform_status
+            parent.save()
+            if 'tags' in data:
+                parent.tags.set(course.tags.all())
+
+        course.refresh_from_db()
+        serializer = api_serializer.CourseEditSerializer(course)
+        return Response({
+            "success": True,
+            "message": "Perubahan kursus berhasil disimpan langsung ke versi publik (Live Update)",
+            "course": serializer.data
+        }, status=status.HTTP_200_OK)
 
 
 
@@ -3211,6 +3506,440 @@ class AdminResetQuizAttemptAPIView(APIView):
             "attempt_id": formatted_attempt_code,
             "student_name": student_name
         }, status=status.HTTP_200_OK)
+
+
+class AdminCourseEvaluationsSummaryAPIView(APIView):
+    """
+    ✨ PHASE 5.3: Admin Course Evaluations Summary API
+    Menyediakan daftar seluruh kursus beserta metrik evaluasi komprehensif untuk tab Evaluasi Kursus di ReportsAdmin:
+    - Ringkasan Metrik Global (Total Kursus, Rata-rata Rating, Total Peserta, Total Lulus/Selesai, Total Review)
+    - Data Kursus Terperinci: Judul, Instruktur, Kategori, Status, Tingkat Kesulitan, Peserta, Rating, Kuis, JP, Tingkat Kelulusan
+    - Mendukung pencarian (search), filter status (Published, Draft, Review, All), dan filter kategori
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        is_admin_or_staff = (
+            getattr(user, 'is_staff', False) or 
+            getattr(user, 'is_admin', False) or 
+            getattr(user, 'current_role', '') == 'admin' or 
+            getattr(user, 'role', '') == 'admin'
+        )
+        if not is_admin_or_staff:
+            return Response(
+                {"error": "Akses ditolak. Fitur ini khusus Administrator Setjen DPD RI."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        search_query = request.query_params.get('search', '').strip()
+        status_filter = request.query_params.get('status', 'all').strip()
+        category_id = request.query_params.get('category', '').strip()
+
+        # Query all primary courses (excluding published version duplicates)
+        courses_qs = api_models.Course.objects.filter(is_published_version=False).select_related('teacher', 'teacher__user', 'category')
+
+        if status_filter and status_filter.lower() not in ['all', 'semua']:
+            courses_qs = courses_qs.filter(platform_status__iexact=status_filter)
+
+        if search_query:
+            courses_qs = courses_qs.filter(
+                Q(title__icontains=search_query) |
+                Q(teacher__full_name__icontains=search_query) |
+                Q(teacher__user__full_name__icontains=search_query) |
+                Q(category__title__icontains=search_query)
+            )
+
+        if category_id and category_id.lower() not in ['all', 'semua']:
+            if category_id.isdigit():
+                courses_qs = courses_qs.filter(category_id=int(category_id))
+            else:
+                courses_qs = courses_qs.filter(category__slug=category_id)
+
+        courses_qs = courses_qs.order_by('-date')
+
+        course_items = []
+        total_students_sum = 0
+        total_completed_sum = 0
+        total_reviews_sum = 0
+        rating_values = []
+
+        for c in courses_qs:
+            try:
+                related_ids = c.get_related_course_ids() if hasattr(c, 'get_related_course_ids') else {c.id}
+
+                # Enrolled & completed (menggunakan Certificate terbitan resmi untuk status kelulusan peserta)
+                enrollments = api_models.EnrolledCourse.objects.filter(course_id__in=related_ids)
+                enrolled_count = enrollments.values('user_id').distinct().count()
+                completed_count = api_models.Certificate.objects.filter(
+                    course_id__in=related_ids, 
+                    is_valid=True
+                ).values('user_id').distinct().count()
+                completion_rate = round((completed_count / enrolled_count * 100), 1) if enrolled_count > 0 else 0
+
+                # Reviews & Rating
+                reviews = api_models.Review.objects.filter(course_id__in=related_ids, active=True)
+                rev_count = reviews.count()
+                avg_rating_res = reviews.aggregate(avg=Avg('rating'))['avg']
+                avg_rating = round(float(avg_rating_res), 2) if avg_rating_res else 0.0
+
+                if avg_rating > 0:
+                    rating_values.append(avg_rating)
+
+                # Quizzes & Attempts
+                quizzes_count = api_models.Quiz.objects.filter(course_id__in=related_ids, is_active=True).count()
+                attempts_count = api_models.QuizAttempt.objects.filter(quiz__course_id__in=related_ids).count() if hasattr(api_models, 'QuizAttempt') else 0
+
+                # JP Calculation
+                total_jp = 2
+                try:
+                    lectures = c.lectures() if callable(getattr(c, 'lectures', None)) else getattr(c, 'lectures', [])
+                    total_sec = sum(l.content_duration_seconds for l in lectures if hasattr(l, 'content_duration_seconds') and l.content_duration_seconds)
+                    total_jp = max(1, (total_sec + 2699) // 2700) if total_sec else 2
+                except Exception:
+                    total_jp = 2
+
+                total_students_sum += enrolled_count
+                total_completed_sum += completed_count
+                total_reviews_sum += rev_count
+
+                # Safe teacher info
+                teacher_name = "Instruktur Tidak Ditemukan"
+                teacher_email = ""
+                teacher_id = ""
+                if c.teacher:
+                    teacher_name = c.teacher.full_name or (c.teacher.user.full_name if c.teacher.user else "") or "Instruktur"
+                    teacher_email = c.teacher.user.email if c.teacher.user else ""
+                    teacher_id = c.teacher.id
+
+                course_items.append({
+                    "id": c.id,
+                    "course_id": str(c.course_id),
+                    "title": c.title,
+                    "slug": c.slug,
+                    "image": c.image.url if hasattr(c.image, 'url') else (str(c.image) if c.image else None),
+                    "level": getattr(c, 'level', 'Beginner') or "Beginner",
+                    "language": getattr(c, 'language', 'Indonesian') or "Indonesian",
+                    "platform_status": c.platform_status,
+                    "teacher_course_status": c.teacher_course_status,
+                    "teacher": {
+                        "id": teacher_id,
+                        "full_name": teacher_name,
+                        "email": teacher_email,
+                    },
+                    "category": {
+                        "id": c.category.id if c.category else None,
+                        "title": c.category.title if c.category else "Tanpa Kategori",
+                        "slug": c.category.slug if c.category else "",
+                    },
+                    "enrolled_count": enrolled_count,
+                    "completed_count": completed_count,
+                    "completion_rate": completion_rate,
+                    "average_rating": avg_rating,
+                    "rating_count": rev_count,
+                    "quizzes_count": quizzes_count,
+                    "attempts_count": attempts_count,
+                    "total_jp": total_jp,
+                    "date": c.date.strftime("%Y-%m-%d") if c.date else None,
+                })
+            except Exception as item_err:
+                logger.error(f"[AdminCourseEvaluationsSummary] Error processing course {getattr(c, 'id', None)}: {item_err}")
+                continue
+
+        overall_avg_rating = round(sum(rating_values) / len(rating_values), 2) if rating_values else 0.0
+
+        global_stats = {
+            "total_courses": len(course_items),
+            "total_students_enrolled": total_students_sum,
+            "total_completions": total_completed_sum,
+            "overall_completion_rate": round((total_completed_sum / total_students_sum * 100), 1) if total_students_sum > 0 else 0,
+            "average_rating": overall_avg_rating,
+            "total_reviews": total_reviews_sum,
+        }
+
+        return Response({
+            "success": True,
+            "stats": global_stats,
+            "courses": course_items,
+        })
+
+
+class AdminCourseEvaluationsExportExcelAPIView(APIView):
+    """
+    Ekspor Rekapitulasi Evaluasi Kursus ke Format Excel (.xlsx) Resmi Setjen DPD RI
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request):
+        import io
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        from django.http import HttpResponse
+
+        # Verify admin access
+        user = request.user
+        is_admin = getattr(user, 'is_admin', False) or getattr(user, 'is_staff', False) or getattr(user, 'role', '') == 'admin'
+        if not is_admin:
+            return Response({'error': 'Akses ditolak. Memerlukan hak akses Administrator.'}, status=status.HTTP_403_FORBIDDEN)
+
+        status_filter = request.GET.get('status', 'all')
+        search_query = request.GET.get('search', '').strip()
+
+        courses_qs = api_models.Course.objects.filter(
+            is_published_version=True
+        ).select_related('teacher', 'teacher__user', 'category').order_by('-date')
+
+        if not courses_qs.exists():
+            courses_qs = api_models.Course.objects.all().select_related('teacher', 'teacher__user', 'category').order_by('-date')
+
+        if status_filter != 'all':
+            courses_qs = courses_qs.filter(platform_status__iexact=status_filter)
+
+        if search_query:
+            courses_qs = courses_qs.filter(
+                Q(title__icontains=search_query) |
+                Q(course_id__icontains=search_query) |
+                Q(teacher__full_name__icontains=search_query) |
+                Q(category__title__icontains=search_query)
+            )
+
+        # Build Excel Workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Rekap Evaluasi Kursus"
+        ws.views.sheetView[0].showGridLines = True
+
+        # Styles
+        font_instansi = Font(name="Calibri", size=11, bold=True, color="1E293B")
+        font_sub_instansi = Font(name="Calibri", size=10, bold=True, color="475569")
+        font_header_title = Font(name="Calibri", size=13, bold=True, color="0F766E")
+        font_meta_lbl = Font(name="Calibri", size=9, bold=True, color="334155")
+        font_meta_val = Font(name="Calibri", size=9, color="0F172A")
+
+        font_th = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+        fill_th = PatternFill(start_color="0F766E", end_color="0F766E", fill_type="solid")
+        fill_alt = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+        fill_white = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+        fill_summary = PatternFill(start_color="E6FFFA", end_color="E6FFFA", fill_type="solid")
+
+        border_thin = Border(
+            left=Side(style='thin', color='CBD5E1'),
+            right=Side(style='thin', color='CBD5E1'),
+            top=Side(style='thin', color='CBD5E1'),
+            bottom=Side(style='thin', color='CBD5E1')
+        )
+        border_th = Border(
+            left=Side(style='thin', color='0D665F'),
+            right=Side(style='thin', color='0D665F'),
+            top=Side(style='medium', color='0D665F'),
+            bottom=Side(style='medium', color='0D665F')
+        )
+        border_total = Border(
+            top=Side(style='thin', color='0F766E'),
+            bottom=Side(style='double', color='0F766E'),
+            left=Side(style='thin', color='CBD5E1'),
+            right=Side(style='thin', color='CBD5E1')
+        )
+
+        align_center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        align_left = Alignment(horizontal="left", vertical="center")
+        align_right = Alignment(horizontal="right", vertical="center")
+
+        # Kop Surat Instansi
+        ws.merge_cells("A1:P1")
+        ws["A1"] = "SEKRETARIAT JENDERAL DEWAN PERWAKILAN DAERAH REPUBLIK INDONESIA"
+        ws["A1"].font = font_instansi
+        ws["A1"].alignment = align_center
+
+        ws.merge_cells("A2:P2")
+        ws["A2"] = "PUSAT PENGEMBANGAN KOMPETENSI APARATUR SIPIL NEGARA (LMS SETJEN DPD RI)"
+        ws["A2"].font = font_sub_instansi
+        ws["A2"].alignment = align_center
+
+        ws.merge_cells("A3:P3")
+        ws["A3"] = "LAPORAN EKSEKUTIF REKAPITULASI & EVALUASI KURSUS PELATIHAN"
+        ws["A3"].font = font_header_title
+        ws["A3"].alignment = align_center
+
+        now = timezone.now()
+        ws["A5"] = "Tanggal Unduh:"
+        ws["A5"].font = font_meta_lbl
+        ws["B5"] = now.strftime("%d %B %Y, %H:%M WIB")
+        ws["B5"].font = font_meta_val
+
+        ws["A6"] = "Administrator:"
+        ws["A6"].font = font_meta_lbl
+        ws["B6"] = user.full_name or user.username
+        ws["B6"].font = font_meta_val
+
+        headers = [
+            "No",
+            "ID Kursus",
+            "Judul Kursus",
+            "Instruktur / Narasumber",
+            "Kategori",
+            "Tingkat",
+            "Bobot JP",
+            "Status Platform",
+            "Peserta Terdaftar",
+            "Peserta Lulus",
+            "Rasio Kelulusan (%)",
+            "Rating Rata-rata",
+            "Jumlah Ulasan",
+            "Jumlah Kuis",
+            "Percobaan Ujian",
+            "Tanggal Rilis"
+        ]
+
+        header_row = 8
+        for col_idx, header_text in enumerate(headers, start=1):
+            cell = ws.cell(row=header_row, column=col_idx, value=header_text)
+            cell.font = font_th
+            cell.fill = fill_th
+            cell.alignment = align_center
+            cell.border = border_th
+        ws.row_dimensions[header_row].height = 28
+
+        current_row = 9
+        total_students_sum = 0
+        total_completed_sum = 0
+        total_reviews_sum = 0
+        rating_values = []
+
+        for idx, c in enumerate(courses_qs, start=1):
+            try:
+                related_ids = c.get_related_course_ids() if hasattr(c, 'get_related_course_ids') else {c.id}
+                enrolled_count = api_models.EnrolledCourse.objects.filter(course_id__in=related_ids).values('user_id').distinct().count()
+                completed_count = api_models.Certificate.objects.filter(course_id__in=related_ids, is_valid=True).values('user_id').distinct().count()
+                completion_rate = round((completed_count / enrolled_count * 100), 1) if enrolled_count > 0 else 0
+
+                reviews = api_models.Review.objects.filter(course_id__in=related_ids, active=True)
+                rev_count = reviews.count()
+                avg_rating_res = reviews.aggregate(avg=Avg('rating'))['avg']
+                avg_rating = round(float(avg_rating_res), 2) if avg_rating_res else 0.0
+
+                if avg_rating > 0:
+                    rating_values.append(avg_rating)
+
+                quizzes_count = api_models.Quiz.objects.filter(course_id__in=related_ids, is_active=True).count()
+                attempts_count = api_models.QuizAttempt.objects.filter(quiz__course_id__in=related_ids).count() if hasattr(api_models, 'QuizAttempt') else 0
+
+                total_jp = 2
+                try:
+                    lectures = c.lectures() if callable(getattr(c, 'lectures', None)) else getattr(c, 'lectures', [])
+                    total_sec = sum(l.content_duration_seconds for l in lectures if hasattr(l, 'content_duration_seconds') and l.content_duration_seconds)
+                    total_jp = max(1, (total_sec + 2699) // 2700) if total_sec else 2
+                except Exception:
+                    total_jp = 2
+
+                total_students_sum += enrolled_count
+                total_completed_sum += completed_count
+                total_reviews_sum += rev_count
+
+                teacher_name = "Instruktur Tidak Ditemukan"
+                if c.teacher:
+                    teacher_name = c.teacher.full_name or (c.teacher.user.full_name if c.teacher.user else "") or "Instruktur"
+
+                fill_row = fill_alt if idx % 2 == 0 else fill_white
+
+                row_values = [
+                    idx,
+                    str(c.course_id),
+                    c.title,
+                    teacher_name,
+                    c.category.title if c.category else "Umum",
+                    getattr(c, 'level', 'Beginner') or "Beginner",
+                    total_jp,
+                    c.platform_status or "Draft",
+                    enrolled_count,
+                    completed_count,
+                    completion_rate,
+                    avg_rating,
+                    rev_count,
+                    quizzes_count,
+                    attempts_count,
+                    c.date.strftime("%Y-%m-%d") if c.date else "-"
+                ]
+
+                for col_idx, val in enumerate(row_values, start=1):
+                    cell = ws.cell(row=current_row, column=col_idx, value=val)
+                    cell.font = Font(name="Calibri", size=10, color="1E293B")
+                    cell.fill = fill_row
+                    cell.border = border_thin
+
+                    # Alignments
+                    if col_idx in [1, 2, 6, 7, 8, 16]:
+                        cell.alignment = align_center
+                    elif col_idx in [9, 10, 11, 12, 13, 14, 15]:
+                        cell.alignment = align_right
+                    else:
+                        cell.alignment = align_left
+
+                ws.row_dimensions[current_row].height = 20
+                current_row += 1
+            except Exception as row_err:
+                logger.error(f"[AdminCourseEvaluationsExportExcel] Error on course {c.id}: {row_err}")
+                continue
+
+        # Summary Row
+        summary_row = current_row
+        ws.merge_cells(start_row=summary_row, start_column=1, end_row=summary_row, end_column=8)
+        sum_label_cell = ws.cell(row=summary_row, column=1, value="TOTAL & RATA-RATA KESELURUHAN")
+        sum_label_cell.font = Font(name="Calibri", size=10, bold=True, color="0F766E")
+        sum_label_cell.alignment = align_right
+
+        ws.cell(row=summary_row, column=9, value=total_students_sum).font = Font(name="Calibri", size=10, bold=True)
+        ws.cell(row=summary_row, column=10, value=total_completed_sum).font = Font(name="Calibri", size=10, bold=True)
+        overall_comp_rate = round((total_completed_sum / total_students_sum * 100), 1) if total_students_sum > 0 else 0
+        ws.cell(row=summary_row, column=11, value=overall_comp_rate).font = Font(name="Calibri", size=10, bold=True)
+        overall_avg_rating = round(sum(rating_values) / len(rating_values), 2) if rating_values else 0.0
+        ws.cell(row=summary_row, column=12, value=overall_avg_rating).font = Font(name="Calibri", size=10, bold=True)
+        ws.cell(row=summary_row, column=13, value=total_reviews_sum).font = Font(name="Calibri", size=10, bold=True)
+        ws.cell(row=summary_row, column=14, value="-").alignment = align_center
+        ws.cell(row=summary_row, column=15, value="-").alignment = align_center
+        ws.cell(row=summary_row, column=16, value="-").alignment = align_center
+
+        for c_idx in range(1, 17):
+            c_cell = ws.cell(row=summary_row, column=c_idx)
+            c_cell.fill = fill_summary
+            c_cell.border = border_total
+            if c_idx in [9, 10, 11, 12, 13]:
+                c_cell.alignment = align_right
+
+        ws.row_dimensions[summary_row].height = 24
+
+        # Auto-adjust column widths
+        for col in ws.columns:
+            max_len = 0
+            col_letter = get_column_letter(col[0].column)
+            for cell in col:
+                if cell.row < 8:
+                    continue
+                val_str = str(cell.value or '')
+                max_len = max(max_len, len(val_str))
+            ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+
+        ws.column_dimensions['A'].width = 6
+        ws.column_dimensions['B'].width = 14
+        ws.column_dimensions['C'].width = 38
+        ws.column_dimensions['D'].width = 28
+        ws.column_dimensions['E'].width = 18
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        filename = f"Laporan_Evaluasi_Kursus_Setjen_DPD_RI_{now.strftime('%Y%m%d_%H%M')}.xlsx"
+        response = HttpResponse(
+            output.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
 
 
 

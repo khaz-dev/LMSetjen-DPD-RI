@@ -4540,7 +4540,8 @@ function CourseEditCurriculum() {
                 }
             });
 
-            const response = await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData);
+            const targetTeacherId = UserData()?.teacher_id || course?.teacher?.id || 'admin';
+            const response = await useAxios.patch(`teacher/course-update/${targetTeacherId}/${param.course_id}/`, formData);
 
             if (response?.data) {
                 reconcileVariantsWithResponse(response.data, variants);
@@ -4807,7 +4808,8 @@ function CourseEditCurriculum() {
             // NOTE: DO NOT set Content-Type header when using FormData!
             // Axios automatically detects FormData and sets the correct multipart/form-data header with boundary
             // Manually setting it breaks the boundary parameter that the server needs
-            const response = await useAxios.patch(`teacher/course-update/${UserData()?.teacher_id}/${param.course_id}/`, formData);
+            const targetTeacherId = UserData()?.teacher_id || course?.teacher?.id || 'admin';
+            const response = await useAxios.patch(`teacher/course-update/${targetTeacherId}/${param.course_id}/`, formData);
 
             // *** CRITICAL FIX: Use response data which now includes updated curriculum ***
             // Backend has been fixed to return refreshed data with curriculum

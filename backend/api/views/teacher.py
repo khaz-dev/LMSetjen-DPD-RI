@@ -97,8 +97,14 @@ class TeacherCourseDetailAPIView(generics.RetrieveDestroyAPIView):
             course = api_models.Course.objects.get(course_id=course_id)
             
             # 🔒 FIX: Pastikan user yang login adalah pemilik kursus ini (atau admin)
-            is_admin = getattr(self.request.user, 'is_admin', False)
-            if course.teacher.user != self.request.user and not is_admin:
+            user = self.request.user
+            is_admin = (
+                getattr(user, 'is_admin', False) or 
+                getattr(user, 'is_staff', False) or 
+                getattr(user, 'current_role', '') == 'admin' or 
+                getattr(user, 'role', '') == 'admin'
+            )
+            if course.teacher.user != user and not is_admin:
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("Akses ditolak. Anda tidak memiliki izin memodifikasi kursus ini.")
 

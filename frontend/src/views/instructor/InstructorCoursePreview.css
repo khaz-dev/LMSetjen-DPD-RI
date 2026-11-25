@@ -85,10 +85,29 @@ body:has(.icp-wrapper)::after {
     margin-bottom: 0 !important;
 }
 
-/* Ensure container inside icp-wrapper sits at z-index: 2 */
-.icp-wrapper > .container {
+/* ========================================================================
+   CONTAINER & LAYOUT SYNCHRONIZATION WITH SITE HEADER (.header-container)
+   Aligns left and right borders pixel-perfectly with main header (max-width: 1400px)
+   ======================================================================== */
+.icp-wrapper .container,
+.icp-wrapper > .container,
+.icp-topbar-sticky > .container,
+.icp-wrapper .header-container-aligned {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
     position: relative;
     z-index: 2;
+    box-sizing: border-box !important;
+}
+
+/* Specifically for sticky topbar container: padding: 0 so icp-topbar-inner aligns perfectly with header-container */
+.icp-topbar-sticky > .container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 /* Footer seamless docking without gap */
@@ -118,8 +137,53 @@ body:has(.icp-wrapper)::after {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.65rem 0;
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 0.65rem 1.25rem !important;
     gap: 1rem;
+    box-sizing: border-box !important;
+}
+
+/* ========================================================================
+   MAIN CONTENT ROW & COLUMN ALIGNMENT WITH SITE HEADER (.header-container)
+   Aligns left and right boundaries of .row.g-3 pixel-perfectly with .header-container
+   ======================================================================== */
+.icp-wrapper > .container > .row.g-3,
+.icp-wrapper .container > .row.g-3 {
+    width: calc(100% + 2.5rem) !important;
+    max-width: calc(100% + 2.5rem) !important;
+    margin-left: -1.25rem !important;
+    margin-right: -1.25rem !important;
+    box-sizing: border-box !important;
+}
+
+@media (min-width: 992px) {
+    .icp-wrapper > .container > .row.g-3 > .col-lg-8,
+    .icp-wrapper .container > .row.g-3 > .col-lg-8 {
+        padding-left: 1.25rem !important;
+        padding-right: 0.5rem !important;
+    }
+    .icp-wrapper > .container > .row.g-3 > .col-lg-4,
+    .icp-wrapper .container > .row.g-3 > .col-lg-4 {
+        padding-left: 0.5rem !important;
+        padding-right: 1.25rem !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .icp-wrapper > .container > .row.g-3 > .col-lg-8,
+    .icp-wrapper .container > .row.g-3 > .col-lg-8 {
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+        margin-bottom: 1rem;
+    }
+    .icp-wrapper > .container > .row.g-3 > .col-lg-4,
+    .icp-wrapper .container > .row.g-3 > .col-lg-4 {
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
 }
 
 .icp-topbar-left {

@@ -302,7 +302,7 @@ function InstructorCoursePreview() {
             <div className="icp-wrapper">
                 {/* Compact Top Navigation Bar */}
                 <div className="icp-topbar-sticky">
-                    <div className="container">
+                    <div className="container header-container-aligned">
                         <div className="icp-topbar-inner">
                             <div className="icp-topbar-left">
                                 <button
@@ -358,7 +358,7 @@ function InstructorCoursePreview() {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="container py-3">
+                <div className="container header-container-aligned py-3">
                     {/* Published View Alert Banner */}
                     {isPublished && (
                         <div className="alert alert-info border-0 shadow-sm d-flex align-items-center justify-content-between mb-3 py-2 px-3 rounded-3" style={{ backgroundColor: "#e0f2fe", borderLeft: "4px solid #0284c7" }}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import AdminHeader from "../partials/AdminHeader";
 import BaseHeader from "../partials/BaseHeader";
 import Footer from "../partials/Footer";
@@ -23,6 +23,11 @@ import "./AdminCourseEvaluation.css";
 function AdminCourseEvaluation() {
     const { course_id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Smart return navigation (defaults to Content Management if not accessed from Reports/Evaluation)
+    const returnUrl = location.state?.from || "/admin/content-management/?tab=courses";
+    const returnLabel = location.state?.fromLabel || "Kelola Konten Kursus";
 
     // Data States
     const [data, setData] = useState(null);
@@ -413,9 +418,9 @@ function AdminCourseEvaluation() {
                     {/* Top Breadcrumb Navigation */}
                     <div className="d-flex align-items-center justify-content-between mb-3">
                         <div className="d-flex align-items-center gap-2">
-                            <Link to="/admin/content-management/?tab=courses" className="btn btn-sm btn-outline-secondary">
+                            <Link to={returnUrl} className="btn btn-sm btn-outline-secondary" title={`Kembali ke ${returnLabel}`}>
                                 <i className="fas fa-arrow-left me-1"></i>
-                                <span>Kelola Konten Kursus</span>
+                                <span>{returnLabel}</span>
                             </Link>
                             <span className="text-muted">/</span>
                             <span className="fw-semibold text-teal">Evaluasi & Rekapitulasi Pelatihan</span>

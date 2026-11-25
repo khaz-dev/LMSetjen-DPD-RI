@@ -89,6 +89,8 @@ const ContentManagementAdmin = lazy(() => import("./views/admin/ContentManagemen
 const CertificateSettingsAdmin = lazy(() => import("./views/admin/CertificateSettingsAdmin"));
 // ✨ PHASE 4.37+: Dedicated admin course review detail page
 const AdminCourseReviewDetail = lazy(() => import("./views/admin/AdminCourseReviewDetail"));
+// Dedicated Admin Direct Course Editor (Instant Live Update)
+const AdminCourseEdit = lazy(() => import("./views/admin/AdminCourseEdit"));
 // ✨ PHASE 5.2: Dedicated admin course evaluation, exam verification, and JP recap page
 const AdminCourseEvaluation = lazy(() => import("./views/admin/AdminCourseEvaluation"));
 // ✨ PHASE 4.210: Unified reports management page
@@ -542,7 +544,7 @@ function App() {
                                 path="/instructor/create-course/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor", "admin"]}>
                                             <CourseCreate />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -552,7 +554,7 @@ function App() {
                                 path="/instructor/edit-course/:course_id/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor", "admin"]}>
                                             <CourseEdit />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -562,7 +564,7 @@ function App() {
                                 path="/instructor/edit-course/:course_id/curriculum/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor", "admin"]}>
                                             <CourseEditCurriculum />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -572,7 +574,7 @@ function App() {
                                 path="/instructor/edit-course/:course_id/quiz/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor", "admin"]}>
                                             <CourseQuiz />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -582,7 +584,7 @@ function App() {
                                 path="/instructor/edit-course/:course_id/gamification/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor", "admin"]}>
                                             <CourseGamification />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -592,7 +594,7 @@ function App() {
                                 path="/instructor/edit-course/:course_id/certificate/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor", "admin"]}>
                                             <CourseCertificateDesign />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -602,7 +604,7 @@ function App() {
                                 path="/instructor/courses/:course_id/certificate/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor", "admin"]}>
                                             <CourseCertificateDesign />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -612,7 +614,7 @@ function App() {
                                 path="/instructor/preview-course/:course_id/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor", "admin"]}>
                                             <InstructorCoursePreview />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -622,7 +624,7 @@ function App() {
                                 path="/instructor/courses/:course_id/evaluation/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor", "admin"]}>
                                             <CourseEvaluation />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -632,7 +634,7 @@ function App() {
                                 path="/instructor/course-evaluation/:course_id/"
                                 element={
                                     <PrivateRoute>
-                                        <RoleRoute allowedRoles={["teacher", "instructor"]}>
+                                        <RoleRoute allowedRoles={["teacher", "instructor", "admin"]}>
                                             <CourseEvaluation />
                                         </RoleRoute>
                                     </PrivateRoute>
@@ -696,6 +698,17 @@ function App() {
                                     <PrivateRoute>
                                         <RoleRoute allowedRoles={["admin"]}>
                                             <AdminCourseReviewDetail />
+                                        </RoleRoute>
+                                    </PrivateRoute>
+                                }
+                            />
+                            {/* Dedicated Admin Direct Course Editor (Instant Live Update) */}
+                            <Route
+                                path="/admin/courses/:course_id/edit/"
+                                element={
+                                    <PrivateRoute>
+                                        <RoleRoute allowedRoles={["admin"]}>
+                                            <AdminCourseEdit />
                                         </RoleRoute>
                                     </PrivateRoute>
                                 }
