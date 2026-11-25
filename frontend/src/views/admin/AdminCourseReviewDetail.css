@@ -21,6 +21,15 @@
     --acrd-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
 }
 
+.admin-dashboard-container.acrd-page-bg {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem;
+}
+
+.acrd-page-bg .footer-container {
+    padding-top: 0 !important;
+}
+
 .acrd-page-bg {
     background-color: #f8fafc;
     min-height: calc(100vh - 120px);
@@ -32,6 +41,7 @@
    ========================================================================== */
 .acrd-topbar {
     background: transparent;
+    margin-top: 0;
 }
 
 .acrd-back-btn {
@@ -63,7 +73,7 @@
     color: var(--acrd-slate-muted);
 }
 
-.acrd-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+.acrd-breadcrumb .breadcrumb-item+.breadcrumb-item::before {
     display: inline-flex;
     align-items: center;
     line-height: 1;
@@ -121,6 +131,12 @@
     background: #fffbeb;
     color: #d97706;
     border: 1px solid #fde68a;
+}
+
+.acrd-status-resubmission {
+    background: linear-gradient(135deg, #e0f2fe 0%, #f0fdfa 100%);
+    color: #0284c7;
+    border: 1px solid #7dd3fc;
 }
 
 .acrd-status-draft {
@@ -751,6 +767,12 @@
     animation: acrd-pulse 2s infinite;
 }
 
+.acrd-status-dot.acrd-status-resubmission {
+    background: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+    animation: acrd-pulse 2s infinite;
+}
+
 .acrd-status-dot.acrd-status-rejected {
     background: #ef4444;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
@@ -764,9 +786,11 @@
     0% {
         box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
     }
+
     70% {
         box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
     }
+
     100% {
         box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
     }
@@ -861,5 +885,87 @@
 
     .acrd-choices-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   Compliance & Quality Checklist Styles
+   ========================================================================== */
+.acrd-compliance-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.55rem;
+    border-radius: var(--acrd-radius-sm);
+    font-size: 0.74rem;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 0.3rem;
+}
+
+.acrd-compliance-item.is-valid {
+    color: #0f172a;
+    background: #f8fafc;
+}
+
+.acrd-compliance-item.is-invalid {
+    color: #475569;
+    background: #fff8f8;
+    border-color: #fee2e2;
+}
+
+.acrd-progress-bar-wrap {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 0.35rem 0 0.55rem;
+}
+
+.acrd-progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+/* ==========================================================================
+   Print Styles for Official Course Evaluation Sheet
+   ========================================================================== */
+@media print {
+
+    .admin-header,
+    footer,
+    .acrd-topbar,
+    .acrd-action-card,
+    .acrd-tabs-card,
+    .btn,
+    button {
+        display: none !important;
+    }
+
+    .acrd-page-bg {
+        background: #ffffff !important;
+        min-height: auto !important;
+    }
+
+    .col-lg-8,
+    .col-lg-4 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+
+    .acrd-sticky-sidebar {
+        position: static !important;
+    }
+
+    .acrd-card {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        page-break-inside: avoid;
+    }
+
+    .acrd-section-body {
+        display: block !important;
     }
 }

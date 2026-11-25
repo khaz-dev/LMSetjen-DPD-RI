@@ -160,22 +160,26 @@ const getCourseTypeText = (type) => {
 };
 
 // Platform status badge info
-const getPlatformStatusInfo = (status) => {
+const getPlatformStatusInfo = (status, rejectionReason = null) => {
     switch (status) {
         case "Published":
             return {
                 label: "Dipublikasikan",
                 icon: "fas fa-check-circle",
                 className: "acrd-status-published",
-                description: "Kursus ini aktif dan dapat diakses peserta didik."
+                description: "Kursus ini aktif dan dapat diakses peserta didik Setjen DPD RI."
             };
-        case "Review":
+        case "Review": {
+            const isResubmission = Boolean(rejectionReason);
             return {
-                label: "Menunggu Review",
-                icon: "fas fa-clock",
-                className: "acrd-status-review",
-                description: "Kursus diajukan instruktur dan menunggu keputusan Admin."
+                label: isResubmission ? "Revisi Diajukan Ulang" : "Menunggu Review Baru",
+                icon: isResubmission ? "fas fa-history" : "fas fa-clock",
+                className: isResubmission ? "acrd-status-resubmission" : "acrd-status-review",
+                description: isResubmission
+                    ? "Kursus telah diperbaiki oleh instruktur berdasarkan catatan sebelumnya dan diajukan ulang."
+                    : "Kursus baru pertama kali diajukan instruktur dan menunggu keputusan Admin."
             };
+        }
         case "Draft":
             return {
                 label: "Draf Instruktur",
@@ -185,7 +189,7 @@ const getPlatformStatusInfo = (status) => {
             };
         case "Rejected":
             return {
-                label: "Ditolak",
+                label: "Ditolak / Perlu Revisi",
                 icon: "fas fa-times-circle",
                 className: "acrd-status-rejected",
                 description: "Kursus ditolak dan instruktur diminta melakukan perbaikan."
@@ -225,6 +229,18 @@ function AdminCourseReviewDetail() {
     const [approving, setApproving] = useState(false);
     const [showIntroVideoInline, setShowIntroVideoInline] = useState(false);
     const [expandedLecturePreview, setExpandedLecturePreview] = useState({});
+
+    // Close inline video / lecture preview on Escape key
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                setShowIntroVideoInline(false);
+                setExpandedLecturePreview({});
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
     useEffect(() => {
         fetchCourseDetail();
@@ -360,6 +376,24 @@ function AdminCourseReviewDetail() {
             }
         });
 
+        // Calculate JP based on duration or backend total_jam_pelatihan (1 JP = 45 menit / 2700 detik)
+        const calculatedJp = course.total_jam_pelatihan && course.total_jam_pelatihan > 0
+            ? Number(course.total_jam_pelatihan)
+            : (totalDurationSeconds > 0 ? Math.ceil(totalDurationSeconds / 2700) : 0);
+
+        // Quality & Compliance Checklist
+        const compliance = {
+            hasCurriculum: sectionsCount > 0 && lessonsCount > 0,
+            hasQuizzes: quizzesCount > 0,
+            hasDuration: Boolean(calculatedJp > 0 || totalDurationSeconds > 0),
+            hasTargetAudience: Boolean(course.target_audience),
+            hasInstructor: Boolean(course.teacher?.full_name),
+            hasLearningOutcomes: (course.learning_outcomes?.length || 0) > 0,
+        };
+        const complianceScore = Object.values(compliance).filter(Boolean).length;
+        const complianceTotal = Object.keys(compliance).length;
+        const compliancePercent = Math.round((complianceScore / complianceTotal) * 100);
+
         return {
             sectionsCount,
             lessonsCount,
@@ -372,6 +406,11 @@ function AdminCourseReviewDetail() {
             docCount,
             totalDurationSeconds,
             totalDurationFormatted: formatDuration(totalDurationSeconds),
+            calculatedJp,
+            compliance,
+            complianceScore,
+            complianceTotal,
+            compliancePercent,
             quizzesCount,
             totalQuestions,
             gamesCount,
@@ -585,7 +624,7 @@ function AdminCourseReviewDetail() {
     }
 
     const introVideoInfo = detectVideoSource(course.file);
-    const statusInfo = getPlatformStatusInfo(course.platform_status);
+    const statusInfo = getPlatformStatusInfo(course.platform_status, course.rejection_reason);
     const teacherName = course.teacher?.full_name || "Instruktur Tanpa Nama";
     const teacherImage = course.teacher?.image ? getImageUrl(course.teacher.image) : DEFAULT_AVATAR_URL;
 
@@ -594,7 +633,7 @@ function AdminCourseReviewDetail() {
             <AdminHeader />
 
             <main className="admin-dashboard-container acrd-page-bg">
-                <div className="container-fluid px-3 px-xl-4 py-3">
+                <div className="container-fluid px-3 px-xl-4 footer-container pb-3">
                     {/* Top Navigation & Breadcrumb Bar */}
                     <div className="acrd-topbar mb-3">
                         <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -630,7 +669,7 @@ function AdminCourseReviewDetail() {
                                         href={`/course-detail/${course.slug}/`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1.5"
+                                        className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1"
                                         style={{ fontSize: "0.8rem", padding: "0.3rem 0.65rem" }}
                                         title="Buka halaman publik kursus di tab baru"
                                     >
@@ -688,6 +727,10 @@ function AdminCourseReviewDetail() {
                                     </span>
                                     <span className="badge bg-light text-dark border">
                                         {getLevelText(course.level)}
+                                    </span>
+                                    <span className="badge border" style={{ backgroundColor: "#f0fdfa", color: "#0d9488", borderColor: "#ccfbf1" }} title="Standar Jam Pelatihan ASN Setjen DPD RI (1 JP = 45 menit)">
+                                        <i className="fas fa-business-time me-1"></i>
+                                        {liveStats.calculatedJp ? `${liveStats.calculatedJp} JP (Standar Diklat)` : "Microlearning"}
                                     </span>
                                     <span className="badge bg-light text-muted border">
                                         <i className="fas fa-users text-primary me-1"></i>
@@ -799,12 +842,26 @@ function AdminCourseReviewDetail() {
 
                     {/* Rejection Alert if previously rejected */}
                     {course.rejection_reason && (
-                        <div className="alert alert-danger acrd-alert-compact mb-3 d-flex align-items-start gap-2 shadow-sm">
-                            <i className="fas fa-exclamation-triangle text-danger mt-1 flex-shrink-0"></i>
-                            <div className="flex-grow-1">
-                                <strong className="d-block small">Catatan Penolakan Sebelumnya:</strong>
-                                <span className="small text-dark" style={{ whiteSpace: "pre-line" }}>{course.rejection_reason}</span>
+                        <div className="alert alert-danger acrd-alert-compact mb-3 d-flex align-items-start justify-content-between gap-2 shadow-sm">
+                            <div className="d-flex align-items-start gap-2">
+                                <i className="fas fa-exclamation-triangle text-danger mt-1 flex-shrink-0"></i>
+                                <div>
+                                    <strong className="d-block small">Catatan Penolakan / Revisi Sebelumnya:</strong>
+                                    <span className="small text-dark" style={{ whiteSpace: "pre-line" }}>{course.rejection_reason}</span>
+                                </div>
                             </div>
+                            <button
+                                type="button"
+                                className="btn btn-xs btn-outline-danger flex-shrink-0"
+                                style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: "4px" }}
+                                onClick={() => {
+                                    navigator.clipboard.writeText(course.rejection_reason);
+                                    Toast().fire({ icon: "success", title: "Catatan revisi disalin ke clipboard" });
+                                }}
+                                title="Salin catatan revisi ke clipboard"
+                            >
+                                <i className="fas fa-copy me-1"></i> Salin
+                            </button>
                         </div>
                     )}
 
@@ -953,7 +1010,7 @@ function AdminCourseReviewDetail() {
                                                                             const targetQuiz = isQuiz
                                                                                 ? ((course.quizzes || []).find(q =>
                                                                                     quizTargetId && (String(q.quiz_id) === String(quizTargetId) || String(q.id) === String(quizTargetId))
-                                                                                  ) || (lecture.quiz && typeof lecture.quiz === 'object' ? lecture.quiz : null) || lecture.quiz_detail)
+                                                                                ) || (lecture.quiz && typeof lecture.quiz === 'object' ? lecture.quiz : null) || lecture.quiz_detail)
                                                                                 : null;
 
                                                                             const itemTitle = lecture.title || targetQuiz?.title || (isQuiz ? "Kuis" : "Materi");
@@ -2153,6 +2210,28 @@ function AdminCourseReviewDetail() {
                                             <i className="fas fa-times-circle me-1"></i>
                                             Tolak / Minta Revisi
                                         </button>
+
+                                        <div className="d-flex gap-2 mt-1">
+                                            <Link
+                                                to={`/admin/courses/${course.course_id}/edit/`}
+                                                className="btn btn-outline-teal w-50 d-inline-flex align-items-center justify-content-center gap-1 shadow-xs"
+                                                style={{ fontSize: "0.78rem", padding: "6px 8px", borderColor: "#0d9488", color: "#0d9488", borderRadius: "6px" }}
+                                                title="Edit materi, judul, atau kuis langsung ke basis data"
+                                            >
+                                                <i className="fas fa-edit"></i>
+                                                <span>Edit Langsung</span>
+                                            </Link>
+                                            <button
+                                                type="button"
+                                                className="btn btn-light border w-50 d-inline-flex align-items-center justify-content-center gap-1 text-secondary shadow-xs"
+                                                style={{ fontSize: "0.78rem", padding: "6px 8px", borderRadius: "6px" }}
+                                                onClick={() => window.print()}
+                                                title="Cetak lembar kurasi telaah kurikulum kursus"
+                                            >
+                                                <i className="fas fa-print"></i>
+                                                <span>Cetak Telaah</span>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="acrd-action-meta mt-3 pt-2 border-top text-muted small">
@@ -2190,6 +2269,18 @@ function AdminCourseReviewDetail() {
 
                                     <div className="row g-2 acrd-mini-stats">
                                         <div className="col-6">
+                                            <div className="acrd-stat-tile" style={{ background: "#f0fdfa", borderColor: "#ccfbf1" }}>
+                                                <div className="acrd-stat-val text-teal">{liveStats.calculatedJp} JP</div>
+                                                <div className="acrd-stat-lbl">Jam Pelatihan (JP)</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-6">
+                                            <div className="acrd-stat-tile">
+                                                <div className="acrd-stat-val text-dark">{liveStats.totalDurationFormatted}</div>
+                                                <div className="acrd-stat-lbl">Total Durasi</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-6">
                                             <div className="acrd-stat-tile">
                                                 <div className="acrd-stat-val text-teal">{liveStats.sectionsCount}</div>
                                                 <div className="acrd-stat-lbl">Total Bagian</div>
@@ -2203,12 +2294,6 @@ function AdminCourseReviewDetail() {
                                         </div>
                                         <div className="col-6">
                                             <div className="acrd-stat-tile">
-                                                <div className="acrd-stat-val text-dark">{liveStats.totalDurationFormatted}</div>
-                                                <div className="acrd-stat-lbl">Total Durasi</div>
-                                            </div>
-                                        </div>
-                                        <div className="col-6">
-                                            <div className="acrd-stat-tile">
                                                 <div className="acrd-stat-val text-primary">{liveStats.quizzesCount}</div>
                                                 <div className="acrd-stat-lbl">Kuis ({liveStats.totalQuestions} Soal)</div>
                                             </div>
@@ -2216,14 +2301,58 @@ function AdminCourseReviewDetail() {
                                         <div className="col-6">
                                             <div className="acrd-stat-tile">
                                                 <div className="acrd-stat-val text-warning">{liveStats.gamesCount}</div>
-                                                <div className="acrd-stat-lbl">Gamifikasi</div>
+                                                <div className="acrd-stat-lbl">Gamifikasi (+{liveStats.totalGameXP} XP)</div>
                                             </div>
                                         </div>
-                                        <div className="col-6">
-                                            <div className="acrd-stat-tile">
-                                                <div className="acrd-stat-val text-success">+{liveStats.totalGameXP}</div>
-                                                <div className="acrd-stat-lbl">Total XP Reward</div>
-                                            </div>
+                                    </div>
+                                </div>
+
+                                {/* 3. Compliance & Quality Checklist Card */}
+                                <div className="acrd-card mb-3">
+                                    <div className="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom">
+                                        <div className="d-flex align-items-center gap-1">
+                                            <i className="fas fa-clipboard-check text-teal"></i>
+                                            <strong className="small text-dark">Kepatuhan Standar Diklat</strong>
+                                        </div>
+                                        <span className={`badge ${liveStats.compliancePercent === 100 ? "bg-success" : "bg-warning text-dark"}`} style={{ fontSize: "0.7rem" }}>
+                                            {liveStats.compliancePercent}%
+                                        </span>
+                                    </div>
+
+                                    <div className="acrd-progress-bar-wrap">
+                                        <div
+                                            className="acrd-progress-bar-fill"
+                                            style={{
+                                                width: `${liveStats.compliancePercent}%`,
+                                                backgroundColor: liveStats.compliancePercent === 100 ? "#0d9488" : "#f59e0b"
+                                            }}
+                                        ></div>
+                                    </div>
+
+                                    <div className="acrd-compliance-list">
+                                        <div className={`acrd-compliance-item ${liveStats.compliance.hasCurriculum ? "is-valid" : "is-invalid"}`}>
+                                            <span><i className={`fas ${liveStats.compliance.hasCurriculum ? "fa-check-circle text-teal" : "fa-times-circle text-danger"} me-1`}></i> Silabus & Bab Materi</span>
+                                            <span className="fw-semibold">{liveStats.sectionsCount} Bab</span>
+                                        </div>
+                                        <div className={`acrd-compliance-item ${liveStats.compliance.hasQuizzes ? "is-valid" : "is-invalid"}`}>
+                                            <span><i className={`fas ${liveStats.compliance.hasQuizzes ? "fa-check-circle text-teal" : "fa-times-circle text-danger"} me-1`}></i> Evaluasi Kelulusan / Kuis</span>
+                                            <span className="fw-semibold">{liveStats.quizzesCount} Kuis</span>
+                                        </div>
+                                        <div className={`acrd-compliance-item ${liveStats.compliance.hasDuration ? "is-valid" : "is-invalid"}`}>
+                                            <span><i className={`fas ${liveStats.compliance.hasDuration ? "fa-check-circle text-teal" : "fa-times-circle text-danger"} me-1`}></i> Bobot Jam Pelatihan (JP)</span>
+                                            <span className="fw-semibold">{liveStats.calculatedJp} JP</span>
+                                        </div>
+                                        <div className={`acrd-compliance-item ${liveStats.compliance.hasTargetAudience ? "is-valid" : "is-invalid"}`}>
+                                            <span><i className={`fas ${liveStats.compliance.hasTargetAudience ? "fa-check-circle text-teal" : "fa-times-circle text-danger"} me-1`}></i> Target Sasaran ASN</span>
+                                            <span className="fw-semibold text-truncate" style={{ maxWidth: "110px" }}>{course.target_audience || "Pegawai"}</span>
+                                        </div>
+                                        <div className={`acrd-compliance-item ${liveStats.compliance.hasInstructor ? "is-valid" : "is-invalid"}`}>
+                                            <span><i className={`fas ${liveStats.compliance.hasInstructor ? "fa-check-circle text-teal" : "fa-times-circle text-danger"} me-1`}></i> Instruktur Pengampu</span>
+                                            <span className="fw-semibold text-truncate" style={{ maxWidth: "110px" }}>{course.teacher?.full_name ? "Terdaftar" : "Belum"}</span>
+                                        </div>
+                                        <div className={`acrd-compliance-item ${liveStats.compliance.hasLearningOutcomes ? "is-valid" : "is-invalid"}`}>
+                                            <span><i className={`fas ${liveStats.compliance.hasLearningOutcomes ? "fa-check-circle text-teal" : "fa-times-circle text-danger"} me-1`}></i> Capaian Pembelajaran</span>
+                                            <span className="fw-semibold">{liveStats.outcomesCount} Poin</span>
                                         </div>
                                     </div>
                                 </div>

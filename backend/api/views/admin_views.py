@@ -322,9 +322,9 @@ class AdminCourseDirectEditAPIView(APIView):
             course.description = data['description']
         if 'level' in data and data['level']:
             course.level = data['level']
-        if 'language' in data and data['language']:
+        if 'language' in data and data['language'] and hasattr(course, 'language'):
             course.language = data['language']
-        if 'course_duration' in data:
+        if 'course_duration' in data and hasattr(course, 'course_duration'):
             course.course_duration = data['course_duration']
         if 'target_audience' in data and data['target_audience']:
             aud = data['target_audience']
@@ -533,8 +533,10 @@ class AdminCourseDirectEditAPIView(APIView):
                 pub.title = course.title
                 pub.description = course.description
                 pub.level = course.level
-                pub.language = course.language
-                pub.course_duration = course.course_duration
+                if hasattr(course, 'language') and hasattr(pub, 'language'):
+                    pub.language = course.language
+                if hasattr(course, 'course_duration') and hasattr(pub, 'course_duration'):
+                    pub.course_duration = course.course_duration
                 pub.target_audience = course.target_audience
                 pub.category = course.category
                 pub.image = course.image
@@ -585,8 +587,10 @@ class AdminCourseDirectEditAPIView(APIView):
             parent.title = course.title
             parent.description = course.description
             parent.level = course.level
-            parent.language = course.language
-            parent.course_duration = course.course_duration
+            if hasattr(course, 'language') and hasattr(parent, 'language'):
+                parent.language = course.language
+            if hasattr(course, 'course_duration') and hasattr(parent, 'course_duration'):
+                parent.course_duration = course.course_duration
             parent.target_audience = course.target_audience
             parent.category = course.category
             parent.image = course.image

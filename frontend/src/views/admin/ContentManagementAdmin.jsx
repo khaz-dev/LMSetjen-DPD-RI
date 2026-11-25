@@ -18,6 +18,7 @@ function ContentManagementAdmin() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState(() => {
         const tab = searchParams.get("tab");
+        if (tab === "certificates") return "certificate";
         return tab === "testimonials" || tab === "materials" || tab === "requests" || tab === "certificate" ? tab : "courses";
     });
 

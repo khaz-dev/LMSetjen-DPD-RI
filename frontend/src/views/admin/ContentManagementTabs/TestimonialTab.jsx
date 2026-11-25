@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import Swal from 'sweetalert2';
 import apiInstance from '../../../utils/axios';
 import Toast from '../../plugin/Toast';
 
@@ -16,10 +17,32 @@ function TestimonialTab({ onCountsUpdated }) {
     const [rejectionReason, setRejectionReason] = useState('');
     const [showRejectionModal, setShowRejectionModal] = useState(false);
     const [selectedTestimonial, setSelectedTestimonial] = useState(null);
+    const [previewTestimonial, setPreviewTestimonial] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [ratingFilter, setRatingFilter] = useState('all');
     const [roleFilter, setRoleFilter] = useState('all');
     const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
+
+    // Multi-select & Bulk Moderation state
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [bulkProcessing, setBulkProcessing] = useState(false);
+
+    // Close preview drawer / modals on Escape key
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setPreviewTestimonial(null);
+                setShowRejectionModal(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    // Clear selections when tab or filters change
+    useEffect(() => {
+        setSelectedIds([]);
+    }, [activeSubTab, searchTerm, ratingFilter, roleFilter]);
 
     // Fetch pending testimonials
     const fetchPendingTestimonials = useCallback(async () => {
@@ -68,8 +91,43 @@ function TestimonialTab({ onCountsUpdated }) {
         fetchAllData();
     }, [fetchAllData]);
 
-    // Handle approve action
-    const handleApprove = async (testimonialId) => {
+    // Handle approve action with SweetAlert2 confirmation
+    const handleApprove = async (itemOrId) => {
+        const item = typeof itemOrId === 'object' && itemOrId !== null
+            ? itemOrId
+            : currentDataset.find(t => t.id === itemOrId);
+        const testimonialId = item?.id || itemOrId;
+        if (!testimonialId) return;
+
+        const result = await Swal.fire({
+            title: "Setujui Testimoni Ini?",
+            html: `
+                <div class="text-start" style="font-size: 0.88rem;">
+                    <p class="mb-2">Anda akan menyetujui ulasan dari:</p>
+                    <div class="p-2 rounded border bg-light mb-2">
+                        <strong class="text-dark d-block">${item?.full_name || 'Pegawai'}</strong>
+                        <span class="text-muted small">${item?.email || '-'} · ${item?.position || 'Peserta'}</span>
+                    </div>
+                    <div class="text-warning small mb-1">
+                        ${"★".repeat(Math.round(item?.rating || 5))}${"☆".repeat(5 - Math.round(item?.rating || 5))} <b class="text-dark">(${item?.rating || 5}.0)</b>
+                    </div>
+                    <p class="small text-muted fst-italic mb-2">"${item?.review || '-'}"</p>
+                    <div class="alert alert-info py-2 px-2 mb-0" style="font-size: 0.78rem;">
+                        <i class="fas fa-info-circle me-1"></i> Ulasan ini akan langsung tampil di beranda dan halaman publik portal LMS Setjen DPD RI.
+                    </div>
+                </div>
+            `,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#0d9488",
+            cancelButtonColor: "#64748b",
+            confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Ya, Setujui & Terbitkan',
+            cancelButtonText: "Batal",
+            reverseButtons: true
+        });
+
+        if (!result.isConfirmed) return;
+
         setProcessingId(testimonialId);
         try {
             await apiInstance.patch(`/admin/testimonials/${testimonialId}/approve-reject/`, {
@@ -77,10 +135,9 @@ function TestimonialTab({ onCountsUpdated }) {
             });
             Toast().fire({
                 icon: 'success',
-                title: 'Testimoni berhasil disetujui',
-                timer: 2000,
+                title: 'Testimoni Berhasil Disetujui',
+                text: `Ulasan dari ${item?.full_name || 'pegawai'} telah dipublikasikan.`
             });
-            // Re-fetch both so approved list receives it and counters update
             fetchAllData();
             if (typeof onCountsUpdated === 'function') {
                 onCountsUpdated();
@@ -90,7 +147,7 @@ function TestimonialTab({ onCountsUpdated }) {
             Toast().fire({
                 icon: 'error',
                 title: 'Gagal menyetujui testimoni',
-                timer: 2000,
+                text: err.response?.data?.detail || 'Terjadi kesalahan saat memproses persetujuan'
             });
         } finally {
             setProcessingId(null);
@@ -115,8 +172,8 @@ function TestimonialTab({ onCountsUpdated }) {
             });
             Toast().fire({
                 icon: 'success',
-                title: 'Testimoni berhasil ditolak',
-                timer: 2000,
+                title: 'Testimoni Berhasil Ditolak',
+                text: `Ulasan dari ${selectedTestimonial.full_name} telah ditolak.`
             });
             setShowRejectionModal(false);
             fetchAllData();
@@ -128,7 +185,7 @@ function TestimonialTab({ onCountsUpdated }) {
             Toast().fire({
                 icon: 'error',
                 title: 'Gagal menolak testimoni',
-                timer: 2000,
+                text: err.response?.data?.detail || 'Terjadi kesalahan saat memproses penolakan'
             });
         } finally {
             setProcessingId(null);
@@ -197,6 +254,331 @@ function TestimonialTab({ onCountsUpdated }) {
             return true;
         });
     }, [currentDataset, searchTerm, ratingFilter, roleFilter]);
+
+    // Multi-select & Bulk Moderation helpers
+    const isAllSelected = useMemo(() => {
+        return filteredTestimonials.length > 0 && filteredTestimonials.every(t => selectedIds.includes(t.id));
+    }, [filteredTestimonials, selectedIds]);
+
+    const isSomeSelected = useMemo(() => {
+        return selectedIds.length > 0 && !isAllSelected;
+    }, [selectedIds, isAllSelected]);
+
+    const handleToggleSelectAll = () => {
+        if (isAllSelected) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(filteredTestimonials.map(t => t.id));
+        }
+    };
+
+    const handleToggleSelectOne = (id) => {
+        if (!id) return;
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const selectedTestimonials = useMemo(() => {
+        return currentDataset.filter(t => selectedIds.includes(t.id));
+    }, [currentDataset, selectedIds]);
+
+    const pendingInSelected = useMemo(() => {
+        return selectedTestimonials.filter(t => !t.active);
+    }, [selectedTestimonials]);
+
+    const approvedInSelected = useMemo(() => {
+        return selectedTestimonials.filter(t => t.active);
+    }, [selectedTestimonials]);
+
+    // Reset all search/rating/role filters
+    const handleResetAllFilters = () => {
+        setSearchTerm('');
+        setRatingFilter('all');
+        setRoleFilter('all');
+    };
+
+    const hasActiveFilters = useMemo(() => {
+        return Boolean(searchTerm.trim() || ratingFilter !== 'all' || roleFilter !== 'all');
+    }, [searchTerm, ratingFilter, roleFilter]);
+
+    // Bulk Approve
+    const handleBulkApprove = async () => {
+        if (pendingInSelected.length === 0) {
+            Toast().fire({
+                icon: 'info',
+                title: 'Tidak ada testimoni pending',
+                text: 'Pilih testimoni berstatus menunggu untuk disetujui.'
+            });
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: `Setujui ${pendingInSelected.length} Testimoni Sekaligus?`,
+            html: `
+                <div class="text-start" style="font-size: 0.86rem;">
+                    <p class="mb-2">Anda akan menyetujui & mempublikasikan <b>${pendingInSelected.length} ulasan testimoni</b> terpilih.</p>
+                    <div class="alert alert-info py-2 px-2 mb-0" style="font-size: 0.78rem;">
+                        <i class="fas fa-info-circle me-1"></i> Seluruh testimoni ini akan langsung aktif dan tampil di portal LMS Setjen DPD RI.
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: `<i class="fas fa-check-double me-1"></i> Ya, Setujui Semua (${pendingInSelected.length})`,
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        });
+
+        if (!result.isConfirmed) return;
+
+        setBulkProcessing(true);
+        let successCount = 0;
+
+        for (const item of pendingInSelected) {
+            try {
+                await apiInstance.patch(`/admin/testimonials/${item.id}/approve-reject/`, {
+                    action: 'approve'
+                });
+                successCount++;
+            } catch (err) {
+                console.error(`Error approving testimonial ${item.id}:`, err);
+            }
+        }
+
+        setBulkProcessing(false);
+        setSelectedIds([]);
+
+        Toast().fire({
+            icon: 'success',
+            title: 'Persetujuan Massal Berhasil',
+            text: `${successCount} testimoni berhasil disetujui & ditayangkan.`
+        });
+
+        fetchAllData();
+        if (typeof onCountsUpdated === 'function') {
+            onCountsUpdated();
+        }
+    };
+
+    // Bulk Reject
+    const handleBulkReject = async () => {
+        if (pendingInSelected.length === 0) {
+            Toast().fire({
+                icon: 'info',
+                title: 'Tidak ada testimoni pending',
+                text: 'Pilih testimoni berstatus menunggu untuk ditolak.'
+            });
+            return;
+        }
+
+        const { value: reason } = await Swal.fire({
+            title: `Tolak ${pendingInSelected.length} Testimoni Sekaligus?`,
+            html: `
+                <div class="text-start mb-2" style="font-size: 0.86rem;">
+                    <p class="mb-2">Tuliskan catatan alasan penolakan untuk <b>${pendingInSelected.length} testimoni</b>:</p>
+                </div>
+            `,
+            input: 'textarea',
+            inputPlaceholder: 'Contoh: Ulasan tidak relevan atau tidak sesuai etika...',
+            inputAttributes: {
+                style: 'min-height: 80px; font-size: 0.85rem;'
+            },
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: `<i class="fas fa-ban me-1"></i> Ya, Tolak Semua (${pendingInSelected.length})`,
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            inputValidator: (val) => {
+                if (!val || !val.trim()) {
+                    return 'Alasan penolakan wajib diisi!';
+                }
+            }
+        });
+
+        if (!reason || !reason.trim()) return;
+
+        setBulkProcessing(true);
+        let successCount = 0;
+
+        for (const item of pendingInSelected) {
+            try {
+                await apiInstance.patch(`/admin/testimonials/${item.id}/approve-reject/`, {
+                    action: 'reject',
+                    reason: reason.trim()
+                });
+                successCount++;
+            } catch (err) {
+                console.error(`Error rejecting testimonial ${item.id}:`, err);
+            }
+        }
+
+        setBulkProcessing(false);
+        setSelectedIds([]);
+
+        Toast().fire({
+            icon: 'warning',
+            title: 'Penolakan Massal Berhasil',
+            text: `${successCount} testimoni telah ditolak.`
+        });
+
+        fetchAllData();
+        if (typeof onCountsUpdated === 'function') {
+            onCountsUpdated();
+        }
+    };
+
+    // Export current filtered testimonials to CSV
+    const handleExportCSV = () => {
+        if (!filteredTestimonials || filteredTestimonials.length === 0) {
+            Toast().fire({
+                icon: 'info',
+                title: 'Tidak ada data untuk diekspor',
+                text: 'Daftar testimoni saat ini kosong berdasarkan filter yang dipilih.'
+            });
+            return;
+        }
+
+        try {
+            const escapeCSV = (str) => {
+                if (str === null || str === undefined) return '""';
+                const s = String(str).replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
+                return `"${s}"`;
+            };
+
+            const headers = [
+                "No",
+                "Nama Pegawai",
+                "Email",
+                "Jabatan / Unit Kerja",
+                "Golongan",
+                "Peran",
+                "Rating (Bintang)",
+                "Isi Ulasan Testimoni",
+                "Tanggal Pengajuan",
+                "Status Publikasi"
+            ];
+
+            const rows = filteredTestimonials.map((item, idx) => {
+                const dateStr = item.date ? new Date(item.date).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                }) : '-';
+
+                return [
+                    idx + 1,
+                    escapeCSV(item.full_name || 'Anonim'),
+                    escapeCSV(item.email || '-'),
+                    escapeCSV(item.position || 'Peserta'),
+                    escapeCSV(item.golongan || '-'),
+                    escapeCSV(item.role === 'instructor' ? 'Instruktur' : 'Peserta'),
+                    item.rating || 5,
+                    escapeCSV(item.review || ''),
+                    escapeCSV(dateStr),
+                    escapeCSV(item.active ? 'Aktif (Terbit)' : 'Menunggu Kurasi')
+                ].join(',');
+            });
+
+            const csvContent = [headers.map(h => `"${h}"`).join(','), ...rows].join('\r\n');
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const dateStamp = new Date().toISOString().slice(0, 10);
+            link.href = URL.createObjectURL(blob);
+            link.download = `Rekap_Testimoni_SetjenDPDRI_${activeSubTab}_${dateStamp}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+
+            Toast().fire({
+                icon: 'success',
+                title: 'Berhasil Mengekspor Data',
+                text: `${filteredTestimonials.length} testimoni berhasil diekspor ke file CSV.`
+            });
+        } catch (err) {
+            console.error('Export error:', err);
+            Toast().fire({
+                icon: 'error',
+                title: 'Gagal Mengekspor',
+                text: 'Terjadi kesalahan saat mengekspor data ke CSV.'
+            });
+        }
+    };
+
+    // Bulk Export Selected Testimonials to CSV
+    const handleBulkExportSelectedCSV = () => {
+        if (!selectedTestimonials || selectedTestimonials.length === 0) return;
+
+        try {
+            const escapeCSV = (str) => {
+                if (str === null || str === undefined) return '""';
+                const s = String(str).replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
+                return `"${s}"`;
+            };
+
+            const headers = [
+                "No",
+                "Nama Pegawai",
+                "Email",
+                "Jabatan / Unit Kerja",
+                "Golongan",
+                "Peran",
+                "Rating (Bintang)",
+                "Isi Ulasan Testimoni",
+                "Tanggal Pengajuan",
+                "Status Publikasi"
+            ];
+
+            const rows = selectedTestimonials.map((item, idx) => {
+                const dateStr = item.date ? new Date(item.date).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                }) : '-';
+
+                return [
+                    idx + 1,
+                    escapeCSV(item.full_name || 'Anonim'),
+                    escapeCSV(item.email || '-'),
+                    escapeCSV(item.position || 'Peserta'),
+                    escapeCSV(item.golongan || '-'),
+                    escapeCSV(item.role === 'instructor' ? 'Instruktur' : 'Peserta'),
+                    item.rating || 5,
+                    escapeCSV(item.review || ''),
+                    escapeCSV(dateStr),
+                    escapeCSV(item.active ? 'Aktif (Terbit)' : 'Menunggu Kurasi')
+                ].join(',');
+            });
+
+            const csvContent = [headers.map(h => `"${h}"`).join(','), ...rows].join('\r\n');
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const dateStamp = new Date().toISOString().slice(0, 10);
+            link.href = URL.createObjectURL(blob);
+            link.download = `Rekap_Testimoni_Pilihan_SetjenDPDRI_${dateStamp}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+
+            Toast().fire({
+                icon: 'success',
+                title: 'Berhasil Mengekspor Pilihan',
+                text: `${selectedTestimonials.length} testimoni terpilih berhasil diekspor ke file CSV.`
+            });
+        } catch (err) {
+            console.error('Bulk export error:', err);
+            Toast().fire({
+                icon: 'error',
+                title: 'Gagal Mengekspor',
+                text: 'Terjadi kesalahan saat mengekspor data terpilih.'
+            });
+        }
+    };
 
     const isLoading = activeSubTab === 'pending' ? loadingPending : (activeSubTab === 'approved' ? loadingApproved : (loadingPending || loadingApproved));
 
@@ -346,8 +728,23 @@ function TestimonialTab({ onCountsUpdated }) {
                         </select>
                     </div>
 
+                    {/* Export to CSV Button */}
+                    <div className="col-auto ms-auto">
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-xs"
+                            style={{ fontSize: "0.78rem", fontWeight: 600, height: "31px", borderRadius: "6px" }}
+                            onClick={handleExportCSV}
+                            title="Ekspor daftar testimoni yang sedang tampil ke berkas CSV"
+                            disabled={isLoading || filteredTestimonials.length === 0}
+                        >
+                            <i className="fas fa-file-export text-teal"></i>
+                            <span className="d-none d-md-inline">Ekspor CSV</span>
+                        </button>
+                    </div>
+
                     {/* View Mode Toggle */}
-                    <div className="col-auto ms-auto d-none d-sm-block">
+                    <div className="col-auto d-none d-sm-block">
                         <div className="btn-group btn-group-sm">
                             <button
                                 type="button"
@@ -370,6 +767,51 @@ function TestimonialTab({ onCountsUpdated }) {
                 </div>
             </div>
 
+            {/* Active Filters Pill Bar */}
+            {hasActiveFilters && (
+                <div className="cm-active-filters-bar mb-3">
+                    <span className="cm-active-filter-label">
+                        <i className="fas fa-filter me-1 text-teal" style={{ color: "#0d9488" }}></i>
+                        Filter Aktif:
+                    </span>
+                    <div className="cm-filter-pills-list">
+                        {searchTerm.trim() && (
+                            <span className="cm-filter-pill">
+                                <span>Cari: <b>"{searchTerm}"</b></span>
+                                <button type="button" onClick={() => setSearchTerm('')} title="Hapus pencarian">
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </span>
+                        )}
+                        {ratingFilter !== 'all' && (
+                            <span className="cm-filter-pill">
+                                <span>Rating: <b>{ratingFilter} Bintang</b></span>
+                                <button type="button" onClick={() => setRatingFilter('all')} title="Hapus filter rating">
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </span>
+                        )}
+                        {roleFilter !== 'all' && (
+                            <span className="cm-filter-pill">
+                                <span>Peran: <b>{roleFilter === 'student' ? 'Peserta' : 'Instruktur'}</b></span>
+                                <button type="button" onClick={() => setRoleFilter('all')} title="Hapus filter peran">
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </span>
+                        )}
+                        <button
+                            type="button"
+                            className="cm-btn-reset-all"
+                            onClick={handleResetAllFilters}
+                            title="Reset semua filter pencarian"
+                        >
+                            <i className="fas fa-undo-alt me-1"></i>
+                            Reset Semua
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* 3. Content Area */}
             {isLoading ? (
                 <div className="cm-loading-box py-5 text-center">
@@ -386,8 +828,8 @@ function TestimonialTab({ onCountsUpdated }) {
                         {searchTerm || ratingFilter !== 'all' || roleFilter !== 'all'
                             ? 'Tidak ada testimoni yang sesuai dengan kriteria pencarian/filter Anda.'
                             : activeSubTab === 'pending'
-                            ? 'Semua pengajuan testimoni telah ditinjau dan tidak ada yang menunggu persetujuan.'
-                            : 'Belum ada data ulasan testimoni pada kategori ini.'}
+                                ? 'Semua pengajuan testimoni telah ditinjau dan tidak ada yang menunggu persetujuan.'
+                                : 'Belum ada data ulasan testimoni pada kategori ini.'}
                     </p>
                 </div>
             ) : viewMode === 'grid' ? (
@@ -396,8 +838,23 @@ function TestimonialTab({ onCountsUpdated }) {
                     {filteredTestimonials.map((item) => {
                         const isPending = !item.active;
                         const isProc = processingId === item.id;
+                        const isSelected = selectedIds.includes(item.id);
                         return (
-                            <div key={item.id} className={`cm-t-card ${isPending ? 'border-pending' : 'border-approved'}`}>
+                            <div key={item.id} className={`cm-t-card ${isPending ? 'border-pending' : 'border-approved'} ${isSelected ? 'is-selected' : ''}`}>
+                                {/* Card Selection Checkbox */}
+                                <div
+                                    className="cm-t-select-box"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title={isSelected ? "Batalkan pilihan" : "Pilih testimoni ini"}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        className="form-check-input cm-card-checkbox"
+                                        checked={isSelected}
+                                        onChange={() => handleToggleSelectOne(item.id)}
+                                    />
+                                </div>
+
                                 {/* Card Header */}
                                 <div className="cm-t-card-header">
                                     <div className="cm-t-avatar-box">
@@ -423,7 +880,12 @@ function TestimonialTab({ onCountsUpdated }) {
 
                                     <div className="cm-t-user-meta">
                                         <div className="d-flex align-items-center justify-content-between gap-1">
-                                            <h4 className="cm-t-name text-truncate mb-0" title={item.full_name}>
+                                            <h4
+                                                className="cm-t-name text-truncate mb-0"
+                                                title={`Klik untuk pratinjau: ${item.full_name}`}
+                                                style={{ cursor: "pointer" }}
+                                                onClick={() => setPreviewTestimonial(item)}
+                                            >
                                                 {item.full_name || 'Anonim'}
                                             </h4>
                                             <span className={`cm-badge-status ${isPending ? 'badge-amber' : 'badge-emerald'}`}>
@@ -459,7 +921,12 @@ function TestimonialTab({ onCountsUpdated }) {
                                 </div>
 
                                 {/* Review Text Bubble */}
-                                <div className="cm-t-quote-box">
+                                <div
+                                    className="cm-t-quote-box"
+                                    onClick={() => setPreviewTestimonial(item)}
+                                    style={{ cursor: "pointer" }}
+                                    title="Klik untuk membaca ulasan lengkap"
+                                >
                                     <i className="fas fa-quote-left cm-quote-icon me-1"></i>
                                     <p className="cm-t-quote-text mb-0">{item.review}</p>
                                 </div>
@@ -475,38 +942,51 @@ function TestimonialTab({ onCountsUpdated }) {
                                         })}
                                     </span>
 
-                                    {isPending ? (
-                                        <div className="cm-t-actions">
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-outline-danger cm-btn-action"
-                                                onClick={() => handleRejectClick(item)}
-                                                disabled={isProc}
-                                                title="Tolak ulasan testimoni"
-                                            >
-                                                <i className="fas fa-times me-1"></i>Tolak
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-teal cm-btn-action"
-                                                onClick={() => handleApprove(item.id)}
-                                                disabled={isProc}
-                                                title="Setujui ulasan untuk tayang di portal publik"
-                                            >
-                                                {isProc ? (
-                                                    <span className="spinner-border spinner-border-sm me-1"></span>
-                                                ) : (
-                                                    <i className="fas fa-check me-1"></i>
-                                                )}
-                                                Setujui
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="cm-t-approved-tag">
-                                            <i className="fas fa-shield-check text-success me-1"></i>
-                                            <span className="text-success small fw-semibold">Aktif di Beranda</span>
-                                        </div>
-                                    )}
+                                    <div className="cm-t-actions d-flex align-items-center gap-1">
+                                        {/* Eyeball Preview Button */}
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-teal cm-btn-action px-2"
+                                            onClick={() => setPreviewTestimonial(item)}
+                                            title="Pratinjau Rincian Testimoni"
+                                            style={{ borderColor: "#0d9488", color: "#0d9488" }}
+                                        >
+                                            <i className="fas fa-eye"></i>
+                                        </button>
+
+                                        {isPending ? (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-danger cm-btn-action"
+                                                    onClick={() => handleRejectClick(item)}
+                                                    disabled={isProc}
+                                                    title="Tolak ulasan testimoni"
+                                                >
+                                                    <i className="fas fa-times me-1"></i>Tolak
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-teal cm-btn-action"
+                                                    onClick={() => handleApprove(item)}
+                                                    disabled={isProc}
+                                                    title="Setujui ulasan untuk tayang di portal publik"
+                                                >
+                                                    {isProc ? (
+                                                        <span className="spinner-border spinner-border-sm me-1"></span>
+                                                    ) : (
+                                                        <i className="fas fa-check me-1"></i>
+                                                    )}
+                                                    Setujui
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <div className="cm-t-approved-tag ms-1">
+                                                <i className="fas fa-shield-check text-success me-1"></i>
+                                                <span className="text-success small fw-semibold">Live</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -518,7 +998,19 @@ function TestimonialTab({ onCountsUpdated }) {
                     <table className="table table-hover cm-dense-table mb-0">
                         <thead>
                             <tr>
-                                <th style={{ width: '40px' }}>#</th>
+                                <th style={{ width: '38px', textAlign: 'center' }}>
+                                    <input
+                                        type="checkbox"
+                                        className="form-check-input cm-table-checkbox"
+                                        checked={isAllSelected}
+                                        ref={(el) => {
+                                            if (el) el.indeterminate = isSomeSelected;
+                                        }}
+                                        onChange={handleToggleSelectAll}
+                                        title={isAllSelected ? "Batalkan pilihan semua" : "Pilih semua testimoni"}
+                                    />
+                                </th>
+                                <th style={{ width: '36px', textAlign: 'center' }}>#</th>
                                 <th>Profil Pegawai</th>
                                 <th>Peran</th>
                                 <th>Rating</th>
@@ -532,16 +1024,33 @@ function TestimonialTab({ onCountsUpdated }) {
                             {filteredTestimonials.map((item, idx) => {
                                 const isPending = !item.active;
                                 const isProc = processingId === item.id;
+                                const isSelected = selectedIds.includes(item.id);
                                 return (
-                                    <tr key={item.id}>
-                                        <td className="text-muted small">{idx + 1}</td>
+                                    <tr key={item.id} className={isSelected ? 'cm-row-selected' : ''}>
+                                        <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input cm-table-checkbox"
+                                                checked={isSelected}
+                                                onChange={() => handleToggleSelectOne(item.id)}
+                                                title={isSelected ? "Batalkan pilihan" : "Pilih testimoni ini"}
+                                            />
+                                        </td>
+                                        <td className="text-muted small" style={{ textAlign: 'center' }}>{idx + 1}</td>
                                         <td>
                                             <div className="d-flex align-items-center gap-2">
                                                 <div className="cm-table-avatar">
                                                     {(item.full_name || 'U').charAt(0).toUpperCase()}
                                                 </div>
                                                 <div className="cm-table-userinfo">
-                                                    <strong className="d-block text-dark small">{item.full_name}</strong>
+                                                    <strong
+                                                        className="d-block text-dark small"
+                                                        style={{ cursor: "pointer" }}
+                                                        onClick={() => setPreviewTestimonial(item)}
+                                                        title="Klik untuk melihat pratinjau lengkap"
+                                                    >
+                                                        {item.full_name}
+                                                    </strong>
                                                     <span className="text-muted tiny d-block">{item.email}</span>
                                                 </div>
                                             </div>
@@ -558,7 +1067,12 @@ function TestimonialTab({ onCountsUpdated }) {
                                             </div>
                                         </td>
                                         <td>
-                                            <p className="cm-table-review-text mb-0 text-truncate" style={{ maxWidth: '320px' }} title={item.review}>
+                                            <p
+                                                className="cm-table-review-text mb-0 text-truncate"
+                                                style={{ maxWidth: '300px', cursor: 'pointer' }}
+                                                onClick={() => setPreviewTestimonial(item)}
+                                                title={`Klik untuk membaca ulasan: "${item.review}"`}
+                                            >
                                                 "{item.review}"
                                             </p>
                                         </td>
@@ -575,32 +1089,47 @@ function TestimonialTab({ onCountsUpdated }) {
                                             </span>
                                         </td>
                                         <td className="text-end">
-                                            {isPending ? (
-                                                <div className="btn-group btn-group-sm">
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-outline-success btn-xs"
-                                                        onClick={() => handleApprove(item.id)}
-                                                        disabled={isProc}
-                                                        title="Setujui"
-                                                    >
-                                                        <i className="fas fa-check"></i>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-outline-danger btn-xs"
-                                                        onClick={() => handleRejectClick(item)}
-                                                        disabled={isProc}
-                                                        title="Tolak"
-                                                    >
-                                                        <i className="fas fa-times"></i>
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <span className="text-success tiny fw-semibold">
-                                                    <i className="fas fa-check-circle me-1"></i>Live
-                                                </span>
-                                            )}
+                                            <div className="d-flex align-items-center justify-content-end gap-1">
+                                                {/* Eyeball Preview Button */}
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-teal btn-xs d-inline-flex align-items-center justify-content-center"
+                                                    style={{ width: "26px", height: "26px", borderColor: "#0d9488", color: "#0d9488" }}
+                                                    onClick={() => setPreviewTestimonial(item)}
+                                                    title="Pratinjau Rincian Testimoni"
+                                                >
+                                                    <i className="fas fa-eye"></i>
+                                                </button>
+
+                                                {isPending ? (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-success btn-xs d-inline-flex align-items-center justify-content-center"
+                                                            style={{ width: "26px", height: "26px" }}
+                                                            onClick={() => handleApprove(item)}
+                                                            disabled={isProc}
+                                                            title="Setujui Testimoni"
+                                                        >
+                                                            <i className="fas fa-check"></i>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-danger btn-xs d-inline-flex align-items-center justify-content-center"
+                                                            style={{ width: "26px", height: "26px" }}
+                                                            onClick={() => handleRejectClick(item)}
+                                                            disabled={isProc}
+                                                            title="Tolak Testimoni"
+                                                        >
+                                                            <i className="fas fa-times"></i>
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-success tiny fw-semibold ms-1">
+                                                        <i className="fas fa-check-circle me-1"></i>Live
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -628,7 +1157,7 @@ function TestimonialTab({ onCountsUpdated }) {
                             </button>
                         </div>
                         <div className="cm-modal-body-compact">
-                            <div className="cm-reject-preview p-2 rounded bg-light border mb-2.5">
+                            <div className="cm-reject-preview p-2 rounded bg-light border mb-2">
                                 <div className="d-flex align-items-center justify-content-between mb-1">
                                     <strong className="small text-dark">{selectedTestimonial.full_name}</strong>
                                     <span className="tiny text-warning">⭐ {selectedTestimonial.rating}.0</span>
@@ -639,7 +1168,7 @@ function TestimonialTab({ onCountsUpdated }) {
                             <label className="form-label small fw-semibold text-dark mb-1">
                                 Alasan Penolakan (Akan disimpan untuk catatan kurasi):
                             </label>
-                            
+
                             {/* Preset Buttons */}
                             <div className="d-flex flex-wrap gap-1 mb-2">
                                 {quickReasons.map((reason, idx) => (
@@ -691,6 +1220,218 @@ function TestimonialTab({ onCountsUpdated }) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* 5. Floating Bulk Action Bar (Batch Moderation) */}
+            {selectedIds.length > 0 && (
+                <div className="cm-floating-bulk-bar shadow-lg">
+                    <div className="cm-bulk-bar-inner">
+                        <div className="cm-bulk-bar-left">
+                            <span className="cm-bulk-badge">
+                                <i className="fas fa-check-square me-1" style={{ color: '#0d9488' }}></i>
+                                <strong>{selectedIds.length}</strong> Testimoni Dipilih
+                            </span>
+                            <div className="cm-bulk-breakdowns d-none d-md-flex align-items-center gap-1 ms-2">
+                                {pendingInSelected.length > 0 && (
+                                    <span className="badge bg-warning text-dark border">
+                                        {pendingInSelected.length} Menunggu Kurasi
+                                    </span>
+                                )}
+                                {approvedInSelected.length > 0 && (
+                                    <span className="badge bg-success text-white">
+                                        {approvedInSelected.length} Aktif
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="cm-bulk-bar-actions">
+                            {/* Bulk Approve */}
+                            {pendingInSelected.length > 0 && (
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-teal text-white d-inline-flex align-items-center gap-1 shadow-xs"
+                                    style={{ backgroundColor: '#0d9488', borderColor: '#0d9488', fontSize: '0.8rem', fontWeight: 600, borderRadius: '6px' }}
+                                    onClick={handleBulkApprove}
+                                    disabled={bulkProcessing}
+                                    title="Setujui semua testimoni terpilih yang menunggu kurasi"
+                                >
+                                    <i className={`fas ${bulkProcessing ? 'fa-spinner fa-spin' : 'fa-check-double'}`}></i>
+                                    <span>Setujui ({pendingInSelected.length})</span>
+                                </button>
+                            )}
+
+                            {/* Bulk Reject */}
+                            {pendingInSelected.length > 0 && (
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 shadow-xs"
+                                    style={{ fontSize: '0.8rem', fontWeight: 600, borderRadius: '6px' }}
+                                    onClick={handleBulkReject}
+                                    disabled={bulkProcessing}
+                                    title="Tolak semua testimoni terpilih yang menunggu kurasi"
+                                >
+                                    <i className={`fas ${bulkProcessing ? 'fa-spinner fa-spin' : 'fa-ban'}`}></i>
+                                    <span>Tolak ({pendingInSelected.length})</span>
+                                </button>
+                            )}
+
+                            {/* Bulk Export Selected */}
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-light border d-inline-flex align-items-center gap-1 shadow-xs text-dark"
+                                style={{ fontSize: '0.8rem', fontWeight: 600, borderRadius: '6px' }}
+                                onClick={handleBulkExportSelectedCSV}
+                                disabled={bulkProcessing}
+                                title="Unduh data testimoni terpilih ke format file CSV"
+                            >
+                                <i className="fas fa-file-csv text-teal"></i>
+                                <span>Ekspor Pilihan</span>
+                            </button>
+
+                            <div className="vr d-none d-sm-block mx-1"></div>
+
+                            {/* Deselect All */}
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-link text-secondary text-decoration-none p-1"
+                                onClick={() => setSelectedIds([])}
+                                disabled={bulkProcessing}
+                                title="Batalkan semua pilihan"
+                            >
+                                <i className="fas fa-times me-1"></i>
+                                <span>Batal</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 6. Quick Preview Slide-over Drawer for Testimonial */}
+            {previewTestimonial && (
+                <>
+                    <div className="cm-drawer-backdrop" onClick={() => setPreviewTestimonial(null)} />
+                    <div className="cm-preview-drawer">
+                        <div className="cm-drawer-header">
+                            <div className="d-flex align-items-center gap-2">
+                                <div className="cm-drawer-icon-box">
+                                    <i className="fas fa-comment-dots"></i>
+                                </div>
+                                <div>
+                                    <h5 className="cm-drawer-title mb-0">Rincian Ulasan Testimoni</h5>
+                                    <span className="text-muted" style={{ fontSize: "0.74rem" }}>
+                                        {new Date(previewTestimonial.date).toLocaleDateString('id-ID', {
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric'
+                                        })}
+                                    </span>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                className="cm-drawer-close-btn"
+                                onClick={() => setPreviewTestimonial(null)}
+                                title="Tutup (Esc)"
+                            >
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div className="cm-drawer-body">
+                            {/* Profile Box */}
+                            <div className="p-3 bg-light rounded border mb-3">
+                                <div className="d-flex align-items-center gap-3 mb-2">
+                                    <div
+                                        className="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold shadow-xs"
+                                        style={{ width: "48px", height: "48px", fontSize: "1.1rem", backgroundColor: "#0d9488" }}
+                                    >
+                                        {(previewTestimonial.full_name || 'U').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <h5 className="mb-0 text-dark fw-bold">{previewTestimonial.full_name || 'Anonim'}</h5>
+                                        <div className="text-muted small">{previewTestimonial.email || 'Tidak ada email'}</div>
+                                        <div className="d-flex align-items-center gap-2 mt-1">
+                                            <span className="badge bg-teal text-white" style={{ backgroundColor: "#0d9488", fontSize: "0.7rem" }}>
+                                                {previewTestimonial.role === 'instructor' ? 'Instruktur' : 'Peserta Pembelajaran'}
+                                            </span>
+                                            {previewTestimonial.position && (
+                                                <span className="badge bg-light text-dark border" style={{ fontSize: "0.7rem" }}>
+                                                    {previewTestimonial.position}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Rating Card */}
+                            <div className="p-2 bg-white rounded border mb-3 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div className="text-muted small">Skor Kepuasan:</div>
+                                    <div className="d-flex align-items-center gap-1 text-warning fs-5">
+                                        <i className="fas fa-star"></i>
+                                        <strong className="text-dark fs-5">{previewTestimonial.rating}.0</strong>
+                                        <span className="text-muted small">/ 5.0</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span className={`badge ${previewTestimonial.active ? 'bg-success' : 'bg-warning text-dark'}`}>
+                                        {previewTestimonial.active ? 'Sudah Disetujui (Tayang)' : 'Menunggu Kurasi'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Full Testimonial Text */}
+                            <div className="mb-3">
+                                <h6 className="fw-bold text-dark mb-1" style={{ fontSize: "0.84rem" }}>Isi Lengkap Testimoni:</h6>
+                                <div className="p-3 rounded border bg-light text-dark" style={{ fontSize: "0.9rem", lineHeight: 1.6 }}>
+                                    <i className="fas fa-quote-left text-teal me-2 opacity-50" style={{ color: "#0d9488" }}></i>
+                                    {previewTestimonial.review}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Quick Actions */}
+                        <div className="cm-drawer-footer d-flex align-items-center justify-content-between">
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => setPreviewTestimonial(null)}
+                            >
+                                Tutup
+                            </button>
+
+                            {!previewTestimonial.active && (
+                                <div className="d-flex align-items-center gap-2">
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() => {
+                                            const t = previewTestimonial;
+                                            setPreviewTestimonial(null);
+                                            handleRejectClick(t);
+                                        }}
+                                    >
+                                        <i className="fas fa-times me-1"></i> Tolak
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-teal text-white"
+                                        style={{ backgroundColor: "#0d9488", borderColor: "#0d9488" }}
+                                        onClick={async () => {
+                                            const t = previewTestimonial;
+                                            setPreviewTestimonial(null);
+                                            await handleApprove(t);
+                                        }}
+                                    >
+                                        <i className="fas fa-check me-1"></i> Setujui & Terbitkan
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );
