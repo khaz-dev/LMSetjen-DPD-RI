@@ -1,5 +1,6 @@
 // React imports
 import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
 // Third-party imports - Lazy load CKEditor (1.24 MB)
@@ -2164,8 +2165,12 @@ function CourseEditCurriculum() {
             LMSGetDiagnostic: () => "No error"
         };
 
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
         return () => {
             delete window.API;
+            document.body.style.overflow = prevOverflow;
         };
     }, [scormPreviewModal.isOpen]);
 
@@ -5518,76 +5523,154 @@ function CourseEditCurriculum() {
                             </form>
 
                             {/* ✨ Interactive SCORM Player Modal for Instructor Preview */}
-                            {scormPreviewModal.isOpen && (
+                            {scormPreviewModal.isOpen && typeof document !== "undefined" && createPortal(
                                 <div
-                                    className="modal fade show d-block"
+                                    className="modal fade show d-flex scorm-modal-overlay align-items-center justify-content-center"
                                     tabIndex="-1"
-                                    style={{ backgroundColor: "rgba(0,0,0,0.7)", zIndex: 1060 }}
+                                    role="dialog"
+                                    aria-modal="true"
+                                    style={{
+                                        position: "fixed",
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        width: "100vw",
+                                        height: "100vh",
+                                        backgroundColor: "rgba(15, 23, 42, 0.75)",
+                                        backdropFilter: "blur(4px)",
+                                        WebkitBackdropFilter: "blur(4px)",
+                                        zIndex: 2147483647,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        overflow: "hidden",
+                                        margin: 0,
+                                        padding: scormPreviewModal.isFullscreen ? 0 : "1.25rem",
+                                        boxSizing: "border-box"
+                                    }}
+                                    onClick={(e) => {
+                                        if (e.target === e.currentTarget) {
+                                            setScormPreviewModal(prev => ({ ...prev, isOpen: false }));
+                                        }
+                                    }}
                                 >
-                                    <div className={`modal-dialog modal-dialog-centered ${scormPreviewModal.isFullscreen ? "modal-fullscreen" : "modal-xl"}`} style={{ maxWidth: scormPreviewModal.isFullscreen ? "100%" : "1100px" }}>
-                                        <div className="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
-                                            <div className="modal-header bg-dark text-white py-3 px-4 d-flex align-items-center justify-content-between">
+                                    <div
+                                        className={`scorm-modal-dialog ${scormPreviewModal.isFullscreen ? "modal-fullscreen m-0" : "modal-xl"}`}
+                                        style={{
+                                            maxWidth: scormPreviewModal.isFullscreen ? "100vw" : "1100px",
+                                            width: scormPreviewModal.isFullscreen ? "100vw" : "96vw",
+                                            maxHeight: scormPreviewModal.isFullscreen ? "100vh" : "92vh",
+                                            height: scormPreviewModal.isFullscreen ? "100vh" : "auto",
+                                            margin: "auto",
+                                            minHeight: 0,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            pointerEvents: "auto",
+                                            transform: "none"
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div
+                                            className="modal-content border-0 shadow-lg rounded-3 overflow-hidden bg-white text-dark"
+                                            style={{
+                                                backgroundColor: "#ffffff",
+                                                color: "#1e293b",
+                                                width: "100%",
+                                                maxHeight: scormPreviewModal.isFullscreen ? "100vh" : "92vh",
+                                                height: scormPreviewModal.isFullscreen ? "100vh" : "auto",
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                                                margin: "auto"
+                                            }}
+                                        >
+                                            <div
+                                                className="modal-header bg-white text-dark py-3 px-4 d-flex align-items-center justify-content-between border-bottom"
+                                                style={{ backgroundColor: "#ffffff", borderBottom: "1px solid #e2e8f0" }}
+                                            >
                                                 <div className="d-flex align-items-center gap-2">
-                                                    <span className="badge bg-teal text-white px-2 py-1">
+                                                    <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-1 fw-semibold">
                                                         <i className="fas fa-cube me-1"></i>
-                                                        {scormPreviewModal.moduleType.toUpperCase()}
+                                                        {(scormPreviewModal.moduleType || "SCORM").toUpperCase()}
                                                     </span>
-                                                    <h6 className="modal-title mb-0 fw-bold text-white">
+                                                    <h6 className="modal-title mb-0 fw-bold text-dark">
                                                         {scormPreviewModal.title}
                                                     </h6>
                                                 </div>
                                                 <div className="d-flex align-items-center gap-3">
-                                                    <div className="d-none d-sm-flex align-items-center gap-2 bg-secondary bg-opacity-25 px-2 py-1 rounded small">
-                                                        <span className="text-light opacity-75">Status RTE:</span>
-                                                        <span className={`badge ${scormPlayerStatus === 'completed' || scormPlayerStatus === 'passed' ? 'bg-success' :
-                                                            scormPlayerStatus === 'failed' ? 'bg-danger' : 'bg-warning text-dark'
+                                                    <div
+                                                        className="d-none d-sm-flex align-items-center gap-2 bg-light border px-2 py-1 rounded small"
+                                                        style={{ backgroundColor: "#f8fafc", borderColor: "#e2e8f0" }}
+                                                    >
+                                                        <span className="text-secondary fw-medium">Status RTE:</span>
+                                                        <span className={`badge ${scormPlayerStatus === 'completed' || scormPlayerStatus === 'passed' ? 'bg-success text-white' :
+                                                            scormPlayerStatus === 'failed' ? 'bg-danger text-white' : 'bg-warning text-dark'
                                                             }`}>
                                                             {scormPlayerStatus}
                                                         </span>
                                                         {scormPlayerScore !== null && (
-                                                            <span className="badge bg-info text-dark">
+                                                            <span className="badge bg-info text-white">
                                                                 Skor: {scormPlayerScore}
                                                             </span>
                                                         )}
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        className="btn btn-sm btn-outline-light border-0"
+                                                        className="btn btn-sm btn-outline-secondary border-0"
                                                         onClick={() => setScormPreviewModal(prev => ({ ...prev, isFullscreen: !prev.isFullscreen }))}
                                                         title={scormPreviewModal.isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+                                                        style={{ color: "#64748b" }}
                                                     >
                                                         <i className={`fas fa-${scormPreviewModal.isFullscreen ? 'compress' : 'expand'}`}></i>
                                                     </button>
                                                     <button
                                                         type="button"
-                                                        className="btn btn-sm btn-close btn-close-white"
+                                                        className="btn btn-sm btn-close"
                                                         onClick={() => setScormPreviewModal(prev => ({ ...prev, isOpen: false }))}
                                                         aria-label="Tutup"
                                                     ></button>
                                                 </div>
                                             </div>
-                                            <div className="modal-body p-0 bg-black" style={{ minHeight: scormPreviewModal.isFullscreen ? "calc(100vh - 60px)" : "620px" }}>
+                                            <div
+                                                className="modal-body p-0 bg-light position-relative"
+                                                style={{
+                                                    flex: "1 1 auto",
+                                                    minHeight: scormPreviewModal.isFullscreen ? "calc(100vh - 120px)" : "600px",
+                                                    height: scormPreviewModal.isFullscreen ? "calc(100vh - 120px)" : "65vh",
+                                                    backgroundColor: "#f8fafc",
+                                                    overflow: "hidden"
+                                                }}
+                                            >
                                                 {scormPreviewModal.url ? (
                                                     <iframe
                                                         ref={scormIframeRef}
                                                         src={scormPreviewModal.url}
                                                         title="SCORM Player Simulation"
-                                                        className="w-100 h-100 border-0"
+                                                        className="w-100 h-100 border-0 flex-grow-1"
                                                         style={{
-                                                            minHeight: scormPreviewModal.isFullscreen ? "calc(100vh - 60px)" : "620px",
-                                                            display: "block"
+                                                            width: "100%",
+                                                            height: "100%",
+                                                            minHeight: scormPreviewModal.isFullscreen ? "calc(100vh - 120px)" : "600px",
+                                                            display: "block",
+                                                            backgroundColor: "#ffffff"
                                                         }}
                                                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                                         allowFullScreen
                                                     />
                                                 ) : (
-                                                    <div className="text-center p-5 text-white-50">
+                                                    <div className="text-center p-5 text-muted d-flex flex-column align-items-center justify-content-center h-100">
                                                         <i className="fas fa-exclamation-triangle fa-2x mb-3 text-warning"></i>
-                                                        <p>URL konten SCORM tidak dapat dimuat.</p>
+                                                        <p className="mb-0 text-muted">URL konten SCORM tidak dapat dimuat.</p>
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="modal-footer bg-light py-2 px-4 d-flex justify-content-between">
+                                            <div
+                                                className="modal-footer bg-white py-2 px-4 d-flex justify-content-between border-top"
+                                                style={{ backgroundColor: "#ffffff", borderTop: "1px solid #e2e8f0" }}
+                                            >
                                                 <small className="text-muted">
                                                     <i className="fas fa-info-circle me-1 text-primary"></i>
                                                     Uji interaksi modul SCORM langsung menggunakan RTE API Bridge bawaan LMS Setjen DPD RI.
@@ -5602,7 +5685,8 @@ function CourseEditCurriculum() {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div>,
+                                document.body
                             )}
 
                         </div>

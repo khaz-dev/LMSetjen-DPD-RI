@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import apiInstance from "../../utils/axios";
 import Toast from "../plugin/Toast";
@@ -6,7 +7,9 @@ import Swal from "sweetalert2";
 import Footer from "../partials/Footer";
 import AdminHeader from "../partials/AdminHeader";
 import { getImageUrl } from "../../utils/courseUtils";
+import { getMediaUrl } from "../../utils/constants";
 import TagSelector from "../instructor/components/TagSelector";
+import LessonCompletionQuestionEditor from "../../components/CourseEdit/LessonCompletionQuestionEditor";
 import "./AdminCourseEdit.css";
 
 // Lazy load CKEditor component for rich course descriptions
@@ -147,9 +150,199 @@ function AdminCourseEdit() {
     const [lectureUploadProgress, setLectureUploadProgress] = useState({});
     const [uploadingLecture, setUploadingLecture] = useState({});
 
+    // SCORM Interactive Player Modal State (Admin Preview & Verification)
+    const [scormPreviewModal, setScormPreviewModal] = useState({
+        isOpen: false,
+        title: "",
+        url: "",
+        moduleType: "scorm_12",
+        isFullscreen: false
+    });
+    const [scormPlayerStatus, setScormPlayerStatus] = useState("not attempted");
+    const [scormPlayerScore, setScormPlayerScore] = useState(null);
+    const scormIframeRef = useRef(null);
+
+    // SCORM 1.2 RTE API Bridge for interactive preview testing by Administrator
+    useEffect(() => {
+        if (!scormPreviewModal.isOpen) return;
+
+        const cmi = {
+            "cmi.core.student_id": "admin_preview",
+            "cmi.core.student_name": "Administrator Penguji",
+            "cmi.core.lesson_status": scormPlayerStatus,
+            "cmi.core.score.raw": scormPlayerScore !== null ? String(scormPlayerScore) : "0",
+            "cmi.core.lesson_location": "",
+            "cmi.core.session_time": "00:00:00",
+            "cmi.suspend_data": "",
+            "cmi.core.entry": "ab-initio",
+            "cmi.core.exit": "",
+            "cmi.core.total_time": "00:00:00",
+            "cmi.core.lesson_mode": "normal"
+        };
+
+        window.API = {
+            LMSInitialize: (param) => {
+                console.log("[Admin SCORM RTE] LMSInitialize:", param);
+                return "true";
+            },
+            LMSGetValue: (element) => {
+                const val = cmi[element] !== undefined ? cmi[element] : "";
+                console.log(`[Admin SCORM RTE] LMSGetValue(${element}) ->`, val);
+                return val;
+            },
+            LMSSetValue: (element, value) => {
+                console.log(`[Admin SCORM RTE] LMSSetValue(${element}, ${value})`);
+                cmi[element] = String(value);
+                if (element === "cmi.core.lesson_status") {
+                    setScormPlayerStatus(String(value).toLowerCase());
+                }
+                if (element === "cmi.core.score.raw") {
+                    setScormPlayerScore(Number(value) || 0);
+                }
+                return "true";
+            },
+            LMSCommit: (param) => {
+                console.log("[Admin SCORM RTE] LMSCommit:", param);
+                return "true";
+            },
+            LMSFinish: (param) => {
+                console.log("[Admin SCORM RTE] LMSFinish:", param);
+                return "true";
+            },
+            LMSGetLastError: () => "0",
+            LMSGetErrorString: () => "No error",
+            LMSGetDiagnostic: () => "No error"
+        };
+
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            delete window.API;
+            document.body.style.overflow = prevOverflow;
+        };
+    }, [scormPreviewModal.isOpen]);
+
+    const handleOpenScormPreview = (item) => {
+        let lm = item?.learning_module_info || (item?.learning_module && typeof item.learning_module === 'object' ? item.learning_module : null) || course?.learning_module;
+        if (!lm) {
+            for (const v of curriculum || []) {
+                for (const it of v.items || []) {
+                    if (it.learning_module_info || (it.learning_module && typeof it.learning_module === 'object')) {
+                        lm = it.learning_module_info || it.learning_module;
+                        break;
+                    }
+                }
+                if (lm) break;
+            }
+        }
+
+        let url = "";
+        if (lm?.player_url) {
+            url = getMediaUrl(lm.player_url);
+        } else if (lm?.id) {
+            url = getMediaUrl(`/media/learning_modules/extracted_${lm.id}/${lm.entry_file || 'index.html'}`);
+        } else if (course?.learning_module_id) {
+            url = getMediaUrl(`/media/learning_modules/extracted_${course.learning_module_id}/index.html`);
+        } else if (item?.file && (item.file.includes("/extracted_") || item.file.includes("index.html"))) {
+            url = getMediaUrl(item.file);
+        }
+
+        if (!url) {
+            Swal.fire({
+                icon: "warning",
+                title: "Modul SCORM Belum Siap",
+                text: "URL pemutar konten SCORM tidak ditemukan. Pastikan modul SCORM telah berhasil diekstrak.",
+                confirmButtonColor: "#0d9488"
+            });
+            return;
+        }
+
+        setScormPlayerStatus("not attempted");
+        setScormPlayerScore(null);
+        setScormPreviewModal({
+            isOpen: true,
+            title: item?.title || lm?.judul || course?.title || "Pratinjau Modul SCORM",
+            url: url,
+            moduleType: lm?.module_type || course?.course_type || "scorm_12",
+            isFullscreen: false
+        });
+    };
+
     const imageInputRef = useRef(null);
     const videoInputRef = useRef(null);
     const quizFileInputRef = useRef(null);
+
+    // Available SCORM modules from library
+    const [availableScormModules, setAvailableScormModules] = useState([]);
+
+    // Helper to accurately detect content type from item attributes & file URL
+    const detectItemContentType = (itm) => {
+        if (!itm) return "video";
+        if (itm.item_type === "quiz" || itm.quiz_id || itm.quiz) {
+            return "quiz";
+        }
+        if (
+            itm.content_type === "scorm" ||
+            itm.content_type === "h5p" ||
+            itm.file_type === "scorm" ||
+            itm.file_type === "h5p" ||
+            Boolean(itm.learning_module_id) ||
+            Boolean(itm.learning_module_info) ||
+            Boolean(itm.learning_module)
+        ) {
+            return "scorm";
+        }
+        const fileLower = (itm.file || itm.uploadedFile || "").toLowerCase().split("?")[0];
+        if (fileLower.endsWith(".zip") && (fileLower.includes("scorm") || fileLower.includes("extracted_") || !fileLower.includes("presentation"))) {
+            return "scorm";
+        }
+        if (
+            itm.content_type === "presentation" ||
+            itm.file_type === "presentation" ||
+            itm.file_type === "ppt" ||
+            fileLower.endsWith(".pptx") ||
+            fileLower.endsWith(".ppt")
+        ) {
+            return "presentation";
+        }
+        if (
+            itm.content_type === "document" ||
+            itm.file_type === "document" ||
+            itm.file_type === "pdf" ||
+            fileLower.endsWith(".pdf") ||
+            fileLower.endsWith(".doc") ||
+            fileLower.endsWith(".docx")
+        ) {
+            return "document";
+        }
+        if (
+            itm.content_type === "audio" ||
+            itm.file_type === "audio" ||
+            fileLower.endsWith(".mp3") ||
+            fileLower.endsWith(".wav") ||
+            fileLower.endsWith(".ogg") ||
+            fileLower.endsWith(".m4a") ||
+            fileLower.endsWith(".flac")
+        ) {
+            return "audio";
+        }
+        if (
+            itm.content_type === "video" ||
+            itm.file_type === "video" ||
+            fileLower.endsWith(".mp4") ||
+            fileLower.endsWith(".webm") ||
+            fileLower.endsWith(".avi") ||
+            fileLower.endsWith(".mov") ||
+            fileLower.endsWith(".mkv")
+        ) {
+            return "video";
+        }
+        if (itm.content_type && ["video", "document", "presentation", "audio", "scorm", "quiz"].includes(itm.content_type)) {
+            return itm.content_type;
+        }
+        return "video";
+    };
 
     // Quizzes & Questions state (for Tab 4: Kuis Terlampir Studio)
     const [quizzes, setQuizzes] = useState([]);
@@ -277,20 +470,40 @@ function AdminCourseEdit() {
                     variant_title: sec.variant_title || sec.title || `Bagian ${sIdx + 1}`,
                     order: sec.order !== undefined ? sec.order : sIdx,
                     items: Array.isArray(sec.variant_items || sec.items)
-                        ? (sec.variant_items || sec.items).map((itm, iIdx) => ({
-                            variant_item_id: itm.variant_item_id,
-                            title: itm.title || `Materi ${iIdx + 1}`,
-                            description: itm.description || "",
-                            file: itm.file || "",
-                            duration: itm.duration || "",
-                            content_type: itm.content_type || (itm.item_type === "quiz" ? "quiz" : "video"),
-                            item_type: itm.item_type || (itm.quiz_id || itm.quiz ? "quiz" : "lesson"),
-                            quiz_id: itm.quiz_id || itm.quiz || "",
-                            preview: Boolean(itm.preview),
-                            order: itm.order !== undefined ? itm.order : iIdx
-                        }))
+                        ? (sec.variant_items || sec.items).map((itm, iIdx) => {
+                            const detectedType = detectItemContentType(itm);
+                            const lmInfo = itm.learning_module_info || (typeof itm.learning_module === "object" ? itm.learning_module : null) || (c.learning_module && (itm.learning_module_id === c.learning_module.id || itm.learning_module === c.learning_module.id) ? c.learning_module : null);
+                            const lmId = itm.learning_module_id || (itm.learning_module?.id) || (lmInfo?.id) || (typeof itm.learning_module === "number" ? itm.learning_module : null) || null;
+
+                            return {
+                                variant_item_id: itm.variant_item_id,
+                                title: itm.title || `Materi ${iIdx + 1}`,
+                                description: itm.description || "",
+                                file: itm.file || "",
+                                duration: itm.duration || "",
+                                content_type: detectedType,
+                                file_type: itm.file_type || detectedType,
+                                item_type: detectedType === "quiz" ? "quiz" : "lesson",
+                                quiz_id: itm.quiz_id || (itm.quiz && typeof itm.quiz === "object" ? itm.quiz.quiz_id : (itm.quiz || "")),
+                                learning_module_id: lmId,
+                                learning_module_info: lmInfo,
+                                learning_module: lmId,
+                                preview: Boolean(itm.preview),
+                                order: itm.order !== undefined ? itm.order : iIdx
+                            };
+                        })
                         : []
                 })));
+            }
+
+            // Available SCORM Modules library
+            try {
+                const scormRes = await apiInstance.get(`/teacher/upload-elearning-module/?course_id=${course_id}/`);
+                if (Array.isArray(scormRes.data?.modules)) {
+                    setAvailableScormModules(scormRes.data.modules);
+                }
+            } catch (sErr) {
+                console.warn("[AdminCourseEdit] Could not fetch SCORM modules:", sErr);
             }
 
             // Categories & tags
@@ -926,7 +1139,14 @@ function AdminCourseEdit() {
             choices: formChoices
         });
         setEditingQuestion(question);
-        setIsAddingQuestion(true);
+        setIsAddingQuestion(false);
+
+        setTimeout(() => {
+            const el = document.getElementById(`question-edit-${question.question_id || question.id}`);
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }, 80);
     };
 
     const handleSaveQuestion = async (e) => {
@@ -1503,6 +1723,32 @@ function AdminCourseEdit() {
         });
     };
 
+    const addScormItem = (secIndex) => {
+        setCurriculum(prev => {
+            const next = [...prev];
+            const sec = next[secIndex];
+            sec.items = [
+                ...sec.items,
+                {
+                    variant_item_id: null,
+                    title: `Modul SCORM ${sec.items.length + 1}`,
+                    description: "",
+                    file: "",
+                    duration: "45:00",
+                    content_type: "scorm",
+                    file_type: "scorm",
+                    item_type: "lesson",
+                    learning_module_id: null,
+                    learning_module_info: null,
+                    quiz_id: "",
+                    preview: false,
+                    order: sec.items.length
+                }
+            ];
+            return next;
+        });
+    };
+
     const updateLectureField = (secIndex, itemIndex, field, val) => {
         setCurriculum(prev => {
             const next = [...prev];
@@ -1601,34 +1847,108 @@ function AdminCourseEdit() {
         if (!selectedFile) return;
 
         const itemKey = `${secIdx}-${itmIdx}`;
+        const fileNameLower = (selectedFile.name || "").toLowerCase();
+        const isZip = fileNameLower.endsWith(".zip") || selectedFile.type === "application/zip" || selectedFile.type === "application/x-zip-compressed";
+
         try {
             setUploadingLecture(prev => ({ ...prev, [itemKey]: true }));
             setLectureUploadProgress(prev => ({ ...prev, [itemKey]: 20 }));
 
-            const formData = new FormData();
-            formData.append("file", selectedFile);
-
-            const res = await apiInstance.post("/file-upload/", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-                onUploadProgress: (progressEvent) => {
-                    const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
-                    setLectureUploadProgress(prev => ({ ...prev, [itemKey]: percent }));
+            if (isZip) {
+                // Upload E-Learning SCORM / H5P package (.zip)
+                const formData = new FormData();
+                formData.append("file", selectedFile);
+                formData.append("course_id", course?.course_id || course?.id || course_id);
+                const currentItem = curriculum[secIdx]?.items[itmIdx];
+                if (currentItem?.title) {
+                    formData.append("title", currentItem.title);
                 }
-            });
 
-            const uploadedUrl = res.data?.url || res.data?.file_url;
-            if (uploadedUrl) {
-                updateLectureField(secIdx, itmIdx, "file", uploadedUrl);
-                Toast().fire({
-                    icon: "success",
-                    title: "Berkas materi berhasil diunggah"
+                const res = await apiInstance.post("/teacher/upload-elearning-module/", formData, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                    onUploadProgress: (progressEvent) => {
+                        const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+                        setLectureUploadProgress(prev => ({ ...prev, [itemKey]: percent }));
+                    }
                 });
+
+                if (res.data?.module_id) {
+                    const moduleObj = res.data.module;
+                    updateLectureField(secIdx, itmIdx, "learning_module_id", res.data.module_id);
+                    updateLectureField(secIdx, itmIdx, "learning_module_info", moduleObj);
+                    updateLectureField(secIdx, itmIdx, "learning_module", res.data.module_id);
+                    updateLectureField(secIdx, itmIdx, "file", moduleObj?.entry_file || "index.html");
+                    updateLectureField(secIdx, itmIdx, "content_type", "scorm");
+                    updateLectureField(secIdx, itmIdx, "file_type", "scorm");
+                    updateLectureField(secIdx, itmIdx, "item_type", "lesson");
+
+                    if (moduleObj) {
+                        setAvailableScormModules(prev => [moduleObj, ...(prev || []).filter(m => m.id !== res.data.module_id)]);
+                    }
+
+                    Toast().fire({
+                        icon: "success",
+                        title: "Paket SCORM Berhasil Diunggah!",
+                        text: `Modul "${moduleObj?.judul || 'SCORM'}" telah diekstrak dan siap diuji coba.`
+                    });
+                } else {
+                    throw new Error(res.data?.message || "Gagal mengunggah paket SCORM");
+                }
+            } else {
+                // Regular multi-media upload (Video, Presentation PPTX, Document PDF, Audio MP3)
+                const formData = new FormData();
+                formData.append("file", selectedFile);
+                formData.append("upload_type", "curriculum");
+
+                const res = await apiInstance.post("/file-upload/", formData, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                    onUploadProgress: (progressEvent) => {
+                        const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+                        setLectureUploadProgress(prev => ({ ...prev, [itemKey]: percent }));
+                    }
+                });
+
+                const uploadedUrl = res.data?.url || res.data?.file_url;
+                if (uploadedUrl) {
+                    let detectedType = "video";
+                    let typeLabel = "Video Pembelajaran";
+
+                    if (fileNameLower.endsWith(".pdf") || res.data?.file_type === "document") {
+                        detectedType = "document";
+                        typeLabel = "Dokumen PDF";
+                    } else if (fileNameLower.endsWith(".pptx") || fileNameLower.endsWith(".ppt") || res.data?.file_type === "presentation") {
+                        detectedType = "presentation";
+                        typeLabel = "Slide Presentasi (PPT/PPTX)";
+                    } else if (fileNameLower.endsWith(".mp3") || fileNameLower.endsWith(".wav") || fileNameLower.endsWith(".ogg") || fileNameLower.endsWith(".m4a") || res.data?.file_type === "audio") {
+                        detectedType = "audio";
+                        typeLabel = "Audio / Podcast";
+                    } else if (fileNameLower.endsWith(".mp4") || fileNameLower.endsWith(".webm") || fileNameLower.endsWith(".avi") || fileNameLower.endsWith(".mov") || res.data?.file_type === "video") {
+                        detectedType = "video";
+                        typeLabel = "Video Pembelajaran";
+                    }
+
+                    updateLectureField(secIdx, itmIdx, "file", uploadedUrl);
+                    updateLectureField(secIdx, itmIdx, "content_type", detectedType);
+                    updateLectureField(secIdx, itmIdx, "file_type", detectedType);
+                    updateLectureField(secIdx, itmIdx, "item_type", "lesson");
+
+                    if (res.data?.video_duration || res.data?.audio_duration) {
+                        updateLectureField(secIdx, itmIdx, "duration", res.data.video_duration || res.data.audio_duration);
+                    }
+
+                    Toast().fire({
+                        icon: "success",
+                        title: "Berkas Berhasil Diunggah!",
+                        text: `Materi otomatis terdeteksi sebagai ${typeLabel}.`
+                    });
+                }
             }
         } catch (err) {
             console.error("Lecture file upload failed:", err);
             Toast().fire({
                 icon: "error",
-                title: "Gagal mengunggah berkas materi"
+                title: "Gagal mengunggah berkas materi",
+                text: err.response?.data?.error || err.response?.data?.message || err.message
             });
         } finally {
             setUploadingLecture(prev => ({ ...prev, [itemKey]: false }));
@@ -1694,7 +2014,19 @@ function AdminCourseEdit() {
                         outcome: (typeof o === "string" ? o : o.text).trim(),
                         order: idx
                     })),
-                curriculum
+                curriculum: curriculum.map(sec => ({
+                    ...sec,
+                    items: (sec.items || []).map(itm => {
+                        const detectedType = itm.content_type || detectItemContentType(itm);
+                        return {
+                            ...itm,
+                            content_type: detectedType,
+                            file_type: itm.file_type || detectedType,
+                            learning_module_id: itm.learning_module_id || null,
+                            learning_module: itm.learning_module_id || null
+                        };
+                    })
+                }))
             };
 
             const response = await apiInstance.put(`/admin/course-direct-edit/${course_id}/`, payload);
@@ -1709,6 +2041,36 @@ function AdminCourseEdit() {
 
                 if (response.data.course) {
                     setCourse(response.data.course);
+                    if (Array.isArray(response.data.course.curriculum)) {
+                        setCurriculum(response.data.course.curriculum.map((sec, sIdx) => ({
+                            variant_id: sec.variant_id,
+                            variant_title: sec.variant_title || sec.title || `Bagian ${sIdx + 1}`,
+                            order: sec.order !== undefined ? sec.order : sIdx,
+                            items: Array.isArray(sec.variant_items || sec.items)
+                                ? (sec.variant_items || sec.items).map((itm, iIdx) => {
+                                    const detectedType = detectItemContentType(itm);
+                                    const lmInfo = itm.learning_module_info || (typeof itm.learning_module === "object" ? itm.learning_module : null);
+                                    const lmId = itm.learning_module_id || (itm.learning_module?.id) || (lmInfo?.id) || null;
+                                    return {
+                                        variant_item_id: itm.variant_item_id,
+                                        title: itm.title || `Materi ${iIdx + 1}`,
+                                        description: itm.description || "",
+                                        file: itm.file || "",
+                                        duration: itm.duration || "",
+                                        content_type: detectedType,
+                                        file_type: itm.file_type || detectedType,
+                                        item_type: detectedType === "quiz" ? "quiz" : "lesson",
+                                        quiz_id: itm.quiz_id || (itm.quiz && typeof itm.quiz === "object" ? itm.quiz.quiz_id : (itm.quiz || "")),
+                                        learning_module_id: lmId,
+                                        learning_module_info: lmInfo,
+                                        learning_module: lmId,
+                                        preview: Boolean(itm.preview),
+                                        order: itm.order !== undefined ? itm.order : iIdx
+                                    };
+                                })
+                                : []
+                        })));
+                    }
                 }
             }
         } catch (err) {
@@ -1721,6 +2083,178 @@ function AdminCourseEdit() {
         } finally {
             setSaving(false);
         }
+    };
+
+    const renderQuestionFormCard = (isInline = false, qIndex = null) => {
+        const isEditing = Boolean(editingQuestion);
+        const questionNumber = isInline && qIndex !== null ? qIndex + 1 : (isEditing ? questions.findIndex(x => (x.question_id || x.id) === (editingQuestion.question_id || editingQuestion.id)) + 1 : null);
+
+        return (
+            <div className="ace-question-form-card mb-2.5">
+                <div className="ace-card-header is-teal-subtle d-flex justify-content-between align-items-center py-2 px-3">
+                    <div className="d-flex align-items-center gap-2">
+                        <span className="badge bg-teal text-white fw-bold px-2 py-0.5" style={{ fontSize: "0.72rem", borderRadius: "5px" }}>
+                            {questionNumber ? `Soal Q${questionNumber}` : "Soal Baru"}
+                        </span>
+                        <h6 className="ace-card-title mb-0" style={{ color: "#0f766e", fontWeight: 700, fontSize: "0.85rem" }}>
+                            <i className={`fas ${isEditing ? "fa-pen-to-square" : "fa-plus-circle"} me-1`} style={{ color: "#0d9488" }}></i>
+                            <span>{isEditing ? `Edit Pertanyaan ${questionNumber ? `Q${questionNumber}` : ""}` : "Tambah Pertanyaan Baru"}</span>
+                        </h6>
+                    </div>
+                    <button
+                        type="button"
+                        className="btn-close btn-sm"
+                        style={{ fontSize: "0.68rem" }}
+                        onClick={() => {
+                            setIsAddingQuestion(false);
+                            setEditingQuestion(null);
+                        }}
+                        title="Batal / Tutup Editor"
+                    ></button>
+                </div>
+                <div className="ace-card-body p-2.5 px-3">
+                    <form onSubmit={handleSaveQuestion}>
+                        <div className="mb-2">
+                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                <label className="ace-form-label fw-bold mb-0" style={{ fontSize: "0.75rem" }}>
+                                    <span>Teks Pertanyaan <strong className="text-danger">*</strong></span>
+                                </label>
+                                <span className="text-muted small" style={{ fontSize: "0.7rem" }}>
+                                    {questionForm.question_text.length} karakter
+                                </span>
+                            </div>
+                            <textarea
+                                className="ace-input"
+                                rows={2}
+                                style={{ fontSize: "0.82rem", resize: "vertical", minHeight: "52px" }}
+                                value={questionForm.question_text}
+                                onChange={(e) => setQuestionForm(prev => ({ ...prev, question_text: e.target.value }))}
+                                placeholder="Tuliskan teks pertanyaan / soal ujian di sini..."
+                                required
+                            />
+                        </div>
+
+                        <div className="d-flex align-items-center justify-content-between mb-1.5 pt-1 border-top">
+                            <label className="ace-form-label fw-bold mb-0" style={{ fontSize: "0.74rem" }}>
+                                <i className="fas fa-list-check text-teal me-1"></i>
+                                <span>Pilihan Jawaban & Kunci Benar <strong className="text-danger">*</strong></span>
+                            </label>
+                            <span className="text-muted small" style={{ fontSize: "0.7rem" }}>
+                                <i className="fas fa-circle-dot text-teal me-1"></i>Pilih bulatan opsi untuk kunci benar
+                            </span>
+                        </div>
+
+                        <div className="row g-2 mb-2">
+                            {questionForm.choices.map((choice, cIdx) => {
+                                const isChoiceCorrect = Boolean(choice.is_correct);
+                                return (
+                                    <div key={cIdx} className="col-md-6">
+                                        <div
+                                            className={`p-1.5 px-2 rounded-2 border d-flex align-items-center gap-2 transition-all ${
+                                                isChoiceCorrect
+                                                    ? "bg-teal-subtle border-teal text-teal shadow-xs"
+                                                    : "bg-white"
+                                            }`}
+                                            style={{
+                                                borderColor: isChoiceCorrect ? "#0d9488" : "#e2e8f0",
+                                                backgroundColor: isChoiceCorrect ? "rgba(13, 148, 136, 0.08)" : "#ffffff"
+                                            }}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name={isInline ? `correctChoice-${qIndex}` : "correctChoice-new"}
+                                                className="form-check-input mt-0 cursor-pointer"
+                                                checked={isChoiceCorrect}
+                                                onChange={() => {
+                                                    setQuestionForm(prev => ({
+                                                        ...prev,
+                                                        choices: prev.choices.map((c, idx) => ({
+                                                            ...c,
+                                                            is_correct: idx === cIdx
+                                                        }))
+                                                    }));
+                                                }}
+                                                style={{ cursor: "pointer", width: "1rem", height: "1rem", accentColor: "#0d9488" }}
+                                                title="Tandai sebagai jawaban benar"
+                                            />
+                                            <span
+                                                className={`badge fw-bold ${
+                                                    isChoiceCorrect ? "bg-teal text-white" : "bg-light text-secondary border"
+                                                }`}
+                                                style={{
+                                                    width: "22px",
+                                                    height: "22px",
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    borderRadius: "50%",
+                                                    fontSize: "0.72rem"
+                                                }}
+                                            >
+                                                {String.fromCharCode(65 + cIdx)}
+                                            </span>
+                                            <input
+                                                type="text"
+                                                className="ace-input flex-grow-1 py-1 px-2"
+                                                style={{ fontSize: "0.8rem", height: "30px" }}
+                                                value={choice.choice_text}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setQuestionForm(prev => ({
+                                                        ...prev,
+                                                        choices: prev.choices.map((c, idx) =>
+                                                            idx === cIdx ? { ...c, choice_text: val } : c
+                                                        )
+                                                    }));
+                                                }}
+                                                placeholder={`Pilihan ${String.fromCharCode(65 + cIdx)}...`}
+                                                required={cIdx < 2}
+                                            />
+                                            {isChoiceCorrect && (
+                                                <span
+                                                    className="badge bg-teal bg-opacity-15 text-teal border border-teal border-opacity-25 py-1 px-1.5 d-none d-sm-inline-flex align-items-center gap-1"
+                                                    style={{ fontSize: "0.68rem" }}
+                                                >
+                                                    <i className="fas fa-check-circle"></i> Kunci
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
+                            <span className="small text-muted d-none d-md-inline-block" style={{ fontSize: "0.72rem" }}>
+                                <i className="fas fa-shield-halved text-teal me-1"></i>
+                                Kunci jawaban akan divalidasi otomatis saat ujian peserta
+                            </span>
+                            <div className="d-flex align-items-center gap-2 ms-auto">
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary py-1 px-2.5"
+                                    style={{ fontSize: "0.78rem" }}
+                                    onClick={() => {
+                                        setIsAddingQuestion(false);
+                                        setEditingQuestion(null);
+                                    }}
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-sm btn-teal text-white py-1 px-3 fw-semibold shadow-sm"
+                                    style={{ fontSize: "0.78rem" }}
+                                >
+                                    <i className="fas fa-check me-1"></i>
+                                    <span>{isEditing ? "Simpan Perubahan" : "Tambahkan Pertanyaan"}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        );
     };
 
     if (loading) {
@@ -2566,6 +3100,16 @@ function AdminCourseEdit() {
                                                     </button>
                                                     <button
                                                         type="button"
+                                                        className="btn btn-sm btn-outline-light text-white fw-semibold d-inline-flex align-items-center gap-1"
+                                                        onClick={() => addScormItem(secIdx)}
+                                                        title="Tambah Modul SCORM 1.2 ke bagian ini"
+                                                        style={{ borderColor: "rgba(255,255,255,0.4)" }}
+                                                    >
+                                                        <i className="fas fa-boxes-stacked"></i>
+                                                        <span>SCORM</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
                                                         className="btn btn-sm btn-warning text-dark fw-semibold d-inline-flex align-items-center gap-1"
                                                         onClick={() => addQuizItem(secIdx)}
                                                         title="Tautkan Kuis ke bagian ini"
@@ -2604,11 +3148,23 @@ function AdminCourseEdit() {
                                                         sec.items.map((itm, itmIdx) => {
                                                             const itemKey = `${secIdx}-${itmIdx}`;
                                                             const fileLower = (itm.file || "").toLowerCase();
-                                                            const isItemQuiz = itm.content_type === "quiz" || itm.item_type === "quiz";
-                                                            const isItemDoc = !isItemQuiz && (itm.content_type === "document" || fileLower.endsWith(".pdf"));
-                                                            const isItemPpt = !isItemQuiz && (itm.content_type === "presentation" || fileLower.includes("presentation") || fileLower.endsWith(".pptx") || fileLower.endsWith(".ppt"));
-                                                            const isItemAudio = !isItemQuiz && (itm.content_type === "audio" || fileLower.endsWith(".mp3") || fileLower.endsWith(".wav") || fileLower.endsWith(".ogg"));
-                                                            const isItemVideo = !isItemQuiz && !isItemDoc && !isItemPpt && !isItemAudio;
+                                                            const resolvedType = itm.content_type || detectItemContentType(itm);
+                                                            const isItemQuiz = resolvedType === "quiz" || itm.item_type === "quiz" || Boolean(itm.quiz_id);
+                                                            const isItemScorm = !isItemQuiz && (
+                                                                resolvedType === "scorm" ||
+                                                                resolvedType === "h5p" ||
+                                                                itm.file_type === "scorm" ||
+                                                                itm.file_type === "h5p" ||
+                                                                Boolean(itm.learning_module_id) ||
+                                                                Boolean(itm.learning_module_info) ||
+                                                                Boolean(itm.learning_module) ||
+                                                                (fileLower.endsWith(".zip") && !fileLower.includes("presentation") && !fileLower.includes("pdf"))
+                                                            );
+                                                            const isItemDoc = !isItemQuiz && !isItemScorm && (resolvedType === "document" || itm.file_type === "document" || itm.file_type === "pdf" || fileLower.endsWith(".pdf") || fileLower.endsWith(".doc") || fileLower.endsWith(".docx"));
+                                                            const isItemPpt = !isItemQuiz && !isItemScorm && (resolvedType === "presentation" || itm.file_type === "presentation" || itm.file_type === "ppt" || fileLower.includes("presentation") || fileLower.endsWith(".pptx") || fileLower.endsWith(".ppt"));
+                                                            const isItemAudio = !isItemQuiz && !isItemScorm && (resolvedType === "audio" || itm.file_type === "audio" || fileLower.endsWith(".mp3") || fileLower.endsWith(".wav") || fileLower.endsWith(".ogg") || fileLower.endsWith(".m4a"));
+                                                            const isItemVideo = !isItemQuiz && !isItemDoc && !isItemPpt && !isItemAudio && !isItemScorm;
+                                                            const effectiveBadgeType = isItemQuiz ? "quiz" : isItemScorm ? "scorm" : isItemDoc ? "document" : isItemPpt ? "presentation" : isItemAudio ? "audio" : "video";
                                                             const isPreviewOpen = Boolean(previewingItems[itemKey]);
                                                             const isUploading = Boolean(uploadingLecture[itemKey]);
                                                             const uploadProg = lectureUploadProgress[itemKey] || 0;
@@ -2620,7 +3176,7 @@ function AdminCourseEdit() {
                                                             return (
                                                                 <div
                                                                     key={itm.variant_item_id || `itm-${secIdx}-${itmIdx}`}
-                                                                    className={`ace-curriculum-item-card is-${itm.content_type || "video"}`}
+                                                                    className={`ace-curriculum-item-card is-${effectiveBadgeType}`}
                                                                 >
                                                                     {/* ITEM HEADER */}
                                                                     <div className="ace-curriculum-item-header">
@@ -2663,11 +3219,12 @@ function AdminCourseEdit() {
                                                                             </span>
 
                                                                             {/* Type Badge */}
-                                                                            <span className={`ace-type-badge ${itm.content_type || "video"}`}>
+                                                                            <span className={`ace-type-badge ${effectiveBadgeType}`}>
                                                                                 {isItemVideo && <><i className="fas fa-video"></i> Video</>}
                                                                                 {isItemDoc && <><i className="fas fa-file-pdf"></i> Dokumen PDF</>}
                                                                                 {isItemPpt && <><i className="fas fa-file-powerpoint"></i> Slide Presentasi</>}
                                                                                 {isItemAudio && <><i className="fas fa-headphones"></i> Audio Podcast</>}
+                                                                                {isItemScorm && <><i className="fas fa-boxes-stacked text-teal"></i> Modul SCORM</>}
                                                                                 {isItemQuiz && <><i className="fas fa-clipboard-question"></i> Kuis Terlampir</>}
                                                                             </span>
 
@@ -2687,7 +3244,19 @@ function AdminCourseEdit() {
 
                                                                         {/* Item Quick Actions */}
                                                                         <div className="d-flex align-items-center gap-1">
-                                                                            {itm.file && (
+                                                                            {isItemScorm && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    className="btn btn-sm btn-teal text-white shadow-sm"
+                                                                                    onClick={() => handleOpenScormPreview(itm)}
+                                                                                    title="Uji Coba Interaksi SCORM Langsung"
+                                                                                    style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                                                                >
+                                                                                    <i className="fas fa-gamepad me-1"></i>
+                                                                                    <span>Uji Coba SCORM</span>
+                                                                                </button>
+                                                                            )}
+                                                                            {itm.file && !isItemScorm && (
                                                                                 <button
                                                                                     type="button"
                                                                                     className={`btn btn-sm ${isPreviewOpen ? "btn-teal text-white" : "btn-outline-secondary"}`}
@@ -2745,14 +3314,20 @@ function AdminCourseEdit() {
                                                                                 </label>
                                                                                 <select
                                                                                     className="ace-select"
-                                                                                    value={itm.content_type || "video"}
+                                                                                    value={effectiveBadgeType}
                                                                                     onChange={(e) => {
                                                                                         const val = e.target.value;
                                                                                         updateLectureField(secIdx, itmIdx, "content_type", val);
+                                                                                        updateLectureField(secIdx, itmIdx, "file_type", val);
                                                                                         if (val === "quiz") {
                                                                                             updateLectureField(secIdx, itmIdx, "item_type", "quiz");
                                                                                         } else {
                                                                                             updateLectureField(secIdx, itmIdx, "item_type", "lesson");
+                                                                                            if (val !== "scorm") {
+                                                                                                updateLectureField(secIdx, itmIdx, "learning_module_id", null);
+                                                                                                updateLectureField(secIdx, itmIdx, "learning_module_info", null);
+                                                                                                updateLectureField(secIdx, itmIdx, "learning_module", null);
+                                                                                            }
                                                                                         }
                                                                                     }}
                                                                                 >
@@ -2760,6 +3335,7 @@ function AdminCourseEdit() {
                                                                                     <option value="document">📄 Dokumen (PDF / Modul)</option>
                                                                                     <option value="presentation">📊 Presentasi (PPT / PPTX)</option>
                                                                                     <option value="audio">🎧 Audio Podcast</option>
+                                                                                    <option value="scorm">📦 Modul SCORM 1.2 / Interaktif</option>
                                                                                     <option value="quiz">📝 Kuis Interaktif</option>
                                                                                 </select>
                                                                             </div>
@@ -2821,6 +3397,93 @@ function AdminCourseEdit() {
                                                                                         >
                                                                                             <i className="fas fa-external-link-alt me-1"></i> Bank Kuis
                                                                                         </button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ) : isItemScorm ? (
+                                                                                <div className="col-12">
+                                                                                    <div className="p-2.5 bg-light rounded border mb-2" style={{ borderLeft: "4px solid #8b5cf6" }}>
+                                                                                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                                                                            <div className="d-flex align-items-center gap-3">
+                                                                                                <div className="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0" style={{ width: "36px", height: "36px", backgroundColor: "#8b5cf6" }}>
+                                                                                                    <i className="fas fa-boxes-stacked"></i>
+                                                                                                </div>
+                                                                                                <div>
+                                                                                                    <div className="fw-bold text-dark small">
+                                                                                                        {itm.learning_module_info?.judul || itm.title || "Paket Pembelajaran SCORM 1.2"}
+                                                                                                    </div>
+                                                                                                    <div className="small text-muted" style={{ fontSize: "0.74rem" }}>
+                                                                                                        Entry File: <code>{itm.learning_module_info?.entry_file || itm.file || "index.html"}</code> &bull; Tipe: <code>{(itm.learning_module_info?.module_type || "SCORM 1.2").toUpperCase()}</code> &bull; Pelacakan RTE: <code>cmi.core.lesson_status</code>, <code>cmi.core.score.raw</code>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div className="d-flex align-items-center gap-2">
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    className="btn btn-sm btn-teal d-inline-flex align-items-center gap-1 shadow-sm text-white"
+                                                                                                    onClick={() => handleOpenScormPreview(itm)}
+                                                                                                    style={{ fontSize: "0.78rem" }}
+                                                                                                >
+                                                                                                    <i className="fas fa-play-circle"></i>
+                                                                                                    <span>Uji Coba SCORM</span>
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        {/* SCORM Selection & Upload Controls */}
+                                                                                        <div className="row g-2 align-items-center pt-2 border-top">
+                                                                                            {availableScormModules.length > 0 && (
+                                                                                                <div className="col-md-7">
+                                                                                                    <div className="d-flex align-items-center gap-2">
+                                                                                                        <span className="small text-muted text-nowrap" style={{ fontSize: "0.72rem" }}>
+                                                                                                            <i className="fas fa-folder-open text-purple me-1"></i>Pustaka Modul:
+                                                                                                        </span>
+                                                                                                        <select
+                                                                                                            className="ace-select flex-grow-1"
+                                                                                                            style={{ fontSize: "0.75rem", padding: "3px 8px" }}
+                                                                                                            value={itm.learning_module_id || ""}
+                                                                                                            onChange={(e) => {
+                                                                                                                const modId = e.target.value;
+                                                                                                                const found = availableScormModules.find(m => String(m.id) === String(modId));
+                                                                                                                if (found) {
+                                                                                                                    updateLectureField(secIdx, itmIdx, "learning_module_id", found.id);
+                                                                                                                    updateLectureField(secIdx, itmIdx, "learning_module_info", found);
+                                                                                                                    updateLectureField(secIdx, itmIdx, "learning_module", found.id);
+                                                                                                                    updateLectureField(secIdx, itmIdx, "file", found.entry_file || "index.html");
+                                                                                                                    updateLectureField(secIdx, itmIdx, "content_type", "scorm");
+                                                                                                                    updateLectureField(secIdx, itmIdx, "file_type", "scorm");
+                                                                                                                }
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            <option value="">-- Pilih dari Pustaka SCORM Tersedia --</option>
+                                                                                                            {availableScormModules.map(m => (
+                                                                                                                <option key={m.id} value={m.id}>
+                                                                                                                    {m.judul} ({m.module_type === "scorm_12" ? "SCORM 1.2" : m.module_type.toUpperCase()})
+                                                                                                                </option>
+                                                                                                            ))}
+                                                                                                        </select>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            )}
+                                                                                            <div className={availableScormModules.length > 0 ? "col-md-5" : "col-12"}>
+                                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                                    <label className="ace-btn-secondary cursor-pointer mb-0 text-nowrap py-1 px-2" style={{ fontSize: "0.75rem" }}>
+                                                                                                        <input
+                                                                                                            type="file"
+                                                                                                            style={{ display: "none" }}
+                                                                                                            accept=".zip, application/zip, application/x-zip-compressed"
+                                                                                                            onChange={(e) => handleLectureFileUpload(secIdx, itmIdx, e)}
+                                                                                                            disabled={isUploading}
+                                                                                                        />
+                                                                                                        {isUploading ? (
+                                                                                                            <i className="fas fa-spinner fa-spin text-purple"></i>
+                                                                                                        ) : (
+                                                                                                            <i className="fas fa-cloud-upload-alt text-purple"></i>
+                                                                                                        )}
+                                                                                                        <span className="ms-1">{isUploading ? `Mengunggah (${uploadProg}%)...` : "Unggah Paket SCORM Baru (.zip)"}</span>
+                                                                                                    </label>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
                                                                             ) : (
@@ -3038,6 +3701,33 @@ function AdminCourseEdit() {
                                                                                 </div>
                                                                             </div>
                                                                         )}
+
+                                                                        {/* PERTANYAAN PENYELESAIAN PELAJARAN (LESSON COMPLETION QUESTION) */}
+                                                                        {!isItemQuiz && !isItemScorm && (
+                                                                            <div className="mt-2 pt-2 border-top">
+                                                                                {itm.variant_item_id ? (
+                                                                                    <LessonCompletionQuestionEditor
+                                                                                        variantItemId={itm.variant_item_id}
+                                                                                        onQuestionSaved={(question) => {
+                                                                                            console.log("[AdminCourseEdit] Completion question saved:", question);
+                                                                                        }}
+                                                                                    />
+                                                                                ) : (
+                                                                                    <div className="small text-muted fst-italic py-1 px-2 bg-light rounded border d-flex align-items-center gap-2" style={{ fontSize: "0.73rem" }}>
+                                                                                        <i className="fas fa-info-circle text-teal"></i>
+                                                                                        <span>Simpan kursus terlebih dahulu (<strong>Simpan & Terapkan Langsung</strong>) untuk menambahkan Pertanyaan Penyelesaian pada materi baru ini.</span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                        {isItemScorm && (
+                                                                            <div className="mt-2 py-1 px-2 rounded border d-flex align-items-center gap-2 small text-muted bg-light" style={{ fontSize: "0.74rem", borderLeft: "3px solid #0f766e" }}>
+                                                                                <i className="fas fa-shield-alt text-teal"></i>
+                                                                                <div>
+                                                                                    <strong>Pelacakan SCORM 1.2 Aktif:</strong> Nilai evaluasi (<code>cmi.core.score.raw</code>) dan status kelulusan (<code>cmi.core.lesson_status</code>) disinkronkan secara otomatis melalui SCORM RTE saat peserta berinteraksi.
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             );
@@ -3053,6 +3743,15 @@ function AdminCourseEdit() {
                                                         >
                                                             <i className="fas fa-plus"></i>
                                                             <span>Tambah Materi</span>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-outline-teal text-teal fw-semibold d-inline-flex align-items-center gap-1 shadow-sm"
+                                                            onClick={() => addScormItem(secIdx)}
+                                                            style={{ fontSize: "0.8rem", padding: "0.35rem 0.75rem", borderRadius: "6px" }}
+                                                        >
+                                                            <i className="fas fa-boxes-stacked"></i>
+                                                            <span>Tambah SCORM</span>
                                                         </button>
                                                         <button
                                                             type="button"
@@ -4004,115 +4703,10 @@ function AdminCourseEdit() {
                                         </div>
                                     </div>
 
-                                    {/* Inline Add / Edit Question Form */}
-                                    {isAddingQuestion && (
-                                        <div className="ace-card mb-3 border-teal shadow-sm">
-                                            <div className="ace-card-header is-teal-subtle d-flex justify-content-between align-items-center">
-                                                <h6 className="ace-card-title mb-0" style={{ color: "#0f766e", fontWeight: 700 }}>
-                                                    <i className={`fas ${editingQuestion ? "fa-edit" : "fa-plus-circle"} me-2`} style={{ color: "#0d9488" }}></i>
-                                                    <span style={{ color: "#0f766e", fontWeight: 700 }}>
-                                                        {editingQuestion ? "Edit Pertanyaan Kuis" : "Tambah Pertanyaan Baru"}
-                                                    </span>
-                                                </h6>
-                                                <button
-                                                    type="button"
-                                                    className="btn-close btn-sm"
-                                                    onClick={() => {
-                                                        setIsAddingQuestion(false);
-                                                        setEditingQuestion(null);
-                                                    }}
-                                                    title="Tutup Form"
-                                                ></button>
-                                            </div>
-                                            <div className="ace-card-body">
-                                                <form onSubmit={handleSaveQuestion}>
-                                                    <div className="mb-3">
-                                                        <label className="ace-form-label fw-bold">
-                                                            Teks Pertanyaan <span className="text-danger">*</span>
-                                                        </label>
-                                                        <textarea
-                                                            className="ace-input"
-                                                            rows={3}
-                                                            value={questionForm.question_text}
-                                                            onChange={(e) => setQuestionForm(prev => ({ ...prev, question_text: e.target.value }))}
-                                                            placeholder="Tuliskan pertanyaan ujian di sini..."
-                                                            required
-                                                        />
-                                                    </div>
-
-                                                    <label className="ace-form-label fw-bold mb-2">
-                                                        Pilihan Jawaban & Kunci Benar <span className="text-danger">*</span>
-                                                        <span className="small text-muted fw-normal ms-2">
-                                                            (Pilih radio button di samping opsi yang merupakan jawaban benar)
-                                                        </span>
-                                                    </label>
-
-                                                    <div className="row g-2 mb-3">
-                                                        {questionForm.choices.map((choice, cIdx) => (
-                                                            <div key={cIdx} className="col-md-6">
-                                                                <div className={`p-2 border rounded-3 d-flex align-items-center gap-2 ${choice.is_correct ? "bg-success bg-opacity-10 border-success" : "bg-white"}`}>
-                                                                    <input
-                                                                        type="radio"
-                                                                        name="correctChoice"
-                                                                        className="form-check-input mt-0"
-                                                                        checked={choice.is_correct}
-                                                                        onChange={() => {
-                                                                            setQuestionForm(prev => ({
-                                                                                ...prev,
-                                                                                choices: prev.choices.map((c, idx) => ({
-                                                                                    ...c,
-                                                                                    is_correct: idx === cIdx
-                                                                                }))
-                                                                            }));
-                                                                        }}
-                                                                        style={{ cursor: "pointer", width: "1.1rem", height: "1.1rem" }}
-                                                                        title="Tandai sebagai jawaban benar"
-                                                                    />
-                                                                    <span className="fw-bold text-secondary" style={{ minWidth: "22px" }}>
-                                                                        {String.fromCharCode(65 + cIdx)}.
-                                                                    </span>
-                                                                    <input
-                                                                        type="text"
-                                                                        className="ace-input flex-grow-1"
-                                                                        value={choice.choice_text}
-                                                                        onChange={(e) => {
-                                                                            const val = e.target.value;
-                                                                            setQuestionForm(prev => ({
-                                                                                ...prev,
-                                                                                choices: prev.choices.map((c, idx) =>
-                                                                                    idx === cIdx ? { ...c, choice_text: val } : c
-                                                                                )
-                                                                            }));
-                                                                        }}
-                                                                        placeholder={`Pilihan ${String.fromCharCode(65 + cIdx)}...`}
-                                                                        required={cIdx < 2}
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-
-                                                    <div className="d-flex justify-content-end gap-2">
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-outline-secondary"
-                                                            onClick={() => {
-                                                                setIsAddingQuestion(false);
-                                                                setEditingQuestion(null);
-                                                            }}
-                                                        >
-                                                            Batal
-                                                        </button>
-                                                        <button
-                                                            type="submit"
-                                                            className="btn btn-sm btn-teal text-white"
-                                                        >
-                                                            <i className="fas fa-save me-1"></i>
-                                                            <span>{editingQuestion ? "Simpan Perubahan" : "Tambahkan Pertanyaan"}</span>
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
+                                    {/* Inline Add / Edit Question Form (Top: Only for adding new question) */}
+                                    {isAddingQuestion && !editingQuestion && (
+                                        <div className="mb-3">
+                                            {renderQuestionFormCard(false, null)}
                                         </div>
                                     )}
 
@@ -4149,81 +4743,103 @@ function AdminCourseEdit() {
                                         </div>
                                     ) : (
                                         <div className="questions-container">
-                                            {questions.map((q, qIdx) => (
-                                                <div key={q.question_id || qIdx} className="question-card">
-                                                    <div className="question-header">
-                                                        <div className="d-flex align-items-center gap-2 flex-grow-1">
-                                                            <span className="question-number">Q{qIdx + 1}</span>
-                                                            <div className="question-order-controls">
+                                            {questions.map((q, qIdx) => {
+                                                const isThisEditing = Boolean(
+                                                    editingQuestion && (
+                                                        (editingQuestion.question_id && (editingQuestion.question_id === q.question_id || editingQuestion.question_id === q.id)) ||
+                                                        (editingQuestion.id && (editingQuestion.id === q.question_id || editingQuestion.id === q.id)) ||
+                                                        (editingQuestion === q)
+                                                    )
+                                                );
+
+                                                if (isThisEditing) {
+                                                    return (
+                                                        <div
+                                                            key={q.question_id || q.id || qIdx}
+                                                            id={`question-edit-${q.question_id || q.id || qIdx}`}
+                                                            className="question-inline-edit-wrapper mb-3"
+                                                        >
+                                                            {renderQuestionFormCard(true, qIdx)}
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div key={q.question_id || q.id || qIdx} className="question-card">
+                                                        <div className="question-header">
+                                                            <div className="d-flex align-items-center gap-2 flex-grow-1">
+                                                                <span className="question-number">Q{qIdx + 1}</span>
+                                                                <div className="question-order-controls">
+                                                                    <button
+                                                                        type="button"
+                                                                        className="question-order-btn"
+                                                                        disabled={qIdx === 0}
+                                                                        onClick={() => handleMoveQuestion(qIdx, "up")}
+                                                                        title="Pindahkan ke atas"
+                                                                    >
+                                                                        <i className="fas fa-arrow-up"></i>
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        className="question-order-btn"
+                                                                        disabled={qIdx === questions.length - 1}
+                                                                        onClick={() => handleMoveQuestion(qIdx, "down")}
+                                                                        title="Pindahkan ke bawah"
+                                                                    >
+                                                                        <i className="fas fa-arrow-down"></i>
+                                                                    </button>
+                                                                </div>
+                                                                <div className="fw-semibold text-dark fs-6 ms-1">
+                                                                    {q.question_text}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="d-flex align-items-center gap-1">
                                                                 <button
                                                                     type="button"
-                                                                    className="question-order-btn"
-                                                                    disabled={qIdx === 0}
-                                                                    onClick={() => handleMoveQuestion(qIdx, "up")}
-                                                                    title="Pindahkan ke atas"
+                                                                    className="ace-micro-action-btn"
+                                                                    onClick={() => handleEditQuestion(q)}
+                                                                    title="Edit Pertanyaan"
                                                                 >
-                                                                    <i className="fas fa-arrow-up"></i>
+                                                                    <i className="fas fa-edit"></i>
                                                                 </button>
                                                                 <button
                                                                     type="button"
-                                                                    className="question-order-btn"
-                                                                    disabled={qIdx === questions.length - 1}
-                                                                    onClick={() => handleMoveQuestion(qIdx, "down")}
-                                                                    title="Pindahkan ke bawah"
+                                                                    className="ace-micro-action-btn delete"
+                                                                    onClick={() => handleDeleteQuestion(q.question_id || q.id)}
+                                                                    title="Hapus Pertanyaan"
                                                                 >
-                                                                    <i className="fas fa-arrow-down"></i>
+                                                                    <i className="fas fa-trash-alt"></i>
                                                                 </button>
                                                             </div>
-                                                            <div className="fw-semibold text-dark fs-6 ms-1">
-                                                                {q.question_text}
-                                                            </div>
                                                         </div>
 
-                                                        <div className="d-flex align-items-center gap-1">
-                                                            <button
-                                                                type="button"
-                                                                className="ace-micro-action-btn"
-                                                                onClick={() => handleEditQuestion(q)}
-                                                                title="Edit Pertanyaan"
-                                                            >
-                                                                <i className="fas fa-edit"></i>
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                className="ace-micro-action-btn delete"
-                                                                onClick={() => handleDeleteQuestion(q.question_id)}
-                                                                title="Hapus Pertanyaan"
-                                                            >
-                                                                <i className="fas fa-trash-alt"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="question-choices">
-                                                        {(q.choices || []).map((choice, cIdx) => (
-                                                            <div
-                                                                key={choice.choice_id || cIdx}
-                                                                className={`choice-item ${choice.is_correct ? "correct" : ""}`}
-                                                            >
-                                                                <span className="choice-indicator">
-                                                                    <i className={`fas ${choice.is_correct ? "fa-check-circle text-success" : "fa-circle text-muted"}`}></i>
-                                                                </span>
-                                                                <span className="choice-label">
-                                                                    {String.fromCharCode(65 + cIdx)}.
-                                                                </span>
-                                                                <span className="choice-text flex-grow-1">
-                                                                    {choice.choice_text}
-                                                                </span>
-                                                                {choice.is_correct && (
-                                                                    <span className="correct-pill">
-                                                                        <i className="fas fa-check me-1"></i>Kunci Benar
+                                                        <div className="question-choices">
+                                                            {(q.choices || []).map((choice, cIdx) => (
+                                                                <div
+                                                                    key={choice.choice_id || cIdx}
+                                                                    className={`choice-item ${choice.is_correct ? "correct" : ""}`}
+                                                                >
+                                                                    <span className="choice-indicator">
+                                                                        <i className={`fas ${choice.is_correct ? "fa-check-circle text-success" : "fa-circle text-muted"}`}></i>
                                                                     </span>
-                                                                )}
-                                                            </div>
-                                                        ))}
+                                                                    <span className="choice-label">
+                                                                        {String.fromCharCode(65 + cIdx)}.
+                                                                    </span>
+                                                                    <span className="choice-text flex-grow-1">
+                                                                        {choice.choice_text}
+                                                                    </span>
+                                                                    {choice.is_correct && (
+                                                                        <span className="correct-pill">
+                                                                            <i className="fas fa-check me-1"></i>Kunci Benar
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
@@ -4581,17 +5197,93 @@ function AdminCourseEdit() {
 
                             <div className="col-md-6">
                                 <div className="ace-card">
-                                    <div className="ace-card-header">
-                                        <h6 className="ace-card-title">
-                                            <i className="fas fa-user-tie text-teal"></i>
-                                            Metadata & Kepemilikan Kursus
+                                    <div className="ace-card-header d-flex justify-content-between align-items-center">
+                                        <h6 className="ace-card-title mb-0">
+                                            <i className="fas fa-shield-alt text-teal me-2"></i>
+                                            Metadata & Riwayat Persetujuan
                                         </h6>
+                                        <span className={`badge ${course?.platform_status === 'Published' ? 'bg-success' : course?.platform_status === 'Review' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                                            {course?.platform_status || 'Draft'}
+                                        </span>
                                     </div>
                                     <div className="ace-card-body">
+                                        {/* Admin Approval Audit Box */}
+                                        <div className="p-3 mb-3 rounded border" style={{ backgroundColor: "#f8fafc" }}>
+                                            <div className="d-flex align-items-start justify-content-between mb-2">
+                                                <span className="small fw-bold text-uppercase text-muted" style={{ letterSpacing: "0.5px" }}>
+                                                    <i className="fas fa-check-circle text-teal me-1"></i> Status Persetujuan Admin
+                                                </span>
+                                                {course?.approved_by_detail || course?.approved_by_name ? (
+                                                    <span className="badge bg-teal bg-opacity-10 text-teal border border-teal-subtle px-2 py-1">
+                                                        <i className="fas fa-user-check me-1"></i> Disetujui
+                                                    </span>
+                                                ) : (
+                                                    <span className="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1">
+                                                        <i className="fas fa-clock me-1"></i> Belum Disetujui
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {course?.approved_by_detail || course?.approved_by_name ? (
+                                                <div className="d-flex align-items-center gap-3">
+                                                    <div 
+                                                        className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm flex-shrink-0"
+                                                        style={{ 
+                                                            width: "44px", 
+                                                            height: "44px", 
+                                                            backgroundColor: "#0d9488",
+                                                            overflow: "hidden" 
+                                                        }}
+                                                    >
+                                                        {course?.approved_by_detail?.image ? (
+                                                            <img 
+                                                                src={getImageUrl(course.approved_by_detail.image)} 
+                                                                alt={course.approved_by_detail.full_name} 
+                                                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                                            />
+                                                        ) : (
+                                                            (course?.approved_by_detail?.full_name || course?.approved_by_name || "A").substring(0, 2).toUpperCase()
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-grow-1 min-w-0">
+                                                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                                                            <strong className="text-dark" style={{ fontSize: "0.92rem" }}>
+                                                                {course?.approved_by_detail?.full_name || course?.approved_by_name}
+                                                            </strong>
+                                                            <span className="badge bg-dark bg-opacity-10 text-dark" style={{ fontSize: "0.72rem" }}>
+                                                                {course?.approved_by_detail?.role || "Administrator"}
+                                                            </span>
+                                                        </div>
+                                                        <div className="small text-muted text-truncate">
+                                                            <i className="far fa-envelope me-1"></i>
+                                                            {course?.approved_by_detail?.email || course?.approved_by_detail?.username || "-"}
+                                                        </div>
+                                                        {(course?.approved_by_detail?.approval_date || course?.approval_date) && (
+                                                            <div className="small text-teal mt-0.5" style={{ fontSize: "0.78rem" }}>
+                                                                <i className="far fa-calendar-check me-1"></i>
+                                                                Disetujui pada: {new Date(course?.approved_by_detail?.approval_date || course?.approval_date).toLocaleString("id-ID", {
+                                                                    day: "numeric",
+                                                                    month: "long",
+                                                                    year: "numeric",
+                                                                    hour: "2-digit",
+                                                                    minute: "2-digit"
+                                                                })} WIB
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="small text-muted py-1">
+                                                    Kursus ini belum diverifikasi/disetujui oleh Administrator, atau statusnya masih dalam peninjauan.
+                                                </div>
+                                            )}
+                                        </div>
+
                                         <table className="table table-sm table-borderless mb-0">
                                             <tbody>
                                                 <tr>
-                                                    <td className="text-muted" style={{ width: "140px" }}>Instruktur Pengampu:</td>
+                                                    <td className="text-muted" style={{ width: "150px" }}>Instruktur Pengampu:</td>
                                                     <td><strong>{course?.teacher?.full_name || "Instruktur"}</strong></td>
                                                 </tr>
                                                 <tr>
@@ -4600,7 +5292,20 @@ function AdminCourseEdit() {
                                                 </tr>
                                                 <tr>
                                                     <td className="text-muted">Slug URL:</td>
-                                                    <td><code>{course?.slug || "-"}</code></td>
+                                                    <td>
+                                                        <code>{course?.slug || "-"}</code>
+                                                        {course?.slug && (
+                                                            <a 
+                                                                href={`/course-detail/${course.slug}/`} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                className="ms-2 text-teal small text-decoration-none"
+                                                                title="Buka halaman publik kursus di tab baru"
+                                                            >
+                                                                <i className="fas fa-external-link-alt"></i>
+                                                            </a>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <td className="text-muted">Tanggal Dibuat:</td>
@@ -4611,8 +5316,18 @@ function AdminCourseEdit() {
                                                     <td>{course?.review_submitted_date ? new Date(course.review_submitted_date).toLocaleString("id-ID") : "-"}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td className="text-muted">Disetujui Oleh:</td>
-                                                    <td>{course?.approved_by_name || "Admin"}</td>
+                                                    <td className="text-muted">Tipe Versi:</td>
+                                                    <td>
+                                                        {course?.is_published_version ? (
+                                                            <span className="badge bg-success bg-opacity-10 text-success border border-success-subtle">
+                                                                <i className="fas fa-globe me-1"></i> Versi Publik (Live untuk Siswa)
+                                                            </span>
+                                                        ) : (
+                                                            <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle">
+                                                                <i className="fas fa-file-signature me-1"></i> Versi Master / Draft
+                                                            </span>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -4624,6 +5339,173 @@ function AdminCourseEdit() {
                 </div>
 
             </div>
+
+            {/* Interactive SCORM Player Modal for Administrator Preview */}
+            {scormPreviewModal.isOpen && typeof document !== "undefined" && createPortal(
+                <div
+                    className="modal fade show d-flex scorm-modal-overlay align-items-center justify-content-center"
+                    tabIndex="-1"
+                    role="dialog"
+                    aria-modal="true"
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        width: "100vw",
+                        height: "100vh",
+                        backgroundColor: "rgba(15, 23, 42, 0.75)",
+                        backdropFilter: "blur(4px)",
+                        WebkitBackdropFilter: "blur(4px)",
+                        zIndex: 2147483647,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                        margin: 0,
+                        padding: scormPreviewModal.isFullscreen ? 0 : "1.25rem",
+                        boxSizing: "border-box"
+                    }}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setScormPreviewModal(prev => ({ ...prev, isOpen: false }));
+                        }
+                    }}
+                >
+                    <div
+                        className={`scorm-modal-dialog ${scormPreviewModal.isFullscreen ? "modal-fullscreen m-0" : "modal-xl"}`}
+                        style={{
+                            maxWidth: scormPreviewModal.isFullscreen ? "100vw" : "1100px",
+                            width: scormPreviewModal.isFullscreen ? "100vw" : "96vw",
+                            maxHeight: scormPreviewModal.isFullscreen ? "100vh" : "92vh",
+                            height: scormPreviewModal.isFullscreen ? "100vh" : "auto",
+                            margin: "auto",
+                            minHeight: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            pointerEvents: "auto",
+                            transform: "none"
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div
+                            className="modal-content border-0 shadow-lg rounded-3 overflow-hidden bg-white text-dark"
+                            style={{
+                                backgroundColor: "#ffffff",
+                                color: "#1e293b",
+                                width: "100%",
+                                maxHeight: scormPreviewModal.isFullscreen ? "100vh" : "92vh",
+                                height: scormPreviewModal.isFullscreen ? "100vh" : "auto",
+                                display: "flex",
+                                flexDirection: "column",
+                                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                                margin: "auto"
+                            }}
+                        >
+                            <div
+                                className="modal-header bg-white text-dark py-3 px-4 d-flex align-items-center justify-content-between border-bottom"
+                                style={{ backgroundColor: "#ffffff", borderBottom: "1px solid #e2e8f0" }}
+                            >
+                                <div className="d-flex align-items-center gap-2">
+                                    <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-1 fw-semibold">
+                                        <i className="fas fa-cube me-1"></i>
+                                        {(scormPreviewModal.moduleType || "SCORM 1.2").toUpperCase()}
+                                    </span>
+                                    <h6 className="modal-title mb-0 fw-bold text-dark">
+                                        {scormPreviewModal.title}
+                                    </h6>
+                                </div>
+                                <div className="d-flex align-items-center gap-3">
+                                    <div
+                                        className="d-none d-sm-flex align-items-center gap-2 bg-light border px-2 py-1 rounded small"
+                                        style={{ backgroundColor: "#f8fafc", borderColor: "#e2e8f0" }}
+                                    >
+                                        <span className="text-secondary fw-medium">Status RTE:</span>
+                                        <span className={`badge ${scormPlayerStatus === 'completed' || scormPlayerStatus === 'passed' ? 'bg-success text-white' :
+                                            scormPlayerStatus === 'failed' ? 'bg-danger text-white' : 'bg-warning text-dark'
+                                            }`}>
+                                            {scormPlayerStatus}
+                                        </span>
+                                        {scormPlayerScore !== null && (
+                                            <span className="badge bg-info text-white">
+                                                Skor: {scormPlayerScore}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-secondary border-0"
+                                        onClick={() => setScormPreviewModal(prev => ({ ...prev, isFullscreen: !prev.isFullscreen }))}
+                                        title={scormPreviewModal.isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+                                        style={{ color: "#64748b" }}
+                                    >
+                                        <i className={`fas fa-${scormPreviewModal.isFullscreen ? 'compress' : 'expand'}`}></i>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-close"
+                                        onClick={() => setScormPreviewModal(prev => ({ ...prev, isOpen: false }))}
+                                        aria-label="Tutup"
+                                    ></button>
+                                </div>
+                            </div>
+                            <div
+                                className="modal-body p-0 bg-light position-relative"
+                                style={{
+                                    flex: "1 1 auto",
+                                    minHeight: scormPreviewModal.isFullscreen ? "calc(100vh - 120px)" : "600px",
+                                    height: scormPreviewModal.isFullscreen ? "calc(100vh - 120px)" : "65vh",
+                                    backgroundColor: "#f8fafc",
+                                    overflow: "hidden"
+                                }}
+                            >
+                                {scormPreviewModal.url ? (
+                                    <iframe
+                                        ref={scormIframeRef}
+                                        src={scormPreviewModal.url}
+                                        title="SCORM Player Simulation"
+                                        className="w-100 h-100 border-0 flex-grow-1"
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            minHeight: scormPreviewModal.isFullscreen ? "calc(100vh - 120px)" : "600px",
+                                            display: "block",
+                                            backgroundColor: "#ffffff"
+                                        }}
+                                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                ) : (
+                                    <div className="text-center p-5 text-muted d-flex flex-column align-items-center justify-content-center h-100">
+                                        <i className="fas fa-exclamation-triangle fa-2x mb-3 text-warning"></i>
+                                        <p className="mb-0 text-muted">URL konten SCORM tidak dapat dimuat.</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div
+                                className="modal-footer bg-white py-2 px-4 d-flex justify-content-between border-top"
+                                style={{ backgroundColor: "#ffffff", borderTop: "1px solid #e2e8f0" }}
+                            >
+                                <small className="text-muted">
+                                    <i className="fas fa-info-circle me-1 text-primary"></i>
+                                    Uji coba simulasi SCORM 1.2 RTE API Bridge bawaan LMS Setjen DPD RI untuk Administrator.
+                                </small>
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-secondary"
+                                    onClick={() => setScormPreviewModal(prev => ({ ...prev, isOpen: false }))}
+                                >
+                                    Tutup Pratinjau
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
 
             <Footer />
         </div>

@@ -1260,7 +1260,8 @@ body.admin-course-edit-active {
 .fdb-modal-overlay,
 .ace-modal-overlay,
 .quiz-modal-overlay,
-.icl-print-modal-overlay {
+.icl-print-modal-overlay,
+.scorm-modal-overlay {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -1288,9 +1289,15 @@ body.admin-course-edit-active {
 .rejection-modal,
 .quiz-modal,
 .user-admin-modal-content,
-.modal-content-modern {
+.modal-content-modern,
+.scorm-modal-dialog {
   margin: auto !important;
   position: relative !important;
   z-index: 2147483647 !important;
   transform: none;
+}
+
+.scorm-modal-dialog::before {
+  content: none !important;
+  display: none !important;
 }

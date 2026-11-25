@@ -734,6 +734,7 @@ class VariantItemSerializer(serializers.ModelSerializer):
     learning_module_info = serializers.SerializerMethodField()
     quiz_detail = serializers.SerializerMethodField()
     quiz_id = serializers.SerializerMethodField()
+    content_type = serializers.SerializerMethodField()
     
     class Meta:
         fields = '__all__'
@@ -748,6 +749,24 @@ class VariantItemSerializer(serializers.ModelSerializer):
         else:
             self.Meta.depth = 1  # Reduced from 3 to 1
     
+    def get_content_type(self, obj):
+        if obj.item_type == 'quiz' or obj.quiz_id:
+            return "quiz"
+        if obj.learning_module_id:
+            return "scorm"
+        ft = obj.file_type
+        if ft in ["presentation", "ppt", "pptx"]:
+            return "presentation"
+        if ft in ["pdf", "document", "doc", "docx"]:
+            return "document"
+        if ft in ["audio", "mp3", "wav", "m4a", "ogg", "flac"]:
+            return "audio"
+        if ft in ["scorm", "h5p"]:
+            return "scorm"
+        if ft == "video":
+            return "video"
+        return "video"
+
     def get_quiz_id(self, obj):
         if obj.quiz_id and obj.quiz:
             return obj.quiz.quiz_id
@@ -1800,6 +1819,54 @@ class SearchCourseSerializer(serializers.ModelSerializer):
         """Get number of ratings"""
         return obj.rating_count()
 
+def get_approver_detail_for_course(course_obj):
+    """Resolve approving admin user and full details for a course or its parent/published copy."""
+    user = course_obj.approved_by
+    if not user and getattr(course_obj, 'parent_course', None):
+        user = course_obj.parent_course.approved_by
+    if not user and hasattr(course_obj, 'published_copies'):
+        pub = course_obj.published_copies.filter(approved_by__isnull=False).first()
+        if pub:
+            user = pub.approved_by
+
+    if not user:
+        return None
+
+    profile = getattr(user, 'profile', None)
+    name = None
+    if profile and getattr(profile, 'full_name', None) and profile.full_name.strip():
+        name = profile.full_name.strip()
+    elif user.get_full_name().strip():
+        name = user.get_full_name().strip()
+    else:
+        name = user.username or user.email
+
+    avatar = None
+    if profile and getattr(profile, 'image', None):
+        try:
+            avatar = profile.image.url
+        except Exception:
+            avatar = None
+
+    approval_date = course_obj.approval_date
+    if not approval_date and getattr(course_obj, 'parent_course', None):
+        approval_date = course_obj.parent_course.approval_date
+    if not approval_date and hasattr(course_obj, 'published_copies'):
+        pub = course_obj.published_copies.filter(approval_date__isnull=False).first()
+        if pub:
+            approval_date = pub.approval_date
+
+    return {
+        "id": user.id,
+        "full_name": name,
+        "username": user.username,
+        "email": user.email,
+        "image": avatar,
+        "role": "Super Admin" if getattr(user, 'is_superuser', False) else ("Administrator" if getattr(user, 'is_admin', False) or getattr(user, 'is_staff', False) else "Admin"),
+        "approval_date": approval_date.isoformat() if approval_date else None
+    }
+
+
 class CourseSerializer(serializers.ModelSerializer):
     students = EnrolledCourseSerializer(many=True, required=False, read_only=True,)
     curriculum = VariantSerializer(many=True, required=False, read_only=True,)
@@ -1836,9 +1903,11 @@ class CourseSerializer(serializers.ModelSerializer):
     total_jam_pelatihan = serializers.SerializerMethodField()
     learning_module = LearningModuleSerializer(read_only=True)
     curriculum_summary = serializers.SerializerMethodField()  # ✨ Accurate sections, lessons, and curriculum quizzes summary
+    approved_by_name = serializers.SerializerMethodField()
+    approved_by_detail = serializers.SerializerMethodField()
     
     class Meta:
-        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan", "course_type", "learning_module", "games", "curriculum_summary"]
+        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students", "curriculum", "lectures", "average_rating", "rating_count", "reviews", "features", "requirements", "learning_outcomes", "resources", "completed_lesson", "qa_count", "quizzes", "rejection_reason", "review_submitted_date", "total_jam_pelatihan", "course_type", "learning_module", "games", "curriculum_summary", "approved_by", "approved_by_name", "approved_by_detail", "approval_date"]
         model = api_models.Course
 
     
@@ -2041,6 +2110,13 @@ class CourseSerializer(serializers.ModelSerializer):
         
         return representation
 
+    def get_approved_by_name(self, obj):
+        detail = get_approver_detail_for_course(obj)
+        return detail["full_name"] if detail else None
+
+    def get_approved_by_detail(self, obj):
+        return get_approver_detail_for_course(obj)
+
 class CourseEditSerializer(serializers.ModelSerializer):
     """
     Simplified course serializer for editing operations to avoid circular references
@@ -2065,7 +2141,8 @@ class CourseEditSerializer(serializers.ModelSerializer):
     features = CourseFeatureSerializer(many=True, read_only=True, required=False)
     requirements = CourseRequirementSerializer(many=True, read_only=True, required=False)
     learning_outcomes = CourseLearningOutcomeSerializer(many=True, read_only=True, required=False)
-    approved_by_name = serializers.CharField(source='approved_by.get_full_name', read_only=True, allow_null=True)
+    approved_by_name = serializers.SerializerMethodField()
+    approved_by_detail = serializers.SerializerMethodField()
     published_version = serializers.SerializerMethodField()  # ✨ PHASE 4.75: Include published version data
     qa_count = serializers.SerializerMethodField()  # ✨ PHASE 7.13: Add QA count for course detail pages
     # ✨ PHASE 7.5 FIX: Add tags field - convert to full objects in to_representation()
@@ -2080,8 +2157,15 @@ class CourseEditSerializer(serializers.ModelSerializer):
         # ✨ PHASE 7.13: Added "qa_count" to CourseEditSerializer
         # ✨ PHASE 7.5 FIX: Added "tags" to return saved tags in edit form
         # ✨ PHASE 7.6 FIX: Added "target_audience" and "course_type" for live course review
-        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "course_type", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "games", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
+        fields = ["id", "category", "tags", "teacher", "file", "image", "title", "description", "level", "target_audience", "course_type", "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "curriculum", "lectures", "quizzes", "games", "average_rating", "rating_count", "rejection_reason", "approved_by", "approved_by_name", "approved_by_detail", "approval_date", "review_submitted_date", "features", "requirements", "learning_outcomes", "published_version", "qa_count"]
         model = api_models.Course
+    
+    def get_approved_by_name(self, obj):
+        detail = get_approver_detail_for_course(obj)
+        return detail["full_name"] if detail else None
+
+    def get_approved_by_detail(self, obj):
+        return get_approver_detail_for_course(obj)
     
     def get_quizzes(self, obj):
         """✨ PHASE 4.38: Return full quiz data with questions and choices for admin review"""

@@ -874,6 +874,10 @@ body.admin-course-edit-active {
     border-left-color: #06b6d4 !important;
 }
 
+.ace-curriculum-item-card.is-scorm {
+    border-left-color: #8b5cf6 !important;
+}
+
 .ace-curriculum-item-card.is-quiz {
     border-left-color: #d97706 !important;
 }
@@ -929,6 +933,11 @@ body.admin-course-edit-active {
 .ace-type-badge.audio {
     background: #cffafe;
     color: #0e7490;
+}
+
+.ace-type-badge.scorm {
+    background: #ede9fe;
+    color: #6d28d9;
 }
 
 .ace-type-badge.quiz {
@@ -1765,6 +1774,61 @@ body.admin-course-edit-active {
     border-color: #0d9488;
     background: #f0fdfa;
 }
+
+/* ========================================================================
+   COMPACT & EYE-CATCHING QUESTION FORM CARD (.ace-question-form-card)
+   High-density, inline in-place editor for quiz questions
+   ======================================================================== */
+
+.ace-question-form-card {
+    background: #ffffff;
+    border: 1.5px solid #0d9488;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(13, 148, 136, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: aceQuestionCardSlide 0.22s ease-out;
+}
+
+.ace-question-form-card:hover {
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.16);
+}
+
+.ace-question-form-card .ace-card-header {
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.09) 0%, rgba(20, 184, 166, 0.04) 100%);
+    border-bottom: 1px solid rgba(13, 148, 136, 0.22);
+}
+
+.ace-question-form-card .ace-card-body {
+    background-color: #ffffff;
+}
+
+.question-inline-edit-wrapper {
+    position: relative;
+    scroll-margin-top: 110px;
+    animation: aceQuestionFadeIn 0.2s ease-out;
+}
+
+@keyframes aceQuestionCardSlide {
+    0% {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes aceQuestionFadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
 
 
 

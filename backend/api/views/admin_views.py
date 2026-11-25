@@ -333,6 +333,12 @@ class AdminCourseDirectEditAPIView(APIView):
             course.target_audience = aud
         if 'platform_status' in data and data['platform_status']:
             course.platform_status = data['platform_status']
+        if course.platform_status == 'Published':
+            if not course.approved_by:
+                course.approved_by = request.user
+            if not course.approval_date:
+                from django.utils import timezone
+                course.approval_date = timezone.now()
         if 'image' in data:
             img = data['image']
             if img in [None, "", "null", "undefined", "No File"]:
@@ -469,9 +475,22 @@ class AdminCourseDirectEditAPIView(APIView):
                             quiz_obj = api_models.Quiz.objects.filter(id=int(quiz_id)).first()
                     item_type = 'quiz' if (quiz_obj or itm_type == 'quiz' or itm.get('item_type') == 'quiz') else 'lesson'
 
+                    lm_id = itm.get('learning_module_id')
+                    if not lm_id and isinstance(itm.get('learning_module'), dict):
+                        lm_id = itm.get('learning_module', {}).get('id')
+                    elif not lm_id and itm.get('learning_module') and str(itm.get('learning_module')).isdigit():
+                        lm_id = itm.get('learning_module')
+
                     variant_item = None
                     if itm_id:
                         variant_item = variant.variant_items.filter(variant_item_id=itm_id).first()
+
+                    lm_obj = None
+                    if lm_id and str(lm_id).isdigit():
+                        lm_obj = api_models.LearningModule.objects.filter(id=int(lm_id)).first()
+                    elif variant_item and variant_item.learning_module:
+                        lm_obj = variant_item.learning_module
+
                     if not variant_item:
                         variant_item = api_models.VariantItem.objects.create(
                             variant=variant,
@@ -480,9 +499,9 @@ class AdminCourseDirectEditAPIView(APIView):
                             file=itm_file,
                             duration=itm_duration,
                             preview=itm_preview,
-                            content_type=itm_type,
                             item_type=item_type,
                             quiz=quiz_obj,
+                            learning_module=lm_obj,
                             order=item_idx
                         )
                     else:
@@ -491,9 +510,9 @@ class AdminCourseDirectEditAPIView(APIView):
                         variant_item.file = itm_file
                         variant_item.duration = itm_duration
                         variant_item.preview = itm_preview
-                        variant_item.content_type = itm_type
                         variant_item.item_type = item_type
                         variant_item.quiz = quiz_obj
+                        variant_item.learning_module = lm_obj
                         variant_item.order = item_idx
                         variant_item.save()
 
@@ -522,6 +541,12 @@ class AdminCourseDirectEditAPIView(APIView):
                 pub.file = course.file
                 if 'platform_status' in data:
                     pub.platform_status = course.platform_status
+                if course.platform_status == 'Published' or pub.platform_status == 'Published':
+                    if not pub.approved_by:
+                        pub.approved_by = course.approved_by or request.user
+                    if not pub.approval_date:
+                        from django.utils import timezone
+                        pub.approval_date = course.approval_date or timezone.now()
                 pub.save()
                 if 'tags' in data:
                     pub.tags.set(course.tags.all())
@@ -529,13 +554,27 @@ class AdminCourseDirectEditAPIView(APIView):
                 # Sync features, requirements, outcomes
                 pub.features.all().delete()
                 for feat in course.features.all():
-                    api_models.CourseFeature.objects.create(course=pub, title=feat.title)
+                    api_models.CourseFeature.objects.create(
+                        course=pub,
+                        icon=feat.icon,
+                        text=feat.text,
+                        highlight=feat.highlight,
+                        order=feat.order
+                    )
                 pub.requirements.all().delete()
                 for req in course.requirements.all():
-                    api_models.CourseRequirement.objects.create(course=pub, title=req.title)
+                    api_models.CourseRequirement.objects.create(
+                        course=pub,
+                        requirement=req.requirement,
+                        order=req.order
+                    )
                 pub.learning_outcomes.all().delete()
                 for out in course.learning_outcomes.all():
-                    api_models.CourseLearningOutcome.objects.create(course=pub, title=out.title)
+                    api_models.CourseLearningOutcome.objects.create(
+                        course=pub,
+                        outcome=out.outcome,
+                        order=out.order
+                    )
 
                 # If curriculum was updated, smart-sync to preserve progress
                 if curriculum_updated:
@@ -554,9 +593,43 @@ class AdminCourseDirectEditAPIView(APIView):
             parent.file = course.file
             if 'platform_status' in data:
                 parent.platform_status = course.platform_status
+            if course.platform_status == 'Published' or parent.platform_status == 'Published':
+                if not parent.approved_by:
+                    parent.approved_by = course.approved_by or request.user
+                if not parent.approval_date:
+                    from django.utils import timezone
+                    parent.approval_date = course.approval_date or timezone.now()
             parent.save()
             if 'tags' in data:
                 parent.tags.set(course.tags.all())
+
+            # Sync features, requirements, outcomes back to parent
+            parent.features.all().delete()
+            for feat in course.features.all():
+                api_models.CourseFeature.objects.create(
+                    course=parent,
+                    icon=feat.icon,
+                    text=feat.text,
+                    highlight=feat.highlight,
+                    order=feat.order
+                )
+            parent.requirements.all().delete()
+            for req in course.requirements.all():
+                api_models.CourseRequirement.objects.create(
+                    course=parent,
+                    requirement=req.requirement,
+                    order=req.order
+                )
+            parent.learning_outcomes.all().delete()
+            for out in course.learning_outcomes.all():
+                api_models.CourseLearningOutcome.objects.create(
+                    course=parent,
+                    outcome=out.outcome,
+                    order=out.order
+                )
+
+            if curriculum_updated:
+                course._copy_content_to(parent, clear_target=False)
 
         course.refresh_from_db()
         serializer = api_serializer.CourseEditSerializer(course)

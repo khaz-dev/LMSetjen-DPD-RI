@@ -482,6 +482,12 @@ function CourseReviewTab({ onCountsUpdated }) {
                                                 {formatDate(course.review_submitted_date || course.date)}
                                             </span>
                                         </div>
+                                        {course.approved_by_name && (
+                                            <div className="text-truncate text-muted mt-1" style={{ fontSize: "0.72rem" }} title={`Disetujui oleh: ${course.approved_by_name}`}>
+                                                <i className="fas fa-user-check text-teal me-1"></i>
+                                                Disetujui: <strong className="text-dark">{course.approved_by_name}</strong>
+                                            </div>
+                                        )}
 
                                         {/* Course Title */}
                                         <h5
@@ -640,10 +646,18 @@ function CourseReviewTab({ onCountsUpdated }) {
                                                 </span>
                                             )}
                                             {course.platform_status === "Published" && (
-                                                <span className="badge bg-success text-white">
-                                                    <i className="fas fa-check me-1"></i>
-                                                    Terbit
-                                                </span>
+                                                <div>
+                                                    <span className="badge bg-success text-white">
+                                                        <i className="fas fa-check me-1"></i>
+                                                        Terbit
+                                                    </span>
+                                                    {course.approved_by_name && (
+                                                        <div className="text-muted mt-0.5" style={{ fontSize: "0.72rem" }} title={`Disetujui oleh: ${course.approved_by_name}`}>
+                                                            <i className="fas fa-user-check text-teal me-1"></i>
+                                                            {course.approved_by_name}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
                                             {course.platform_status === "Draft" && (
                                                 <span className="badge bg-secondary text-white">
