@@ -99,15 +99,29 @@ $COMPOSE_BIN up -d frontend
 echo -e "${GREEN}  ✅ Container frontend berhasil di-build ulang dan aktif.${NC}"
 
 # ------------------------------------------------------------------------------
-# 4. SANITY CHECK KESEHATAN API
+# 4. SANITY CHECK KESEHATAN API & AKSES MEDIA THUMBNAIL
 # ------------------------------------------------------------------------------
-echo -e "\n${BLUE}${BOLD}[4/4] Menguji status respons endpoint Tag dan Health API...${NC}"
+echo -e "\n${BLUE}${BOLD}[4/4] Menguji status respons endpoint Tag dan Hak Akses Media...${NC}"
 TAG_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -H "X-Forwarded-Proto: https" "http://127.0.0.1:8001/api/v1/course/tag/" 2>/dev/null || echo "000")
 
 if [ "$TAG_HTTP" = "200" ]; then
     echo -e "${GREEN}  ✅ Endpoint Tag Kursus merespons dengan normal (HTTP 200 OK).${NC}"
 else
     echo -e "${YELLOW}  ℹ️ Status endpoint Tag: HTTP $TAG_HTTP${NC}"
+fi
+
+# Pengujian T-01: Dokumen PDF harus tetap 401 jika tanpa login
+PDF_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -H "X-Forwarded-Proto: https" "http://127.0.0.1:8001/media/course-file/pentest.pdf" 2>/dev/null || echo "000")
+if [ "$PDF_HTTP" = "401" ]; then
+    echo -e "${GREEN}  ✅ Proteksi Dokumen Pentest T-01: Berkas .pdf tanpa login tetap diblokir (HTTP 401).${NC}"
+fi
+
+# Pengujian Gambar: Thumbnail kursus (.png/.jpg) tidak boleh terblokir 401
+IMG_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -H "X-Forwarded-Proto: https" "http://127.0.0.1:8001/media/course-file/test_probe.png" 2>/dev/null || echo "000")
+if [ "$IMG_HTTP" != "401" ]; then
+    echo -e "${GREEN}  ✅ Akses Gambar Kursus: Thumbnail/poster publik tidak diblokir 401 (HTTP $IMG_HTTP - Siap ditampilkan).${NC}"
+else
+    echo -e "${RED}  ❌ Peringatan: Gambar publik masih merespons 401.${NC}"
 fi
 
 echo -e "\n${BOLD}${GREEN}========================================================================${NC}"

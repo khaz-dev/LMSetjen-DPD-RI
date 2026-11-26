@@ -46,11 +46,29 @@ class EnhancedMediaView(View):
         # 🔒 PROTECTED MEDIA ACCESS CONTROL (Mengatasi Temuan Pentest T-01)
         # Berkas dokumen kursus, materi pelatihan, dan file sensitif wajib terautentikasi
         norm_check_path = path.replace('\\', '/').lower()
+
+        # Ekstensi gambar umum (thumbnail kursus, avatar, ikon, poster)
+        PUBLIC_IMAGE_EXTENSIONS = (
+            '.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif', '.ico', '.bmp', '.avif'
+        )
+        # Ekstensi dokumen & arsip sensitif yang wajib diotentikasi (Pentest T-01)
+        SENSITIVE_DOC_EXTENSIONS = (
+            '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', 
+            '.zip', '.rar', '.7z', '.tar', '.gz', '.csv'
+        )
+
+        is_public_image = any(norm_check_path.endswith(ext) for ext in PUBLIC_IMAGE_EXTENSIONS)
+        is_sensitive_doc = any(norm_check_path.endswith(ext) for ext in SENSITIVE_DOC_EXTENSIONS)
+
+        # File terproteksi jika:
+        # 1. Berada di direktori documents/ atau certificates/ (termasuk jika format gambar)
+        # 2. Memiliki ekstensi dokumen/arsip sensitif (.pdf, .docx, .zip, dll)
+        # 3. Berada di course-file/ tetapi BUKAN berkas gambar thumbnail (.png, .jpg, dll)
         is_protected = (
-            norm_check_path.startswith('course-file/') or 
             norm_check_path.startswith('documents/') or
             norm_check_path.startswith('certificates/') or
-            any(norm_check_path.endswith(ext) for ext in ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.zip', '.rar'])
+            is_sensitive_doc or
+            (norm_check_path.startswith('course-file/') and not is_public_image)
         )
 
         if is_protected:
@@ -59,8 +77,9 @@ class EnhancedMediaView(View):
             req_user = getattr(request, 'user', None)
             if req_user and req_user.is_authenticated:
                 is_authenticated = True
-            else:
-                # 2. Cek header Authorization: Bearer <JWT>
+            
+            # 2. Cek header Authorization: Bearer <JWT>
+            if not is_authenticated:
                 auth_header = request.META.get('HTTP_AUTHORIZATION', '')
                 if auth_header.startswith('Bearer '):
                     try:
@@ -72,20 +91,39 @@ class EnhancedMediaView(View):
                             is_authenticated = True
                     except Exception:
                         pass
-                
-                # 3. Cek query parameter ?token= / ?jwt= (untuk browser download / tag viewer)
-                if not is_authenticated:
-                    query_token = request.GET.get('token') or request.GET.get('jwt')
-                    if query_token:
-                        try:
-                            from rest_framework_simplejwt.authentication import JWTAuthentication
-                            jwt_auth = JWTAuthentication()
-                            validated_token = jwt_auth.get_validated_token(query_token)
-                            user = jwt_auth.get_user(validated_token)
-                            if user and user.is_authenticated:
-                                is_authenticated = True
-                        except Exception:
-                            pass
+            
+            # 3. Cek query parameter ?token= / ?jwt= (untuk browser download / tag viewer)
+            if not is_authenticated:
+                query_token = request.GET.get('token') or request.GET.get('jwt')
+                if query_token:
+                    try:
+                        from rest_framework_simplejwt.authentication import JWTAuthentication
+                        jwt_auth = JWTAuthentication()
+                        validated_token = jwt_auth.get_validated_token(query_token)
+                        user = jwt_auth.get_user(validated_token)
+                        if user and user.is_authenticated:
+                            is_authenticated = True
+                    except Exception:
+                        pass
+
+            # 4. Cek cookie browser (access_token / access / jwt / token)
+            if not is_authenticated:
+                cookie_token = (
+                    request.COOKIES.get('access_token') or 
+                    request.COOKIES.get('access') or 
+                    request.COOKIES.get('jwt') or
+                    request.COOKIES.get('token')
+                )
+                if cookie_token:
+                    try:
+                        from rest_framework_simplejwt.authentication import JWTAuthentication
+                        jwt_auth = JWTAuthentication()
+                        validated_token = jwt_auth.get_validated_token(cookie_token)
+                        user = jwt_auth.get_user(validated_token)
+                        if user and user.is_authenticated:
+                            is_authenticated = True
+                    except Exception:
+                        pass
 
             if not is_authenticated:
                 import json
