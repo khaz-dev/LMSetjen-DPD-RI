@@ -105,7 +105,7 @@ services:
       context: .
       dockerfile: ./frontend/Dockerfile.prod
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8001}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
     container_name: lms_frontend
     restart: unless-stopped
@@ -113,7 +113,7 @@ services:
     environment:
       MODE: ${MODE:-development}
       FRONTEND_SITE_URL: ${FRONTEND_SITE_URL:-http://localhost:5174}
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8001}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
       VITE_PORT: 5174
     # 🔒 SECURITY FIX (K-03): Bind frontend port to 127.0.0.1 so it is only reachable via reverse proxy
     ports:
