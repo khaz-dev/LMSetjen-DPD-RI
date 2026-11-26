@@ -4774,7 +4774,12 @@ class StudentNotificationListAPIView(generics.ListAPIView):
         except Exception:
             pass
 
-        return api_models.Notification.objects.filter(user_id=user_id, teacher__isnull=True).order_by('-date')
+        # ✨ K-ROLE-NOTIF: Kecualikan notifikasi khusus Administrator (misal: Telaah Kursus) agar tidak bocor ke akun Peserta
+        admin_only_types = ['Course Under Review']
+        return api_models.Notification.objects.filter(
+            user_id=user_id, 
+            teacher__isnull=True
+        ).exclude(type__in=admin_only_types).order_by('-date')
 
 
 class StudentNotificationDetailAPIView(generics.RetrieveUpdateAPIView):
@@ -4799,5 +4804,11 @@ class StudentNotificationMarkAllReadAPIView(APIView):
     def post(self, request, user_id):
         if not request.user.is_staff and str(request.user.id) != str(user_id):
             return Response({"error": "Akses ditolak"}, status=status.HTTP_403_FORBIDDEN)
-        updated = api_models.Notification.objects.filter(user_id=user_id, teacher__isnull=True, seen=False).update(seen=True)
+        # ✨ K-ROLE-NOTIF: Hanya tandai notifikasi murni Peserta sebagai telah dibaca
+        admin_only_types = ['Course Under Review']
+        updated = api_models.Notification.objects.filter(
+            user_id=user_id, 
+            teacher__isnull=True, 
+            seen=False
+        ).exclude(type__in=admin_only_types).update(seen=True)
         return Response({"success": True, "updated_count": updated}, status=status.HTTP_200_OK)

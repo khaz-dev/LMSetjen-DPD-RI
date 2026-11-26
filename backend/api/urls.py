@@ -19,6 +19,7 @@ urlpatterns = [
     path("user/token/", api_views.MyTokenObtainPairView.as_view()),
     path("user/token/refresh/", TokenRefreshView.as_view()),
     path("user/profile/<user_id>/", api_views.ProfileAPIView.as_view()),
+    path("user/role-notifications/", api_views.UserRoleNotificationCountsAPIView.as_view(), name="user-role-notifications"),
     
     # SSO (Single Sign-On) Endpoints
     path("sso/verify/", api_views.SSOTokenVerifyAPIView.as_view(), name="sso-verify"),

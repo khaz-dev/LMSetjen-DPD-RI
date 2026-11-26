@@ -332,6 +332,33 @@ function CourseDetail() {
 
     const [quizResumeData, setQuizResumeData] = useState(null);
 
+    // ✨ Question Status Palette & Marked ("Ragu-ragu") Questions
+    const [markedQuestions, setMarkedQuestions] = useState([]);
+    const markedQuestionsRef = useRef([]);
+    markedQuestionsRef.current = markedQuestions;
+    const [showQuestionPalette, setShowQuestionPalette] = useState(true);
+
+    const toggleMarkQuestion = (questionId) => {
+        if (!questionId) return;
+        setMarkedQuestions((prev) => {
+            const updated = prev.includes(questionId)
+                ? prev.filter((id) => id !== questionId)
+                : [...prev, questionId];
+            markedQuestionsRef.current = updated;
+            if (isQuizActive && selectedQuiz) {
+                saveQuizProgress(
+                    selectedQuiz,
+                    currentQuizStateRef.current?.answers || quizAnswers,
+                    currentQuestionIndex,
+                    timeRemaining,
+                    quizStartTime,
+                    updated
+                );
+            }
+            return updated;
+        });
+    };
+
     const inlineQuizContainerRef = useRef(null);  // ✨ PHASE 4.225+: Ref for inline quiz container
 
     // ✨ Fullscreen Support untuk Kuis, Pre-Test, dan Post-Test
@@ -3788,6 +3815,8 @@ function CourseDetail() {
             setQuizResult(null);
 
             setIsQuizActive(false);
+            setMarkedQuestions([]);
+            markedQuestionsRef.current = [];
 
 
 
@@ -4485,6 +4514,8 @@ function CourseDetail() {
             setCurrentQuestionIndex(0);
 
             setQuizAnswers({});
+            setMarkedQuestions([]);
+            markedQuestionsRef.current = [];
 
             setTimeRemaining(quiz.questions.length * 60); // 1 minute per question
 
@@ -4627,6 +4658,9 @@ function CourseDetail() {
             setCurrentQuestionIndex(resumeData.currentQuestionIndex);
 
             setQuizAnswers(resumeData.answers);
+            const restoredMarked = Array.isArray(resumeData.markedQuestions) ? resumeData.markedQuestions : [];
+            setMarkedQuestions(restoredMarked);
+            markedQuestionsRef.current = restoredMarked;
 
             setTimeRemaining(resumeData.timeRemaining);
 
@@ -4774,6 +4808,8 @@ function CourseDetail() {
             }
 
             setIsQuizActive(false);
+            setMarkedQuestions([]);
+            markedQuestionsRef.current = [];
 
             const endTime = Date.now();
 
@@ -4889,6 +4925,8 @@ function CourseDetail() {
             });
 
             setIsQuizActive(false);
+            setMarkedQuestions([]);
+            markedQuestionsRef.current = [];
 
         } finally {
             isSubmittingQuizRef.current = false;
@@ -4911,6 +4949,8 @@ function CourseDetail() {
         // For Pre-test and Post-test: score and lock ONLY occur when user clicks "Kirim Kuis"!
         if (selectedQuiz.quiz_type === 'pre_post_test') {
             setIsQuizActive(false);
+            setMarkedQuestions([]);
+            markedQuestionsRef.current = [];
             Toast().fire({
                 icon: "warning",
                 title: "Waktu Pengerjaan Selesai",
@@ -4936,6 +4976,8 @@ function CourseDetail() {
             // Set quiz as inactive
 
             setIsQuizActive(false);
+            setMarkedQuestions([]);
+            markedQuestionsRef.current = [];
 
             const endTime = Date.now();
 
@@ -5078,6 +5120,8 @@ function CourseDetail() {
             });
 
             setIsQuizActive(false);
+            setMarkedQuestions([]);
+            markedQuestionsRef.current = [];
 
         }
 
@@ -5345,7 +5389,7 @@ function CourseDetail() {
 
     // Quiz Resume Functions
 
-    const saveQuizProgress = (quizData, answers, currentIndex, timeLeft, startTime) => {
+    const saveQuizProgress = (quizData, answers, currentIndex, timeLeft, startTime, customMarked = null) => {
 
         // Validate inputs
 
@@ -5370,6 +5414,8 @@ function CourseDetail() {
             quiz: quizData,
 
             answers: answers || {},
+
+            markedQuestions: customMarked !== null ? customMarked : (markedQuestionsRef.current || []),
 
             currentQuestionIndex: currentIndex || 0,
 
@@ -9541,7 +9587,16 @@ function CourseDetail() {
 
                                                                 </div>
 
-                                                                <div className="quiz-header-actions ms-auto ps-2">
+                                                                <div className="quiz-header-actions ms-auto ps-2 d-flex align-items-center gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        className={`btn btn-sm ${showQuestionPalette ? 'btn-primary text-white' : 'btn-outline-primary'} d-flex align-items-center gap-1 shadow-sm quiz-palette-toggle-btn`}
+                                                                        onClick={() => setShowQuestionPalette(prev => !prev)}
+                                                                        title={showQuestionPalette ? "Sembunyikan Nomor Soal" : "Tampilkan Nomor Soal"}
+                                                                    >
+                                                                        <i className="fas fa-th-large"></i>
+                                                                        <span className="d-none d-sm-inline">{showQuestionPalette ? "Tutup Nomor" : "Nomor Soal"}</span>
+                                                                    </button>
                                                                     <button
                                                                         type="button"
                                                                         className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 quiz-fullscreen-toggle-btn shadow-sm"
@@ -9559,7 +9614,9 @@ function CourseDetail() {
 
                                                             {selectedQuiz.questions && selectedQuiz.questions[currentQuestionIndex] && (
 
-                                                                <div className="quiz-question-section">
+                                                                <div className="quiz-active-body">
+
+                                                                    <div className="quiz-question-section">
 
                                                                     <div className="question-text">
 
@@ -9659,11 +9716,47 @@ function CourseDetail() {
 
 
 
+                                                                        {/* Ragu-ragu / Tandai Soal Button */}
+
+                                                                        {(() => {
+
+                                                                            const currentQId = selectedQuiz.questions[currentQuestionIndex]?.question_id;
+
+                                                                            const isCurrentMarked = currentQId && markedQuestions.includes(currentQId);
+
+                                                                            return (
+
+                                                                                <button
+
+                                                                                    type="button"
+
+                                                                                    className={`btn btn-sm quiz-nav-btn quiz-mark-btn ${isCurrentMarked ? 'marked-active' : ''}`}
+
+                                                                                    onClick={() => currentQId && toggleMarkQuestion(currentQId)}
+
+                                                                                    title={isCurrentMarked ? "Hapus tanda ragu-ragu" : "Tandai soal ini sebagai ragu-ragu"}
+
+                                                                                >
+
+                                                                                    <i className={`fas fa-flag ${isCurrentMarked ? 'text-white' : 'text-warning'} me-1`}></i>
+
+                                                                                    <span>{isCurrentMarked ? "Ragu-ragu (Ditandai)" : "Ragu-ragu"}</span>
+
+                                                                                </button>
+
+                                                                            );
+
+                                                                        })()}
+
+
+
                                                                         {currentQuestionIndex < (selectedQuiz.questions?.length || 0) - 1 ? (
 
                                                                             <button
 
-                                                                                className="btn btn-sm btn-primary"
+                                                                                type="button"
+
+                                                                                className="btn btn-sm btn-primary quiz-nav-btn next-btn"
 
                                                                                 onClick={() => {
 
@@ -9693,7 +9786,9 @@ function CourseDetail() {
 
                                                                             <button
 
-                                                                                className="btn btn-sm btn-success"
+                                                                                type="button"
+
+                                                                                className="btn btn-sm btn-success quiz-nav-btn submit-btn"
 
                                                                                 onClick={() => submitQuiz()}
 
@@ -9711,7 +9806,159 @@ function CourseDetail() {
 
                                                                 </div>
 
-                                                            )}
+
+
+                                                                {/* Question Status Palette / Sidebar */}
+
+                                                                {showQuestionPalette && (
+
+                                                                    <aside className="quiz-question-palette" aria-label="Navigasi Nomor Soal">
+
+                                                                        <div className="quiz-palette-header">
+
+                                                                            <h6 className="quiz-palette-title">
+
+                                                                                <i className="fas fa-th-large text-primary"></i>
+
+                                                                                <span>Nomor Soal</span>
+
+                                                                            </h6>
+
+                                                                            <span className="badge bg-light text-dark border">
+
+                                                                                {selectedQuiz.questions?.filter(q => quizAnswers[q.question_id] !== undefined && quizAnswers[q.question_id] !== null && quizAnswers[q.question_id] !== "").length} / {selectedQuiz.questions?.length || 0} Terjawab
+
+                                                                            </span>
+
+                                                                        </div>
+
+
+
+                                                                        <div className="quiz-palette-legend">
+
+                                                                            <div className="quiz-legend-item" title="Sudah dijawab">
+
+                                                                                <span className="quiz-legend-box answered"><i className="fas fa-check"></i></span>
+
+                                                                                <span>Sudah</span>
+
+                                                                            </div>
+
+                                                                            <div className="quiz-legend-item" title="Ragu-ragu">
+
+                                                                                <span className="quiz-legend-box marked"><i className="fas fa-flag"></i></span>
+
+                                                                                <span>Ragu</span>
+
+                                                                            </div>
+
+                                                                            <div className="quiz-legend-item" title="Belum dijawab">
+
+                                                                                <span className="quiz-legend-box unanswered"></span>
+
+                                                                                <span>Belum</span>
+
+                                                                            </div>
+
+                                                                        </div>
+
+
+
+                                                                        <div className="quiz-palette-grid">
+
+                                                                            {selectedQuiz.questions?.map((q, idx) => {
+
+                                                                                const isAnswered = quizAnswers[q.question_id] !== undefined && quizAnswers[q.question_id] !== null && quizAnswers[q.question_id] !== "";
+
+                                                                                const isMarked = markedQuestions.includes(q.question_id);
+
+                                                                                const isCurrent = currentQuestionIndex === idx;
+
+
+
+                                                                                let statusClass = "unanswered";
+
+                                                                                if (isMarked) {
+
+                                                                                    statusClass = "marked";
+
+                                                                                } else if (isAnswered) {
+
+                                                                                    statusClass = "answered";
+
+                                                                                }
+
+
+
+                                                                                return (
+
+                                                                                    <button
+
+                                                                                        key={q.question_id || idx}
+
+                                                                                        type="button"
+
+                                                                                        className={`quiz-palette-box ${statusClass} ${isCurrent ? 'current' : ''}`}
+
+                                                                                        onClick={() => {
+
+                                                                                            setCurrentQuestionIndex(idx);
+
+                                                                                            currentQuizStateRef.current.questionIndex = idx;
+
+                                                                                            if (isQuizActive && selectedQuiz) {
+
+                                                                                                saveQuizProgress(selectedQuiz, quizAnswers, idx, timeRemaining, quizStartTime);
+
+                                                                                            }
+
+                                                                                        }}
+
+                                                                                        title={`Soal ${idx + 1}: ${isMarked ? 'Ragu-ragu' : isAnswered ? 'Sudah Dijawab' : 'Belum Dijawab'}${isCurrent ? ' (Sedang Dikerjakan)' : ''}`}
+
+                                                                                        aria-label={`Pindah ke soal ${idx + 1}`}
+
+                                                                                    >
+
+                                                                                        <span className="quiz-palette-box-num">{idx + 1}</span>
+
+                                                                                        {isMarked ? (
+
+                                                                                            <i className="fas fa-flag quiz-palette-box-icon"></i>
+
+                                                                                        ) : isAnswered ? (
+
+                                                                                            <i className="fas fa-check quiz-palette-box-icon"></i>
+
+                                                                                        ) : null}
+
+                                                                                    </button>
+
+                                                                                );
+
+                                                                            })}
+
+                                                                        </div>
+
+
+
+                                                                        <div className="quiz-palette-footer text-center">
+
+                                                                            <small className="text-muted">
+
+                                                                                Klik nomor untuk berpindah soal
+
+                                                                            </small>
+
+                                                                        </div>
+
+                                                                    </aside>
+
+                                                                )}
+
+                                                            </div>
+
+                                                        )}
 
                                                         </div>
 

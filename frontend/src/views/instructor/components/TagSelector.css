@@ -1,6 +1,10 @@
-/* ✨ PHASE X.2: Searchable Tag Selector Component Styling */
+/* Searchable Tag Selector Component Styling */
 
 .tag-selector-container {
+    width: 100%;
+}
+
+.tag-selector-box-wrapper {
     position: relative;
     width: 100%;
 }
@@ -9,17 +13,22 @@
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
     background-color: #fff;
-    padding: 8px;
+    padding: 8px 12px;
     min-height: 44px;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    cursor: text;
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
+.tag-selector-wrapper:hover {
+    border-color: #b0bec5;
+}
+
 .tag-selector-wrapper:focus-within {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: #0f766e;
+    box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.2);
 }
 
 /* Badge Display for Selected Tags */
@@ -88,10 +97,11 @@
     flex: 1;
     border: none;
     outline: none;
-    padding: 6px 8px;
+    padding: 6px 4px;
     font-size: 13px;
-    min-height: 32px;
+    min-height: 30px;
     background-color: transparent;
+    cursor: text;
 }
 
 .tag-selector-input::placeholder {
@@ -111,7 +121,7 @@
 }
 
 .tag-selector-toggle:hover {
-    color: #495057;
+    color: #0f766e;
 }
 
 .tag-selector-toggle.open {
@@ -119,22 +129,21 @@
     transform: rotate(180deg);
 }
 
-/* Dropdown Menu - Fixed positioning always below container */
+/* Dropdown Menu - Absolutely positioned below the box wrapper */
 .tag-selector-dropdown {
-    position: fixed;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    width: 100%;
     background-color: white;
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 10000;
-    max-height: 300px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 1050;
+    max-height: 280px;
     overflow-y: auto;
     overflow-x: hidden;
-    min-width: 250px;
-    /* CRITICAL: Lock these values - no changes on hover/pointer */
-    will-change: auto;
-    contain: layout style paint;
-    scrollbar-gutter: stable;
 }
 
 .tag-selector-list {
@@ -146,7 +155,7 @@
 .tag-selector-item {
     display: flex;
     align-items: center;
-    padding: 10px 12px;
+    padding: 10px 14px;
     cursor: pointer;
     border-bottom: 1px solid #f0f0f0;
     transition: background-color 0.15s ease;
@@ -157,11 +166,8 @@
 }
 
 .tag-selector-item:hover {
-    background-color: #f8f9fa;
-}
-
-.tag-selector-item.selected {
-    background-color: #e8f4ff;
+    background-color: #f0fdfa;
+    color: #0f766e;
 }
 
 .tag-selector-checkbox {
@@ -178,6 +184,11 @@
     color: #212529;
     user-select: none;
     cursor: pointer;
+}
+
+.tag-selector-item:hover .tag-selector-label {
+    color: #0f766e;
+    font-weight: 500;
 }
 
 .tag-course-count {
@@ -211,11 +222,11 @@
 
     .tag-selector-input {
         font-size: 12px;
-        min-height: 30px;
+        min-height: 28px;
     }
 
     .tag-selector-dropdown {
-        max-height: 250px;
+        max-height: 220px;
     }
 }
 

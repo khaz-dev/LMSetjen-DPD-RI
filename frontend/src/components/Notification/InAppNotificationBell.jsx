@@ -163,7 +163,9 @@ function InAppNotificationBell() {
             } else {
                 // Notifikasi murni Siswa
                 res = await useAxios.get(`student/noti-list/${userId}/`);
-                const data = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+                const rawData = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+                // Safeguard ketat: pastikan notifikasi khusus Administrator (misal: Telaah Kursus) tidak muncul di tampilan Peserta
+                const data = rawData.filter(n => n.type !== 'Course Under Review');
                 setNotifications(data);
                 setUnreadCount(data.filter(n => !n.seen).length);
             }

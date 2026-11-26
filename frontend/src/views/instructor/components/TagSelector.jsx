@@ -1,17 +1,18 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './TagSelector.css';
 
 /**
- * ✨ PHASE X.2: Searchable Tag Selector Component
+ * ✨ Searchable Tag Selector Component
  * 
  * Features:
  * - Displays selected tags as removable badges
  * - Dropdown with searchable tag list
- * - Checkbox indicators for selected tags
- * - Clean Bootstrap styling
- * - No external dependencies (pure React + CSS)
+ * - Wrapper click-to-focus and open dropdown
+ * - Clean Bootstrap & LMS Teal styling
+ * - Reliable CSS absolute positioning (no jumping or scroll-lag)
  * 
  * Props:
+ * - id: Optional id for input field (default: "tags-field")
  * - tags: Array of all available tags [{id, title, ...}]
  * - selectedTags: Array of currently selected tags [{id, title, ...}]
  * - onChange: Callback function called with updated tags array
@@ -19,6 +20,7 @@ import './TagSelector.css';
  * - helpText: Optional help text to display below component
  */
 const TagSelector = ({ 
+    id = "tags-field",
     tags = [], 
     selectedTags = [], 
     onChange, 
@@ -27,102 +29,21 @@ const TagSelector = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, flipAbove: false });
     const containerRef = useRef(null);
     const inputRef = useRef(null);
-    const positionLockedRef = useRef(false); // Prevent recalculation on hover/pointer events
-    const resizeTimeoutRef = useRef(null);
 
-    // ✨ PHASE X.2.1: Calculate dropdown position - ALWAYS below container
-    const calculateDropdownPosition = () => {
-        if (!containerRef.current) return;
-
-        const rect = containerRef.current.getBoundingClientRect();
-        const gap = 4; // 4px gap between container and dropdown
-        
-        // Position dropdown ALWAYS directly below the container
-        const top = rect.bottom + gap;
-        
-        // Ensure dropdown doesn't go off-screen horizontally
-        // ⚠️ CRITICAL: Use exact width to prevent left/right shifts
-        let left = rect.left;
-        const dropdownWidth = rect.width;
-        const rightEdge = left + dropdownWidth;
-        
-        if (rightEdge > window.innerWidth) {
-            left = window.innerWidth - dropdownWidth - 10;
-        }
-        if (left < 0) {
-            left = 10;
-        }
-
-        return {
-            top,
-            left,
-            width: dropdownWidth, // Use exact width - don't recalculate on viewport
-            flipAbove: false  // Never flip - always show below
-        };
-    };
-
-    // ✨ PHASE 7.2 FIX: Lock position immediately on open - prevent recalculation on pointer events
-    // ✨ PHASE 7.5 FIX: ADD SCROLL LISTENER to keep dropdown stuck below container when scrolling
-    useEffect(() => {
-        if (isOpen) {
-            // Calculate position ONCE when opening
-            const newPosition = calculateDropdownPosition();
-            setDropdownPosition(newPosition);
-            positionLockedRef.current = true;
-            
-            // ✨ CRITICAL: Clear any pending resize handler
-            if (resizeTimeoutRef.current) {
-                clearTimeout(resizeTimeoutRef.current);
-            }
-            
-            // ✨ PHASE 7.5 FIX: CRITICAL - Handle scroll events to keep dropdown anchored
-            // When user scrolls, container moves through viewport, so getBoundingClientRect() changes
-            // We MUST recalculate position on scroll to keep dropdown below it
-            const handleScroll = () => {
-                if (positionLockedRef.current && containerRef.current) {
-                    const updatedPosition = calculateDropdownPosition();
-                    setDropdownPosition(updatedPosition);
-                }
-            };
-            
-            // Handle window resize
-            const handleResize = () => {
-                if (resizeTimeoutRef.current) {
-                    clearTimeout(resizeTimeoutRef.current);
-                }
-                
-                resizeTimeoutRef.current = setTimeout(() => {
-                    if (positionLockedRef.current && containerRef.current) {
-                        const updatedPosition = calculateDropdownPosition();
-                        setDropdownPosition(updatedPosition);
-                    }
-                }, 150);
-            };
-            
-            // Add BOTH scroll AND resize listeners
-            window.addEventListener('scroll', handleScroll, { passive: true });
-            window.addEventListener('resize', handleResize);
-            
-            return () => {
-                window.removeEventListener('scroll', handleScroll);
-                window.removeEventListener('resize', handleResize);
-                if (resizeTimeoutRef.current) {
-                    clearTimeout(resizeTimeoutRef.current);
-                }
-            };
-        } else {
-            // When dropdown closes, unlock position for next open
-            positionLockedRef.current = false;
-        }
-    }, [isOpen]);
+    // Check if a tag is selected (handles both tag object and raw ID)
+    const isTagSelected = useCallback((tagId) => {
+        return (Array.isArray(selectedTags) ? selectedTags : []).some(tag => {
+            const currentId = tag?.id !== undefined ? tag.id : tag;
+            return currentId === tagId;
+        });
+    }, [selectedTags]);
 
     // Filter tags based on search term and exclude already selected tags
     const filteredTags = (Array.isArray(tags) ? tags : []).filter(tag => {
-        if (!tag || !tag.id) return false;
-        const isAlreadySelected = (Array.isArray(selectedTags) ? selectedTags : []).some(st => (st?.id || st) === tag.id);
+        if (!tag || tag.id === undefined) return false;
+        const isAlreadySelected = isTagSelected(tag.id);
         const titleStr = String(tag.title || tag.name || '').toLowerCase();
         const matchesSearch = titleStr.includes((searchTerm || '').toLowerCase());
         return matchesSearch && !isAlreadySelected;
@@ -130,16 +51,46 @@ const TagSelector = ({
 
     // Handle tag selection
     const handleSelectTag = (tag) => {
-        const updatedTags = [...selectedTags, tag];
-        onChange(updatedTags);
+        const currentList = Array.isArray(selectedTags) ? selectedTags : [];
+        const updatedTags = [...currentList, tag];
+        if (typeof onChange === 'function') {
+            onChange(updatedTags);
+        }
         setSearchTerm('');
         inputRef.current?.focus();
     };
 
     // Handle tag removal
     const handleRemoveTag = (tagId) => {
-        const updatedTags = selectedTags.filter(tag => tag.id !== tagId);
-        onChange(updatedTags);
+        const currentList = Array.isArray(selectedTags) ? selectedTags : [];
+        const updatedTags = currentList.filter(tag => {
+            const currentId = tag?.id !== undefined ? tag.id : tag;
+            return currentId !== tagId;
+        });
+        if (typeof onChange === 'function') {
+            onChange(updatedTags);
+        }
+    };
+
+    // Handle click on wrapper to focus input and open dropdown
+    const handleWrapperClick = (e) => {
+        // Prevent action if clicking on remove button or toggle button
+        if (e.target.closest('.tag-remove-btn') || e.target.closest('.tag-selector-toggle')) {
+            return;
+        }
+        inputRef.current?.focus();
+        setIsOpen(true);
+    };
+
+    // Handle keyboard events (Escape to close, Backspace to remove last tag)
+    const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            setIsOpen(false);
+        } else if (e.key === 'Backspace' && !searchTerm && selectedTags.length > 0) {
+            const lastTag = selectedTags[selectedTags.length - 1];
+            const lastTagId = lastTag?.id !== undefined ? lastTag.id : lastTag;
+            handleRemoveTag(lastTagId);
+        }
     };
 
     // Close dropdown when clicking outside
@@ -154,81 +105,93 @@ const TagSelector = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Check if a tag is selected
-    const isTagSelected = (tagId) => selectedTags.some(tag => tag.id === tagId);
-
     return (
         <div className="tag-selector-container" ref={containerRef}>
-            <div className="tag-selector-wrapper">
-                {/* Selected Tags Display */}
-                {selectedTags.length > 0 && (
-                    <div className="tag-selector-badges">
-                        {selectedTags.map(tag => (
-                            <span key={tag.id} className="tag-badge">
-                                <span className="tag-title">{tag.title}</span>
-                                <button
-                                    type="button"
-                                    className="tag-remove-btn"
-                                    onClick={() => handleRemoveTag(tag.id)}
-                                    aria-label={`Remove ${tag.title}`}
-                                >
-                                    <i className="fas fa-times"></i>
-                                </button>
-                            </span>
-                        ))}
-                    </div>
-                )}
+            <div className="tag-selector-box-wrapper">
+                <div 
+                    className="tag-selector-wrapper"
+                    onClick={handleWrapperClick}
+                    role="combobox"
+                    aria-expanded={isOpen}
+                    aria-haspopup="listbox"
+                >
+                    {/* Selected Tags Display */}
+                    {Array.isArray(selectedTags) && selectedTags.length > 0 && (
+                        <div className="tag-selector-badges">
+                            {selectedTags.map(tag => {
+                                const tagId = tag?.id !== undefined ? tag.id : tag;
+                                const tagTitle = tag?.title || tag?.name || String(tagId);
+                                return (
+                                    <span key={tagId} className="tag-badge">
+                                        <span className="tag-title">{tagTitle}</span>
+                                        <button
+                                            type="button"
+                                            className="tag-remove-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRemoveTag(tagId);
+                                            }}
+                                            aria-label={`Remove ${tagTitle}`}
+                                        >
+                                            <i className="fas fa-times"></i>
+                                        </button>
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    )}
 
-                {/* Search Input and Dropdown Trigger */}
-                <div className="tag-selector-input-wrapper">
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        className="tag-selector-input"
-                        placeholder={placeholder}
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            setIsOpen(true);
-                        }}
-                        onFocus={() => setIsOpen(true)}
-                        aria-haspopup="listbox"
-                        aria-expanded={isOpen}
-                    />
-                    <button
-                        type="button"
-                        className={`tag-selector-toggle ${isOpen ? 'open' : ''}`}
-                        onClick={() => setIsOpen(!isOpen)}
-                        aria-label="Toggle tag dropdown"
-                    >
-                        <i className="fas fa-chevron-down"></i>
-                    </button>
+                    {/* Search Input and Dropdown Trigger */}
+                    <div className="tag-selector-input-wrapper">
+                        <input
+                            ref={inputRef}
+                            id={id}
+                            type="text"
+                            className="tag-selector-input"
+                            placeholder={selectedTags.length === 0 ? placeholder : "Tambah tag lagi..."}
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setIsOpen(true);
+                            }}
+                            onFocus={() => setIsOpen(true)}
+                            onClick={() => setIsOpen(true)}
+                            onKeyDown={handleKeyDown}
+                            autoComplete="off"
+                        />
+                        <button
+                            type="button"
+                            className={`tag-selector-toggle ${isOpen ? 'open' : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsOpen(prev => {
+                                    if (!prev) {
+                                        inputRef.current?.focus();
+                                    }
+                                    return !prev;
+                                });
+                            }}
+                            aria-label="Toggle tag dropdown"
+                        >
+                            <i className="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Dropdown Menu */}
                 {isOpen && (
-                    <div 
-                        className="tag-selector-dropdown"
-                        style={dropdownPosition?.top ? {
-                            top: `${dropdownPosition.top}px`,
-                            left: `${dropdownPosition.left}px`,
-                            width: `${dropdownPosition.width}px`
-                        } : {}}
-                    >
+                    <div className="tag-selector-dropdown" role="listbox">
                         {filteredTags.length > 0 ? (
                             <ul className="tag-selector-list">
                                 {filteredTags.map(tag => (
                                     <li
                                         key={tag.id}
-                                        className={`tag-selector-item ${isTagSelected(tag.id) ? 'selected' : ''}`}
+                                        className="tag-selector-item"
                                         onClick={() => handleSelectTag(tag)}
+                                        role="option"
+                                        aria-selected={false}
                                     >
-                                        <input
-                                            type="checkbox"
-                                            checked={isTagSelected(tag.id)}
-                                            onChange={() => handleSelectTag(tag)}
-                                            className="tag-selector-checkbox"
-                                        />
+                                        <i className="fas fa-tag me-2 text-muted" style={{ fontSize: "12px" }}></i>
                                         <span className="tag-selector-label">{tag.title}</span>
                                         {tag.course_count !== undefined && (
                                             <span className="tag-course-count">
@@ -241,6 +204,10 @@ const TagSelector = ({
                         ) : searchTerm ? (
                             <div className="tag-selector-empty">
                                 Tidak ada tag yang cocok dengan "{searchTerm}"
+                            </div>
+                        ) : tags.length === 0 ? (
+                            <div className="tag-selector-empty">
+                                Belum ada tag yang tersedia
                             </div>
                         ) : (
                             <div className="tag-selector-empty">

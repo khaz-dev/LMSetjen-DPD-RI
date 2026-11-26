@@ -1013,6 +1013,90 @@ class CompleteOnboardingAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class UserRoleNotificationCountsAPIView(APIView):
+    """
+    ✨ ROLE-NOTIF: Mengembalikan hitungan notifikasi aktif / belum dibaca
+    untuk setiap peran yang dimiliki pengguna yang sedang login.
+    Digunakan oleh indikator peran (RoleIndicator / Ubah Peran dropdown).
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        available_roles = (
+            user.get_available_boolean_roles()
+            if hasattr(user, 'get_available_boolean_roles')
+            else ['student']
+        )
+
+        counts = {
+            'student': 0,
+            'instructor': 0,
+            'teacher': 0,
+            'admin': 0,
+        }
+
+        # 1. Notifikasi Siswa / Peserta (hanya notifikasi siswa murni yang belum dibaca)
+        if 'student' in available_roles:
+            counts['student'] = api_models.Notification.objects.filter(
+                user=user,
+                teacher__isnull=True,
+                seen=False
+            ).exclude(type__in=['Course Under Review']).count()
+
+        # 2. Notifikasi Instruktur / Pengajar (notifikasi pengajar yang belum dibaca)
+        if 'instructor' in available_roles or 'teacher' in available_roles:
+            teacher = api_models.Teacher.objects.filter(user=user).first()
+            if teacher:
+                inst_count = api_models.Notification.objects.filter(
+                    teacher=teacher,
+                    seen=False
+                ).count()
+                counts['instructor'] = inst_count
+                counts['teacher'] = inst_count
+
+        # 3. Notifikasi Administrator (Tugas moderasi / review / telaah kursus yang menunggu aksi)
+        is_admin_user = (
+            getattr(user, 'is_admin', False) or
+            getattr(user, 'role', None) == 'admin' or
+            (hasattr(user, 'has_admin_role') and user.has_admin_role()) or
+            user.is_superuser or
+            user.is_staff
+        )
+        if is_admin_user:
+            try:
+                pending_courses = api_models.Course.objects.filter(
+                    is_published_version=False,
+                    platform_status='Review'
+                ).count()
+            except Exception:
+                pending_courses = 0
+
+            try:
+                pending_instructor_requests = api_models.InstructorRequest.objects.filter(
+                    status='PENDING'
+                ).count()
+            except Exception:
+                pending_instructor_requests = 0
+
+            try:
+                pending_reports = api_models.ReviewAbuse.objects.filter(
+                    status='pending'
+                ).count()
+            except Exception:
+                pending_reports = 0
+
+            counts['admin'] = pending_courses + pending_instructor_requests + pending_reports
+
+        return Response({
+            'success': True,
+            'counts': counts,
+            'total': counts['student'] + counts['instructor'] + counts['admin']
+        }, status=status.HTTP_200_OK)
+
+
+
 
 
 

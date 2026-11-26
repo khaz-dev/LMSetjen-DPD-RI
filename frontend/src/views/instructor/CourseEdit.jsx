@@ -1271,6 +1271,7 @@ function CourseEdit() {
                                                 </label>
                                                 {/* ✨ PHASE X.2: NEW - Searchable tag selector with visual improvements */}
                                                 <TagSelector
+                                                    id="tags-field"
                                                     tags={Array.isArray(tags) ? tags : []}
                                                     selectedTags={Array.isArray(courseData?.tags) ? courseData.tags : []}
                                                     onChange={(selectedTags) => {

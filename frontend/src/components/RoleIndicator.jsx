@@ -78,6 +78,49 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
     }
   }, [isDropdownOpen]);
 
+  // ✨ ROLE-NOTIF: Hitungan notifikasi aktif / belum dibaca untuk masing-masing peran
+  const [roleNotifCounts, setRoleNotifCounts] = useState({
+    student: 0,
+    instructor: 0,
+    teacher: 0,
+    admin: 0
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchRoleNotifCounts = async () => {
+      try {
+        const res = await useAxios.get('user/role-notifications/');
+        if (isMounted && res.data?.success && res.data?.counts) {
+          setRoleNotifCounts(res.data.counts);
+        }
+      } catch (err) {
+        // Silent fail jika belum login / unauthorized
+        console.debug('Failed to fetch role notifications count:', err);
+      }
+    };
+
+    fetchRoleNotifCounts();
+
+    const handleRefresh = () => {
+      fetchRoleNotifCounts();
+    };
+
+    window.addEventListener('notificationUpdated', handleRefresh);
+    window.addEventListener('refreshNotifications', handleRefresh);
+    window.addEventListener('focus', handleRefresh);
+
+    const interval = setInterval(fetchRoleNotifCounts, 45000);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('notificationUpdated', handleRefresh);
+      window.removeEventListener('refreshNotifications', handleRefresh);
+      window.removeEventListener('focus', handleRefresh);
+      clearInterval(interval);
+    };
+  }, []);
+
   const normalizeRole = (role) => {
     if (!role) return '';
     const r = role.toLowerCase().trim();
@@ -87,6 +130,20 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
   const isRoleActive = (role) => {
     return normalizeRole(role) === normalizeRole(currentRole);
   };
+
+  const getRoleNotificationCount = (role) => {
+    if (!role) return 0;
+    const r = role.toLowerCase().trim();
+    if (r === 'teacher' || r === 'instructor') {
+      return roleNotifCounts.instructor || roleNotifCounts.teacher || 0;
+    }
+    return roleNotifCounts[r] || 0;
+  };
+
+  const hasOtherRoleNotifications = (availableRoles || []).some(role => {
+    if (isRoleActive(role)) return false;
+    return getRoleNotificationCount(role) > 0;
+  });
 
   // Handle role switch - changes role first, then navigates
   const handleRoleSwitch = async (role) => {
@@ -172,14 +229,17 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
     return (
       <div className="role-indicator compact" ref={dropdownRef}>
         <button
-          className={`role-badge-compact ${getCurrentRoleBadgeColor()}`}
+          className={`role-badge-compact ${getCurrentRoleBadgeColor()} ${hasOtherRoleNotifications ? 'has-other-notif' : ''}`}
           type="button"
           onClick={() => (availableRoles?.length || 0) > 1 && setIsDropdownOpen(!isDropdownOpen)}
-          title={`Peran saat ini: ${getCurrentRoleLabel()}`}
+          title={`Peran saat ini: ${getCurrentRoleLabel()}${hasOtherRoleNotifications ? ' (Ada notifikasi di peran lain)' : ''}`}
           disabled={isSwitching}
         >
           <i className={`${getCurrentRoleIcon()} me-1`}></i>
           <span>{getCurrentRoleLabel()}</span>
+          {hasOtherRoleNotifications && (
+            <span className="role-compact-pulse-dot" title="Ada notifikasi aktif di peran lain"></span>
+          )}
           {(availableRoles?.length || 0) > 1 && (
             <i className={`fas fa-chevron-down ms-1 role-chevron ${isDropdownOpen ? 'rotate' : ''}`}></i>
           )}
@@ -192,23 +252,37 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
               <span>Ubah Peran</span>
             </div>
             <div className={isAdmin ? "admin-role-dropdown-divider" : "role-dropdown-divider"}></div>
-            {availableRoles?.map((role) => (
-              <button
-                key={role}
-                className={`${isAdmin ? "admin-role-dropdown-item" : "role-dropdown-item"} ${isRoleActive(role) ? 'active' : ''} ${isSwitching ? 'disabled' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRoleSwitch(role);
-                }}
-                disabled={isSwitching}
-              >
-                <i className={`${roleIcons[role?.toLowerCase()] || 'fas fa-user'} me-2`}></i>
-                <span className={isAdmin ? "admin-role-label" : "role-label"}>{roleLabels[role?.toLowerCase()] || role}</span>
-                {isRoleActive(role) && (
-                  <i className="fas fa-check-circle ms-auto text-success role-active-check"></i>
-                )}
-              </button>
-            ))}
+            {availableRoles?.map((role) => {
+              const notifCount = getRoleNotificationCount(role);
+              const isActive = isRoleActive(role);
+              return (
+                <button
+                  key={role}
+                  className={`${isAdmin ? "admin-role-dropdown-item" : "role-dropdown-item"} ${isActive ? 'active' : ''} ${isSwitching ? 'disabled' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRoleSwitch(role);
+                  }}
+                  disabled={isSwitching}
+                >
+                  <i className={`${roleIcons[role?.toLowerCase()] || 'fas fa-user'} me-2`}></i>
+                  <span className={isAdmin ? "admin-role-label" : "role-label"}>
+                    {roleLabels[role?.toLowerCase()] || role}
+                  </span>
+                  {notifCount > 0 && (
+                    <span 
+                      className={`role-notif-pill ${isActive ? 'active-role-pill' : ''}`}
+                      title={`${notifCount} notifikasi aktif`}
+                    >
+                      {notifCount > 99 ? '99+' : notifCount}
+                    </span>
+                  )}
+                  {isActive && (
+                    <i className="fas fa-check-circle ms-auto text-success role-active-check"></i>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -230,6 +304,9 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
             <span className="role-label-small">Peran Saat Ini</span>
             <span className="role-name">{getCurrentRoleLabel()}</span>
           </div>
+          {hasOtherRoleNotifications && (
+            <span className="role-compact-pulse-dot ms-2" title="Ada notifikasi aktif di peran lain"></span>
+          )}
           {(availableRoles?.length || 0) > 1 && (
             <i className={`fas fa-chevron-down role-chevron ${isDropdownOpen ? 'rotate' : ''}`}></i>
           )}
@@ -242,26 +319,40 @@ const RoleIndicator = ({ compact = false, variant = 'light', isAdmin = false }) 
               <span>Ubah Peran</span>
             </div>
             <div className="role-dropdown-divider"></div>
-            {availableRoles?.map((role) => (
-              <button
-                key={role}
-                className={`role-dropdown-item ${isRoleActive(role) ? 'active' : ''} ${isSwitching ? 'disabled' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRoleSwitch(role);
-                }}
-                disabled={isSwitching}
-              >
-                <i className={`${roleIcons[role?.toLowerCase()] || 'fas fa-user'} me-2`}></i>
-                <span className="role-label">{roleLabels[role?.toLowerCase()] || role}</span>
-                <span className="role-description">
-                  {isRoleActive(role) ? 'Peran sedang aktif' : `Beralih ke peran ${roleLabels[role?.toLowerCase()] || role}`}
-                </span>
-                {isRoleActive(role) && (
-                  <i className="fas fa-check-circle ms-auto text-success role-active-check"></i>
-                )}
-              </button>
-            ))}
+            {availableRoles?.map((role) => {
+              const notifCount = getRoleNotificationCount(role);
+              const isActive = isRoleActive(role);
+              return (
+                <button
+                  key={role}
+                  className={`role-dropdown-item ${isActive ? 'active' : ''} ${isSwitching ? 'disabled' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRoleSwitch(role);
+                  }}
+                  disabled={isSwitching}
+                >
+                  <i className={`${roleIcons[role?.toLowerCase()] || 'fas fa-user'} me-2`}></i>
+                  <div className="role-dropdown-info">
+                    <span className="role-label">{roleLabels[role?.toLowerCase()] || role}</span>
+                    <span className="role-description">
+                      {isActive ? 'Peran sedang aktif' : `Beralih ke peran ${roleLabels[role?.toLowerCase()] || role}`}
+                    </span>
+                  </div>
+                  {notifCount > 0 && (
+                    <span 
+                      className={`role-notif-pill ${isActive ? 'active-role-pill' : ''}`}
+                      title={`${notifCount} notifikasi aktif`}
+                    >
+                      {notifCount > 99 ? '99+' : notifCount}
+                    </span>
+                  )}
+                  {isActive && (
+                    <i className="fas fa-check-circle ms-auto text-success role-active-check"></i>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
