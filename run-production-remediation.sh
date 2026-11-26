@@ -45,15 +45,29 @@ echo -e "${BLUE}${BOLD}==> Memulai proses eksekusi remediasi pentest... (Timesta
 # 1. TUTUP PORT FTP 21 & KERASKAN FIREWALL UFW (Temuan I-01)
 # ------------------------------------------------------------------------------
 echo -e "${CYAN}${BOLD}[LANGKAH 1/7] Menutup Port FTP 21 dan Mengonfigurasi UFW Firewall (I-01)...${NC}"
-if systemctl is-active --quiet pure-ftpd 2>/dev/null; then
-    systemctl stop pure-ftpd
-    systemctl disable pure-ftpd
-    echo -e "${GREEN}  ✅ Layanan pure-ftpd dinonaktifkan permanen.${NC}"
+
+# Hentikan FTP melalui systemctl & init.d (Mendukung OS standar maupun aaPanel / BT-Panel)
+for ftp_service in pure-ftpd vsftpd; do
+    if systemctl is-active --quiet "$ftp_service" 2>/dev/null; then
+        systemctl stop "$ftp_service" 2>/dev/null || true
+        systemctl disable "$ftp_service" 2>/dev/null || true
+    fi
+done
+
+# Matikan daemon pure-ftpd jika dikelola aaPanel (/etc/init.d/pure-ftpd)
+if [ -f "/etc/init.d/pure-ftpd" ]; then
+    /etc/init.d/pure-ftpd stop >/dev/null 2>&1 || true
+    chmod -x /etc/init.d/pure-ftpd 2>/dev/null || true
 fi
-if systemctl is-active --quiet vsftpd 2>/dev/null; then
-    systemctl stop vsftpd
-    systemctl disable vsftpd
-    echo -e "${GREEN}  ✅ Layanan vsftpd dinonaktifkan permanen.${NC}"
+
+# Pastikan proses pure-ftpd dimatikan paksa jika masih menggantung
+pkill -9 pure-ftpd 2>/dev/null || true
+pkill -9 vsftpd 2>/dev/null || true
+
+# Blokir port 21 via iptables & UFW
+if command -v iptables >/dev/null 2>&1; then
+    iptables -C INPUT -p tcp --dport 21 -j DROP 2>/dev/null || \
+    iptables -I INPUT 1 -p tcp --dport 21 -j DROP 2>/dev/null || true
 fi
 
 if command -v ufw >/dev/null 2>&1; then
@@ -62,11 +76,12 @@ if command -v ufw >/dev/null 2>&1; then
     ufw allow 22/tcp comment 'SSH Secure Access' >/dev/null 2>&1 || true
     ufw allow 80/tcp comment 'HTTP Web' >/dev/null 2>&1 || true
     ufw allow 443/tcp comment 'HTTPS Web' >/dev/null 2>&1 || true
+    ufw deny 21/tcp comment 'Block FTP' >/dev/null 2>&1 || true
     echo "y" | ufw enable >/dev/null 2>&1 || true
     ufw reload >/dev/null 2>&1 || true
-    echo -e "${GREEN}  ✅ UFW Firewall aktif: Hanya port 22, 80, 443 yang dibuka untuk publik.${NC}"
+    echo -e "${GREEN}  ✅ UFW Firewall & iptables aktif: Port 21 (FTP) ditutup dan diblokir.${NC}"
 else
-    echo -e "${YELLOW}  ⚠️ UFW tidak ditemukan, pastikan port 21 tidak dibuka di iptables.${NC}"
+    echo -e "${YELLOW}  ⚠️ UFW tidak ditemukan, port 21 telah diblokir via iptables.${NC}"
 fi
 
 # ------------------------------------------------------------------------------
@@ -165,10 +180,13 @@ fi
 # ------------------------------------------------------------------------------
 echo -e "\n${CYAN}${BOLD}[LANGKAH 7/7] Menjalankan Uji Verifikasi Keamanan Pasca-Remediasi...${NC}"
 
+# Tambahkan header X-Forwarded-Proto: https agar Django tidak merespons redirect 301 saat dites lokal
+CURL_TEST_HEADER=(-H "X-Forwarded-Proto: https" -H "Host: lms-be.dpd.go.id")
+
 # Uji A: K-01 (Bypass SSO Token Invalidsig ditolak 401)
 echo -n "  [Uji A] Memeriksa penolakan token JWT palsu (K-01)... "
 TEST_SSO_PAYLOAD='{"sso_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NSIsIm5pcCI6IjEyMzQ1IiwiZXhwIjoyNTI0NjA4MDAwfQ.invalidsig"}'
-SSO_HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8001/api/v1/sso/verify/" -H "Content-Type: application/json" -d "$TEST_SSO_PAYLOAD" 2>/dev/null || echo "000")"
+SSO_HTTP_CODE="$(curl -s -L -o /dev/null -w "%{http_code}" -X POST "http://127.0.0.1:8001/api/v1/sso/verify/" "${CURL_TEST_HEADER[@]}" -H "Content-Type: application/json" -d "$TEST_SSO_PAYLOAD" 2>/dev/null || echo "000")"
 if [ "$SSO_HTTP_CODE" = "401" ] || [ "$SSO_HTTP_CODE" = "400" ]; then
     echo -e "${GREEN}LOLOS (HTTP $SSO_HTTP_CODE: Token ditolak keras).${NC}"
 else
@@ -177,7 +195,7 @@ fi
 
 # Uji B: T-01 (Media course file tanpa login ditolak 401)
 echo -n "  [Uji B] Memeriksa proteksi berkas materi course-file (T-01)... "
-MEDIA_HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:8001/media/course-file/pentest.pdf" 2>/dev/null || echo "000")"
+MEDIA_HTTP_CODE="$(curl -s -L -o /dev/null -w "%{http_code}" "http://127.0.0.1:8001/media/course-file/pentest.pdf" "${CURL_TEST_HEADER[@]}" 2>/dev/null || echo "000")"
 if [ "$MEDIA_HTTP_CODE" = "401" ]; then
     echo -e "${GREEN}LOLOS (HTTP 401: Berkas terproteksi otentikasi).${NC}"
 else
@@ -186,7 +204,7 @@ fi
 
 # Uji C: S-01 (Anti User Enumeration uniform 404)
 echo -n "  [Uji C] Memeriksa respons anti-enumerasi profil (S-01)... "
-PROFILE_HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:8001/api/v1/user/profile/1/" 2>/dev/null || echo "000")"
+PROFILE_HTTP_CODE="$(curl -s -L -o /dev/null -w "%{http_code}" "http://127.0.0.1:8001/api/v1/user/profile/1/" "${CURL_TEST_HEADER[@]}" 2>/dev/null || echo "000")"
 if [ "$PROFILE_HTTP_CODE" = "404" ] || [ "$PROFILE_HTTP_CODE" = "401" ]; then
     echo -e "${GREEN}LOLOS (HTTP $PROFILE_HTTP_CODE: Tidak membocorkan keberadaan user via 403).${NC}"
 else
