@@ -90,12 +90,12 @@ class SSOTokenVerifier:
             api_token  # raw token fallback
         ]
 
-        # Kandidat base URL backend CMB / Nusa
+        # Kandidat base URL backend CMB / Nusa (prioritaskan internal 10.20.30.13 lalu publik)
+        configured_url = getattr(settings, 'EXTERNAL_API_BASE_URL', '').rstrip('/')
         base_urls = [
-            getattr(settings, 'EXTERNAL_API_BASE_URL', '').rstrip('/'),
-            'https://cmb.dpd.go.id',
+            configured_url,
             'http://10.20.30.13:8000',
-            'https://nusa.dpd.go.id'
+            'https://cmb.dpd.go.id'
         ]
         # Hilangkan string kosong & duplikat
         base_urls = [u for u in dict.fromkeys(base_urls) if u]
@@ -105,30 +105,25 @@ class SSOTokenVerifier:
         ssl_arg = ca_bundle if (verify_ssl and ca_bundle and os.path.exists(ca_bundle)) else verify_ssl
 
         for b_url in base_urls:
-            endpoints = [
-                f"{b_url}/sso/verify/{token}",
-                f"{b_url}/api/sso/verify/{token}",
-            ]
-            for endpoint in endpoints:
-                for enc_tok in encrypted_tokens:
-                    try:
-                        headers = {
-                            "X-API-Token": enc_tok,
-                            "User-Agent": "LMSetjen-DPDRI/1.0"
-                        }
-                        resp = requests.get(endpoint, headers=headers, timeout=5, verify=ssl_arg)
-                        if resp.status_code == 200:
-                            data = resp.json() if resp.headers.get('content-type', '').startswith('application/json') else None
-                            # Jika response menunjukkan valid
-                            if data is True or (isinstance(data, dict) and data.get('status') is True) or (isinstance(data, dict) and data.get('success') is True):
-                                logger.info(f"[SSO REMOTE] Token SSO berhasil diverifikasi oleh server otentikasi resmi: {endpoint}")
-                                return True
-                            elif data is False or (isinstance(data, dict) and (data.get('status') is False or data.get('success') is False)):
-                                logger.warning(f"[SSO REMOTE] Server otentikasi menolak token: {data}")
-                                return False
-                    except Exception as req_err:
-                        logger.debug(f"[SSO REMOTE DEBUG] Endpoint {endpoint} tidak merespons: {req_err}")
-                        continue
+            endpoint = f"{b_url}/sso/verify/{token}"
+            for enc_tok in encrypted_tokens:
+                try:
+                    headers = {
+                        "X-API-Token": enc_tok,
+                        "User-Agent": "LMSetjen-DPDRI/1.0"
+                    }
+                    resp = requests.get(endpoint, headers=headers, timeout=2.5, verify=ssl_arg)
+                    if resp.status_code == 200:
+                        data = resp.json() if resp.headers.get('content-type', '').startswith('application/json') else None
+                        if data is True or (isinstance(data, dict) and data.get('status') is True) or (isinstance(data, dict) and data.get('success') is True):
+                            logger.info(f"[SSO REMOTE] Token SSO berhasil diverifikasi oleh server otentikasi resmi: {endpoint}")
+                            return True
+                        elif data is False or (isinstance(data, dict) and (data.get('status') is False or data.get('success') is False)):
+                            logger.warning(f"[SSO REMOTE] Server otentikasi menolak token: {data}")
+                            return False
+                except Exception as req_err:
+                    logger.debug(f"[SSO REMOTE DEBUG] Endpoint {endpoint} tidak merespons: {req_err}")
+                    continue
 
         return None  # Remote check inconclusive / unreachable
 

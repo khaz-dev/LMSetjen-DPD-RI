@@ -293,10 +293,16 @@ class IsOwnerOrStaff(permissions.BasePermission):
         # Check URL parameter 'teacher_id' if present in view kwargs
         teacher_id = view.kwargs.get('teacher_id')
         if teacher_id is not None:
+            # Handle frontend passing 'admin' as teacher_id
+            if str(teacher_id).lower() == 'admin':
+                return self._is_staff_or_admin(request.user)
             try:
                 from api.models import Teacher
                 teacher = Teacher.objects.filter(id=teacher_id).first()
                 if teacher and teacher.user_id == request.user.id:
+                    return True
+                # If user is staff/admin, allow even if teacher_id doesn't match
+                if self._is_staff_or_admin(request.user):
                     return True
                 return False
             except Exception:
@@ -326,6 +332,11 @@ class IsOwnerOrStaff(permissions.BasePermission):
         if hasattr(obj, 'user_id'):
             return obj.user_id == request.user.id
             
+        # If obj has teacher attribute (e.g. Course)
+        if hasattr(obj, 'teacher') and obj.teacher:
+            if getattr(obj.teacher, 'user_id', None) == request.user.id or getattr(obj.teacher, 'user', None) == request.user:
+                return True
+
         # If obj has course attribute (e.g. Quiz accessed in course context by enrolled student)
         if hasattr(obj, 'course'):
             user_id = view.kwargs.get('user_id')

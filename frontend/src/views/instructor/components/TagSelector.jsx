@@ -120,9 +120,11 @@ const TagSelector = ({
     }, [isOpen]);
 
     // Filter tags based on search term and exclude already selected tags
-    const filteredTags = tags.filter(tag => {
-        const isAlreadySelected = selectedTags.some(st => st.id === tag.id);
-        const matchesSearch = tag.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const filteredTags = (Array.isArray(tags) ? tags : []).filter(tag => {
+        if (!tag || !tag.id) return false;
+        const isAlreadySelected = (Array.isArray(selectedTags) ? selectedTags : []).some(st => (st?.id || st) === tag.id);
+        const titleStr = String(tag.title || tag.name || '').toLowerCase();
+        const matchesSearch = titleStr.includes((searchTerm || '').toLowerCase());
         return matchesSearch && !isAlreadySelected;
     });
 
@@ -207,11 +209,11 @@ const TagSelector = ({
                 {isOpen && (
                     <div 
                         className="tag-selector-dropdown"
-                        style={{
+                        style={dropdownPosition?.top ? {
                             top: `${dropdownPosition.top}px`,
                             left: `${dropdownPosition.left}px`,
                             width: `${dropdownPosition.width}px`
-                        }}
+                        } : {}}
                     >
                         {filteredTags.length > 0 ? (
                             <ul className="tag-selector-list">

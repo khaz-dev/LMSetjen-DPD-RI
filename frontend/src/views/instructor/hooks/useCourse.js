@@ -304,7 +304,7 @@ export const useCourseSubmit = () => {
             console.log('[useCourse.submitCourse] All fields:', formattedData);
             console.log('[useCourse.submitCourse] ===== END REQUEST DATA =====');
 
-            const targetTeacherId = userData?.teacher_id || formattedData?.teacher_id || 'admin';
+            const targetTeacherId = userData?.teacher_id || formattedData?.teacher_id || courseData?.teacher?.id || courseData?.teacher || 'admin';
             const response = await useAxios.patch(
                 `/teacher/course-update/${targetTeacherId}/${courseId}/`,
                 formattedData

@@ -250,12 +250,14 @@ function CourseEdit() {
         } catch (error) {
             console.error("[CourseEdit.debouncedAutoSave] ❌ Error:", error);
             setAutoSaveStatus("error");
+            // Set isDirty to false on error so it doesn't trigger an infinite re-submit loop
+            setIsDirty(false);
         }
     }, 2000, [isDirty, submitStatus, courseData, initialCourseData, submitCourse, param?.course_id, setCourseData]);
 
     // ✨ PHASE 4.168: Trigger auto-save when isDirty becomes true
     useEffect(() => {
-        if (isDirty && autoSaveStatus !== "saving") {
+        if (isDirty && autoSaveStatus !== "saving" && autoSaveStatus !== "error") {
             debouncedAutoSave();
         }
     }, [isDirty, autoSaveStatus, debouncedAutoSave]);
