@@ -41,20 +41,22 @@ class SSOUserSerializer(serializers.Serializer):
 class SSOTokenVerifier:
     """
     Utility class for verifying and decoding SSO tokens from Nusa DPD & CMB.
-    Mengatasi Temuan Pentest K-02 & S-02 (Anti-Replay, HMAC Verification, Strict Issuer & Expiry)
+    Mengatasi Temuan Pentest K-01, K-02 & H-01 (Mandatory Signature Verification, Anti-Account Factory, Strict NIP & Expiry)
 
     Validasi Keamanan yang Diterapkan:
-      1. Verifikasi Signature HMAC (HS256) menggunakan SSO_SECRET_KEY jika dikonfigurasi.
-      2. Validasi klaim `iss` (Issuer) harus berasal dari sistem terpercaya (CMB, NUSA, dll).
-      3. Validasi klaim `exp` (Expiry) ketat dan pembatasan masa berlaku maksimum (TTL).
-      4. Validasi klaim `iat` (Issued At) dan pencegahan clock skew berlebih.
-      5. Anti-replay: setiap token hanya boleh digunakan satu kali (UsedSSOToken).
+      1. Wajib verifikasi Signature HMAC (HS256) menggunakan SSO_SECRET_KEY / SECRET_KEY (TOLAK KERAS token tanpa signature valid).
+      2. Validasi format NIP pegawai resmi (minimal 8-18 digit angka, tolak NIP sembarang/dummy).
+      3. Validasi klaim `iss` (Issuer) harus berasal dari sistem terpercaya (CMB, NUSA, dll).
+      4. Validasi klaim `exp` (Expiry) ketat dan pembatasan masa berlaku maksimum (TTL).
+      5. Validasi klaim `iat` (Issued At) dan pencegahan clock skew berlebih.
+      6. Anti-replay: setiap token hanya boleh digunakan satu kali (UsedSSOToken).
     """
 
     @staticmethod
     def verify_token(token, secret_key=None, algorithms=None):
         """
         Decode dan validasi SSO JWT token dari Nusa DPD / CMB.
+        WAJIB memvalidasi cryptographic signature HMAC.
 
         Args:
             token (str): JWT token dari URL SSO Nusa DPD / CMB
@@ -72,30 +74,27 @@ class SSOTokenVerifier:
         import logging
         logger = logging.getLogger('security')
 
-        # Resolusi secret key dari parameter atau Django settings
-        active_secret = secret_key or getattr(settings, 'SSO_SECRET_KEY', None)
+        # Resolusi secret key dari parameter atau Django settings (fallback ke SECRET_KEY)
+        active_secret = secret_key or getattr(settings, 'SSO_SECRET_KEY', None) or getattr(settings, 'SECRET_KEY', None)
         active_algorithms = algorithms or [getattr(settings, 'SSO_ALGORITHM', 'HS256')]
 
+        if not active_secret:
+            logger.critical("[SSO CRITICAL] SSO_SECRET_KEY maupun SECRET_KEY tidak ditemukan pada server!")
+            raise jwt.InvalidTokenError("Konfigurasi keamanan SSO server belum lengkap (Secret key tidak ditemukan)")
+
         try:
-            # 1. Jika SSO_SECRET_KEY dikonfigurasi, wajibkan verifikasi signature HMAC (K-02)
-            if active_secret:
-                decoded = jwt.decode(
-                    token,
-                    key=active_secret,
-                    algorithms=active_algorithms,
-                    options={
-                        "verify_signature": True,
-                        "verify_exp": False,  # Kita validasi exp secara eksplisit di bawah dengan pesan ramah
-                    }
-                )
-                logger.info("[SSO] Signature token berhasil diverifikasi dengan HMAC secret key.")
-            else:
-                # Mode transisi jika Nusa DPD/CMB belum menyinkronkan shared secret
-                decoded = jwt.decode(
-                    token,
-                    options={"verify_signature": False, "verify_exp": False}
-                )
-                logger.warning("[SSO] Peringatan: SSO_SECRET_KEY belum disetel. Token diproses tanpa verifikasi signature.")
+            # 1. 🔒 MANDATORY HMAC SIGNATURE VERIFICATION (Mengatasi Pentest K-01 & K-02)
+            # TIDAK ADA LAGI fallback decode tanpa verifikasi signature!
+            decoded = jwt.decode(
+                token,
+                key=active_secret,
+                algorithms=active_algorithms,
+                options={
+                    "verify_signature": True,
+                    "verify_exp": False,  # Kita validasi exp secara eksplisit di bawah dengan pesan ramah
+                }
+            )
+            logger.info("[SSO] Signature token berhasil diverifikasi secara kriptografis.")
 
             # 2. Validasi klaim exp (Expiration) secara eksplisit dan ketat
             exp = decoded.get('exp')
@@ -128,7 +127,7 @@ class SSOTokenVerifier:
             if iss and allowed_issuers:
                 if iss not in allowed_issuers:
                     logger.warning(f"[SSO] Issuer token tidak diizinkan: '{iss}' (Diizinkan: {allowed_issuers})")
-                    raise jwt.InvalidTokenError(f"Penerbit token SSO ({iss}) tidak terdaftar dalam allowlist")
+                    raise jwt.InvalidTokenError(f"Penerbit token SSO ({iss}) tidak terdaftar dalam allowlist resmi DPD RI")
 
             # 5. Validasi klaim aud (Audience) jika dikonfigurasi
             expected_aud = getattr(settings, 'SSO_AUDIENCE', None)
@@ -139,17 +138,28 @@ class SSOTokenVerifier:
                 elif isinstance(aud, str) and aud != expected_aud:
                     raise jwt.InvalidTokenError(f"Audience token ({aud}) tidak cocok dengan sistem ini")
 
-            # 6. Validasi klaim nip wajib ada
-            if not decoded.get('nip'):
+            # 6. 🔒 VALIDASI NIP RESMI ASN (Mengatasi Pentest K-02: Account Factory via NIP Bebas)
+            raw_nip = decoded.get('nip')
+            if not raw_nip:
                 raise jwt.InvalidTokenError("Token tidak mengandung NIP — bukan token SSO yang valid")
+            clean_nip = str(raw_nip).strip()
+            # Validasi NIP: NIP ASN di Indonesia berformat angka minimal 8 hingga 20 digit
+            if not clean_nip.isdigit() or len(clean_nip) < 8 or len(clean_nip) > 20:
+                logger.warning(f"[SSO ATTACK DETECTED] Penolakan NIP tidak valid/dummy: '{clean_nip}'")
+                raise jwt.InvalidTokenError(f"Format NIP '{clean_nip}' tidak valid sebagai identitas pegawai resmi DPD RI")
 
-            logger.info(f"[SSO] Token valid: nip={decoded.get('nip')}, iss={iss or 'N/A'}, exp={exp}")
+            logger.info(f"[SSO] Token valid: nip={clean_nip}, iss={iss or 'N/A'}, exp={exp}")
             return decoded
 
         except jwt.ExpiredSignatureError:
             raise jwt.InvalidTokenError("Token SSO sudah kadaluarsa")
         except jwt.InvalidSignatureError:
-            raise jwt.InvalidTokenError("Signature token SSO tidak valid atau tidak cocok dengan secret key")
+            logger.warning("[SSO ATTACK DETECTED] Percobaan login SSO dengan signature palsu/tidak valid!")
+            raise jwt.InvalidTokenError("Signature token SSO tidak valid atau tidak cocok dengan secret key resmi")
+        except jwt.InvalidTokenError:
+            raise
+        except Exception as e:
+            raise jwt.InvalidTokenError(f"Gagal memproses token SSO: {str(e)}")
         except jwt.InvalidTokenError:
             raise
         except Exception as e:

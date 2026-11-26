@@ -35,11 +35,69 @@ class EnhancedMediaView(View):
     @method_decorator(cache_control(max_age=3600, public=True))
     def get(self, request, path):
         """
-        Serve media files with range request support for video streaming
+        Serve media files with range request support for video streaming.
+        🔒 SECURITY (Mengatasi Temuan Pentest T-01):
+        File dokumen kursus / media terproteksi WAJIB memerlukan otentikasi (JWT / Session).
         """
         # Security: ensure path doesn't escape media directory
         if '..' in path or path.startswith('/'):
             raise Http404("Invalid path")
+
+        # 🔒 PROTECTED MEDIA ACCESS CONTROL (Mengatasi Temuan Pentest T-01)
+        # Berkas dokumen kursus, materi pelatihan, dan file sensitif wajib terautentikasi
+        norm_check_path = path.replace('\\', '/').lower()
+        is_protected = (
+            norm_check_path.startswith('course-file/') or 
+            norm_check_path.startswith('documents/') or
+            norm_check_path.startswith('certificates/') or
+            any(norm_check_path.endswith(ext) for ext in ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.zip', '.rar'])
+        )
+
+        if is_protected:
+            is_authenticated = False
+            # 1. Cek sesi terotentikasi Django
+            req_user = getattr(request, 'user', None)
+            if req_user and req_user.is_authenticated:
+                is_authenticated = True
+            else:
+                # 2. Cek header Authorization: Bearer <JWT>
+                auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+                if auth_header.startswith('Bearer '):
+                    try:
+                        from rest_framework_simplejwt.authentication import JWTAuthentication
+                        jwt_auth = JWTAuthentication()
+                        validated_token = jwt_auth.get_validated_token(auth_header.split(' ')[1])
+                        user = jwt_auth.get_user(validated_token)
+                        if user and user.is_authenticated:
+                            is_authenticated = True
+                    except Exception:
+                        pass
+                
+                # 3. Cek query parameter ?token= / ?jwt= (untuk browser download / tag viewer)
+                if not is_authenticated:
+                    query_token = request.GET.get('token') or request.GET.get('jwt')
+                    if query_token:
+                        try:
+                            from rest_framework_simplejwt.authentication import JWTAuthentication
+                            jwt_auth = JWTAuthentication()
+                            validated_token = jwt_auth.get_validated_token(query_token)
+                            user = jwt_auth.get_user(validated_token)
+                            if user and user.is_authenticated:
+                                is_authenticated = True
+                        except Exception:
+                            pass
+
+            if not is_authenticated:
+                import json
+                response = HttpResponse(
+                    json.dumps({
+                        "detail": "Autentikasi diperlukan untuk mengakses dokumen/materi ini. Harap sertakan Authorization Bearer token."
+                    }),
+                    status=401,
+                    content_type="application/json"
+                )
+                response['WWW-Authenticate'] = 'Bearer realm="LMSetjen DPD RI Media"'
+                return response
             
         # Construct full file path
         full_path = os.path.join(settings.MEDIA_ROOT, path)

@@ -200,6 +200,10 @@ class SSOTokenVerifyAPIView(APIView):
     """
     permission_classes = [AllowAny]
     authentication_classes = []
+    # 🔒 RATE LIMITING (Mengatasi Temuan Pentest H-01 & K-02)
+    # Maksimal 5 permintaan per menit per IP (Cegah account factory & spam)
+    from api.throttling import SSOVerifyRateThrottle
+    throttle_classes = [SSOVerifyRateThrottle]
     
     def post(self, request):
         """Verify SSO token and create/update user"""
@@ -554,12 +558,23 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
     authentication_classes = [JWTAuthentication]
     parser_classes = [MultiPartParser, FormParser, JSONParser]  # Support file uploads and JSON payloads
 
+    def permission_denied(self, request, message=None, code=None):
+        """
+        🔒 ANTI-ENUMERATION (Mengatasi Temuan Pentest S-01):
+        Kembalikan HTTP 404 daripada 403 jika pengguna mencoba mengakses ID pengguna lain.
+        Ini memastikan penyerang tidak dapat membedakan antara ID yang ada (403) vs tidak ada (404).
+        """
+        if request.user and request.user.is_authenticated:
+            raise Http404("User tidak ditemukan.")
+        super().permission_denied(request, message, code)
+
     def get_object(self):
         user_id = self.kwargs.get('user_id')
         request_user = self.request.user
         
-        # 🔒 Anti-IDOR Check (K-03 & K-04):
-        # Hanya izinkan akses jika mengakses profil sendiri atau admin/staff
+        # 🔒 Anti-IDOR & Anti-Enumeration (K-03, K-04, S-01):
+        # Hanya izinkan akses jika mengakses profil sendiri atau admin/staff.
+        # Jika bukan haknya, selalu kembalikan 404 Not Found secara seragam.
         is_admin_or_staff = (
             request_user.is_staff or 
             getattr(request_user, 'is_admin', False) or 
@@ -570,7 +585,7 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
                 f"[IDOR ATTEMPT] User {request_user.id} ({request_user.email}) "
                 f"attempted unauthorized access to profile of user_id={user_id}"
             )
-            raise PermissionDenied("Anda tidak memiliki izin untuk mengakses atau mengubah profil ini.")
+            raise Http404("User tidak ditemukan.")
             
         try:
             user = User.objects.get(id=user_id)

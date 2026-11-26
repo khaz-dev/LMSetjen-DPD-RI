@@ -148,3 +148,28 @@ class SecureBurstRateThrottle(SimpleRateThrottle):
             'scope': self.scope,
             'ident': ident
         }
+
+
+class SSOVerifyRateThrottle(SimpleRateThrottle):
+    """
+    🔒 Throttle khusus untuk endpoint /api/v1/sso/verify/ (Mengatasi Temuan Pentest H-01 & K-02).
+    Mencegah account factory massal dan penyerangan berulang.
+    Membatasi maksimal 5 permintaan per menit per IP (mengembalikan HTTP 429 Too Many Requests).
+    """
+    scope = 'sso_verify'
+
+    def allow_request(self, request, view):
+        from django.conf import settings
+        if getattr(settings, 'DISABLE_THROTTLING', False):
+            return True
+        return super().allow_request(request, view)
+
+    def get_ident(self, request):
+        return get_real_client_ip(request)
+
+    def get_cache_key(self, request, view):
+        ident = self.get_ident(request)
+        return self.cache_format % {
+            'scope': self.scope,
+            'ident': ident
+        }

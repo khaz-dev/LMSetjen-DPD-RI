@@ -672,6 +672,7 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
     'anon': env('ANON_THROTTLE_RATE', default='1000/hour' if not DEBUG else '100000/hour'),  # 1000 requests/hr in prod, 100k in dev
     'user': env('USER_THROTTLE_RATE', default='5000/hour' if not DEBUG else '100000/hour'),  # 5000 requests/hr in prod, 100k in dev
     'burst': env('BURST_THROTTLE_RATE', default='60/minute' if not DEBUG else '1000/minute'),  # 60 requests/min in prod, 1k in dev
+    'sso_verify': env('SSO_VERIFY_THROTTLE_RATE', default='5/minute'),  # 🔒 H-01: Maks 5 req/menit untuk SSO verify
 }
 
 # 8. Password Validation Enhancements
