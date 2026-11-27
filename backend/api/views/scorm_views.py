@@ -119,20 +119,33 @@ class UploadElearningModuleAPIView(APIView):
                 author=request.user
             )
 
-            # Jika berhasil diekstrak dan memiliki judul di imsmanifest.xml, update judul
-            if module_type == 'scorm_12' and learning_module.extracted_path:
+            # Jika berhasil diekstrak dan memiliki judul di imsmanifest.xml atau h5p.json, update judul
+            if learning_module.extracted_path:
                 extract_full_path = os.path.join(settings.MEDIA_ROOT, learning_module.extracted_path)
-                manifest_path = os.path.join(extract_full_path, 'imsmanifest.xml')
-                if os.path.exists(manifest_path):
-                    try:
-                        tree = ET.parse(manifest_path)
-                        root = tree.getroot()
-                        title_elem = root.find('.//{*}title')
-                        if title_elem is not None and title_elem.text and not request.data.get('title'):
-                            learning_module.judul = title_elem.text.strip()
-                            learning_module.save(update_fields=['judul'])
-                    except Exception as e:
-                        print(f"[SCORM] Manifest title parse warning: {e}")
+                if learning_module.module_type == 'scorm_12':
+                    manifest_path = os.path.join(extract_full_path, 'imsmanifest.xml')
+                    if os.path.exists(manifest_path):
+                        try:
+                            tree = ET.parse(manifest_path)
+                            root = tree.getroot()
+                            title_elem = root.find('.//{*}title')
+                            if title_elem is not None and title_elem.text and not request.data.get('title'):
+                                learning_module.judul = title_elem.text.strip()
+                                learning_module.save(update_fields=['judul'])
+                        except Exception as e:
+                            print(f"[SCORM] Manifest title parse warning: {e}")
+                elif learning_module.module_type == 'h5p' or os.path.exists(os.path.join(extract_full_path, 'h5p.json')):
+                    h5p_json_path = os.path.join(extract_full_path, 'h5p.json')
+                    if os.path.exists(h5p_json_path):
+                        try:
+                            with open(h5p_json_path, 'r', encoding='utf-8') as f:
+                                h5p_meta = json.load(f)
+                                if h5p_meta.get('title') and not request.data.get('title'):
+                                    learning_module.judul = h5p_meta['title'].strip()
+                                    learning_module.module_type = 'h5p'
+                                    learning_module.save(update_fields=['judul', 'module_type'])
+                        except Exception as e:
+                            print(f"[H5P] h5p.json title parse warning: {e}")
 
             # ✨ PHASE 65: Catat Log Unggah Modul E-Learning SCORM/H5P
             try:

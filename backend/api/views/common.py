@@ -527,7 +527,8 @@ class FileUploadAPIView(APIView):
         '.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv',
         '.ppt', '.pptx',
         '.doc', '.docx', '.txt',
-        '.mp3', '.wav', '.ogg', '.m4a', '.aac'
+        '.mp3', '.wav', '.ogg', '.m4a', '.aac',
+        '.h5p', '.zip'
     }
     DANGEROUS_EXTENSIONS = {
         '.html', '.htm', '.svg', '.php', '.phtml', '.php3', '.php4', '.php5',
@@ -584,7 +585,10 @@ class FileUploadAPIView(APIView):
         '.wav': ['audio/wav', 'audio/x-wav'],
         '.ogg': ['audio/ogg', 'application/ogg'],
         '.m4a': ['audio/mp4', 'audio/x-m4a', 'audio/m4a'],
-        '.aac': ['audio/aac']
+        '.aac': ['audio/aac'],
+        # Modul Interaktif
+        '.h5p': ['application/zip', 'application/x-zip-compressed', 'application/octet-stream'],
+        '.zip': ['application/zip', 'application/x-zip-compressed', 'application/octet-stream']
     }
 
     @swagger_auto_schema(

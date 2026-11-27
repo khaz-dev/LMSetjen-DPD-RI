@@ -43,9 +43,9 @@ function spaFallbackPlugin() {
           
           console.log(`[SPA] Middleware checking: ${urlPath}`)
           
-          // Skip if it's an API or media request
-          if (urlPath.startsWith('/api') || urlPath.startsWith('/media')) {
-            console.log(`[SPA]   → API/media request, passing through`)
+          // Skip if it's an API, media, or static request
+          if (urlPath.startsWith('/api') || urlPath.startsWith('/media') || urlPath.startsWith('/static')) {
+            console.log(`[SPA]   → API/media/static request, passing through`)
             return next()
           }
           
@@ -128,6 +128,10 @@ export default defineConfig({
     ],
     proxy: {
       '/media': {
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8001',
+        changeOrigin: true,
+      },
+      '/static': {
         target: process.env.VITE_API_BASE_URL || 'http://localhost:8001',
         changeOrigin: true,
       },

@@ -1,4 +1,5 @@
 import os
+import json
 import zipfile
 import datetime
 from django.conf import settings
@@ -1923,9 +1924,228 @@ class LearningModule(models.Model):
                     print(f"[LearningModule] Manifest parse error in {mp}: {e}")
 
         # 4. Prioritas 2: H5P
-        if not found_entry:
-            if self.module_type == 'h5p' and os.path.exists(os.path.join(extract_full_path, 'h5p.json')):
-                found_entry = 'h5p.json'
+        h5p_manifest_path = os.path.join(extract_full_path, 'h5p.json')
+        if not found_entry and (self.module_type == 'h5p' or os.path.exists(h5p_manifest_path)):
+            self.module_type = 'h5p'
+            # Coba ambil judul resmi dari h5p.json jika ada
+            if os.path.exists(h5p_manifest_path):
+                try:
+                    with open(h5p_manifest_path, 'r', encoding='utf-8') as f:
+                        h5p_meta = json.load(f)
+                        if h5p_meta.get('title') and (not self.judul or self.judul.lower().startswith('temp_') or self.judul.lower().startswith('modul e-learning')):
+                            self.judul = h5p_meta['title'].strip()
+                except Exception as e:
+                    print(f"[LearningModule] Warning reading h5p.json title: {e}")
+
+            # Generate Standalone H5P Player index.html
+            h5p_index_path = os.path.join(extract_full_path, 'index.html')
+            h5p_player_html = f"""<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{self.judul}</title>
+  <link rel="stylesheet" href="/vendor/h5p-standalone/styles/h5p.css" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/h5p-standalone@3.8.2/dist/styles/h5p.css';">
+  <style>
+    body, html {{
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow-x: hidden;
+    }}
+    #h5p-container {{
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      min-height: 100vh;
+      background: #ffffff;
+      box-sizing: border-box;
+    }}
+    .h5p-frame, .h5p-iframe-wrapper {{
+      border: none !important;
+      width: 100% !important;
+      height: 100% !important;
+    }}
+    .h5p-loading {{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #0f172a;
+      color: #94a3b8;
+      z-index: 10;
+      transition: opacity 0.2s ease;
+    }}
+    /* Sembunyikan h5p-loading seketika jika h5p-container telah berisi iframe/wrapper */
+    #h5p-container:has(.h5p-iframe-wrapper) .h5p-loading,
+    #h5p-container:has(iframe) .h5p-loading,
+    .h5p-loaded .h5p-loading {{
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+    }}
+    .h5p-spinner {{
+      width: 40px;
+      height: 40px;
+      border: 4px solid #334155;
+      border-top-color: #0f766e;
+      border-radius: 50%;
+      animation: h5p-spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }}
+    @keyframes h5p-spin {{
+      to {{ transform: rotate(360deg); }}
+    }}
+  </style>
+</head>
+<body>
+  <div id="h5p-container">
+    <div class="h5p-loading">
+      <div class="h5p-spinner"></div>
+      <div style="font-weight: 600; font-size: 14px; color: #f1f5f9;">Memuat Modul Interaktif H5P...</div>
+    </div>
+  </div>
+
+  <script src="/vendor/h5p-standalone/main.bundle.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/h5p-standalone@3.8.2/dist/main.bundle.js';"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {{
+      const el = document.getElementById('h5p-container');
+      
+      let currentDir = window.location.pathname;
+      if (currentDir.endsWith('/index.html')) {{
+        currentDir = currentDir.substring(0, currentDir.lastIndexOf('/index.html'));
+      }} else if (currentDir.endsWith('/')) {{
+        currentDir = currentDir.substring(0, currentDir.length - 1);
+      }}
+
+      // Resolve frameJs and frameCss with local-first and CDN fallback
+      let frameJs = 'https://cdn.jsdelivr.net/npm/h5p-standalone@3.8.2/dist/frame.bundle.js';
+      let frameCss = 'https://cdn.jsdelivr.net/npm/h5p-standalone@3.8.2/dist/styles/h5p.css';
+
+      const candidates = [
+        {{
+          js: '/vendor/h5p-standalone/frame.bundle.js',
+          css: '/vendor/h5p-standalone/styles/h5p.css'
+        }},
+        {{
+          js: '/static/vendor/h5p-standalone/frame.bundle.js',
+          css: '/static/vendor/h5p-standalone/styles/h5p.css'
+        }}
+      ];
+
+      for (const cand of candidates) {{
+        try {{
+          const testRes = await fetch(cand.js, {{ method: 'GET', headers: {{ 'Accept': 'application/javascript, */*' }} }});
+          const ct = testRes.headers.get('content-type') || '';
+          if (testRes.ok && (ct.includes('javascript') || ct.includes('octet-stream'))) {{
+            frameJs = cand.js;
+            frameCss = cand.css;
+            break;
+          }}
+        }} catch (e) {{
+          // ignore error, try next candidate
+        }}
+      }}
+
+      const options = {{
+        h5pJsonPath: currentDir,
+        frameJs: frameJs,
+        frameCss: frameCss
+      }};
+
+      function purgeLoadingOverlay() {{
+        const loadingEl = el.querySelector('.h5p-loading');
+        if (loadingEl) {{
+          loadingEl.style.display = 'none';
+          if (loadingEl.parentNode) {{
+            loadingEl.parentNode.removeChild(loadingEl);
+          }}
+        }}
+        el.classList.add('h5p-loaded');
+      }}
+
+      // Seketika h5p-standalone menyisipkan iframe wrapper ke dalam container, segera hapus loading
+      const loadingObserver = new MutationObserver(function () {{
+        if (el.querySelector('.h5p-iframe-wrapper') || el.querySelector('iframe')) {{
+          purgeLoadingOverlay();
+          loadingObserver.disconnect();
+        }}
+      }});
+      loadingObserver.observe(el, {{ childList: true, subtree: true }});
+
+      try {{
+        const player = await new H5PStandalone.H5P(el, options);
+        console.log('[H5P Player] Inisialisasi berhasil untuk modul: {self.judul}');
+        purgeLoadingOverlay();
+
+        if (window.H5P && window.H5P.externalDispatcher) {{
+          window.H5P.externalDispatcher.on('xAPI', function (event) {{
+            try {{
+              const verb = event.getVerb();
+              console.log('[H5P xAPI Event]', verb, event);
+              
+              if (['completed', 'passed', 'answered'].includes(verb)) {{
+                const score = event.getScore();
+                const maxScore = event.getMaxScore();
+                const rawScore = (score !== undefined && maxScore) ? Math.round((score / maxScore) * 100) : null;
+
+                // 1. Integrasi SCORM RTE (jika dijalankan dalam wrapper player window.parent.API)
+                if (window.parent && window.parent.API) {{
+                  if (['passed', 'completed'].includes(verb)) {{
+                    window.parent.API.LMSSetValue('cmi.core.lesson_status', 'completed');
+                  }}
+                  if (rawScore !== null) {{
+                    window.parent.API.LMSSetValue('cmi.core.score.raw', String(rawScore));
+                  }}
+                  window.parent.API.LMSCommit('');
+                }}
+
+                // 2. PostMessage ke parent window
+                if (window.parent && window.parent !== window) {{
+                  window.parent.postMessage({{
+                    type: 'H5P_COMPLETED',
+                    status: (verb === 'passed' || verb === 'completed') ? 'completed' : 'incomplete',
+                    score: rawScore,
+                    verb: verb,
+                    moduleId: '{self.pk}'
+                  }}, '*');
+                }}
+              }}
+            }} catch (trackErr) {{
+              console.warn('[H5P Tracking Error]', trackErr);
+            }}
+          }});
+        }}
+      }} catch (err) {{
+        console.error('[H5P Player Error]', err);
+        el.innerHTML = '<div style=\"padding: 30px; text-align: center; color: #ef4444;\">' +
+          '<h5 style=\"margin-bottom: 8px;\">Gagal Menjalankan Modul Interaktif H5P</h5>' +
+          '<p style=\"font-size: 13px; color: #64748b;\">' + (err.message || String(err)) + '</p>' +
+          '</div>';
+      }}
+    }});
+  </script>
+</body>
+</html>"""
+            try:
+                with open(h5p_index_path, 'w', encoding='utf-8') as f:
+                    f.write(h5p_player_html)
+                found_entry = 'index.html'
+            except Exception as e:
+                print(f"[LearningModule] Error writing H5P index.html: {e}")
 
         # 5. Prioritas 3: Standar HTML Entrypoint
         if not found_entry:
@@ -2016,7 +2236,9 @@ class LearningModule(models.Model):
 
         LearningModule.objects.filter(pk=self.pk).update(
             extracted_path=self.extracted_path,
-            entry_file=self.entry_file
+            entry_file=self.entry_file,
+            module_type=self.module_type,
+            judul=self.judul
         )
 
     def save(self, *args, **kwargs):

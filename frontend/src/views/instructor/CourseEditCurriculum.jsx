@@ -773,10 +773,10 @@ function SortableSection({
                             style={{ gap: "8px" }}
                             onClick={() => addScormLesson && addScormLesson(variantIndex)}
                             disabled={uiState.isSubmitting}
-                            title="Tambah materi pembelajaran interaktif SCORM 1.2"
+                            title="Tambah materi pembelajaran modul interaktif (H5P / SCORM 1.2)"
                         >
-                            <i className="fas fa-cube text-teal small"></i>
-                            <span>Tambah Modul SCORM</span>
+                            <i className="fas fa-puzzle-piece text-teal small"></i>
+                            <span>Tambah Modul Interaktif</span>
                         </button>
                         <button
                             type="button"
@@ -851,8 +851,18 @@ function SortableLessonItem({
         Boolean(item?.learning_module_id) ||
         Boolean(item?.learning_module_info) ||
         item?.file_type === 'scorm' ||
+        item?.file_type === 'h5p' ||
         item?.media_source === 'scorm' ||
+        item?.media_source === 'h5p' ||
         isElearningScorm
+    );
+
+    const isItemH5p = isItemScorm && (
+        item?.learning_module_info?.module_type === 'h5p' ||
+        item?.file_type === 'h5p' ||
+        item?.media_source === 'h5p' ||
+        (item?.file && String(item.file).toLowerCase().endsWith('.h5p')) ||
+        (item?.uploadedFile && String(item.uploadedFile).toLowerCase().endsWith('.h5p'))
     );
 
     const regularQuizzes = (courseQuizzes || []).filter(q => q.quiz_type !== 'pre_post_test' && !q.has_pre_test && !q.has_post_test);
@@ -875,10 +885,10 @@ function SortableLessonItem({
     const currentSeconds = Number(item?.duration_seconds) || 0;
     const currentJP = currentSeconds > 0 ? Math.ceil(currentSeconds / 2700) : 0;
 
-    // SCORM Linked Metadata
+    // SCORM / H5P Linked Metadata
     const lm = item?.learning_module_info || (item?.learning_module && typeof item.learning_module === 'object' ? item.learning_module : (isElearningScorm ? course?.learning_module : null));
     const isScormLinked = Boolean(item?.learning_module_id || lm);
-    const scormTitle = lm?.judul || item?.title || "Paket SCORM 1.2";
+    const scormTitle = lm?.judul || item?.title || (isItemH5p ? "Modul Interaktif H5P" : "Paket SCORM 1.2");
     const scormEntry = lm?.entry_file || "index.html";
 
     const [scormUploadState, setScormUploadState] = useState({ isUploading: false, progress: 0 });
@@ -918,11 +928,12 @@ function SortableLessonItem({
         }
     }, [item?.youtubeLink, item?.gdriveLink, activeMediaUrl]);
 
-    // Format switch handler (Media vs SCORM)
+    // Format switch handler (Media vs Modul Interaktif)
     const handleFormatSwitch = (format) => {
         if (format === 'scorm') {
-            handleLessonChange(variantIndex, itemIndex, "file_type", "scorm");
-            handleLessonChange(variantIndex, itemIndex, "media_source", "scorm");
+            const isTargetH5p = item?.learning_module_info?.module_type === 'h5p' || item?.file_type === 'h5p' || (availableScormModules?.length === 1 && availableScormModules[0]?.module_type === 'h5p');
+            handleLessonChange(variantIndex, itemIndex, "file_type", isTargetH5p ? "h5p" : "scorm");
+            handleLessonChange(variantIndex, itemIndex, "media_source", isTargetH5p ? "h5p" : "scorm");
             if (!item?.learning_module_id && course?.learning_module_id) {
                 handleLessonChange(variantIndex, itemIndex, "learning_module_id", course.learning_module_id);
                 handleLessonChange(variantIndex, itemIndex, "learning_module_info", course.learning_module);
@@ -942,7 +953,7 @@ function SortableLessonItem({
         setTimeout(() => autoSaveCurriculum(), 150);
     };
 
-    // SCORM ZIP Upload Handler
+    // SCORM / H5P ZIP Upload Handler
     const handleScormZipUpload = async (file) => {
         if (!file) return;
         const fileName = (file.name || '').toLowerCase();
@@ -950,7 +961,7 @@ function SortableLessonItem({
             Toast().fire({
                 icon: "error",
                 title: "Format Berkas Tidak Valid",
-                text: "Harap unggah paket SCORM dalam format berkas ZIP (.zip) atau H5P (.h5p)."
+                text: "Harap unggah modul interaktif dalam format berkas H5P (.h5p) atau SCORM ZIP (.zip)."
             });
             return;
         }
@@ -958,7 +969,7 @@ function SortableLessonItem({
             Toast().fire({
                 icon: "error",
                 title: "Berkas Terlalu Besar",
-                text: "Ukuran maksimal paket e-learning adalah 500MB."
+                text: "Ukuran maksimal paket modul interaktif adalah 500MB."
             });
             return;
         }
@@ -979,15 +990,16 @@ function SortableLessonItem({
             });
 
             if (res.data?.module_id) {
+                const isH5pUpload = fileName.endsWith('.h5p') || res.data.module?.module_type === 'h5p';
                 handleLessonChange(variantIndex, itemIndex, "learning_module_id", res.data.module_id);
                 handleLessonChange(variantIndex, itemIndex, "learning_module_info", res.data.module);
-                handleLessonChange(variantIndex, itemIndex, "file_type", "scorm");
-                handleLessonChange(variantIndex, itemIndex, "media_source", "scorm");
+                handleLessonChange(variantIndex, itemIndex, "file_type", isH5pUpload ? "h5p" : "scorm");
+                handleLessonChange(variantIndex, itemIndex, "media_source", isH5pUpload ? "h5p" : "scorm");
                 handleLessonChange(variantIndex, itemIndex, "uploadedFile", "");
                 handleLessonChange(variantIndex, itemIndex, "file", "");
                 handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
                 handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
-                if (!item?.title || item.title === "Pelajaran Tanpa Judul" || item.title === "Modul Pembelajaran SCORM") {
+                if (!item?.title || item.title === "Pelajaran Tanpa Judul" || item.title === "Modul Pembelajaran SCORM" || item.title === "Modul Pembelajaran Interaktif") {
                     handleLessonChange(variantIndex, itemIndex, "title", res.data.module?.judul || file.name.replace(/\.[^/.]+$/, ""));
                 }
                 if (!item?.duration_seconds) {
@@ -999,35 +1011,36 @@ function SortableLessonItem({
 
                 Toast().fire({
                     icon: "success",
-                    title: "Paket SCORM Berhasil Diunggah!",
-                    text: `Modul "${res.data.module?.judul || 'SCORM'}" telah diekstrak dan siap digunakan.`,
+                    title: isH5pUpload ? "Modul H5P Berhasil Diunggah!" : "Paket SCORM Berhasil Diunggah!",
+                    text: `Modul "${res.data.module?.judul || (isH5pUpload ? 'H5P Interaktif' : 'SCORM')}" telah diekstrak dan siap digunakan.`,
                     timer: 2000,
                     showConfirmButton: false
                 });
                 setTimeout(() => autoSaveCurriculum(), 150);
             }
         } catch (err) {
-            console.error("Error uploading SCORM package:", err);
+            console.error("Error uploading elearning package:", err);
             Toast().fire({
                 icon: "error",
-                title: "Unggahan SCORM Gagal",
-                text: err.response?.data?.error || err.response?.data?.message || "Gagal mengunggah dan mengekstrak paket SCORM."
+                title: "Unggahan Modul Gagal",
+                text: err.response?.data?.error || err.response?.data?.message || "Gagal mengunggah dan mengekstrak paket modul interaktif."
             });
         } finally {
             setScormUploadState({ isUploading: false, progress: 0 });
         }
     };
 
-    // Link existing SCORM module from library
+    // Link existing SCORM / H5P module from library
     const handleSelectExistingModule = (moduleId) => {
         if (!moduleId) return;
         const chosen = (availableScormModules || []).find(m => String(m.id) === String(moduleId));
         if (chosen) {
+            const isH5pModule = chosen.module_type === 'h5p';
             handleLessonChange(variantIndex, itemIndex, "learning_module_id", chosen.id);
             handleLessonChange(variantIndex, itemIndex, "learning_module_info", chosen);
-            handleLessonChange(variantIndex, itemIndex, "file_type", "scorm");
-            handleLessonChange(variantIndex, itemIndex, "media_source", "scorm");
-            if (!item?.title || item.title === "Pelajaran Tanpa Judul" || item.title === "Modul Pembelajaran SCORM") {
+            handleLessonChange(variantIndex, itemIndex, "file_type", isH5pModule ? "h5p" : "scorm");
+            handleLessonChange(variantIndex, itemIndex, "media_source", isH5pModule ? "h5p" : "scorm");
+            if (!item?.title || item.title === "Pelajaran Tanpa Judul" || item.title === "Modul Pembelajaran SCORM" || item.title === "Modul Pembelajaran Interaktif") {
                 handleLessonChange(variantIndex, itemIndex, "title", chosen.judul);
             }
             if (!item?.duration_seconds) {
@@ -1035,7 +1048,7 @@ function SortableLessonItem({
             }
             Toast().fire({
                 icon: "success",
-                title: "Modul SCORM Dihubungkan",
+                title: isH5pModule ? "Modul H5P Dihubungkan" : "Modul SCORM Dihubungkan",
                 text: `Materi "${chosen.judul}" berhasil dihubungkan.`,
                 timer: 1500,
                 showConfirmButton: false
@@ -1044,11 +1057,11 @@ function SortableLessonItem({
         }
     };
 
-    // Detach SCORM module
+    // Detach SCORM / H5P module
     const handleDetachScorm = async () => {
         const result = await Swal.fire({
-            title: 'Lepaskan Paket SCORM?',
-            text: 'Modul SCORM akan dilepaskan dari materi pelajaran ini.',
+            title: 'Lepaskan Modul Interaktif?',
+            text: 'Modul interaktif (H5P / SCORM) akan dilepaskan dari materi pelajaran ini.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
@@ -1071,7 +1084,7 @@ function SortableLessonItem({
         handleLessonChange(variantIndex, itemIndex, "media_source", "upload");
         Toast().fire({
             icon: "info",
-            title: "Modul SCORM Dilepaskan",
+            title: "Modul Interaktif Dilepaskan",
             text: "Materi ini dapat diisi kembali dengan video/berkas atau paket modul lainnya.",
             timer: 1500,
             showConfirmButton: false
@@ -1095,10 +1108,10 @@ function SortableLessonItem({
         <div
             ref={setNodeRef}
             style={style}
-            className={`curriculum-item-card-enhanced ${isItemQuiz ? 'is-quiz' : isItemScorm ? 'is-scorm' : 'is-media'} ${isDragging ? 'dragging' : ''}`}
+            className={`curriculum-item-card-enhanced ${isItemQuiz ? 'is-quiz' : isItemH5p ? 'is-h5p is-scorm' : isItemScorm ? 'is-scorm' : 'is-media'} ${isDragging ? 'dragging' : ''}`}
         >
             {/* Header: Compact, Sleek, Eye-Catching */}
-            <div className={`curriculum-item-header-enhanced ${isItemQuiz ? 'quiz-header' : isItemScorm ? 'scorm-header' : ''}`}>
+            <div className={`curriculum-item-header-enhanced ${isItemQuiz ? 'quiz-header' : isItemH5p ? 'h5p-header' : isItemScorm ? 'scorm-header' : ''}`}>
                 <div className="d-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center gap-1 flex-wrap flex-grow-1 overflow-hidden me-2">
                         {/* Drag Handle */}
@@ -1137,6 +1150,7 @@ function SortableLessonItem({
                         {/* Number Badge */}
                         <span className={`lesson-number-badge ${isItemQuiz ? 'bg-warning-subtle text-dark border-warning' : ''}`}>
                             <i className={`fas ${isItemQuiz ? 'fa-clipboard-check text-warning' :
+                                    isItemH5p ? 'fa-puzzle-piece text-primary' :
                                     isItemScorm ? 'fa-cube text-teal' :
                                         isItemAudio ? 'fa-headphones text-info' :
                                             isItemPpt ? 'fa-file-powerpoint text-warning' :
@@ -1151,8 +1165,8 @@ function SortableLessonItem({
                         {/* Format Badges */}
                         {isItemScorm && (
                             <>
-                                <span className="badge badge-scorm-pill shadow-xs d-inline-flex align-items-center">
-                                    <i className="fas fa-cube text-teal me-1"></i>SCORM 1.2
+                                <span className={`badge ${isItemH5p ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'badge-scorm-pill'} shadow-xs d-inline-flex align-items-center`}>
+                                    <i className={`fas ${isItemH5p ? 'fa-puzzle-piece' : 'fa-cube'} me-1`}></i>{isItemH5p ? 'H5P Interaktif' : 'SCORM 1.2'}
                                 </span>
                                 <span className={`badge ${currentJP > 0 ? "bg-white text-teal border shadow-xs" : "bg-warning text-dark"} d-inline-flex align-items-center`}>
                                     <i className="fas fa-graduation-cap me-1"></i>{currentJP > 0 ? `${currentJP} JP` : "0 JP"}
@@ -1329,7 +1343,7 @@ function SortableLessonItem({
                                 )}
                             </div>
                             <div className="col-md-4">
-                                {/* Segmented Format Switcher: Video/Media vs SCORM 1.2 */}
+                                {/* Segmented Format Switcher: Video/Media vs Modul Interaktif (H5P / SCORM) */}
                                 <div className="btn-group btn-group-sm w-100 shadow-xs" role="group">
                                     <button
                                         type="button"
@@ -1342,12 +1356,12 @@ function SortableLessonItem({
                                     </button>
                                     <button
                                         type="button"
-                                        className={`btn py-1 px-2 ${isItemScorm ? 'btn-teal text-white fw-bold shadow-xs' : 'btn-outline-secondary bg-white text-muted'}`}
+                                        className={`btn py-1 px-2 ${isItemScorm ? (isItemH5p ? 'btn-primary text-white fw-bold shadow-xs' : 'btn-teal text-white fw-bold shadow-xs') : 'btn-outline-secondary bg-white text-muted'}`}
                                         style={{ fontSize: "0.75rem", transition: "all 0.15s ease" }}
                                         onClick={() => handleFormatSwitch('scorm')}
-                                        title="Format Paket Interaktif SCORM 1.2"
+                                        title="Format Paket Interaktif Modul E-Learning (H5P / SCORM 1.2)"
                                     >
-                                        <i className="fas fa-cube me-1"></i>Modul SCORM
+                                        <i className={`fas ${isItemH5p ? 'fa-puzzle-piece' : 'fa-cube'} me-1`}></i>Modul Interaktif
                                     </button>
                                 </div>
                             </div>
@@ -1515,13 +1529,13 @@ function SortableLessonItem({
                             {/* Right Column: SCORM Container OR Media Container */}
                             <div className="col-md-6">
                                 {isItemScorm ? (
-                                    /* === SCORM MODULE CONTAINER === */
+                                    /* === SCORM / H5P MODULE CONTAINER === */
                                     isScormLinked ? (
-                                        <div className="p-2 rounded-3 border bg-white shadow-xs h-100 d-flex flex-column justify-content-between" style={{ borderLeft: '3px solid #0f766e', backgroundColor: '#f0fdfa' }}>
+                                        <div className="p-2 rounded-3 border bg-white shadow-xs h-100 d-flex flex-column justify-content-between" style={{ borderLeft: `3px solid ${isItemH5p ? '#0284c7' : '#0f766e'}`, backgroundColor: isItemH5p ? '#f0f9ff' : '#f0fdfa' }}>
                                             <div>
                                                 <div className="d-flex align-items-center justify-content-between mb-1">
-                                                    <span className="badge bg-teal text-white py-0 px-2" style={{ fontSize: "10px" }}>
-                                                        <i className="fas fa-cube me-1"></i>Paket SCORM 1.2
+                                                    <span className={`badge ${isItemH5p ? 'bg-primary' : 'bg-teal'} text-white py-0 px-2`} style={{ fontSize: "10px" }}>
+                                                        <i className={`fas ${isItemH5p ? 'fa-puzzle-piece' : 'fa-cube'} me-1`}></i>{isItemH5p ? 'Modul Interaktif H5P' : 'Paket SCORM 1.2'}
                                                     </span>
                                                     <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-1" style={{ fontSize: "10px" }}>
                                                         <i className="fas fa-check-circle me-1"></i>Terhubung
@@ -1531,34 +1545,34 @@ function SortableLessonItem({
                                                     {scormTitle}
                                                 </h6>
                                                 <div className="d-flex align-items-center gap-2 small text-muted flex-wrap" style={{ fontSize: "0.75rem" }}>
-                                                    <span><i className="fas fa-file-code text-teal me-1"></i><code className="text-dark bg-light px-1 py-0 rounded">{scormEntry}</code></span>
+                                                    <span><i className={`fas ${isItemH5p ? 'fa-file-code text-primary' : 'fa-file-code text-teal'} me-1`}></i><code className="text-dark bg-light px-1 py-0 rounded">{scormEntry}</code></span>
                                                     <span>&bull;</span>
-                                                    <span><i className="fas fa-shield-alt text-success me-1"></i>cmi.core RTE Aktif</span>
+                                                    <span><i className={`fas ${isItemH5p ? 'fa-bolt text-primary' : 'fa-shield-alt text-success'} me-1`}></i>{isItemH5p ? 'H5P Standalone Player Aktif' : 'cmi.core RTE Aktif'}</span>
                                                 </div>
                                             </div>
 
                                             <div className="d-flex align-items-center justify-content-between mt-2 pt-1 border-top">
                                                 <button
                                                     type="button"
-                                                    className="btn btn-xs btn-outline-teal d-inline-flex align-items-center justify-content-center gap-1 py-1 px-2 shadow-xs"
+                                                    className={`btn btn-xs ${isItemH5p ? 'btn-outline-primary' : 'btn-outline-teal'} d-inline-flex align-items-center justify-content-center gap-1 py-1 px-2 shadow-xs`}
                                                     onClick={() => onPreviewScorm && onPreviewScorm(item)}
-                                                    title="Uji coba pemutar SCORM interaktif"
+                                                    title={isItemH5p ? "Uji coba pemutar H5P interaktif" : "Uji coba pemutar SCORM interaktif"}
                                                     style={{ fontSize: "0.75rem", lineHeight: 1, verticalAlign: "middle" }}
                                                 >
-                                                    <i className="fas fa-play text-teal" style={{ fontSize: "10px", lineHeight: 1 }}></i>
-                                                    <span className="fw-semibold" style={{ lineHeight: 1 }}>Uji Coba SCORM</span>
+                                                    <i className="fas fa-play" style={{ fontSize: "10px", lineHeight: 1 }}></i>
+                                                    <span className="fw-semibold" style={{ lineHeight: 1 }}>{isItemH5p ? 'Uji Coba H5P' : 'Uji Coba SCORM'}</span>
                                                 </button>
                                                 <div className="d-flex align-items-center gap-1">
                                                     <label
                                                         className="btn btn-xs btn-outline-secondary d-inline-flex align-items-center justify-content-center py-1 px-2 mb-0 shadow-xs"
-                                                        title="Ganti paket SCORM"
+                                                        title="Ganti paket modul interaktif"
                                                         style={{ fontSize: "0.725rem", cursor: "pointer", lineHeight: 1, verticalAlign: "middle" }}
                                                     >
                                                         <i className="fas fa-sync-alt me-1" style={{ fontSize: "0.7rem", lineHeight: 1 }}></i>
                                                         <span style={{ lineHeight: 1 }}>Ganti</span>
                                                         <input
                                                             type="file"
-                                                            accept=".zip,.h5p"
+                                                            accept=".h5p,.zip"
                                                             hidden
                                                             onChange={(e) => handleScormZipUpload(e.target.files?.[0])}
                                                         />
@@ -1566,7 +1580,7 @@ function SortableLessonItem({
                                                     <button
                                                         type="button"
                                                         className="btn btn-xs btn-outline-danger d-inline-flex align-items-center justify-content-center py-1 px-2 shadow-xs"
-                                                        title="Lepaskan modul SCORM dari materi ini"
+                                                        title="Lepaskan modul interaktif dari materi ini"
                                                         onClick={handleDetachScorm}
                                                         style={{ fontSize: "0.725rem", lineHeight: 1, verticalAlign: "middle" }}
                                                     >
@@ -1581,10 +1595,10 @@ function SortableLessonItem({
                                             <div>
                                                 <div className="d-flex align-items-center justify-content-between mb-1">
                                                     <span className="badge bg-teal-subtle text-teal border border-teal-subtle py-0 px-2 fw-bold" style={{ fontSize: "10px" }}>
-                                                        <i className="fas fa-cube me-1"></i>Unggah / Pilih SCORM
+                                                        <i className="fas fa-puzzle-piece me-1"></i>Unggah / Pilih Modul (H5P / SCORM)
                                                     </span>
                                                     <span className="text-muted small" style={{ fontSize: "0.72rem" }}>
-                                                        ZIP maks. 500MB
+                                                        .h5p / .zip maks. 500MB
                                                     </span>
                                                 </div>
 
@@ -1592,7 +1606,7 @@ function SortableLessonItem({
                                                     <div className="py-2 text-center">
                                                         <div className="spinner-border spinner-border-sm text-teal mb-1" role="status"></div>
                                                         <div className="small fw-bold text-dark" style={{ fontSize: "0.8rem" }}>
-                                                            Mengunggah & Mengekstrak SCORM... {scormUploadState.progress}%
+                                                            Mengunggah & Mengekstrak Modul Interaktif... {scormUploadState.progress}%
                                                         </div>
                                                         <div className="progress mt-1" style={{ height: "6px" }}>
                                                             <div className="progress-bar bg-teal" style={{ width: `${scormUploadState.progress}%` }}></div>
@@ -1602,10 +1616,10 @@ function SortableLessonItem({
                                                     <div className="d-flex flex-column gap-1">
                                                         <label className="btn btn-sm btn-outline-teal w-100 d-flex align-items-center justify-content-center gap-1 py-1 mb-0 shadow-xs" style={{ cursor: "pointer", fontSize: "0.8rem" }}>
                                                             <i className="fas fa-cloud-arrow-up"></i>
-                                                            <span className="fw-semibold">Unggah Paket SCORM 1.2 (.zip)</span>
+                                                            <span className="fw-semibold">Unggah Paket Modul (.h5p / .zip)</span>
                                                             <input
                                                                 type="file"
-                                                                accept=".zip,.h5p"
+                                                                accept=".h5p,.zip"
                                                                 hidden
                                                                 onChange={(e) => handleScormZipUpload(e.target.files?.[0])}
                                                             />
@@ -1622,7 +1636,7 @@ function SortableLessonItem({
                                                                     <option value="" disabled>-- Atau pilih paket dari pustaka --</option>
                                                                     {availableScormModules.map(m => (
                                                                         <option key={m.id} value={m.id}>
-                                                                            {m.judul} ({m.module_type === 'scorm_12' ? 'SCORM 1.2' : m.module_type.toUpperCase()})
+                                                                            {m.judul} ({m.module_type === 'h5p' ? 'H5P Interaktif' : m.module_type === 'scorm_12' ? 'SCORM 1.2' : m.module_type.toUpperCase()})
                                                                         </option>
                                                                     ))}
                                                                 </select>
@@ -1633,7 +1647,7 @@ function SortableLessonItem({
                                             </div>
 
                                             <div className="small text-muted mt-2 pt-1 border-top d-flex align-items-center justify-content-between" style={{ fontSize: "0.72rem" }}>
-                                                <span><i className="fas fa-check-circle text-teal me-1"></i>Otomatis ekstrak imsmanifest</span>
+                                                <span><i className="fas fa-check-circle text-teal me-1"></i>Otomatis ekstrak H5P / imsmanifest</span>
                                                 <span><i className="fas fa-shield-alt text-teal me-1"></i>Zip-Slip safe</span>
                                             </div>
                                         </div>
@@ -1808,24 +1822,33 @@ function SortableLessonItem({
                                                         <div>
                                                             <label className="btn btn-sm btn-outline-teal w-100 d-flex align-items-center justify-content-center gap-1 py-1 mb-0 shadow-xs" style={{ cursor: "pointer", fontSize: "0.8rem" }}>
                                                                 <i className="fas fa-folder-open"></i>
-                                                                <span className="fw-semibold">Pilih Berkas Media (Video/Doc/PPT)</span>
+                                                                <span className="fw-semibold">Pilih Berkas Media (Video/Doc/PPT/H5P)</span>
                                                                 <input
                                                                     type="file"
                                                                     hidden
-                                                                    accept=".mp4,.webm,.ogv,.mov,.avi,.mkv,.ppt,.pptx,.pdf,.doc,.docx,.txt,.mp3,.wav,.ogg,.m4a,video/*,audio/*,application/pdf"
+                                                                    accept=".mp4,.webm,.ogv,.mov,.avi,.mkv,.ppt,.pptx,.pdf,.doc,.docx,.txt,.mp3,.wav,.ogg,.m4a,.h5p,.zip,video/*,audio/*,application/pdf"
                                                                     onChange={(e) => {
                                                                         const file = e.target.files?.[0];
                                                                         if (file) {
-                                                                            const validExts = ['.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv', '.ppt', '.pptx', '.pdf', '.doc', '.docx', '.txt', '.mp3', '.wav', '.ogg', '.m4a', '.aac'];
                                                                             const fileName = (file.name || '').toLowerCase();
+                                                                            // ✨ DETEKSI OTOMATIS BERKAS MODUL INTERAKTIF (.h5p atau .zip modul)
+                                                                            if (fileName.endsWith('.h5p') || (fileName.endsWith('.zip') && !file.type.startsWith('video/'))) {
+                                                                                handleLessonChange(variantIndex, itemIndex, "file_type", fileName.endsWith('.h5p') ? "h5p" : "scorm");
+                                                                                handleLessonChange(variantIndex, itemIndex, "media_source", fileName.endsWith('.h5p') ? "h5p" : "scorm");
+                                                                                handleScormZipUpload(file);
+                                                                                e.target.value = '';
+                                                                                return;
+                                                                            }
+
+                                                                            const validExts = ['.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv', '.ppt', '.pptx', '.pdf', '.doc', '.docx', '.txt', '.mp3', '.wav', '.ogg', '.m4a', '.aac', '.h5p', '.zip'];
                                                                             const isExtOk = validExts.some(ext => fileName.endsWith(ext));
-                                                                            const isMimeOk = file.type.startsWith('video/') || file.type.startsWith('audio/') || file.type === 'application/pdf' || file.type.includes('presentation') || file.type.includes('document');
+                                                                            const isMimeOk = file.type.startsWith('video/') || file.type.startsWith('audio/') || file.type === 'application/pdf' || file.type.includes('presentation') || file.type.includes('document') || file.type.includes('zip');
 
                                                                             if (!isExtOk && !isMimeOk) {
                                                                                 Toast().fire({
                                                                                     icon: "error",
                                                                                     title: "Tipe Berkas Tidak Didukung",
-                                                                                    text: "Silakan unggah video (MP4/WebM/MOV), presentasi (PPT/PPTX), dokumen (PDF/DOCX), atau audio (MP3/WAV).",
+                                                                                    text: "Silakan unggah modul interaktif (.h5p), video (MP4/WebM/MOV), presentasi (PPT/PPTX), dokumen (PDF/DOCX), atau audio (MP3/WAV).",
                                                                                 });
                                                                                 return;
                                                                             }
@@ -2197,22 +2220,28 @@ function CourseEditCurriculum() {
             url = getMediaUrl(`/media/learning_modules/extracted_${course.learning_module_id}/index.html`);
         }
 
+        const isH5p = lm?.module_type === 'h5p' || item?.file_type === 'h5p' || (item?.file && String(item.file).toLowerCase().endsWith('.h5p'));
         if (!url) {
             Toast().fire({
                 icon: "warning",
-                title: "Modul SCORM Belum Siap",
-                text: "URL pemutar modul SCORM tidak ditemukan. Pastikan modul SCORM telah berhasil diunggah."
+                title: isH5p ? "Modul H5P Belum Siap" : "Modul SCORM Belum Siap",
+                text: isH5p ? "URL pemutar modul H5P tidak ditemukan. Pastikan modul H5P telah berhasil diunggah." : "URL pemutar modul SCORM tidak ditemukan. Pastikan modul SCORM telah berhasil diunggah."
             });
             return;
+        }
+
+        if (url) {
+            const separator = url.includes('?') ? '&' : '?';
+            url = `${url}${separator}_t=${Date.now()}`;
         }
 
         setScormPlayerStatus("not attempted");
         setScormPlayerScore(null);
         setScormPreviewModal({
             isOpen: true,
-            title: item?.title || lm?.judul || course?.title || "Pratinjau Modul SCORM",
+            title: item?.title || lm?.judul || course?.title || (isH5p ? "Pratinjau Modul H5P" : "Pratinjau Modul SCORM"),
             url: url,
-            moduleType: lm?.module_type || course?.course_type || "scorm_12",
+            moduleType: isH5p ? 'h5p' : (lm?.module_type || course?.course_type || "scorm_12"),
             isFullscreen: false
         });
     };
@@ -2604,8 +2633,8 @@ function CourseEditCurriculum() {
             }
         }
 
-        // ✨ SCORM Lesson: Content and duration are managed directly by the SCORM package & RTE API
-        const isItemScorm = isElearningScorm || Boolean(item.learning_module_id) || Boolean(item.learning_module_info) || item.file_type === 'scorm';
+        // ✨ SCORM / H5P Lesson: Content and duration are managed directly by the interactive module package & RTE API
+        const isItemScorm = isElearningScorm || Boolean(item.learning_module_id) || Boolean(item.learning_module_info) || item.file_type === 'scorm' || item.file_type === 'h5p';
 
         if (!isItemScorm) {
             // Validate media sources for standard video - accept Google Drive, YouTube, or Uploaded File
@@ -2808,10 +2837,11 @@ function CourseEditCurriculum() {
                         const isUploadedFile = fileUrl.includes('/media/') ||
                             /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl); // Check for video extensions
 
-                        // ✨ Detect SCORM learning module
+                        // ✨ Detect SCORM / H5P learning module
                         const itemLmInfo = item.learning_module_info || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module : courseData.learning_module);
                         const itemLmId = item.learning_module_id || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module.id : (typeof item.learning_module === 'number' ? item.learning_module : (courseData.learning_module_id || courseData.learning_module?.id)));
-                        const isItemScorm = isCourseScorm || Boolean(itemLmId) || item.file_type === 'scorm';
+                        const isItemH5p = itemLmInfo?.module_type === 'h5p' || item.file_type === 'h5p' || (fileUrl && fileUrl.toLowerCase().endsWith('.h5p'));
+                        const isItemScorm = isCourseScorm || Boolean(itemLmId) || item.file_type === 'scorm' || isItemH5p;
 
                         return {
                             title: item.title || "",
@@ -2827,7 +2857,7 @@ function CourseEditCurriculum() {
                             order: item.order !== undefined ? item.order : itemIndex, // ✅ Preserve lesson order
                             duration_seconds: item.duration_seconds || null, // ✨ PHASE 4.43.9: Preserve duration_seconds from backend
                             duration_formatted: item.content_duration || null, // ✨ PHASE 4.43.9: Also preserve formatted duration for display
-                            media_source: item.media_source || (isItemScorm ? 'scorm' : null),
+                            media_source: item.media_source || (isItemH5p ? 'h5p' : isItemScorm ? 'scorm' : null),
                             learning_module_id: itemLmId || null,
                             learning_module_info: itemLmInfo ? {
                                 id: itemLmInfo.id,
@@ -2836,7 +2866,7 @@ function CourseEditCurriculum() {
                                 player_url: itemLmInfo.player_url,
                                 entry_file: itemLmInfo.entry_file || "index.html"
                             } : null,
-                            file_type: isItemScorm ? 'scorm' : (item.file_type || null)
+                            file_type: isItemH5p ? 'h5p' : (isItemScorm ? 'scorm' : (item.file_type || null))
                         };
                     })
                 };
@@ -4157,9 +4187,10 @@ function CourseEditCurriculum() {
 
                 const itemLmInfo = item.learning_module_info || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module : updatedCourse.learning_module);
                 const itemLmId = item.learning_module_id || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module.id : (typeof item.learning_module === 'number' ? item.learning_module : (updatedCourse.learning_module_id || updatedCourse.learning_module?.id)));
-                const isItemScorm = isElearningScorm || Boolean(itemLmId) || item.file_type === 'scorm';
+                const isItemH5p = itemLmInfo?.module_type === 'h5p' || item.file_type === 'h5p' || (fileUrl && fileUrl.toLowerCase().endsWith('.h5p'));
+                const isItemScorm = isElearningScorm || Boolean(itemLmId) || item.file_type === 'scorm' || isItemH5p;
 
-                const detectedSource = isItemScorm ? 'scorm' : (isUploadedFile ? 'upload' : (isYouTubeLink ? 'youtube' : (fileUrl ? 'google_drive' : (prevItem?.media_source || null))));
+                const detectedSource = isItemH5p ? 'h5p' : isItemScorm ? 'scorm' : (isUploadedFile ? 'upload' : (isYouTubeLink ? 'youtube' : (fileUrl ? 'google_drive' : (prevItem?.media_source || null))));
 
                 return {
                     title: item.title || '',
@@ -5592,9 +5623,9 @@ function CourseEditCurriculum() {
                                                 style={{ backgroundColor: "#ffffff", borderBottom: "1px solid #e2e8f0" }}
                                             >
                                                 <div className="d-flex align-items-center gap-2">
-                                                    <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-1 fw-semibold">
-                                                        <i className="fas fa-cube me-1"></i>
-                                                        {(scormPreviewModal.moduleType || "SCORM").toUpperCase()}
+                                                    <span className={`badge ${scormPreviewModal.moduleType === 'h5p' ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-teal-subtle text-teal border border-teal-subtle'} px-2 py-1 fw-semibold`}>
+                                                        <i className={`fas ${scormPreviewModal.moduleType === 'h5p' ? 'fa-puzzle-piece' : 'fa-cube'} me-1`}></i>
+                                                        {scormPreviewModal.moduleType === 'h5p' ? 'MODUL H5P INTERAKTIF' : (scormPreviewModal.moduleType || "SCORM").toUpperCase()}
                                                     </span>
                                                     <h6 className="modal-title mb-0 fw-bold text-dark">
                                                         {scormPreviewModal.title}
@@ -5646,6 +5677,7 @@ function CourseEditCurriculum() {
                                             >
                                                 {scormPreviewModal.url ? (
                                                     <iframe
+                                                        key={scormPreviewModal.url}
                                                         ref={scormIframeRef}
                                                         src={scormPreviewModal.url}
                                                         title="SCORM Player Simulation"

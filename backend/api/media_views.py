@@ -32,7 +32,6 @@ class EnhancedMediaView(View):
         response['Access-Control-Allow-Headers'] = '*'
         return response
     
-    @method_decorator(cache_control(max_age=3600, public=True))
     def get(self, request, path):
         """
         Serve media files with range request support for video streaming.
@@ -186,7 +185,17 @@ class EnhancedMediaView(View):
         # Determine content type
         content_type, encoding = mimetypes.guess_type(full_path)
         if content_type is None:
-            content_type = 'application/octet-stream'
+            lower_name = full_path.lower()
+            if lower_name.endswith('.woff2'):
+                content_type = 'font/woff2'
+            elif lower_name.endswith('.woff'):
+                content_type = 'font/woff'
+            elif lower_name.endswith('.json'):
+                content_type = 'application/json'
+            elif lower_name.endswith('.h5p') or lower_name.endswith('.zip'):
+                content_type = 'application/zip'
+            else:
+                content_type = 'application/octet-stream'
         
         # Get file size
         file_size = stat_obj.st_size
@@ -252,7 +261,12 @@ class EnhancedMediaView(View):
         response['Accept-Ranges'] = 'bytes'
         
         # Add caching headers
-        response['Cache-Control'] = 'public, max-age=3600'
+        if file_path.lower().endswith(('.html', '.htm', '.json')):
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+        else:
+            response['Cache-Control'] = 'public, max-age=3600'
         response['ETag'] = f'"{file_size}-{os.path.getmtime(file_path)}"'
         response['Access-Control-Allow-Origin'] = '*'
         response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
@@ -278,7 +292,12 @@ class EnhancedMediaView(View):
         response['Accept-Ranges'] = 'bytes'
         
         # Add caching headers
-        response['Cache-Control'] = 'public, max-age=3600'
+        if file_path.lower().endswith(('.html', '.htm', '.json')):
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+        else:
+            response['Cache-Control'] = 'public, max-age=3600'
         response['ETag'] = f'"{file_size}-{os.path.getmtime(file_path)}"'
         response['Access-Control-Allow-Origin'] = '*'
         response['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS'
