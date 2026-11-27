@@ -1,5 +1,8 @@
 # Root .gitignore for Django React LMS Project
 
+# Tes SCORM
+Test SCORM/
+
 # ===================================
 # ENVIRONMENT & CONFIGURATION FILES
 # ===================================
