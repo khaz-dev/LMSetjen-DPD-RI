@@ -5,6 +5,7 @@ export const COURSE_LEVELS = [
   { value: "Beginner", label: "🟢 Pemula" },
   { value: "Intermediate", label: "🟡 Menengah" },
   { value: "Advanced", label: "🔴 Lanjutan" },
+  { value: "All Levels", label: "🔵 Semua Level" },
 ];
 
 export const COURSE_AUDIENCE_OPTIONS = [

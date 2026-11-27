@@ -4,7 +4,8 @@
 export const CURRICULUM_LEVELS = [
     { value: "Beginner", label: "Beginner" },
     { value: "Intermediate", label: "Intermediate" },
-    { value: "Advanced", label: "Advanced" }
+    { value: "Advanced", label: "Advanced" },
+    { value: "All Levels", label: "All Levels" }
 ];
 
 // File Upload Limits for Curriculum

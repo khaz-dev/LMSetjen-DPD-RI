@@ -245,9 +245,20 @@ function UsersAdmin() {
             });
         }
 
-        // Role filter
+        // Role filter (mendukung multi-role boolean flags yang konsisten dengan KPI card)
         if (roleFilter !== "all") {
-            filtered = filtered.filter(user => user.role === roleFilter);
+            filtered = filtered.filter(user => {
+                if (roleFilter === "teacher" || roleFilter === "instructor") {
+                    return Boolean(user.is_instructor);
+                }
+                if (roleFilter === "student") {
+                    return Boolean(user.is_student);
+                }
+                if (roleFilter === "admin") {
+                    return Boolean(user.is_admin);
+                }
+                return user.role === roleFilter;
+            });
         }
 
         // Status filter

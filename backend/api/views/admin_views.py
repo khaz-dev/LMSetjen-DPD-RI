@@ -1030,10 +1030,17 @@ class AdminUserManagementAPIView(generics.ListAPIView):
             'profile__image'
         ).order_by('-date_joined')
         
-        # Apply filtering if provided
+        # Apply filtering if provided (support multi-role boolean flags)
         role_filter = self.request.query_params.get('role', None)
         if role_filter:
-            queryset = queryset.filter(role=role_filter)
+            if role_filter in ['teacher', 'instructor']:
+                queryset = queryset.filter(is_instructor=True)
+            elif role_filter == 'student':
+                queryset = queryset.filter(is_student=True)
+            elif role_filter == 'admin':
+                queryset = queryset.filter(is_admin=True)
+            else:
+                queryset = queryset.filter(role=role_filter)
 
         user_type_filter = self.request.query_params.get('user_type', None)
         if user_type_filter and user_type_filter.upper() != 'ALL':
@@ -1117,10 +1124,17 @@ class AdminUserManagementAllAPIView(generics.ListAPIView):
             'profile__image'
         ).order_by('-date_joined')
         
-        # Apply filtering if provided
+        # Apply filtering if provided (support multi-role boolean flags)
         role_filter = self.request.query_params.get('role', None)
         if role_filter:
-            queryset = queryset.filter(role=role_filter)
+            if role_filter in ['teacher', 'instructor']:
+                queryset = queryset.filter(is_instructor=True)
+            elif role_filter == 'student':
+                queryset = queryset.filter(is_student=True)
+            elif role_filter == 'admin':
+                queryset = queryset.filter(is_admin=True)
+            else:
+                queryset = queryset.filter(role=role_filter)
 
         user_type_filter = self.request.query_params.get('user_type', None)
         if user_type_filter and user_type_filter.upper() != 'ALL':

@@ -698,7 +698,8 @@ class LevelFilterAPIView(generics.GenericAPIView):
         level_descriptions = {
             'Beginner': 'Perfect for those new to the topic',
             'Intermediate': 'For learners with basic knowledge',
-            'Advanced': 'For experienced learners'
+            'Advanced': 'For experienced learners',
+            'All Levels': 'Suitable for all learning levels'
         }
         
         for level_choice in api_models.LEVEL:

@@ -90,6 +90,8 @@ export const getLevelBadgeStyle = (level) => {
         Beginner: 'linear-gradient(135deg, #2dd4bf, #14b8a6)',       // Teal-400 to Teal-500 (lightest)
         Intermediate: 'linear-gradient(135deg, #0d9488, #0f766e)',   // Teal-600 to Teal-700 (mid)
         Advanced: 'linear-gradient(135deg, #115e59, #134e4a)',       // Teal-800 to Teal-900 (darkest)
+        'All Levels': 'linear-gradient(135deg, #0ea5e9, #0284c7)',   // Sky-500 to Sky-600
+        'Semua Level': 'linear-gradient(135deg, #0ea5e9, #0284c7)',  // Sky-500 to Sky-600
         default: 'linear-gradient(135deg, #0d9488, #0f766e)'         // Teal default
     };
     return styles[level] || styles.default;
@@ -100,9 +102,14 @@ export const getLevelText = (level) => {
         Beginner: '🟢 Pemula',
         Intermediate: '🟡 Menengah',
         Advanced: '🔴 Lanjutan',
+        'All Levels': '🔵 Semua Level',
+        'Semua Level': '🔵 Semua Level',
         beginner: '🟢 Pemula',
         intermediate: '🟡 Menengah',
         advanced: '🔴 Lanjutan',
+        'all levels': '🔵 Semua Level',
+        'semua level': '🔵 Semua Level',
+        all: '🔵 Semua Level',
         default: 'N/A'
     };
     return texts[level] || texts.default;

@@ -872,6 +872,11 @@ body.instructor-theme section.instructor-hero-banner.is-stuck,
     background: rgba(139, 92, 246, 0.9);
 }
 
+.badge-level-chip.level-all,
+.badge-level-chip.level-all-levels {
+    background: rgba(2, 132, 199, 0.9);
+}
+
 /* Card Details */
 .course-card-details {
     padding: 0.95rem;

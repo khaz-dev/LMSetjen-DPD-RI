@@ -235,6 +235,9 @@ function Courses() {
         if (lvl.includes("exp") || lvl.includes("ahli")) {
             return { label: "Ahli", tone: "level-amber", icon: "fa-crown" };
         }
+        if (lvl.includes("all") || lvl.includes("semua")) {
+            return { label: "Semua Level", tone: "level-slate", icon: "fa-layer-group" };
+        }
         return { label: level || "Semua Tingkat", tone: "level-slate", icon: "fa-layer-group" };
     };
 

@@ -100,6 +100,9 @@ function CertificateValidation() {
         if (lvl.includes('exp') || lvl.includes('ahli')) {
             return { label: 'Ahli', tone: 'val-lvl-amber', icon: 'fa-crown' };
         }
+        if (lvl.includes('all') || lvl.includes('semua')) {
+            return { label: 'Semua Level', tone: 'val-lvl-slate', icon: 'fa-layer-group' };
+        }
         return { label: level || 'Umum', tone: 'val-lvl-slate', icon: 'fa-book' };
     };
 

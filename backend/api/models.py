@@ -32,6 +32,7 @@ LEVEL = (
     ("Beginner", "Beginner"),
     ("Intermediate", "Intermediate"),
     ("Advanced", "Advanced"),
+    ("All Levels", "All Levels"),
 )
 
 TARGET_AUDIENCE = (

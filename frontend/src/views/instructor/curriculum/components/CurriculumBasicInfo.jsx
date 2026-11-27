@@ -151,6 +151,7 @@ const CurriculumBasicInfo = forwardRef(({
                     <option value="Beginner">Pemula</option>
                     <option value="Intermediate">Menengah</option>
                     <option value="Advanced">Lanjutan</option>
+                    <option value="All Levels">Semua Level</option>
                 </select>
                 <small className="text-muted">
                     Pilih tingkat kesulitan yang sesuai untuk kursus Anda.

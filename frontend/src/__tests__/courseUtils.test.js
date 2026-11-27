@@ -52,6 +52,7 @@ describe('courseUtils', () => {
       expect(getLevelBadgeStyle('Beginner')).toContain('#2dd4bf');
       expect(getLevelBadgeStyle('Intermediate')).toContain('#0d9488');
       expect(getLevelBadgeStyle('Advanced')).toContain('#115e59');
+      expect(getLevelBadgeStyle('All Levels')).toContain('#0ea5e9');
       expect(getLevelBadgeStyle('Unknown')).toContain('#0d9488');
     });
   });
@@ -61,6 +62,7 @@ describe('courseUtils', () => {
       expect(getLevelText('Beginner')).toBe('🟢 Pemula');
       expect(getLevelText('Intermediate')).toBe('🟡 Menengah');
       expect(getLevelText('Advanced')).toBe('🔴 Lanjutan');
+      expect(getLevelText('All Levels')).toBe('🔵 Semua Level');
       expect(getLevelText('unknown')).toBe('N/A');
     });
 
