@@ -2136,51 +2136,70 @@ function CourseEditCurriculum() {
     const [scormPlayerScore, setScormPlayerScore] = useState(null);
     const scormIframeRef = useRef(null);
 
-    // SCORM 1.2 RTE API bridge for interactive preview testing by instructor
-    useEffect(() => {
-        if (!scormPreviewModal.isOpen) return;
-
+    // Helper to initialize SCORM 1.2 & SCORM 2004 RTE API bridges synchronously for interactive preview testing
+    const initScormRte = (setStatus, setScore) => {
         const cmi = {
+            // SCORM 1.2
             "cmi.core.student_id": "instructor_preview",
             "cmi.core.student_name": "Instruktur Penguji",
-            "cmi.core.lesson_status": scormPlayerStatus,
-            "cmi.core.score.raw": scormPlayerScore !== null ? String(scormPlayerScore) : "0",
+            "cmi.core.lesson_status": "not attempted",
+            "cmi.core.score.raw": "0",
+            "cmi.core.score.min": "0",
+            "cmi.core.score.max": "100",
             "cmi.core.lesson_location": "",
             "cmi.core.session_time": "00:00:00",
             "cmi.suspend_data": "",
             "cmi.core.entry": "ab-initio",
             "cmi.core.exit": "",
             "cmi.core.total_time": "00:00:00",
-            "cmi.core.lesson_mode": "normal"
+            "cmi.core.lesson_mode": "normal",
+            "cmi.core.credit": "credit",
+
+            // SCORM 2004
+            "cmi.learner_id": "instructor_preview",
+            "cmi.learner_name": "Instruktur Penguji",
+            "cmi.completion_status": "unknown",
+            "cmi.success_status": "unknown",
+            "cmi.score.raw": "0",
+            "cmi.score.scaled": "0",
+            "cmi.score.min": "0",
+            "cmi.score.max": "100",
+            "cmi.location": "",
+            "cmi.session_time": "PT0H0M0S",
+            "cmi.entry": "ab-initio",
+            "cmi.exit": "",
+            "cmi.total_time": "PT0H0M0S",
+            "cmi.mode": "normal",
+            "cmi.credit": "credit"
         };
 
-        window.API = {
+        const api12 = {
             LMSInitialize: (param) => {
-                console.log("[Curriculum SCORM RTE] LMSInitialize:", param);
+                console.log("[Curriculum SCORM 1.2 RTE] LMSInitialize:", param);
                 return "true";
             },
             LMSGetValue: (element) => {
                 const val = cmi[element] !== undefined ? cmi[element] : "";
-                console.log(`[Curriculum SCORM RTE] LMSGetValue(${element}) ->`, val);
+                console.log(`[Curriculum SCORM 1.2 RTE] LMSGetValue(${element}) ->`, val);
                 return val;
             },
             LMSSetValue: (element, value) => {
-                console.log(`[Curriculum SCORM RTE] LMSSetValue(${element}, ${value})`);
+                console.log(`[Curriculum SCORM 1.2 RTE] LMSSetValue(${element}, ${value})`);
                 cmi[element] = String(value);
-                if (element === "cmi.core.lesson_status") {
-                    setScormPlayerStatus(String(value).toLowerCase());
+                if (element === "cmi.core.lesson_status" && setStatus) {
+                    setStatus(String(value).toLowerCase());
                 }
-                if (element === "cmi.core.score.raw") {
-                    setScormPlayerScore(Number(value) || 0);
+                if (element === "cmi.core.score.raw" && setScore) {
+                    setScore(Number(value) || 0);
                 }
                 return "true";
             },
             LMSCommit: (param) => {
-                console.log("[Curriculum SCORM RTE] LMSCommit:", param);
+                console.log("[Curriculum SCORM 1.2 RTE] LMSCommit:", param);
                 return "true";
             },
             LMSFinish: (param) => {
-                console.log("[Curriculum SCORM RTE] LMSFinish:", param);
+                console.log("[Curriculum SCORM 1.2 RTE] LMSFinish:", param);
                 return "true";
             },
             LMSGetLastError: () => "0",
@@ -2188,14 +2207,64 @@ function CourseEditCurriculum() {
             LMSGetDiagnostic: () => "No error"
         };
 
+        const api2004 = {
+            Initialize: (param) => {
+                console.log("[Curriculum SCORM 2004 RTE] Initialize:", param);
+                return "true";
+            },
+            GetValue: (element) => {
+                const val = cmi[element] !== undefined ? cmi[element] : "";
+                console.log(`[Curriculum SCORM 2004 RTE] GetValue(${element}) ->`, val);
+                return val;
+            },
+            SetValue: (element, value) => {
+                console.log(`[Curriculum SCORM 2004 RTE] SetValue(${element}, ${value})`);
+                cmi[element] = String(value);
+                if ((element === "cmi.completion_status" || element === "cmi.success_status") && setStatus) {
+                    setStatus(String(value).toLowerCase());
+                }
+                if (element === "cmi.score.raw" && setScore) {
+                    setScore(Number(value) || 0);
+                } else if (element === "cmi.score.scaled" && setScore) {
+                    setScore(Math.round((Number(value) || 0) * 100));
+                }
+                return "true";
+            },
+            Commit: (param) => {
+                console.log("[Curriculum SCORM 2004 RTE] Commit:", param);
+                return "true";
+            },
+            Terminate: (param) => {
+                console.log("[Curriculum SCORM 2004 RTE] Terminate:", param);
+                return "true";
+            },
+            GetLastError: () => "0",
+            GetErrorString: () => "No error",
+            GetDiagnostic: () => "No error"
+        };
+
+        window.API = api12;
+        window.API_1484_11 = api2004;
+        return { api12, api2004 };
+    };
+
+    // SCORM 1.2 & SCORM 2004 RTE API lifecycle effect
+    useEffect(() => {
+        if (!scormPreviewModal.isOpen) return;
+
+        if (scormPreviewModal.moduleType !== 'h5p' && (!window.API || !window.API_1484_11)) {
+            initScormRte(setScormPlayerStatus, setScormPlayerScore);
+        }
+
         const prevOverflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
 
         return () => {
             delete window.API;
+            delete window.API_1484_11;
             document.body.style.overflow = prevOverflow;
         };
-    }, [scormPreviewModal.isOpen]);
+    }, [scormPreviewModal.isOpen, scormPreviewModal.moduleType]);
 
     const handleOpenScormPreview = (item) => {
         let lm = item?.learning_module_info || (item?.learning_module && typeof item.learning_module === 'object' ? item.learning_module : null) || course?.learning_module;
@@ -2233,6 +2302,11 @@ function CourseEditCurriculum() {
         if (url) {
             const separator = url.includes('?') ? '&' : '?';
             url = `${url}${separator}_t=${Date.now()}`;
+        }
+
+        // Synchronously initialize SCORM 1.2 & 2004 APIs BEFORE modal mounts iframe to prevent race conditions
+        if (!isH5p) {
+            initScormRte(setScormPlayerStatus, setScormPlayerScore);
         }
 
         setScormPlayerStatus("not attempted");
@@ -5688,6 +5762,21 @@ function CourseEditCurriculum() {
                                                             minHeight: scormPreviewModal.isFullscreen ? "calc(100vh - 120px)" : "600px",
                                                             display: "block",
                                                             backgroundColor: "#ffffff"
+                                                        }}
+                                                        onLoad={(e) => {
+                                                            try {
+                                                                const cw = e.target.contentWindow;
+                                                                if (cw) {
+                                                                    if (window.API && !cw.API) {
+                                                                        cw.API = window.API;
+                                                                    }
+                                                                    if (window.API_1484_11 && !cw.API_1484_11) {
+                                                                        cw.API_1484_11 = window.API_1484_11;
+                                                                    }
+                                                                }
+                                                            } catch (err) {
+                                                                console.warn("[SCORM Iframe] Cross-origin or access warning:", err);
+                                                            }
                                                         }}
                                                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                                                         allowFullScreen

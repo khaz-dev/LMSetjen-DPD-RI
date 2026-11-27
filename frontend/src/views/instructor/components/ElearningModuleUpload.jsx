@@ -65,16 +65,16 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
 
     window.API = {
       LMSInitialize: (param) => {
-        console.log("[Inline SCORM RTE] LMSInitialize:", param);
+        console.log("[Inline SCORM 1.2 RTE] LMSInitialize:", param);
         return "true";
       },
       LMSGetValue: (element) => {
         const val = cmi[element] !== undefined ? cmi[element] : "";
-        console.log(`[Inline SCORM RTE] LMSGetValue(${element}) ->`, val);
+        console.log(`[Inline SCORM 1.2 RTE] LMSGetValue(${element}) ->`, val);
         return val;
       },
       LMSSetValue: (element, value) => {
-        console.log(`[Inline SCORM RTE] LMSSetValue(${element}, ${value})`);
+        console.log(`[Inline SCORM 1.2 RTE] LMSSetValue(${element}, ${value})`);
         cmi[element] = String(value);
         if (element === "cmi.core.lesson_status") {
           setPlayerStatus(String(value).toLowerCase());
@@ -85,11 +85,11 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
         return "true";
       },
       LMSCommit: (param) => {
-        console.log("[Inline SCORM RTE] LMSCommit:", param);
+        console.log("[Inline SCORM 1.2 RTE] LMSCommit:", param);
         return "true";
       },
       LMSFinish: (param) => {
-        console.log("[Inline SCORM RTE] LMSFinish:", param);
+        console.log("[Inline SCORM 1.2 RTE] LMSFinish:", param);
         return "true";
       },
       LMSGetLastError: () => "0",
@@ -97,8 +97,45 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
       LMSGetDiagnostic: () => "No error"
     };
 
+    window.API_1484_11 = {
+      Initialize: (param) => {
+        console.log("[Inline SCORM 2004 RTE] Initialize:", param);
+        return "true";
+      },
+      GetValue: (element) => {
+        const val = cmi[element] !== undefined ? cmi[element] : "";
+        console.log(`[Inline SCORM 2004 RTE] GetValue(${element}) ->`, val);
+        return val;
+      },
+      SetValue: (element, value) => {
+        console.log(`[Inline SCORM 2004 RTE] SetValue(${element}, ${value})`);
+        cmi[element] = String(value);
+        if (element === "cmi.completion_status" || element === "cmi.success_status") {
+          setPlayerStatus(String(value).toLowerCase());
+        }
+        if (element === "cmi.score.raw") {
+          setPlayerScore(Number(value) || 0);
+        } else if (element === "cmi.score.scaled") {
+          setPlayerScore(Math.round((Number(value) || 0) * 100));
+        }
+        return "true";
+      },
+      Commit: (param) => {
+        console.log("[Inline SCORM 2004 RTE] Commit:", param);
+        return "true";
+      },
+      Terminate: (param) => {
+        console.log("[Inline SCORM 2004 RTE] Terminate:", param);
+        return "true";
+      },
+      GetLastError: () => "0",
+      GetErrorString: () => "No error",
+      GetDiagnostic: () => "No error"
+    };
+
     return () => {
       delete window.API;
+      delete window.API_1484_11;
     };
   }, [showPlayer, playerStatus, playerScore]);
 

@@ -125,27 +125,53 @@ const ScormPlayer = ({
     }
   }, [moduleId, courseId, course, variantItem, handleMarkLessonAsCompleted, isLessonAlreadyCompleted]);
 
-  // Setup window.API for SCORM 1.2 on window object so any iframe finding window.parent.API works directly
+  // Setup window.API for SCORM 1.2 and window.API_1484_11 for SCORM 2004 on window object
   useEffect(() => {
     const cmiStore = {
+      // SCORM 1.2
       "cmi.core.student_id": "current_asn",
+      "cmi.core.student_name": "Siswa ASN",
       "cmi.core.lesson_status": lessonStatus,
       "cmi.core.score.raw": "0",
+      "cmi.core.score.min": "0",
+      "cmi.core.score.max": "100",
       "cmi.core.lesson_location": "",
       "cmi.core.session_time": "00:00:00",
       "cmi.suspend_data": "",
+      "cmi.core.entry": "ab-initio",
+      "cmi.core.exit": "",
+      "cmi.core.total_time": "00:00:00",
+      "cmi.core.lesson_mode": "normal",
+      "cmi.core.credit": "credit",
+
+      // SCORM 2004
+      "cmi.learner_id": "current_asn",
+      "cmi.learner_name": "Siswa ASN",
+      "cmi.completion_status": lessonStatus === 'completed' || lessonStatus === 'passed' ? 'completed' : 'incomplete',
+      "cmi.success_status": lessonStatus === 'passed' ? 'passed' : lessonStatus === 'failed' ? 'failed' : 'unknown',
+      "cmi.score.raw": "0",
+      "cmi.score.scaled": "0",
+      "cmi.score.min": "0",
+      "cmi.score.max": "100",
+      "cmi.location": "",
+      "cmi.session_time": "PT0H0M0S",
+      "cmi.entry": "ab-initio",
+      "cmi.exit": "",
+      "cmi.total_time": "PT0H0M0S",
+      "cmi.mode": "normal",
+      "cmi.credit": "credit"
     };
 
     window.API = {
       LMSInitialize: (param) => {
-        console.log("[Parent ScormPlayer] LMSInitialize:", param);
+        console.log("[Parent ScormPlayer 1.2] LMSInitialize:", param);
         return "true";
       },
       LMSGetValue: (element) => {
         return cmiStore[element] !== undefined ? cmiStore[element] : "";
       },
       LMSSetValue: (element, value) => {
-        console.log(`[Parent ScormPlayer] LMSSetValue(${element}, ${value})`);
+        console.log(`[Parent ScormPlayer 1.2] LMSSetValue(${element}, ${value})`);
         cmiStore[element] = String(value);
 
         if (element === "cmi.core.lesson_status") {
@@ -157,7 +183,7 @@ const ScormPlayer = ({
         return "true";
       },
       LMSCommit: (param) => {
-        console.log("[Parent ScormPlayer] LMSCommit triggered");
+        console.log("[Parent ScormPlayer 1.2] LMSCommit triggered");
         handleTrackingSync({
           lesson_status: cmiStore["cmi.core.lesson_status"],
           score_raw: cmiStore["cmi.core.score.raw"],
@@ -168,7 +194,7 @@ const ScormPlayer = ({
         return "true";
       },
       LMSFinish: (param) => {
-        console.log("[Parent ScormPlayer] LMSFinish triggered");
+        console.log("[Parent ScormPlayer 1.2] LMSFinish triggered");
         handleTrackingSync({
           lesson_status: cmiStore["cmi.core.lesson_status"],
           score_raw: cmiStore["cmi.core.score.raw"],
@@ -183,9 +209,59 @@ const ScormPlayer = ({
       LMSGetDiagnostic: () => "No error",
     };
 
+    window.API_1484_11 = {
+      Initialize: (param) => {
+        console.log("[Parent ScormPlayer 2004] Initialize:", param);
+        return "true";
+      },
+      GetValue: (element) => {
+        return cmiStore[element] !== undefined ? cmiStore[element] : "";
+      },
+      SetValue: (element, value) => {
+        console.log(`[Parent ScormPlayer 2004] SetValue(${element}, ${value})`);
+        cmiStore[element] = String(value);
+
+        if (element === "cmi.completion_status" || element === "cmi.success_status") {
+          setLessonStatus(String(value).toLowerCase());
+        }
+        if (element === "cmi.score.raw") {
+          setScore(Number(value) || 0);
+        } else if (element === "cmi.score.scaled") {
+          setScore(Math.round((Number(value) || 0) * 100));
+        }
+        return "true";
+      },
+      Commit: (param) => {
+        console.log("[Parent ScormPlayer 2004] Commit triggered");
+        handleTrackingSync({
+          lesson_status: cmiStore["cmi.completion_status"] || cmiStore["cmi.core.lesson_status"],
+          score_raw: cmiStore["cmi.score.raw"] || cmiStore["cmi.core.score.raw"],
+          lesson_location: cmiStore["cmi.location"] || cmiStore["cmi.core.lesson_location"],
+          session_time: cmiStore["cmi.session_time"] || cmiStore["cmi.core.session_time"],
+          suspend_data: cmiStore["cmi.suspend_data"],
+        });
+        return "true";
+      },
+      Terminate: (param) => {
+        console.log("[Parent ScormPlayer 2004] Terminate triggered");
+        handleTrackingSync({
+          lesson_status: cmiStore["cmi.completion_status"] || cmiStore["cmi.core.lesson_status"],
+          score_raw: cmiStore["cmi.score.raw"] || cmiStore["cmi.core.score.raw"],
+          lesson_location: cmiStore["cmi.location"] || cmiStore["cmi.core.lesson_location"],
+          session_time: cmiStore["cmi.session_time"] || cmiStore["cmi.core.session_time"],
+          suspend_data: cmiStore["cmi.suspend_data"],
+        });
+        return "true";
+      },
+      GetLastError: () => "0",
+      GetErrorString: () => "No error",
+      GetDiagnostic: () => "No error",
+    };
+
     return () => {
-      // Clean up API
+      // Clean up APIs
       delete window.API;
+      delete window.API_1484_11;
     };
   }, [lessonStatus, handleTrackingSync]);
 

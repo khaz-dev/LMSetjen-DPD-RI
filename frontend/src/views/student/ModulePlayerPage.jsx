@@ -137,80 +137,140 @@ const ModulePlayerPage = () => {
     }
   }, [moduleId]);
 
-  // Setup SCORM 1.2 window.API
+  // Setup SCORM 1.2 & SCORM 2004 window.API and window.API_1484_11
   useEffect(() => {
     const cmi = {
+      // SCORM 1.2
       "cmi.core.student_id": "asn_student",
+      "cmi.core.student_name": "Siswa ASN",
       "cmi.core.lesson_status": lessonStatus,
       "cmi.core.score.raw": String(score || 0),
+      "cmi.core.score.min": "0",
+      "cmi.core.score.max": "100",
       "cmi.core.lesson_location": progress?.lesson_location || "",
       "cmi.core.session_time": "00:00:00",
       "cmi.suspend_data": progress?.suspend_data || "",
       "cmi.core.entry": progress?.lesson_location ? "resume" : "ab-initio",
       "cmi.core.exit": "",
       "cmi.core.total_time": "00:00:00",
-      "cmi.core.lesson_mode": "normal"
+      "cmi.core.lesson_mode": "normal",
+      "cmi.core.credit": "credit",
+
+      // SCORM 2004
+      "cmi.learner_id": "asn_student",
+      "cmi.learner_name": "Siswa ASN",
+      "cmi.completion_status": lessonStatus === 'completed' || lessonStatus === 'passed' ? 'completed' : 'incomplete',
+      "cmi.success_status": lessonStatus === 'passed' ? 'passed' : lessonStatus === 'failed' ? 'failed' : 'unknown',
+      "cmi.score.raw": String(score || 0),
+      "cmi.score.scaled": String((score || 0) / 100),
+      "cmi.score.min": "0",
+      "cmi.score.max": "100",
+      "cmi.location": progress?.lesson_location || "",
+      "cmi.session_time": "PT0H0M0S",
+      "cmi.entry": progress?.lesson_location ? "resume" : "ab-initio",
+      "cmi.exit": "",
+      "cmi.total_time": "PT0H0M0S",
+      "cmi.mode": "normal",
+      "cmi.credit": "credit"
+    };
+
+    const broadcastStatus = (status, scr) => {
+      if (typeof window !== "undefined" && window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: "SCORM_MODULE_STATUS",
+          status: status,
+          score: scr,
+          moduleId: moduleId,
+          courseId: courseIdParam,
+          variantItemId: variantItemIdParam
+        }, "*");
+      }
     };
 
     window.API = {
       LMSInitialize: (param) => {
-        console.log("[ModulePlayerPage SCORM] LMSInitialize:", param);
+        console.log("[ModulePlayerPage SCORM 1.2] LMSInitialize:", param);
         return "true";
       },
       LMSGetValue: (element) => {
         const val = cmi[element] !== undefined ? cmi[element] : "";
-        console.log(`[ModulePlayerPage SCORM] LMSGetValue(${element}) ->`, val);
+        console.log(`[ModulePlayerPage SCORM 1.2] LMSGetValue(${element}) ->`, val);
         return val;
       },
       LMSSetValue: (element, value) => {
-        console.log(`[ModulePlayerPage SCORM] LMSSetValue(${element}, ${value})`);
+        console.log(`[ModulePlayerPage SCORM 1.2] LMSSetValue(${element}, ${value})`);
         cmi[element] = String(value);
 
         if (element === "cmi.core.lesson_status") {
           const newStatus = String(value).toLowerCase();
           setLessonStatus(newStatus);
-          // Broadcast perubahan status langsung ke parent agar kurikulum responsif instan
-          if (typeof window !== "undefined" && window.parent && window.parent !== window) {
-            window.parent.postMessage({
-              type: "SCORM_MODULE_STATUS",
-              status: newStatus,
-              score: cmi["cmi.core.score.raw"],
-              moduleId: moduleId,
-              courseId: courseIdParam,
-              variantItemId: variantItemIdParam
-            }, "*");
-          }
+          broadcastStatus(newStatus, cmi["cmi.core.score.raw"]);
         }
         if (element === "cmi.core.score.raw") {
           const newScore = Number(value) || 0;
           setScore(newScore);
-          // Broadcast perubahan nilai langsung ke parent agar badge skor di lesson-item kurikulum otomatis terupdate
-          if (typeof window !== "undefined" && window.parent && window.parent !== window) {
-            window.parent.postMessage({
-              type: "SCORM_MODULE_STATUS",
-              status: cmi["cmi.core.lesson_status"]?.toLowerCase(),
-              score: newScore,
-              moduleId: moduleId,
-              courseId: courseIdParam,
-              variantItemId: variantItemIdParam
-            }, "*");
-          }
+          broadcastStatus(cmi["cmi.core.lesson_status"]?.toLowerCase(), newScore);
         }
         return "true";
       },
       LMSCommit: (param) => {
-        console.log("[ModulePlayerPage SCORM] LMSCommit triggered");
+        console.log("[ModulePlayerPage SCORM 1.2] LMSCommit triggered");
         syncTracking(cmi);
         return "true";
       },
       LMSFinish: (param) => {
-        console.log("[ModulePlayerPage SCORM] LMSFinish triggered");
+        console.log("[ModulePlayerPage SCORM 1.2] LMSFinish triggered");
         syncTracking(cmi);
         return "true";
       },
       LMSGetLastError: () => "0",
       LMSGetErrorString: () => "No error",
       LMSGetDiagnostic: () => "No error"
+    };
+
+    window.API_1484_11 = {
+      Initialize: (param) => {
+        console.log("[ModulePlayerPage SCORM 2004] Initialize:", param);
+        return "true";
+      },
+      GetValue: (element) => {
+        const val = cmi[element] !== undefined ? cmi[element] : "";
+        console.log(`[ModulePlayerPage SCORM 2004] GetValue(${element}) ->`, val);
+        return val;
+      },
+      SetValue: (element, value) => {
+        console.log(`[ModulePlayerPage SCORM 2004] SetValue(${element}, ${value})`);
+        cmi[element] = String(value);
+
+        if (element === "cmi.completion_status" || element === "cmi.success_status") {
+          const newStatus = String(value).toLowerCase();
+          setLessonStatus(newStatus);
+          broadcastStatus(newStatus, cmi["cmi.score.raw"]);
+        }
+        if (element === "cmi.score.raw") {
+          const newScore = Number(value) || 0;
+          setScore(newScore);
+          broadcastStatus(lessonStatus, newScore);
+        } else if (element === "cmi.score.scaled") {
+          const newScore = Math.round((Number(value) || 0) * 100);
+          setScore(newScore);
+          broadcastStatus(lessonStatus, newScore);
+        }
+        return "true";
+      },
+      Commit: (param) => {
+        console.log("[ModulePlayerPage SCORM 2004] Commit triggered");
+        syncTracking(cmi);
+        return "true";
+      },
+      Terminate: (param) => {
+        console.log("[ModulePlayerPage SCORM 2004] Terminate triggered");
+        syncTracking(cmi);
+        return "true";
+      },
+      GetLastError: () => "0",
+      GetErrorString: () => "No error",
+      GetDiagnostic: () => "No error"
     };
 
     const handleBeforeUnload = () => {
@@ -222,6 +282,7 @@ const ModulePlayerPage = () => {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       delete window.API;
+      delete window.API_1484_11;
     };
   }, [lessonStatus, score, progress, syncTracking]);
 
