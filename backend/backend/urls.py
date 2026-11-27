@@ -61,10 +61,13 @@ urlpatterns = [
     
     path('admin/', admin.site.urls),
     
-    # Certificate Validation Route - Serves React SPA
+    # Certificate Validation & Verification Routes - Serves React SPA
     # In production with Docker/nginx, this is not used (nginx handles routing)
     # In development without Docker, this allows React Router to handle the route
     path('certificate/validate/<str:validation_token>/', api_views.ReactSPACatchAllView.as_view(), name='certificate-validate-spa'),
+    path('certificate/verify/', api_views.ReactSPACatchAllView.as_view(), name='certificate-verify-spa'),
+    path('verify-certificate/', api_views.ReactSPACatchAllView.as_view(), name='verify-certificate-spa'),
+    path('cek-sertifikat/', api_views.ReactSPACatchAllView.as_view(), name='cek-sertifikat-spa'),
 
     path("api/v1/", include("api.urls")),
     # Fallback to handle accidental double slashes (e.g., api/v1//admin/...) gracefully

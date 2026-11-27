@@ -689,6 +689,16 @@ function BaseHeader() {
                                         <span>Panduan</span>
                                     </Link>
                                 </li>
+                                <li className="nav-item">
+                                    <Link 
+                                        to="/certificate/verify/" 
+                                        className={`header-nav-link ${location.pathname.startsWith('/certificate/verify') || location.pathname.startsWith('/verify-certificate') || location.pathname.startsWith('/cek-sertifikat') ? 'active' : ''}`}
+                                        title="Verifikasi Keaslian Sertifikat DPD RI (Satuan & Massal)"
+                                    >
+                                        <i className="fas fa-certificate header-nav-icon"></i>
+                                        <span>Cek Sertifikat</span>
+                                    </Link>
+                                </li>
                             </ul>
 
                             {/* Search */}

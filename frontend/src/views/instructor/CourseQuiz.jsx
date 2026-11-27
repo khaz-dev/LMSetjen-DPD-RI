@@ -51,6 +51,8 @@ function SortableQuestionCard({
     setQuestionForm,
     handleChoiceChange,
     isSubmitting,
+    currentQuiz,
+    course,
 }) {
     const {
         attributes,
@@ -67,7 +69,7 @@ function SortableQuestionCard({
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.5 : 1,
+        opacity: isDragging ? 0 : 1,
         position: "relative",
         zIndex: isDragging ? 999 : "auto",
     };
@@ -90,7 +92,7 @@ function SortableQuestionCard({
                                 Edit Pertanyaan Q{index + 1}
                             </h5>
                             <small className="text-muted">
-                                Ubah teks pertanyaan dan pilih jawaban yang benar
+                                Ubah teks pertanyaan, pilih modul materi asal, dan tentukan bobot jawaban
                             </small>
                         </div>
                     </div>
@@ -106,23 +108,48 @@ function SortableQuestionCard({
 
                 <form onSubmit={handleCreateQuestion}>
                     <div className="question-form-body">
-                        <div className="form-group">
-                            <label className="form-label">Teks Pertanyaan *</label>
-                            <textarea
-                                className="form-control"
-                                rows="3"
-                                value={questionForm.question_text}
-                                onChange={(e) => setQuestionForm({ ...questionForm, question_text: e.target.value })}
-                                placeholder="Masukkan pertanyaan kuis Anda di sini..."
-                                required
-                            />
+                        <div className="row g-2 mb-3">
+                            <div className="col-12 col-md-7">
+                                <label className="form-label">Teks Pertanyaan *</label>
+                                <textarea
+                                    className="form-control"
+                                    rows="3"
+                                    value={questionForm.question_text}
+                                    onChange={(e) => setQuestionForm({ ...questionForm, question_text: e.target.value })}
+                                    placeholder="Masukkan pertanyaan kuis Anda di sini..."
+                                    required
+                                />
+                            </div>
+                            <div className="col-12 col-md-5">
+                                <label className="form-label">
+                                    <i className="fas fa-layer-group me-1 text-teal"></i>Modul Materi Asal (Opsional)
+                                </label>
+                                <select
+                                    className="form-select form-select-sm"
+                                    value={questionForm.variant_id || ""}
+                                    onChange={(e) => setQuestionForm({ ...questionForm, variant_id: e.target.value })}
+                                >
+                                    <option value="">-- Tanpa Modul Spesifik --</option>
+                                    {course?.curriculum?.map((mod, mIdx) => (
+                                        <option key={mod.variant_id || mod.id || mIdx} value={mod.variant_id || mod.id}>
+                                            Modul {mIdx + 1}: {mod.title}
+                                        </option>
+                                    ))}
+                                </select>
+                                <small className="text-muted d-block mt-1" style={{ fontSize: "0.74rem" }}>
+                                    Digunakan oleh Pre/Post-Test untuk mengundi soal per modul materi.
+                                </small>
+                            </div>
                         </div>
 
                         <div className="form-group mb-0">
                             <div className="d-flex justify-content-between align-items-center mb-2">
                                 <label className="form-label mb-0">Pilihan Jawaban *</label>
                                 <span className="form-help mb-0">
-                                    <i className="fas fa-info-circle me-1"></i>Pilih radio untuk menandai kunci jawaban yang benar
+                                    <i className="fas fa-info-circle me-1"></i>
+                                    {currentQuiz?.scoring_mode === "weighted"
+                                        ? "Isi bobot poin tiap pilihan jawaban dan tandai kunci utama"
+                                        : "Pilih radio untuk menandai kunci jawaban yang benar"}
                                 </span>
                             </div>
 
@@ -160,6 +187,22 @@ function SortableQuestionCard({
                                             placeholder={`Pilihan ${String.fromCharCode(65 + cIndex)}`}
                                             onClick={(e) => e.stopPropagation()}
                                         />
+                                        {currentQuiz?.scoring_mode === "weighted" && (
+                                            <div className="d-flex align-items-center gap-1 ms-2" onClick={(e) => e.stopPropagation()}>
+                                                <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", whiteSpace: "nowrap" }}>Poin:</span>
+                                                <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    min="0"
+                                                    className="form-control form-control-sm text-center"
+                                                    style={{ width: "72px", fontWeight: "700" }}
+                                                    value={choice.point_weight !== undefined ? choice.point_weight : 0}
+                                                    onChange={(e) => handleChoiceChange(cIndex, "point_weight", parseFloat(e.target.value) || 0)}
+                                                    placeholder="0"
+                                                    title="Bobot poin jika peserta memilih jawaban ini"
+                                                />
+                                            </div>
+                                        )}
                                         {choice.is_correct && (
                                             <span className="badge bg-success-subtle text-success ms-2 px-2 py-1 correct-pill">
                                                 <i className="fas fa-check me-1"></i>Kunci Jawaban
@@ -249,7 +292,14 @@ function SortableQuestionCard({
                 </div>
 
                 <div className="question-text">
-                    <h5>{question.question_text}</h5>
+                    <div className="d-flex align-items-center gap-2 mb-1">
+                        {question.variant_title && (
+                            <span className="badge bg-light text-dark border px-2 py-0" style={{ fontSize: "0.72rem" }}>
+                                <i className="fas fa-layer-group me-1 text-teal"></i>{question.variant_title}
+                            </span>
+                        )}
+                    </div>
+                    <h5 className="mb-0">{question.question_text}</h5>
                 </div>
 
                 <div className="question-actions">
@@ -291,8 +341,13 @@ function SortableQuestionCard({
                             </span>
                             {choice.choice_text}
                         </div>
+                        {currentQuiz?.scoring_mode === "weighted" && (
+                            <span className="badge bg-primary-subtle text-primary ms-auto me-2 px-2 py-1" style={{ fontSize: "0.72rem" }}>
+                                {choice.point_weight || 0} Poin
+                            </span>
+                        )}
                         {choice.is_correct && (
-                            <span className="badge bg-success-subtle text-success ms-auto px-2 py-1 correct-pill">
+                            <span className={`badge bg-success-subtle text-success px-2 py-1 correct-pill ${currentQuiz?.scoring_mode === "weighted" ? "" : "ms-auto"}`}>
                                 <i className="fas fa-check me-1"></i>Jawaban Benar
                             </span>
                         )}
@@ -400,19 +455,98 @@ function CourseQuiz() {
         title: "",
         description: "",
         quiz_type: "quiz",
+        scoring_mode: "standard",
+        passing_score: 70.0,
+        duration_minutes: 15,
+        blueprint_rules: [],
         presentation_mode: "ordered",
         is_active: true
     });
 
     const [questionForm, setQuestionForm] = useState({
         question_text: "",
+        variant_id: "",
         choices: [
-            { choice_text: "", is_correct: false },
-            { choice_text: "", is_correct: false },
-            { choice_text: "", is_correct: false },
-            { choice_text: "", is_correct: false }
+            { choice_text: "", is_correct: false, point_weight: 0 },
+            { choice_text: "", is_correct: false, point_weight: 0 },
+            { choice_text: "", is_correct: false, point_weight: 0 },
+            { choice_text: "", is_correct: false, point_weight: 0 }
         ]
     });
+
+    // Blueprint Rules Helpers for Pre-Test & Post-Test
+    const addBlueprintRule = () => {
+        const currentRules = quizForm.blueprint_rules || [];
+        const nextStart = currentRules.length > 0
+            ? Math.max(...currentRules.map(r => parseInt(r.end_num || 0) || 0)) + 1
+            : 1;
+        const nextEnd = nextStart + 1;
+        const firstModule = course?.curriculum?.[0];
+        const newRule = {
+            rule_id: `rule_${Date.now()}`,
+            variant_id: firstModule?.variant_id || firstModule?.id || "",
+            variant_title: firstModule?.title || "",
+            start_num: nextStart,
+            end_num: nextEnd,
+            question_count: (nextEnd - nextStart + 1)
+        };
+        setQuizForm({
+            ...quizForm,
+            blueprint_rules: [...currentRules, newRule]
+        });
+    };
+
+    const updateBlueprintRule = (index, field, value) => {
+        const updated = [...(quizForm.blueprint_rules || [])];
+        updated[index] = { ...updated[index], [field]: value };
+        if (field === 'start_num' || field === 'end_num') {
+            const s = parseInt(field === 'start_num' ? value : updated[index].start_num) || 1;
+            const e = parseInt(field === 'end_num' ? value : updated[index].end_num) || s;
+            updated[index].question_count = Math.max(1, e - s + 1);
+        }
+        if (field === 'variant_id') {
+            const selMod = course?.curriculum?.find(m => String(m.variant_id) === String(value) || String(m.id) === String(value));
+            if (selMod) {
+                updated[index].variant_title = selMod.title;
+            }
+        }
+        setQuizForm({ ...quizForm, blueprint_rules: updated });
+    };
+
+    const removeBlueprintRule = (index) => {
+        const updated = (quizForm.blueprint_rules || []).filter((_, i) => i !== index);
+        setQuizForm({ ...quizForm, blueprint_rules: updated });
+    };
+
+    const autoGenerateBlueprint = () => {
+        if (!course?.curriculum || course.curriculum.length === 0) {
+            Toast().fire({
+                icon: "warning",
+                title: "Belum ada modul kurikulum pada kursus ini"
+            });
+            return;
+        }
+        let currentNum = 1;
+        const generated = course.curriculum.map((mod, idx) => {
+            const count = 2; // Default 2 questions per module
+            const s = currentNum;
+            const e = currentNum + count - 1;
+            currentNum = e + 1;
+            return {
+                rule_id: `rule_auto_${idx}_${Date.now()}`,
+                variant_id: mod.variant_id || mod.id,
+                variant_title: mod.title,
+                start_num: s,
+                end_num: e,
+                question_count: count
+            };
+        });
+        setQuizForm({ ...quizForm, blueprint_rules: generated });
+        Toast().fire({
+            icon: "success",
+            title: `Otomatis membuat ${generated.length} aturan modul!`
+        });
+    };
 
     // UI States
     const [showQuizModal, setShowQuizModal] = useState(false);
@@ -622,6 +756,7 @@ function CourseQuiz() {
             setIsSubmitting(true);
             const questionData = {
                 question_text: questionForm.question_text,
+                variant_id: questionForm.variant_id || null,
                 quiz_id: currentQuiz.quiz_id
             };
 
@@ -703,6 +838,7 @@ function CourseQuiz() {
                     question_id: questionId,
                     choice_text: choice.choice_text,
                     is_correct: choice.is_correct,
+                    point_weight: parseFloat(choice.point_weight || 0),
                     order: index + 1
                 });
             }
@@ -814,6 +950,10 @@ function CourseQuiz() {
             title: "",
             description: "",
             quiz_type: "quiz",
+            scoring_mode: "standard",
+            passing_score: 70.0,
+            duration_minutes: 15,
+            blueprint_rules: [],
             presentation_mode: "ordered",
             is_active: true
         });
@@ -823,11 +963,12 @@ function CourseQuiz() {
     const resetQuestionForm = () => {
         setQuestionForm({
             question_text: "",
+            variant_id: "",
             choices: [
-                { choice_text: "", is_correct: false },
-                { choice_text: "", is_correct: false },
-                { choice_text: "", is_correct: false },
-                { choice_text: "", is_correct: false }
+                { choice_text: "", is_correct: false, point_weight: 0 },
+                { choice_text: "", is_correct: false, point_weight: 0 },
+                { choice_text: "", is_correct: false, point_weight: 0 },
+                { choice_text: "", is_correct: false, point_weight: 0 }
             ]
         });
         setEditingQuestion(null);
@@ -838,6 +979,10 @@ function CourseQuiz() {
             title: quiz.title,
             description: quiz.description || "",
             quiz_type: quiz.quiz_type || "quiz",
+            scoring_mode: quiz.scoring_mode || "standard",
+            passing_score: quiz.passing_score !== undefined ? parseFloat(quiz.passing_score) : 70.0,
+            duration_minutes: quiz.duration_minutes !== undefined ? parseInt(quiz.duration_minutes) : 15,
+            blueprint_rules: Array.isArray(quiz.blueprint_rules) ? quiz.blueprint_rules : [],
             presentation_mode: quiz.presentation_mode || "ordered",
             is_active: quiz.is_active
         });
@@ -852,23 +997,27 @@ function CourseQuiz() {
         if (existingChoices.length >= 4) {
             formChoices = existingChoices.slice(0, 4).map(c => ({
                 choice_text: c.choice_text || "",
-                is_correct: !!c.is_correct
+                is_correct: !!c.is_correct,
+                point_weight: c.point_weight !== undefined ? parseFloat(c.point_weight) : 0
             }));
         } else {
             formChoices = [
                 ...existingChoices.map(c => ({
                     choice_text: c.choice_text || "",
-                    is_correct: !!c.is_correct
+                    is_correct: !!c.is_correct,
+                    point_weight: c.point_weight !== undefined ? parseFloat(c.point_weight) : 0
                 })),
                 ...Array(4 - existingChoices.length).fill(null).map(() => ({
                     choice_text: "",
-                    is_correct: false
+                    is_correct: false,
+                    point_weight: 0
                 }))
             ];
         }
 
         setQuestionForm({
             question_text: question.question_text || "",
+            variant_id: question.variant_id || question.variant?.variant_id || question.variant || "",
             choices: formChoices
         });
         setEditingQuestion(question);
@@ -958,7 +1107,7 @@ function CourseQuiz() {
 
     const handleExportTemplate = () => {
         const csvContent =
-`No,Pertanyaan,Pilihan A,Pilihan B,Pilihan C,Pilihan D,Pilihan E,Kunci Jawaban
+            `No,Pertanyaan,Pilihan A,Pilihan B,Pilihan C,Pilihan D,Pilihan E,Kunci Jawaban
 1,"Apa tugas dan wewenang utama dari Dewan Perwakilan Daerah (DPD) RI menurut UUD 1945?","Mengajukan RUU terkait otonomi daerah dan hubungan pusat dengan daerah","Menetapkan Anggaran Pendapatan dan Belanja Negara (APBN) secara mandiri","Mengangkat dan memberhentikan para menteri kabinet pemerintahan","Memeriksa pertanggungjawaban pengelolaan keuangan negara","Mengadili perkara perselisihan sengketa hasil pemilihan umum","A"
 2,"Berapa jumlah anggota DPD RI dari setiap provinsi berdasarkan ketentuan konstitusi?","2 orang","3 orang","4 orang","5 orang","6 orang","C"
 3,"Kapan Dewan Perwakilan Daerah (DPD) RI resmi dibentuk dalam sistem ketatanegaraan Indonesia?","17 Agustus 1945","1 Oktober 2004","21 Mei 1998","5 Juli 1959","10 November 2001","B"
@@ -1451,13 +1600,13 @@ function CourseQuiz() {
                                 <div className="d-flex flex-column flex-md-row md-align-items-center justify-content-between gap-3">
                                     <div>
                                         <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
-                                            <span className="badge bg-teal-subtle text-teal border border-teal-subtle fw-semibold px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                            <span className="badge bg-teal-subtle text-teal border border-teal-subtle fw-semibold px-2 py-0" style={{ fontSize: "11px" }}>
                                                 <i className="fas fa-question-circle me-1"></i> Manajemen Kuis
                                             </span>
-                                            <span className="badge bg-light text-muted border px-2 py-0.5" style={{ fontSize: "11px" }}>
+                                            <span className="badge bg-light text-muted border px-2 py-0" style={{ fontSize: "11px" }}>
                                                 ID: #{param?.course_id}
                                             </span>
-                                            <span className={`badge px-2 py-0.5 ${course?.status === "Published" ? "bg-success text-white" : "bg-secondary text-white"}`} style={{ fontSize: "11px" }}>
+                                            <span className={`badge px-2 py-0 ${course?.status === "Published" ? "bg-success text-white" : "bg-secondary text-white"}`} style={{ fontSize: "11px" }}>
                                                 {course?.status === "Published" ? "Terbit" : "Draf"}
                                             </span>
                                         </div>
@@ -1510,7 +1659,7 @@ function CourseQuiz() {
                                         <div className="d-flex align-items-center gap-2 flex-wrap justify-content-md-end">
                                             <button
                                                 type="button"
-                                                className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1.5"
+                                                className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
                                                 onClick={handleExportTemplate}
                                                 title="Unduh format template CSV untuk pengisian kuis & soal"
                                             >
@@ -1519,7 +1668,7 @@ function CourseQuiz() {
                                             </button>
                                             <button
                                                 type="button"
-                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-1.5"
+                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-1"
                                                 onClick={() => handleOpenImportModal()}
                                                 title="Import Soal Kuis dari File CSV atau JSON"
                                             >
@@ -1598,7 +1747,7 @@ function CourseQuiz() {
 
                             {/* Unified Navigation & Filter Toolbar */}
                             <div className="quiz-toolbar-card mb-3">
-                                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2.5">
+                                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     {/* Navigation Tabs */}
                                     <div className="quiz-segmented-tabs">
                                         <button
@@ -1657,7 +1806,7 @@ function CourseQuiz() {
                                         <div className="d-flex align-items-center gap-2 flex-wrap">
                                             <button
                                                 type="button"
-                                                className="btn btn-light btn-sm border text-secondary d-inline-flex align-items-center gap-1.5"
+                                                className="btn btn-light btn-sm border text-secondary d-inline-flex align-items-center gap-1"
                                                 onClick={() => setActiveTab("overview")}
                                             >
                                                 <i className="fas fa-arrow-left"></i>
@@ -1666,7 +1815,7 @@ function CourseQuiz() {
                                             {questions.length > 0 && (
                                                 <button
                                                     type="button"
-                                                    className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1.5"
+                                                    className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
                                                     onClick={() => handleExportQuizQuestions(currentQuiz)}
                                                     title="Export seluruh soal kuis ini ke file CSV"
                                                 >
@@ -1676,14 +1825,14 @@ function CourseQuiz() {
                                             )}
                                             <button
                                                 type="button"
-                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-1.5"
+                                                className="btn btn-outline-teal btn-sm d-inline-flex align-items-center gap-1"
                                                 onClick={() => handleOpenImportModal(currentQuiz?.quiz_id)}
                                                 title="Import soal langsung ke kuis ini"
                                             >
                                                 <i className="fas fa-file-import"></i>
                                                 <span>Import Soal</span>
                                             </button>
-                                            <span className="badge bg-light text-dark border px-2.5 py-1.5 fw-semibold small">
+                                            <span className="badge bg-light text-dark border px-2 py-1 fw-semibold small">
                                                 <i className="fas fa-question-circle text-teal me-1"></i>
                                                 {questions.length} Soal
                                             </span>
@@ -1746,87 +1895,102 @@ function CourseQuiz() {
                                             quizzes
                                                 .filter(quiz => quizTypeFilter === "all" || (quiz.quiz_type || "quiz") === quizTypeFilter)
                                                 .map((quiz) => (
-                                                <div key={quiz.quiz_id} className="quiz-card">
-                                                    <div className="quiz-card-header">
-                                                        <div className="quiz-status">
-                                                            <span className={`status-badge ${quiz.is_active ? "active" : "inactive"}`}>
-                                                                <i className={`fas ${quiz.is_active ? "fa-check-circle" : "fa-pause-circle"}`}></i>
-                                                                {quiz.is_active ? "Aktif" : "Tidak Aktif"}
-                                                            </span>
+                                                    <div key={quiz.quiz_id} className="quiz-card">
+                                                        <div className="quiz-card-header">
+                                                            <div className="quiz-status">
+                                                                <span className={`status-badge ${quiz.is_active ? "active" : "inactive"}`}>
+                                                                    <i className={`fas ${quiz.is_active ? "fa-check-circle" : "fa-pause-circle"}`}></i>
+                                                                    {quiz.is_active ? "Aktif" : "Tidak Aktif"}
+                                                                </span>
+                                                            </div>
+                                                            <div className="quiz-actions mb-0 pb-0">
+                                                                <button
+                                                                    className="btn-icon"
+                                                                    onClick={() => handleEditQuiz(quiz)}
+                                                                    title="Edit Kuis"
+                                                                >
+                                                                    <i className="fas fa-edit"></i>
+                                                                </button>
+                                                                <button
+                                                                    className="btn-icon btn-danger"
+                                                                    onClick={() => handleDeleteQuiz(quiz.quiz_id)}
+                                                                    title="Hapus Kuis"
+                                                                >
+                                                                    <i className="fas fa-trash"></i>
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                        <div className="quiz-actions mb-0 pb-0">
+                                                        <div className="quiz-card-body mb-0">
+                                                            <div className="quiz-badges-row mb-2 d-flex align-items-center gap-1 flex-wrap">
+                                                                <span className={`badge-quiz-type ${quiz.quiz_type === "pre_post_test" ? "type-prepost" : "type-quiz"}`}>
+                                                                    <i className={`fas ${quiz.quiz_type === "pre_post_test" ? "fa-graduation-cap" : "fa-clipboard-check"} me-1`}></i>
+                                                                    {quiz.quiz_type === "pre_post_test" ? "Pre & Post-test" : "Kuis"}
+                                                                </span>
+                                                                <span className={`badge-quiz-mode ${quiz.scoring_mode === "weighted" ? "mode-weighted" : "mode-ordered"}`} title="Mode penilaian kuis">
+                                                                    <i className={`fas ${quiz.scoring_mode === "weighted" ? "fa-balance-scale" : "fa-check-double"} me-1`}></i>
+                                                                    {quiz.scoring_mode === "weighted" ? "Bobot Poin" : "Standar"}
+                                                                </span>
+                                                                <span className="badge-quiz-score" title="Nilai minimum kelulusan">
+                                                                    <i className="fas fa-award me-1"></i>Min {quiz.passing_score !== undefined ? quiz.passing_score : 70}%
+                                                                </span>
+                                                                <span className="badge-quiz-timer" title="Batas durasi waktu">
+                                                                    <i className="fas fa-stopwatch me-1"></i>{quiz.duration_minutes ? `${quiz.duration_minutes} mnt` : "Tanpa Batas"}
+                                                                </span>
+                                                                <span
+                                                                    className={`badge-quiz-mode ${quiz.presentation_mode === "random" ? "mode-random" : "mode-ordered"}`}
+                                                                    title={quiz.presentation_mode === "random" ? "Pertanyaan disajikan secara acak untuk setiap peserta" : "Pertanyaan disajikan sesuai urutan"}
+                                                                >
+                                                                    <i className={`fas ${quiz.presentation_mode === "random" ? "fa-random" : "fa-sort-numeric-down"} me-1`}></i>
+                                                                    {quiz.presentation_mode === "random" ? "Acak" : "Sesuai Urutan"}
+                                                                </span>
+                                                                {quiz.quiz_type === "pre_post_test" && quiz.blueprint_rules && quiz.blueprint_rules.length > 0 && (
+                                                                    <span className="badge-quiz-blueprint" title="Distribusi soal acak per modul">
+                                                                        <i className="fas fa-random me-1"></i>Blueprint ({quiz.blueprint_rules.length} Modul)
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <h4 className="quiz-title" title={quiz.title}>{quiz.title}</h4>
+                                                            {quiz.description && (
+                                                                <p className="quiz-description text-secondary" title={quiz.description}>{quiz.description}</p>
+                                                            )}
+                                                            <div className="quiz-stats d-flex flex-row align-items-center flex-wrap">
+                                                                <div className="quiz-stat-pill stat-item d-inline-flex flex-row align-items-center">
+                                                                    <i className="fas fa-question me-1" style={{ color: '#0f766e' }}></i>
+                                                                    <span className="quiz-stat-text">{quiz.total_questions || 0} Pertanyaan</span>
+                                                                </div>
+                                                                <div className="quiz-stat-pill stat-item d-inline-flex flex-row align-items-center">
+                                                                    <i className="fas fa-calendar text-success me-1"></i>
+                                                                    <span className="quiz-stat-text">{new Date(quiz.date).toLocaleDateString()}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="quiz-card-footer d-flex align-items-center gap-1">
                                                             <button
+                                                                className="btn btn-primary btn-sm flex-grow-1 d-inline-flex align-items-center justify-content-center gap-1"
+                                                                onClick={() => selectQuiz(quiz)}
+                                                            >
+                                                                <i className="fas fa-cog"></i>
+                                                                <span>Kelola Pertanyaan</span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
                                                                 className="btn-icon"
-                                                                onClick={() => handleEditQuiz(quiz)}
-                                                                title="Edit Kuis"
+                                                                onClick={() => handleExportQuizQuestions(quiz)}
+                                                                title="Export Soal Kuis (CSV)"
                                                             >
-                                                                <i className="fas fa-edit"></i>
+                                                                <i className="fas fa-file-export text-teal"></i>
                                                             </button>
                                                             <button
-                                                                className="btn-icon btn-danger"
-                                                                onClick={() => handleDeleteQuiz(quiz.quiz_id)}
-                                                                title="Hapus Kuis"
+                                                                type="button"
+                                                                className="btn-icon"
+                                                                onClick={() => handleOpenImportModal(quiz.quiz_id)}
+                                                                title="Import Soal ke Kuis Ini"
                                                             >
-                                                                <i className="fas fa-trash"></i>
+                                                                <i className="fas fa-file-import"></i>
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div className="quiz-card-body mb-0">
-                                                        <div className="quiz-badges-row mb-2 d-flex align-items-center gap-1 flex-wrap">
-                                                            <span className={`badge-quiz-type ${quiz.quiz_type === "pre_post_test" ? "type-prepost" : "type-quiz"}`}>
-                                                                <i className={`fas ${quiz.quiz_type === "pre_post_test" ? "fa-graduation-cap" : "fa-clipboard-check"} me-1`}></i>
-                                                                {quiz.quiz_type === "pre_post_test" ? "Pre & Post-test" : "Kuis"}
-                                                            </span>
-                                                            <span
-                                                                className={`badge-quiz-mode ${quiz.presentation_mode === "random" ? "mode-random" : "mode-ordered"}`}
-                                                                title={quiz.presentation_mode === "random" ? "Pertanyaan disajikan secara acak untuk setiap peserta" : "Pertanyaan disajikan sesuai urutan"}
-                                                            >
-                                                                <i className={`fas ${quiz.presentation_mode === "random" ? "fa-random" : "fa-sort-numeric-down"} me-1`}></i>
-                                                                {quiz.presentation_mode === "random" ? "Acak" : "Sesuai Urutan"}
-                                                            </span>
-                                                        </div>
-                                                        <h4 className="quiz-title" title={quiz.title}>{quiz.title}</h4>
-                                                        {quiz.description && (
-                                                            <p className="quiz-description text-secondary" title={quiz.description}>{quiz.description}</p>
-                                                        )}
-                                                        <div className="quiz-stats d-flex flex-row align-items-center flex-wrap">
-                                                            <div className="quiz-stat-pill stat-item d-inline-flex flex-row align-items-center">
-                                                                <i className="fas fa-question me-1" style={{ color: '#0f766e' }}></i>
-                                                                <span className="quiz-stat-text">{quiz.total_questions || 0} Pertanyaan</span>
-                                                            </div>
-                                                            <div className="quiz-stat-pill stat-item d-inline-flex flex-row align-items-center">
-                                                                <i className="fas fa-calendar text-success me-1"></i>
-                                                                <span className="quiz-stat-text">{new Date(quiz.date).toLocaleDateString()}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="quiz-card-footer d-flex align-items-center gap-1.5">
-                                                        <button
-                                                            className="btn btn-primary btn-sm flex-grow-1 d-inline-flex align-items-center justify-content-center gap-1.5"
-                                                            onClick={() => selectQuiz(quiz)}
-                                                        >
-                                                            <i className="fas fa-cog"></i>
-                                                            <span>Kelola Pertanyaan</span>
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className="btn-icon"
-                                                            onClick={() => handleExportQuizQuestions(quiz)}
-                                                            title="Export Soal Kuis (CSV)"
-                                                        >
-                                                            <i className="fas fa-file-export text-teal"></i>
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className="btn-icon"
-                                                            onClick={() => handleOpenImportModal(quiz.quiz_id)}
-                                                            title="Import Soal ke Kuis Ini"
-                                                        >
-                                                            <i className="fas fa-file-import"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))
+                                                ))
                                         )}
                                     </div>
                                 </div>
@@ -1844,6 +2008,16 @@ function CourseQuiz() {
                                                         <i className={`fas ${currentQuiz.quiz_type === "pre_post_test" ? "fa-graduation-cap" : "fa-clipboard-check"} me-1`}></i>
                                                         {currentQuiz.quiz_type === "pre_post_test" ? "Pre & Post-test" : "Kuis"}
                                                     </span>
+                                                    <span className={`badge-quiz-mode ${currentQuiz.scoring_mode === "weighted" ? "mode-weighted" : "mode-ordered"}`} title="Mode penilaian kuis">
+                                                        <i className={`fas ${currentQuiz.scoring_mode === "weighted" ? "fa-balance-scale" : "fa-check-double"} me-1`}></i>
+                                                        {currentQuiz.scoring_mode === "weighted" ? "Bobot Poin" : "Standar"}
+                                                    </span>
+                                                    <span className="badge-quiz-score" title="Nilai minimum kelulusan">
+                                                        <i className="fas fa-award me-1"></i>Min {currentQuiz.passing_score !== undefined ? currentQuiz.passing_score : 70}%
+                                                    </span>
+                                                    <span className="badge-quiz-timer" title="Batas durasi waktu">
+                                                        <i className="fas fa-stopwatch me-1"></i>{currentQuiz.duration_minutes ? `${currentQuiz.duration_minutes} mnt` : "Tanpa Batas"}
+                                                    </span>
                                                     <span
                                                         className={`badge-quiz-mode ${currentQuiz.presentation_mode === "random" ? "mode-random" : "mode-ordered"}`}
                                                         title={currentQuiz.presentation_mode === "random" ? "Pertanyaan disajikan secara acak untuk setiap peserta" : "Pertanyaan disajikan sesuai urutan"}
@@ -1851,6 +2025,11 @@ function CourseQuiz() {
                                                         <i className={`fas ${currentQuiz.presentation_mode === "random" ? "fa-random" : "fa-sort-numeric-down"} me-1`}></i>
                                                         {currentQuiz.presentation_mode === "random" ? "Acak" : "Sesuai Urutan"}
                                                     </span>
+                                                    {currentQuiz.quiz_type === "pre_post_test" && currentQuiz.blueprint_rules && currentQuiz.blueprint_rules.length > 0 && (
+                                                        <span className="badge-quiz-blueprint" title="Distribusi soal acak per modul">
+                                                            <i className="fas fa-random me-1"></i>Blueprint ({currentQuiz.blueprint_rules.length} Modul)
+                                                        </span>
+                                                    )}
                                                     <span className={`status-badge ${currentQuiz.is_active ? "active" : "inactive"}`}>
                                                         <i className={`fas ${currentQuiz.is_active ? "fa-check-circle" : "fa-pause-circle"} me-1`}></i>
                                                         {currentQuiz.is_active ? "Aktif" : "Tidak Aktif"}
@@ -1859,7 +2038,7 @@ function CourseQuiz() {
                                                 <p className="quiz-description text-muted small mb-0">{currentQuiz.description || "Kelola pertanyaan kuis untuk kursus ini"}</p>
                                             </div>
                                             <div className="d-flex align-items-center gap-2 flex-shrink-0">
-                                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2.5 py-1.5 fw-semibold small">
+                                                <span className="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-1 fw-semibold small">
                                                     <i className="fas fa-list-ol me-1"></i>
                                                     Total {questions.length} Pertanyaan
                                                 </span>
@@ -1939,6 +2118,8 @@ function CourseQuiz() {
                                                                 setQuestionForm={setQuestionForm}
                                                                 handleChoiceChange={handleChoiceChange}
                                                                 isSubmitting={isSubmitting}
+                                                                currentQuiz={currentQuiz}
+                                                                course={course}
                                                             />
                                                         ))}
                                                     </SortableContext>
@@ -1963,7 +2144,7 @@ function CourseQuiz() {
                                                                         </small>
                                                                     ) : (
                                                                         <small className="text-muted">
-                                                                            Tuliskan teks pertanyaan dan tentukan satu jawaban yang benar
+                                                                            Tuliskan teks pertanyaan, modul asal, dan tentukan jawaban
                                                                         </small>
                                                                     )}
                                                                 </div>
@@ -1980,24 +2161,49 @@ function CourseQuiz() {
 
                                                         <form onSubmit={handleCreateQuestion}>
                                                             <div className="question-form-body">
-                                                                <div className="form-group">
-                                                                    <label className="form-label">Teks Pertanyaan *</label>
-                                                                    <textarea
-                                                                        id="new-question-textarea"
-                                                                        className="form-control"
-                                                                        rows="3"
-                                                                        value={questionForm.question_text}
-                                                                        onChange={(e) => setQuestionForm({ ...questionForm, question_text: e.target.value })}
-                                                                        placeholder="Masukkan pertanyaan kuis Anda di sini..."
-                                                                        required
-                                                                    />
+                                                                <div className="row g-2 mb-3">
+                                                                    <div className="col-12 col-md-7">
+                                                                        <label className="form-label">Teks Pertanyaan *</label>
+                                                                        <textarea
+                                                                            id="new-question-textarea"
+                                                                            className="form-control"
+                                                                            rows="3"
+                                                                            value={questionForm.question_text}
+                                                                            onChange={(e) => setQuestionForm({ ...questionForm, question_text: e.target.value })}
+                                                                            placeholder="Masukkan pertanyaan kuis Anda di sini..."
+                                                                            required
+                                                                        />
+                                                                    </div>
+                                                                    <div className="col-12 col-md-5">
+                                                                        <label className="form-label">
+                                                                            <i className="fas fa-layer-group me-1 text-teal"></i>Modul Materi Asal (Opsional)
+                                                                        </label>
+                                                                        <select
+                                                                            className="form-select form-select-sm"
+                                                                            value={questionForm.variant_id || ""}
+                                                                            onChange={(e) => setQuestionForm({ ...questionForm, variant_id: e.target.value })}
+                                                                        >
+                                                                            <option value="">-- Tanpa Modul Spesifik --</option>
+                                                                            {course?.curriculum?.map((mod, mIdx) => (
+                                                                                <option key={mod.variant_id || mod.id || mIdx} value={mod.variant_id || mod.id}>
+                                                                                    Modul {mIdx + 1}: {mod.title}
+                                                                                </option>
+                                                                            ))}
+                                                                        </select>
+                                                                        <small className="text-muted d-block mt-1" style={{ fontSize: "0.74rem" }}>
+                                                                            Digunakan oleh Pre/Post-Test untuk mengundi soal per modul materi.
+                                                                        </small>
+                                                                    </div>
                                                                 </div>
 
                                                                 <div className="form-group mb-0">
                                                                     <div className="d-flex justify-content-between align-items-center mb-2">
                                                                         <label className="form-label mb-0">Pilihan Jawaban *</label>
                                                                         <span className="form-help mb-0">
-                                                                            <i className="fas fa-info-circle me-1"></i>Pilih radio untuk menandai kunci jawaban yang benar
+                                                                            <i className="fas fa-info-circle me-1"></i>
+                                                                            {currentQuiz?.scoring_mode === "weighted"
+                                                                                ? "Isi bobot poin tiap pilihan jawaban dan tandai kunci utama"
+                                                                                : "Pilih radio untuk menandai kunci jawaban yang benar"}
                                                                         </span>
                                                                     </div>
 
@@ -2035,6 +2241,22 @@ function CourseQuiz() {
                                                                                     placeholder={`Pilihan ${String.fromCharCode(65 + cIndex)}`}
                                                                                     onClick={(e) => e.stopPropagation()}
                                                                                 />
+                                                                                {currentQuiz?.scoring_mode === "weighted" && (
+                                                                                    <div className="d-flex align-items-center gap-1 ms-2" onClick={(e) => e.stopPropagation()}>
+                                                                                        <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", whiteSpace: "nowrap" }}>Poin:</span>
+                                                                                        <input
+                                                                                            type="number"
+                                                                                            step="0.1"
+                                                                                            min="0"
+                                                                                            className="form-control form-control-sm text-center"
+                                                                                            style={{ width: "72px", fontWeight: "700" }}
+                                                                                            value={choice.point_weight !== undefined ? choice.point_weight : 0}
+                                                                                            onChange={(e) => handleChoiceChange(cIndex, "point_weight", parseFloat(e.target.value) || 0)}
+                                                                                            placeholder="0"
+                                                                                            title="Bobot poin jika peserta memilih jawaban ini"
+                                                                                        />
+                                                                                    </div>
+                                                                                )}
                                                                                 {choice.is_correct && (
                                                                                     <span className="badge bg-success-subtle text-success ms-2 px-2 py-1 correct-pill">
                                                                                         <i className="fas fa-check me-1"></i>Kunci Jawaban
@@ -2103,7 +2325,7 @@ function CourseQuiz() {
                             {/* Quiz Modal */}
                             {showQuizModal && (
                                 <div className="quiz-modal-overlay">
-                                    <div className="quiz-modal">
+                                    <div className={`quiz-modal ${quizForm.quiz_type === "pre_post_test" ? "quiz-modal-large" : ""}`}>
                                         <div className="modal-header">
                                             <h4>{editingQuiz ? "Edit Kuis" : "Buat Kuis Baru"}</h4>
                                             <button
@@ -2186,6 +2408,216 @@ function CourseQuiz() {
                                                         </label>
                                                     </div>
                                                 </div>
+
+                                                {/* Mode Penilaian */}
+                                                <div className="form-group mb-3">
+                                                    <label className="form-label fw-bold">Mode Penilaian *</label>
+                                                    <div className="quiz-option-grid">
+                                                        <label className={`quiz-option-card ${quizForm.scoring_mode === "standard" ? "selected" : ""}`}>
+                                                            <input
+                                                                type="radio"
+                                                                name="scoring_mode"
+                                                                value="standard"
+                                                                checked={quizForm.scoring_mode === "standard"}
+                                                                onChange={(e) => setQuizForm({ ...quizForm, scoring_mode: e.target.value })}
+                                                                className="visually-hidden"
+                                                            />
+                                                            <div className="option-icon-box ordered">
+                                                                <i className="fas fa-check-double"></i>
+                                                            </div>
+                                                            <div className="option-text-box">
+                                                                <div className="option-title">Standar (Jumlah Benar)</div>
+                                                                <div className="option-desc">1 jawaban benar per soal, skor berdasarkan persentase jawaban benar</div>
+                                                            </div>
+                                                            <div className="option-check">
+                                                                <i className="fas fa-check-circle"></i>
+                                                            </div>
+                                                        </label>
+                                                        <label className={`quiz-option-card ${quizForm.scoring_mode === "weighted" ? "selected" : ""}`}>
+                                                            <input
+                                                                type="radio"
+                                                                name="scoring_mode"
+                                                                value="weighted"
+                                                                checked={quizForm.scoring_mode === "weighted"}
+                                                                onChange={(e) => setQuizForm({ ...quizForm, scoring_mode: e.target.value })}
+                                                                className="visually-hidden"
+                                                            />
+                                                            <div className="option-icon-box quiz">
+                                                                <i className="fas fa-balance-scale"></i>
+                                                            </div>
+                                                            <div className="option-text-box">
+                                                                <div className="option-title">Bobot Poin Tiap Pilihan</div>
+                                                                <div className="option-desc">Tiap pilihan jawaban memiliki bobot poin tersendiri untuk diakumulasi</div>
+                                                            </div>
+                                                            <div className="option-check">
+                                                                <i className="fas fa-check-circle"></i>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                {/* Pengaturan Kelulusan & Durasi Waktu */}
+                                                <div className="row g-3 mb-3">
+                                                    <div className="col-12 col-md-6">
+                                                        <label className="form-label fw-bold">
+                                                            <i className="fas fa-award text-warning me-1"></i>Skor Minimal Kelulusan (%) *
+                                                        </label>
+                                                        <div className="input-group">
+                                                            <input
+                                                                type="number"
+                                                                step="0.1"
+                                                                min="0"
+                                                                max="100"
+                                                                className="form-control"
+                                                                value={quizForm.passing_score !== undefined ? quizForm.passing_score : 70}
+                                                                onChange={(e) => setQuizForm({ ...quizForm, passing_score: parseFloat(e.target.value) || 0 })}
+                                                                placeholder="Contoh: 75"
+                                                                required
+                                                            />
+                                                            <span className="input-group-text">%</span>
+                                                        </div>
+                                                        <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                                            Nilai KKM untuk lulus kuis ini (mendukung desimal, misal 75).
+                                                        </small>
+                                                    </div>
+                                                    <div className="col-12 col-md-6">
+                                                        <label className="form-label fw-bold">
+                                                            <i className="fas fa-stopwatch text-teal me-1"></i>Durasi Pengerjaan (Menit) *
+                                                        </label>
+                                                        <div className="input-group">
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                className="form-control"
+                                                                value={quizForm.duration_minutes !== undefined ? quizForm.duration_minutes : 15}
+                                                                onChange={(e) => setQuizForm({ ...quizForm, duration_minutes: parseInt(e.target.value) || 0 })}
+                                                                placeholder="15"
+                                                                required
+                                                            />
+                                                            <span className="input-group-text">Menit</span>
+                                                        </div>
+                                                        <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                                            Batas waktu pengerjaan. Masukkan 0 jika tanpa batas waktu.
+                                                        </small>
+                                                    </div>
+                                                </div>
+
+                                                {/* Blueprint Sebaran Soal Acak per Modul (Khusus Pre/Post-Test) */}
+                                                {quizForm.quiz_type === "pre_post_test" && (
+                                                    <div className="blueprint-config-box p-3 mb-3 border rounded">
+                                                        <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                                            <div>
+                                                                <h6 className="fw-bold mb-0 text-dark">
+                                                                    <i className="fas fa-random me-1 text-primary"></i>Blueprint Soal Acak per Modul
+                                                                </h6>
+                                                                <small className="text-muted" style={{ fontSize: "0.78rem" }}>
+                                                                    Tentukan rentang nomor soal yang diambil acak dari masing-masing modul aktif.
+                                                                </small>
+                                                            </div>
+                                                            <div className="d-flex gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-outline-teal"
+                                                                    onClick={autoGenerateBlueprint}
+                                                                    title="Buat aturan otomatis membagi rata ke seluruh modul kurikulum"
+                                                                >
+                                                                    <i className="fas fa-magic me-1"></i>Auto Blueprint
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-primary"
+                                                                    onClick={addBlueprintRule}
+                                                                >
+                                                                    <i className="fas fa-plus me-1"></i>Tambah Aturan
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {(!quizForm.blueprint_rules || quizForm.blueprint_rules.length === 0) ? (
+                                                            <div className="text-center py-3 border border-dashed rounded bg-white">
+                                                                <i className="fas fa-layer-group text-muted mb-1" style={{ fontSize: "1rem" }}></i>
+                                                                <p className="text-muted mb-2" style={{ fontSize: "0.82rem" }}>
+                                                                    Belum ada aturan sebaran modul. Klik <strong>Auto Blueprint</strong> atau <strong>Tambah Aturan</strong> untuk memetakan nomor soal acak per modul (Contoh: Soal 1-2 Modul 1, Soal 3-4 Modul 2, dst).
+                                                                </p>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-xs btn-outline-primary"
+                                                                    onClick={autoGenerateBlueprint}
+                                                                >
+                                                                    <i className="fas fa-magic me-1"></i>Generate Otomatis dari Modul Kursus
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="blueprint-rules-list d-flex flex-column gap-2 mt-2">
+                                                                {quizForm.blueprint_rules.map((rule, rIdx) => (
+                                                                    <div key={rule.rule_id || rIdx} className="blueprint-rule-row card p-2 border shadow-none bg-white">
+                                                                        <div className="row g-2 align-items-center">
+                                                                            <div className="col-auto">
+                                                                                <span className="badge bg-secondary-subtle text-dark px-2 py-1">
+                                                                                    Slot #{rIdx + 1}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="col-12 col-md-3">
+                                                                                <div className="d-flex align-items-center gap-1">
+                                                                                    <span className="text-muted" style={{ fontSize: "0.75rem", whiteSpace: "nowrap" }}>Soal No.</span>
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        min="1"
+                                                                                        className="form-control form-control-sm text-center"
+                                                                                        style={{ width: "60px" }}
+                                                                                        value={rule.start_num || 1}
+                                                                                        onChange={(e) => updateBlueprintRule(rIdx, "start_num", e.target.value)}
+                                                                                        title="Nomor awal rentang soal"
+                                                                                    />
+                                                                                    <span className="text-muted">-</span>
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        min="1"
+                                                                                        className="form-control form-control-sm text-center"
+                                                                                        style={{ width: "60px" }}
+                                                                                        value={rule.end_num || 2}
+                                                                                        onChange={(e) => updateBlueprintRule(rIdx, "end_num", e.target.value)}
+                                                                                        title="Nomor akhir rentang soal"
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="col-12 col-md-5">
+                                                                                <select
+                                                                                    className="form-select form-select-sm"
+                                                                                    value={rule.variant_id || ""}
+                                                                                    onChange={(e) => updateBlueprintRule(rIdx, "variant_id", e.target.value)}
+                                                                                >
+                                                                                    <option value="">-- Pilih Modul Sumber Soal --</option>
+                                                                                    {course?.curriculum?.map((mod, mIdx) => (
+                                                                                        <option key={mod.variant_id || mod.id || mIdx} value={mod.variant_id || mod.id}>
+                                                                                            Modul {mIdx + 1}: {mod.title}
+                                                                                        </option>
+                                                                                    ))}
+                                                                                </select>
+                                                                            </div>
+                                                                            <div className="col-auto">
+                                                                                <span className="badge bg-teal-subtle text-teal border px-2 py-1" style={{ fontSize: "0.75rem" }}>
+                                                                                    <i className="fas fa-dice me-1"></i>{rule.question_count || (Math.max(1, (rule.end_num || 1) - (rule.start_num || 1) + 1))} Soal Acak
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="col-auto ms-auto">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    className="btn btn-xs btn-outline-danger"
+                                                                                    onClick={() => removeBlueprintRule(rIdx)}
+                                                                                    title="Hapus Aturan Ini"
+                                                                                >
+                                                                                    <i className="fas fa-trash"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
 
                                                 {/* Penyajian Pertanyaan */}
                                                 <div className="form-group mb-3">
@@ -2306,7 +2738,7 @@ function CourseQuiz() {
                                             {/* Quick Guide & Download Template Banner */}
                                             <div className="quiz-import-guide-banner mb-3">
                                                 <div className="d-flex align-items-center justify-content-between gap-3">
-                                                    <div className="d-flex align-items-center gap-2.5 flex-grow-1">
+                                                    <div className="d-flex align-items-center gap-2 flex-grow-1">
                                                         <i className="fas fa-lightbulb text-warning fs-5 flex-shrink-0"></i>
                                                         <span className="small text-secondary mb-0">
                                                             Format file: <strong>CSV (.csv)</strong> atau <strong>JSON (.json)</strong>. Kolom: Pertanyaan, Pilihan A-E, Kunci Jawaban.
@@ -2314,7 +2746,7 @@ function CourseQuiz() {
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1.5 flex-shrink-0 text-nowrap ms-auto"
+                                                        className="btn btn-sm btn-outline-teal d-inline-flex align-items-center gap-1 flex-shrink-0 text-nowrap ms-auto"
                                                         onClick={handleExportTemplate}
                                                         title="Download file contoh CSV yang siap diisi"
                                                     >
@@ -2326,7 +2758,7 @@ function CourseQuiz() {
 
                                             {/* Target Quiz Selection */}
                                             <div className="quiz-import-target-card mb-3 p-3 rounded">
-                                                <label className="form-label quiz-compact-label fw-bold mb-1.5">
+                                                <label className="form-label quiz-compact-label fw-bold mb-1">
                                                     <i className="fas fa-bullseye text-teal me-1"></i> Target Kuis Tujuan:
                                                 </label>
                                                 <div className="row g-2 align-items-center">
@@ -2530,7 +2962,7 @@ function CourseQuiz() {
                                             </button>
                                             <button
                                                 type="button"
-                                                className="btn btn-update-course d-inline-flex align-items-center gap-1.5"
+                                                className="btn btn-update-course d-inline-flex align-items-center gap-1"
                                                 onClick={handleExecuteImport}
                                                 disabled={isImporting || parsedQuestions.filter(q => q.isValid).length === 0}
                                             >

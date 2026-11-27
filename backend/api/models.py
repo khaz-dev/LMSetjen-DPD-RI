@@ -2775,6 +2775,10 @@ class Quiz(models.Model):
         ('ordered', 'Sesuai Urutan'),
         ('random', 'Acak'),
     )
+    SCORING_MODE_CHOICES = (
+        ('standard', 'Standar (Jumlah Benar)'),
+        ('weighted', 'Bobot Poin Tiap Pilihan'),
+    )
 
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="quizzes")
     title = models.CharField(max_length=255)
@@ -2782,6 +2786,10 @@ class Quiz(models.Model):
     quiz_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     quiz_type = models.CharField(max_length=30, choices=QUIZ_TYPE_CHOICES, default='quiz')
     presentation_mode = models.CharField(max_length=30, choices=PRESENTATION_MODE_CHOICES, default='ordered')
+    scoring_mode = models.CharField(max_length=30, choices=SCORING_MODE_CHOICES, default='standard', help_text="Mode penilaian kuis: standar atau berbobot poin per pilihan")
+    passing_score = models.DecimalField(max_digits=5, decimal_places=2, default=70.00, help_text="Nilai minimal kelulusan (skor 0.00 - 100.00, mendukung desimal)")
+    duration_minutes = models.PositiveIntegerField(default=15, null=True, blank=True, help_text="Durasi pengerjaan kuis dalam menit (0 atau null = tanpa batas waktu)")
+    blueprint_rules = models.JSONField(default=list, blank=True, null=True, help_text="Aturan distribusi nomor soal acak per modul untuk Pre/Post-Test")
     is_active = models.BooleanField(default=True)
     date = models.DateTimeField(default=timezone.now)
 
@@ -2798,6 +2806,7 @@ class Quiz(models.Model):
 
 class QuizQuestion(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="questions")
+    variant = models.ForeignKey('Variant', on_delete=models.SET_NULL, null=True, blank=True, related_name="quiz_questions", verbose_name="Modul Terkait")
     question_text = models.CharField(max_length=1000)
     question_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     order = models.PositiveIntegerField(default=1)
@@ -2816,6 +2825,7 @@ class QuizChoice(models.Model):
     question = models.ForeignKey(QuizQuestion, on_delete=models.CASCADE, related_name="choices")
     choice_text = models.CharField(max_length=500)
     is_correct = models.BooleanField(default=False)
+    point_weight = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Bobot poin jika pilihan ini dipilih (khusus mode penilaian berbobot)")
     choice_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     order = models.PositiveIntegerField(default=1)
 
@@ -2824,12 +2834,15 @@ class QuizChoice(models.Model):
 
     def __str__(self):
         status = "[OK]" if self.is_correct else "✗"
-        return f"{status} {self.choice_text}"
+        return f"{status} {self.choice_text} ({self.point_weight} pts)"
 
     def save(self, *args, **kwargs):
-        # Ensure only one correct answer per question
+        # Ensure only one correct answer per question if is_correct is set
         if self.is_correct:
-            QuizChoice.objects.filter(question=self.question, is_correct=True).update(is_correct=False)
+            if self.pk:
+                QuizChoice.objects.filter(question=self.question, is_correct=True).exclude(pk=self.pk).update(is_correct=False)
+            else:
+                QuizChoice.objects.filter(question=self.question, is_correct=True).update(is_correct=False)
         super().save(*args, **kwargs)
 
 
@@ -2839,7 +2852,10 @@ class QuizAttempt(models.Model):
     score = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  # Score out of 100
     total_questions = models.PositiveIntegerField()
     correct_answers = models.PositiveIntegerField(default=0)
-    is_passed = models.BooleanField(default=False)  # True if score >= 80
+    points_earned = models.DecimalField(max_digits=7, decimal_places=2, default=0.00, help_text="Total poin yang diperoleh peserta")
+    max_possible_points = models.DecimalField(max_digits=7, decimal_places=2, default=0.00, help_text="Total poin maksimal yang bisa diperoleh")
+    assigned_questions = models.JSONField(default=list, blank=True, null=True, help_text="Daftar ID pertanyaan yang diundi untuk attempt ini")
+    is_passed = models.BooleanField(default=False)  # Dinamis berdasarkan passing_score kuis
     time_taken = models.DurationField(null=True, blank=True)  # Time taken to complete
     attempt_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet="1234567890")
     date_attempted = models.DateTimeField(default=timezone.now)
@@ -2867,7 +2883,8 @@ class QuizAttempt(models.Model):
         if (self.quiz and getattr(self.quiz, 'quiz_type', '') == 'pre_post_test' and self.attempt_type == 'pre_test') or getattr(self, '_is_pre_test', False):
             self.is_passed = True
         else:
-            self.is_passed = Decimal(str(self.score)) >= Decimal('70.00')
+            passing_grade = getattr(self.quiz, 'passing_score', Decimal('70.00')) if self.quiz else Decimal('70.00')
+            self.is_passed = Decimal(str(self.score)) >= Decimal(str(passing_grade))
         super().save(*args, **kwargs)
 
     @classmethod

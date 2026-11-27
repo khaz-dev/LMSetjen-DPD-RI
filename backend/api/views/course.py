@@ -2130,10 +2130,16 @@ class QuizQuestionListCreateAPIView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         quiz_id = self.request.data.get('quiz_id')
         quiz = api_models.Quiz.objects.get(quiz_id=quiz_id)
+        variant_id = self.request.data.get('variant_id') or self.request.data.get('variant')
+        variant = None
+        if variant_id:
+            variant = api_models.Variant.objects.filter(variant_id=variant_id).first()
+            if not variant and str(variant_id).isdigit():
+                variant = api_models.Variant.objects.filter(id=int(variant_id)).first()
         # Auto-increment order
         last_question = api_models.QuizQuestion.objects.filter(quiz=quiz).order_by('-order').first()
         next_order = (last_question.order + 1) if last_question else 1
-        serializer.save(quiz=quiz, order=next_order)
+        serializer.save(quiz=quiz, variant=variant, order=next_order)
 
 
 
@@ -2163,6 +2169,19 @@ class QuizQuestionDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             
         # Jika bukan admin, hanya bisa memanipulasi kuis di kursus miliknya
         return api_models.QuizQuestion.objects.filter(quiz__course__teacher__user=user)
+
+    def perform_update(self, serializer):
+        kwargs = {}
+        if 'variant_id' in self.request.data or 'variant' in self.request.data:
+            variant_id = self.request.data.get('variant_id') or self.request.data.get('variant')
+            if not variant_id or variant_id == 'null':
+                kwargs['variant'] = None
+            else:
+                variant = api_models.Variant.objects.filter(variant_id=variant_id).first()
+                if not variant and str(variant_id).isdigit():
+                    variant = api_models.Variant.objects.filter(id=int(variant_id)).first()
+                kwargs['variant'] = variant
+        serializer.save(**kwargs)
 
 
 
@@ -2226,10 +2245,11 @@ class QuizChoiceListCreateAPIView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         question_id = self.request.data.get('question_id')
         question = api_models.QuizQuestion.objects.get(question_id=question_id)
+        point_weight = self.request.data.get('point_weight', 0.00)
         # Auto-increment order
         last_choice = api_models.QuizChoice.objects.filter(question=question).order_by('-order').first()
         next_order = (last_choice.order + 1) if last_choice else 1
-        serializer.save(question=question, order=next_order)
+        serializer.save(question=question, point_weight=point_weight, order=next_order)
 
 
 

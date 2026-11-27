@@ -4517,7 +4517,11 @@ function CourseDetail() {
             setMarkedQuestions([]);
             markedQuestionsRef.current = [];
 
-            setTimeRemaining(quiz.questions.length * 60); // 1 minute per question
+            const quizDurationMinutes = (quiz.duration_minutes !== null && quiz.duration_minutes !== undefined)
+                ? Number(quiz.duration_minutes)
+                : 15;
+            const initialSeconds = quizDurationMinutes === 0 ? 0 : quizDurationMinutes * 60;
+            setTimeRemaining(initialSeconds);
 
             setShowQuizResult(false);
 
@@ -4567,12 +4571,13 @@ function CourseDetail() {
 
 
 
+                        if (quizDurationMinutes === 0) {
+                            return prev + 1; // Unlimited time: count upwards elapsed seconds
+                        }
+
                         if (prev <= 1) {
-
                             clearInterval(quizTimerRef.current);
-
                             quizTimerRef.current = null;
-
                             setIsTimeExpired(true);
 
 
@@ -4662,6 +4667,10 @@ function CourseDetail() {
             setMarkedQuestions(restoredMarked);
             markedQuestionsRef.current = restoredMarked;
 
+            const quizDurationMinutes = (quiz?.duration_minutes !== null && quiz?.duration_minutes !== undefined)
+                ? Number(quiz.duration_minutes)
+                : 15;
+
             setTimeRemaining(resumeData.timeRemaining);
 
             setShowQuizResult(false);
@@ -4732,12 +4741,13 @@ function CourseDetail() {
 
 
 
+                        if (quizDurationMinutes === 0) {
+                            return prev + 1; // Unlimited time: count upwards elapsed seconds
+                        }
+
                         if (prev <= 1) {
-
                             clearInterval(quizTimerRef.current);
-
                             quizTimerRef.current = null;
-
                             setIsTimeExpired(true);
 
 
@@ -9339,7 +9349,7 @@ function CourseDetail() {
 
                                                                             <i className="fas fa-question-circle"></i>
 
-                                                                            <span className="info-number">{selectedQuiz.total_questions}</span>
+                                                                            <span className="info-number">{selectedQuiz.total_questions || selectedQuiz.questions?.length || 0}</span>
 
                                                                             <span className="info-label">Pertanyaan</span>
 
@@ -9349,9 +9359,11 @@ function CourseDetail() {
 
                                                                             <i className="fas fa-clock"></i>
 
-                                                                            <span className="info-number">{selectedQuiz.total_questions}</span>
+                                                                            <span className="info-number">
+                                                                                {selectedQuiz.duration_minutes === 0 ? "∞" : (selectedQuiz.duration_minutes || selectedQuiz.total_questions || selectedQuiz.questions?.length || 15)}
+                                                                            </span>
 
-                                                                            <span className="info-label">Menit</span>
+                                                                            <span className="info-label">{selectedQuiz.duration_minutes === 0 ? "Tanpa Batas" : "Menit"}</span>
 
                                                                         </div>
 
@@ -9359,9 +9371,9 @@ function CourseDetail() {
 
                                                                             <i className={`fas ${isPreTest ? 'fa-check text-success' : 'fa-trophy text-amber'}`}></i>
 
-                                                                            <span className="info-number">{isPreTest ? "Bebas" : "80%"}</span>
+                                                                            <span className="info-number">{isPreTest ? "Bebas" : `${selectedQuiz.passing_score ?? 70}%`}</span>
 
-                                                                            <span className="info-label">{isPreTest ? "Tanpa Batas Nilai" : "Skor Lulus"}</span>
+                                                                            <span className="info-label">{isPreTest ? "Tanpa Batas Nilai" : "KKM Lulus"}</span>
 
                                                                         </div>
 
@@ -9411,7 +9423,16 @@ function CourseDetail() {
 
                                                                         <ul>
 
-                                                                            <li>Anda memiliki 1 menit per pertanyaan</li>
+                                                                            <li>
+                                                                                {selectedQuiz.duration_minutes === 0
+                                                                                    ? <span>Waktu pengerjaan: <strong>Tanpa batas waktu</strong></span>
+                                                                                    : <span>Durasi pengerjaan: <strong>{selectedQuiz.duration_minutes || selectedQuiz.total_questions || 15} menit</strong></span>
+                                                                                }
+                                                                            </li>
+
+                                                                            {selectedQuiz.scoring_mode === 'weighted' && (
+                                                                                <li><strong>Mode Penilaian:</strong> Berbobot (tiap pilihan jawaban memiliki bobot poin tertentu)</li>
+                                                                            )}
 
                                                                             {isPreTest ? (
 
@@ -9433,7 +9454,7 @@ function CourseDetail() {
 
                                                                                     <li>Jika Anda belum mengklik Kirim Kuis, Anda masih dapat mengulang atau melanjutkan pengerjaan Post-test.</li>
 
-                                                                                    <li>Penyelesaian Post-test merupakan syarat wajib untuk menerbitkan sertifikat resmi.</li>
+                                                                                    <li>Penyelesaian Post-test merupakan syarat wajib untuk menerbitkan sertifikat resmi (Minimal kelulusan: <strong>{selectedQuiz.passing_score ?? 70}%</strong>).</li>
 
                                                                                 </>
 
@@ -9441,7 +9462,7 @@ function CourseDetail() {
 
                                                                                 <>
 
-                                                                                    <li>Anda perlu 80% untuk lulus kuis ini</li>
+                                                                                    <li>Anda perlu <strong>{selectedQuiz.passing_score ?? 70}%</strong> untuk lulus kuis ini</li>
 
                                                                                     <li>Anda dapat mencoba kuis ini maksimal 3 kali per hari</li>
 
@@ -9579,9 +9600,9 @@ function CourseDetail() {
 
                                                                     <div className="quiz-timer">
 
-                                                                        <i className="fas fa-clock me-2"></i>
+                                                                        <i className={`fas ${selectedQuiz.duration_minutes === 0 ? "fa-infinity" : "fa-clock"} me-2`}></i>
 
-                                                                        {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, "0")}
+                                                                        {selectedQuiz.duration_minutes === 0 ? "Tanpa Batas" : `${Math.floor(timeRemaining / 60)}:${(timeRemaining % 60).toString().padStart(2, "0")}`}
 
                                                                     </div>
 
@@ -10052,7 +10073,7 @@ function CourseDetail() {
 
                                                                                         ? "Anda telah berhasil lulus kuis ini dengan baik!"
 
-                                                                                        : "Anda membutuhkan 80% atau lebih untuk lulus kuis ini. Silakan review materi dan coba lagi!"}
+                                                                                        : `Anda membutuhkan ${selectedQuiz.passing_score ?? 70}% atau lebih untuk lulus kuis ini. Silakan review materi dan coba lagi!`}
 
                                                                         </p>
 
@@ -10070,25 +10091,29 @@ function CourseDetail() {
 
                                                                             <span className={`stat-number ${isPreTest || quizResult.passed ? "text-success" : "text-danger"}`}>
 
-                                                                                {Math.round(quizResult.score)}%
+                                                                                {typeof quizResult.score === 'number' ? Number(quizResult.score).toFixed(1).replace(/\.0$/, '') : quizResult.score}%
 
                                                                             </span>
 
                                                                         </div>
 
-                                                                        <div className="result-stat-card">
-
-                                                                            <i className="fas fa-check-circle"></i>
-
-                                                                            <span className="stat-label">Benar</span>
-
-                                                                            <span className="stat-number">
-
-                                                                                {quizResult.correct_answers}/{quizResult.total_questions}
-
-                                                                            </span>
-
-                                                                        </div>
+                                                                        {selectedQuiz.scoring_mode === 'weighted' && quizResult.points_earned !== undefined && quizResult.points_earned !== null ? (
+                                                                            <div className="result-stat-card">
+                                                                                <i className="fas fa-star text-amber"></i>
+                                                                                <span className="stat-label">Total Poin</span>
+                                                                                <span className="stat-number">
+                                                                                    {quizResult.points_earned} / {quizResult.max_possible_points}
+                                                                                </span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="result-stat-card">
+                                                                                <i className="fas fa-check-circle"></i>
+                                                                                <span className="stat-label">Benar</span>
+                                                                                <span className="stat-number">
+                                                                                    {quizResult.correct_answers}/{quizResult.total_questions}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
 
                                                                         <div className="result-stat-card">
 
@@ -10227,7 +10252,7 @@ function CourseDetail() {
 
                                                                                         ? "Nilai sempurna! Lanjutkan dengan kuis berikutnya atau review materi."
 
-                                                                                        : `Anda mendapat ${Math.round(quizResult.score)}%. Coba lagi untuk mencapai skor lulus minimal 80%.`}
+                                                                                        : `Anda mendapat ${typeof quizResult.score === 'number' ? Number(quizResult.score).toFixed(1).replace(/\.0$/, '') : quizResult.score}%. Coba lagi untuk mencapai skor lulus minimal ${selectedQuiz.passing_score ?? 70}%.`}
 
                                                                         </p>
 

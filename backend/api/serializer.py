@@ -2389,7 +2389,7 @@ class TeacherSummarySerializer(serializers.Serializer):
 class QuizChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = api_models.QuizChoice
-        fields = ['choice_id', 'choice_text', 'is_correct', 'order']
+        fields = ['choice_id', 'choice_text', 'is_correct', 'point_weight', 'order']
 
     def __init__(self, *args, **kwargs):
         super(QuizChoiceSerializer, self).__init__(*args, **kwargs)
@@ -2402,10 +2402,12 @@ class QuizChoiceSerializer(serializers.ModelSerializer):
 class QuizQuestionSerializer(serializers.ModelSerializer):
     choices = QuizChoiceSerializer(many=True, read_only=True)
     correct_answer = QuizChoiceSerializer(read_only=True)
+    variant_id = serializers.CharField(source='variant.variant_id', read_only=True, default=None)
+    variant_title = serializers.CharField(source='variant.title', read_only=True, default=None)
     
     class Meta:
         model = api_models.QuizQuestion
-        fields = ['question_id', 'question_text', 'order', 'date', 'choices', 'correct_answer']
+        fields = ['question_id', 'question_text', 'variant', 'variant_id', 'variant_title', 'order', 'date', 'choices', 'correct_answer']
 
     def __init__(self, *args, **kwargs):
         super(QuizQuestionSerializer, self).__init__(*args, **kwargs)
@@ -2422,7 +2424,12 @@ class QuizSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = api_models.Quiz
-        fields = ['quiz_id', 'title', 'description', 'quiz_type', 'presentation_mode', 'is_active', 'date', 'questions', 'total_questions', 'course_title']
+        fields = [
+            'quiz_id', 'title', 'description', 'quiz_type', 
+            'scoring_mode', 'passing_score', 'duration_minutes', 'blueprint_rules',
+            'presentation_mode', 'is_active', 'date', 
+            'questions', 'total_questions', 'course_title'
+        ]
 
     def get_course_title(self, obj):
         return obj.course.title if obj.course else None
@@ -2445,7 +2452,8 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
         model = api_models.QuizAttempt
         fields = [
             'attempt_id', 'quiz', 'quiz_title', 'score', 'total_questions', 
-            'correct_answers', 'is_passed', 'pass_status', 'percentage_display',
+            'correct_answers', 'points_earned', 'max_possible_points', 'assigned_questions',
+            'is_passed', 'pass_status', 'percentage_display',
             'time_taken', 'date_attempted', 'attempt_type'
         ]
         read_only_fields = ['attempt_id', 'is_passed', 'date_attempted']

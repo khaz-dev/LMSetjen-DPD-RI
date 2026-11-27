@@ -140,6 +140,7 @@ function BaseFooter() {
                 Dukungan
               </h5>
               <ul className="footer-section-list">
+                <li><Link to="/certificate/verify/" className="footer-link">Cek & Validasi Sertifikat</Link></li>
                 <li><Link to="/user-guide/" className="footer-link">Panduan Pengguna</Link></li>
                 <li><Link to="/contact/" className="footer-link">Menjadi Instruktur</Link></li>
                 <li>

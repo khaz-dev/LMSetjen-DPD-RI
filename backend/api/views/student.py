@@ -2370,13 +2370,6 @@ class StudentQuizDetailAPIView(generics.RetrieveAPIView):
                 # Get the serialized data
                 serializer = self.get_serializer(quiz)
                 quiz_data = serializer.data
-                
-                # If presentation mode is random, shuffle questions for student
-                if getattr(quiz, 'presentation_mode', 'ordered') == 'random' and 'questions' in quiz_data and isinstance(quiz_data['questions'], list):
-                    import random
-                    shuffled_questions = list(quiz_data['questions'])
-                    random.shuffle(shuffled_questions)
-                    quiz_data['questions'] = shuffled_questions
 
                 # Add attempt information
                 if quiz.quiz_type == 'pre_post_test':
@@ -2438,9 +2431,63 @@ class StudentQuizDetailAPIView(generics.RetrieveAPIView):
 
                     quiz_data['today_attempts'] = today_attempts
                     quiz_data['can_attempt'] = can_attempt
-                    quiz_data['best_score'] = best_attempt.score if best_attempt else 0
+                    quiz_data['best_score'] = float(best_attempt.score) if best_attempt else 0
                     quiz_data['is_passed'] = best_attempt.is_passed if best_attempt else False
-                
+
+                # Dynamic Modular Question Sampling (Pre/Post-Test Blueprint)
+                blueprint_rules = getattr(quiz, 'blueprint_rules', None)
+                current_attempt_mode = quiz_data.get('current_mode') or ('pre_test' if quiz.quiz_type == 'pre_post_test' and not quiz_data.get('has_pre_test') else ('post_test' if quiz.quiz_type == 'pre_post_test' else 'quiz'))
+
+                if blueprint_rules and isinstance(blueprint_rules, list) and len(blueprint_rules) > 0 and current_attempt_mode in ['pre_test', 'post_test', 'quiz']:
+                    from django.core.cache import cache
+                    import random
+                    cache_key = f"quiz_blueprint_assigned_{user.id}_{quiz.quiz_id}_{current_attempt_mode}"
+                    cached_q_ids = cache.get(cache_key)
+
+                    selected_questions = []
+                    if cached_q_ids:
+                        q_map = {q.question_id: q for q in api_models.QuizQuestion.objects.filter(question_id__in=cached_q_ids).prefetch_related('choices')}
+                        for q_id in cached_q_ids:
+                            if q_id in q_map:
+                                selected_questions.append(q_map[q_id])
+
+                    if not selected_questions:
+                        assigned_q_ids = []
+                        sorted_rules = sorted(blueprint_rules, key=lambda r: int(r.get('start_num', 0) or 0))
+                        for rule in sorted_rules:
+                            var_id = rule.get('variant_id') or rule.get('module_id')
+                            q_count = int(rule.get('question_count') or (int(rule.get('end_num', 1)) - int(rule.get('start_num', 1)) + 1))
+                            if q_count <= 0:
+                                continue
+
+                            var_filter = Q(variant__variant_id=var_id) if var_id else Q()
+                            if var_id and str(var_id).isdigit():
+                                var_filter = var_filter | Q(variant__id=int(var_id))
+
+                            mod_questions = list(api_models.QuizQuestion.objects.filter(Q(quiz=quiz) & var_filter).prefetch_related('choices'))
+                            if not mod_questions:
+                                mod_questions = list(api_models.QuizQuestion.objects.filter(Q(quiz__course=quiz.course) & var_filter).prefetch_related('choices'))
+
+                            if mod_questions:
+                                sampled = random.sample(mod_questions, min(q_count, len(mod_questions)))
+                                for sq in sampled:
+                                    if sq.question_id not in assigned_q_ids:
+                                        assigned_q_ids.append(sq.question_id)
+                                        selected_questions.append(sq)
+
+                        if selected_questions:
+                            cache.set(cache_key, assigned_q_ids, timeout=86400)
+
+                    if selected_questions:
+                        serialized_questions = api_serializer.QuizQuestionSerializer(selected_questions, many=True).data
+                        quiz_data['questions'] = serialized_questions
+                        quiz_data['total_questions'] = len(selected_questions)
+                elif getattr(quiz, 'presentation_mode', 'ordered') == 'random' and 'questions' in quiz_data and isinstance(quiz_data['questions'], list):
+                    import random
+                    shuffled_questions = list(quiz_data['questions'])
+                    random.shuffle(shuffled_questions)
+                    quiz_data['questions'] = shuffled_questions
+
                 return Response(quiz_data)
                 
             except User.DoesNotExist:
@@ -2534,31 +2581,78 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                     )
                 
                 # Calculate score
-                total_questions = quiz.questions.count()
+                from decimal import Decimal
+                from django.core.cache import cache
+
+                cache_key = f"quiz_blueprint_assigned_{user.id}_{quiz.quiz_id}_{final_attempt_type}"
+                cached_assigned_q_ids = cache.get(cache_key) or []
+                assigned_q_ids = list(cached_assigned_q_ids) if cached_assigned_q_ids else [a.get('question_id') for a in answers if a.get('question_id')]
+
+                scoring_mode = getattr(quiz, 'scoring_mode', 'standard')
+                
+                # Determine question set
+                if assigned_q_ids:
+                    eval_questions = api_models.QuizQuestion.objects.filter(question_id__in=assigned_q_ids).prefetch_related('choices')
+                    total_questions = len(assigned_q_ids)
+                else:
+                    eval_questions = quiz.questions.all().prefetch_related('choices')
+                    total_questions = eval_questions.count()
+
                 correct_answers = 0
-                
-                print(f"Total questions in quiz: {total_questions}")
-                
-                for answer in answers:
-                    question_id = answer.get('question_id')
-                    choice_id = answer.get('choice_id')
-                    
-                    print(f"Processing answer - question_id: {question_id}, choice_id: {choice_id}")
-                    
-                    try:
-                        choice = api_models.QuizChoice.objects.get(choice_id=choice_id)
-                        if choice.is_correct:
-                            correct_answers += 1
-                            print(f"Correct answer found for question {question_id}")
-                    except api_models.QuizChoice.DoesNotExist:
-                        print(f"Choice {choice_id} not found")
-                        continue
-                
-                # Calculate percentage score
-                score = (correct_answers / total_questions * 100) if total_questions > 0 else 0
-                print(f"Final score: {score}% ({correct_answers}/{total_questions})")
-                print(f"Score type: {type(score)}, Score >= 80: {score >= 80}")
-                
+                points_earned = Decimal('0.00')
+                max_possible_points = Decimal('0.00')
+
+                # If weighted scoring mode
+                if scoring_mode == 'weighted':
+                    # Calculate max possible points across all evaluated questions
+                    for q in eval_questions:
+                        q_choice_weights = [Decimal(str(c.point_weight or 0.00)) for c in q.choices.all()]
+                        q_max = max(q_choice_weights) if q_choice_weights else Decimal('1.00')
+                        if q_max <= Decimal('0.00'):
+                            q_max = Decimal('1.00')
+                        max_possible_points += q_max
+
+                    # Process student answers
+                    for answer in answers:
+                        question_id = answer.get('question_id')
+                        choice_id = answer.get('choice_id')
+                        
+                        try:
+                            choice = api_models.QuizChoice.objects.get(choice_id=choice_id)
+                            c_weight = Decimal(str(choice.point_weight or 0.00))
+                            points_earned += c_weight
+                            if choice.is_correct or c_weight > Decimal('0.00'):
+                                correct_answers += 1
+                        except api_models.QuizChoice.DoesNotExist:
+                            continue
+
+                    score = (float(points_earned) / float(max_possible_points) * 100.0) if max_possible_points > 0 else 0.0
+                    score = round(score, 2)
+                else:
+                    # Standard mode: binary correct answers
+                    for answer in answers:
+                        question_id = answer.get('question_id')
+                        choice_id = answer.get('choice_id')
+                        
+                        try:
+                            choice = api_models.QuizChoice.objects.get(choice_id=choice_id)
+                            if choice.is_correct:
+                                correct_answers += 1
+                        except api_models.QuizChoice.DoesNotExist:
+                            continue
+
+                    score = (correct_answers / total_questions * 100.0) if total_questions > 0 else 0.0
+                    score = round(score, 2)
+                    points_earned = Decimal(str(correct_answers))
+                    max_possible_points = Decimal(str(total_questions))
+
+                # Determine passing status based on custom passing_score
+                passing_score_target = Decimal(str(getattr(quiz, 'passing_score', 70.00) or 70.00))
+                if is_pre_test:
+                    is_passed = True
+                else:
+                    is_passed = Decimal(str(score)) >= passing_score_target
+
                 # Anti-Cheat Verification: Validasi durasi manusiawi & pelanggaran tab switch
                 tab_switch_violations = int(request.data.get('tab_switch_violations', 0))
                 min_realistic_quiz_time = max(5, total_questions * 3)
@@ -2567,7 +2661,6 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
 
                 # Create quiz attempt record
                 from datetime import timedelta
-                from decimal import Decimal
                 time_taken_duration = timedelta(seconds=time_taken) if time_taken else None
 
                 attempt = api_models.QuizAttempt.objects.create(
@@ -2576,14 +2669,19 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                     score=Decimal(str(score)),
                     total_questions=total_questions,
                     correct_answers=correct_answers,
+                    points_earned=points_earned,
+                    max_possible_points=max_possible_points,
+                    assigned_questions=assigned_q_ids,
+                    is_passed=is_passed,
                     time_taken=time_taken_duration,
                     attempt_type=final_attempt_type,
                     _points_awarded=False
                 )
-                if is_pre_test:
-                    attempt.is_passed = True
-                    attempt.save()
-                
+
+                # Clear cached blueprint questions after submission
+                if cached_assigned_q_ids:
+                    cache.delete(cache_key)
+
                 # Refresh the attempt from database
                 attempt.refresh_from_db()
                 
@@ -2664,6 +2762,10 @@ class StudentQuizSubmitAPIView(generics.CreateAPIView):
                     "score": score,
                     "correct_answers": correct_answers,
                     "total_questions": total_questions,
+                    "points_earned": float(points_earned),
+                    "max_possible_points": float(max_possible_points),
+                    "passing_score": float(passing_score_target),
+                    "scoring_mode": scoring_mode,
                     "is_passed": attempt.is_passed,
                     "passed": attempt.is_passed,  # Add this for frontend compatibility
                     "pass_status": attempt.pass_status,
@@ -3172,69 +3274,136 @@ class StudentCertificateListAPIView(APIView):
 
 
 
+def _lookup_certificate(query_str):
+    """
+    Search certificate by:
+    - validation_token (exact case-insensitive)
+    - certificate_id (exact digits/string)
+    - formatted_certificate_id format: e.g. KP.04/LMS/123456/DPDRI/II/2026
+    """
+    if not query_str:
+        return None
+    raw = str(query_str).strip()
+    if not raw:
+        return None
+    
+    # 1. Exact match on validation_token
+    cert = api_models.Certificate.objects.select_related(
+        'user', 'course', 'course__teacher', 'course__category'
+    ).filter(validation_token__iexact=raw).first()
+    if cert:
+        return cert
+
+    # 2. Exact match on certificate_id
+    cert = api_models.Certificate.objects.select_related(
+        'user', 'course', 'course__teacher', 'course__category'
+    ).filter(certificate_id__iexact=raw).first()
+    if cert:
+        return cert
+
+    # 3. Check if input matches formatted pattern like KP.04/LMS/<id>/DPDRI/...
+    import re
+    match = re.search(r'LMS/([^/]+)/DPDRI', raw, re.IGNORECASE)
+    if match:
+        extracted_id = match.group(1).strip()
+        cert = api_models.Certificate.objects.select_related(
+            'user', 'course', 'course__teacher', 'course__category'
+        ).filter(certificate_id__iexact=extracted_id).first()
+        if cert:
+            return cert
+
+    # 4. Check if someone pasted formatted string with any prefix/suffix containing the 5-12 digit ID
+    digits_matches = re.findall(r'\b\d{5,12}\b', raw)
+    for dig in digits_matches:
+        cert = api_models.Certificate.objects.select_related(
+            'user', 'course', 'course__teacher', 'course__category'
+        ).filter(certificate_id=dig).first()
+        if cert:
+            return cert
+
+    return None
+
+
+def _build_certificate_payload(certificate, request=None):
+    cert_course = certificate.course
+    cert_jp = getattr(cert_course, 'total_jam_pelatihan', None)
+    if not cert_jp or int(cert_jp) <= 0:
+        import math
+        total_secs = sum(it.duration.total_seconds() for it in api_models.VariantItem.objects.filter(variant__course=cert_course) if it.duration)
+        cert_jp = math.ceil(total_secs / 2700) if total_secs > 0 else 2
+    else:
+        cert_jp = int(cert_jp)
+
+    image_url = None
+    if certificate.image_file:
+        if request:
+            image_url = request.build_absolute_uri(f'/api/v1/student/certificate-image/{certificate.certificate_id}/')
+        else:
+            image_url = f'/api/v1/student/certificate-image/{certificate.certificate_id}/'
+
+    # Student name
+    student_name = certificate.user.full_name if (certificate.user and certificate.user.full_name) else (certificate.user.username if certificate.user else 'Peserta Pelatihan')
+    instructor_name = certificate.course.teacher.full_name if (certificate.course and certificate.course.teacher and certificate.course.teacher.full_name) else 'Instruktur DPD RI'
+
+    is_valid = bool(certificate.is_valid and certificate.integrity_status != 'rejected')
+    status_str = 'valid' if is_valid else ('revoked' if not certificate.is_valid else 'rejected')
+
+    return {
+        'certificate_id': certificate.certificate_id,
+        'formatted_certificate_id': certificate.get_formatted_certificate_id(),
+        'validation_token': certificate.validation_token,
+        'validation_url': f"/certificate/validate/{certificate.validation_token}/",
+        'student_name': student_name,
+        'student_email': certificate.user.email if certificate.user and certificate.user.email else '',
+        'course_title': certificate.course.title if certificate.course else 'Kursus DPD RI',
+        'course_slug': certificate.course.slug if certificate.course else '',
+        'instructor_name': instructor_name,
+        'completion_date': certificate.date.strftime('%B %d, %Y') if certificate.date else None,
+        'issued_date': certificate.created_at.strftime('%B %d, %Y') if certificate.created_at else None,
+        'course_level': certificate.course.level if certificate.course else 'Semua Level',
+        'course_category': certificate.course.category.title if certificate.course and certificate.course.category else 'General',
+        'total_jam_pelatihan': cert_jp,
+        'integrity_status': certificate.integrity_status,
+        'is_valid': is_valid,
+        'status': status_str,
+        'image_file_url': image_url
+    }
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class CertificateValidationAPIView(APIView):
-    """Validate certificate authenticity by validation token"""
+    """Validate certificate authenticity by validation token or certificate id"""
     authentication_classes = []
     permission_classes = [AllowAny]  # Public certificate validation
     
     def get(self, request, validation_token):
         """Get certificate details for validation"""
         try:
-            certificate = api_models.Certificate.objects.select_related(
-                'user', 'course', 'course__teacher'
-            ).get(validation_token=validation_token)
-            
-            if not certificate.is_valid:
+            certificate = _lookup_certificate(validation_token)
+            if not certificate:
                 return Response({
                     'is_valid': False,
-                    'status': 'invalid',
-                    'message': 'This certificate has been marked as invalid',
+                    'status': 'not_found',
+                    'message': 'Certificate not found in our system',
                     'details': None
-                }, status=status.HTTP_200_OK)
+                }, status=status.HTTP_404_NOT_FOUND)
             
-            # Calculate official Jam Pelatihan (JP)
-            cert_course = certificate.course
-            cert_jp = getattr(cert_course, 'total_jam_pelatihan', None)
-            if not cert_jp or int(cert_jp) <= 0:
-                import math
-                total_secs = sum(it.duration.total_seconds() for it in api_models.VariantItem.objects.filter(variant__course=cert_course) if it.duration)
-                cert_jp = math.ceil(total_secs / 2700) if total_secs > 0 else 2
-            else:
-                cert_jp = int(cert_jp)
-
-            # Certificate is valid - return full details
-            certificate_details = {
-                'certificate_id': certificate.certificate_id,
-                'formatted_certificate_id': certificate.get_formatted_certificate_id(),  # ✨ PHASE 4.227: Professional certificate ID format
-                'student_name': certificate.user.full_name if certificate.user else 'Unknown',
-                'student_email': certificate.user.email if certificate.user else 'Unknown',
-                'course_title': certificate.course.title,
-                'course_slug': certificate.course.slug,
-                'instructor_name': certificate.course.teacher.full_name if certificate.course.teacher else 'Unknown',
-                'instructor_email': certificate.course.teacher.user.email if certificate.course.teacher and certificate.course.teacher.user else 'Unknown',
-                'completion_date': certificate.date.strftime('%B %d, %Y'),
-                'issued_date': certificate.created_at.strftime('%B %d, %Y'),
-                'course_level': certificate.course.level,
-                'course_category': certificate.course.category.title if certificate.course.category else 'General',
-                'total_jam_pelatihan': cert_jp,
-                'image_file_url': request.build_absolute_uri(f'/api/v1/student/certificate-image/{certificate.certificate_id}/') if certificate.image_file else None
-            }
+            payload = _build_certificate_payload(certificate, request)
+            if not payload['is_valid']:
+                return Response({
+                    'is_valid': False,
+                    'status': payload['status'],
+                    'message': 'This certificate has been marked as invalid or rejected',
+                    'details': payload
+                }, status=status.HTTP_200_OK)
             
             return Response({
                 'is_valid': True,
                 'status': 'valid',
                 'message': 'Certificate is authentic and valid',
-                'details': certificate_details
+                'details': payload
             }, status=status.HTTP_200_OK)
                 
-        except api_models.Certificate.DoesNotExist:
-            return Response({
-                'is_valid': False,
-                'status': 'not_found',
-                'message': 'Certificate not found in our system',
-                'details': None
-            }, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({
                 'is_valid': False,
@@ -3242,6 +3411,153 @@ class CertificateValidationAPIView(APIView):
                 'message': f'Error validating certificate: {str(e)}',
                 'details': None
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CertificateVerifySingleAPIView(APIView):
+    """
+    Public single certificate verification endpoint.
+    Accepts: query param or POST body: 'query' or 'certificate_id' or 'no_sertifikat'
+    """
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        query = request.query_params.get('query') or request.query_params.get('certificate_id') or request.query_params.get('no_sertifikat', '')
+        return self._handle_verification(query, request)
+
+    def post(self, request):
+        query = request.data.get('query') or request.data.get('certificate_id') or request.data.get('no_sertifikat', '')
+        return self._handle_verification(query, request)
+
+    def _handle_verification(self, query, request):
+        if not query or not str(query).strip():
+            return Response({
+                'is_valid': False,
+                'status': 'error',
+                'message': 'Nomor sertifikat atau token validasi harus diisi.',
+                'details': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        certificate = _lookup_certificate(query)
+        if not certificate:
+            return Response({
+                'is_valid': False,
+                'status': 'not_found',
+                'message': f'Sertifikat dengan nomor/kode "{query}" tidak ditemukan di pangkalan data LMS DPD RI.',
+                'details': None
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        payload = _build_certificate_payload(certificate, request)
+        if not payload['is_valid']:
+            msg = 'Sertifikat ini telah dicabut atau dinyatakan tidak valid.' if not certificate.is_valid else 'Sertifikat ini berstatus ditolak / terindikasi curang.'
+            return Response({
+                'is_valid': False,
+                'status': payload['status'],
+                'message': msg,
+                'details': payload
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            'is_valid': True,
+            'status': 'valid',
+            'message': 'Sertifikat resmi dan terverifikasi valid pada pangkalan data LMS DPD RI.',
+            'details': payload
+        }, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CertificateVerifyBulkAPIView(APIView):
+    """
+    Public bulk certificate verification endpoint.
+    Accepts:
+    - 'queries': list of strings
+    - or 'text': newline or comma/semicolon-separated string
+    Limit: max 100 queries per request.
+    """
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        queries_input = request.data.get('queries')
+        text_input = request.data.get('text')
+
+        items = []
+        if isinstance(queries_input, list):
+            items = [str(q).strip() for q in queries_input if str(q).strip()]
+        elif isinstance(text_input, str):
+            import re
+            tokens = re.split(r'[\r\n,;]+', text_input)
+            items = [t.strip() for t in tokens if t.strip()]
+
+        # Remove duplicate preserving order
+        unique_items = []
+        seen = set()
+        for it in items:
+            normalized = it.upper()
+            if normalized not in seen:
+                seen.add(normalized)
+                unique_items.append(it)
+
+        if not unique_items:
+            return Response({
+                'error': 'Daftar nomor sertifikat tidak boleh kosong.',
+                'results': [],
+                'total_checked': 0,
+                'valid_count': 0,
+                'invalid_count': 0
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Enforce max limit of 100
+        if len(unique_items) > 100:
+            unique_items = unique_items[:100]
+
+        results = []
+        valid_count = 0
+        invalid_count = 0
+
+        for q in unique_items:
+            cert = _lookup_certificate(q)
+            if not cert:
+                invalid_count += 1
+                results.append({
+                    'query': q,
+                    'found': False,
+                    'is_valid': False,
+                    'status': 'not_found',
+                    'message': 'Sertifikat tidak ditemukan di sistem LMS DPD RI',
+                    'details': None
+                })
+            else:
+                payload = _build_certificate_payload(cert, request)
+                if payload['is_valid']:
+                    valid_count += 1
+                    results.append({
+                        'query': q,
+                        'found': True,
+                        'is_valid': True,
+                        'status': 'valid',
+                        'message': 'Sertifikat resmi terverifikasi valid',
+                        'details': payload
+                    })
+                else:
+                    invalid_count += 1
+                    msg = 'Sertifikat telah dicabut' if not cert.is_valid else 'Sertifikat ditolak'
+                    results.append({
+                        'query': q,
+                        'found': True,
+                        'is_valid': False,
+                        'status': payload['status'],
+                        'message': msg,
+                        'details': payload
+                    })
+
+        return Response({
+            'total_checked': len(unique_items),
+            'valid_count': valid_count,
+            'invalid_count': invalid_count,
+            'results': results
+        }, status=status.HTTP_200_OK)
 
 
 

@@ -143,6 +143,8 @@ urlpatterns = [
     path("student/noti-detail/<user_id>/<noti_id>/", api_views.StudentNotificationDetailAPIView.as_view()),
     path("student/noti-mark-all-read/<user_id>/", api_views.StudentNotificationMarkAllReadAPIView.as_view()),  # ✨ PHASE 4.228: List all student certificates for "Sertifikat Kursus" page
     path("certificate/validate/<validation_token>/", api_views.CertificateValidationAPIView.as_view(), name="certificate-validate"),
+    path("certificate/verify/", api_views.CertificateVerifySingleAPIView.as_view(), name="certificate-verify-single"),
+    path("certificate/verify/bulk/", api_views.CertificateVerifyBulkAPIView.as_view(), name="certificate-verify-bulk"),
     path("certificate/template-config/", api_views.CertificateTemplateConfigPublicAPIView.as_view(), name="certificate-template-config-public"),
     path("admin/certificate-template-config/", api_views.AdminCertificateTemplateConfigAPIView.as_view(), name="admin-certificate-template-config"),
     path("admin/certificate-template-download-pptx/", api_views.AdminCertificateDownloadDefaultPPTXAPIView.as_view(), name="admin-certificate-template-download-pptx"),

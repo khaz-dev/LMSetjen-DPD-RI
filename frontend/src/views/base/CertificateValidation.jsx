@@ -260,6 +260,13 @@ function CertificateValidation() {
                             </div>
 
                             <div className="val-invalid-actions">
+                                <Link
+                                    to="/certificate/verify/"
+                                    className="btn btn-teal text-white me-2"
+                                >
+                                    <i className="fas fa-search me-2"></i>
+                                    Cek Nomor Sertifikat Manual
+                                </Link>
                                 <button
                                     type="button"
                                     className="btn btn-val-home"
@@ -595,6 +602,14 @@ function CertificateValidation() {
                                 </div>
 
                                 <div className="val-action-right">
+                                    <Link
+                                        to="/certificate/verify/"
+                                        className="btn btn-outline-secondary me-2"
+                                        title="Pengecekan sertifikat lainnya atau pengecekan massal"
+                                    >
+                                        <i className="fas fa-search me-1"></i>
+                                        Cek Sertifikat Lain
+                                    </Link>
                                     <button
                                         type="button"
                                         className="btn btn-val-home"

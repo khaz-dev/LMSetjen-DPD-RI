@@ -43,6 +43,7 @@ const Contact = lazy(() => import("./views/base/Contact"));
 const Tentang = lazy(() => import("./views/base/Tentang"));
 const Capaian = lazy(() => import("./views/base/Capaian"));
 const CertificateValidation = lazy(() => import("./views/base/CertificateValidation"));
+const CertificateVerify = lazy(() => import("./views/base/CertificateVerify"));
 const PrivacyPolicy = lazy(() => import("./views/base/PrivacyPolicy"));
 const TermsAndConditions = lazy(() => import("./views/base/TermsAndConditions"));
 const CookiePolicy = lazy(() => import("./views/base/CookiePolicy"));
@@ -309,6 +310,9 @@ function App() {
                                 <Route path="/tentang/" element={<Tentang />} />
                                 <Route path="/capaian/" element={<Capaian />} />
                                 <Route path="/certificate/validate/:validation_token/" element={<CertificateValidation />} />
+                                <Route path="/certificate/verify/" element={<CertificateVerify />} />
+                                <Route path="/verify-certificate/" element={<CertificateVerify />} />
+                                <Route path="/cek-sertifikat/" element={<CertificateVerify />} />
                                 <Route path="/privacy-policy/" element={<PrivacyPolicy />} />
                                 <Route path="/terms-and-conditions/" element={<TermsAndConditions />} />
                                 <Route path="/cookie-policy/" element={<CookiePolicy />} />
