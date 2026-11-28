@@ -376,11 +376,22 @@ SSO_MAX_TOKEN_TTL_SECONDS = env.int('SSO_MAX_TOKEN_TTL_SECONDS', default=3600)  
 # CORS Configuration for Frontend Integration
 CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=False)
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
+    "http://localhost:5173",
     "http://localhost:5174",
+    "http://localhost:5175",
+    "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
+    "http://127.0.0.1:5175",
     "https://lms.khaz.app",
     "https://lms.dpd.go.id",
 ])
+
+# For local development, dynamically allow any localhost / 127.0.0.1 port
+if DEBUG:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^http://localhost:\d+$",
+        r"^http://127\.0\.0\.1:\d+$",
+    ]
 
 # Keep local/dev auth flows working with the configured frontend URL.
 if FRONTEND_SITE_URL.startswith('http') and FRONTEND_SITE_URL not in CORS_ALLOWED_ORIGINS:
@@ -417,9 +428,13 @@ CORS_EXPOSE_HEADERS = [
 # CSRF Configuration - Trust staging and production domains
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
     'http://localhost:8001',
+    'http://localhost:5173',
     'http://localhost:5174',
+    'http://localhost:5175',
     'http://127.0.0.1:8001',
+    'http://127.0.0.1:5173',
     'http://127.0.0.1:5174',
+    'http://127.0.0.1:5175',
     'https://lms.khaz.app',
     'https://lms.dpd.go.id',
 ])

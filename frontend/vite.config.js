@@ -6,16 +6,16 @@ const runtimeMode = (process.env.MODE || 'development').toLowerCase()
 const isLiveDeployment = runtimeMode === 'staging' || runtimeMode === 'production'
 
 function resolveHmrConfig() {
-  const vitePort = Number(process.env.VITE_PORT || 5174)
-
   if (isLiveDeployment) {
     return false
   }
 
+  const hmrPort = process.env.VITE_HMR_PORT ? Number(process.env.VITE_HMR_PORT) : undefined
+
   return {
     protocol: 'ws',
     host: 'localhost',
-    port: vitePort,
+    ...(hmrPort ? { port: hmrPort } : {}),
   }
 }
 

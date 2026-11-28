@@ -97,6 +97,528 @@ const DocumentPreview = ({ fileUrl, title }) => {
     );
 };
 
+/**
+ * ✨ Admin Lesson Description Editor Component
+ * - Provides comfortable textarea with auto-resizing & character counter
+ * - Local draft state to avoid sluggish typing and immediate commit
+ * - Smart multi-line formatting: Bullet, Numbering (auto-increment based on preceding line), Bold
+ * - Smart Enter: auto-continuation of numbers & bullets, clean exit on empty list item
+ * - Dedicated "Simpan" & "Batal" controls with visual dirty/saved indicators
+ * - Full Focus Mode / Modal Editor with quick toolbar & template
+ */
+function AdminLessonDescriptionEditor({ item, secIndex, itemIndex, updateLectureField }) {
+    const savedDescription = item?.description || "";
+    const [localDescription, setLocalDescription] = useState(savedDescription);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showSavedFeedback, setShowSavedFeedback] = useState(false);
+    const [modalText, setModalText] = useState(savedDescription);
+    const textareaRef = useRef(null);
+    const modalTextareaRef = useRef(null);
+    const feedbackTimerRef = useRef(null);
+
+    useEffect(() => {
+        setLocalDescription(item?.description || "");
+    }, [item?.description]);
+
+    const isDirty = localDescription !== (item?.description || "");
+
+    const handleCommitSave = (textToSave = localDescription) => {
+        updateLectureField(secIndex, itemIndex, "description", textToSave);
+        setShowSavedFeedback(true);
+        if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+        feedbackTimerRef.current = setTimeout(() => {
+            setShowSavedFeedback(false);
+        }, 2500);
+    };
+
+    const handleCancel = () => {
+        setLocalDescription(savedDescription);
+    };
+
+    const handleOpenModal = () => {
+        setModalText(localDescription);
+        setIsModalOpen(true);
+    };
+
+    const handleApplyFromModal = () => {
+        setLocalDescription(modalText);
+        handleCommitSave(modalText);
+        setIsModalOpen(false);
+    };
+
+    // Helper: Deteksi nomor urut baris sebelumnya untuk auto-increment
+    const getPrecedingNumber = (text, beforePos) => {
+        if (beforePos <= 0) return 1;
+        const textBefore = text.substring(0, beforePos).trimEnd();
+        const lastNewline = textBefore.lastIndexOf("\n");
+        const prevLine = (lastNewline === -1 ? textBefore : textBefore.substring(lastNewline + 1)).trim();
+        const match = prevLine.match(/^(\d+)[\.\)]\s*/);
+        if (match) {
+            return parseInt(match[1], 10) + 1;
+        }
+        return 1;
+    };
+
+    // ✨ Smart Numbering: Multi-line & Auto-increment
+    const applyNumbering = () => {
+        if (!modalTextareaRef.current) return;
+        const ta = modalTextareaRef.current;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+
+        const lineStart = modalText.lastIndexOf("\n", start - 1) + 1;
+        let lineEnd = modalText.indexOf("\n", end);
+        if (lineEnd === -1) lineEnd = modalText.length;
+
+        const selectedBlock = modalText.substring(lineStart, lineEnd);
+        const lines = selectedBlock.split("\n");
+
+        const startNum = getPrecedingNumber(modalText, lineStart);
+        let currentNum = startNum;
+
+        const newLines = lines.map(line => {
+            const cleaned = line.replace(/^(\d+[\.\)]\s*|[•\-\*]\s*)/, "");
+            if (cleaned.trim() || lines.length === 1) {
+                const res = `${currentNum}. ${cleaned}`;
+                currentNum++;
+                return res;
+            }
+            return line;
+        });
+
+        const newBlock = newLines.join("\n");
+        const newText = modalText.substring(0, lineStart) + newBlock + modalText.substring(lineEnd);
+        setModalText(newText);
+
+        setTimeout(() => {
+            ta.focus();
+            ta.setSelectionRange(lineStart, lineStart + newBlock.length);
+        }, 30);
+    };
+
+    // ✨ Smart Bullet: Multi-line & Toggle
+    const applyBullet = () => {
+        if (!modalTextareaRef.current) return;
+        const ta = modalTextareaRef.current;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+
+        const lineStart = modalText.lastIndexOf("\n", start - 1) + 1;
+        let lineEnd = modalText.indexOf("\n", end);
+        if (lineEnd === -1) lineEnd = modalText.length;
+
+        const selectedBlock = modalText.substring(lineStart, lineEnd);
+        const lines = selectedBlock.split("\n");
+
+        const allBulleted = lines.every(line => !line.trim() || /^[•\-\*]\s*/.test(line));
+
+        const newLines = lines.map(line => {
+            const cleaned = line.replace(/^(\d+[\.\)]\s*|[•\-\*]\s*)/, "");
+            if (!cleaned.trim() && lines.length > 1) {
+                return line;
+            }
+            if (allBulleted) {
+                return cleaned;
+            }
+            return `• ${cleaned}`;
+        });
+
+        const newBlock = newLines.join("\n");
+        const newText = modalText.substring(0, lineStart) + newBlock + modalText.substring(lineEnd);
+        setModalText(newText);
+
+        setTimeout(() => {
+            ta.focus();
+            ta.setSelectionRange(lineStart, lineStart + newBlock.length);
+        }, 30);
+    };
+
+    // ✨ Smart Bold: Wrap / Unwrap
+    const applyBold = () => {
+        if (!modalTextareaRef.current) return;
+        const ta = modalTextareaRef.current;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const sel = modalText.substring(start, end);
+
+        if (!sel) {
+            const placeholder = "teks tebal";
+            const replacement = `**${placeholder}**`;
+            const newText = modalText.substring(0, start) + replacement + modalText.substring(end);
+            setModalText(newText);
+            setTimeout(() => {
+                ta.focus();
+                ta.setSelectionRange(start + 2, start + 2 + placeholder.length);
+            }, 30);
+            return;
+        }
+
+        if (sel.startsWith("**") && sel.endsWith("**") && sel.length >= 4) {
+            const unwrapped = sel.substring(2, sel.length - 2);
+            const newText = modalText.substring(0, start) + unwrapped + modalText.substring(end);
+            setModalText(newText);
+            setTimeout(() => {
+                ta.focus();
+                ta.setSelectionRange(start, start + unwrapped.length);
+            }, 30);
+            return;
+        }
+
+        const replacement = `**${sel}**`;
+        const newText = modalText.substring(0, start) + replacement + modalText.substring(end);
+        setModalText(newText);
+        setTimeout(() => {
+            ta.focus();
+            ta.setSelectionRange(start, start + replacement.length);
+        }, 30);
+    };
+
+    // ✨ Smart Enter Handler for modal textarea
+    const handleModalKeyDown = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault();
+            handleApplyFromModal();
+            return;
+        }
+
+        if (e.key === "Enter" && !e.shiftKey) {
+            const ta = modalTextareaRef.current;
+            if (!ta) return;
+            const pos = ta.selectionStart;
+            const lineStart = modalText.lastIndexOf("\n", pos - 1) + 1;
+            const nextNewline = modalText.indexOf("\n", pos);
+            const lineEnd = nextNewline === -1 ? modalText.length : nextNewline;
+            const currentLine = modalText.substring(lineStart, lineEnd);
+
+            const emptyNumMatch = currentLine.match(/^(\d+)[\.\)]\s*$/);
+            if (emptyNumMatch) {
+                e.preventDefault();
+                const newText = modalText.substring(0, lineStart) + modalText.substring(pos);
+                setModalText(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(lineStart, lineStart);
+                }, 0);
+                return;
+            }
+
+            const emptyBulletMatch = currentLine.match(/^[•\-\*]\s*$/);
+            if (emptyBulletMatch) {
+                e.preventDefault();
+                const newText = modalText.substring(0, lineStart) + modalText.substring(pos);
+                setModalText(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(lineStart, lineStart);
+                }, 0);
+                return;
+            }
+
+            const numMatch = currentLine.match(/^(\d+)[\.\)]\s+/);
+            if (numMatch && pos >= lineStart + numMatch[0].length) {
+                e.preventDefault();
+                const nextNum = parseInt(numMatch[1], 10) + 1;
+                const insertStr = `\n${nextNum}. `;
+                const newText = modalText.substring(0, pos) + insertStr + modalText.substring(pos);
+                setModalText(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(pos + insertStr.length, pos + insertStr.length);
+                }, 0);
+                return;
+            }
+
+            const bulletMatch = currentLine.match(/^[•\-\*]\s+/);
+            if (bulletMatch && pos >= lineStart + bulletMatch[0].length) {
+                e.preventDefault();
+                const insertStr = "\n• ";
+                const newText = modalText.substring(0, pos) + insertStr + modalText.substring(pos);
+                setModalText(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(pos + insertStr.length, pos + insertStr.length);
+                }, 0);
+                return;
+            }
+        }
+    };
+
+    // ✨ Smart Enter Handler for inline textarea
+    const handleInlineKeyDown = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault();
+            handleCommitSave();
+            return;
+        }
+
+        if (e.key === "Enter" && !e.shiftKey) {
+            const ta = textareaRef.current;
+            if (!ta) return;
+            const pos = ta.selectionStart;
+            const lineStart = localDescription.lastIndexOf("\n", pos - 1) + 1;
+            const nextNewline = localDescription.indexOf("\n", pos);
+            const lineEnd = nextNewline === -1 ? localDescription.length : nextNewline;
+            const currentLine = localDescription.substring(lineStart, lineEnd);
+
+            const emptyNumMatch = currentLine.match(/^(\d+)[\.\)]\s*$/);
+            if (emptyNumMatch) {
+                e.preventDefault();
+                const newText = localDescription.substring(0, lineStart) + localDescription.substring(pos);
+                setLocalDescription(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(lineStart, lineStart);
+                }, 0);
+                return;
+            }
+
+            const emptyBulletMatch = currentLine.match(/^[•\-\*]\s*$/);
+            if (emptyBulletMatch) {
+                e.preventDefault();
+                const newText = localDescription.substring(0, lineStart) + localDescription.substring(pos);
+                setLocalDescription(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(lineStart, lineStart);
+                }, 0);
+                return;
+            }
+
+            const numMatch = currentLine.match(/^(\d+)[\.\)]\s+/);
+            if (numMatch && pos >= lineStart + numMatch[0].length) {
+                e.preventDefault();
+                const nextNum = parseInt(numMatch[1], 10) + 1;
+                const insertStr = `\n${nextNum}. `;
+                const newText = localDescription.substring(0, pos) + insertStr + localDescription.substring(pos);
+                setLocalDescription(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(pos + insertStr.length, pos + insertStr.length);
+                }, 0);
+                return;
+            }
+
+            const bulletMatch = currentLine.match(/^[•\-\*]\s+/);
+            if (bulletMatch && pos >= lineStart + bulletMatch[0].length) {
+                e.preventDefault();
+                const insertStr = "\n• ";
+                const newText = localDescription.substring(0, pos) + insertStr + localDescription.substring(pos);
+                setLocalDescription(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(pos + insertStr.length, pos + insertStr.length);
+                }, 0);
+                return;
+            }
+        }
+    };
+
+    const insertTemplate = () => {
+        const template = `📌 Tujuan Pembelajaran:\n1. Memahami konsep dasar materi ini\n2. Mampu menerapkan langkah-langkah praktis\n\n📋 Petunjuk Belajar:\n• Pelajari materi video / dokumen ini secara berurutan.\n• Catat hal-hal penting pada tab Catatan.\n• Kerjakan kuis setelah selesai mempelajari materi.`;
+        setModalText(prev => (prev.trim() ? `${prev}\n\n${template}` : template));
+    };
+
+    return (
+        <div className="ace-lesson-description-editor w-100">
+            {/* Header / Info Row */}
+            <div className="d-flex align-items-center justify-content-between mb-1">
+                <label className="ace-form-label mb-0 d-flex align-items-center gap-1" style={{ fontSize: "0.74rem" }}>
+                    <i className="fas fa-align-left text-teal"></i>
+                    <span>Catatan / Petunjuk Belajar</span>
+                    <span className="text-muted fw-normal">(Opsional)</span>
+                </label>
+                <div className="d-flex align-items-center gap-1">
+                    {showSavedFeedback && (
+                        <span className="badge bg-success-subtle text-success border border-success-subtle px-1 py-0" style={{ fontSize: "0.68rem" }}>
+                            <i className="fas fa-check-circle me-1"></i>Tersimpan
+                        </span>
+                    )}
+                    {isDirty && !showSavedFeedback && (
+                        <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-1 py-0" style={{ fontSize: "0.68rem" }}>
+                            <i className="fas fa-pen-nib me-1"></i>Belum disimpan
+                        </span>
+                    )}
+                    <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm py-0 px-1 border-0 text-muted"
+                        onClick={handleOpenModal}
+                        title="Buka Editor Nyaman (Layar Luas & Template)"
+                        style={{ fontSize: "0.74rem" }}
+                    >
+                        <i className="fas fa-expand-alt text-teal me-1"></i>
+                        <span className="d-none d-sm-inline" style={{ fontSize: "0.72rem" }}>Editor Luas</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Inline Textarea */}
+            <div className="position-relative">
+                <textarea
+                    ref={textareaRef}
+                    className="ace-textarea form-control form-control-sm"
+                    style={{
+                        fontSize: "0.82rem",
+                        lineHeight: 1.5,
+                        minHeight: "56px",
+                        maxHeight: "150px",
+                        resize: "vertical"
+                    }}
+                    value={localDescription}
+                    onChange={(e) => setLocalDescription(e.target.value)}
+                    onKeyDown={handleInlineKeyDown}
+                    rows="2"
+                    placeholder="Tuliskan petunjuk atau catatan belajar untuk peserta..."
+                />
+            </div>
+
+            {/* Action Bar Beneath Textarea */}
+            <div className="d-flex align-items-center justify-content-between mt-1 px-1">
+                <small className="text-muted" style={{ fontSize: "0.7rem" }}>
+                    {localDescription ? `${localDescription.length} karakter` : "Opsional"}
+                    {isDirty && <span className="ms-1 text-muted">(Ctrl+Enter untuk simpan)</span>}
+                </small>
+                {isDirty && (
+                    <div className="d-flex align-items-center gap-1">
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-sm py-0 px-2"
+                            style={{ fontSize: "0.72rem", height: "24px" }}
+                            onClick={handleCancel}
+                            title="Batalkan perubahan"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-teal btn-sm py-0 px-2 fw-semibold shadow-sm d-flex align-items-center gap-1"
+                            style={{ fontSize: "0.72rem", height: "24px" }}
+                            onClick={() => handleCommitSave()}
+                            title="Simpan keterangan materi ini"
+                        >
+                            <i className="fas fa-save"></i>
+                            <span>Simpan</span>
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Modal Editor Luas */}
+            {isModalOpen && typeof document !== "undefined" && createPortal(
+                <div
+                    className="modal fade show d-block"
+                    tabIndex="-1"
+                    style={{ backgroundColor: "rgba(15, 23, 42, 0.65)", zIndex: 1060 }}
+                >
+                    <div className="modal-dialog modal-dialog-centered modal-lg">
+                        <div className="modal-content shadow-lg border-0 rounded-3">
+                            <div className="modal-header py-2 px-3 bg-light border-bottom">
+                                <div className="d-flex align-items-center gap-2">
+                                    <div className="p-1 rounded bg-teal text-white d-flex align-items-center justify-content-center" style={{ width: 28, height: 28 }}>
+                                        <i className="fas fa-edit small"></i>
+                                    </div>
+                                    <div>
+                                        <h6 className="modal-title fw-bold mb-0" style={{ fontSize: "0.95rem" }}>
+                                            Editor Catatan & Petunjuk Belajar
+                                        </h6>
+                                        <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                            {item?.title || "Materi Pelajaran"}
+                                        </small>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="btn-close btn-sm"
+                                    onClick={() => setIsModalOpen(false)}
+                                    aria-label="Close"
+                                ></button>
+                            </div>
+
+                            <div className="modal-body p-3">
+                                {/* Quick Toolbar */}
+                                <div className="d-flex align-items-center gap-1 flex-wrap mb-2 p-1 bg-light rounded border">
+                                    <span className="small text-muted me-1 ps-1" style={{ fontSize: "0.72rem" }}>Format Cepat:</span>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-white border py-0 px-2 text-dark bg-white"
+                                        style={{ fontSize: "0.75rem" }}
+                                        onClick={applyBullet}
+                                        title="Sisipkan/Alihkan Bullet Poin (Mendukung blok multi-baris & toggle)"
+                                    >
+                                        <i className="fas fa-list-ul me-1 text-teal"></i>Bullet
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-white border py-0 px-2 text-dark bg-white"
+                                        style={{ fontSize: "0.75rem" }}
+                                        onClick={applyNumbering}
+                                        title="Sisipkan Penomoran Berurutan (Mendukung blok multi-baris & auto-increment)"
+                                    >
+                                        <i className="fas fa-list-ol me-1 text-teal"></i>Nomor
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-white border py-0 px-2 text-dark bg-white"
+                                        style={{ fontSize: "0.75rem" }}
+                                        onClick={applyBold}
+                                        title="Tebalkan Teks (**teks**)"
+                                    >
+                                        <i className="fas fa-bold me-1 text-teal"></i>Tebal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-white border py-0 px-2 text-dark bg-white ms-auto"
+                                        style={{ fontSize: "0.75rem" }}
+                                        onClick={insertTemplate}
+                                        title="Gunakan Template Standar Petunjuk Pembelajaran"
+                                    >
+                                        <i className="fas fa-magic me-1 text-amber"></i>Template Petunjuk
+                                    </button>
+                                </div>
+
+                                <textarea
+                                    ref={modalTextareaRef}
+                                    className="form-control"
+                                    rows="10"
+                                    style={{
+                                        fontSize: "0.92rem",
+                                        lineHeight: 1.65,
+                                        resize: "vertical",
+                                        minHeight: "220px"
+                                    }}
+                                    value={modalText}
+                                    onChange={(e) => setModalText(e.target.value)}
+                                    onKeyDown={handleModalKeyDown}
+                                    placeholder="Tuliskan catatan, petunjuk pembelajaran, atau instruksi materi ini secara lengkap..."
+                                />
+
+                                <div className="d-flex align-items-center justify-content-between mt-2 text-muted small" style={{ fontSize: "0.75rem" }}>
+                                    <span>
+                                        <strong>{modalText ? modalText.trim().split(/\s+/).filter(Boolean).length : 0}</strong> kata | <strong>{modalText.length}</strong> karakter
+                                    </span>
+                                    <span className="text-secondary">
+                                        <i className="fas fa-keyboard me-1"></i>Tekan <strong>Ctrl + Enter</strong> untuk simpan cepat
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="modal-footer py-2 px-3 bg-light border-top">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary btn-sm px-3"
+                                    onClick={() => setIsModalOpen(false)}
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-teal btn-sm px-3 fw-semibold shadow-sm d-flex align-items-center gap-1"
+                                    onClick={handleApplyFromModal}
+                                >
+                                    <i className="fas fa-check"></i>
+                                    <span>Terapkan & Simpan</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+        </div>
+    );
+}
+
 function AdminCourseEdit() {
     const { course_id } = useParams();
     const navigate = useNavigate();
@@ -3870,16 +4392,11 @@ function AdminCourseEdit() {
 
                                                                                     {/* Kolom Kanan: Catatan / Petunjuk Peserta */}
                                                                                     <div className="col-md-5">
-                                                                                        <label className="ace-form-label mb-1" style={{ fontSize: "0.74rem" }}>
-                                                                                            <span>Catatan / Petunjuk Belajar</span>
-                                                                                            <span className="text-muted fw-normal">(Opsional)</span>
-                                                                                        </label>
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            className="ace-input"
-                                                                                            value={itm.description || ""}
-                                                                                            onChange={(e) => updateLectureField(secIdx, itmIdx, "description", e.target.value)}
-                                                                                            placeholder="Instruksi khusus untuk peserta..."
+                                                                                        <AdminLessonDescriptionEditor
+                                                                                            item={itm}
+                                                                                            secIndex={secIdx}
+                                                                                            itemIndex={itmIdx}
+                                                                                            updateLectureField={updateLectureField}
                                                                                         />
                                                                                     </div>
                                                                                 </>

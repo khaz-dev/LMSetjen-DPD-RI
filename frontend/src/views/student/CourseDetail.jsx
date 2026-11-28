@@ -113,6 +113,10 @@ function CourseDetail() {
 
     const [variantItem, setVariantItem] = useState(null);
 
+    // ✨ Deskripsi Ringkas Materi Pelajaran: state & ref (Expanded by default)
+    const [isLessonDescriptionExpanded, setIsLessonDescriptionExpanded] = useState(true);
+    const lessonDescriptionRef = useRef(null);
+
     const [autoplayVideo, setAutoplayVideo] = useState(false);  // ✨ PHASE 4.103: Track if video should autoplay
 
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);  // ✨ PHASE 4.105: Track if video is currently playing
@@ -1018,23 +1022,32 @@ function CourseDetail() {
 
 
 
-    // ✨ PHASE X.X: Auto-scroll to video player when lesson item is clicked
+    // ✨ Deskripsi Pelajaran: Buka otomatis (expand as default) setiap kali pelajaran baru dipilih
+    useEffect(() => {
+        if (variantItem?.description && variantItem.description.trim() !== '') {
+            setIsLessonDescriptionExpanded(true);
+        }
+    }, [variantItem?.variant_item_id]);
+
+    // ✨ PHASE X.X: Auto-scroll to lesson description or video player when lesson item is clicked
 
     useEffect(() => {
 
-        if (variantItem && videoPlayerContainerRef.current) {
+        if (variantItem && (videoPlayerContainerRef.current || lessonDescriptionRef.current)) {
 
             // Use setTimeout to ensure the DOM has updated
 
             setTimeout(() => {
 
-                const element = videoPlayerContainerRef.current;
+                const targetElement = (variantItem?.description && lessonDescriptionRef.current) 
+                    ? lessonDescriptionRef.current 
+                    : videoPlayerContainerRef.current;
 
-                if (element) {
+                if (targetElement) {
 
                     const headerOffset = 120;  // Offset for fixed header
 
-                    const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+                    const elementPosition = targetElement.getBoundingClientRect().top + window.scrollY;
 
                     const offsetPosition = elementPosition - headerOffset;
 
@@ -1047,10 +1060,6 @@ function CourseDetail() {
                         behavior: 'smooth'
 
                     });
-
-
-
-
 
                 }
 
@@ -10481,13 +10490,80 @@ function CourseDetail() {
                                     )}
 
                                     {activeTab !== 'certificate' && activeTab !== 'review' && activeTab !== 'quiz' && activeTab !== 'gamification' && (
-                                        <div
+                                        <>
+                                            {/* ✨ Deskripsi Ringkas Materi Pelajaran (Collapsible / Default Expanded) */}
+                                            {(!pretestRequired || hasCompletedPretest) && variantItem && variantItem.description && variantItem.description.trim() !== '' && (
+                                                <div 
+                                                    ref={lessonDescriptionRef}
+                                                    className={`lesson-brief-description-card ${isLessonDescriptionExpanded ? 'is-expanded' : 'is-collapsed'}`}
+                                                >
+                                                    <div 
+                                                        className="lesson-brief-header"
+                                                        onClick={() => setIsLessonDescriptionExpanded(prev => !prev)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                                e.preventDefault();
+                                                                setIsLessonDescriptionExpanded(prev => !prev);
+                                                            }
+                                                        }}
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        aria-expanded={isLessonDescriptionExpanded}
+                                                    >
+                                                        <div className="lesson-brief-title-area">
+                                                            <div className="lesson-brief-icon-circle">
+                                                                <i className="fas fa-book-open"></i>
+                                                            </div>
+                                                            <div className="lesson-brief-headings">
+                                                                <div className="d-flex align-items-center gap-2 flex-wrap">
+                                                                    <span className="lesson-brief-badge">
+                                                                        <i className="fas fa-info-circle me-1"></i>Keterangan Pelajaran
+                                                                    </span>
+                                                                    {variantItem.title && (
+                                                                        <span className="lesson-brief-item-title text-truncate" title={variantItem.title}>
+                                                                            {variantItem.title}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="lesson-brief-subtext">
+                                                                    {isLessonDescriptionExpanded 
+                                                                        ? "Klik untuk menciutkan keterangan materi ini" 
+                                                                        : "Klik untuk membaca keterangan ringkas materi pelajaran ini"}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            type="button" 
+                                                            className="btn-toggle-lesson-brief"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setIsLessonDescriptionExpanded(prev => !prev);
+                                                            }}
+                                                            aria-label={isLessonDescriptionExpanded ? "Sembunyikan keterangan" : "Tampilkan keterangan"}
+                                                        >
+                                                            <span className="toggle-text d-none d-sm-inline">
+                                                                {isLessonDescriptionExpanded ? "Sembunyikan" : "Tampilkan"}
+                                                            </span>
+                                                            <i className={`fas fa-chevron-${isLessonDescriptionExpanded ? 'up' : 'down'} toggle-icon`}></i>
+                                                        </button>
+                                                    </div>
+                                                    {isLessonDescriptionExpanded && (
+                                                        <div className="lesson-brief-body">
+                                                            <div className="lesson-brief-content">
+                                                                {variantItem.description}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
 
-                                            ref={videoPlayerContainerRef}
+                                            <div
 
-                                            className="course-player-column"
+                                                ref={videoPlayerContainerRef}
 
-                                        >
+                                                className="course-player-column"
+
+                                            >
 
                                             {pretestRequired && !hasCompletedPretest ? (
 
@@ -10617,7 +10693,8 @@ function CourseDetail() {
 
                                             )}
 
-                                        </div>
+                                            </div>
+                                        </>
                                     )}
 
                                     {/* 2. Modern Tabs: Sejajar dan Tepat Berada di Bawah certificate-display-column & course-player-column */}

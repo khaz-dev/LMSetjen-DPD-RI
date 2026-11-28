@@ -1921,3 +1921,29 @@ body.admin-course-edit-active {
         opacity: 1;
     }
 }
+
+/* ============================================================================
+   ✨ ADMIN LESSON DESCRIPTION EDITOR (Catatan & Petunjuk Belajar Editor)
+   =========================================================================== */
+
+.ace-lesson-description-editor {
+    width: 100%;
+}
+
+.ace-lesson-description-editor .ace-textarea {
+    min-height: 54px;
+    max-height: 140px;
+    resize: vertical;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ace-lesson-description-editor .ace-textarea:focus {
+    border-color: #0d9488;
+    box-shadow: 0 0 0 2.5px rgba(13, 148, 136, 0.15);
+}

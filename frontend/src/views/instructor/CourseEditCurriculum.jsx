@@ -796,6 +796,565 @@ function SortableSection({
 }
 
 /**
+ * ✨ Lesson Description Editor Component
+ * - Isolates text drafting to avoid triggering curriculum autosave on every keystroke
+ * - Provides comfortable auto-growing textarea & explicit "Simpan" button
+ * - Supports quick shortcut Ctrl/Cmd + Enter
+ * - Offers a Distraction-Free Fullscreen / Modal Editor with formatting helpers
+ */
+function LessonDescriptionEditor({
+    item,
+    variantIndex,
+    itemIndex,
+    handleLessonChange,
+    autoSaveCurriculum,
+    uiState,
+    validationState,
+    getValidationClass
+}) {
+    const savedDescription = item?.description || "";
+    const [localDescription, setLocalDescription] = useState(savedDescription);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [showSavedFeedback, setShowSavedFeedback] = useState(false);
+    const [modalText, setModalText] = useState(savedDescription);
+    const textareaRef = useRef(null);
+    const modalTextareaRef = useRef(null);
+    const feedbackTimerRef = useRef(null);
+
+    // Sync local state when external item description changes
+    useEffect(() => {
+        setLocalDescription(item?.description || "");
+    }, [item?.description]);
+
+    const isDirty = localDescription !== (item?.description || "");
+
+    const handleCommitSave = async (textToSave = localDescription) => {
+        setIsSaving(true);
+        try {
+            await handleLessonChange(variantIndex, itemIndex, "description", textToSave);
+            if (typeof autoSaveCurriculum === "function") {
+                setTimeout(() => {
+                    autoSaveCurriculum();
+                }, 150);
+            }
+            setShowSavedFeedback(true);
+            if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+            feedbackTimerRef.current = setTimeout(() => {
+                setShowSavedFeedback(false);
+            }, 3000);
+        } catch (err) {
+            console.error("Gagal menyimpan deskripsi materi:", err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleCancel = () => {
+        setLocalDescription(savedDescription);
+    };
+
+    const handleKeyDown = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault();
+            handleCommitSave();
+            return;
+        }
+
+        // Smart List Continuation on Enter for inline textarea
+        if (e.key === "Enter" && !e.shiftKey) {
+            const ta = textareaRef.current;
+            if (!ta) return;
+            const pos = ta.selectionStart;
+            const lineStart = localDescription.lastIndexOf("\n", pos - 1) + 1;
+            const nextNewline = localDescription.indexOf("\n", pos);
+            const lineEnd = nextNewline === -1 ? localDescription.length : nextNewline;
+            const currentLine = localDescription.substring(lineStart, lineEnd);
+
+            const emptyNumMatch = currentLine.match(/^(\d+)[\.\)]\s*$/);
+            if (emptyNumMatch) {
+                e.preventDefault();
+                const newText = localDescription.substring(0, lineStart) + localDescription.substring(pos);
+                setLocalDescription(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(lineStart, lineStart);
+                }, 0);
+                return;
+            }
+
+            const emptyBulletMatch = currentLine.match(/^[•\-\*]\s*$/);
+            if (emptyBulletMatch) {
+                e.preventDefault();
+                const newText = localDescription.substring(0, lineStart) + localDescription.substring(pos);
+                setLocalDescription(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(lineStart, lineStart);
+                }, 0);
+                return;
+            }
+
+            const numMatch = currentLine.match(/^(\d+)[\.\)]\s+/);
+            if (numMatch && pos >= lineStart + numMatch[0].length) {
+                e.preventDefault();
+                const nextNum = parseInt(numMatch[1], 10) + 1;
+                const insertStr = `\n${nextNum}. `;
+                const newText = localDescription.substring(0, pos) + insertStr + localDescription.substring(pos);
+                setLocalDescription(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(pos + insertStr.length, pos + insertStr.length);
+                }, 0);
+                return;
+            }
+
+            const bulletMatch = currentLine.match(/^[•\-\*]\s+/);
+            if (bulletMatch && pos >= lineStart + bulletMatch[0].length) {
+                e.preventDefault();
+                const insertStr = "\n• ";
+                const newText = localDescription.substring(0, pos) + insertStr + localDescription.substring(pos);
+                setLocalDescription(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(pos + insertStr.length, pos + insertStr.length);
+                }, 0);
+                return;
+            }
+        }
+    };
+
+    const handleOpenModal = () => {
+        setModalText(localDescription);
+        setIsModalOpen(true);
+    };
+
+    const handleApplyFromModal = () => {
+        setLocalDescription(modalText);
+        handleCommitSave(modalText);
+        setIsModalOpen(false);
+    };
+
+    // Helper: Deteksi nomor urut baris sebelumnya untuk auto-increment
+    const getPrecedingNumber = (text, beforePos) => {
+        if (beforePos <= 0) return 1;
+        const textBefore = text.substring(0, beforePos).trimEnd();
+        const lastNewline = textBefore.lastIndexOf("\n");
+        const prevLine = (lastNewline === -1 ? textBefore : textBefore.substring(lastNewline + 1)).trim();
+        const match = prevLine.match(/^(\d+)[\.\)]\s*/);
+        if (match) {
+            return parseInt(match[1], 10) + 1;
+        }
+        return 1;
+    };
+
+    // ✨ Smart Numbering: Mendukung seleksi banyak baris & auto-increment dari nomor sebelumnya
+    const applyNumbering = () => {
+        if (!modalTextareaRef.current) return;
+        const ta = modalTextareaRef.current;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+
+        // Cari batas baris utuh dari seleksi
+        const lineStart = modalText.lastIndexOf("\n", start - 1) + 1;
+        let lineEnd = modalText.indexOf("\n", end);
+        if (lineEnd === -1) lineEnd = modalText.length;
+
+        const selectedBlock = modalText.substring(lineStart, lineEnd);
+        const lines = selectedBlock.split("\n");
+
+        // Deteksi apakah baris sebelum blok ini sudah memiliki nomor (misal baris di atasnya '1. ')
+        const startNum = getPrecedingNumber(modalText, lineStart);
+
+        let currentNum = startNum;
+        const newLines = lines.map(line => {
+            // Bersihkan nomor atau bullet yang sudah ada sebelumnya agar tidak bertumpuk
+            const cleaned = line.replace(/^(\d+[\.\)]\s*|[•\-\*]\s*)/, "");
+            if (cleaned.trim() || lines.length === 1) {
+                const res = `${currentNum}. ${cleaned}`;
+                currentNum++;
+                return res;
+            }
+            return line;
+        });
+
+        const newBlock = newLines.join("\n");
+        const newText = modalText.substring(0, lineStart) + newBlock + modalText.substring(lineEnd);
+        setModalText(newText);
+
+        setTimeout(() => {
+            ta.focus();
+            ta.setSelectionRange(lineStart, lineStart + newBlock.length);
+        }, 30);
+    };
+
+    // ✨ Smart Bullet: Mendukung seleksi banyak baris & toggle on/off
+    const applyBullet = () => {
+        if (!modalTextareaRef.current) return;
+        const ta = modalTextareaRef.current;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+
+        const lineStart = modalText.lastIndexOf("\n", start - 1) + 1;
+        let lineEnd = modalText.indexOf("\n", end);
+        if (lineEnd === -1) lineEnd = modalText.length;
+
+        const selectedBlock = modalText.substring(lineStart, lineEnd);
+        const lines = selectedBlock.split("\n");
+
+        // Cek apakah semua baris yang tidak kosong sudah memiliki bullet
+        const allBulleted = lines.every(line => !line.trim() || /^[•\-\*]\s*/.test(line));
+
+        const newLines = lines.map(line => {
+            const cleaned = line.replace(/^(\d+[\.\)]\s*|[•\-\*]\s*)/, "");
+            if (!cleaned.trim() && lines.length > 1) {
+                return line;
+            }
+            if (allBulleted) {
+                return cleaned; // Toggle off: hilangkan bullet jika semua sudah ber-bullet
+            }
+            return `• ${cleaned}`;
+        });
+
+        const newBlock = newLines.join("\n");
+        const newText = modalText.substring(0, lineStart) + newBlock + modalText.substring(lineEnd);
+        setModalText(newText);
+
+        setTimeout(() => {
+            ta.focus();
+            ta.setSelectionRange(lineStart, lineStart + newBlock.length);
+        }, 30);
+    };
+
+    // ✨ Smart Bold: Bungkus atau lepas tebal (**teks**)
+    const applyBold = () => {
+        if (!modalTextareaRef.current) return;
+        const ta = modalTextareaRef.current;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const sel = modalText.substring(start, end);
+
+        if (!sel) {
+            const placeholder = "teks tebal";
+            const replacement = `**${placeholder}**`;
+            const newText = modalText.substring(0, start) + replacement + modalText.substring(end);
+            setModalText(newText);
+            setTimeout(() => {
+                ta.focus();
+                ta.setSelectionRange(start + 2, start + 2 + placeholder.length);
+            }, 30);
+            return;
+        }
+
+        if (sel.startsWith("**") && sel.endsWith("**") && sel.length >= 4) {
+            const unwrapped = sel.substring(2, sel.length - 2);
+            const newText = modalText.substring(0, start) + unwrapped + modalText.substring(end);
+            setModalText(newText);
+            setTimeout(() => {
+                ta.focus();
+                ta.setSelectionRange(start, start + unwrapped.length);
+            }, 30);
+            return;
+        }
+
+        const replacement = `**${sel}**`;
+        const newText = modalText.substring(0, start) + replacement + modalText.substring(end);
+        setModalText(newText);
+        setTimeout(() => {
+            ta.focus();
+            ta.setSelectionRange(start, start + replacement.length);
+        }, 30);
+    };
+
+    // ✨ Smart Enter Handler untuk modal: otomatis meneruskan nomor / bullet berikutnya
+    const handleModalKeyDown = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault();
+            handleApplyFromModal();
+            return;
+        }
+
+        if (e.key === "Enter" && !e.shiftKey) {
+            const ta = modalTextareaRef.current;
+            if (!ta) return;
+            const pos = ta.selectionStart;
+            const lineStart = modalText.lastIndexOf("\n", pos - 1) + 1;
+            const nextNewline = modalText.indexOf("\n", pos);
+            const lineEnd = nextNewline === -1 ? modalText.length : nextNewline;
+            const currentLine = modalText.substring(lineStart, lineEnd);
+
+            // Item bernomor kosong (contoh "2. " tanpa teks tambahan): batalkan nomor & keluar dari list
+            const emptyNumMatch = currentLine.match(/^(\d+)[\.\)]\s*$/);
+            if (emptyNumMatch) {
+                e.preventDefault();
+                const newText = modalText.substring(0, lineStart) + modalText.substring(pos);
+                setModalText(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(lineStart, lineStart);
+                }, 0);
+                return;
+            }
+
+            // Bullet kosong (contoh "• " tanpa teks tambahan): batalkan bullet & keluar dari list
+            const emptyBulletMatch = currentLine.match(/^[•\-\*]\s*$/);
+            if (emptyBulletMatch) {
+                e.preventDefault();
+                const newText = modalText.substring(0, lineStart) + modalText.substring(pos);
+                setModalText(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(lineStart, lineStart);
+                }, 0);
+                return;
+            }
+
+            // Baris bernomor aktif: otomatis tambahkan baris baru dengan nomor selanjutnya
+            const numMatch = currentLine.match(/^(\d+)[\.\)]\s+/);
+            if (numMatch && pos >= lineStart + numMatch[0].length) {
+                e.preventDefault();
+                const nextNum = parseInt(numMatch[1], 10) + 1;
+                const insertStr = `\n${nextNum}. `;
+                const newText = modalText.substring(0, pos) + insertStr + modalText.substring(pos);
+                setModalText(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(pos + insertStr.length, pos + insertStr.length);
+                }, 0);
+                return;
+            }
+
+            // Baris ber-bullet aktif: otomatis tambahkan bullet pada baris baru
+            const bulletMatch = currentLine.match(/^[•\-\*]\s+/);
+            if (bulletMatch && pos >= lineStart + bulletMatch[0].length) {
+                e.preventDefault();
+                const insertStr = "\n• ";
+                const newText = modalText.substring(0, pos) + insertStr + modalText.substring(pos);
+                setModalText(newText);
+                setTimeout(() => {
+                    ta.setSelectionRange(pos + insertStr.length, pos + insertStr.length);
+                }, 0);
+                return;
+            }
+        }
+    };
+
+    const insertTemplate = () => {
+        const template = `📌 Tujuan Pembelajaran:\n1. Memahami konsep dasar materi ini\n2. Mampu menerapkan langkah-langkah praktis\n\n📋 Petunjuk Belajar:\n• Pelajari materi video / modul secara berurutan.\n• Catat hal-hal krusial pada tab Catatan.\n• Kerjakan kuis setelah selesai mempelajari materi.`;
+        setModalText(prev => (prev.trim() ? `${prev}\n\n${template}` : template));
+    };
+
+    return (
+        <div className="lesson-description-editor-container mb-1">
+            {/* Header / Info Row */}
+            <div className="d-flex align-items-center justify-content-between mb-1">
+                <label className="form-label small fw-semibold text-secondary mb-0 d-flex align-items-center gap-1" style={{ fontSize: "0.75rem" }}>
+                    <i className="fas fa-align-left text-teal"></i>
+                    <span>Keterangan / Petunjuk Pelajaran:</span>
+                </label>
+                <div className="d-flex align-items-center gap-1">
+                    {showSavedFeedback && (
+                        <span className="badge bg-success-subtle text-success border border-success-subtle px-1 py-0" style={{ fontSize: "0.68rem" }}>
+                            <i className="fas fa-check-circle me-1"></i>Tersimpan
+                        </span>
+                    )}
+                    {isDirty && !showSavedFeedback && (
+                        <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-1 py-0" style={{ fontSize: "0.68rem" }}>
+                            <i className="fas fa-pen-nib me-1"></i>Belum disimpan
+                        </span>
+                    )}
+                    <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm py-0 px-1 border-0 text-muted"
+                        onClick={handleOpenModal}
+                        title="Buka Editor Nyaman (Layar Luas & Template)"
+                        style={{ fontSize: "0.74rem" }}
+                    >
+                        <i className="fas fa-expand-alt text-teal me-1"></i>
+                        <span className="d-none d-sm-inline" style={{ fontSize: "0.72rem" }}>Editor Luas</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Inline Textarea */}
+            <div className="position-relative">
+                <textarea
+                    ref={textareaRef}
+                    className={`form-control form-control-sm lesson-desc-textarea ${getValidationClass(
+                        validationState.errors[`item_${variantIndex}_${itemIndex}_description`],
+                        validationState.warnings[`item_${variantIndex}_${itemIndex}_description`]
+                    )}`}
+                    value={localDescription}
+                    onChange={(e) => setLocalDescription(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    rows="3"
+                    placeholder="Tuliskan ringkasan materi, petunjuk pengerjaan, atau poin penting pelajaran ini (opsional)..."
+                    disabled={uiState.isSubmitting || isSaving}
+                />
+            </div>
+
+            {/* Action Bar Beneath Textarea */}
+            <div className="d-flex align-items-center justify-content-between mt-1 px-1">
+                <small className="text-muted" style={{ fontSize: "0.7rem" }}>
+                    {localDescription ? `${localDescription.length} karakter` : "Opsional"}
+                    {isDirty && <span className="ms-1 text-muted">(Ctrl+Enter untuk simpan)</span>}
+                </small>
+                {isDirty && (
+                    <div className="d-flex align-items-center gap-1">
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-sm py-0 px-2"
+                            style={{ fontSize: "0.72rem", height: "24px" }}
+                            onClick={handleCancel}
+                            disabled={isSaving}
+                            title="Batalkan perubahan"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-teal btn-sm py-0 px-2 fw-semibold shadow-sm d-flex align-items-center gap-1"
+                            style={{ fontSize: "0.72rem", height: "24px" }}
+                            onClick={() => handleCommitSave()}
+                            disabled={isSaving}
+                            title="Simpan keterangan materi ini"
+                        >
+                            {isSaving ? (
+                                <>
+                                    <i className="fas fa-spinner fa-spin"></i>
+                                    <span>Menyimpan...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fas fa-save"></i>
+                                    <span>Simpan</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Modal Editor Luas */}
+            {isModalOpen && typeof document !== "undefined" && createPortal(
+                <div
+                    className="modal fade show d-block"
+                    tabIndex="-1"
+                    style={{ backgroundColor: "rgba(15, 23, 42, 0.65)", zIndex: 1060 }}
+                >
+                    <div className="modal-dialog modal-dialog-centered modal-lg">
+                        <div className="modal-content shadow-lg border-0 rounded-3">
+                            <div className="modal-header py-2 px-3 bg-light border-bottom">
+                                <div className="d-flex align-items-center gap-2">
+                                    <div className="p-1 rounded bg-teal text-white d-flex align-items-center justify-content-center" style={{ width: 28, height: 28 }}>
+                                        <i className="fas fa-edit small"></i>
+                                    </div>
+                                    <div>
+                                        <h6 className="modal-title fw-bold mb-0" style={{ fontSize: "0.95rem" }}>
+                                            Editor Petunjuk & Deskripsi Pelajaran
+                                        </h6>
+                                        <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                            {item?.title || "Pelajaran tanpa judul"}
+                                        </small>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="btn-close btn-sm"
+                                    onClick={() => setIsModalOpen(false)}
+                                    aria-label="Close"
+                                ></button>
+                            </div>
+
+                            <div className="modal-body p-3">
+                                {/* Quick Toolbar */}
+                                <div className="d-flex align-items-center gap-1 flex-wrap mb-2 p-1 bg-light rounded border">
+                                    <span className="small text-muted me-1 ps-1" style={{ fontSize: "0.72rem" }}>Format Cepat:</span>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-white border py-0 px-2 text-dark bg-white"
+                                        style={{ fontSize: "0.75rem" }}
+                                        onClick={applyBullet}
+                                        title="Sisipkan/Alihkan Bullet Poin (Mendukung blok multi-baris & toggle)"
+                                    >
+                                        <i className="fas fa-list-ul me-1 text-teal"></i>Bullet
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-white border py-0 px-2 text-dark bg-white"
+                                        style={{ fontSize: "0.75rem" }}
+                                        onClick={applyNumbering}
+                                        title="Sisipkan Penomoran Berurutan (Mendukung blok multi-baris & otomatis meneruskan nomor baris sebelumnya)"
+                                    >
+                                        <i className="fas fa-list-ol me-1 text-teal"></i>Nomor
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-white border py-0 px-2 text-dark bg-white"
+                                        style={{ fontSize: "0.75rem" }}
+                                        onClick={applyBold}
+                                        title="Tebalkan Teks (**teks**)"
+                                    >
+                                        <i className="fas fa-bold me-1 text-teal"></i>Tebal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-white border py-0 px-2 text-dark bg-white ms-auto"
+                                        style={{ fontSize: "0.75rem" }}
+                                        onClick={insertTemplate}
+                                        title="Gunakan Template Standar Petunjuk Pembelajaran"
+                                    >
+                                        <i className="fas fa-magic me-1 text-amber"></i>Template Petunjuk
+                                    </button>
+                                </div>
+
+                                <textarea
+                                    ref={modalTextareaRef}
+                                    className="form-control"
+                                    rows="10"
+                                    style={{
+                                        fontSize: "0.92rem",
+                                        lineHeight: 1.65,
+                                        resize: "vertical",
+                                        minHeight: "220px"
+                                    }}
+                                    value={modalText}
+                                    onChange={(e) => setModalText(e.target.value)}
+                                    onKeyDown={handleModalKeyDown}
+                                    placeholder="Tuliskan petunjuk materi, tujuan instruksional, atau catatan penting pelajaran ini secara lengkap..."
+                                />
+
+                                <div className="d-flex align-items-center justify-content-between mt-2 text-muted small" style={{ fontSize: "0.75rem" }}>
+                                    <span>
+                                        <strong>{modalText ? modalText.trim().split(/\s+/).filter(Boolean).length : 0}</strong> kata | <strong>{modalText.length}</strong> karakter
+                                    </span>
+                                    <span className="text-secondary">
+                                        <i className="fas fa-keyboard me-1"></i>Tekan <strong>Ctrl + Enter</strong> untuk simpan cepat
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="modal-footer py-2 px-3 bg-light border-top">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary btn-sm px-3"
+                                    onClick={() => setIsModalOpen(false)}
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-teal btn-sm px-3 fw-semibold shadow-sm d-flex align-items-center gap-1"
+                                    onClick={handleApplyFromModal}
+                                    disabled={isSaving}
+                                >
+                                    <i className="fas fa-check"></i>
+                                    <span>Terapkan & Simpan</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+        </div>
+    );
+}
+
+/**
  * Sortable Lesson Item Component for @dnd-kit
  * Wraps each lesson to make it draggable and sortable
  */
@@ -1372,19 +1931,16 @@ function SortableLessonItem({
                         <div className="row g-2 align-items-stretch">
                             {/* Left Column: Description & Compact Duration/JP Setting */}
                             <div className="col-md-6 d-flex flex-column justify-content-between">
-                                <div>
-                                    <textarea
-                                        className={`form-control form-control-sm mb-1 ${getValidationClass(
-                                            validationState.errors[`item_${variantIndex}_${itemIndex}_description`],
-                                            validationState.warnings[`item_${variantIndex}_${itemIndex}_description`]
-                                        )}`}
-                                        value={item?.description || ""}
-                                        onChange={(e) => handleLessonChange(variantIndex, itemIndex, "description", e.target.value)}
-                                        rows="2"
-                                        style={{ fontSize: "0.8rem", resize: "none" }}
-                                        placeholder="Deskripsi ringkas materi pelajaran ini (opsional)..."
-                                    />
-                                </div>
+                                <LessonDescriptionEditor
+                                    item={item}
+                                    variantIndex={variantIndex}
+                                    itemIndex={itemIndex}
+                                    handleLessonChange={handleLessonChange}
+                                    autoSaveCurriculum={autoSaveCurriculum}
+                                    uiState={uiState}
+                                    validationState={validationState}
+                                    getValidationClass={getValidationClass}
+                                />
 
                                 {/* Compact Duration / JP and Preview Bar */}
                                 <div className="mt-auto">

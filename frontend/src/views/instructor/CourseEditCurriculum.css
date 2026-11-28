@@ -1881,3 +1881,30 @@ select.curriculum-form-control,
 .instructor-course-edit-curriculum-page .form-control::placeholder {
     color: #94a3b8 !important;
 }
+
+/* ============================================================================
+   ✨ LESSON DESCRIPTION EDITOR (Comfortable Inline & Modal Text Editor)
+   =========================================================================== */
+
+.lesson-description-editor-container {
+    width: 100%;
+}
+
+.lesson-desc-textarea {
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+    min-height: 56px;
+    max-height: 150px;
+    resize: vertical !important;
+    background: #fdfefe !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 0.45rem 0.65rem !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lesson-desc-textarea:focus {
+    background: #ffffff !important;
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15) !important;
+}
