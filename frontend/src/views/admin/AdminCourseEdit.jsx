@@ -794,6 +794,18 @@ function AdminCourseEdit() {
 
         window.API = api12;
         window.API_1484_11 = api2004;
+        try {
+            if (typeof window !== "undefined") {
+                if (window.parent && window.parent !== window) {
+                    window.parent.API = api12;
+                    window.parent.API_1484_11 = api2004;
+                }
+                if (window.top && window.top !== window) {
+                    window.top.API = api12;
+                    window.top.API_1484_11 = api2004;
+                }
+            }
+        } catch (e) {}
         return { api12, api2004 };
     };
 
@@ -805,13 +817,28 @@ function AdminCourseEdit() {
             initAdminScormRte(setScormPlayerStatus, setScormPlayerScore);
         }
 
-        const prevOverflow = document.body.style.overflow;
+        const prevBodyOverflow = document.body.style.overflow;
+        const prevHtmlOverflow = document.documentElement.style.overflow;
         document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
 
         return () => {
             delete window.API;
             delete window.API_1484_11;
-            document.body.style.overflow = prevOverflow;
+            try {
+                if (typeof window !== "undefined") {
+                    if (window.parent) {
+                        delete window.parent.API;
+                        delete window.parent.API_1484_11;
+                    }
+                    if (window.top) {
+                        delete window.top.API;
+                        delete window.top.API_1484_11;
+                    }
+                }
+            } catch (e) {}
+            document.body.style.overflow = prevBodyOverflow;
+            document.documentElement.style.overflow = prevHtmlOverflow;
         };
     }, [scormPreviewModal.isOpen]);
 
@@ -6186,6 +6213,7 @@ function AdminCourseEdit() {
                         alignItems: "center",
                         justifyContent: "center",
                         overflow: "hidden",
+                        overscrollBehavior: "contain",
                         margin: 0,
                         padding: scormPreviewModal.isFullscreen ? 0 : "1.25rem",
                         boxSizing: "border-box"
@@ -6308,6 +6336,53 @@ function AdminCourseEdit() {
                                                     if (window.API_1484_11 && !cw.API_1484_11) {
                                                         cw.API_1484_11 = window.API_1484_11;
                                                     }
+
+                                                    // ✨ Auto-trigger Articulate Storyline 360 / modern SCORM start button
+                                                    const doc = cw.document;
+                                                    let attempts = 0;
+                                                    const maxAttempts = 25;
+                                                    const autoStartInterval = setInterval(() => {
+                                                        attempts++;
+                                                        try {
+                                                            if (!doc || !cw) {
+                                                                clearInterval(autoStartInterval);
+                                                                return;
+                                                            }
+
+                                                            const startBtn = doc.getElementById('mobile-start-button') ||
+                                                                doc.querySelector('.mobile-start-overlay button, [aria-label*="Mulai Kursus"], [aria-label*="Start"]');
+                                                            if (startBtn && startBtn.offsetParent !== null) {
+                                                                startBtn.click();
+                                                                clearInterval(autoStartInterval);
+                                                                return;
+                                                            }
+
+                                                            const resumeBtn = doc.querySelector('.resume-dialog button, [data-dv_comp="resume"] button, button[aria-label*="Lanjut"], button[aria-label*="Resume"]');
+                                                            if (resumeBtn && resumeBtn.offsetParent !== null) {
+                                                                resumeBtn.click();
+                                                                clearInterval(autoStartInterval);
+                                                                return;
+                                                            }
+
+                                                            if (attempts > 8 && doc.body && doc.body.classList.contains('resume-shown')) {
+                                                                const slide = doc.getElementById('slide');
+                                                                if (slide && cw.getComputedStyle(slide).display === 'none') {
+                                                                    doc.body.classList.remove('resume-shown');
+                                                                    slide.style.setProperty('display', 'block', 'important');
+                                                                    const overlay = doc.querySelector('.mobile-start-overlay');
+                                                                    if (overlay) overlay.style.setProperty('display', 'none', 'important');
+                                                                    clearInterval(autoStartInterval);
+                                                                    return;
+                                                                }
+                                                            }
+
+                                                            if (attempts >= maxAttempts) {
+                                                                clearInterval(autoStartInterval);
+                                                            }
+                                                        } catch (pollerErr) {
+                                                            if (attempts >= maxAttempts) clearInterval(autoStartInterval);
+                                                        }
+                                                    }, 300);
                                                 }
                                             } catch (err) {
                                                 console.warn("[SCORM Iframe] Cross-origin or access warning:", err);

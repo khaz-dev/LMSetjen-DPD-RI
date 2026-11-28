@@ -3043,6 +3043,13 @@ class WebPreviewProxyAPIView(APIView):
         if hostname in ["localhost", "127.0.0.1", "0.0.0.0", "::1"] or hostname.endswith(".local"):
             return Response({"error": "Access to local addresses is restricted."}, status=status.HTTP_403_FORBIDDEN)
 
+        # Handle bare font domain preconnect / origin requests (e.g. fonts.gstatic.com)
+        if hostname in ["fonts.gstatic.com", "fonts.googleapis.com"] and (not parsed.path or parsed.path == "/"):
+            resp_empty = HttpResponse("/* Google Fonts Domain */", content_type="text/css; charset=utf-8", status=200)
+            resp_empty.xframe_options_exempt = True
+            resp_empty["Access-Control-Allow-Origin"] = "*"
+            return resp_empty
+
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -3052,6 +3059,22 @@ class WebPreviewProxyAPIView(APIView):
         try:
             resp = requests.get(target_url, headers=headers, timeout=12, verify=False, allow_redirects=True)
             content_type = resp.headers.get("Content-Type", "text/html; charset=utf-8")
+
+            # Check if this was a subresource (CSS or font) that failed with 4xx
+            sec_dest = request.META.get('HTTP_SEC_FETCH_DEST', '')
+            accept_hdr = request.META.get('HTTP_ACCEPT', '')
+            is_style_req = sec_dest == 'style' or 'text/css' in accept_hdr or target_url.endswith('.css')
+            is_font_req = sec_dest == 'font' or any(target_url.endswith(ext) for ext in ['.woff', '.woff2', '.ttf', '.eot', '.otf'])
+
+            if resp.status_code >= 400 and (is_style_req or is_font_req):
+                # Return empty CSS/font with 200 OK so browser strict MIME check does not fail with red console error
+                if is_style_req:
+                    response = HttpResponse("/* asset unavailable */", content_type="text/css; charset=utf-8", status=200)
+                else:
+                    response = HttpResponse(b"", content_type="font/woff2", status=200)
+                response.xframe_options_exempt = True
+                response["Access-Control-Allow-Origin"] = "*"
+                return response
 
             if "text/html" in content_type.lower():
                 html = resp.text
@@ -3093,9 +3116,12 @@ class WebPreviewProxyAPIView(APIView):
                     m = re.search(r'href=[\'"]?([^\'" >]+)[\'"]?', full_tag)
                     if m:
                         href_val = m.group(1)
-                        if not href_val.startswith('data:') and not href_val.startswith('https://fonts.googleapis.com'):
+                        if not href_val.startswith('data:') and not href_val.startswith('https://fonts.googleapis.com') and not href_val.startswith('https://fonts.gstatic.com'):
                             if '/api/v1/course/web-preview/' not in href_val:
                                 abs_href = urllib.parse.urljoin(final_url, href_val)
+                                p_href = urllib.parse.urlparse(abs_href)
+                                if p_href.hostname in ["fonts.gstatic.com", "fonts.googleapis.com"] and (not p_href.path or p_href.path == "/"):
+                                    return full_tag
                                 proxied_href = f"{proxy_base_endpoint}?url={urllib.parse.quote(abs_href)}"
                                 return full_tag.replace(href_val, proxied_href)
                     return full_tag
@@ -3402,6 +3428,9 @@ window.vueRecaptchaApiLoaded = window.vueRecaptchaApiLoaded || function(){};
                     if raw_val.startswith('data:') or '/api/v1/course/web-preview/' in raw_val:
                         return match.group(0)
                     abs_url = urllib.parse.urljoin(final_url, raw_val)
+                    p_abs = urllib.parse.urlparse(abs_url)
+                    if p_abs.hostname in ["fonts.gstatic.com", "fonts.googleapis.com"] and (not p_abs.path or p_abs.path == "/"):
+                        return match.group(0)
                     proxied_url = f"{proxy_base_endpoint}?url={urllib.parse.quote(abs_url)}"
                     return f"url('{proxied_url}')"
 
@@ -3439,12 +3468,26 @@ window.vueRecaptchaApiLoaded = window.vueRecaptchaApiLoaded || function(){};
 
             return response
         except requests.exceptions.Timeout:
+            sec_dest = request.META.get('HTTP_SEC_FETCH_DEST', '')
+            accept_hdr = request.META.get('HTTP_ACCEPT', '')
+            if sec_dest == 'style' or 'text/css' in accept_hdr or target_url.endswith('.css'):
+                response = HttpResponse("/* timeout */", content_type="text/css; charset=utf-8", status=200)
+                response.xframe_options_exempt = True
+                response["Access-Control-Allow-Origin"] = "*"
+                return response
             return HttpResponse(
                 f"<div style='font-family:sans-serif;padding:30px;text-align:center;'><h3>Waktu Koneksi Habis</h3><p>Halaman web <b>{target_url}</b> membutuhkan waktu terlalu lama untuk merespons.</p><a href='{target_url}' target='_blank' style='display:inline-block;padding:8px 16px;background:#0d9488;color:#fff;text-decoration:none;border-radius:4px;'>Buka Langsung di Tab Baru</a></div>",
                 content_type="text/html",
                 status=504
             )
         except Exception as e:
+            sec_dest = request.META.get('HTTP_SEC_FETCH_DEST', '')
+            accept_hdr = request.META.get('HTTP_ACCEPT', '')
+            if sec_dest == 'style' or 'text/css' in accept_hdr or target_url.endswith('.css'):
+                response = HttpResponse(f"/* error: {str(e)} */", content_type="text/css; charset=utf-8", status=200)
+                response.xframe_options_exempt = True
+                response["Access-Control-Allow-Origin"] = "*"
+                return response
             return HttpResponse(
                 f"<div style='font-family:sans-serif;padding:30px;text-align:center;'><h3>Tidak Dapat Memuat Halaman Web</h3><p>{str(e)}</p><a href='{target_url}' target='_blank' style='display:inline-block;padding:8px 16px;background:#0d9488;color:#fff;text-decoration:none;border-radius:4px;'>Buka Langsung di Tab Baru</a></div>",
                 content_type="text/html",

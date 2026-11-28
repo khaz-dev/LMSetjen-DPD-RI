@@ -1476,6 +1476,19 @@ function SortableLessonItem({
     const [mediaUrlInput, setMediaUrlInput] = useState(item?.youtubeLink || item?.gdriveLink || (hasExistingUrlMedia ? activeMediaUrl : ''));
     const [isWebFullscreen, setIsWebFullscreen] = useState(false);
 
+    // ✨ Prevent background page scrolling when web preview modal is in fullscreen
+    useEffect(() => {
+        if (!isWebFullscreen) return;
+        const prevBodyOverflow = document.body.style.overflow;
+        const prevHtmlOverflow = document.documentElement.style.overflow;
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = prevBodyOverflow;
+            document.documentElement.style.overflow = prevHtmlOverflow;
+        };
+    }, [isWebFullscreen]);
+
     useEffect(() => {
         if (item?.youtubeLink) {
             setMediaUrlInput(item.youtubeLink);
@@ -2430,7 +2443,9 @@ function SortableLessonItem({
                                                                             top: 0,
                                                                             left: 0,
                                                                             width: "100vw",
-                                                                            height: "100vh"
+                                                                            height: "100vh",
+                                                                            overscrollBehavior: "contain",
+                                                                            overflow: "hidden"
                                                                         }}
                                                                         tabIndex="-1"
                                                                         role="dialog"
@@ -2972,32 +2987,62 @@ function CourseEditCurriculum() {
 
         window.API = api12;
         window.API_1484_11 = api2004;
+        try {
+            if (typeof window !== "undefined") {
+                if (window.parent && window.parent !== window) {
+                    window.parent.API = api12;
+                    window.parent.API_1484_11 = api2004;
+                }
+                if (window.top && window.top !== window) {
+                    window.top.API = api12;
+                    window.top.API_1484_11 = api2004;
+                }
+            }
+        } catch (e) {}
         return { api12, api2004 };
     };
 
-    // SCORM 1.2 & SCORM 2004 RTE API lifecycle effect
+    // SCORM 1.2 & SCORM 2004 RTE API & Modal Background Scroll Lock lifecycle effect
     useEffect(() => {
-        if (!scormPreviewModal.isOpen) return;
+        const isAnyModalOpen = scormPreviewModal.isOpen || scormLibraryModal.isOpen;
+        if (!isAnyModalOpen) return;
 
-        if (scormPreviewModal.moduleType !== 'h5p' && (!window.API || !window.API_1484_11)) {
+        if (scormPreviewModal.isOpen && scormPreviewModal.moduleType !== 'h5p' && (!window.API || !window.API_1484_11)) {
             initScormRte(setScormPlayerStatus, setScormPlayerScore);
         }
 
-        const prevOverflow = document.body.style.overflow;
+        const prevBodyOverflow = document.body.style.overflow;
+        const prevHtmlOverflow = document.documentElement.style.overflow;
         document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
 
         return () => {
-            delete window.API;
-            delete window.API_1484_11;
-            document.body.style.overflow = prevOverflow;
+            if (scormPreviewModal.isOpen) {
+                delete window.API;
+                delete window.API_1484_11;
+                try {
+                    if (typeof window !== "undefined") {
+                        if (window.parent) {
+                            delete window.parent.API;
+                            delete window.parent.API_1484_11;
+                        }
+                        if (window.top) {
+                            delete window.top.API;
+                            delete window.top.API_1484_11;
+                        }
+                    }
+                } catch (e) {}
+            }
+            document.body.style.overflow = prevBodyOverflow;
+            document.documentElement.style.overflow = prevHtmlOverflow;
         };
-    }, [scormPreviewModal.isOpen, scormPreviewModal.moduleType]);
+    }, [scormPreviewModal.isOpen, scormPreviewModal.moduleType, scormLibraryModal.isOpen]);
 
     const handleOpenScormPreview = (item) => {
         let lm = item?.learning_module_info || (item?.learning_module && typeof item.learning_module === 'object' ? item.learning_module : null) || course?.learning_module;
         if (!lm) {
-            for (const v of curriculum || []) {
-                for (const it of v.items || []) {
+            for (const v of (variants || [])) {
+                for (const it of (v.items || [])) {
                     if (it.learning_module_info || (it.learning_module && typeof it.learning_module === 'object')) {
                         lm = it.learning_module_info || it.learning_module;
                         break;
@@ -3442,7 +3487,8 @@ function CourseEditCurriculum() {
             const hasGoogleDriveLink = item.gdriveLink && item.gdriveLink.trim().length > 0;
             const hasYouTubeLink = item.youtubeLink && item.youtubeLink.trim().length > 0;
             const hasUploadedFile = item.uploadedFile && item.uploadedFile.trim().length > 0;
-            const hasValidLink = hasGoogleDriveLink || hasYouTubeLink || hasUploadedFile;
+            const hasFile = item.file && String(item.file).trim().length > 0;
+            const hasValidLink = hasGoogleDriveLink || hasYouTubeLink || hasUploadedFile || hasFile;
             const isExistingItem = item.variant_item_id || item.id;
 
             if (!hasValidLink && !isExistingItem) {
@@ -3454,8 +3500,18 @@ function CourseEditCurriculum() {
                 itemErrors.youtubeLink = 'Link YouTube harus dari youtube.com atau youtu.be';
             }
 
-            // Validate duration for all standard media types
-            if (hasGoogleDriveLink || hasYouTubeLink || hasUploadedFile) {
+            // Determine if the item is purely reading material / web link / document rather than video/audio
+            const rawMedia = item?.uploadedFile || item?.file || item?.youtubeLink || item?.gdriveLink || '';
+            const mediaExt = rawMedia.toLowerCase().split('.').pop().split('?')[0];
+            const isItemAudio = ['mp3', 'wav', 'ogg', 'm4a', 'aac'].includes(mediaExt);
+            const isItemPdf = mediaExt === 'pdf';
+            const isItemPpt = ['ppt', 'pptx'].includes(mediaExt) || rawMedia.includes('docs.google.com/presentation');
+            const isItemWord = ['doc', 'docx', 'txt'].includes(mediaExt);
+            const isItemVideo = ['mp4', 'webm', 'ogv', 'mov', 'avi', 'mkv'].includes(mediaExt) || rawMedia.includes('youtube.com') || rawMedia.includes('youtu.be') || Boolean(item?.youtubeLink) || item?.file_type === 'video';
+            const isReadingOrWeb = item?.file_type === 'link' || isItemPdf || isItemPpt || isItemWord || Boolean(rawMedia && rawMedia.startsWith('http') && !isItemAudio && !isItemVideo);
+
+            // Validate duration only for actual video/audio media types (not for web links / reading material)
+            if (!isReadingOrWeb && (hasGoogleDriveLink || hasYouTubeLink || hasUploadedFile)) {
                 const durationSeconds = item.duration_seconds || 0;
                 if (!durationSeconds || durationSeconds === 0) {
                     itemErrors.duration = 'Durasi video harus diisi (tidak boleh 0m 0s). Durasi diekstraksi otomatis saat mengunggah file, atau gunakan tombol "Edit" untuk memasukkan durasi manual.';
@@ -3632,11 +3688,15 @@ function CourseEditCurriculum() {
                     order: variant.order !== undefined ? variant.order : index, // ✅ Preserve order field
                     items: sortedItems.map((item, itemIndex) => {
                         // ✨ PHASE 4.110: Detect media source type on initial load
-                        // Support three types: YouTube links, Uploaded files (/media/*), and Google Drive links
+                        // Support YouTube links, Google Drive links, and Uploaded/Web URLs
                         const fileUrl = item.file || '';
                         const isYouTubeLink = fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be');
-                        const isUploadedFile = fileUrl.includes('/media/') ||
-                            /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl); // Check for video extensions
+                        const isGoogleDriveLink = fileUrl.includes('drive.google.com') || fileUrl.includes('drive.usercontent.google.com');
+                        const isUploadedFile = !isYouTubeLink && !isGoogleDriveLink && (
+                            fileUrl.includes('/media/') ||
+                            /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl) ||
+                            Boolean(fileUrl && fileUrl.startsWith('http'))
+                        );
 
                         // ✨ Detect SCORM / H5P learning module
                         const itemLmInfo = item.learning_module_info || (item.learning_module && typeof item.learning_module === 'object' ? item.learning_module : courseData.learning_module);
@@ -3650,9 +3710,9 @@ function CourseEditCurriculum() {
                             item_type: item.item_type || (item.quiz_id || item.quiz ? 'quiz' : 'lesson'),
                             quiz_id: item.quiz_id || (item.quiz && typeof item.quiz === 'object' ? item.quiz.quiz_id : (item.quiz || null)),
                             quiz_detail: item.quiz_detail || null,
-                            gdriveLink: !isYouTubeLink && !isUploadedFile ? fileUrl : '',  // Store Google Drive links
+                            gdriveLink: isGoogleDriveLink ? fileUrl : '',  // Store Google Drive links only when actually from Google Drive
                             youtubeLink: isYouTubeLink ? fileUrl : '',  // Store YouTube URLs
-                            uploadedFile: isUploadedFile ? fileUrl : '',  // ✨ PHASE 4.110: Store uploaded file URLs
+                            uploadedFile: !isYouTubeLink && !isGoogleDriveLink ? fileUrl : '',  // Store uploaded file or generic web page URLs
                             preview: item.preview || false,
                             variant_item_id: item.variant_item_id || item.id, // Preserve variant_item_id
                             order: item.order !== undefined ? item.order : itemIndex, // ✅ Preserve lesson order
@@ -5186,8 +5246,12 @@ function CourseEditCurriculum() {
             const mappedItems = sortedItems.map((item, itemIndex) => {
                 const fileUrl = item.file || '';
                 const isYouTubeLink = fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be');
-                const isUploadedFile = fileUrl.includes('/media/') ||
-                    /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl);
+                const isGoogleDriveLink = fileUrl.includes('drive.google.com') || fileUrl.includes('drive.usercontent.google.com');
+                const isUploadedFile = !isYouTubeLink && !isGoogleDriveLink && (
+                    fileUrl.includes('/media/') ||
+                    /\.(mp4|webm|ogg|avi|mov|mkv)(\?|$)/i.test(fileUrl) ||
+                    Boolean(fileUrl && fileUrl.startsWith('http'))
+                );
 
                 const itemIdStr = String(item.variant_item_id || item.id || '');
                 const prevItem = (itemIdStr && previousItemsMap.get(itemIdStr)) || (item.title && previousItemsMap.get(item.title));
@@ -5197,7 +5261,7 @@ function CourseEditCurriculum() {
                 const isItemH5p = itemLmInfo?.module_type === 'h5p' || item.file_type === 'h5p' || (fileUrl && fileUrl.toLowerCase().endsWith('.h5p'));
                 const isItemScorm = isElearningScorm || Boolean(itemLmId) || item.file_type === 'scorm' || isItemH5p;
 
-                const detectedSource = isItemH5p ? 'h5p' : isItemScorm ? 'scorm' : (isUploadedFile ? 'upload' : (isYouTubeLink ? 'youtube' : (fileUrl ? 'google_drive' : (prevItem?.media_source || null))));
+                const detectedSource = isItemH5p ? 'h5p' : isItemScorm ? 'scorm' : (isUploadedFile ? 'upload' : (isYouTubeLink ? 'youtube' : (isGoogleDriveLink ? 'google_drive' : (fileUrl ? 'url' : (prevItem?.media_source || null)))));
 
                 return {
                     title: item.title || '',
@@ -5205,9 +5269,9 @@ function CourseEditCurriculum() {
                     item_type: item.item_type || (item.quiz_id || item.quiz ? 'quiz' : (prevItem?.item_type || 'lesson')),
                     quiz_id: item.quiz_id || (item.quiz && typeof item.quiz === 'object' ? item.quiz.quiz_id : (item.quiz || prevItem?.quiz_id || null)),
                     quiz_detail: item.quiz_detail || prevItem?.quiz_detail || null,
-                    gdriveLink: !isYouTubeLink && !isUploadedFile ? fileUrl : (prevItem?.gdriveLink || ''),
+                    gdriveLink: isGoogleDriveLink ? fileUrl : (prevItem?.gdriveLink && (prevItem.gdriveLink.includes('drive.google.com') || prevItem.gdriveLink.includes('drive.usercontent.google.com')) ? prevItem.gdriveLink : ''),
                     youtubeLink: isYouTubeLink ? fileUrl : (prevItem?.youtubeLink || ''),
-                    uploadedFile: isUploadedFile ? fileUrl : (prevItem?.uploadedFile || ''),
+                    uploadedFile: !isYouTubeLink && !isGoogleDriveLink ? (fileUrl || prevItem?.uploadedFile || '') : '',
                     file: fileUrl,
                     preview: item.preview || false,
                     variant_item_id: item.variant_item_id || item.id,
@@ -6594,6 +6658,7 @@ function CourseEditCurriculum() {
                                         alignItems: "center",
                                         justifyContent: "center",
                                         overflow: "hidden",
+                                        overscrollBehavior: "contain",
                                         margin: 0,
                                         padding: scormPreviewModal.isFullscreen ? 0 : "1.25rem",
                                         boxSizing: "border-box"
@@ -6717,6 +6782,58 @@ function CourseEditCurriculum() {
                                                                     if (window.API_1484_11 && !cw.API_1484_11) {
                                                                         cw.API_1484_11 = window.API_1484_11;
                                                                     }
+
+                                                                    // ✨ Auto-trigger Articulate Storyline 360 / modern SCORM start button
+                                                                    const doc = cw.document;
+                                                                    let attempts = 0;
+                                                                    const maxAttempts = 25; // Poll up to 7.5 seconds
+                                                                    const autoStartInterval = setInterval(() => {
+                                                                        attempts++;
+                                                                        try {
+                                                                            if (!doc || !cw) {
+                                                                                clearInterval(autoStartInterval);
+                                                                                return;
+                                                                            }
+
+                                                                            // 1. Detect & click Articulate Storyline mobile start button
+                                                                            const startBtn = doc.getElementById('mobile-start-button') ||
+                                                                                doc.querySelector('.mobile-start-overlay button, [aria-label*="Mulai Kursus"], [aria-label*="Start"]');
+                                                                            if (startBtn && startBtn.offsetParent !== null) {
+                                                                                startBtn.click();
+                                                                                console.log("[SCORM Preview] Automatically clicked Storyline 360 start button");
+                                                                                clearInterval(autoStartInterval);
+                                                                                return;
+                                                                            }
+
+                                                                            // 2. Detect & click resume prompt dialog buttons if present
+                                                                            const resumeBtn = doc.querySelector('.resume-dialog button, [data-dv_comp="resume"] button, button[aria-label*="Lanjut"], button[aria-label*="Resume"]');
+                                                                            if (resumeBtn && resumeBtn.offsetParent !== null) {
+                                                                                resumeBtn.click();
+                                                                                console.log("[SCORM Preview] Automatically clicked Storyline resume prompt");
+                                                                                clearInterval(autoStartInterval);
+                                                                                return;
+                                                                            }
+
+                                                                            // 3. Fallback unhide slide if body is stuck on .resume-shown without start overlay
+                                                                            if (attempts > 8 && doc.body && doc.body.classList.contains('resume-shown')) {
+                                                                                const slide = doc.getElementById('slide');
+                                                                                if (slide && cw.getComputedStyle(slide).display === 'none') {
+                                                                                    doc.body.classList.remove('resume-shown');
+                                                                                    slide.style.setProperty('display', 'block', 'important');
+                                                                                    const overlay = doc.querySelector('.mobile-start-overlay');
+                                                                                    if (overlay) overlay.style.setProperty('display', 'none', 'important');
+                                                                                    clearInterval(autoStartInterval);
+                                                                                    return;
+                                                                                }
+                                                                            }
+
+                                                                            if (attempts >= maxAttempts) {
+                                                                                clearInterval(autoStartInterval);
+                                                                            }
+                                                                        } catch (pollerErr) {
+                                                                            if (attempts >= maxAttempts) clearInterval(autoStartInterval);
+                                                                        }
+                                                                    }, 300);
                                                                 }
                                                             } catch (err) {
                                                                 console.warn("[SCORM Iframe] Cross-origin or access warning:", err);
@@ -6777,6 +6894,7 @@ function CourseEditCurriculum() {
                                         alignItems: "center",
                                         justifyContent: "center",
                                         overflow: "hidden",
+                                        overscrollBehavior: "contain",
                                         margin: 0,
                                         padding: "1rem",
                                         boxSizing: "border-box"
