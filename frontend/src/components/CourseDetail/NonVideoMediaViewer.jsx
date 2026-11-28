@@ -4,7 +4,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import apiInstance from '../../utils/axios';
 import useAxios from '../../utils/useAxios';
 import UserData from '../../views/plugin/UserData';
-import { getMediaUrl } from '../../utils/constants';
+import { getMediaUrl, getApiUrl } from '../../utils/constants';
 import Toast from '../../views/plugin/Toast';
 import PptxRenderer from '../Common/PptxRenderer';
 import PdfRenderer from '../Common/PdfRenderer';
@@ -73,15 +73,15 @@ const NonVideoMediaViewer = forwardRef(({
         if (!target) return;
         if (!document.fullscreenElement && !document.webkitFullscreenElement) {
             if (target.requestFullscreen) {
-                target.requestFullscreen().catch(() => {});
+                target.requestFullscreen().catch(() => { });
             } else if (target.webkitRequestFullscreen) {
-                target.webkitRequestFullscreen().catch(() => {});
+                target.webkitRequestFullscreen().catch(() => { });
             }
         } else {
             if (document.exitFullscreen) {
-                document.exitFullscreen().catch(() => {});
+                document.exitFullscreen().catch(() => { });
             } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen().catch(() => {});
+                document.webkitExitFullscreen().catch(() => { });
             }
         }
     };
@@ -162,7 +162,7 @@ const NonVideoMediaViewer = forwardRef(({
             const clVId = String(cl.variant_item?.variant_item_id || cl.variant_item?.id || "");
             const clId = String(cl.variant_item?.id || "");
             return (targetVId && (clVId === targetVId || clId === targetVId)) ||
-                   (targetId && (clId === targetId || clVId === targetId));
+                (targetId && (clId === targetId || clVId === targetId));
         });
     }, [variantItem, course?.completed_lesson, justCompletedId]);
 
@@ -227,7 +227,7 @@ const NonVideoMediaViewer = forwardRef(({
                         elapsedSeconds: next,
                         completed: done
                     }));
-                } catch (e) {}
+                } catch (e) { }
                 if (done) {
                     setIsDocTimerCompleted(true);
                 }
@@ -349,7 +349,7 @@ const NonVideoMediaViewer = forwardRef(({
                     p.then(() => {
                         setIsPlaying(true);
                         setAudioError(null);
-                    }).catch(() => {});
+                    }).catch(() => { });
                 }
             }
         }
@@ -364,7 +364,7 @@ const NonVideoMediaViewer = forwardRef(({
                 p.then(() => {
                     setIsPlaying(true);
                     setAudioError(null);
-                }).catch(() => {});
+                }).catch(() => { });
             }
         }
     }, [isAudio, seekPosition, variantItem?.variant_item_id, audioBlobUrl]);
@@ -504,8 +504,8 @@ const NonVideoMediaViewer = forwardRef(({
                             audioRef.current.play().then(() => {
                                 setIsPlaying(true);
                                 setAudioError(null);
-                            }).catch(() => {});
-                        } catch (e) {}
+                            }).catch(() => { });
+                        } catch (e) { }
                     });
             }
         }
@@ -713,7 +713,7 @@ const NonVideoMediaViewer = forwardRef(({
                                 height: '100px',
                                 background: 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)',
                                 color: '#fff',
-                                fontSize: '2.5rem'
+                                fontSize: '2rem'
                             }}
                         >
                             {audioLoading ? (
@@ -745,7 +745,7 @@ const NonVideoMediaViewer = forwardRef(({
                                             audioRef.current.play().then(() => {
                                                 setIsPlaying(true);
                                                 setAudioError(null);
-                                            }).catch(() => {});
+                                            }).catch(() => { });
                                         }
                                     }}
                                 >
@@ -856,7 +856,45 @@ const NonVideoMediaViewer = forwardRef(({
                     </div>
                 )}
 
-                {(isWordDoc || isExternalLink || (!isYouTube && !isGDrive && !isAudio && !isPdf && !isPresentation)) && (
+                {isExternalLink && (
+                    <div className="flex-grow-1 d-flex flex-column w-100" style={{ minHeight: isFullscreen ? 'calc(100vh - 120px)' : '520px' }}>
+                        <div className="p-2 bg-light border-bottom d-flex align-items-center justify-content-between px-3 flex-wrap gap-2">
+                            <div className="d-flex align-items-center gap-2 overflow-hidden me-2">
+                                <span className="badge text-white px-2 py-1" style={{ backgroundColor: '#7c3aed', fontSize: '11px' }}>
+                                    <i className="fas fa-globe me-1"></i>Halaman Web
+                                </span>
+                                <span className="text-muted small text-truncate font-monospace" style={{ maxWidth: '380px' }} title={fileUrl}>
+                                    {fileUrl}
+                                </span>
+                            </div>
+                            <div className="d-flex align-items-center gap-2">
+                                <a
+                                    href={fileUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-sm btn-primary py-1 px-3 d-inline-flex align-items-center gap-1 shadow-xs"
+                                    style={{ fontSize: '12px' }}
+                                >
+                                    <i className="fas fa-external-link-alt"></i>
+                                    <span>Buka di Tab Baru</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div className="flex-grow-1 position-relative w-100" style={{ minHeight: isFullscreen ? 'calc(100vh - 170px)' : '480px', backgroundColor: '#f8fafc' }}>
+                            <iframe
+                                src={getApiUrl(`course/web-preview/?url=${encodeURIComponent(fileUrl)}`)}
+                                title={variantItem?.title || "Halaman Web Pembelajaran"}
+                                className="w-100 h-100 border-0"
+                                style={{ minHeight: isFullscreen ? 'calc(100vh - 170px)' : '480px', display: 'block' }}
+                                sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads"
+                                allow="fullscreen"
+                                loading="lazy"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {(isWordDoc || (!isYouTube && !isGDrive && !isAudio && !isPdf && !isPresentation && !isExternalLink)) && (
                     <div className="p-4 d-flex flex-column align-items-center justify-content-center text-center my-auto">
                         <div
                             className="rounded-4 d-flex align-items-center justify-content-center shadow-lg mb-3"
@@ -865,7 +903,7 @@ const NonVideoMediaViewer = forwardRef(({
                                 height: '90px',
                                 background: typeBadge.color,
                                 color: '#fff',
-                                fontSize: '2.5rem'
+                                fontSize: '2rem'
                             }}
                         >
                             <i className={typeBadge.icon}></i>

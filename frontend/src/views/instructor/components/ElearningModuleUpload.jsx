@@ -41,7 +41,7 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
     entry_file: courseData.learning_module_entry || "index.html"
   } : null);
 
-  const playerUrl = currentModule?.player_url 
+  const playerUrl = currentModule?.player_url
     ? getMediaUrl(currentModule.player_url)
     : (currentModule?.id ? getMediaUrl(`/media/learning_modules/extracted_${currentModule.id}/${currentModule.entry_file || 'index.html'}`) : "");
 
@@ -142,9 +142,9 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
   const toggleFullscreen = () => {
     if (!playerContainerRef.current) return;
     if (!document.fullscreenElement) {
-      playerContainerRef.current.requestFullscreen().catch(() => {});
+      playerContainerRef.current.requestFullscreen().catch(() => { });
     } else {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen().catch(() => { });
     }
   };
 
@@ -362,182 +362,182 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
       {currentModule ? (
         <>
           <div className="card border-success shadow-sm">
-          <div className="card-body p-3">
-            <div className="d-flex align-items-start justify-content-between gap-3">
-              <div className="d-flex align-items-center gap-3">
-                <div
-                  className="rounded-3 d-flex align-items-center justify-content-center"
-                  style={{
-                    width: "52px",
-                    height: "52px",
-                    backgroundColor: currentModule.module_type === "h5p" ? "#fef3c7" : "#e0f2fe",
-                    color: currentModule.module_type === "h5p" ? "#d97706" : "#0284c7",
-                    fontSize: "24px"
-                  }}
-                >
-                  <i className={currentModule.module_type === "h5p" ? "fas fa-puzzle-piece" : "fas fa-cubes"}></i>
-                </div>
-                <div>
-                  <h6 className="mb-1 fw-bold text-dark">
-                    {currentModule.judul || "Modul E-Learning Terunggah"}
-                  </h6>
-                  <div className="d-flex align-items-center gap-2 flex-wrap">
-                    <span className="badge bg-primary text-uppercase">
-                      {currentModule.module_type === "h5p" ? "H5P Interactive" : "SCORM 1.2"}
-                    </span>
-                    <span className="badge bg-secondary">
-                      Entry: {currentModule.entry_file || "index.html"}
-                    </span>
-                    <span className="text-success small fw-semibold">
-                      <i className="fas fa-check-circle me-1"></i>
-                      Siap Diputar & Terlacak
-                    </span>
+            <div className="card-body p-3">
+              <div className="d-flex align-items-start justify-content-between gap-3">
+                <div className="d-flex align-items-center gap-3">
+                  <div
+                    className="rounded-3 d-flex align-items-center justify-content-center"
+                    style={{
+                      width: "52px",
+                      height: "52px",
+                      backgroundColor: currentModule.module_type === "h5p" ? "#fef3c7" : "#e0f2fe",
+                      color: currentModule.module_type === "h5p" ? "#d97706" : "#0284c7",
+                      fontSize: "24px"
+                    }}
+                  >
+                    <i className={currentModule.module_type === "h5p" ? "fas fa-puzzle-piece" : "fas fa-cubes"}></i>
+                  </div>
+                  <div>
+                    <h6 className="mb-1 fw-bold text-dark">
+                      {currentModule.judul || "Modul E-Learning Terunggah"}
+                    </h6>
+                    <div className="d-flex align-items-center gap-2 flex-wrap">
+                      <span className="badge bg-primary text-uppercase">
+                        {currentModule.module_type === "h5p" ? "H5P Interactive" : "SCORM 1.2"}
+                      </span>
+                      <span className="badge bg-secondary">
+                        Entry: {currentModule.entry_file || "index.html"}
+                      </span>
+                      <span className="text-success small fw-semibold">
+                        <i className="fas fa-check-circle me-1"></i>
+                        Siap Diputar & Terlacak
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="d-flex align-items-center gap-2">
-                {currentModule.id && (
+                <div className="d-flex align-items-center gap-2">
+                  {currentModule.id && (
+                    <button
+                      type="button"
+                      className="btn btn-sm text-white fw-semibold d-inline-flex align-items-center gap-1 shadow-sm px-3 py-1"
+                      style={{
+                        backgroundColor: showPlayer ? "#334155" : "#0284c7",
+                        borderColor: showPlayer ? "#334155" : "#0284c7",
+                        color: "#ffffff",
+                        gap: "6px"
+                      }}
+                      onClick={() => setShowPlayer(prev => !prev)}
+                      title={showPlayer ? "Tutup Pemutar Pratinjau" : "Uji Putar Langsung di Halaman Ini"}
+                    >
+                      <i className={showPlayer ? "fas fa-chevron-up" : "fas fa-play"} style={{ color: "#ffffff", fontSize: "12px" }}></i>
+                      <span style={{ color: "#ffffff", fontWeight: 600 }}>{showPlayer ? "Tutup Pemutar" : "Uji Putar"}</span>
+                    </button>
+                  )}
                   <button
                     type="button"
-                    className="btn btn-sm text-white fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm px-3 py-1.5"
+                    className="btn btn-sm text-white fw-semibold d-inline-flex align-items-center gap-1 shadow-sm px-3 py-1"
                     style={{
-                      backgroundColor: showPlayer ? "#334155" : "#0284c7",
-                      borderColor: showPlayer ? "#334155" : "#0284c7",
+                      backgroundColor: "#dc2626",
+                      borderColor: "#dc2626",
                       color: "#ffffff",
-                      gap: "6px"
+                      gap: "5px"
                     }}
-                    onClick={() => setShowPlayer(prev => !prev)}
-                    title={showPlayer ? "Tutup Pemutar Pratinjau" : "Uji Putar Langsung di Halaman Ini"}
+                    onClick={handleRemoveModule}
+                    title="Hapus modul dari kursus ini"
                   >
-                    <i className={showPlayer ? "fas fa-chevron-up" : "fas fa-play"} style={{ color: "#ffffff", fontSize: "12px" }}></i>
-                    <span style={{ color: "#ffffff", fontWeight: 600 }}>{showPlayer ? "Tutup Pemutar" : "Uji Putar"}</span>
+                    <i className="fas fa-trash-alt" style={{ color: "#ffffff", fontSize: "12px" }}></i>
+                    <span style={{ color: "#ffffff" }}>Ganti</span>
                   </button>
-                )}
-                <button
-                  type="button"
-                  className="btn btn-sm text-white fw-semibold d-inline-flex align-items-center gap-1.5 shadow-sm px-3 py-1.5"
-                  style={{
-                    backgroundColor: "#dc2626",
-                    borderColor: "#dc2626",
-                    color: "#ffffff",
-                    gap: "5px"
-                  }}
-                  onClick={handleRemoveModule}
-                  title="Hapus modul dari kursus ini"
-                >
-                  <i className="fas fa-trash-alt" style={{ color: "#ffffff", fontSize: "12px" }}></i>
-                  <span style={{ color: "#ffffff" }}>Ganti</span>
-                </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Pratinjau Interaktif Player Inline */}
-        {showPlayer && currentModule && (
-          <div 
-            ref={playerContainerRef} 
-            className="mt-3 rounded-3 overflow-hidden shadow-sm border bg-white"
-            style={{ borderColor: "#cbd5e1" }}
-          >
-            {/* Topbar Kontrol Player */}
-            <div 
-              className="px-3 py-2.5 d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom"
-              style={{ backgroundColor: "#0f172a", color: "#f8fafc" }}
+          {/* Pratinjau Interaktif Player Inline */}
+          {showPlayer && currentModule && (
+            <div
+              ref={playerContainerRef}
+              className="mt-3 rounded-3 overflow-hidden shadow-sm border bg-white"
+              style={{ borderColor: "#cbd5e1" }}
             >
-              <div className="d-flex align-items-center gap-2">
-                <span 
-                  className="badge d-inline-flex align-items-center gap-1.5 px-2.5 py-1"
-                  style={{ backgroundColor: "#0f766e", color: "#ffffff", fontSize: "11px" }}
-                >
-                  <i className="fas fa-play-circle"></i>
-                  <span>Uji Putar Langsung</span>
-                </span>
-                <span className="fw-semibold text-truncate small text-white" style={{ maxWidth: "340px" }} title={currentModule.judul}>
-                  {currentModule.judul}
-                </span>
+              {/* Topbar Kontrol Player */}
+              <div
+                className="px-3 py-2 d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom"
+                style={{ backgroundColor: "#0f172a", color: "#f8fafc" }}
+              >
+                <div className="d-flex align-items-center gap-2">
+                  <span
+                    className="badge d-inline-flex align-items-center gap-1 px-2 py-1"
+                    style={{ backgroundColor: "#0f766e", color: "#ffffff", fontSize: "11px" }}
+                  >
+                    <i className="fas fa-play-circle"></i>
+                    <span>Uji Putar Langsung</span>
+                  </span>
+                  <span className="fw-semibold text-truncate small text-white" style={{ maxWidth: "340px" }} title={currentModule.judul}>
+                    {currentModule.judul}
+                  </span>
+                </div>
+
+                <div className="d-flex align-items-center gap-2">
+                  {/* Status Tracking Real-time */}
+                  <span
+                    className="badge px-2 py-1 text-uppercase"
+                    style={{
+                      backgroundColor: playerStatus === "passed" || playerStatus === "completed"
+                        ? "#16a34a"
+                        : playerStatus === "failed"
+                          ? "#dc2626"
+                          : "#ca8a04",
+                      color: "#ffffff",
+                      fontSize: "11px"
+                    }}
+                  >
+                    Status: {playerStatus} {playerScore !== null ? `• Skor: ${playerScore}` : ""}
+                  </span>
+
+                  {/* Muat Ulang */}
+                  <button
+                    type="button"
+                    className="btn btn-sm text-light p-1"
+                    onClick={handleReloadPlayer}
+                    title="Muat Ulang Modul (Restart)"
+                    style={{ background: "transparent", border: "none" }}
+                  >
+                    <i className="fas fa-redo"></i>
+                  </button>
+
+                  {/* Layar Penuh */}
+                  <button
+                    type="button"
+                    className="btn btn-sm text-light p-1"
+                    onClick={toggleFullscreen}
+                    title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+                    style={{ background: "transparent", border: "none" }}
+                  >
+                    <i className={isFullscreen ? "fas fa-compress" : "fas fa-expand"}></i>
+                  </button>
+
+                  {/* Buka Tab Baru (Opsi Tambahan) */}
+                  <a
+                    href={`/modules/${currentModule.id}/player/`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-sm text-light p-1"
+                    title="Buka di Tab Baru"
+                    style={{ textDecoration: "none" }}
+                  >
+                    <i className="fas fa-external-link-alt"></i>
+                  </a>
+
+                  {/* Tutup Pemutar */}
+                  <button
+                    type="button"
+                    className="btn btn-sm text-danger p-1 ms-1"
+                    onClick={() => setShowPlayer(false)}
+                    title="Tutup Pemutar"
+                    style={{ background: "transparent", border: "none" }}
+                  >
+                    <i className="fas fa-times-circle fs-5"></i>
+                  </button>
+                </div>
               </div>
 
-              <div className="d-flex align-items-center gap-2">
-                {/* Status Tracking Real-time */}
-                <span 
-                  className="badge px-2.5 py-1 text-uppercase"
-                  style={{ 
-                    backgroundColor: playerStatus === "passed" || playerStatus === "completed" 
-                      ? "#16a34a" 
-                      : playerStatus === "failed" 
-                      ? "#dc2626" 
-                      : "#ca8a04",
-                    color: "#ffffff",
-                    fontSize: "11px"
-                  }}
-                >
-                  Status: {playerStatus} {playerScore !== null ? `• Skor: ${playerScore}` : ""}
-                </span>
-
-                {/* Muat Ulang */}
-                <button
-                  type="button"
-                  className="btn btn-sm text-light p-1"
-                  onClick={handleReloadPlayer}
-                  title="Muat Ulang Modul (Restart)"
-                  style={{ background: "transparent", border: "none" }}
-                >
-                  <i className="fas fa-redo"></i>
-                </button>
-
-                {/* Layar Penuh */}
-                <button
-                  type="button"
-                  className="btn btn-sm text-light p-1"
-                  onClick={toggleFullscreen}
-                  title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
-                  style={{ background: "transparent", border: "none" }}
-                >
-                  <i className={isFullscreen ? "fas fa-compress" : "fas fa-expand"}></i>
-                </button>
-
-                {/* Buka Tab Baru (Opsi Tambahan) */}
-                <a
-                  href={`/modules/${currentModule.id}/player/`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-sm text-light p-1"
-                  title="Buka di Tab Baru"
-                  style={{ textDecoration: "none" }}
-                >
-                  <i className="fas fa-external-link-alt"></i>
-                </a>
-
-                {/* Tutup Pemutar */}
-                <button
-                  type="button"
-                  className="btn btn-sm text-danger p-1 ms-1"
-                  onClick={() => setShowPlayer(false)}
-                  title="Tutup Pemutar"
-                  style={{ background: "transparent", border: "none" }}
-                >
-                  <i className="fas fa-times-circle fs-5"></i>
-                </button>
+              {/* Iframe SCORM Player */}
+              <div className="position-relative" style={{ height: isFullscreen ? "calc(100vh - 46px)" : "580px", minHeight: "450px", backgroundColor: "#ffffff" }}>
+                <iframe
+                  ref={iframeRef}
+                  src={playerUrl}
+                  title={`Pratinjau Modul ${currentModule.judul}`}
+                  className="w-100 h-100 border-0"
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                />
               </div>
             </div>
-
-            {/* Iframe SCORM Player */}
-            <div className="position-relative" style={{ height: isFullscreen ? "calc(100vh - 46px)" : "580px", minHeight: "450px", backgroundColor: "#ffffff" }}>
-              <iframe
-                ref={iframeRef}
-                src={playerUrl}
-                title={`Pratinjau Modul ${currentModule.judul}`}
-                className="w-100 h-100 border-0"
-                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              />
-            </div>
-          </div>
-        )}
+          )}
         </>
       ) : (
-        <div 
+        <div
           className={`upload-dropzone p-4 text-center border border-2 border-dashed rounded-3 bg-white d-flex flex-column align-items-center justify-content-center ${isDragging ? 'border-teal bg-teal-subtle' : ''}`}
           onDragOver={handleDragOver}
           onDragEnter={handleDragEnter}
@@ -574,8 +574,8 @@ const ElearningModuleUpload = ({ courseData, setCourseData, onModuleUploaded, on
           </div>
 
           <h6 className="fw-semibold mb-1 text-center">
-            {isDragging 
-              ? "Lepaskan file paket (.zip / .h5p) di sini..." 
+            {isDragging
+              ? "Lepaskan file paket (.zip / .h5p) di sini..."
               : (loading ? statusMessage : "Pilih atau Tarik File Paket (.zip / .h5p) ke Sini")}
           </h6>
           <p className="text-muted small mb-3 text-center">

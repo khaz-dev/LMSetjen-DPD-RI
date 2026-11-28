@@ -49,6 +49,8 @@ if DEBUG:
         'backend',
         'lms.dpd.go.id',
     ])
+    if 'testserver' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('testserver')
 else:
     # Production: MUST be explicitly provided via environment variable
     allowed_hosts_env = env('ALLOWED_HOSTS', default='')

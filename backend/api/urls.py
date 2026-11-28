@@ -37,6 +37,7 @@ urlpatterns = [
     path("course/presentation-preview/", api_views.PresentationPreviewAPIView.as_view(), name="presentation-preview"),
     path("course/pdf-data/", api_views.PdfDataAPIView.as_view(), name="pdf-data"),
     path("course/media-data/", api_views.MediaDataAPIView.as_view(), name="media-data"),
+    path("course/web-preview/", api_views.WebPreviewProxyAPIView.as_view(), name="web-preview-proxy"),
     path("statistics/public-stats/", api_views.PublicStatsAPIView.as_view()),
     path("statistics/testimonials/", api_views.TestimonialListAPIView.as_view()),  # ✨ PHASE 4: Testimonials endpoint
     path("student/submit-testimonial/", api_views.TestimonialCreateAPIView.as_view()),  # ✨ PHASE 4.10: Testimonial submission endpoint

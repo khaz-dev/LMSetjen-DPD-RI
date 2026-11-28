@@ -78,6 +78,8 @@ urlpatterns = [
 # Use EnhancedMediaView for both development and production
 # This ensures consistent behavior and proper media file serving
 urlpatterns += [
+    # Fallback for web preview proxy if accessed via media path
+    re_path(r'^media/api/v1/course/web-preview/?$', api_views.WebPreviewProxyAPIView.as_view(), name='media-web-preview-proxy-fallback'),
     # Video files with streaming support (range requests for seeking)
     re_path(r'^media/(?P<path>.*\.(mp4|webm|avi|mov|mkv|m4v|3gp|flv)$)', 
             VideoStreamView.as_view(), name='video-stream'),

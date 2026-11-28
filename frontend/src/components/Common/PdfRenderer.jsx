@@ -277,9 +277,9 @@ const PdfRenderer = ({
     const toggleFullscreen = () => {
         if (!containerRef.current) return;
         if (!document.fullscreenElement) {
-            containerRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+            containerRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => { });
         } else {
-            document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+            document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => { });
         }
     };
 
@@ -408,7 +408,7 @@ const PdfRenderer = ({
                     <button
                         type="button"
                         className="pdf-toolbar-btn"
-                        onClick={() => setScale((s) => Math.min(2.5, Number((s + 0.15).toFixed(2))))}
+                        onClick={() => setScale((s) => Math.min(2, Number((s + 0.15).toFixed(2))))}
                         title="Perbesar (+)"
                     >
                         <i className="fas fa-search-plus"></i>

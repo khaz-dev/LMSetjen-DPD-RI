@@ -3010,3 +3010,445 @@ class PresentationPreviewAPIView(APIView):
         })
 
 
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.utils.decorators import method_decorator
+
+@method_decorator(xframe_options_exempt, name='dispatch')
+class WebPreviewProxyAPIView(APIView):
+    """
+    Proxies external web pages for iframe previews, stripping headers like
+    X-Frame-Options and Content-Security-Policy that block iframe rendering
+    in LMS (e.g. government portals, educational sites with SAMEORIGIN).
+    Injects <base href="..."> so that all assets, styles, and links resolve correctly.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        target_url = request.query_params.get("url", "").strip()
+        if not target_url:
+            return Response({"error": "url parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate URL scheme
+        if not (target_url.startswith("http://") or target_url.startswith("https://")):
+            return Response({"error": "Invalid URL scheme. Only HTTP and HTTPS are allowed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        import urllib.parse
+        import urllib3
+        import re
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        # SSRF Protection: Disallow loopback / private IP targets
+        parsed = urllib.parse.urlparse(target_url)
+        hostname = (parsed.hostname or "").lower()
+        if hostname in ["localhost", "127.0.0.1", "0.0.0.0", "::1"] or hostname.endswith(".local"):
+            return Response({"error": "Access to local addresses is restricted."}, status=status.HTTP_403_FORBIDDEN)
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "id,en-US;q=0.7,en;q=0.3",
+        }
+
+        try:
+            resp = requests.get(target_url, headers=headers, timeout=12, verify=False, allow_redirects=True)
+            content_type = resp.headers.get("Content-Type", "text/html; charset=utf-8")
+
+            if "text/html" in content_type.lower():
+                html = resp.text
+                final_url = resp.url or target_url
+                base_tag = f'<base href="{final_url}">'
+
+                # Unwrap <noscript> tags into visible containers so pre-rendered content
+                # (articles, book cards, synopses, PDFs) renders reliably even if third-party
+                # SPAs (Vue/React/Keycloak SSO) fail inside cross-origin iframes.
+                html = re.sub(
+                    r'<noscript\b[^>]*>(.*?)</noscript>',
+                    r'<div class="web-preview-unwrapped-content">\1</div>',
+                    html,
+                    flags=re.DOTALL | re.IGNORECASE
+                )
+
+                # Determine absolute base proxy endpoint using incoming request host
+                try:
+                    proxy_base_endpoint = request.build_absolute_uri('/api/v1/course/web-preview/')
+                except Exception:
+                    host = request.META.get('HTTP_HOST', '127.0.0.1:8001')
+                    proxy_base_endpoint = f"http://{host}/api/v1/course/web-preview/"
+
+                def proxy_resource_url(raw_url):
+                    raw_url = raw_url.strip('\'" ')
+                    if not raw_url or raw_url.startswith('data:'):
+                        return raw_url
+                    # CRITICAL: Prevent re-proxying already proxied URLs!
+                    if '/api/v1/course/web-preview/' in raw_url:
+                        return raw_url
+                    if not (raw_url.startswith('http://') or raw_url.startswith('https://') or raw_url.startswith('/')):
+                        return raw_url
+                    abs_url = urllib.parse.urljoin(final_url, raw_url)
+                    return f"{proxy_base_endpoint}?url={urllib.parse.quote(abs_url)}"
+
+                # Rewrite external stylesheet links so that fonts declared inside them are proxied with CORS headers
+                def rewrite_css_link(match):
+                    full_tag = match.group(0)
+                    m = re.search(r'href=[\'"]?([^\'" >]+)[\'"]?', full_tag)
+                    if m:
+                        href_val = m.group(1)
+                        if not href_val.startswith('data:') and not href_val.startswith('https://fonts.googleapis.com'):
+                            if '/api/v1/course/web-preview/' not in href_val:
+                                abs_href = urllib.parse.urljoin(final_url, href_val)
+                                proxied_href = f"{proxy_base_endpoint}?url={urllib.parse.quote(abs_href)}"
+                                return full_tag.replace(href_val, proxied_href)
+                    return full_tag
+
+                html = re.sub(r'<link[^>]*rel=[\'"]?stylesheet[\'"]?[^>]*>', rewrite_css_link, html, flags=re.IGNORECASE)
+
+                # Transform Quasar's SSR fake image divs into real <img> elements with absolute proxied URLs
+                def replace_qimg_div(match):
+                    full_str = match.group(0)
+                    bg_m = re.search(r'background-image:\s*url\((?:&quot;|[\'"])?([^&"\'\)]+)(?:&quot;|[\'"])?\)', full_str)
+                    if bg_m:
+                        img_url = bg_m.group(1).strip()
+                        abs_proxy_url = proxy_resource_url(img_url)
+                        return f'<img src="{abs_proxy_url}" class="web-preview-real-img" alt="Gambar Materi" />'
+                    return full_str
+
+                html = re.sub(
+                    r'<div[^>]*class=["\'][^"\']*q-img__image[^"\']*["\'][^>]*>(?:</div>)?',
+                    replace_qimg_div,
+                    html,
+                    flags=re.IGNORECASE
+                )
+                html = re.sub(
+                    r'<div[^>]*style=["\'][^"\']*background-image:[^"\']*["\'][^>]*class=["\'][^"\']*q-img__image[^"\']*["\'][^>]*>(?:</div>)?',
+                    replace_qimg_div,
+                    html,
+                    flags=re.IGNORECASE
+                )
+
+                # Clean escaped HTML entities in inline CSS background-image: url(&quot;...&quot;)
+                html = re.sub(r'url\(&quot;([^&]+)&quot;\)', r"url('\1')", html)
+
+                # Rewrite any remaining inline style background-image URLs so they route through proxy with proper image MIME type
+                def rewrite_inline_bg_url(match):
+                    raw_val = match.group(1).strip('\'" ')
+                    if '/api/v1/course/web-preview/' in raw_val:
+                        return match.group(0)
+                    return f"url('{proxy_resource_url(raw_val)}')"
+
+                html = re.sub(r'url\((?![\'"]?data:)([^)]+)\)', rewrite_inline_bg_url, html)
+
+                # Rewrite img src attributes so images route through proxy with proper image MIME type (without double proxying)
+                def rewrite_img_src(match):
+                    full_tag = match.group(0)
+                    m = re.search(r'src=[\'"]?([^\'" >]+)[\'"]?', full_tag)
+                    if m:
+                        src_val = m.group(1)
+                        if '/api/v1/course/web-preview/' not in src_val:
+                            return full_tag.replace(src_val, proxy_resource_url(src_val))
+                    return full_tag
+
+                html = re.sub(r'<img\b[^>]*>', rewrite_img_src, html, flags=re.IGNORECASE)
+
+                helper_code = '''
+<script>
+window.vueRecaptchaApiLoaded = window.vueRecaptchaApiLoaded || function(){};
+(function() {
+    // Intercept Window.prototype.postMessage to prevent targetOrigin DOMWindow mismatch errors
+    var origWindowPostMessage = Window.prototype.postMessage;
+    Window.prototype.postMessage = function(message, targetOrigin, transfer) {
+        try {
+            if (targetOrigin && targetOrigin !== '*' && targetOrigin !== window.location.origin) {
+                targetOrigin = '*';
+            }
+            if (transfer) return origWindowPostMessage.call(this, message, targetOrigin, transfer);
+            return origWindowPostMessage.call(this, message, targetOrigin);
+        } catch(e) {}
+    };
+
+    // Intercept iframe.contentWindow to wrap postMessage so child iframes don't throw targetOrigin errors
+    try {
+        var origContentWindowGetter = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'contentWindow').get;
+        Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', {
+            get: function() {
+                var realWin = origContentWindowGetter.call(this);
+                if (!realWin) return realWin;
+                try {
+                    return new Proxy(realWin, {
+                        get: function(target, prop) {
+                            if (prop === 'postMessage') {
+                                return function(msg, targetOrigin, transfer) {
+                                    try {
+                                        if (targetOrigin && targetOrigin !== '*' && targetOrigin !== window.location.origin) {
+                                            targetOrigin = '*';
+                                        }
+                                        return transfer ? target.postMessage(msg, targetOrigin, transfer) : target.postMessage(msg, targetOrigin);
+                                    } catch(e) {}
+                                };
+                            }
+                            var val = target[prop];
+                            if (typeof val === 'function') {
+                                return val.bind(target);
+                            }
+                            return val;
+                        }
+                    });
+                } catch(e) {
+                    return realWin;
+                }
+            }
+        });
+    } catch(e) {}
+
+    // Intercept Keycloak login-status-iframe to prevent 403 Forbidden & postMessage DOMWindow mismatch
+    var origSetAttribute = Element.prototype.setAttribute;
+    Element.prototype.setAttribute = function(name, value) {
+        if (name === 'src' && typeof value === 'string' && value.includes('login-status-iframe')) {
+            var self = this;
+            setTimeout(function() {
+                try {
+                    if (typeof self.onload === 'function') self.onload();
+                } catch(e) {}
+            }, 50);
+            return origSetAttribute.call(this, name, 'about:blank');
+        }
+        return origSetAttribute.apply(this, arguments);
+    };
+
+    var origReplaceState = history.replaceState;
+    var origPushState = history.pushState;
+
+    history.replaceState = function(state, title, url) {
+        try {
+            if (url) {
+                try {
+                    var parsed = new URL(url, document.baseURI);
+                    if (parsed.origin !== window.location.origin) {
+                        return origReplaceState.call(this, state, title, window.location.pathname + window.location.search);
+                    }
+                } catch(e) {}
+            }
+            return origReplaceState.apply(this, arguments);
+        } catch(e) {}
+    };
+
+    history.pushState = function(state, title, url) {
+        try {
+            if (url) {
+                try {
+                    var parsed = new URL(url, document.baseURI);
+                    if (parsed.origin !== window.location.origin) {
+                        return origPushState.call(this, state, title, window.location.pathname + window.location.search);
+                    }
+                } catch(e) {}
+            }
+            return origPushState.apply(this, arguments);
+        } catch(e) {}
+    };
+
+    // Suppress third-party cross-origin errors (Keycloak SSO, analytics)
+    window.addEventListener('unhandledrejection', function(e) {
+        if (e) {
+            e.preventDefault();
+            if (e.stopPropagation) e.stopPropagation();
+        }
+    });
+    window.addEventListener('error', function(e) {
+        if (e) {
+            e.preventDefault();
+            if (e.stopPropagation) e.stopPropagation();
+        }
+    });
+
+    // Open all anchor links in a new tab safely
+    window.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('a').forEach(function(a) {
+            if (!a.target || a.target === '_self') {
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+            }
+        });
+    });
+})();
+</script>
+<style>
+.web-preview-unwrapped-content {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin: 0 auto !important;
+    max-width: 980px !important;
+    padding: 24px 32px !important;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    line-height: 1.7 !important;
+}
+.web-preview-unwrapped-content .q-page,
+.web-preview-unwrapped-content main {
+    min-height: auto !important;
+    height: auto !important;
+}
+.web-preview-unwrapped-content .fit {
+    width: 100% !important;
+    height: auto !important;
+}
+.web-preview-unwrapped-content .row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+}
+.web-preview-unwrapped-content .col-5 {
+    flex: 0 0 38% !important;
+    max-width: 38% !important;
+}
+.web-preview-unwrapped-content .col-7 {
+    flex: 0 0 62% !important;
+    max-width: 62% !important;
+    padding-left: 28px !important;
+}
+.web-preview-unwrapped-content .col-9,
+.web-preview-unwrapped-content .col-10,
+.web-preview-unwrapped-content .col-12 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+.web-preview-unwrapped-content .q-img {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 16px auto !important;
+    overflow: hidden !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+}
+.web-preview-unwrapped-content .q-img > div[style*="padding-bottom"] {
+    display: none !important;
+}
+.web-preview-unwrapped-content .q-img__content {
+    display: none !important;
+}
+.web-preview-unwrapped-content img.web-preview-real-img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 16px auto !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1) !important;
+    object-fit: contain !important;
+}
+.web-preview-unwrapped-content .text-h4 {
+    font-size: 1.6rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin-bottom: 8px !important;
+    line-height: 1.35 !important;
+}
+.web-preview-unwrapped-content .text-grey-6 {
+    color: #64748b !important;
+    font-size: 0.95rem !important;
+    margin-bottom: 14px !important;
+}
+.web-preview-unwrapped-content .text-body1 {
+    font-size: 1rem !important;
+    line-height: 1.75 !important;
+    color: #334155 !important;
+}
+.web-preview-unwrapped-content p {
+    font-size: 1rem !important;
+    line-height: 1.75 !important;
+    color: #334155 !important;
+    margin-bottom: 1rem !important;
+}
+.web-preview-unwrapped-content a.q-btn,
+.web-preview-unwrapped-content .q-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 10px 24px !important;
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    margin-top: 16px !important;
+    box-shadow: 0 2px 6px rgba(2,132,199,0.35) !important;
+}
+.web-preview-unwrapped-content a.q-btn:hover {
+    background: #0369a1 !important;
+}
+</style>
+'''
+
+                if "<head" in html.lower():
+                    html = re.sub(r'(<head[^>]*>)', r'\1' + base_tag + helper_code, html, count=1, flags=re.IGNORECASE)
+                else:
+                    html = base_tag + helper_code + html
+
+                response = HttpResponse(html, content_type=content_type, status=resp.status_code)
+            elif "text/css" in content_type.lower():
+                css_text = resp.text
+                final_url = resp.url or target_url
+                try:
+                    proxy_base_endpoint = request.build_absolute_uri('/api/v1/course/web-preview/')
+                except Exception:
+                    host = request.META.get('HTTP_HOST', '127.0.0.1:8001')
+                    proxy_base_endpoint = f"http://{host}/api/v1/course/web-preview/"
+
+                # Rewrite relative font and asset URLs in CSS so they route through our proxy with CORS headers
+                def rewrite_css_url(match):
+                    raw_val = match.group(1).strip('\'"')
+                    if raw_val.startswith('data:') or '/api/v1/course/web-preview/' in raw_val:
+                        return match.group(0)
+                    abs_url = urllib.parse.urljoin(final_url, raw_val)
+                    proxied_url = f"{proxy_base_endpoint}?url={urllib.parse.quote(abs_url)}"
+                    return f"url('{proxied_url}')"
+
+                css_text = re.sub(r'url\((?![\'"]?data:)([^)]+)\)', rewrite_css_url, css_text)
+                response = HttpResponse(css_text, content_type="text/css; charset=utf-8", status=resp.status_code)
+            else:
+                content = resp.content
+                # Sniff magic bytes for proper image Content-Type so browsers render images without nosniff blocking
+                if content.startswith(b'\xff\xd8\xff'):
+                    content_type = "image/jpeg"
+                elif content.startswith(b'\x89PNG\r\n\x1a\n'):
+                    content_type = "image/png"
+                elif content.startswith(b'GIF87a') or content.startswith(b'GIF89a'):
+                    content_type = "image/gif"
+                elif content.startswith(b'RIFF') and content[8:12] == b'WEBP':
+                    content_type = "image/webp"
+                elif content.startswith(b'\x00\x00\x01\x00'):
+                    content_type = "image/x-icon"
+                elif b'<svg' in content[:250].lower():
+                    content_type = "image/svg+xml"
+
+                response = HttpResponse(content, content_type=content_type, status=resp.status_code)
+
+            # Ensure iframe can embed this proxy response and has unrestricted CORS
+            response.xframe_options_exempt = True
+            if "X-Frame-Options" in response:
+                del response["X-Frame-Options"]
+            if "Content-Security-Policy" in response:
+                del response["Content-Security-Policy"]
+            if "X-Content-Type-Options" in response:
+                del response["X-Content-Type-Options"]
+            response["Access-Control-Allow-Origin"] = "*"
+            response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+            response["Access-Control-Allow-Headers"] = "*"
+
+            return response
+        except requests.exceptions.Timeout:
+            return HttpResponse(
+                f"<div style='font-family:sans-serif;padding:30px;text-align:center;'><h3>Waktu Koneksi Habis</h3><p>Halaman web <b>{target_url}</b> membutuhkan waktu terlalu lama untuk merespons.</p><a href='{target_url}' target='_blank' style='display:inline-block;padding:8px 16px;background:#0d9488;color:#fff;text-decoration:none;border-radius:4px;'>Buka Langsung di Tab Baru</a></div>",
+                content_type="text/html",
+                status=504
+            )
+        except Exception as e:
+            return HttpResponse(
+                f"<div style='font-family:sans-serif;padding:30px;text-align:center;'><h3>Tidak Dapat Memuat Halaman Web</h3><p>{str(e)}</p><a href='{target_url}' target='_blank' style='display:inline-block;padding:8px 16px;background:#0d9488;color:#fff;text-decoration:none;border-radius:4px;'>Buka Langsung di Tab Baru</a></div>",
+                content_type="text/html",
+                status=502
+            )
+
+

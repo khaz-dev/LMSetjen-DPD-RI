@@ -46,7 +46,7 @@ import UserData from "../plugin/UserData";
 import Toast from "../plugin/Toast";
 import { useInstructorSidebarCollapse } from "./Partials/useInstructorSidebarCollapse";
 import { useDebouncedCallback } from "../../utils/useOptimization";  // ✨ PHASE 4.170: Auto-save utility
-import { getMediaUrl } from "../../utils/constants";
+import { getMediaUrl, getApiUrl } from "../../utils/constants";
 
 // Styles
 import "./CourseEditCurriculum.css";
@@ -1474,6 +1474,7 @@ function SortableLessonItem({
     const hasExistingUrlMedia = Boolean(item?.youtubeLink || item?.gdriveLink || (typeof activeMediaUrl === 'string' && activeMediaUrl.startsWith('http') && !activeMediaUrl.includes('/media/curriculum-media/')));
     const [mediaTab, setMediaTab] = useState(hasExistingUrlMedia ? 'url' : 'upload');
     const [mediaUrlInput, setMediaUrlInput] = useState(item?.youtubeLink || item?.gdriveLink || (hasExistingUrlMedia ? activeMediaUrl : ''));
+    const [isWebFullscreen, setIsWebFullscreen] = useState(false);
 
     useEffect(() => {
         if (item?.youtubeLink) {
@@ -1710,7 +1711,7 @@ function SortableLessonItem({
                         {/* Number Badge */}
                         <span className={`lesson-number-badge ${isItemQuiz ? 'bg-warning-subtle text-dark border-warning' : ''}`}>
                             <i className={`fas ${isItemQuiz ? 'fa-clipboard-check text-warning' :
-                                    isItemH5p ? 'fa-puzzle-piece text-primary' :
+                                isItemH5p ? 'fa-puzzle-piece text-primary' :
                                     isItemScorm ? 'fa-cube text-teal' :
                                         isItemAudio ? 'fa-headphones text-info' :
                                             isItemPpt ? 'fa-file-powerpoint text-warning' :
@@ -1810,7 +1811,7 @@ function SortableLessonItem({
                                     className={`form-select form-select-sm curriculum-form-control ${getValidationClass(
                                         validationState.errors[`item_${variantIndex}_${itemIndex}_quiz_id`]
                                     )}`}
-                                    style={{ paddingRight: '2.5rem', textOverflow: 'ellipsis' }}
+                                    style={{ paddingRight: '2rem', textOverflow: 'ellipsis' }}
                                     value={item?.quiz_id || ''}
                                     onChange={(e) => {
                                         const chosenId = e.target.value;
@@ -2248,15 +2249,16 @@ function SortableLessonItem({
                                             <div className="p-2 rounded-3 border bg-white shadow-xs">
                                                 <div className="d-flex align-items-center justify-content-between mb-1">
                                                     <div className="d-flex align-items-center gap-1 overflow-hidden me-2">
-                                                        <span className="badge bg-primary-subtle text-primary border border-primary-subtle py-0 px-1" style={{ fontSize: "10px" }}>
+                                                        <span className={`badge ${isItemWebLink ? 'bg-secondary-subtle text-dark border' : 'bg-primary-subtle text-primary border border-primary-subtle'} py-0 px-1`} style={{ fontSize: "10px" }}>
                                                             <i className={
                                                                 isItemAudio ? "fas fa-headphones me-1" :
                                                                     isItemPdf ? "fas fa-file-pdf me-1" :
                                                                         isItemPpt ? "fas fa-file-powerpoint me-1" :
                                                                             isItemWord ? "fas fa-file-word me-1" :
-                                                                                "fas fa-play-circle me-1"
+                                                                                isItemWebLink ? "fas fa-globe me-1 text-primary" :
+                                                                                    "fas fa-play-circle me-1"
                                                             }></i>
-                                                            {isItemAudio ? "Audio" : isItemPdf ? "PDF" : isItemPpt ? "Slide" : isItemWord ? "Dokumen" : "Video"}
+                                                            {isItemAudio ? "Audio" : isItemPdf ? "PDF" : isItemPpt ? "Slide" : isItemWord ? "Dokumen" : isItemWebLink ? "Halaman Web" : "Video"}
                                                         </span>
                                                         <span className="small text-dark fw-bold text-truncate" title={activeMediaUrl} style={{ maxWidth: "210px", fontSize: "0.8rem" }}>
                                                             {activeMediaUrl.split('/').pop().split('?')[0] || "Media Terpasang"}
@@ -2328,7 +2330,7 @@ function SortableLessonItem({
 
                                                 {/* Expandable Compact Preview Container */}
                                                 {isPreviewOpen && (
-                                                    <div className="mt-1 pt-1 border-top rounded overflow-hidden" style={{ maxHeight: (isItemPpt || isItemPdf) ? '580px' : '180px' }}>
+                                                    <div className="mt-1 pt-1 border-top rounded overflow-hidden" style={{ maxHeight: (isItemPpt || isItemPdf || isItemWebLink) ? '580px' : '180px' }}>
                                                         {isItemVideo && (activeMediaUrl.includes('youtube.com') || activeMediaUrl.includes('youtu.be')) ? (
                                                             <div className="ratio ratio-16x9 rounded overflow-hidden" style={{ maxHeight: "170px" }}>
                                                                 <iframe
@@ -2368,6 +2370,119 @@ function SortableLessonItem({
                                                                 <a href={activeMediaUrl} target="_blank" rel="noopener noreferrer" className="btn btn-xs btn-outline-primary mt-1 py-0 px-2" style={{ fontSize: "0.72rem" }}>
                                                                     <i className="fas fa-external-link-alt me-1"></i>Buka Dokumen
                                                                 </a>
+                                                            </div>
+                                                        ) : isItemWebLink ? (
+                                                            <div className="rounded border overflow-hidden bg-white shadow-xs">
+                                                                <div className="bg-light px-2 py-1 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                                                    <div className="d-flex align-items-center gap-1 overflow-hidden me-2">
+                                                                        <span className="badge bg-secondary-subtle text-dark border py-0 px-1" style={{ fontSize: "10px" }}>
+                                                                            <i className="fas fa-globe me-1 text-primary"></i>Halaman Web
+                                                                        </span>
+                                                                        <span className="small text-muted text-truncate font-monospace" style={{ fontSize: "0.75rem", maxWidth: "240px" }} title={activeMediaUrl}>
+                                                                            {activeMediaUrl}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="d-flex align-items-center gap-1">
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-xs btn-outline-secondary py-0 px-2 d-inline-flex align-items-center gap-1"
+                                                                            style={{ fontSize: "0.72rem" }}
+                                                                            onClick={() => setIsWebFullscreen(true)}
+                                                                            title="Tampilkan Pratinjau Layar Penuh"
+                                                                        >
+                                                                            <i className="fas fa-expand"></i>
+                                                                            <span>Layar Penuh</span>
+                                                                        </button>
+                                                                        <a
+                                                                            href={activeMediaUrl}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="btn btn-xs btn-outline-primary py-0 px-2 d-inline-flex align-items-center gap-1"
+                                                                            style={{ fontSize: "0.72rem" }}
+                                                                            title="Buka tautan web di tab baru"
+                                                                        >
+                                                                            <i className="fas fa-external-link-alt"></i>
+                                                                            <span>Buka di Tab Baru</span>
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="position-relative" style={{ height: "420px", backgroundColor: "#f8fafc" }}>
+                                                                    <iframe
+                                                                        src={getApiUrl(`course/web-preview/?url=${encodeURIComponent(activeMediaUrl)}`)}
+                                                                        title={item.title || "Pratinjau Halaman Web"}
+                                                                        className="w-100 h-100 border-0"
+                                                                        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads"
+                                                                        allow="fullscreen"
+                                                                        loading="lazy"
+                                                                    />
+                                                                </div>
+
+                                                                {/* Fullscreen Portal for Web Preview */}
+                                                                {isWebFullscreen && createPortal(
+                                                                    <div
+                                                                        className="modal fade show"
+                                                                        style={{
+                                                                            display: "block",
+                                                                            backgroundColor: "rgba(15, 23, 42, 0.8)",
+                                                                            backdropFilter: "blur(4px)",
+                                                                            zIndex: 99999,
+                                                                            position: "fixed",
+                                                                            top: 0,
+                                                                            left: 0,
+                                                                            width: "100vw",
+                                                                            height: "100vh"
+                                                                        }}
+                                                                        tabIndex="-1"
+                                                                        role="dialog"
+                                                                    >
+                                                                        <div className="d-flex flex-column w-100 h-100 bg-white">
+                                                                            <div className="bg-light px-3 py-2 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+                                                                                <div className="d-flex align-items-center gap-2 overflow-hidden me-2">
+                                                                                    <span className="badge bg-primary text-white py-1 px-2" style={{ fontSize: "11px" }}>
+                                                                                        <i className="fas fa-globe me-1"></i>Halaman Web Pembelajaran
+                                                                                    </span>
+                                                                                    <span className="fw-semibold text-truncate text-dark" style={{ maxWidth: "450px", fontSize: "0.9rem" }}>
+                                                                                        {item.title || "Pratinjau Halaman Web"}
+                                                                                    </span>
+                                                                                    <span className="small text-muted font-monospace text-truncate d-none d-md-inline" style={{ maxWidth: "350px", fontSize: "0.8rem" }}>
+                                                                                        ({activeMediaUrl})
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                    <a
+                                                                                        href={activeMediaUrl}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        className="btn btn-sm btn-outline-primary py-1 px-2 d-inline-flex align-items-center gap-1"
+                                                                                        style={{ fontSize: "0.8rem" }}
+                                                                                    >
+                                                                                        <i className="fas fa-external-link-alt"></i>
+                                                                                        <span>Buka di Tab Baru</span>
+                                                                                    </a>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        className="btn btn-sm btn-danger py-1 px-2 d-inline-flex align-items-center gap-1"
+                                                                                        style={{ fontSize: "0.8rem" }}
+                                                                                        onClick={() => setIsWebFullscreen(false)}
+                                                                                    >
+                                                                                        <i className="fas fa-compress"></i>
+                                                                                        <span>Tutup Layar Penuh</span>
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex-grow-1 w-100 position-relative bg-light">
+                                                                                <iframe
+                                                                                    src={getApiUrl(`course/web-preview/?url=${encodeURIComponent(activeMediaUrl)}`)}
+                                                                                    title={item.title || "Pratinjau Halaman Web"}
+                                                                                    className="w-100 h-100 border-0"
+                                                                                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads"
+                                                                                    allow="fullscreen"
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>,
+                                                                    document.body
+                                                                )}
                                                             </div>
                                                         ) : (
                                                             <div className="bg-black text-center rounded overflow-hidden">
@@ -2569,7 +2684,7 @@ function SortableLessonItem({
                                                                 type="url"
                                                                 className="form-control form-control-sm py-1"
                                                                 style={{ fontSize: "0.78rem" }}
-                                                                placeholder="Tempel tautan YouTube / Drive..."
+                                                                placeholder="Tempel tautan Web / Artikel / YouTube / Google Drive..."
                                                                 value={mediaUrlInput}
                                                                 onChange={(e) => setMediaUrlInput(e.target.value)}
                                                             />
@@ -2596,11 +2711,26 @@ function SortableLessonItem({
                                                                         handleLessonChange(variantIndex, itemIndex, "media_source", "gdrive");
                                                                         handleLessonChange(variantIndex, itemIndex, "file_type", "video");
                                                                     } else {
+                                                                        const urlClean = trimmed.toLowerCase().split('?')[0];
+                                                                        let determinedType = "link";
+                                                                        if (['.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv'].some(ext => urlClean.endsWith(ext))) {
+                                                                            determinedType = "video";
+                                                                        } else if (['.mp3', '.wav', '.ogg', '.m4a', '.aac'].some(ext => urlClean.endsWith(ext))) {
+                                                                            determinedType = "audio";
+                                                                        } else if (urlClean.endsWith('.pdf')) {
+                                                                            determinedType = "pdf";
+                                                                        } else if (['.ppt', '.pptx'].some(ext => urlClean.endsWith(ext))) {
+                                                                            determinedType = "ppt";
+                                                                        } else if (['.doc', '.docx', '.txt'].some(ext => urlClean.endsWith(ext))) {
+                                                                            determinedType = "doc";
+                                                                        }
+
                                                                         handleLessonChange(variantIndex, itemIndex, "uploadedFile", trimmed);
                                                                         handleLessonChange(variantIndex, itemIndex, "file", trimmed);
                                                                         handleLessonChange(variantIndex, itemIndex, "youtubeLink", "");
                                                                         handleLessonChange(variantIndex, itemIndex, "gdriveLink", "");
-                                                                        handleLessonChange(variantIndex, itemIndex, "media_source", "url");
+                                                                        handleLessonChange(variantIndex, itemIndex, "media_source", determinedType === "link" ? "url" : "upload");
+                                                                        handleLessonChange(variantIndex, itemIndex, "file_type", determinedType);
                                                                     }
                                                                     setTimeout(() => autoSaveCurriculum(), 100);
                                                                     Toast().fire({
@@ -6780,7 +6910,7 @@ function CourseEditCurriculum() {
                                                                     style={{ fontSize: "0.75rem" }}
                                                                     onClick={() => setScormLibraryModal(prev => ({ ...prev, filterType: 'unused' }))}
                                                                 >
-                                                                    Tak Terpakai ({ (availableScormModules || []).filter(m => !m.is_used && (!m.usage_count || m.usage_count === 0)).length })
+                                                                    Tak Terpakai ({(availableScormModules || []).filter(m => !m.is_used && (!m.usage_count || m.usage_count === 0)).length})
                                                                 </button>
                                                                 <button
                                                                     type="button"
@@ -6788,7 +6918,7 @@ function CourseEditCurriculum() {
                                                                     style={{ fontSize: "0.75rem" }}
                                                                     onClick={() => setScormLibraryModal(prev => ({ ...prev, filterType: 'used' }))}
                                                                 >
-                                                                    Digunakan ({ (availableScormModules || []).filter(m => m.is_used || (m.usage_count && m.usage_count > 0)).length })
+                                                                    Digunakan ({(availableScormModules || []).filter(m => m.is_used || (m.usage_count && m.usage_count > 0)).length})
                                                                 </button>
                                                             </div>
 

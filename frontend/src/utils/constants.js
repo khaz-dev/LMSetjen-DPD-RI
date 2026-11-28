@@ -17,6 +17,20 @@ export const DEFAULT_IMAGE_URL = "/images/placeholders/default-course.svg";
 export const DEFAULT_AVATAR_URL = "/images/placeholders/default-avatar.svg";
 export const DEFAULT_INSTRUCTOR_URL = "/images/placeholders/default-instructor.svg";
 
+// Helper function to build full API endpoint URL
+export const getApiUrl = (endpoint = '') => {
+    if (!endpoint) return API_BASE_URL;
+    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+        return endpoint;
+    }
+    let clean = endpoint.replace(/^\/+/, '');
+    if (clean.startsWith('api/v1/')) {
+        clean = clean.substring('api/v1/'.length);
+    }
+    const base = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
+    return `${base}${clean}`;
+};
+
 // Helper function to get full media URL
 // ✨ PHASE 4.30: Fixed to use correct backend origin for media files in development
 // In development: points to http://127.0.0.1:8001/media/ (Django backend)

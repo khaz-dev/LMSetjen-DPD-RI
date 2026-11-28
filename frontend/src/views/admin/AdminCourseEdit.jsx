@@ -7,7 +7,7 @@ import Swal from "sweetalert2";
 import Footer from "../partials/Footer";
 import AdminHeader from "../partials/AdminHeader";
 import { getImageUrl } from "../../utils/courseUtils";
-import { getMediaUrl } from "../../utils/constants";
+import { getMediaUrl, getApiUrl } from "../../utils/constants";
 import TagSelector from "../instructor/components/TagSelector";
 import LessonCompletionQuestionEditor from "../../components/CourseEdit/LessonCompletionQuestionEditor";
 import "./AdminCourseEdit.css";
@@ -450,7 +450,7 @@ function AdminLessonDescriptionEditor({ item, secIndex, itemIndex, updateLecture
                     className="ace-textarea form-control form-control-sm"
                     style={{
                         fontSize: "0.82rem",
-                        lineHeight: 1.5,
+                        lineHeight: 1,
                         minHeight: "56px",
                         maxHeight: "150px",
                         resize: "vertical"
@@ -2754,10 +2754,10 @@ function AdminCourseEdit() {
         const questionNumber = isInline && qIndex !== null ? qIndex + 1 : (isEditing ? questions.findIndex(x => (x.question_id || x.id) === (editingQuestion.question_id || editingQuestion.id)) + 1 : null);
 
         return (
-            <div className="ace-question-form-card mb-2.5">
+            <div className="ace-question-form-card mb-2">
                 <div className="ace-card-header is-teal-subtle d-flex justify-content-between align-items-center py-2 px-3">
                     <div className="d-flex align-items-center gap-2">
-                        <span className="badge bg-teal text-white fw-bold px-2 py-0.5" style={{ fontSize: "0.72rem", borderRadius: "5px" }}>
+                        <span className="badge bg-teal text-white fw-bold px-2 py-0" style={{ fontSize: "0.72rem", borderRadius: "5px" }}>
                             {questionNumber ? `Soal Q${questionNumber}` : "Soal Baru"}
                         </span>
                         <h6 className="ace-card-title mb-0" style={{ color: "#0f766e", fontWeight: 700, fontSize: "0.85rem" }}>
@@ -2776,7 +2776,7 @@ function AdminCourseEdit() {
                         title="Batal / Tutup Editor"
                     ></button>
                 </div>
-                <div className="ace-card-body p-2.5 px-3">
+                <div className="ace-card-body p-2 px-3">
                     <form onSubmit={handleSaveQuestion}>
                         <div className="mb-2">
                             <div className="d-flex justify-content-between align-items-center mb-1">
@@ -2798,7 +2798,7 @@ function AdminCourseEdit() {
                             />
                         </div>
 
-                        <div className="d-flex align-items-center justify-content-between mb-1.5 pt-1 border-top">
+                        <div className="d-flex align-items-center justify-content-between mb-1 pt-1 border-top">
                             <label className="ace-form-label fw-bold mb-0" style={{ fontSize: "0.74rem" }}>
                                 <i className="fas fa-list-check text-teal me-1"></i>
                                 <span>Pilihan Jawaban & Kunci Benar <strong className="text-danger">*</strong></span>
@@ -2814,7 +2814,7 @@ function AdminCourseEdit() {
                                 return (
                                     <div key={cIdx} className="col-md-6">
                                         <div
-                                            className={`p-1.5 px-2 rounded-2 border d-flex align-items-center gap-2 transition-all ${isChoiceCorrect
+                                            className={`p-1 px-2 rounded-2 border d-flex align-items-center gap-2 transition-all ${isChoiceCorrect
                                                 ? "bg-teal-subtle border-teal text-teal shadow-xs"
                                                 : "bg-white"
                                                 }`}
@@ -2874,7 +2874,7 @@ function AdminCourseEdit() {
                                             />
                                             {isChoiceCorrect && (
                                                 <span
-                                                    className="badge bg-teal bg-opacity-15 text-teal border border-teal border-opacity-25 py-1 px-1.5 d-none d-sm-inline-flex align-items-center gap-1"
+                                                    className="badge bg-teal bg-opacity-15 text-teal border border-teal border-opacity-25 py-1 px-1 d-none d-sm-inline-flex align-items-center gap-1"
                                                     style={{ fontSize: "0.68rem" }}
                                                 >
                                                     <i className="fas fa-check-circle"></i> Kunci
@@ -2894,7 +2894,7 @@ function AdminCourseEdit() {
                             <div className="d-flex align-items-center gap-2 ms-auto">
                                 <button
                                     type="button"
-                                    className="btn btn-sm btn-outline-secondary py-1 px-2.5"
+                                    className="btn btn-sm btn-outline-secondary py-1 px-2"
                                     style={{ fontSize: "0.78rem" }}
                                     onClick={() => {
                                         setIsAddingQuestion(false);
@@ -3951,8 +3951,13 @@ function AdminCourseEdit() {
                                                             const isItemDoc = !isItemQuiz && !isItemScorm && (resolvedType === "document" || itm.file_type === "document" || itm.file_type === "pdf" || fileLower.endsWith(".pdf") || fileLower.endsWith(".doc") || fileLower.endsWith(".docx"));
                                                             const isItemPpt = !isItemQuiz && !isItemScorm && (resolvedType === "presentation" || itm.file_type === "presentation" || itm.file_type === "ppt" || fileLower.includes("presentation") || fileLower.endsWith(".pptx") || fileLower.endsWith(".ppt"));
                                                             const isItemAudio = !isItemQuiz && !isItemScorm && (resolvedType === "audio" || itm.file_type === "audio" || fileLower.endsWith(".mp3") || fileLower.endsWith(".wav") || fileLower.endsWith(".ogg") || fileLower.endsWith(".m4a"));
-                                                            const isItemVideo = !isItemQuiz && !isItemDoc && !isItemPpt && !isItemAudio && !isItemScorm;
-                                                            const effectiveBadgeType = isItemQuiz ? "quiz" : isItemScorm ? "scorm" : isItemDoc ? "document" : isItemPpt ? "presentation" : isItemAudio ? "audio" : "video";
+                                                            const isItemWebLink = !isItemQuiz && !isItemScorm && !isItemDoc && !isItemPpt && !isItemAudio && (
+                                                                resolvedType === "link" ||
+                                                                itm.file_type === "link" ||
+                                                                (Boolean(itm.file) && itm.file.startsWith("http") && !itm.file.includes("youtube.com") && !itm.file.includes("youtu.be") && !itm.file.includes("drive.google.com") && !['.mp4', '.webm', '.ogv', '.mov', '.avi', '.mkv'].some(ext => fileLower.endsWith(ext)))
+                                                            );
+                                                            const isItemVideo = !isItemQuiz && !isItemDoc && !isItemPpt && !isItemAudio && !isItemScorm && !isItemWebLink;
+                                                            const effectiveBadgeType = isItemQuiz ? "quiz" : isItemScorm ? "scorm" : isItemDoc ? "document" : isItemPpt ? "presentation" : isItemAudio ? "audio" : isItemWebLink ? "link" : "video";
                                                             const isPreviewOpen = Boolean(previewingItems[itemKey]);
                                                             const isUploading = Boolean(uploadingLecture[itemKey]);
                                                             const uploadProg = lectureUploadProgress[itemKey] || 0;
@@ -4012,6 +4017,7 @@ function AdminCourseEdit() {
                                                                                 {isItemDoc && <><i className="fas fa-file-pdf"></i> Dokumen PDF</>}
                                                                                 {isItemPpt && <><i className="fas fa-file-powerpoint"></i> Slide Presentasi</>}
                                                                                 {isItemAudio && <><i className="fas fa-headphones"></i> Audio Podcast</>}
+                                                                                {isItemWebLink && <><i className="fas fa-globe text-primary"></i> Halaman Web</>}
                                                                                 {isItemScorm && <><i className="fas fa-boxes-stacked text-teal"></i> Modul SCORM</>}
                                                                                 {isItemQuiz && <><i className="fas fa-clipboard-question"></i> Kuis Terlampir</>}
                                                                             </span>
@@ -4189,7 +4195,7 @@ function AdminCourseEdit() {
                                                                                 </div>
                                                                             ) : isItemScorm ? (
                                                                                 <div className="col-12">
-                                                                                    <div className="p-2.5 bg-light rounded border mb-2" style={{ borderLeft: "4px solid #8b5cf6" }}>
+                                                                                    <div className="p-2 bg-light rounded border mb-2" style={{ borderLeft: "4px solid #8b5cf6" }}>
                                                                                         <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
                                                                                             <div className="d-flex align-items-center gap-3">
                                                                                                 <div className="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0" style={{ width: "36px", height: "36px", backgroundColor: "#8b5cf6" }}>
@@ -4414,6 +4420,7 @@ function AdminCourseEdit() {
                                                                                             {isItemDoc && <i className="fas fa-file-pdf text-danger"></i>}
                                                                                             {isItemPpt && <i className="fas fa-file-powerpoint text-warning"></i>}
                                                                                             {isItemAudio && <i className="fas fa-headphones text-info"></i>}
+                                                                                            {isItemWebLink && <i className="fas fa-globe text-primary"></i>}
                                                                                             <span className="fw-semibold small text-dark text-truncate">{itm.title || "Pratinjau Media Pembelajaran"}</span>
                                                                                         </div>
                                                                                         <div className="d-flex align-items-center gap-2 flex-shrink-0">
@@ -4458,6 +4465,39 @@ function AdminCourseEdit() {
                                                                                             <DocumentPreview fileUrl={itm.file} title={itm.title} />
                                                                                         ) : isItemPpt ? (
                                                                                             <PresentationPreview fileUrl={itm.file} />
+                                                                                        ) : isItemWebLink ? (
+                                                                                            <div className="rounded border overflow-hidden bg-white shadow-xs">
+                                                                                                <div className="bg-light px-3 py-2 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                                                                    <div className="d-flex align-items-center gap-2 overflow-hidden me-2">
+                                                                                                        <span className="badge bg-secondary-subtle text-dark border py-1 px-2" style={{ fontSize: "11px" }}>
+                                                                                                            <i className="fas fa-globe me-1 text-primary"></i>Halaman Web
+                                                                                                        </span>
+                                                                                                        <span className="small text-muted text-truncate font-monospace" style={{ fontSize: "0.8rem", maxWidth: "350px" }} title={itm.file}>
+                                                                                                            {itm.file}
+                                                                                                        </span>
+                                                                                                    </div>
+                                                                                                    <a
+                                                                                                        href={itm.file}
+                                                                                                        target="_blank"
+                                                                                                        rel="noopener noreferrer"
+                                                                                                        className="btn btn-xs btn-outline-primary py-1 px-3 d-inline-flex align-items-center gap-1"
+                                                                                                        style={{ fontSize: "0.75rem" }}
+                                                                                                    >
+                                                                                                        <i className="fas fa-external-link-alt"></i>
+                                                                                                        <span>Buka di Tab Baru</span>
+                                                                                                    </a>
+                                                                                                </div>
+                                                                                                <div className="position-relative" style={{ height: "460px", backgroundColor: "#f8fafc" }}>
+                                                                                                    <iframe
+                                                                                                        src={getApiUrl(`course/web-preview/?url=${encodeURIComponent(itm.file)}`)}
+                                                                                                        title={itm.title || "Pratinjau Halaman Web"}
+                                                                                                        className="w-100 h-100 border-0"
+                                                                                                        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads"
+                                                                                                        allow="fullscreen"
+                                                                                                        loading="lazy"
+                                                                                                    />
+                                                                                                </div>
+                                                                                            </div>
                                                                                         ) : (
                                                                                             /* VIDEO (Default or isItemVideo) */
                                                                                             <div className="ace-preview-video-container">
@@ -5993,7 +6033,7 @@ function AdminCourseEdit() {
                                         {/* Admin Approval Audit Box */}
                                         <div className="p-3 mb-3 rounded border" style={{ backgroundColor: "#f8fafc" }}>
                                             <div className="d-flex align-items-start justify-content-between mb-2">
-                                                <span className="small fw-bold text-uppercase text-muted" style={{ letterSpacing: "0.5px" }}>
+                                                <span className="small fw-bold text-uppercase text-muted" style={{ letterSpacing: "0px" }}>
                                                     <i className="fas fa-check-circle text-teal me-1"></i> Status Persetujuan Admin
                                                 </span>
                                                 {course?.approved_by_detail || course?.approved_by_name ? (
@@ -6043,7 +6083,7 @@ function AdminCourseEdit() {
                                                             {course?.approved_by_detail?.email || course?.approved_by_detail?.username || "-"}
                                                         </div>
                                                         {(course?.approved_by_detail?.approval_date || course?.approval_date) && (
-                                                            <div className="small text-teal mt-0.5" style={{ fontSize: "0.78rem" }}>
+                                                            <div className="small text-teal mt-0" style={{ fontSize: "0.78rem" }}>
                                                                 <i className="far fa-calendar-check me-1"></i>
                                                                 Disetujui pada: {new Date(course?.approved_by_detail?.approval_date || course?.approval_date).toLocaleString("id-ID", {
                                                                     day: "numeric",
