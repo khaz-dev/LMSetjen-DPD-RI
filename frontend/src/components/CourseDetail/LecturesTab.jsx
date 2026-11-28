@@ -1376,7 +1376,7 @@ const LecturesTab = ({
                     const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
                     
                     return (
-                        <div className="curriculum-mini-progress">
+                        <div className="curriculum-mini-progress ms-auto">
                             <span className="curriculum-mini-progress-text">
                                 <i className="fas fa-circle-check text-emerald me-1"></i>
                                 {completedLessons}/{totalLessons} Selesai ({progressPercentage}%)

@@ -39,6 +39,7 @@
     border: 1px solid #e2e8f0;
     padding: 0.3rem 0.75rem;
     border-radius: 20px;
+    margin-left: auto !important;
 }
 
 .curriculum-mini-progress-text {

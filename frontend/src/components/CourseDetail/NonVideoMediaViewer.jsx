@@ -570,24 +570,13 @@ const NonVideoMediaViewer = forwardRef(({
                 </div>
 
                 <div className="video-player-header-right d-flex align-items-center gap-2">
-                    {/* Indikator Timer Membaca Dokumen (PPTX & PDF) di Header */}
-                    {(isPdf || isPresentation) && !isCompleted && (
-                        <div
-                            className="d-none d-sm-inline-flex align-items-center gap-1 px-2 py-1 rounded bg-light border text-muted"
-                            style={{ fontSize: '11px' }}
-                            title={isDocReadyToComplete ? "Waktu membaca wajib terpenuhi" : `Waktu membaca wajib tersisa: ${formatTime(remainingDocSeconds)}`}
-                        >
-                            <i className={`fas ${isDocReadyToComplete ? 'fa-check text-success' : 'fa-hourglass-half text-warning'}`}></i>
-                            <span>
-                                {isDocReadyToComplete ? 'Waktu Membaca Selesai' : `Sisa: ${formatTime(remainingDocSeconds)}`}
-                            </span>
-                        </div>
-                    )}
-
                     {isCompleted ? (
                         <span className="badge bg-success text-white px-2 py-1" style={{ fontSize: '11px' }}>
                             <i className="fas fa-check-circle me-1"></i>Selesai
                         </span>
+                    ) : (isPdf || isPresentation) ? (
+                        // ✨ PDF & Presentasi: Timer dan Tombol Selesaikan Modul cukup di bottom bar (tidak diduplikasi di header)
+                        null
                     ) : isAudio ? (
                         // Audio TIDAK memiliki tombol manual Tandai Selesai (selesai otomatis via onEnded + pertanyaan)
                         <span className="badge bg-light text-secondary border px-2 py-1" style={{ fontSize: '11px' }} title="Dengarkan seluruh audio hingga selesai untuk menyelesaikan materi">
@@ -596,30 +585,30 @@ const NonVideoMediaViewer = forwardRef(({
                     ) : (
                         <button
                             type="button"
-                            className={`btn btn-sm ${(isPdf || isPresentation) && !isDocReadyToComplete ? 'btn-outline-secondary' : 'btn-teal'} py-1 px-2 fw-semibold`}
+                            className="btn btn-sm btn-teal py-1 px-2 fw-semibold"
                             style={{ fontSize: '11px', borderRadius: '6px' }}
                             onClick={handleMarkComplete}
-                            disabled={((isPdf || isPresentation) && !isDocReadyToComplete) || isCheckingQuestion}
-                            title={((isPdf || isPresentation) && !isDocReadyToComplete) ? `Harap pelajari materi hingga waktu membaca selesai: ${formatTime(remainingDocSeconds)}` : "Tandai materi ini sudah Anda baca / pelajari"}
+                            disabled={isCheckingQuestion}
+                            title="Tandai materi ini sudah Anda baca / pelajari"
                         >
                             {isCheckingQuestion ? (
                                 <><span className="spinner-border spinner-border-sm me-1" role="status"></span>Cek...</>
-                            ) : ((isPdf || isPresentation) && !isDocReadyToComplete) ? (
-                                <><i className="fas fa-lock me-1"></i>Tandai Selesai ({formatTime(remainingDocSeconds)})</>
                             ) : (
                                 <><i className="fas fa-check me-1"></i>Tandai Selesai</>
                             )}
                         </button>
                     )}
-                    {/* Fullscreen Toggle Button */}
-                    <button
-                        type="button"
-                        className="btn btn-sm btn-link text-muted p-1"
-                        onClick={toggleFullscreen}
-                        title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
-                    >
-                        <i className={`fas fa-${isFullscreen ? 'compress' : 'expand'}`}></i>
-                    </button>
+                    {/* Fullscreen Toggle Button - Khusus PDF sudah tersedia terpadu di pdf-toolbar */}
+                    {!isPdf && (
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-link text-muted p-1"
+                            onClick={toggleFullscreen}
+                            title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+                        >
+                            <i className={`fas fa-${isFullscreen ? 'compress' : 'expand'}`}></i>
+                        </button>
+                    )}
 
                     {onClose && (
                         <button

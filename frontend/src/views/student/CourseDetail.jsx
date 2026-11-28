@@ -117,6 +117,9 @@ function CourseDetail() {
     const [isLessonDescriptionExpanded, setIsLessonDescriptionExpanded] = useState(true);
     const lessonDescriptionRef = useRef(null);
 
+    // ✨ Tampilan Tag Kursus: 1 baris default, toggle show/hide seluruh tag
+    const [showAllCourseTags, setShowAllCourseTags] = useState(false);
+
     const [autoplayVideo, setAutoplayVideo] = useState(false);  // ✨ PHASE 4.103: Track if video should autoplay
 
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);  // ✨ PHASE 4.105: Track if video is currently playing
@@ -8721,19 +8724,47 @@ function CourseDetail() {
 
                                                         {course?.course?.tags && Array.isArray(course.course.tags) && course.course.tags.length > 0 && (
 
-                                                            <div className="course-tags-strip mb-1" data-testid="course-tags-section">
+                                                            <div className={`course-tags-container mb-1 ${showAllCourseTags ? 'is-expanded' : 'is-collapsed'}`} data-testid="course-tags-section">
 
-                                                                {course.course.tags.map((tag) => (
+                                                                <div className="course-tags-strip">
 
-                                                                    <span key={tag.id} className="course-detail-tag-badge">
+                                                                    {course.course.tags.map((tag) => (
 
-                                                                        <i className="fas fa-bookmark me-1"></i>
+                                                                        <span key={tag.id} className="course-detail-tag-badge">
 
-                                                                        {tag.title}
+                                                                            <i className="fas fa-bookmark me-1"></i>
 
-                                                                    </span>
+                                                                            {tag.title}
 
-                                                                ))}
+                                                                        </span>
+
+                                                                    ))}
+
+                                                                </div>
+
+                                                                {course.course.tags.length > 1 && (
+
+                                                                    <button
+
+                                                                        type="button"
+
+                                                                        className="course-tags-toggle-btn"
+
+                                                                        onClick={() => setShowAllCourseTags(prev => !prev)}
+
+                                                                        title={showAllCourseTags ? "Sembunyikan tag lainnya" : "Tampilkan seluruh tag kursus"}
+
+                                                                        aria-expanded={showAllCourseTags}
+
+                                                                    >
+
+                                                                        <i className={`fas ${showAllCourseTags ? 'fa-chevron-up' : 'fa-tags'}`}></i>
+
+                                                                        <span>{showAllCourseTags ? 'Tutup' : `Semua (${course.course.tags.length})`}</span>
+
+                                                                    </button>
+
+                                                                )}
 
                                                             </div>
 
@@ -8776,14 +8807,6 @@ function CourseDetail() {
                                                                 </span>
 
                                                             )}
-
-                                                            <span className={`course-status-badge ${completionPercentage === 100 ? "completed" : "in-progress"}`}>
-
-                                                                <i className={`fas ${completionPercentage === 100 ? "fa-circle-check text-success-bright" : "fa-chart-line text-teal-accent"} me-1`}></i>
-
-                                                                {completionPercentage === 100 ? "Tuntas" : `${completionPercentage || 0}% Selesai`}
-
-                                                            </span>
 
                                                         </div>
 
