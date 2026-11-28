@@ -15,7 +15,7 @@
     backdrop-filter: blur(5px) !important;
     -webkit-backdrop-filter: blur(5px) !important;
     transition: background-color 0.2s ease !important;
-    z-index: 99999 !important;
+    z-index: 2147483647 !important;
 }
 
 /* Ensure SweetAlert2 renders properly inside custom containers / Fullscreen elements */

@@ -76,7 +76,7 @@ function Courses() {
         }
     };
 
-    // KPI Metrics calculation
+    // KPI Metrics calculation with Monev support
     const metrics = useMemo(() => {
         const total = courses.length;
         if (total === 0) {
@@ -85,18 +85,42 @@ function Courses() {
                 publishedCourses: 0,
                 draftCourses: 0,
                 totalStudents: 0,
+                avgCompletionRate: 0,
+                totalPendingIntegrity: 0,
             };
         }
 
-        const published = courses.filter((c) => {
+        const publishedList = courses.filter((c) => {
             const status = getActualCourseStatus(c);
             return status.status === "Published" || c.is_published_version === true;
-        }).length;
+        });
+
+        const published = publishedList.length;
 
         const draft = courses.filter((c) => {
             const status = getActualCourseStatus(c);
             return status.status === "Draft" || status.status === "Review" || status.status === "Rejected";
         }).length;
+
+        let totalGraduated = 0;
+        let totalPublishedStudents = 0;
+        let totalPendingIntegrity = 0;
+
+        publishedList.forEach((c) => {
+            if (Array.isArray(c.students)) {
+                totalPublishedStudents += c.students.length;
+                totalGraduated += c.students.filter(s =>
+                    Boolean(s.certificate) ||
+                    s.completion_percentage === 100 ||
+                    (s.completion_metrics && s.completion_metrics.completed)
+                ).length;
+                totalPendingIntegrity += c.students.filter(s => s.integrity_status === 'pending_review').length;
+            }
+        });
+
+        const avgCompletionRate = totalPublishedStudents > 0
+            ? Math.round((totalGraduated / totalPublishedStudents) * 100)
+            : 0;
 
         const totalStudents = courses.reduce((acc, c) => {
             const count = Array.isArray(c.students)
@@ -110,6 +134,8 @@ function Courses() {
             publishedCourses: published,
             draftCourses: draft,
             totalStudents: totalStudents,
+            avgCompletionRate: avgCompletionRate,
+            totalPendingIntegrity: totalPendingIntegrity,
         };
     }, [courses]);
 
@@ -273,7 +299,10 @@ function Courses() {
                                                 <span className="metric-value">{metrics.publishedCourses}</span>
                                                 <span className="metric-label">Terbit & Aktif</span>
                                             </div>
-                                            <span className="metric-badge bg-emerald-subtle text-emerald">Bisa Diakses</span>
+                                            <span className="metric-badge bg-emerald-subtle text-emerald" title={`Rata-rata kelulusan kursus terbit: ${metrics.avgCompletionRate}%`}>
+                                                <i className="fas fa-chart-line me-1"></i>
+                                                Monev Aktif ({metrics.avgCompletionRate}% Lulus)
+                                            </span>
                                         </div>
 
                                         <div className="course-metric-card">
@@ -298,6 +327,34 @@ function Courses() {
                                             <span className="metric-badge bg-purple-subtle text-purple">Peserta Terdaftar</span>
                                         </div>
                                     </div>
+
+                                    {/* 2.5 Monev Informative Banner for Published Courses */}
+                                    {metrics.publishedCourses > 0 && (
+                                        <div className="courses-monev-info-banner">
+                                            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <div className="monev-info-icon-box">
+                                                        <i className="fas fa-chart-line text-teal"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div className="monev-info-title">
+                                                            <strong>Monitoring &amp; Evaluasi Kursus Terbit</strong>
+                                                            <span className="badge bg-teal-subtle text-teal ms-2">Monev Instruktur</span>
+                                                        </div>
+                                                        <div className="monev-info-desc">
+                                                            Pantau efektivitas pembelajaran Pre &rarr; Post-Test, ranking kompetensi peserta, verifikasi integritas ujian, dan unduh laporan resmi.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {metrics.totalPendingIntegrity > 0 && (
+                                                    <span className="badge bg-warning-subtle text-amber-800 border border-warning px-2 py-1">
+                                                        <i className="fas fa-triangle-exclamation me-1"></i>
+                                                        {metrics.totalPendingIntegrity} Ujian Menunggu Verifikasi
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* 3. Integrated Compact Control Toolbar (Filter & Search) */}
                                     <div className="courses-control-bar">
@@ -332,9 +389,9 @@ function Courses() {
                                                     onChange={(e) => setSelectedStatus(e.target.value)}
                                                     title="Filter berdasarkan status"
                                                 >
-                                                    <option value="all">Semua Status</option>
-                                                    <option value="Published">Dipublikasikan</option>
-                                                    <option value="Draft">Draf</option>
+                                                    <option value="all">Semua Status ({courses.length})</option>
+                                                    <option value="Published">Dipublikasikan — Monev Aktif ({metrics.publishedCourses})</option>
+                                                    <option value="Draft">Draf ({metrics.draftCourses})</option>
                                                     <option value="Review">Menunggu Review</option>
                                                     <option value="Rejected">Ditolak</option>
                                                 </select>
@@ -447,7 +504,7 @@ function Courses() {
                                     {/* 4. Courses Display (Grid or List Mode) */}
                                     <div className="courses-items-container">
                                         {filteredCourses?.length > 0 ? (
-                                            <div className="row g-3 courses-grid-row">
+                                            <div className={`row ${viewMode === "list" ? "g-2 courses-list-row" : "g-3"} courses-grid-row`}>
                                                 {filteredCourses.map((course, index) => (
                                                     <CourseCard
                                                         key={course.course_id || course.id || index}

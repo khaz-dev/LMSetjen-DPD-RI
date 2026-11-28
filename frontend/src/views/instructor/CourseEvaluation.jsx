@@ -48,7 +48,7 @@ function CourseEvaluation() {
 
     return (
         <>
-            <BaseHeader title={`Evaluasi & Peringkat - ${course?.title || "Kursus"}`} />
+            <BaseHeader title={`Monitoring & Evaluasi - ${course?.title || "Kursus"}`} />
             <section className="course-evaluation-page courses-container courses-main-section">
                 <div className="container header-container-aligned">
                     <Header />
@@ -59,7 +59,7 @@ function CourseEvaluation() {
                             {/* Compact & Unified Course Evaluation Header Card */}
                             {loading ? (
                                 <div className="ce-compact-header-card d-flex align-items-center justify-content-center py-3">
-                                    <LoadingSpinner message="Memuat informasi evaluasi kursus..." />
+                                    <LoadingSpinner message="Memuat informasi monitoring & evaluasi kursus..." />
                                 </div>
                             ) : (
                                 <div className="ce-compact-header-card">
@@ -88,7 +88,7 @@ function CourseEvaluation() {
                                                     <span>Kursus Saya</span>
                                                 </Link>
                                                 <span className="ce-badge-tag ce-badge-eval">
-                                                    <i className="fas fa-chart-line"></i> Evaluasi & Analitik
+                                                    <i className="fas fa-chart-line"></i> Monitoring & Evaluasi
                                                 </span>
                                                 <span className="ce-badge-tag ce-badge-muted">
                                                     ID: #{course?.course_id || course_id}
@@ -118,12 +118,12 @@ function CourseEvaluation() {
                                             </div>
 
                                             <h2 className="ce-course-title" title={course?.title}>
-                                                {course?.title || "Evaluasi Kursus"}
+                                                {course?.title || "Monitoring & Evaluasi Kursus"}
                                             </h2>
 
                                             <div className="ce-subtext">
                                                 <i className="fas fa-info-circle text-teal me-1"></i>
-                                                Rekapitulasi efektivitas pembelajaran Pre &rarr; Post-Test, ulasan kepuasan peserta, perolehan XP, dan pantauan integritas ujian.
+                                                Monitoring progres belajar, efektivitas Pre &rarr; Post-Test, ranking kompetensi ASN, verifikasi integritas ujian, dan rekapitulasi kepuasan peserta.
                                             </div>
                                         </div>
 

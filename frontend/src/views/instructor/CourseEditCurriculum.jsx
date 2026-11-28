@@ -842,6 +842,7 @@ function SortableLessonItem({
     setExtractedDuration, // ✨ PHASE 4.204: Setter for extracted duration state
     isElearningScorm,
     onPreviewScorm,
+    onOpenScormLibrary,
     courseQuizzes = [],
     availableScormModules = [],
     setAvailableScormModules
@@ -1563,6 +1564,16 @@ function SortableLessonItem({
                                                     <span className="fw-semibold" style={{ lineHeight: 1 }}>{isItemH5p ? 'Uji Coba H5P' : 'Uji Coba SCORM'}</span>
                                                 </button>
                                                 <div className="d-flex align-items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-xs btn-outline-teal d-inline-flex align-items-center justify-content-center py-1 px-2 shadow-xs"
+                                                        title="Buka pustaka modul interaktif untuk melihat daftar atau membersihkan paket duplikasi"
+                                                        onClick={() => onOpenScormLibrary && onOpenScormLibrary(variantIndex, itemIndex)}
+                                                        style={{ fontSize: "0.725rem", lineHeight: 1, verticalAlign: "middle" }}
+                                                    >
+                                                        <i className="fas fa-boxes-stacked me-1" style={{ fontSize: "0.7rem", lineHeight: 1 }}></i>
+                                                        <span style={{ lineHeight: 1 }}>Pustaka</span>
+                                                    </button>
                                                     <label
                                                         className="btn btn-xs btn-outline-secondary d-inline-flex align-items-center justify-content-center py-1 px-2 mb-0 shadow-xs"
                                                         title="Ganti paket modul interaktif"
@@ -1633,13 +1644,35 @@ function SortableLessonItem({
                                                                     defaultValue=""
                                                                     onChange={(e) => handleSelectExistingModule(e.target.value)}
                                                                 >
-                                                                    <option value="" disabled>-- Atau pilih paket dari pustaka --</option>
+                                                                    <option value="" disabled>-- Atau pilih paket dari pustaka ({availableScormModules.length} tersedia) --</option>
                                                                     {availableScormModules.map(m => (
                                                                         <option key={m.id} value={m.id}>
-                                                                            {m.judul} ({m.module_type === 'h5p' ? 'H5P Interaktif' : m.module_type === 'scorm_12' ? 'SCORM 1.2' : m.module_type.toUpperCase()})
+                                                                            {m.judul} ({m.module_type === 'h5p' ? 'H5P' : 'SCORM 1.2'}) {m.is_used ? '✓ Digunakan' : '(Tak Terpakai)'}
                                                                         </option>
                                                                     ))}
                                                                 </select>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-outline-teal btn-sm py-1 px-2 d-flex align-items-center gap-1 text-nowrap shadow-xs"
+                                                                    style={{ fontSize: "0.75rem", lineHeight: 1 }}
+                                                                    title="Buka Pengelola Pustaka Modul untuk menghapus paket duplikasi atau mengelola modul"
+                                                                    onClick={() => onOpenScormLibrary && onOpenScormLibrary(variantIndex, itemIndex)}
+                                                                >
+                                                                    <i className="fas fa-boxes-stacked"></i>
+                                                                    <span>Kelola</span>
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                        {(!availableScormModules || availableScormModules.length === 0) && (
+                                                            <div className="mt-1 d-flex justify-content-end">
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-link btn-xs text-muted text-decoration-none p-0"
+                                                                    style={{ fontSize: "0.72rem" }}
+                                                                    onClick={() => onOpenScormLibrary && onOpenScormLibrary(variantIndex, itemIndex)}
+                                                                >
+                                                                    <i className="fas fa-boxes-stacked me-1"></i>Pustaka Modul
+                                                                </button>
                                                             </div>
                                                         )}
                                                     </div>
@@ -2131,6 +2164,14 @@ function CourseEditCurriculum() {
         url: "",
         moduleType: "scorm_12",
         isFullscreen: false
+    });
+    // ✨ State for SCORM / H5P Library Management Modal
+    const [scormLibraryModal, setScormLibraryModal] = useState({
+        isOpen: false,
+        activeVariantIndex: null,
+        activeItemIndex: null,
+        searchTerm: "",
+        filterType: "all", // 'all' | 'unused' | 'used'
     });
     const [scormPlayerStatus, setScormPlayerStatus] = useState("not attempted");
     const [scormPlayerScore, setScormPlayerScore] = useState(null);
@@ -3494,6 +3535,212 @@ function CourseEditCurriculum() {
                 text: "Silakan masukkan angka yang valid (detik)"
             });
         }
+    };
+
+    // ✨ SCORM & H5P Library Management Handlers
+    const handleOpenScormLibrary = (variantIndex = null, itemIndex = null) => {
+        setScormLibraryModal({
+            isOpen: true,
+            activeVariantIndex: variantIndex,
+            activeItemIndex: itemIndex,
+            searchTerm: "",
+            filterType: "all"
+        });
+    };
+
+    const handleDeleteScormModule = async (module) => {
+        if (!module) return;
+        const isUsed = Boolean(module.is_used) || Boolean(module.usage_count > 0);
+
+        const confirmResult = await Swal.fire({
+            title: `Hapus Paket Modul?`,
+            html: `
+                <div class="text-start">
+                    <p class="mb-2">Apakah Anda yakin ingin menghapus paket modul <strong>"${module.judul}"</strong>?</p>
+                    ${isUsed ? `
+                        <div class="alert alert-warning py-2 px-3 small mb-0">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>Perhatian:</strong> Modul ini sedang digunakan pada <strong>${module.usage_count} materi kurikulum</strong>. Tautan materi akan dilepaskan secara otomatis jika modul ini dihapus.
+                        </div>
+                    ` : `
+                        <div class="alert alert-info py-2 px-3 small mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Modul ini <strong>tidak digunakan</strong> pada materi mana pun (duplikasi / arsip). Berkas ZIP dan folder ekstraksi fisik di server akan dibersihkan permanen.
+                        </div>
+                    `}
+                </div>
+            `,
+            icon: isUsed ? 'warning' : 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Ya, Hapus dari Server',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            customClass: {
+                confirmButton: 'btn btn-danger btn-sm px-3 shadow-sm',
+                cancelButton: 'btn btn-secondary btn-sm px-3 shadow-sm'
+            },
+            buttonsStyling: false
+        });
+
+        if (!confirmResult.isConfirmed) return;
+
+        try {
+            Swal.fire({
+                title: 'Menghapus Modul...',
+                text: 'Membersihkan berkas paket dari server...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const res = await useAxios.delete(`teacher/upload-elearning-module/?module_id=${module.id}`);
+
+            // Perbarui state availableScormModules
+            setAvailableScormModules(prev => (prev || []).filter(m => m.id !== module.id));
+
+            // Jika ada materi di kurikulum yang sedang memakai modul ini, lepaskan
+            setVariants(prevVariants => {
+                let changed = false;
+                const nextVariants = prevVariants.map(sec => {
+                    const nextItems = sec.items.map(it => {
+                        if (String(it.learning_module_id) === String(module.id)) {
+                            changed = true;
+                            return {
+                                ...it,
+                                learning_module_id: null,
+                                learning_module_info: null,
+                                file_type: null,
+                                media_source: "upload"
+                            };
+                        }
+                        return it;
+                    });
+                    return { ...sec, items: nextItems };
+                });
+                if (changed) {
+                    setTimeout(() => autoSaveCurriculum(), 150);
+                }
+                return nextVariants;
+            });
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Modul Berhasil Dihapus',
+                text: res.data?.message || `Paket modul "${module.judul}" berhasil dibersihkan dari server.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } catch (err) {
+            console.error("Error deleting scorm module:", err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menghapus Modul',
+                text: err.response?.data?.error || err.response?.data?.message || 'Terjadi kesalahan saat menghapus paket modul dari server.'
+            });
+        }
+    };
+
+    const handleCleanupUnusedScormModules = async () => {
+        const unusedModules = (availableScormModules || []).filter(m => !m.is_used && (!m.usage_count || m.usage_count === 0));
+        if (unusedModules.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Tidak Ada Modul Duplikasi/Tak Terpakai',
+                text: 'Semua modul interaktif di pustaka saat ini sedang digunakan pada kurikulum.',
+                timer: 2500,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        const confirmResult = await Swal.fire({
+            title: `Bersihkan ${unusedModules.length} Modul Duplikasi?`,
+            html: `
+                <div class="text-start">
+                    <p class="mb-2">Ditemukan <strong>${unusedModules.length} paket modul</strong> yang tidak terpakai/duplikasi.</p>
+                    <p class="text-muted small mb-3">Semua berkas paket (.zip/.h5p) dan folder ekstraksi fisik di server yang tidak terhubung ke materi mana pun akan dihapus secara permanen untuk menghemat ruang penyimpanan server.</p>
+                    <ul class="small text-secondary ps-3 mb-0" style="max-height: 120px; overflow-y: auto;">
+                        ${unusedModules.map(m => `<li>${m.judul} (${m.module_type === 'h5p' ? 'H5P' : 'SCORM'})</li>`).join('')}
+                    </ul>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `<i class="fas fa-trash-alt me-1"></i> Ya, Bersihkan ${unusedModules.length} Modul`,
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            customClass: {
+                confirmButton: 'btn btn-danger btn-sm px-3 shadow-sm',
+                cancelButton: 'btn btn-secondary btn-sm px-3 shadow-sm'
+            },
+            buttonsStyling: false
+        });
+
+        if (!confirmResult.isConfirmed) return;
+
+        try {
+            Swal.fire({
+                title: 'Membersihkan Duplikasi...',
+                text: 'Menghapus berkas modul yang tidak terpakai dari server...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const res = await useAxios.delete(`teacher/upload-elearning-module/?action=cleanup_unused&course_id=${param.course_id}`);
+
+            // Refresh list modul dari backend
+            const scormResponse = await useAxios.get(`teacher/upload-elearning-module/?course_id=${param.course_id}`);
+            const moduleList = Array.isArray(scormResponse.data?.modules) ? scormResponse.data.modules : [];
+            setAvailableScormModules(moduleList);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Pustaka Berhasil Dibersihkan',
+                text: res.data?.message || `Berhasil menghapus ${unusedModules.length} modul yang tidak terpakai.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } catch (err) {
+            console.error("Error cleaning up unused modules:", err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Membersihkan Pustaka',
+                text: err.response?.data?.error || err.response?.data?.message || 'Terjadi kesalahan saat membersihkan modul dari server.'
+            });
+        }
+    };
+
+    const handleSelectScormFromLibrary = (module) => {
+        if (!module) return;
+        const { activeVariantIndex, activeItemIndex } = scormLibraryModal;
+        if (activeVariantIndex !== null && activeItemIndex !== null) {
+            const isH5pModule = module.module_type === 'h5p';
+            handleLessonChange(activeVariantIndex, activeItemIndex, "learning_module_id", module.id);
+            handleLessonChange(activeVariantIndex, activeItemIndex, "learning_module_info", module);
+            handleLessonChange(activeVariantIndex, activeItemIndex, "file_type", isH5pModule ? "h5p" : "scorm");
+            handleLessonChange(activeVariantIndex, activeItemIndex, "media_source", isH5pModule ? "h5p" : "scorm");
+
+            const currentItem = variants[activeVariantIndex]?.items[activeItemIndex];
+            if (!currentItem?.title || currentItem.title === "Pelajaran Tanpa Judul" || currentItem.title === "Modul Pembelajaran SCORM" || currentItem.title === "Modul Pembelajaran Interaktif") {
+                handleLessonChange(activeVariantIndex, activeItemIndex, "title", module.judul);
+            }
+            if (!currentItem?.duration_seconds) {
+                handleDurationInput(activeVariantIndex, activeItemIndex, "2700");
+            }
+
+            Toast().fire({
+                icon: "success",
+                title: isH5pModule ? "Modul H5P Dihubungkan" : "Modul SCORM Dihubungkan",
+                text: `Materi "${module.judul}" berhasil dihubungkan.`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+            setTimeout(() => autoSaveCurriculum(), 150);
+        }
+        setScormLibraryModal(prev => ({ ...prev, isOpen: false }));
     };
 
     /**
@@ -5135,6 +5382,16 @@ function CourseEditCurriculum() {
                                         </Link>
                                         <button
                                             type="button"
+                                            className="btn btn-sm btn-outline-teal d-inline-flex align-items-center"
+                                            style={{ padding: "0.35rem 0.65rem", fontSize: "0.8125rem", gap: "5px" }}
+                                            onClick={() => handleOpenScormLibrary(null, null)}
+                                            title="Buka Pustaka Modul Interaktif (SCORM/H5P) untuk mengelola atau membersihkan paket duplikasi"
+                                        >
+                                            <i className="fas fa-boxes-stacked"></i>
+                                            <span>Pustaka Modul ({availableScormModules?.length || 0})</span>
+                                        </button>
+                                        <button
+                                            type="button"
                                             className="btn btn-sm btn-teal d-inline-flex align-items-center"
                                             onClick={addCurriculumSection}
                                             disabled={uiState.isSubmitting}
@@ -5460,6 +5717,7 @@ function CourseEditCurriculum() {
                                                                                     setExtractedDuration={setExtractedDuration}  // ✨ PHASE 4.204: Setter for extracted duration
                                                                                     isElearningScorm={isElearningScorm}
                                                                                     onPreviewScorm={handleOpenScormPreview}
+                                                                                    onOpenScormLibrary={handleOpenScormLibrary}
                                                                                     courseQuizzes={courseQuizzes}
                                                                                     availableScormModules={availableScormModules}
                                                                                     setAvailableScormModules={setAvailableScormModules}
@@ -5645,7 +5903,7 @@ function CourseEditCurriculum() {
                                         backgroundColor: "rgba(15, 23, 42, 0.75)",
                                         backdropFilter: "blur(4px)",
                                         WebkitBackdropFilter: "blur(4px)",
-                                        zIndex: 2147483647,
+                                        zIndex: 1055,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -5802,6 +6060,333 @@ function CourseEditCurriculum() {
                                                     onClick={() => setScormPreviewModal(prev => ({ ...prev, isOpen: false }))}
                                                 >
                                                     Tutup Pratinjau
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>,
+                                document.body
+                            )}
+
+                            {/* ✨ Interactive SCORM & H5P Library Management Modal */}
+                            {scormLibraryModal.isOpen && typeof document !== "undefined" && createPortal(
+                                <div
+                                    className="modal fade show d-flex align-items-center justify-content-center"
+                                    tabIndex="-1"
+                                    role="dialog"
+                                    aria-modal="true"
+                                    style={{
+                                        position: "fixed",
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        width: "100vw",
+                                        height: "100vh",
+                                        backgroundColor: "rgba(15, 23, 42, 0.75)",
+                                        backdropFilter: "blur(4px)",
+                                        WebkitBackdropFilter: "blur(4px)",
+                                        zIndex: 1055,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        overflow: "hidden",
+                                        margin: 0,
+                                        padding: "1rem",
+                                        boxSizing: "border-box"
+                                    }}
+                                    onClick={(e) => {
+                                        if (e.target === e.currentTarget) {
+                                            setScormLibraryModal(prev => ({ ...prev, isOpen: false }));
+                                        }
+                                    }}
+                                >
+                                    <div
+                                        className="modal-dialog modal-lg modal-dialog-centered"
+                                        style={{
+                                            maxWidth: "880px",
+                                            width: "95vw",
+                                            maxHeight: "90vh",
+                                            margin: "auto",
+                                            display: "flex",
+                                            flexDirection: "column"
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div className="modal-content shadow-lg border-0 rounded-3 overflow-hidden d-flex flex-column" style={{ maxHeight: "88vh" }}>
+                                            {/* Modal Header */}
+                                            <div className="modal-header bg-light py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <div className="rounded-circle p-2 bg-teal-subtle text-teal d-flex align-items-center justify-content-center" style={{ width: "36px", height: "36px" }}>
+                                                        <i className="fas fa-boxes-stacked"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="modal-title fw-bold text-dark mb-0" style={{ fontSize: "1.05rem" }}>
+                                                            Pustaka Modul Interaktif (SCORM & H5P)
+                                                        </h5>
+                                                        <p className="text-muted small mb-0" style={{ fontSize: "0.75rem" }}>
+                                                            Kelola, pratinjau, dan bersihkan paket modul yang telah diunggah ke LMSetjen DPD RI
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    className="btn-close"
+                                                    aria-label="Close"
+                                                    onClick={() => setScormLibraryModal(prev => ({ ...prev, isOpen: false }))}
+                                                ></button>
+                                            </div>
+
+                                            {/* Modal Body */}
+                                            <div className="modal-body p-3 overflow-auto" style={{ backgroundColor: "#f8fafc" }}>
+                                                {/* Summary stats & fast actions */}
+                                                <div className="row g-2 mb-3">
+                                                    <div className="col-sm-4">
+                                                        <div className="p-2 rounded-2 border bg-white shadow-xs d-flex align-items-center gap-2">
+                                                            <div className="p-2 rounded bg-primary-subtle text-primary">
+                                                                <i className="fas fa-folder-open"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-muted small" style={{ fontSize: "0.72rem" }}>Total Tersimpan</div>
+                                                                <div className="fw-bold text-dark">{availableScormModules?.length || 0} Paket</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-sm-4">
+                                                        <div className="p-2 rounded-2 border bg-white shadow-xs d-flex align-items-center gap-2">
+                                                            <div className="p-2 rounded bg-success-subtle text-success">
+                                                                <i className="fas fa-link"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-muted small" style={{ fontSize: "0.72rem" }}>Sedang Digunakan</div>
+                                                                <div className="fw-bold text-dark">
+                                                                    {(availableScormModules || []).filter(m => m.is_used || (m.usage_count && m.usage_count > 0)).length} Paket
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-sm-4">
+                                                        <div className="p-2 rounded-2 border bg-white shadow-xs d-flex align-items-center gap-2">
+                                                            <div className="p-2 rounded bg-warning-subtle text-warning">
+                                                                <i className="fas fa-copy"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-muted small" style={{ fontSize: "0.72rem" }}>Duplikasi / Tak Terpakai</div>
+                                                                <div className="fw-bold text-dark">
+                                                                    {(availableScormModules || []).filter(m => !m.is_used && (!m.usage_count || m.usage_count === 0)).length} Paket
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Filter, Search & Batch Cleanup Row */}
+                                                <div className="bg-white p-2 rounded-2 border shadow-xs mb-3">
+                                                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                                        <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ maxWidth: "340px" }}>
+                                                            <div className="input-group input-group-sm">
+                                                                <span className="input-group-text bg-light border-end-0 text-muted">
+                                                                    <i className="fas fa-search"></i>
+                                                                </span>
+                                                                <input
+                                                                    type="text"
+                                                                    className="form-control border-start-0"
+                                                                    placeholder="Cari judul modul..."
+                                                                    value={scormLibraryModal.searchTerm}
+                                                                    onChange={(e) => setScormLibraryModal(prev => ({ ...prev, searchTerm: e.target.value }))}
+                                                                    style={{ fontSize: "0.8rem" }}
+                                                                />
+                                                                {scormLibraryModal.searchTerm && (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn btn-outline-secondary"
+                                                                        onClick={() => setScormLibraryModal(prev => ({ ...prev, searchTerm: "" }))}
+                                                                    >
+                                                                        <i className="fas fa-times"></i>
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="d-flex align-items-center gap-1 flex-wrap">
+                                                            <div className="btn-group btn-group-sm" role="group">
+                                                                <button
+                                                                    type="button"
+                                                                    className={`btn ${scormLibraryModal.filterType === 'all' ? 'btn-teal' : 'btn-outline-secondary'}`}
+                                                                    style={{ fontSize: "0.75rem" }}
+                                                                    onClick={() => setScormLibraryModal(prev => ({ ...prev, filterType: 'all' }))}
+                                                                >
+                                                                    Semua ({availableScormModules?.length || 0})
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className={`btn ${scormLibraryModal.filterType === 'unused' ? 'btn-teal' : 'btn-outline-secondary'}`}
+                                                                    style={{ fontSize: "0.75rem" }}
+                                                                    onClick={() => setScormLibraryModal(prev => ({ ...prev, filterType: 'unused' }))}
+                                                                >
+                                                                    Tak Terpakai ({ (availableScormModules || []).filter(m => !m.is_used && (!m.usage_count || m.usage_count === 0)).length })
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className={`btn ${scormLibraryModal.filterType === 'used' ? 'btn-teal' : 'btn-outline-secondary'}`}
+                                                                    style={{ fontSize: "0.75rem" }}
+                                                                    onClick={() => setScormLibraryModal(prev => ({ ...prev, filterType: 'used' }))}
+                                                                >
+                                                                    Digunakan ({ (availableScormModules || []).filter(m => m.is_used || (m.usage_count && m.usage_count > 0)).length })
+                                                                </button>
+                                                            </div>
+
+                                                            {((availableScormModules || []).filter(m => !m.is_used && (!m.usage_count || m.usage_count === 0)).length > 0) && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 ms-sm-2"
+                                                                    style={{ fontSize: "0.75rem" }}
+                                                                    onClick={handleCleanupUnusedScormModules}
+                                                                    title="Hapus semua paket modul duplikasi yang tidak terhubung ke kurikulum"
+                                                                >
+                                                                    <i className="fas fa-trash-can"></i>
+                                                                    <span>Bersihkan Duplikasi</span>
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Modules List */}
+                                                {(() => {
+                                                    const filtered = (availableScormModules || []).filter(m => {
+                                                        const q = (scormLibraryModal.searchTerm || '').toLowerCase();
+                                                        const matchTitle = !q || (m.judul && m.judul.toLowerCase().includes(q)) || (m.module_type && m.module_type.toLowerCase().includes(q));
+                                                        if (!matchTitle) return false;
+                                                        const isUsed = m.is_used || (m.usage_count && m.usage_count > 0);
+                                                        if (scormLibraryModal.filterType === 'unused') return !isUsed;
+                                                        if (scormLibraryModal.filterType === 'used') return isUsed;
+                                                        return true;
+                                                    });
+
+                                                    if (filtered.length === 0) {
+                                                        return (
+                                                            <div className="text-center py-5 bg-white rounded-3 border">
+                                                                <i className="fas fa-box-open fa-3x text-secondary opacity-50 mb-2"></i>
+                                                                <h6 className="fw-semibold text-dark mb-1">Tidak Ada Modul Ditemukan</h6>
+                                                                <p className="text-muted small mb-0">
+                                                                    {scormLibraryModal.searchTerm
+                                                                        ? `Tidak ada modul dengan kata kunci "${scormLibraryModal.searchTerm}"`
+                                                                        : "Belum ada paket modul interaktif SCORM/H5P yang tersimpan di pustaka."}
+                                                                </p>
+                                                            </div>
+                                                        );
+                                                    }
+
+                                                    return (
+                                                        <div className="d-flex flex-column gap-2">
+                                                            {filtered.map(m => {
+                                                                const isUsed = m.is_used || (m.usage_count && m.usage_count > 0);
+                                                                const isH5p = m.module_type === 'h5p';
+                                                                return (
+                                                                    <div
+                                                                        key={m.id}
+                                                                        className="p-3 rounded-2 border bg-white shadow-xs d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2"
+                                                                        style={{ borderLeft: isUsed ? "4px solid #198754" : "4px solid #ffc107" }}
+                                                                    >
+                                                                        <div className="d-flex align-items-start gap-2 overflow-hidden flex-grow-1">
+                                                                            <div className={`p-2 rounded mt-1 ${isH5p ? 'bg-primary-subtle text-primary' : 'bg-teal-subtle text-teal'}`}>
+                                                                                <i className={`fas ${isH5p ? 'fa-puzzle-piece' : 'fa-cube'}`}></i>
+                                                                            </div>
+                                                                            <div className="overflow-hidden">
+                                                                                <div className="d-flex align-items-center gap-1 flex-wrap mb-1">
+                                                                                    <span className={`badge ${isH5p ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-teal-subtle text-teal border border-teal-subtle'} py-0 px-1`} style={{ fontSize: "10px" }}>
+                                                                                        {isH5p ? 'H5P INTERAKTIF' : 'SCORM 1.2'}
+                                                                                    </span>
+                                                                                    {isUsed ? (
+                                                                                        <span className="badge bg-success-subtle text-success border border-success-subtle py-0 px-1" style={{ fontSize: "10px" }}>
+                                                                                            <i className="fas fa-check-circle me-1"></i>Digunakan ({m.usage_count}x)
+                                                                                        </span>
+                                                                                    ) : (
+                                                                                        <span className="badge bg-warning-subtle text-warning border border-warning-subtle py-0 px-1" style={{ fontSize: "10px" }}>
+                                                                                            <i className="fas fa-clock me-1"></i>Tak Terpakai (Duplikasi)
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <h6 className="fw-bold text-dark mb-1 text-truncate" title={m.judul} style={{ fontSize: "0.88rem" }}>
+                                                                                    {m.judul}
+                                                                                </h6>
+                                                                                <div className="small text-muted d-flex align-items-center gap-2 flex-wrap" style={{ fontSize: "0.72rem" }}>
+                                                                                    <span><i className="far fa-calendar-alt me-1"></i>{m.tanggal_dibuat ? new Date(m.tanggal_dibuat).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                                                                                    <span>&bull;</span>
+                                                                                    <span><i className="fas fa-hard-drive me-1"></i>{m.file_size_formatted || '-'}</span>
+                                                                                    {m.entry_file && (
+                                                                                        <>
+                                                                                            <span>&bull;</span>
+                                                                                            <span className="font-monospace text-truncate" style={{ maxWidth: "160px" }}>{m.entry_file}</span>
+                                                                                        </>
+                                                                                    )}
+                                                                                </div>
+                                                                                {isUsed && m.linked_lessons && m.linked_lessons.length > 0 && (
+                                                                                    <div className="mt-1 small text-muted text-truncate" style={{ fontSize: "0.7rem" }} title={m.linked_lessons.join(', ')}>
+                                                                                        <i className="fas fa-link me-1 text-teal"></i>{m.linked_lessons.join(', ')}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Action Buttons */}
+                                                                        <div className="d-flex align-items-center gap-1 flex-shrink-0 align-self-end align-self-md-center">
+                                                                            <button
+                                                                                type="button"
+                                                                                className="btn btn-xs btn-outline-primary py-1 px-2 d-inline-flex align-items-center gap-1"
+                                                                                style={{ fontSize: "0.75rem" }}
+                                                                                onClick={() => handleOpenScormPreview({ title: m.judul, learning_module_info: m })}
+                                                                                title="Uji coba modul ini di pemutar interaktif"
+                                                                            >
+                                                                                <i className="fas fa-play" style={{ fontSize: "9px" }}></i>
+                                                                                <span>Uji Coba</span>
+                                                                            </button>
+
+                                                                            {scormLibraryModal.activeVariantIndex !== null && scormLibraryModal.activeItemIndex !== null && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    className="btn btn-xs btn-teal py-1 px-2 d-inline-flex align-items-center gap-1"
+                                                                                    style={{ fontSize: "0.75rem" }}
+                                                                                    onClick={() => handleSelectScormFromLibrary(m)}
+                                                                                    title="Hubungkan modul ini ke materi yang sedang diedit"
+                                                                                >
+                                                                                    <i className="fas fa-check" style={{ fontSize: "10px" }}></i>
+                                                                                    <span>Pilih Materi</span>
+                                                                                </button>
+                                                                            )}
+
+                                                                            <button
+                                                                                type="button"
+                                                                                className="btn btn-xs btn-outline-danger py-1 px-2 d-inline-flex align-items-center gap-1"
+                                                                                style={{ fontSize: "0.75rem" }}
+                                                                                onClick={() => handleDeleteScormModule(m)}
+                                                                                title={isUsed ? "Hapus paket modul dari server (Tautan materi akan dilepas)" : "Hapus modul tak terpakai dari server"}
+                                                                            >
+                                                                                <i className="fas fa-trash-alt" style={{ fontSize: "10px" }}></i>
+                                                                                <span>Hapus</span>
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
+
+                                            {/* Modal Footer */}
+                                            <div className="modal-footer bg-light py-2 px-3 border-top d-flex align-items-center justify-content-between">
+                                                <span className="small text-muted" style={{ fontSize: "0.72rem" }}>
+                                                    <i className="fas fa-shield-alt text-teal me-1"></i>
+                                                    Penghapusan modul membersihkan berkas fisik (.zip/.h5p) dan folder ekstraksi dari penyimpanan server.
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-secondary"
+                                                    onClick={() => setScormLibraryModal(prev => ({ ...prev, isOpen: false }))}
+                                                >
+                                                    Tutup
                                                 </button>
                                             </div>
                                         </div>

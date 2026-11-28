@@ -619,7 +619,7 @@ function Index() {
                                             <i className="fas fa-university me-2 hero-badge-icon"></i>
                                             <span className="fw-semibold">Sekretariat Jenderal DPD RI</span>
                                             <span className="hero-badge-sep">•</span>
-                                            <span className="hero-badge-sub">E-Learning Biro OKK</span>
+                                            <span className="hero-badge-sub">E-Learning</span>
                                         </div>
 
                                         {/* Main Headline */}
@@ -1000,7 +1000,7 @@ function Index() {
                                 <div className="d-flex align-items-center gap-2">
                                     <span className="stats-live-radar-dot"></span>
                                     <span className="stats-live-title">Sinkronisasi Database Real-Time</span>
-                                    <span className="stats-live-badge">BPSDM Setjen DPD RI</span>
+                                    <span className="stats-live-badge">LMSetjen DPD RI</span>
                                 </div>
                                 <div className="d-flex align-items-center gap-3 stats-live-meta">
                                     <span className="stats-live-meta-item d-none d-md-flex">
@@ -1132,12 +1132,12 @@ function Index() {
                             <div className="categories-live-toolbar d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                                 <div className="d-flex align-items-center gap-2">
                                     <span className="cat-live-radar-dot"></span>
-                                    <span className="cat-live-title">Klaster Bidang Keahlian Biro OKK</span>
+                                    <span className="cat-live-title">Klaster Bidang Keahlian</span>
                                     <span className="cat-live-badge">{categories.length} Bidang Kompetensi</span>
                                 </div>
                                 <div className="d-flex align-items-center gap-3 cat-live-meta">
                                     <span className="cat-live-meta-item d-none d-md-flex">
-                                        <i className="fas fa-check-circle text-teal me-1"></i> Terbuka untuk Pegawai DPD RI
+                                        <i className="fas fa-check-circle text-teal me-1"></i> Terbuka untuk Umum
                                     </span>
                                     <Link to="/search/" className="cat-toolbar-all-btn">
                                         <i className="fas fa-compass me-1"></i> Semua Silabus
@@ -1294,7 +1294,7 @@ function Index() {
                                 </div>
 
                                 <h2 className="display-6 fw-bold mb-1" style={{ color: "#2c3e50", fontSize: "clamp(1.4rem, 2.3vw, 1.85rem)" }}>
-                                    Program Kursus <span className="about-title-accent">Pilihan BPSDM</span>
+                                    Program Kursus <span className="about-title-accent">Pilihan LMSetjen DPD RI</span>
                                 </h2>
 
                                 <p className="text-muted mb-0" style={{ fontSize: "0.85rem" }}>
@@ -1307,7 +1307,7 @@ function Index() {
                                 <div className="d-flex align-items-center gap-2">
                                     <span className="courses-live-pill">
                                         <span className="courses-live-dot"></span>
-                                        Sinkronisasi Database BPSDM
+                                        Sinkronisasi Database LMS
                                     </span>
                                     <span className="courses-count-pill">
                                         <i className="fas fa-book-open me-1 text-teal"></i>

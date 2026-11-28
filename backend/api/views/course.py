@@ -1459,8 +1459,22 @@ class CourseEditPublishedAPIView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            # Verify this is the published version
+            # Verify this is the published version or an editable draft of a published course
             if not course.is_published_version:
+                # If course itself is already the draft copy of a published course, return it directly
+                if course.published_copies.filter(is_published_version=True).exists() or course.platform_status == "Published":
+                    return Response({
+                        "success": True,
+                        "message": "Draft versi dari kursus ini siap diedit.",
+                        "is_new": False,
+                        "course": {
+                            "course_id": str(course.course_id),
+                            "title": course.title,
+                            "slug": course.slug,
+                            "platform_status": course.platform_status
+                        }
+                    }, status=status.HTTP_200_OK)
+
                 print(f"[Edit Published] [FAIL] Course is not a published version: {course.title}")
                 return Response({
                     "success": False,

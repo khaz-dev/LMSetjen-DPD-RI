@@ -696,6 +696,10 @@ class BasicTeacherSerializer(serializers.ModelSerializer):
 
 class LearningModuleSerializer(serializers.ModelSerializer):
     player_url = serializers.ReadOnlyField()
+    usage_count = serializers.SerializerMethodField()
+    is_used = serializers.SerializerMethodField()
+    file_size_formatted = serializers.SerializerMethodField()
+    linked_lessons = serializers.SerializerMethodField()
 
     class Meta:
         model = api_models.LearningModule
@@ -703,9 +707,39 @@ class LearningModuleSerializer(serializers.ModelSerializer):
             'id', 'judul', 'deskripsi', 'module_type', 
             'file_zip', 'extracted_path', 'entry_file', 
             'player_url', 'course', 'author', 
-            'tanggal_dibuat', 'tanggal_diperbarui'
+            'tanggal_dibuat', 'tanggal_diperbarui',
+            'usage_count', 'is_used', 'file_size_formatted', 'linked_lessons'
         ]
-        read_only_fields = ['extracted_path', 'entry_file', 'player_url', 'tanggal_dibuat', 'tanggal_diperbarui']
+        read_only_fields = [
+            'extracted_path', 'entry_file', 'player_url', 
+            'tanggal_dibuat', 'tanggal_diperbarui',
+            'usage_count', 'is_used', 'file_size_formatted', 'linked_lessons'
+        ]
+
+    def get_usage_count(self, obj):
+        return obj.variant_items.count() + (1 if obj.assigned_courses.exists() else 0)
+
+    def get_is_used(self, obj):
+        return obj.variant_items.exists() or obj.assigned_courses.exists()
+
+    def get_file_size_formatted(self, obj):
+        try:
+            if obj.file_zip and hasattr(obj.file_zip, 'size'):
+                size_bytes = obj.file_zip.size
+                if size_bytes < 1024 * 1024:
+                    return f"{size_bytes / 1024:.1f} KB"
+                return f"{size_bytes / (1024 * 1024):.1f} MB"
+        except Exception:
+            pass
+        return "-"
+
+    def get_linked_lessons(self, obj):
+        lessons = []
+        for vi in obj.variant_items.select_related('variant', 'variant__course')[:5]:
+            course_title = vi.variant.course.title if (vi.variant and vi.variant.course) else "Tanpa Kursus"
+            section_title = vi.variant.title if vi.variant else "Bagian"
+            lessons.append(f"{course_title} » {section_title} » {vi.title}")
+        return lessons
 
 
 class UserProgressSerializer(serializers.ModelSerializer):

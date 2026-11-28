@@ -1,6 +1,7 @@
 import os
 import json
 import zipfile
+import shutil
 import xml.etree.ElementTree as ET
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, HttpResponseForbidden
@@ -47,20 +48,120 @@ class UploadElearningModuleAPIView(APIView):
 
             if course_obj:
                 queryset = queryset.filter(
-                    Q(course=course_obj) | Q(author=request.user) | Q(course__isnull=True)
+                    Q(course=course_obj) | Q(author=request.user) | Q(course__teacher__user=request.user) | Q(course__isnull=True)
                 )
             else:
                 queryset = queryset.filter(
-                    Q(author=request.user) | Q(course__isnull=True)
+                    Q(author=request.user) | Q(course__teacher__user=request.user) | Q(course__isnull=True)
                 )
         else:
             queryset = queryset.filter(
-                Q(author=request.user) | Q(course__isnull=True)
+                Q(author=request.user) | Q(course__teacher__user=request.user) | Q(course__isnull=True)
             )
 
-        queryset = queryset.order_by('-tanggal_dibuat')
+        queryset = queryset.distinct().order_by('-tanggal_dibuat')
         serializer = LearningModuleSerializer(queryset, many=True, context={'request': request})
         return Response({"modules": serializer.data}, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        """
+        Menghapus modul e-learning dan membersihkan berkas fisik (ZIP & direktori ekstraksi).
+        Mendukung:
+        1. Single module delete via query param ?module_id=... atau data {module_id: ...}
+        2. Batch cleanup paket duplikasi / tidak terpakai via ?action=cleanup_unused
+        """
+        action = request.query_params.get('action') or request.data.get('action')
+        course_id = request.query_params.get('course_id') or request.data.get('course_id')
+
+        # 🧹 BATCH CLEANUP MODUL TAK TERPAKAI / DUPLIKASI
+        if action == 'cleanup_unused':
+            queryset = api_models.LearningModule.objects.filter(
+                Q(author=request.user) | Q(course__teacher__user=request.user)
+            ).filter(variant_items__isnull=True, assigned_courses__isnull=True).distinct()
+
+            if course_id:
+                course_obj = api_models.Course.objects.filter(course_id=course_id).first()
+                if not course_obj and str(course_id).isdigit():
+                    course_obj = api_models.Course.objects.filter(id=course_id).first()
+                if course_obj:
+                    queryset = queryset.filter(Q(course=course_obj) | Q(course__isnull=True))
+
+            deleted_count = 0
+            for mod in queryset:
+                try:
+                    if mod.file_zip and hasattr(mod.file_zip, 'path') and os.path.exists(mod.file_zip.path):
+                        os.remove(mod.file_zip.path)
+                    if mod.extracted_path:
+                        full_extract_path = os.path.join(settings.MEDIA_ROOT, mod.extracted_path)
+                        if os.path.exists(full_extract_path) and os.path.abspath(full_extract_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
+                            shutil.rmtree(full_extract_path, ignore_errors=True)
+                except Exception as clean_err:
+                    print(f"[Cleanup Unused] Error removing files for module {mod.id}: {clean_err}")
+                mod.delete()
+                deleted_count += 1
+
+            return Response({
+                "message": f"Berhasil membersihkan {deleted_count} paket modul interaktif yang tidak terpakai/duplikasi.",
+                "deleted_count": deleted_count
+            }, status=status.HTTP_200_OK)
+
+        # 🗑️ SINGLE MODULE DELETE
+        module_id = request.query_params.get('module_id') or request.data.get('module_id')
+        if not module_id:
+            return Response(
+                {"error": "Parameter module_id wajib disertakan untuk menghapus modul."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        module = get_object_or_404(api_models.LearningModule, pk=module_id)
+
+        # Validasi izin pengguna
+        is_owner = (module.author == request.user)
+        if not is_owner and module.course and module.course.teacher:
+            is_owner = (module.course.teacher.user == request.user)
+        if not is_owner and not request.user.is_staff:
+            return Response(
+                {"error": "Anda tidak memiliki izin untuk menghapus paket modul ini."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Lepaskan relasi pada kurikulum agar tidak broken link
+        module.variant_items.update(learning_module=None)
+        module.assigned_courses.update(learning_module=None)
+
+        # Hapus berkas fisik ZIP dan direktori ekstraksi
+        try:
+            if module.file_zip and hasattr(module.file_zip, 'path') and os.path.exists(module.file_zip.path):
+                os.remove(module.file_zip.path)
+            if module.extracted_path:
+                full_extract_path = os.path.join(settings.MEDIA_ROOT, module.extracted_path)
+                if os.path.exists(full_extract_path) and os.path.abspath(full_extract_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
+                    shutil.rmtree(full_extract_path, ignore_errors=True)
+        except Exception as e:
+            print(f"[LearningModule Delete] Warning cleaning up disk files: {e}")
+
+        judul_modul = module.judul
+        module_type_disp = module.get_module_type_display()
+        module.delete()
+
+        # Log aktivitas
+        try:
+            api_models.ActivityLog.objects.create(
+                user=request.user,
+                activity_type='resource_deleted',
+                role_at_time='instructor',
+                title=f"Hapus Modul Interaktif: {judul_modul}",
+                description=f"Menghapus paket materi interaktif {module_type_disp} '{judul_modul}' dari pustaka",
+                success=True,
+                metadata={'module_id': module_id, 'judul': judul_modul}
+            )
+        except Exception:
+            pass
+
+        return Response({
+            "message": f"Paket modul '{judul_modul}' dan berkas terkait berhasil dihapus dari pustaka.",
+            "module_id": module_id
+        }, status=status.HTTP_200_OK)
 
     def post(self, request):
         file_obj = request.FILES.get('file')
@@ -434,11 +535,18 @@ class ModuleDetailAPIView(APIView):
         module = get_object_or_404(api_models.LearningModule, pk=module_id)
 
         # Validasi kepemilikan
-        if module.author != request.user and not request.user.is_staff:
+        is_owner = (module.author == request.user)
+        if not is_owner and module.course and module.course.teacher:
+            is_owner = (module.course.teacher.user == request.user)
+        if not is_owner and not request.user.is_staff:
             return Response(
                 {"error": "Anda tidak memiliki izin untuk menghapus modul ini."},
                 status=status.HTTP_403_FORBIDDEN
             )
+
+        # Lepaskan relasi pada kurikulum agar tidak broken link
+        module.variant_items.update(learning_module=None)
+        module.assigned_courses.update(learning_module=None)
 
         try:
             if module.file_zip and hasattr(module.file_zip, 'path') and os.path.exists(module.file_zip.path):
@@ -447,14 +555,14 @@ class ModuleDetailAPIView(APIView):
             if module.extracted_path:
                 full_extract_path = os.path.join(settings.MEDIA_ROOT, module.extracted_path)
                 if os.path.exists(full_extract_path) and os.path.abspath(full_extract_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
-                    import shutil
                     shutil.rmtree(full_extract_path, ignore_errors=True)
         except Exception as e:
             print(f"[LearningModule Delete] Warning cleaning up disk files: {e}")
 
+        judul_modul = module.judul
         module.delete()
         return Response({
-            "message": "Modul dan berkas fisik berhasil dibersihkan dari server."
+            "message": f"Modul '{judul_modul}' dan berkas fisik berhasil dibersihkan dari server."
         }, status=status.HTTP_200_OK)
 
 
